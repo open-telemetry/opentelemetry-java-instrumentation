@@ -21,14 +21,14 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
    * will be examined to determine the name of the span.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      HttpCommonAttributesExtractor<REQUEST, ?> attributesExtractor) {
-    return new HttpSpanNameExtractor<>(attributesExtractor);
+      HttpCommonAttributesGetter<REQUEST, ?> getter) {
+    return new HttpSpanNameExtractor<>(getter);
   }
 
-  private final HttpCommonAttributesExtractor<REQUEST, ?> attributesExtractor;
+  private final HttpCommonAttributesGetter<REQUEST, ?> getter;
 
-  private HttpSpanNameExtractor(HttpCommonAttributesExtractor<REQUEST, ?> attributesExtractor) {
-    this.attributesExtractor = attributesExtractor;
+  private HttpSpanNameExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+    this.getter = getter;
   }
 
   @Override
@@ -37,7 +37,7 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     if (route != null) {
       return route;
     }
-    String method = attributesExtractor.method(request);
+    String method = getter.method(request);
     if (method != null) {
       return "HTTP " + method;
     }
@@ -46,8 +46,8 @@ public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
 
   @Nullable
   private String extractRoute(REQUEST request) {
-    if (attributesExtractor instanceof HttpServerAttributesExtractor) {
-      return ((HttpServerAttributesExtractor<REQUEST, ?>) attributesExtractor).route(request);
+    if (getter instanceof HttpServerAttributesGetter) {
+      return ((HttpServerAttributesGetter<REQUEST, ?>) getter).route(request);
     }
     return null;
   }

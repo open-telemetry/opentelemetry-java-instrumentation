@@ -9,9 +9,7 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpHeaderA
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpHeaderAttributes.responseAttributeKey;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -21,22 +19,25 @@ import javax.annotation.Nullable;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#common-attributes">HTTP
  * attributes</a> that are common to client and server instrumentations.
  */
-public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
+abstract class HttpCommonAttributesExtractor<
+        REQUEST, RESPONSE, GETTER extends HttpCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
+  final GETTER getter;
   private final CapturedHttpHeaders capturedHttpHeaders;
 
-  HttpCommonAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
+  HttpCommonAttributesExtractor(GETTER getter, CapturedHttpHeaders capturedHttpHeaders) {
+    this.getter = getter;
     this.capturedHttpHeaders = capturedHttpHeaders;
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, REQUEST request) {
-    set(attributes, SemanticAttributes.HTTP_METHOD, method(request));
+    set(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
     set(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
 
     for (String name : capturedHttpHeaders.requestHeaders()) {
-      List<String> values = requestHeader(request, name);
+      List<String> values = getter.requestHeader(request, name);
       if (!values.isEmpty()) {
         set(attributes, requestAttributeKey(name), values);
       }
@@ -53,28 +54,28 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
     set(
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-        requestContentLength(request, response));
+        getter.requestContentLength(request, response));
     set(
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED,
-        requestContentLengthUncompressed(request, response));
+        getter.requestContentLengthUncompressed(request, response));
 
     if (response != null) {
-      Integer statusCode = statusCode(request, response);
+      Integer statusCode = getter.statusCode(request, response);
       if (statusCode != null && statusCode > 0) {
         set(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
       }
       set(
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-          responseContentLength(request, response));
+          getter.responseContentLength(request, response));
       set(
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
-          responseContentLengthUncompressed(request, response));
+          getter.responseContentLengthUncompressed(request, response));
 
       for (String name : capturedHttpHeaders.responseHeaders()) {
-        List<String> values = responseHeader(request, response, name);
+        List<String> values = getter.responseHeader(request, response, name);
         if (!values.isEmpty()) {
           set(attributes, responseAttributeKey(name), values);
         }
@@ -82,84 +83,10 @@ public abstract class HttpCommonAttributesExtractor<REQUEST, RESPONSE>
     }
   }
 
-  // Attributes that always exist in a request
-
-  @Nullable
-  protected abstract String method(REQUEST request);
-
   @Nullable
   private String userAgent(REQUEST request) {
-    return firstHeaderValue(requestHeader(request, "user-agent"));
+    return firstHeaderValue(getter.requestHeader(request, "user-agent"));
   }
-
-  /**
-   * Extracts all values of header named {@code name} from the request, or an empty list if there
-   * were none.
-   *
-   * <p>Implementations of this method <b>must not</b> return a null value; an empty list should be
-   * returned instead.
-   */
-  protected abstract List<String> requestHeader(REQUEST request, String name);
-
-  // Attributes which are not always available when the request is ready.
-
-  /**
-   * Extracts the {@code http.request_content_length} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
-   */
-  @Nullable
-  protected abstract Long requestContentLength(REQUEST request, @Nullable RESPONSE response);
-
-  /**
-   * Extracts the {@code http.request_content_length_uncompressed} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
-   */
-  @Nullable
-  protected abstract Long requestContentLengthUncompressed(
-      REQUEST request, @Nullable RESPONSE response);
-
-  /**
-   * Extracts the {@code http.status_code} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
-   * {@code response} is non-{@code null}.
-   */
-  @Nullable
-  protected abstract Integer statusCode(REQUEST request, RESPONSE response);
-
-  /**
-   * Extracts the {@code http.response_content_length} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
-   * {@code response} is non-{@code null}.
-   */
-  @Nullable
-  protected abstract Long responseContentLength(REQUEST request, RESPONSE response);
-
-  /**
-   * Extracts the {@code http.response_content_length_uncompressed} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
-   * {@code response} is non-{@code null}.
-   */
-  @Nullable
-  protected abstract Long responseContentLengthUncompressed(REQUEST request, RESPONSE response);
-
-  /**
-   * Extracts all values of header named {@code name} from the response, or an empty list if there
-   * were none.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
-   * {@code response} is non-{@code null}.
-   *
-   * <p>Implementations of this method <b>must not</b> return a null value; an empty list should be
-   * returned instead.
-   */
-  protected abstract List<String> responseHeader(REQUEST request, RESPONSE response, String name);
 
   @Nullable
   static String firstHeaderValue(List<String> values) {

@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
@@ -25,21 +23,17 @@ public final class UndertowSingletons {
   private static final Instrumenter<HttpServerExchange, HttpServerExchange> INSTRUMENTER;
 
   static {
-    HttpServerAttributesExtractor<HttpServerExchange, HttpServerExchange> httpAttributesExtractor =
-        new UndertowHttpAttributesExtractor();
-    SpanNameExtractor<HttpServerExchange> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<HttpServerExchange, HttpServerExchange> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetServerAttributesExtractor<HttpServerExchange, HttpServerExchange> netAttributesExtractor =
-        NetServerAttributesExtractor.create(new UndertowNetAttributesGetter());
+    UndertowHttpAttributesGetter httpAttributesGetter = new UndertowHttpAttributesGetter();
+    UndertowNetAttributesGetter netAttributesGetter = new UndertowNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<HttpServerExchange, HttpServerExchange>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(spanStatusExtractor)
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addContextCustomizer(HttpRouteHolder.get())
             .addContextCustomizer(
                 (context, request, attributes) -> {

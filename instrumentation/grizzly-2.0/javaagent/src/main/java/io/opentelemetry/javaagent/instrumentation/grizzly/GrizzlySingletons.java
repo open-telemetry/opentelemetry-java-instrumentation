@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -20,16 +21,16 @@ public final class GrizzlySingletons {
   private static final Instrumenter<HttpRequestPacket, HttpResponsePacket> INSTRUMENTER;
 
   static {
-    GrizzlyHttpAttributesExtractor httpAttributesExtractor = new GrizzlyHttpAttributesExtractor();
+    GrizzlyHttpAttributesGetter httpAttributesGetter = new GrizzlyHttpAttributesGetter();
     GrizzlyNetAttributesGetter netAttributesGetter = new GrizzlyNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<HttpRequestPacket, HttpResponsePacket>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.grizzly-2.0",
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpServerMetrics.get())
             .addContextCustomizer(

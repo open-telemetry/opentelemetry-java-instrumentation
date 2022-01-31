@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -33,7 +35,8 @@ public final class RatpackTracingBuilder {
 
   private final List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors =
       new ArrayList<>();
-  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.server(Config.get());
+  private CapturedHttpHeaders capturedHttpClientHeaders = CapturedHttpHeaders.client(Config.get());
+  private CapturedHttpHeaders capturedHttpServerHeaders = CapturedHttpHeaders.server(Config.get());
 
   private final List<AttributesExtractor<? super RequestSpec, ? super HttpResponse>>
       additionalHttpClientExtractors = new ArrayList<>();
@@ -64,24 +67,51 @@ public final class RatpackTracingBuilder {
    *
    * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
    *     HTTP request and response names.
+   * @deprecated Use {@link #captureHttpServerHeaders(CapturedHttpHeaders)} instead.
    */
+  @Deprecated
   public RatpackTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
-    this.capturedHttpHeaders = capturedHttpHeaders;
+    return captureHttpServerHeaders(capturedHttpServerHeaders);
+  }
+
+  /**
+   * Configure the HTTP client instrumentation to capture chosen HTTP request and response headers
+   * as span attributes.
+   *
+   * @param capturedHttpClientHeaders An instance of {@link CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   */
+  public RatpackTracingBuilder captureHttpClientHeaders(
+      CapturedHttpHeaders capturedHttpClientHeaders) {
+    this.capturedHttpClientHeaders = capturedHttpClientHeaders;
+    return this;
+  }
+
+  /**
+   * Configure the HTTP server instrumentation to capture chosen HTTP request and response headers
+   * as span attributes.
+   *
+   * @param capturedHttpServerHeaders An instance of {@link CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   */
+  public RatpackTracingBuilder captureHttpServerHeaders(
+      CapturedHttpHeaders capturedHttpServerHeaders) {
+    this.capturedHttpServerHeaders = capturedHttpServerHeaders;
     return this;
   }
 
   /** Returns a new {@link RatpackTracing} with the configuration of this builder. */
   public RatpackTracing build() {
     RatpackNetAttributesGetter netAttributes = new RatpackNetAttributesGetter();
-    RatpackHttpAttributesExtractor httpAttributes =
-        new RatpackHttpAttributesExtractor(capturedHttpHeaders);
+    RatpackHttpAttributesGetter httpAttributes = new RatpackHttpAttributesGetter();
 
     Instrumenter<Request, Response> instrumenter =
         Instrumenter.<Request, Response>builder(
                 openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributes))
-            .addAttributesExtractor(httpAttributes)
+            .addAttributesExtractor(
+                HttpServerAttributesExtractor.create(httpAttributes, capturedHttpServerHeaders))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(RatpackGetter.INSTANCE);
@@ -91,14 +121,14 @@ public final class RatpackTracingBuilder {
 
   private Instrumenter<RequestSpec, HttpResponse> httpClientInstrumenter() {
     RatpackHttpNetAttributesGetter netAttributes = new RatpackHttpNetAttributesGetter();
-    RatpackHttpClientAttributesExtractor httpAttributes =
-        new RatpackHttpClientAttributesExtractor(capturedHttpHeaders);
+    RatpackHttpClientAttributesGetter httpAttributes = new RatpackHttpClientAttributesGetter();
 
     return Instrumenter.<RequestSpec, HttpResponse>builder(
             openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
         .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributes))
-        .addAttributesExtractor(httpAttributes)
+        .addAttributesExtractor(
+            HttpClientAttributesExtractor.create(httpAttributes, capturedHttpClientHeaders))
         .addAttributesExtractors(additionalHttpClientExtractors)
         .addRequestMetrics(HttpServerMetrics.get())
         .newClientInstrumenter(RequestHeaderSetter.INSTANCE);
