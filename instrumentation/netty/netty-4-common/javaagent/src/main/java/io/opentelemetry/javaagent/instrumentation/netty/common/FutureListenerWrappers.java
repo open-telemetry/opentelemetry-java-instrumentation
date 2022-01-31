@@ -11,7 +11,7 @@ import io.netty.util.concurrent.GenericProgressiveFutureListener;
 import io.netty.util.concurrent.ProgressiveFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.lang.ref.WeakReference;
 
 public final class FutureListenerWrappers {
@@ -19,17 +19,17 @@ public final class FutureListenerWrappers {
   // remove the wrapped listener from the netty future, and if the value is collected prior to the
   // key, that means it's no longer used (referenced) by the netty future anyways.
   //
-  // also note: this is not using VirtualField in case this is ever converted to library
-  // instrumentation, because while the library implementation of VirtualField maintains a weak
-  // reference to its keys, it maintains a strong reference to its values, and in this particular
-  // case the wrapper listener (value) has a strong reference to original listener (key), which will
-  // create a memory leak. which is not a problem in the javaagent's implementation of VirtualField,
-  // since it injects the value directly into the key as a field, and so the value is only retained
-  // strongly by the key, and so they can be collected together.
-  private static final Cache<
+  // also note: this is using WeakReference as VirtualField value in case this is ever converted to
+  // library instrumentation, because while the library implementation of VirtualField maintains a
+  // weak reference to its keys, it maintains a strong reference to its values, and in this
+  // particular case the wrapper listener (value) has a strong reference to original listener (key),
+  // which will create a memory leak. which is not a problem in the javaagent's implementation of
+  // VirtualField, since it injects the value directly into the key as a field, and so the value is
+  // only retained strongly by the key, and so they can be collected together.
+  private static final VirtualField<
           GenericFutureListener<? extends Future<?>>,
           WeakReference<GenericFutureListener<? extends Future<?>>>>
-      wrappers = Cache.weak();
+      wrapperVirtualField = VirtualField.find(GenericFutureListener.class, WeakReference.class);
 
   private static final ClassValue<Boolean> shouldWrap =
       new ClassValue<Boolean>() {
@@ -54,7 +54,7 @@ public final class FutureListenerWrappers {
     // collected before we have a chance to make (and return) a strong reference to the wrapper
 
     WeakReference<GenericFutureListener<? extends Future<?>>> resultReference =
-        wrappers.get(delegate);
+        wrapperVirtualField.get(delegate);
 
     if (resultReference != null) {
       GenericFutureListener<? extends Future<?>> wrapper = resultReference.get();
@@ -75,14 +75,14 @@ public final class FutureListenerWrappers {
     } else {
       wrapper = new WrappedFutureListener(context, (GenericFutureListener<Future<?>>) delegate);
     }
-    wrappers.put(delegate, new WeakReference<>(wrapper));
+    wrapperVirtualField.set(delegate, new WeakReference<>(wrapper));
     return wrapper;
   }
 
   public static GenericFutureListener<? extends Future<?>> getWrapper(
       GenericFutureListener<? extends Future<?>> delegate) {
     WeakReference<GenericFutureListener<? extends Future<?>>> wrapperReference =
-        wrappers.get(delegate);
+        wrapperVirtualField.get(delegate);
     if (wrapperReference == null) {
       return delegate;
     }
