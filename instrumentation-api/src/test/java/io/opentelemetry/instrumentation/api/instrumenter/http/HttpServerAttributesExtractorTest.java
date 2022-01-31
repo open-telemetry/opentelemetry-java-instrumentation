@@ -23,83 +23,78 @@ import org.junit.jupiter.api.Test;
 class HttpServerAttributesExtractorTest {
 
   static class TestHttpServerAttributesExtractor
-      extends HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> {
-
-    TestHttpServerAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
-      super(capturedHttpHeaders);
-    }
+      implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    protected String method(Map<String, String> request) {
+    public String method(Map<String, String> request) {
       return request.get("method");
     }
 
     @Override
-    protected String target(Map<String, String> request) {
+    public String target(Map<String, String> request) {
       return request.get("target");
     }
 
     @Override
-    protected String route(Map<String, String> request) {
+    public String route(Map<String, String> request) {
       return request.get("route");
     }
 
     @Override
-    protected String scheme(Map<String, String> request) {
+    public String scheme(Map<String, String> request) {
       return request.get("scheme");
     }
 
     @Override
-    protected String serverName(Map<String, String> request, Map<String, String> response) {
+    public String serverName(Map<String, String> request, Map<String, String> response) {
       return request.get("serverName");
     }
 
     @Override
-    protected List<String> requestHeader(Map<String, String> request, String name) {
+    public List<String> requestHeader(Map<String, String> request, String name) {
       String values = request.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
 
     @Override
-    protected Long requestContentLength(Map<String, String> request, Map<String, String> response) {
+    public Long requestContentLength(Map<String, String> request, Map<String, String> response) {
       String value = request.get("requestContentLength");
       return value == null ? null : Long.parseLong(value);
     }
 
     @Override
-    protected Long requestContentLengthUncompressed(
+    public Long requestContentLengthUncompressed(
         Map<String, String> request, Map<String, String> response) {
       String value = request.get("requestContentLengthUncompressed");
       return value == null ? null : Long.parseLong(value);
     }
 
     @Override
-    protected Integer statusCode(Map<String, String> request, Map<String, String> response) {
+    public Integer statusCode(Map<String, String> request, Map<String, String> response) {
       String value = response.get("statusCode");
       return value == null ? null : Integer.parseInt(value);
     }
 
     @Override
-    protected String flavor(Map<String, String> request) {
+    public String flavor(Map<String, String> request) {
       return request.get("flavor");
     }
 
     @Override
-    protected Long responseContentLength(
-        Map<String, String> request, Map<String, String> response) {
+    public Long responseContentLength(Map<String, String> request, Map<String, String> response) {
       String value = response.get("responseContentLength");
       return value == null ? null : Long.parseLong(value);
     }
 
     @Override
-    protected Long responseContentLengthUncompressed(
+    public Long responseContentLengthUncompressed(
         Map<String, String> request, Map<String, String> response) {
       String value = response.get("responseContentLengthUncompressed");
       return value == null ? null : Long.parseLong(value);
     }
 
     @Override
-    protected List<String> responseHeader(
+    public List<String> responseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String values = response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
@@ -129,8 +124,9 @@ class HttpServerAttributesExtractorTest {
     response.put("responseContentLengthUncompressed", "21");
     response.put("header.custom-response-header", "654,321");
 
-    TestHttpServerAttributesExtractor extractor =
-        new TestHttpServerAttributesExtractor(
+    HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(
+            new TestHttpServerAttributesExtractor(),
             CapturedHttpHeaders.create(
                 singletonList("Custom-Request-Header"), singletonList("Custom-Response-Header")));
 
@@ -180,8 +176,9 @@ class HttpServerAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("header.x-forwarded-for", "1.1.1.1");
 
-    TestHttpServerAttributesExtractor extractor =
-        new TestHttpServerAttributesExtractor(CapturedHttpHeaders.empty());
+    HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(
+            new TestHttpServerAttributesExtractor(), CapturedHttpHeaders.empty());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, request);

@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -59,20 +60,18 @@ public final class OkHttpTracingBuilder {
 
   /** Returns a new {@link OkHttpTracing} with the settings of this {@link OkHttpTracingBuilder}. */
   public OkHttpTracing build() {
-    OkHttpAttributesExtractor httpAttributesExtractor =
-        new OkHttpAttributesExtractor(capturedHttpHeaders);
+    OkHttpAttributesGetter httpAttributesGetter = new OkHttpAttributesGetter();
     OkHttpNetAttributesGetter attributesGetter = new OkHttpNetAttributesGetter();
-    NetClientAttributesExtractor<Request, Response> attributesExtractor =
-        NetClientAttributesExtractor.create(attributesGetter);
 
     Instrumenter<Request, Response> instrumenter =
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(attributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())
             .newInstrumenter(alwaysClient());

@@ -88,7 +88,7 @@ corresponding instrumentation `name`:
 | Redis Jedis | jedis|
 | Redis Lettuce | lettuce|
 | Rediscala | rediscala|
-| Scala executors | scala-executors |
+| Scala ForkJoinPool | scala-fork-join |
 | Spark Web Framework | spark|
 | Spring Batch | spring-batch|
 | Spring Core | spring-core|

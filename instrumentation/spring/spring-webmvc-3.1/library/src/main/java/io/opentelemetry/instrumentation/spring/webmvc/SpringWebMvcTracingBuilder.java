@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -61,16 +62,16 @@ public final class SpringWebMvcTracingBuilder {
    * SpringWebMvcTracingBuilder}.
    */
   public SpringWebMvcTracing build() {
-    SpringWebMvcHttpAttributesExtractor httpAttributesExtractor =
-        new SpringWebMvcHttpAttributesExtractor(capturedHttpHeaders);
+    SpringWebMvcHttpAttributesGetter httpAttributesGetter = new SpringWebMvcHttpAttributesGetter();
 
     Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter =
         Instrumenter.<HttpServletRequest, HttpServletResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                HttpServerAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
             .addAttributesExtractor(new StatusCodeExtractor())
             .addAttributesExtractor(
                 NetServerAttributesExtractor.create(new SpringWebMvcNetAttributesGetter()))

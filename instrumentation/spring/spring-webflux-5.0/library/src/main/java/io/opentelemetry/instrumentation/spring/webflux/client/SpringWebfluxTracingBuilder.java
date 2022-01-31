@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -62,8 +63,8 @@ public final class SpringWebfluxTracingBuilder {
    * SpringWebfluxTracingBuilder}.
    */
   public SpringWebfluxTracing build() {
-    SpringWebfluxHttpAttributesExtractor httpAttributesExtractor =
-        new SpringWebfluxHttpAttributesExtractor(capturedHttpHeaders);
+    SpringWebfluxHttpAttributesGetter httpAttributesGetter =
+        new SpringWebfluxHttpAttributesGetter();
     SpringWebfluxNetAttributesGetter attributesGetter = new SpringWebfluxNetAttributesGetter();
     NetClientAttributesExtractor<ClientRequest, ClientResponse> attributesExtractor =
         NetClientAttributesExtractor.create(attributesGetter);
@@ -72,9 +73,10 @@ public final class SpringWebfluxTracingBuilder {
         Instrumenter.<ClientRequest, ClientResponse>builder(
                 openTelemetry,
                 "io.opentelemetry.spring-webflux-5.0",
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)

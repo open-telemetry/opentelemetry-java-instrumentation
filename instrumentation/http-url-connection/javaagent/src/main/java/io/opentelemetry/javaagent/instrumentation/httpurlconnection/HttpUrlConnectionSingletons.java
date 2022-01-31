@@ -8,31 +8,27 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.net.HttpURLConnection;
 
-public class HttpUrlConnectionSingletons {
+public final class HttpUrlConnectionSingletons {
 
   private static final Instrumenter<HttpURLConnection, Integer> INSTRUMENTER;
 
   static {
-    HttpUrlHttpAttributesExtractor httpAttributesExtractor = new HttpUrlHttpAttributesExtractor();
+    HttpUrlHttpAttributesGetter httpAttributesGetter = new HttpUrlHttpAttributesGetter();
     HttpUrlNetAttributesGetter netAttributesGetter = new HttpUrlNetAttributesGetter();
-    SpanNameExtractor<HttpURLConnection> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
 
-    NetClientAttributesExtractor<HttpURLConnection, Integer> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesGetter);
     INSTRUMENTER =
         Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.http-url-connection",
-                spanNameExtractor)
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(RequestPropertySetter.INSTANCE);
@@ -41,4 +37,6 @@ public class HttpUrlConnectionSingletons {
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {
     return INSTRUMENTER;
   }
+
+  private HttpUrlConnectionSingletons() {}
 }
