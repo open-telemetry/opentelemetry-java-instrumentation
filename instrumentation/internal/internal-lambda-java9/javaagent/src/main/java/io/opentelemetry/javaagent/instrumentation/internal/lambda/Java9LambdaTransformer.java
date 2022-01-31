@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.lambda;
 
-import io.opentelemetry.javaagent.bootstrap.InjectedHelperClassDetector;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 
@@ -20,10 +19,6 @@ public final class Java9LambdaTransformer {
       String slashClassName,
       Class<?> targetClass)
       throws IllegalClassFormatException {
-    // Skip transforming lambdas of injected helper classes.
-    if (InjectedHelperClassDetector.isHelperClass(targetClass)) {
-      return classBytes;
-    }
     return transformer.transform(
         targetClass.getModule(),
         targetClass.getClassLoader(),
