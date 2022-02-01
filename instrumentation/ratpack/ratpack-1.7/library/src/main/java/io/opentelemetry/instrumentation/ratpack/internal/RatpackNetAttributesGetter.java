@@ -10,6 +10,10 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import ratpack.http.Request;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class RatpackNetAttributesGetter implements NetServerAttributesGetter<Request> {
   @Override
   @Nullable
