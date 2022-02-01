@@ -41,6 +41,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
     extends OpenTelemetryStatement<S> implements PreparedStatement {
 

@@ -10,7 +10,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import javax.annotation.Nullable;
 
-/** Makes span keys for specific instrumentation accessible to enrich and suppress spans. */
+/**
+ * Makes span keys for specific instrumentation accessible to enrich and suppress spans.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public final class SpanKey {
 
   // server span key

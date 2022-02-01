@@ -16,6 +16,10 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class SupportabilityMetrics {
   private static final Logger logger = LoggerFactory.getLogger(SupportabilityMetrics.class);
   private final boolean agentDebugEnabled;
@@ -91,6 +95,10 @@ public final class SupportabilityMetrics {
     return this;
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static final class CounterNames {
     public static final String SQL_STATEMENT_SANITIZER_CACHE_MISS =
         "SqlStatementSanitizer cache miss";

@@ -8,6 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.api.appender.internal;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class AgentLogEmitterProvider {
 
   private static final LogEmitterProviderHolder delegate = new LogEmitterProviderHolder();

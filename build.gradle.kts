@@ -37,9 +37,11 @@ nexusPublishing {
 description = "OpenTelemetry instrumentations for Java"
 
 subprojects {
-  plugins.withId("otel.errorprone-conventions") {
-    dependencies.run {
-      add("errorprone", project(":custom-checks"))
+  if (path != ":instrumentation:liberty:compile-stub" && !path.startsWith(":instrumentation:internal:")) {
+    plugins.withId("otel.errorprone-conventions") {
+      dependencies.run {
+        add("errorprone", project(":custom-checks"))
+      }
     }
   }
 }

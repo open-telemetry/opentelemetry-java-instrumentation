@@ -28,6 +28,9 @@ import org.slf4j.LoggerFactory;
  * attachToRequest() 1. Start the CLIENT span and create the tracer 2. Set the listener callbacks
  * for each important lifecycle actions that would cause the start and close of the span 3. Set
  * callback wrappers on two important request-based callbacks
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class JettyHttpClient9TracingInterceptor
     implements Request.BeginListener,
