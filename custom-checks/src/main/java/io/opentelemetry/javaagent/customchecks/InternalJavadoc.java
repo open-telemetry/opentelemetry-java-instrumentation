@@ -32,6 +32,9 @@ public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeM
 
   private static final Pattern INTERNAL_PACKAGE_PATTERN = Pattern.compile("\\binternal\\b");
 
+  private static final Pattern EXCLUDE_PACKAGE_PATTERN =
+      Pattern.compile("^io\\.opentelemetry\\.javaagent\\.instrumentation\\.internal\\.");
+
   static final String EXPECTED_INTERNAL_COMMENT =
       "This class is internal and is hence not for public use."
           + " Its APIs are unstable and can change at any time.";
@@ -54,8 +57,12 @@ public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeM
 
   private static boolean isInternal(VisitorState state) {
     PackageTree packageTree = state.getPath().getCompilationUnit().getPackage();
-    return packageTree != null
-        && INTERNAL_PACKAGE_PATTERN.matcher(packageTree.getPackageName().toString()).find();
+    if (packageTree == null) {
+      return false;
+    }
+    String packageName = packageTree.getPackageName().toString();
+    return INTERNAL_PACKAGE_PATTERN.matcher(packageName).find()
+        && !EXCLUDE_PACKAGE_PATTERN.matcher(packageName).find();
   }
 
   @Nullable

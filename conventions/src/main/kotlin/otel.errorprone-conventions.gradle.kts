@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
   errorprone("com.google.errorprone:error_prone_core")
+  errorprone(project(":custom-checks"))
 }
 
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
