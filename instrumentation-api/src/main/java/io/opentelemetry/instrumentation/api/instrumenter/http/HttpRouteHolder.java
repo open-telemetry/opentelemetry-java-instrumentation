@@ -51,7 +51,7 @@ public final class HttpRouteHolder {
    * <p>If there is a server span in the context, and the context has been customized with a {@link
    * HttpRouteHolder}, then this method will update the route using the provided {@code httpRoute}
    * if and only if the last {@link HttpRouteSource} to update the route using this method has
-   * strictly lower priority than the provided {@link HttpRouteSource}, and the pased value is
+   * strictly lower priority than the provided {@link HttpRouteSource}, and the passed value is
    * non-null.
    *
    * <p>If there is a server span in the context, and the context has NOT been customized with a
