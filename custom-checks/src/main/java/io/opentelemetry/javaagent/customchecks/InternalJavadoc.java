@@ -14,6 +14,7 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.PackageTree;
 import com.sun.tools.javac.api.JavacTrees;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -52,9 +53,9 @@ public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeM
   }
 
   private static boolean isInternal(VisitorState state) {
-    String packageName =
-        state.getPath().getCompilationUnit().getPackage().getPackageName().toString();
-    return INTERNAL_PACKAGE_PATTERN.matcher(packageName).find();
+    PackageTree packageTree = state.getPath().getCompilationUnit().getPackage();
+    return packageTree != null
+        && INTERNAL_PACKAGE_PATTERN.matcher(packageTree.getPackageName().toString()).find();
   }
 
   @Nullable
