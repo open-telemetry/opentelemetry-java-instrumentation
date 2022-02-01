@@ -3,10 +3,10 @@ plugins {
 }
 
 dependencies {
-  implementation("com.google.errorprone:error_prone_core:2.11.0")
+  implementation("com.google.errorprone:error_prone_core:2.10.0")
 
   annotationProcessor("com.google.auto.service:auto-service:1.0.1")
-  compileOnly("com.google.auto.service:auto-service-annotations")
+  compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
