@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
@@ -88,20 +89,20 @@ class KtorServerTracing private constructor(
         throw IllegalArgumentException("OpenTelemetry must be set")
       }
 
-      val httpAttributesExtractor = KtorHttpServerAttributesExtractor(configuration.capturedHttpHeaders)
+      val httpAttributesGetter = KtorHttpServerAttributesGetter()
 
       val instrumenterBuilder = Instrumenter.builder<ApplicationRequest, ApplicationResponse>(
         configuration.openTelemetry,
         INSTRUMENTATION_NAME,
-        HttpSpanNameExtractor.create(httpAttributesExtractor)
+        HttpSpanNameExtractor.create(httpAttributesGetter)
       )
 
       configuration.additionalExtractors.forEach { instrumenterBuilder.addAttributesExtractor(it) }
 
       with(instrumenterBuilder) {
-        setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor)))
+        setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
         addAttributesExtractor(NetServerAttributesExtractor.create(KtorNetServerAttributesGetter()))
-        addAttributesExtractor(httpAttributesExtractor)
+        addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter, configuration.capturedHttpHeaders))
         addRequestMetrics(HttpServerMetrics.get())
         addContextCustomizer(HttpRouteHolder.get())
       }

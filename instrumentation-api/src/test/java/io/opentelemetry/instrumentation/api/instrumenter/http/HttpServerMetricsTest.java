@@ -156,6 +156,49 @@ class HttpServerMetricsTest {
                     .satisfiesExactly(point -> assertThat(point).hasSum(300 /* millis */)));
   }
 
+  @Test
+  void collectsHttpRouteFromContext() {
+    // given
+    InMemoryMetricReader metricReader = InMemoryMetricReader.create();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder()
+            .registerMetricReader(metricReader)
+            .setMinimumCollectionInterval(Duration.ZERO)
+            .build();
+
+    RequestListener listener = new HttpServerMetrics(meterProvider.get("test"), c -> "/test/{id}");
+
+    Attributes requestAttributes =
+        Attributes.builder().put("http.host", "host").put("http.scheme", "https").build();
+
+    Attributes responseAttributes = Attributes.empty();
+
+    Context parentContext = Context.root();
+
+    // when
+    Context context = listener.start(parentContext, requestAttributes, nanos(100));
+    listener.end(context, responseAttributes, nanos(200));
+
+    // then
+    assertThat(metricReader.collectAllMetrics())
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.duration")
+                    .hasUnit("ms")
+                    .hasDoubleHistogram()
+                    .points()
+                    .satisfiesExactly(
+                        point ->
+                            assertThat(point)
+                                .hasSum(100 /* millis */)
+                                .attributes()
+                                .containsOnly(
+                                    attributeEntry("http.scheme", "https"),
+                                    attributeEntry("http.host", "host"),
+                                    attributeEntry("http.route", "/test/{id}"))));
+  }
+
   private static long nanos(int millis) {
     return TimeUnit.MILLISECONDS.toNanos(millis);
   }

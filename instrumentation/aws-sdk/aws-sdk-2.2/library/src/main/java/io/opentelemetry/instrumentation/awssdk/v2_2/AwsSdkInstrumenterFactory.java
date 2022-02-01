@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.Arrays;
 import java.util.List;
@@ -18,8 +19,10 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 
 final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
-  static final AwsSdkHttpAttributesExtractor httpAttributesExtractor =
-      new AwsSdkHttpAttributesExtractor();
+
+  static final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
+  static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> httpAttributesExtractor =
+      HttpClientAttributesExtractor.create(httpAttributesGetter);
   static final AwsSdkRpcAttributesExtractor rpcAttributesExtractor =
       new AwsSdkRpcAttributesExtractor();
   private static final AwsSdkNetAttributesGetter netAttributesGetter =

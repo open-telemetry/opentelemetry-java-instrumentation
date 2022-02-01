@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -15,6 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.LoggerFactory;
 
 // Our convention for accessing agent package
 @SuppressWarnings("UnnecessarilyFullyQualified")
@@ -28,12 +31,23 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("get")).and(takesArguments(0)),
-        OpenTelemetryInstrumentation.class.getName() + "$GetGlobalOpenTelemetryAdvice");
+        isMethod()
+            .and(isStatic())
+            .and(named("get"))
+            .and(takesArguments(0))
+            .and(returns(named("application.io.opentelemetry.api.OpenTelemetry"))),
+        OpenTelemetryInstrumentation.class.getName() + "$GetAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(isStatic())
+            .and(named("set"))
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("application.io.opentelemetry.api.OpenTelemetry"))),
+        OpenTelemetryInstrumentation.class.getName() + "$SetAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class GetGlobalOpenTelemetryAdvice {
+  public static class GetAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
     public static Object onEnter() {
@@ -45,6 +59,20 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false)
             application.io.opentelemetry.api.OpenTelemetry openTelemetry) {
       openTelemetry = ApplicationOpenTelemetry.INSTANCE;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      LoggerFactory.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class)
+          .warn(
+              "You are currently using the OpenTelemetry Instrumentation Java Agent;"
+                  + " all GlobalOpenTelemetry.set calls are ignored - the agent provides"
+                  + " the global OpenTelemetry object used by your application.",
+              new Throwable());
     }
   }
 }

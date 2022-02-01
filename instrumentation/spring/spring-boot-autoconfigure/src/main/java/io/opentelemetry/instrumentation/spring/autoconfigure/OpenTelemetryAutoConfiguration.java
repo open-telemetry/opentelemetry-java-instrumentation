@@ -11,7 +11,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
@@ -45,8 +45,7 @@ public class OpenTelemetryAutoConfiguration {
       SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 
       spanExportersProvider.getIfAvailable(Collections::emptyList).stream()
-          // todo SimpleSpanProcessor...is that really what we want here?
-          .map(SimpleSpanProcessor::create)
+          .map(spanExporter -> BatchSpanProcessor.builder(spanExporter).build())
           .forEach(tracerProviderBuilder::addSpanProcessor);
 
       return tracerProviderBuilder
