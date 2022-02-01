@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.oshi.SystemMetrics;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -44,7 +43,7 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
-      SystemMetrics.registerObservers();
+      MetricsRegistration.register();
     }
   }
 }

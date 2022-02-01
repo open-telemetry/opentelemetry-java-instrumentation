@@ -30,8 +30,7 @@ public class SystemMetrics {
   /** Register observers for system metrics. */
   public static void registerObservers() {
     // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
-    Meter meter =
-        GlobalOpenTelemetry.get().getMeterProvider().get("io.opentelemetry.instrumentation.oshi");
+    Meter meter = GlobalOpenTelemetry.get().getMeterProvider().get("io.opentelemetry.oshi");
     SystemInfo systemInfo = new SystemInfo();
     HardwareAbstractionLayer hal = systemInfo.getHardware();
 
