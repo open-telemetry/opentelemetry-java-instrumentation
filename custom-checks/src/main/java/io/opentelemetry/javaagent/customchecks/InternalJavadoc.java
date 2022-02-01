@@ -22,13 +22,16 @@ import javax.lang.model.element.Modifier;
 @AutoService(BugChecker.class)
 @BugPattern(
     name = "InternalJavadoc",
-    summary = "This public internal class is missing the standard internal javadoc disclaimer.",
+    summary =
+        "This public internal class is missing the javadoc disclaimer: \""
+            + InternalJavadoc.EXPECTED_INTERNAL_COMMENT
+            + "\"",
     severity = WARNING)
 public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeMatcher {
 
   private static final Pattern INTERNAL_PACKAGE_PATTERN = Pattern.compile("\\binternal\\b");
 
-  private static final String EXPECTED_INTERNAL_COMMENT =
+  static final String EXPECTED_INTERNAL_COMMENT =
       "This class is internal and is hence not for public use."
           + " Its APIs are unstable and can change at any time.";
 
