@@ -13,9 +13,9 @@ dependencies {
   testImplementation("org.assertj:assertj-core")
   testImplementation("org.mockito:mockito-core")
 
-  latestDepTestLibrary("software.amazon.awssdk:kinesis:2.17.114")
-  latestDepTestLibrary("software.amazon.awssdk:aws-core:2.17.114")
-  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:2.17.114")
+  latestDepTestLibrary("software.amazon.awssdk:kinesis:2.17.114") // issue #5259
+  latestDepTestLibrary("software.amazon.awssdk:aws-core:2.17.114") // issue #5259
+  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:2.17.114") // issue #5259
 }
 
 tasks {

@@ -25,7 +25,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
-  latestDepTestLibrary("redis.clients:jedis:3.+")
+  latestDepTestLibrary("redis.clients:jedis:3.+") // see jedis-4.0 module
 }
 
 tasks {
