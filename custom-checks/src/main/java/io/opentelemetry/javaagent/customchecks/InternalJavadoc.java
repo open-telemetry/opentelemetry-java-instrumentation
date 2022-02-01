@@ -23,7 +23,7 @@ import javax.lang.model.element.Modifier;
 @BugPattern(
     name = "InternalJavadoc",
     summary =
-        "This public internal class is missing the javadoc disclaimer: \""
+        "This public internal class doesn't end with the javadoc disclaimer: \""
             + InternalJavadoc.EXPECTED_INTERNAL_COMMENT
             + "\"",
     severity = WARNING)
@@ -41,7 +41,7 @@ public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeM
       return Description.NO_MATCH;
     }
     String javadoc = getJavadoc(state);
-    if (javadoc != null && javadoc.contains(EXPECTED_INTERNAL_COMMENT)) {
+    if (javadoc != null && javadoc.endsWith(EXPECTED_INTERNAL_COMMENT)) {
       return Description.NO_MATCH;
     }
     return describeMatch(tree);
