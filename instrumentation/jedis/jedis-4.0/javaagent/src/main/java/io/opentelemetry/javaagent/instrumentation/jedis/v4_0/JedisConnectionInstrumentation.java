@@ -18,6 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
 import java.net.Socket;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -47,7 +48,6 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         this.getClass().getName() + "$SendCommandAdvice");
-    // FIXME: This instrumentation only incorporates sending the command, not processing the result.
   }
 
   @SuppressWarnings("unused")
@@ -84,7 +84,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
       request.setSocket(socket);
 
       scope.close();
-      instrumenter().end(context, request, null, throwable);
+      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
 
@@ -121,7 +121,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
       request.setSocket(socket);
 
       scope.close();
-      instrumenter().end(context, request, null, throwable);
+      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
 }
