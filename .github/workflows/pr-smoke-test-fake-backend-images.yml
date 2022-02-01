@@ -15,7 +15,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Build Docker Image
@@ -39,7 +39,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Build Docker Image

@@ -15,7 +15,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Build
@@ -35,7 +35,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Build
@@ -53,8 +53,8 @@ jobs:
           - 11
           - 15
         vm:
-          - hotspot
-          - openj9
+          - temurin
+          - adopt-openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@v2.3.4
@@ -63,13 +63,13 @@ jobs:
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
         uses: actions/setup-java@v2
         with:
-          distribution: adopt-${{ matrix.vm }}
+          distribution: ${{ matrix.vm }}
           java-version: ${{ matrix.test-java-version }}
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Test
@@ -89,7 +89,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Test
@@ -131,7 +131,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Test
@@ -154,7 +154,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Cache Gradle Wrapper
@@ -179,7 +179,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Cache Gradle Wrapper
@@ -205,7 +205,7 @@ jobs:
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Local publish of artifacts
