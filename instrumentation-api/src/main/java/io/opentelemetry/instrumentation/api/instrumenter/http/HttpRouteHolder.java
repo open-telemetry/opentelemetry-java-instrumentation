@@ -11,6 +11,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.server.ServerSpan;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -110,7 +111,9 @@ public final class HttpRouteHolder {
     if (httpRouteHolder == null) {
       String httpRoute = httpRouteGetter.get(context, arg1, arg2);
       if (httpRoute != null && !httpRoute.isEmpty()) {
-        updateSpanData(serverSpan, httpRoute);
+        // update both span and name, since there's no HttpRouteHolder in the context
+        serverSpan.updateName(httpRoute);
+        serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, httpRoute);
       }
       return;
     }
@@ -123,15 +126,15 @@ public final class HttpRouteHolder {
       if (route != null
           && !route.isEmpty()
           && (!onlyIfBetterRoute || httpRouteHolder.isBetterRoute(route))) {
-        updateSpanData(serverSpan, route);
+
+        // update just the span name - the attribute will be picked up by the
+        // HttpServerAttributesExtractor at the end of request processing
+        serverSpan.updateName(route);
+
         httpRouteHolder.updatedBySourceOrder = source.order;
         httpRouteHolder.route = route;
       }
     }
-  }
-
-  private static void updateSpanData(Span serverSpan, String route) {
-    serverSpan.updateName(route);
   }
 
   // This is used when setting route from a servlet filter to pick the most descriptive (longest)
