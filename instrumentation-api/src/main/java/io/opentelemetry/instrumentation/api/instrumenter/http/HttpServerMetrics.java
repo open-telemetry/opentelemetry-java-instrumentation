@@ -18,9 +18,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,14 +49,8 @@ public final class HttpServerMetrics implements RequestListener {
 
   private final LongUpDownCounter activeRequests;
   private final DoubleHistogram duration;
-  private final Function<Context, String> httpRouteHolderGetter;
 
   private HttpServerMetrics(Meter meter) {
-    this(meter, HttpRouteHolder::getRoute);
-  }
-
-  // visible for tests
-  HttpServerMetrics(Meter meter, Function<Context, String> httpRouteHolderGetter) {
     activeRequests =
         meter
             .upDownCounterBuilder("http.server.active_requests")
@@ -72,8 +64,6 @@ public final class HttpServerMetrics implements RequestListener {
             .setUnit("ms")
             .setDescription("The duration of the inbound HTTP request")
             .build();
-
-    this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
   @Override
@@ -96,17 +86,8 @@ public final class HttpServerMetrics implements RequestListener {
     activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()));
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyServerDurationView(state.startAttributes(), addHttpRoute(context, endAttributes)),
+        applyServerDurationView(state.startAttributes(), endAttributes),
         context);
-  }
-
-  // TODO: the http.route should be extracted by the AttributesExtractor, HttpServerMetrics should
-  // not access the context to get it
-  private Attributes addHttpRoute(Context context, Attributes endAttributes) {
-    String route = httpRouteHolderGetter.apply(context);
-    return route == null
-        ? endAttributes
-        : endAttributes.toBuilder().put(SemanticAttributes.HTTP_ROUTE, route).build();
   }
 
   @AutoValue

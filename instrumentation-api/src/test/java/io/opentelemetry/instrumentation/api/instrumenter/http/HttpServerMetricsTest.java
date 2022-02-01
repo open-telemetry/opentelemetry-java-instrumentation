@@ -157,7 +157,7 @@ class HttpServerMetricsTest {
   }
 
   @Test
-  void collectsHttpRouteFromContext() {
+  void collectsHttpRouteFromEndAttributes() {
     // given
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
@@ -166,12 +166,12 @@ class HttpServerMetricsTest {
             .setMinimumCollectionInterval(Duration.ZERO)
             .build();
 
-    RequestListener listener = new HttpServerMetrics(meterProvider.get("test"), c -> "/test/{id}");
+    RequestListener listener = HttpServerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder().put("http.host", "host").put("http.scheme", "https").build();
 
-    Attributes responseAttributes = Attributes.empty();
+    Attributes responseAttributes = Attributes.builder().put("http.route", "/test/{id}").build();
 
     Context parentContext = Context.root();
 

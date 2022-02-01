@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpHeaderA
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpHeaderAttributes.responseAttributeKey;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
@@ -32,7 +33,7 @@ abstract class HttpCommonAttributesExtractor<
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     set(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
     set(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
 
@@ -47,6 +48,7 @@ abstract class HttpCommonAttributesExtractor<
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {

@@ -11,7 +11,6 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.server.ServerSpan;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -20,7 +19,7 @@ import javax.annotation.Nullable;
  *
  * <p>Usually the route is not accessible when the request processing starts; and needs to be set
  * later, after the instrumented operation starts. This class provides several static methods that
- * allow the isntrumentation author to provide the matching HTTP route to the instrumentation when
+ * allow the instrumentation author to provide the matching HTTP route to the instrumentation when
  * it is discovered.
  */
 public final class HttpRouteHolder {
@@ -131,11 +130,8 @@ public final class HttpRouteHolder {
     }
   }
 
-  // TODO: instead of calling setAttribute() consider storing the route in context end retrieving it
-  // in the AttributesExtractor
   private static void updateSpanData(Span serverSpan, String route) {
     serverSpan.updateName(route);
-    serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, route);
   }
 
   // This is used when setting route from a servlet filter to pick the most descriptive (longest)
@@ -147,11 +143,11 @@ public final class HttpRouteHolder {
   }
 
   /**
-   * Returns the {@code http.route} attribute value that's stored in the passed {@code context}, or
-   * null if it was not set before.
+   * Returns the {@code http.route} attribute value that's stored in the {@code context}, or null if
+   * it was not set before.
    */
   @Nullable
-  public static String getRoute(Context context) {
+  static String getRoute(Context context) {
     HttpRouteHolder httpRouteHolder = context.get(CONTEXT_KEY);
     return httpRouteHolder == null ? null : httpRouteHolder.route;
   }
