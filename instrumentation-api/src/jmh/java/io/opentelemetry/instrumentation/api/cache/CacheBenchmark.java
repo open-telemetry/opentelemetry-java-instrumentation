@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.cache.internal;
+package io.opentelemetry.instrumentation.api.cache;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
