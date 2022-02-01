@@ -15,12 +15,6 @@ dependencies {
 
   library("org.apache.struts:struts2-core:2.3.1")
 
-  // There was no 2.4 version at all.
-  // In version 2.5 Struts Servlet Filter entry point was relocated.
-  // This Servlet Filter is relevant only in setting up the test app and it is not used in
-  // instrumentation. So fixing Struts library version for the test.
-  latestDepTestLibrary("org.apache.struts:struts2-core:2.3.+")
-
   testImplementation(project(":testing-common"))
   testImplementation("org.eclipse.jetty:jetty-server:8.0.0.v20110901")
   testImplementation("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
