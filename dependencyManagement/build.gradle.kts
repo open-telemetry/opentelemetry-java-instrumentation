@@ -73,7 +73,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "org.mockito",
     "4.2.0",
-    listOf("mockito-core", "mockito-junit-jupiter")
+    listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
   ),
   DependencySet(
     "org.slf4j",
