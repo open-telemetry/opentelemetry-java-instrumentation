@@ -28,6 +28,16 @@ tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 }
 
+tasks.withType<JavaCompile> {
+  options.compilerArgs.addAll(
+    listOf(
+      "--add-exports", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+      "--add-exports", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+      "--add-exports", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+    )
+  )
+}
+
 dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
@@ -55,6 +65,13 @@ dependencies {
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:2.0.2")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.2.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.3.0")
+
+  implementation("com.google.errorprone:error_prone_core:2.11.0")
+
+  annotationProcessor("com.google.auto.service:auto-service:1.0.1")
+  compileOnly("com.google.auto.service:auto-service-annotations")
+
+  testImplementation("com.google.errorprone:error_prone_test_helpers:2.11.0")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.8.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.customchecks;
 
-import static com.google.errorprone.BugPattern.SeverityLevel.WARNING;
-
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
@@ -23,7 +21,7 @@ import javax.lang.model.element.Modifier;
 @BugPattern(
     name = "InternalJavadoc",
     summary = "This public internal class is missing the standard internal javadoc disclaimer.",
-    severity = WARNING)
+    severity = BugPattern.SeverityLevel.WARNING)
 public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeMatcher {
 
   private static final Pattern INTERNAL_PACKAGE_PATTERN = Pattern.compile("\\binternal\\b");

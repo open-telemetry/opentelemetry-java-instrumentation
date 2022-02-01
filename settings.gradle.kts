@@ -83,8 +83,6 @@ rootProject.name = "opentelemetry-java-instrumentation"
 
 includeBuild("conventions")
 
-include(":custom-checks")
-
 include(":muzzle")
 
 // agent projects
