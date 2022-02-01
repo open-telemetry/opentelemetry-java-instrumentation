@@ -25,8 +25,9 @@ dependencies {
 
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:8.0.41")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:[9.+, 10)")
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:[9.+, 10)")
+
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+") // see tomcat-10.0 module
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see tomcat-10.0 module
 }
 
 tasks.withType<Test>().configureEach {

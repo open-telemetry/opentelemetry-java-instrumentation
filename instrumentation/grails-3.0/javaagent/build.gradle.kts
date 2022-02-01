@@ -43,8 +43,4 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
-
-  // spring boot 3 uses spring 6 which requires java 17
-  latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+")
 }

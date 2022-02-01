@@ -9,7 +9,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:rxjava:rxjava-3-common:testing"))
 
-  latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0")
+  latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0") // see rxjava-3.1.1 module
 }
 
 tasks.withType<Test>().configureEach {

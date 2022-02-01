@@ -17,5 +17,11 @@ dependencies {
 
   library("com.github.oshi:oshi-core:5.3.1")
 
-  testImplementation("com.google.guava:guava")
+  testImplementation(project(":instrumentation:oshi:testing"))
+}
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.oshi.experimental-metrics.enabled=true")
+  }
 }
