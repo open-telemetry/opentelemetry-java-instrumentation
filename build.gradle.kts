@@ -35,3 +35,11 @@ nexusPublishing {
 // tasks.release.finalizedBy tasks.closeAndReleaseRepository
 
 description = "OpenTelemetry instrumentations for Java"
+
+subprojects {
+  plugins.withId("otel.errorprone-conventions") {
+    dependencies.run {
+      add("errorprone", project(":custom-checks"))
+    }
+  }
+}
