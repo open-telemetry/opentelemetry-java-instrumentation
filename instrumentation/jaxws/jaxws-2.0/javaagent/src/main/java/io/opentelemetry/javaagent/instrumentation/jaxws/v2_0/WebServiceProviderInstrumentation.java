@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
 import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -41,7 +40,7 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(nameMatches("invoke")).and(takesArguments(1)),
+        isMethod().and(isPublic()).and(named("invoke")).and(takesArguments(1)),
         WebServiceProviderInstrumentation.class.getName() + "$InvokeAdvice");
   }
 

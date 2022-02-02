@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.scalaexecutors;
 
-import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -40,7 +39,7 @@ public class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
         ScalaForkJoinPoolInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
-        nameMatches("invoke")
+        named("invoke")
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
         ScalaForkJoinPoolInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
   }
