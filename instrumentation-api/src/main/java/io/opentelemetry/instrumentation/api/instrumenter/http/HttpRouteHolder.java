@@ -111,7 +111,7 @@ public final class HttpRouteHolder {
     if (httpRouteHolder == null) {
       String httpRoute = httpRouteGetter.get(context, arg1, arg2);
       if (httpRoute != null && !httpRoute.isEmpty()) {
-        // update both span and name, since there's no HttpRouteHolder in the context
+        // update both span name and attribute, since there's no HttpRouteHolder in the context
         serverSpan.updateName(httpRoute);
         serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, httpRoute);
       }
