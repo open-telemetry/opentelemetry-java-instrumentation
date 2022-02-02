@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.appender.internal;
 
-/** Builder class for creating {@link LogEmitter} instances. */
+/**
+ * Builder class for creating {@link LogEmitter} instances.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public interface LogEmitterBuilder {
 
   /**

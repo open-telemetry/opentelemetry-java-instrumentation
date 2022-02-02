@@ -37,4 +37,5 @@ dependencies {
   testImplementation(project(":instrumentation:aws-lambda-1.0:testing"))
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.assertj:assertj-core")
+  testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }

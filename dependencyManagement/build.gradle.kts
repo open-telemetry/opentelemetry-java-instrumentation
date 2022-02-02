@@ -73,7 +73,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "org.mockito",
     "4.2.0",
-    listOf("mockito-core", "mockito-junit-jupiter")
+    listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
   ),
   DependencySet(
     "org.slf4j",
@@ -91,6 +91,7 @@ val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.2.10",
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
+  "uk.org.webcompere:system-stubs-jupiter:2.0.1",
   "com.uber.nullaway:nullaway:0.9.5",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",

@@ -9,6 +9,10 @@ import com.google.auto.value.AutoValue;
 import java.time.Instant;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @AutoValue
 public abstract class ReceivedRecords {
 

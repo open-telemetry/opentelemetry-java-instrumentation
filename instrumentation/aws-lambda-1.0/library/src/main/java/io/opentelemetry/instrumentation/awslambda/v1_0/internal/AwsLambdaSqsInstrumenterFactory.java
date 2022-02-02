@@ -11,6 +11,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class AwsLambdaSqsInstrumenterFactory {
 
   public static Instrumenter<SQSEvent, Void> forEvent(OpenTelemetry openTelemetry) {

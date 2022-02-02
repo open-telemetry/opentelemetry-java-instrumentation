@@ -31,6 +31,10 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   protected final S delegate;

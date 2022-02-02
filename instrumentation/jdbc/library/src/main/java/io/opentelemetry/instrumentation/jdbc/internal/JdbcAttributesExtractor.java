@@ -10,6 +10,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.SqlAttributesExtract
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class JdbcAttributesExtractor extends SqlAttributesExtractor<DbRequest, Void> {
   @Nullable
   @Override

@@ -40,6 +40,9 @@ import javax.annotation.Nullable;
  *
  * <p>This class has been copied as is from
  * https://github.com/raphw/weak-lock-free/blob/ad0e5e0c04d4a31f9485bf12b89afbc9d75473b3/src/main/java/com/blogspot/mydailyjava/weaklockfree/WeakConcurrentMap.java
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 // Suppress warnings since this is copied as-is.
 @SuppressWarnings({
@@ -196,6 +199,9 @@ public class WeakConcurrentMap<K, V>
   /**
    * A {@link WeakConcurrentMap} where stale entries are removed as a side effect of interacting
    * with this map.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
    */
   public static class WithInlinedExpunction<K, V> extends WeakConcurrentMap<K, V> {
 

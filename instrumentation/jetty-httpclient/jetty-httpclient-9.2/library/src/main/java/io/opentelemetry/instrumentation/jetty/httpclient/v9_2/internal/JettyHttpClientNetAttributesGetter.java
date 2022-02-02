@@ -11,6 +11,10 @@ import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class JettyHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<Request, Response> {
 

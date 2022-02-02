@@ -20,6 +20,10 @@ import java.util.Collections;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class KafkaInstrumenterFactory {
 
   public static Instrumenter<ProducerRecord<?, ?>, Void> createProducerInstrumenter(

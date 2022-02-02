@@ -26,10 +26,10 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.Test;
 
-public class LogEventMapperTest {
+class LogEventMapperTest {
 
   @Test
-  public void testDefault() {
+  void testDefault() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, emptyList());
@@ -46,7 +46,7 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testSome() {
+  void testSome() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("key2"));
@@ -64,7 +64,7 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testAll() {
+  void testAll() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("*"));
@@ -84,7 +84,7 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testCaptureMapMessageDisabled() {
+  void testCaptureMapMessageDisabled() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("*"));
@@ -105,7 +105,7 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testCaptureMapMessageWithSpecialAttribute() {
+  void testCaptureMapMessageWithSpecialAttribute() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
@@ -126,7 +126,7 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testCaptureMapMessageWithoutSpecialAttribute() {
+  void testCaptureMapMessageWithoutSpecialAttribute() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
@@ -150,7 +150,7 @@ public class LogEventMapperTest {
   }
 
   @Test
-  public void testCaptureStructuredDataMessage() {
+  void testCaptureStructuredDataMessage() {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));

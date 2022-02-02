@@ -15,17 +15,20 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import java.util.Map;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
-import org.junit.contrib.java.lang.system.RestoreSystemProperties;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-public class ParentContextExtractorTest {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+@ExtendWith(SystemStubsExtension.class)
+class ParentContextExtractorTest {
 
-  @Rule
-  public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
-
-  @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+  @SystemStub final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
   private static final OpenTelemetry OTEL =
       OpenTelemetry.propagating(ContextPropagators.create(B3Propagator.injectingSingleHeader()));
@@ -34,7 +37,7 @@ public class ParentContextExtractorTest {
       AwsLambdaFunctionInstrumenterFactory.createInstrumenter(OTEL);
 
   @Test
-  public void shouldUseHttpIfAwsParentNotSampled() {
+  void shouldUseHttpIfAwsParentNotSampled() {
     // given
     Map<String, String> headers =
         ImmutableMap.of(
@@ -60,7 +63,7 @@ public class ParentContextExtractorTest {
   }
 
   @Test
-  public void shouldPreferAwsParentHeaderIfValidAndSampled() {
+  void shouldPreferAwsParentHeaderIfValidAndSampled() {
     // given
     Map<String, String> headers =
         ImmutableMap.of(
@@ -86,7 +89,7 @@ public class ParentContextExtractorTest {
   }
 
   @Test
-  public void shouldExtractCaseInsensitiveHeaders() {
+  void shouldExtractCaseInsensitiveHeaders() {
     // given
     Map<String, String> headers =
         ImmutableMap.of(
