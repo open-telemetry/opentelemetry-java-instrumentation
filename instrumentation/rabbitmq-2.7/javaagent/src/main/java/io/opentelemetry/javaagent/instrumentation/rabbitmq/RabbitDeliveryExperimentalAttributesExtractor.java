@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitInstrume
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.Date;
 import javax.annotation.Nullable;
@@ -19,7 +20,8 @@ class RabbitDeliveryExperimentalAttributesExtractor
       AttributeKey.longKey("rabbitmq.record.queue_time_ms");
 
   @Override
-  public void onStart(AttributesBuilder attributes, DeliveryRequest request) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, DeliveryRequest request) {
     Date timestamp = request.getProperties().getTimestamp();
     if (timestamp != null) {
       // this will be set if the sender sets the timestamp,
@@ -37,6 +39,7 @@ class RabbitDeliveryExperimentalAttributesExtractor
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       DeliveryRequest request,
       @Nullable Void unused,
       @Nullable Throwable error) {}

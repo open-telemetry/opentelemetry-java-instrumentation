@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
 final class ConstantAttributesExtractor<REQUEST, RESPONSE, T>
@@ -21,13 +22,14 @@ final class ConstantAttributesExtractor<REQUEST, RESPONSE, T>
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     attributes.put(attributeKey, attributeValue);
   }
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {}

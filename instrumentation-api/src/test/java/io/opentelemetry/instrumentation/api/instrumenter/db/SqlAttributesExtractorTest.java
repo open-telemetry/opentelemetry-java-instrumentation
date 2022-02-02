@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,12 +66,14 @@ class SqlAttributesExtractorTest {
 
     dbTableAttribute = SemanticAttributes.DB_SQL_TABLE;
 
+    Context context = Context.root();
+
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    underTest.onStart(startAttributes, request);
+    underTest.onStart(startAttributes, context, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, request, null, null);
+    underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
     assertThat(startAttributes.build())
@@ -94,9 +97,11 @@ class SqlAttributesExtractorTest {
 
     dbTableAttribute = null;
 
+    Context context = Context.root();
+
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, request);
+    underTest.onStart(attributes, context, request);
 
     // then
     assertThat(attributes.build())
@@ -109,7 +114,7 @@ class SqlAttributesExtractorTest {
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Collections.emptyMap());
+    underTest.onStart(attributes, Context.root(), Collections.emptyMap());
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();

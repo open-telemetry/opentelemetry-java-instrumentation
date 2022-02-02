@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,12 +51,14 @@ class MessagingAttributesExtractorTest {
 
     TestMessagingAttributesExtractor underTest = new TestMessagingAttributesExtractor(operation);
 
+    Context context = Context.root();
+
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    underTest.onStart(startAttributes, request);
+    underTest.onStart(startAttributes, context, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, request, "42", null);
+    underTest.onEnd(endAttributes, context, request, "42", null);
 
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
@@ -95,12 +98,14 @@ class MessagingAttributesExtractorTest {
     TestMessagingAttributesExtractor underTest =
         new TestMessagingAttributesExtractor(MessageOperation.SEND);
 
+    Context context = Context.root();
+
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    underTest.onStart(startAttributes, Collections.emptyMap());
+    underTest.onStart(startAttributes, context, Collections.emptyMap());
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, Collections.emptyMap(), null, null);
+    underTest.onEnd(endAttributes, context, Collections.emptyMap(), null, null);
 
     // then
     assertThat(startAttributes.build().isEmpty()).isTrue();

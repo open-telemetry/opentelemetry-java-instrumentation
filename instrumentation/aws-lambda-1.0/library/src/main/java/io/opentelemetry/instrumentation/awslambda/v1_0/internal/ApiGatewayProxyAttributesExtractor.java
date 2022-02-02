@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaRequest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -28,7 +29,8 @@ import javax.annotation.Nullable;
 final class ApiGatewayProxyAttributesExtractor
     implements AttributesExtractor<AwsLambdaRequest, Object> {
   @Override
-  public void onStart(AttributesBuilder attributes, AwsLambdaRequest request) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, AwsLambdaRequest request) {
     if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
       set(attributes, FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
       onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
@@ -78,6 +80,7 @@ final class ApiGatewayProxyAttributesExtractor
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       AwsLambdaRequest request,
       @Nullable Object response,
       @Nullable Throwable error) {

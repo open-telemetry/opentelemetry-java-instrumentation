@@ -15,19 +15,17 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of {@link io.opentelemetry.api.common.Attributes} for a given request and response.
- * Will be called {@linkplain #onStart(AttributesBuilder, Object) on start} with just the {@link
- * REQUEST} and again {@linkplain #onEnd(AttributesBuilder, Object, Object, Throwable) on end} with
- * both {@link REQUEST} and {@link RESPONSE} to allow populating attributes at each stage of a
- * request's lifecycle. It is best to populate as much as possible in {@link
- * #onStart(AttributesBuilder, Object)} to have it available during sampling.
+ * Will be called {@linkplain #onStart(AttributesBuilder, Context, Object) on start} with just the
+ * {@link REQUEST} and again {@linkplain #onEnd(AttributesBuilder, Context, Object, Object,
+ * Throwable) on end} with both {@link REQUEST} and {@link RESPONSE} to allow populating attributes
+ * at each stage of a request's lifecycle. It is best to populate as much as possible in {@link
+ * #onStart(AttributesBuilder, Context, Object)} to have it available during sampling.
  *
  * @see DbAttributesExtractor
  * @see HttpClientAttributesExtractor
  * @see NetServerAttributesExtractor
  */
 public interface AttributesExtractor<REQUEST, RESPONSE> {
-
-  // TODO: use new methods everywhere
 
   /**
    * Extracts attributes from the {@link Context} and the {@link REQUEST} into the {@link
@@ -40,9 +38,10 @@ public interface AttributesExtractor<REQUEST, RESPONSE> {
   /**
    * Extracts attributes from the {@link REQUEST} into the {@link AttributesBuilder} at the
    * beginning of a request.
+   *
+   * @deprecated Use {@link #onStart(AttributesBuilder, Context, Object)} instead.
    */
-  // * @deprecated Use {@link #onStart(AttributesBuilder, Context, Object)} instead.
-  // @Deprecated
+  @Deprecated
   default void onStart(AttributesBuilder attributes, REQUEST request) {
     throw new UnsupportedOperationException(
         "This method variant is deprecated and will be removed in the next minor release.");
@@ -64,10 +63,10 @@ public interface AttributesExtractor<REQUEST, RESPONSE> {
   /**
    * Extracts attributes from the {@link REQUEST} and either {@link RESPONSE} or {@code error} into
    * the {@link AttributesBuilder} at the end of a request.
+   *
+   * @deprecated Use {@link #onEnd(AttributesBuilder, Context, Object, Object, Throwable)} instead.
    */
-  // * @deprecated Use {@link #onEnd(AttributesBuilder, Context, Object, Object, Throwable)}
-  // instead.
-  // @Deprecated
+  @Deprecated
   default void onEnd(
       AttributesBuilder attributes,
       REQUEST request,

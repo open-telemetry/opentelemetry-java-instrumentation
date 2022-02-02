@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.db;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import javax.annotation.Nullable;
@@ -26,8 +27,8 @@ public abstract class SqlAttributesExtractor<REQUEST, RESPONSE>
     extends DbAttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  public final void onStart(AttributesBuilder attributes, REQUEST request) {
-    super.onStart(attributes, request);
+  public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    super.onStart(attributes, parentContext, request);
     AttributeKey<String> dbTable = dbTableAttribute();
     if (dbTable != null) {
       set(attributes, dbTable, table(request));
