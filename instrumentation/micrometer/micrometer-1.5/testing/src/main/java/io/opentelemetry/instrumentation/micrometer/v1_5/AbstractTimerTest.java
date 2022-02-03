@@ -13,6 +13,7 @@ import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -196,5 +197,50 @@ public abstract class AbstractTimerTest {
                             .anySatisfy(
                                 point ->
                                     assertThat(point).attributes().containsEntry("phi", "0.99"))));
+  }
+
+  @Test
+  void testMicrometerMax() throws InterruptedException {
+    // given
+    Timer timer =
+        Timer.builder("testTimerMax")
+            .description("This is a test timer")
+            .tags("tag", "value")
+            .register(Metrics.globalRegistry);
+
+    // when
+    timer.record(1, TimeUnit.SECONDS);
+    timer.record(2, TimeUnit.SECONDS);
+    timer.record(4, TimeUnit.SECONDS);
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testTimerMax.max",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test timer")
+                            .hasDoubleGauge()
+                            .points()
+                            .anySatisfy(
+                                point ->
+                                    assertThat(point)
+                                        .hasValue(4_000)
+                                        .attributes()
+                                        .containsEntry("tag", "value"))));
+
+    // when
+    Metrics.globalRegistry.remove(timer);
+    Thread.sleep(10); // give time for any inflight metric export to be received
+    testing().clearData();
+
+    // then
+    Thread.sleep(100); // interval of the test metrics exporter
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME, "testTimerMax.max", AbstractIterableAssert::isEmpty);
   }
 }
