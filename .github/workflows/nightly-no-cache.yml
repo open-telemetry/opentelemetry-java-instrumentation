@@ -23,7 +23,8 @@ jobs:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build --no-build-cache
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: build --no-build-cache -x javadoc
 
   build-gradle-plugins:
     runs-on: ubuntu-latest
