@@ -218,6 +218,12 @@ tasks {
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
   }
+
+  // We don't publish this jar file, so the actual classifier value is not important.
+  // But we should not have two tasks (jar and shadow) that produce the same file.
+  jar {
+    archiveClassifier.set("slim")
+  }
 }
 
 licenseReport {
