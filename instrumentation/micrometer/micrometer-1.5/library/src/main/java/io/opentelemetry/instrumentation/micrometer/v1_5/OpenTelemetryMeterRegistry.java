@@ -49,11 +49,14 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
     return new OpenTelemetryMeterRegistryBuilder(openTelemetry);
   }
 
+  private final TimeUnit baseTimeUnit;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
   private final AsyncInstrumentRegistry asyncInstrumentRegistry;
 
-  OpenTelemetryMeterRegistry(Clock clock, io.opentelemetry.api.metrics.Meter otelMeter) {
+  OpenTelemetryMeterRegistry(
+      Clock clock, TimeUnit baseTimeUnit, io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
+    this.baseTimeUnit = baseTimeUnit;
     this.otelMeter = otelMeter;
     this.asyncInstrumentRegistry = AsyncInstrumentRegistry.getOrCreate(otelMeter);
     this.config().onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
@@ -73,7 +76,8 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   protected LongTaskTimer newLongTaskTimer(
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig) {
     OpenTelemetryLongTaskTimer timer =
-        new OpenTelemetryLongTaskTimer(id, clock, distributionStatisticConfig, otelMeter);
+        new OpenTelemetryLongTaskTimer(
+            id, clock, getBaseTimeUnit(), distributionStatisticConfig, otelMeter);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
@@ -91,6 +95,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             clock,
             distributionStatisticConfig,
             pauseDetector,
+            getBaseTimeUnit(),
             otelMeter,
             asyncInstrumentRegistry);
     if (timer.isUsingMicrometerHistograms()) {
@@ -135,7 +140,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected TimeUnit getBaseTimeUnit() {
-    return TimeUnit.MILLISECONDS;
+    return baseTimeUnit;
   }
 
   @Override

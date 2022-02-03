@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.getUnitString;
 
 import io.micrometer.core.instrument.AbstractTimer;
 import io.micrometer.core.instrument.Clock;
@@ -29,10 +30,9 @@ import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
-
   private final Measurements measurements;
   private final TimeWindowMax max;
+  private final TimeUnit baseTimeUnit;
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
   private final Attributes attributes;
@@ -45,6 +45,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
       PauseDetector pauseDetector,
+      TimeUnit baseTimeUnit,
       Meter otelMeter,
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
     super(id, clock, distributionStatisticConfig, pauseDetector, TimeUnit.MILLISECONDS, false);
@@ -56,12 +57,13 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     }
     max = new TimeWindowMax(clock, distributionStatisticConfig);
 
+    this.baseTimeUnit = baseTimeUnit;
     this.attributes = tagsAsAttributes(id);
     this.otelHistogram =
         otelMeter
             .histogramBuilder(id.getName())
             .setDescription(description(id))
-            .setUnit("ms")
+            .setUnit(getUnitString(baseTimeUnit))
             .build();
     this.maxHandle =
         asyncInstrumentRegistry.buildGauge(
@@ -81,7 +83,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   protected void recordNonNegative(long amount, TimeUnit unit) {
     if (amount >= 0 && !removed) {
       long nanos = unit.toNanos(amount);
-      double time = nanos / NANOS_PER_MS;
+      double time = TimeUtils.nanosToUnit(nanos, baseTimeUnit);
       otelHistogram.record(time, attributes);
       measurements.record(nanos);
       max.record(nanos, TimeUnit.NANOSECONDS);
