@@ -24,7 +24,8 @@ jobs:
       - name: Build
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: build -x javadoc
           cache-read-only: true
 
       - name: Upload deadlock detector artifacts if any

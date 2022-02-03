@@ -26,7 +26,8 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: build -x javadoc
 
   build-gradle-plugins:
     runs-on: ubuntu-latest
