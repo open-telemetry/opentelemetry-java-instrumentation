@@ -52,18 +52,14 @@ public final class GrpcTracingBuilder {
     return this;
   }
 
-  /**
-   * Sets custom client {@link SpanNameExtractor}
-   */
+  /** Sets custom client {@link SpanNameExtractor}. */
   public GrpcTracingBuilder setClientSpanNameExtractor(
       SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor) {
     this.clientSpanNameExtractor = clientSpanNameExtractor;
     return this;
   }
 
-  /**
-   * Sets custom server {@link SpanNameExtractor}
-   */
+  /** Sets custom server {@link SpanNameExtractor}. */
   public GrpcTracingBuilder setServerSpanNameExtractor(
       SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor) {
     this.serverSpanNameExtractor = serverSpanNameExtractor;
