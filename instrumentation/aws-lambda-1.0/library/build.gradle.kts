@@ -1,5 +1,11 @@
 plugins {
   id("otel.library-instrumentation")
+
+  id("org.unbroken-dome.test-sets")
+}
+
+testSets {
+  create("testEvents")
 }
 
 dependencies {
@@ -14,7 +20,7 @@ dependencies {
   // with lambda.
   // NB: 2.2.0 includes a class called SQSEvent but isn't usable due to it returning private classes
   // in public API.
-  library("com.amazonaws:aws-lambda-java-events:2.2.1")
+  compileOnly("com.amazonaws:aws-lambda-java-events:2.2.1")
 
   compileOnly("com.fasterxml.jackson.core:jackson-databind")
   compileOnly("commons-io:commons-io:2.2")
@@ -24,8 +30,9 @@ dependencies {
 
   // allows to get the function ARN
   testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")
+
   // allows to get the default events
-  testLibrary("com.amazonaws:aws-lambda-java-events:3.10.0")
+  add("testEventsImplementation", "com.amazonaws:aws-lambda-java-events:3.10.0")
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation("commons-io:commons-io:2.2")
@@ -38,4 +45,16 @@ dependencies {
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.assertj:assertj-core")
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
+}
+
+tasks {
+  val testEvents by existing(Test::class) {
+    filter {
+      setFailOnNoMatchingTests(false)
+    }
+  }
+
+  test {
+    dependsOn(testEvents)
+  }
 }

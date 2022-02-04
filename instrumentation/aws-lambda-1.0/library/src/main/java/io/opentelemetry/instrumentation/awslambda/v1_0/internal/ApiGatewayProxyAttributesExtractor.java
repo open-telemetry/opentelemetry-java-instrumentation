@@ -29,7 +29,7 @@ final class ApiGatewayProxyAttributesExtractor
     implements AttributesExtractor<AwsLambdaRequest, Object> {
   @Override
   public void onStart(AttributesBuilder attributes, AwsLambdaRequest request) {
-    if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
+    if (AwsLambdaUtil.hasEvents() && request.getInput() instanceof APIGatewayProxyRequestEvent) {
       set(attributes, FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
       onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
     }
@@ -81,7 +81,7 @@ final class ApiGatewayProxyAttributesExtractor
       AwsLambdaRequest request,
       @Nullable Object response,
       @Nullable Throwable error) {
-    if (response instanceof APIGatewayProxyResponseEvent) {
+    if (AwsLambdaUtil.hasEvents() && response instanceof APIGatewayProxyResponseEvent) {
       Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
       if (statusCode != null) {
         attributes.put(HTTP_STATUS_CODE, statusCode);

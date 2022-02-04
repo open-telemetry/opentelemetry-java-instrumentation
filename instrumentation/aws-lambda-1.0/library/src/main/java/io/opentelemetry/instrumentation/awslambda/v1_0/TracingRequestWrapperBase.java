@@ -21,9 +21,18 @@ import java.util.function.BiFunction;
 abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, O> {
 
   protected static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper()
-          .registerModule(new CustomJodaModule())
-          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+  static {
+    try {
+      // Present if events are on the classpath
+      Class.forName("org.joda.time.DateTime");
+      OBJECT_MAPPER.registerModule(new CustomJodaModule());
+    } catch (Throwable t) {
+      // Ignore
+    }
+  }
+
   private final WrappedLambda wrappedLambda;
   private final Method targetMethod;
   private final BiFunction<I, Class<?>, Object> parameterMapper;

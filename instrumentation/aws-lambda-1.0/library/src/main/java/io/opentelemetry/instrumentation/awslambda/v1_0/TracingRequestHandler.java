@@ -11,6 +11,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenter;
 import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaFunctionInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaUtil;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
 import java.util.Collections;
@@ -66,7 +67,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
 
   private Map<String, String> getHeaders(I input) {
     Map<String, String> result = null;
-    if (input instanceof APIGatewayProxyRequestEvent) {
+    if (AwsLambdaUtil.hasEvents() && input instanceof APIGatewayProxyRequestEvent) {
       APIGatewayProxyRequestEvent event = (APIGatewayProxyRequestEvent) input;
       result = event.getHeaders();
     }

@@ -32,7 +32,7 @@ public class AwsLambdaFunctionInstrumenterFactory {
 
   private static String spanName(AwsLambdaRequest input) {
     String name = null;
-    if (input.getInput() instanceof APIGatewayProxyRequestEvent) {
+    if (AwsLambdaUtil.hasEvents() && input.getInput() instanceof APIGatewayProxyRequestEvent) {
       name = ((APIGatewayProxyRequestEvent) input.getInput()).getResource();
     }
     return name == null ? input.getAwsContext().getFunctionName() : name;
