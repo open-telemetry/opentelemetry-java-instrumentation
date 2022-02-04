@@ -30,6 +30,8 @@ import javax.lang.model.element.Modifier;
     severity = WARNING)
 public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeMatcher {
 
+  private static final long serialVersionUID = 1L;
+
   private static final Pattern INTERNAL_PACKAGE_PATTERN = Pattern.compile("\\binternal\\b");
 
   private static final Pattern EXCLUDE_PACKAGE_PATTERN =
@@ -60,8 +62,9 @@ public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeM
     if (packageTree == null) {
       return false;
     }
-    String packageName = packageTree.getPackageName().toString();
-    return INTERNAL_PACKAGE_PATTERN.matcher(packageName).find()
+    String packageName = state.getSourceForNode(packageTree.getPackageName());
+    return packageName != null
+        && INTERNAL_PACKAGE_PATTERN.matcher(packageName).find()
         && !EXCLUDE_PACKAGE_PATTERN.matcher(packageName).find();
   }
 
