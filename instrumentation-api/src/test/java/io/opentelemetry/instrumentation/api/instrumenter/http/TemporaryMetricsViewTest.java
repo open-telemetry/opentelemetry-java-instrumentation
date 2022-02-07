@@ -110,37 +110,6 @@ public class TemporaryMetricsViewTest {
   }
 
   @Test
-  public void shouldApplyServerDurationView_withTarget() {
-    Attributes startAttributes =
-        Attributes.builder()
-            .put(SemanticAttributes.HTTP_METHOD, "GET")
-            .put(SemanticAttributes.HTTP_URL, "https://somehost/high/cardinality/12345")
-            .put(SemanticAttributes.HTTP_SCHEME, "https")
-            .put(SemanticAttributes.HTTP_HOST, "somehost")
-            .put(SemanticAttributes.HTTP_SERVER_NAME, "somehost")
-            .put(
-                SemanticAttributes.HTTP_TARGET, "/somehost/high/cardinality/12345;jsessionId=12145")
-            .put(SemanticAttributes.NET_HOST_NAME, "somehost")
-            .put(SemanticAttributes.NET_HOST_PORT, 443)
-            .build();
-
-    Attributes endAttributes =
-        Attributes.builder()
-            .put(SemanticAttributes.HTTP_STATUS_CODE, 500)
-            .put(SemanticAttributes.NET_PEER_NAME, "somehost2")
-            .put(SemanticAttributes.NET_PEER_IP, "127.0.0.1")
-            .put(SemanticAttributes.NET_PEER_PORT, 443)
-            .build();
-
-    OpenTelemetryAssertions.assertThat(applyServerDurationView(startAttributes, endAttributes))
-        .containsOnly(
-            attributeEntry(SemanticAttributes.HTTP_SCHEME.getKey(), "https"),
-            attributeEntry(SemanticAttributes.HTTP_HOST.getKey(), "somehost"),
-            attributeEntry(SemanticAttributes.HTTP_METHOD.getKey(), "GET"),
-            attributeEntry(SemanticAttributes.HTTP_STATUS_CODE.getKey(), 500));
-  }
-
-  @Test
   public void shouldApplyActiveRequestsView() {
     Attributes attributes =
         Attributes.builder()

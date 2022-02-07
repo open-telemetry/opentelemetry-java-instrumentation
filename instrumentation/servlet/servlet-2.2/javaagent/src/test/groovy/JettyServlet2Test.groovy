@@ -20,6 +20,8 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -73,17 +75,22 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
 
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
     [
       SemanticAttributes.HTTP_SERVER_NAME,
       SemanticAttributes.NET_TRANSPORT
-    ]
+    ] as Set
+  }
+
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
+    switch (endpoint) {
+      case NOT_FOUND:
+        return "HTTP $method"
+      case PATH_PARAM:
+        return getContextPath() + "/path/:id/param"
+      default:
+        return endpoint.resolvePath(address).path
+    }
   }
 
   @Override

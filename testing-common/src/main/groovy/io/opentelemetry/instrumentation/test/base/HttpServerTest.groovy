@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
@@ -40,7 +41,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static java.util.Collections.singletonList
 import static org.junit.jupiter.api.Assumptions.assumeTrue
@@ -65,12 +65,17 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       singletonList(TEST_RESPONSE_HEADER))
   }
 
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
     def route = expectedHttpRoute(endpoint)
-    return route == null ? getContextPath() + "/*" : route
+    return route == null ? "HTTP $method" : route
   }
 
   String expectedHttpRoute(ServerEndpoint endpoint) {
+    // no need to compute route if we're not expecting it
+    if (!httpAttributes(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+      return null
+    }
+
     switch (endpoint) {
       case NOT_FOUND:
         return null
@@ -159,12 +164,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    [SemanticAttributes.HTTP_ROUTE] as Set
-  }
-
-  // TODO: remove that method and use httpAttributes everywhere; similar to HttpClientTest
-  List<AttributeKey<?>> extraAttributes() {
-    []
+    [
+      SemanticAttributes.HTTP_ROUTE,
+      SemanticAttributes.NET_TRANSPORT,
+      SemanticAttributes.NET_PEER_NAME,
+      SemanticAttributes.NET_PEER_PORT
+    ] as Set
   }
 
   enum ServerEndpoint {
@@ -273,7 +278,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }
-    return runUnderTrace("controller", closure)
+    return GlobalTraceUtil.runWithSpan("controller") {
+      closure.call()
+    }
   }
 
   def "test success with #count requests"() {
@@ -516,7 +523,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       // Force HTTP/1 via h1c so upgrade requests don't show up as traces
         .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
         .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
-      runUnderTrace("client " + index) {
+      runWithSpan("client " + index) {
         Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
         propagator.inject(Context.current(), request, setter)
         client.execute(request.build()).aggregate().thenRun {
@@ -661,9 +668,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
-    def httpAttributes = extraAttributes() + this.httpAttributes(endpoint)
+    def httpAttributes = this.httpAttributes(endpoint)
     trace.span(index) {
-      name expectedServerSpanName(endpoint)
+      name expectedServerSpanName(endpoint, method)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
       if (endpoint.status >= 500) {
         status StatusCode.ERROR
@@ -688,10 +695,19 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
-        // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-        "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
-        "$SemanticAttributes.NET_PEER_PORT" { it == null || (it instanceof Long && it != port) }
-        "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+          "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
+        }
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+          "$SemanticAttributes.NET_PEER_PORT" { (it instanceof Long && it.intValue() != port) }
+        }
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)) {
+          "$SemanticAttributes.NET_PEER_IP" { it == peerIp(endpoint) }
+        } else {
+          // Optional
+          "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) }
+        }
 
         "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
         "$SemanticAttributes.HTTP_METHOD" method
@@ -699,21 +715,21 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "$SemanticAttributes.HTTP_FLAVOR" { it == "1.1" || it == "2.0" }
         "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
 
-        "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
         "$SemanticAttributes.HTTP_SCHEME" "http"
+        "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
         "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
 
         if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
         } else {
-          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
+          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
         if (httpAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         } else {
-          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
+          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
         if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "$SemanticAttributes.HTTP_SERVER_NAME" String
@@ -735,19 +751,28 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD
-    def httpAttributes = extraAttributes() + this.httpAttributes(endpoint)
+    def httpAttributes = this.httpAttributes(endpoint)
     trace.span(1) {
-      name expectedServerSpanName(endpoint)
+      name expectedServerSpanName(endpoint, "GET")
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
       childOf((SpanData) parent)
       attributes {
         if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
-        // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-        "$SemanticAttributes.NET_PEER_NAME" { (it == null || it == address.host) }
-        "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
-        "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
+          "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
+        }
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+          "$SemanticAttributes.NET_PEER_PORT" { (it instanceof Long && it.intValue() != port) }
+        }
+        if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)) {
+          "$SemanticAttributes.NET_PEER_IP" { it == peerIp(endpoint) }
+        } else {
+          // Optional
+          "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) }
+        }
 
         "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
         "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -762,14 +787,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
         } else {
-          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
+          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
         if (httpAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         } else {
-          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           // Optional
+          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
         if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
           // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria

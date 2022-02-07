@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker
+
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
 import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installOpenTelemetrySdk;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
@@ -203,7 +202,6 @@ public class AgentInstaller {
       Config config,
       AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     for (AgentListener agentListener : agentListeners) {
-      agentListener.beforeAgent(config);
       agentListener.beforeAgent(config, autoConfiguredSdk);
     }
   }
@@ -253,10 +251,13 @@ public class AgentInstaller {
           new DelayedAfterAgentCallback(config, agentListeners, autoConfiguredSdk));
     } else {
       for (AgentListener agentListener : agentListeners) {
-        agentListener.afterAgent(config);
         agentListener.afterAgent(config, autoConfiguredSdk);
       }
     }
+  }
+
+  private static boolean isJavaBefore9() {
+    return System.getProperty("java.version").startsWith("1.");
   }
 
   private static void addByteBuddyRawSetting() {
@@ -381,7 +382,6 @@ public class AgentInstaller {
     private void runAgentListeners() {
       for (AgentListener agentListener : agentListeners) {
         try {
-          agentListener.afterAgent(config);
           agentListener.afterAgent(config, autoConfiguredSdk);
         } catch (RuntimeException e) {
           logger.error("Failed to execute {}", agentListener.getClass().getName(), e);

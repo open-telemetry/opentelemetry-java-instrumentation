@@ -19,9 +19,12 @@ import java.util.function.BiFunction;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.ByteBufFlux;
+import reactor.netty.ByteBufMono;
+import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 
@@ -121,10 +124,12 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static <T extends HttpClient.ResponseReceiver<?>> void onExit(
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Enter HttpClient.ResponseReceiver<?> modifiedReceiver,
-        @Advice.Argument(0) BiFunction receiveFunction,
+        @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
+        @Advice.Argument(0)
+            BiFunction<? super HttpClientResponse, ? super ByteBufFlux, ? extends Publisher<T>>
+                receiveFunction,
         @Advice.Return(readOnly = false) Flux<?> returnValue) {
 
       try {
@@ -157,10 +162,12 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static <T extends HttpClient.ResponseReceiver<?>> void onExit(
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Enter HttpClient.ResponseReceiver<?> modifiedReceiver,
-        @Advice.Argument(0) BiFunction receiveFunction,
+        @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
+        @Advice.Argument(0)
+            BiFunction<? super HttpClientResponse, ? super Connection, ? extends Publisher<T>>
+                receiveFunction,
         @Advice.Return(readOnly = false) Flux<?> returnValue) {
 
       try {
@@ -228,10 +235,12 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static <T extends HttpClient.ResponseReceiver<?>> void onExit(
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Enter HttpClient.ResponseReceiver<?> modifiedReceiver,
-        @Advice.Argument(0) BiFunction receiveFunction,
+        @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
+        @Advice.Argument(0)
+            BiFunction<? super HttpClientResponse, ? super ByteBufMono, ? extends Mono<T>>
+                receiveFunction,
         @Advice.Return(readOnly = false) Mono<?> returnValue) {
 
       try {

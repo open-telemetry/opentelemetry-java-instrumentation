@@ -17,7 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
@@ -79,9 +80,9 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       handlerData = new HandlerData(target.getClass(), method);
 
-      ServerSpanNaming.updateServerSpanName(
+      HttpRouteHolder.updateHttpRoute(
           parentContext,
-          ServerSpanNaming.Source.CONTROLLER,
+          HttpRouteSource.CONTROLLER,
           JaxrsServerSpanNaming.SERVER_SPAN_NAME,
           handlerData);
 

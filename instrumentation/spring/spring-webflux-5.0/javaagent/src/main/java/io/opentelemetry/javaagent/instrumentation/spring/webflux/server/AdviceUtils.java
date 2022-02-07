@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.WebfluxSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ClassNames;
+import io.opentelemetry.instrumentation.api.instrumenter.ClassNames;
 import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;

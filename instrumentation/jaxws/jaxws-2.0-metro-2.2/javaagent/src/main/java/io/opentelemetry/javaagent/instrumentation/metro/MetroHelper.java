@@ -20,7 +20,7 @@ public final class MetroHelper {
 
   private MetroHelper() {}
 
-  public static void start(WSEndpoint endpoint, Packet packet) {
+  public static void start(WSEndpoint<?> endpoint, Packet packet) {
     Context parentContext = Context.current();
 
     MetroRequest request = new MetroRequest(endpoint, packet);

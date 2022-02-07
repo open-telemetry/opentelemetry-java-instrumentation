@@ -6,7 +6,6 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> implements AgentTestTrait {
 
@@ -22,20 +21,13 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
 //  }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "akka.request"
-  }
-
-  @Override
   boolean testCapturedHttpHeaders() {
     false
   }
 
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes
+    []
   }
 }
 

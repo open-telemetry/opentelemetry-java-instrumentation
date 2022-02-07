@@ -398,7 +398,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
           for (int i = 0; i < options.maxRedirects; i++) {
             assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           }
-          trace.hasSpansSatisfyingExactly(assertions.toArray(new Consumer[0]));
+          trace.hasSpansSatisfyingExactly(assertions);
         });
   }
 
@@ -924,9 +924,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
               }
 
-              // Optional
-              // TODO(anuraaga): Move to test knob rather than always treating
-              // as optional
+              // TODO(anuraaga): Move to test knob rather than always treating as optional
               if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_IP)) {
                 if (uri.getHost().equals("192.0.2.1")) {
                   // NB(anuraaga): This branch seems to currently only be exercised on Java 15.
@@ -1098,7 +1096,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   private int doRequestWithExistingTracingHeaders(String method, URI uri) throws Exception {
-    Map<String, String> headers = new HashMap();
+    Map<String, String> headers = new HashMap<>();
     for (String field :
         testing.getOpenTelemetry().getPropagators().getTextMapPropagator().fields()) {
       headers.put(field, "12345789");

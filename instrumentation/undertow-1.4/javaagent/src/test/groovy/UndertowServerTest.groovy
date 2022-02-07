@@ -109,21 +109,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)
     attributes
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "HTTP GET"
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
-      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-      SemanticAttributes.NET_PEER_NAME,
-      SemanticAttributes.NET_TRANSPORT
-    ]
   }
 
   def "test send response"() {

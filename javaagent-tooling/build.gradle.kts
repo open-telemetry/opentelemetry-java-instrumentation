@@ -30,7 +30,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
   implementation("io.opentelemetry:opentelemetry-extension-noop-api")
 
-  // Only the logging exporter is included in our slim distribution so we include it here.
   // Other exporters are in javaagent-exporters
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
 
@@ -38,7 +37,12 @@ dependencies {
   implementation("org.slf4j:slf4j-api")
 
   annotationProcessor("com.google.auto.service:auto-service")
-  compileOnly("com.google.auto.service:auto-service")
+  compileOnly("com.google.auto.service:auto-service-annotations")
+  testCompileOnly("com.google.auto.service:auto-service-annotations")
+
+  // Used by byte-buddy but not brought in as a transitive dependency.
+  compileOnly("com.google.code.findbugs:annotations")
+  testCompileOnly("com.google.code.findbugs:annotations")
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")

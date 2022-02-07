@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
-import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 public class TapestryServerSpanNaming {
 
-  public static final ServerSpanNameSupplier<String> SERVER_SPAN_NAME =
+  public static final HttpRouteGetter<String> SERVER_SPAN_NAME =
       (context, pageName) -> {
         if (pageName == null) {
           return null;

@@ -111,7 +111,7 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
   }
 
   @Override
-  public ConsumerRecord<K, V> set(int index, ConsumerRecord element) {
+  public ConsumerRecord<K, V> set(int index, ConsumerRecord<K, V> element) {
     return delegate.set(index, element);
   }
 

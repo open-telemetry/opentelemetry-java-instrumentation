@@ -63,12 +63,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   }
 
   @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
-      SemanticAttributes.HTTP_SERVER_NAME,
-      SemanticAttributes.NET_PEER_NAME,
-      SemanticAttributes.NET_TRANSPORT
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_SERVER_NAME
     ]
+    super.httpAttributes(endpoint) + extra
   }
 
   // this override is needed because dropwizard reports peer ip as the client ip

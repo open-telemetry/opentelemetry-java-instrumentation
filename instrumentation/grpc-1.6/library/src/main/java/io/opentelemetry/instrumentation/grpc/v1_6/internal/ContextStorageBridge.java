@@ -15,6 +15,9 @@ import java.util.logging.Logger;
  * {@link Context.Storage} override which uses OpenTelemetry context as the backing store. Both gRPC
  * and OpenTelemetry contexts refer to each other to ensure that both OTel context propagation
  * mechanisms and gRPC context propagation mechanisms can be used interchangably.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class ContextStorageBridge extends Context.Storage {
 

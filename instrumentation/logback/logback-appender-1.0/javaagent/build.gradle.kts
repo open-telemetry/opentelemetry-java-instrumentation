@@ -21,8 +21,6 @@ dependencies {
 
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
-  latestDepTestLibrary("ch.qos.logback:logback-classic:1.2.+")
-
   testImplementation("org.awaitility:awaitility")
 }
 

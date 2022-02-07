@@ -15,9 +15,9 @@ import com.sun.xml.ws.api.pipe.helper.AbstractTubeImpl;
 import com.sun.xml.ws.api.server.WSEndpoint;
 
 public class TracingTube extends AbstractFilterTubeImpl {
-  private final WSEndpoint endpoint;
+  private final WSEndpoint<?> endpoint;
 
-  public TracingTube(WSEndpoint endpoint, Tube next) {
+  public TracingTube(WSEndpoint<?> endpoint, Tube next) {
     super(next);
     this.endpoint = endpoint;
   }

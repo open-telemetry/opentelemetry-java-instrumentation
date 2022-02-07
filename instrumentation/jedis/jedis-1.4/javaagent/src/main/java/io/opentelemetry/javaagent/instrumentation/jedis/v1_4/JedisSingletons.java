@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 public final class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
@@ -22,14 +23,16 @@ public final class JedisSingletons {
     DbAttributesExtractor<JedisRequest, Void> attributesExtractor =
         new JedisDbAttributesExtractor();
     SpanNameExtractor<JedisRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
-    JedisNetAttributesExtractor netAttributesExtractor = new JedisNetAttributesExtractor();
+    JedisNetAttributesGetter netAttributesGetter = new JedisNetAttributesGetter();
+    NetClientAttributesExtractor<JedisRequest, Void> netAttributesExtractor =
+        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

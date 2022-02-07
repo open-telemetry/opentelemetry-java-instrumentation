@@ -14,9 +14,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -61,20 +63,22 @@ public final class SpringWebfluxTracingBuilder {
    * SpringWebfluxTracingBuilder}.
    */
   public SpringWebfluxTracing build() {
-    SpringWebfluxHttpAttributesExtractor httpAttributesExtractor =
-        new SpringWebfluxHttpAttributesExtractor(capturedHttpHeaders);
-    SpringWebfluxNetAttributesExtractor netAttributesExtractor =
-        new SpringWebfluxNetAttributesExtractor();
+    SpringWebfluxHttpAttributesGetter httpAttributesGetter =
+        new SpringWebfluxHttpAttributesGetter();
+    SpringWebfluxNetAttributesGetter attributesGetter = new SpringWebfluxNetAttributesGetter();
+    NetClientAttributesExtractor<ClientRequest, ClientResponse> attributesExtractor =
+        NetClientAttributesExtractor.create(attributesGetter);
 
     InstrumenterBuilder<ClientRequest, ClientResponse> builder =
         Instrumenter.<ClientRequest, ClientResponse>builder(
                 openTelemetry,
                 "io.opentelemetry.spring-webflux-5.0",
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+            .addAttributesExtractor(attributesExtractor)
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get());
 

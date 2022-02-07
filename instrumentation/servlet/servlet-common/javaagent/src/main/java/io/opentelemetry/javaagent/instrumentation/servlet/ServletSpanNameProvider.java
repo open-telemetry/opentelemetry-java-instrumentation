@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNameTwoArgSupplier;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteBiGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
 /** Helper class for constructing span name for given servlet/filter mapping and request. */
 public class ServletSpanNameProvider<REQUEST>
-    implements ServerSpanNameTwoArgSupplier<MappingResolver, REQUEST> {
+    implements HttpRouteBiGetter<MappingResolver, REQUEST> {
   private final ServletAccessor<REQUEST, ?> servletAccessor;
 
   public ServletSpanNameProvider(ServletAccessor<REQUEST, ?> servletAccessor) {

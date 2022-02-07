@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
   errorprone("com.google.errorprone:error_prone_core")
+  errorprone(project(":custom-checks"))
 }
 
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
@@ -39,6 +40,10 @@ tasks {
         disable("AutoValueImmutableFields")
         disable("StringSplitter")
         disable("ImmutableMemberCollection")
+
+        // Fully qualified names may be necessary when deprecating a class to avoid
+        // deprecation warning.
+        disable("UnnecessarilyFullyQualified")
 
         // Don't currently use this (to indicate a local variable that's mutated) but could
         // consider for future.

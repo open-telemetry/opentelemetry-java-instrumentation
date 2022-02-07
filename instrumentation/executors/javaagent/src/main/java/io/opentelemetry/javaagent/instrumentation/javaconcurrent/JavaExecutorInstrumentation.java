@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
-import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -39,26 +42,34 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         named("execute").and(takesArgument(0, ForkJoinTask.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
-        named("submit").and(takesArgument(0, Runnable.class)),
+        named("submit")
+            .and(takesArgument(0, Runnable.class))
+            .and(returns(hasSuperType(is(Future.class)))),
         JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
     transformer.applyAdviceToMethod(
-        named("submit").and(takesArgument(0, Callable.class)),
+        named("submit")
+            .and(takesArgument(0, Callable.class))
+            .and(returns(hasSuperType(is(Future.class)))),
         JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
     transformer.applyAdviceToMethod(
         named("submit").and(takesArgument(0, ForkJoinTask.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
-        nameMatches("invoke(Any|All)$").and(takesArgument(0, Collection.class)),
+        namedOneOf("invokeAny", "invokeAll").and(takesArgument(0, Collection.class)),
         JavaExecutorInstrumentation.class.getName()
             + "$SetCallableStateForCallableCollectionAdvice");
     transformer.applyAdviceToMethod(
-        nameMatches("invoke").and(takesArgument(0, ForkJoinTask.class)),
+        named("invoke").and(takesArgument(0, ForkJoinTask.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
-        named("schedule").and(takesArgument(0, Runnable.class)),
+        named("schedule")
+            .and(takesArgument(0, Runnable.class))
+            .and(returns(hasSuperType(is(Future.class)))),
         JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
     transformer.applyAdviceToMethod(
-        named("schedule").and(takesArgument(0, Callable.class)),
+        named("schedule")
+            .and(takesArgument(0, Callable.class))
+            .and(returns(hasSuperType(is(Future.class)))),
         JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
   }
 

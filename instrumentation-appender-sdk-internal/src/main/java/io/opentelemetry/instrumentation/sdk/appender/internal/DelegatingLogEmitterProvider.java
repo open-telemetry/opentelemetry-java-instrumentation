@@ -9,6 +9,10 @@ import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class DelegatingLogEmitterProvider implements LogEmitterProvider {
 
   private final SdkLogEmitterProvider delegate;

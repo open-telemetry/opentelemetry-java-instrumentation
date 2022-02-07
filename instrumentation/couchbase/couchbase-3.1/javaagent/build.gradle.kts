@@ -31,14 +31,11 @@ dependencies {
     )
   )
 
-  library("com.couchbase.client:core-io:2.1.0")
-
-  testLibrary("com.couchbase.client:java-client:3.1.0")
+  library("com.couchbase.client:java-client:3.1.0")
 
   testImplementation("org.testcontainers:couchbase")
 
   latestDepTestLibrary("com.couchbase.client:java-client:3.1.5")
-  latestDepTestLibrary("com.couchbase.client:core-io:2.1.5")
 }
 
 tasks {

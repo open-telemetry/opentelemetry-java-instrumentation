@@ -20,7 +20,7 @@ import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
@@ -49,20 +49,13 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
     return new OpenTelemetryMeterRegistryBuilder(openTelemetry);
   }
 
-  // we need to re-use instrument registries per OpenTelemetry instance so that async instruments
-  // that were created by other OpenTelemetryMeterRegistries can be reused; otherwise the SDK will
-  // start logging errors and async measurements will not be recorded
-  private static final Cache<io.opentelemetry.api.metrics.Meter, AsyncInstrumentRegistry>
-      asyncInstrumentRegistries = Cache.weak();
-
   private final io.opentelemetry.api.metrics.Meter otelMeter;
   private final AsyncInstrumentRegistry asyncInstrumentRegistry;
 
   OpenTelemetryMeterRegistry(Clock clock, io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.otelMeter = otelMeter;
-    this.asyncInstrumentRegistry =
-        asyncInstrumentRegistries.computeIfAbsent(otelMeter, AsyncInstrumentRegistry::new);
+    this.asyncInstrumentRegistry = AsyncInstrumentRegistry.getOrCreate(otelMeter);
     this.config().onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
   }
 

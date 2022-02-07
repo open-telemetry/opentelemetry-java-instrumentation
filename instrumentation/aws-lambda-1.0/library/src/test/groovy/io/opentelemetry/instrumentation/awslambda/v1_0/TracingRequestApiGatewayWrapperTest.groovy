@@ -63,7 +63,7 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
     @Override
     String handleRequest(CustomType input, Context context) {
       if (input.key == "hello") {
-        return "Hello "+input.value
+        return "Hello " + input.value
       }
       throw new IllegalStateException("bad request")
     }

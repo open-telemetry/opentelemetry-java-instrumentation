@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,19 +18,9 @@ import java.util.function.BiConsumer;
 @SuppressWarnings("rawtypes")
 final class TemporaryMetricsView {
 
-  // TODO (trask) remove this once http.route is captured consistently
-  //
-  // this is not enabled by default because it falls back to http.target (which can be high
-  // cardinality) when http.route is not available
-  private static final boolean USE_HTTP_TARGET_FALLBACK =
-      Config.get()
-          .getBoolean("otel.instrumentation.metrics.experimental.use-http-target-fallback", false);
-
   private static final Set<AttributeKey> durationAlwaysInclude = buildDurationAlwaysInclude();
   private static final Set<AttributeKey> durationClientView = buildDurationClientView();
   private static final Set<AttributeKey> durationServerView = buildDurationServerView();
-  private static final Set<AttributeKey> durationServerFallbackView =
-      buildDurationServerFallbackView();
   private static final Set<AttributeKey> activeRequestsView = buildActiveRequestsView();
 
   private static Set<AttributeKey> buildDurationAlwaysInclude() {
@@ -65,19 +54,6 @@ final class TemporaryMetricsView {
     return view;
   }
 
-  private static Set<AttributeKey> buildDurationServerFallbackView() {
-    // We pull identifying attributes according to:
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
-    // With the following caveat:
-    // - we always rely on http.route + http.host in this repository.
-    // - we prefer http.route (which is scrubbed) over http.target (which is not scrubbed).
-    Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
-    view.add(SemanticAttributes.HTTP_SCHEME);
-    view.add(SemanticAttributes.HTTP_HOST);
-    view.add(SemanticAttributes.HTTP_TARGET);
-    return view;
-  }
-
   private static Set<AttributeKey> buildActiveRequestsView() {
     // the list of included metrics is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
@@ -97,21 +73,10 @@ final class TemporaryMetricsView {
     return filtered.build();
   }
 
-  private static <T> boolean containsAttribute(
-      AttributeKey<T> key, Attributes startAttributes, Attributes endAttributes) {
-    return startAttributes.get(key) != null || endAttributes.get(key) != null;
-  }
-
   static Attributes applyServerDurationView(Attributes startAttributes, Attributes endAttributes) {
-    Set<AttributeKey> fullSet = durationServerView;
-    // Use http.target when http.route is not available.
-    if (USE_HTTP_TARGET_FALLBACK
-        && !containsAttribute(SemanticAttributes.HTTP_ROUTE, startAttributes, endAttributes)) {
-      fullSet = durationServerFallbackView;
-    }
     AttributesBuilder filtered = Attributes.builder();
-    applyView(filtered, startAttributes, fullSet);
-    applyView(filtered, endAttributes, fullSet);
+    applyView(filtered, startAttributes, durationServerView);
+    applyView(filtered, endAttributes, durationServerView);
     return filtered.build();
   }
 

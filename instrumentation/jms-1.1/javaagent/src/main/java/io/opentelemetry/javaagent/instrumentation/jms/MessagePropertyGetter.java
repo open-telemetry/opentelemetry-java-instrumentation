@@ -13,6 +13,7 @@ enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
   INSTANCE;
 
   @Override
+  @SuppressWarnings("unchecked")
   public Iterable<String> keys(MessageWithDestination message) {
     try {
       return Collections.list(message.message().getPropertyNames());

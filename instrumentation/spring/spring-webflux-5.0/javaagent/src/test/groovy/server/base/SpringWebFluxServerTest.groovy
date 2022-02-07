@@ -5,10 +5,8 @@
 
 package server.base
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 
@@ -36,21 +34,14 @@ abstract class SpringWebFluxServerTest extends HttpServerTest<ConfigurableApplic
   }
 
   @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
       case NOT_FOUND:
         return "/**"
       default:
-        return super.expectedServerSpanName(endpoint)
+        return super.expectedHttpRoute(endpoint)
     }
   }
 

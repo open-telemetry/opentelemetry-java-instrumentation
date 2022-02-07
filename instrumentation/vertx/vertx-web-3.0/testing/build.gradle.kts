@@ -7,6 +7,9 @@ dependencies {
 
   implementation("io.vertx:vertx-web:3.0.0")
 
+  compileOnly("io.vertx:vertx-codegen:3.0.0")
+  compileOnly("io.vertx:vertx-docgen:3.0.0")
+
   implementation("org.codehaus.groovy:groovy-all")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.spockframework:spock-core")

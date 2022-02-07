@@ -37,6 +37,9 @@ import java.lang.annotation.Target;
  * members, so there is no reason to publish them and we avoid requiring end users to have to depend
  * on the annotations in their own build. See the original <a
  * href="https://github.com/open-telemetry/opentelemetry-java/issues/2897">issue</a> for more info.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.SOURCE)

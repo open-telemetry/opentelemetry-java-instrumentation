@@ -11,7 +11,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-val otelVersion = "1.10.0"
+val otelVersion = "1.10.1"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
@@ -40,6 +40,11 @@ val DEPENDENCY_BOMS = listOf(
 
 val DEPENDENCY_SETS = listOf(
   DependencySet(
+    "com.google.auto.service",
+    "1.0.1",
+    listOf("auto-service", "auto-service-annotations")
+  ),
+  DependencySet(
     "com.google.auto.value",
     "1.9",
     listOf("auto-value", "auto-value-annotations")
@@ -47,7 +52,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "com.google.errorprone",
     "2.10.0",
-    listOf("error_prone_annotations", "error_prone_core")
+    listOf("error_prone_annotations", "error_prone_core", "error_prone_test_helpers")
   ),
   DependencySet(
     "io.prometheus",
@@ -68,7 +73,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "org.mockito",
     "4.2.0",
-    listOf("mockito-core", "mockito-junit-jupiter")
+    listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
   ),
   DependencySet(
     "org.slf4j",
@@ -86,7 +91,7 @@ val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.2.10",
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
-  "com.google.auto.service:auto-service:1.0.1",
+  "uk.org.webcompere:system-stubs-jupiter:2.0.1",
   "com.uber.nullaway:nullaway:0.9.5",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
@@ -102,6 +107,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.proto:opentelemetry-proto:0.11.0-alpha",
   "org.assertj:assertj-core:3.22.0",
   "org.awaitility:awaitility:4.1.1",
+  "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
   "org.objenesis:objenesis:3.2",

@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +48,8 @@ public class RabbitSingletons {
     return Instrumenter.<ChannelAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractors(
-            new RabbitChannelAttributesExtractor(), new RabbitChannelNetAttributesExtractor())
+            new RabbitChannelAttributesExtractor(),
+            NetClientAttributesExtractor.create(new RabbitChannelNetAttributesGetter()))
         .newInstrumenter(
             channelAndMethod ->
                 channelAndMethod.getMethod().equals("Channel.basicPublish") ? PRODUCER : CLIENT);
@@ -56,7 +58,7 @@ public class RabbitSingletons {
   private static Instrumenter<ReceiveRequest, GetResponse> createReceiveInstrumenter() {
     List<AttributesExtractor<ReceiveRequest, GetResponse>> extractors = new ArrayList<>();
     extractors.add(new RabbitReceiveAttributesExtractor());
-    extractors.add(new RabbitReceiveNetAttributesExtractor());
+    extractors.add(NetClientAttributesExtractor.create(new RabbitReceiveNetAttributesGetter()));
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
     }

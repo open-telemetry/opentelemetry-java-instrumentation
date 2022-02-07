@@ -15,7 +15,9 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import okhttp3.Request;
 
 public class KubernetesClientSingletons {
@@ -27,8 +29,7 @@ public class KubernetesClientSingletons {
   private static final ContextPropagators CONTEXT_PROPAGATORS;
 
   static {
-    KubernetesHttpAttributesExtractor httpAttributesExtractor =
-        new KubernetesHttpAttributesExtractor();
+    KubernetesHttpAttributesGetter httpAttributesGetter = new KubernetesHttpAttributesGetter();
     SpanNameExtractor<Request> spanNameExtractor =
         request -> KubernetesRequestDigest.parse(request).toString();
 
@@ -37,9 +38,10 @@ public class KubernetesClientSingletons {
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.kubernetes-client-7.0",
                 spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(new KubernetesNetAttributesExtractor());
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                NetClientAttributesExtractor.create(new KubernetesNetAttributesGetter()));
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       instrumenterBuilder.addAttributesExtractor(new KubernetesExperimentalAttributesExtractor());

@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import play.BuiltInComponents
 import play.Mode
 import play.mvc.Controller
@@ -103,14 +102,6 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes
+    []
   }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "akka.request"
-  }
-
 }

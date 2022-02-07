@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static org.junit.jupiter.api.Assumptions.assumeTrue
-
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 
 abstract class AbstractSpringCloudStreamProducerTest extends InstrumentationSpecification implements WithRabbitProducerConsumerTrait {
   private static final boolean HAS_PRODUCER_SPAN = Boolean.getBoolean("otel.instrumentation.spring-integration.producer.enabled")

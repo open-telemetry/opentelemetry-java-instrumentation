@@ -21,3 +21,7 @@ dependencies {
   library("org.springframework:spring-aop:4.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot:1.1.0.RELEASE")
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
+}

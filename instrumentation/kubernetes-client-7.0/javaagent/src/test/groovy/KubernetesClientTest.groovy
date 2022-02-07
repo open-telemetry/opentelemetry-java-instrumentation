@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class KubernetesClientTest extends AgentInstrumentationSpecification {
@@ -116,7 +115,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
         void onSuccess(String result, int statusCode, Map<String, List<String>> responseHeaders) {
           responseBody.set(result)
           latch.countDown()
-          runInternalSpan("callback")
+          runWithSpan("callback") {}
         }
       })
     }
@@ -157,7 +156,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
         void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
           exception.set(e)
           latch.countDown()
-          runInternalSpan("callback")
+          runWithSpan("callback") {}
         }
       })
     }

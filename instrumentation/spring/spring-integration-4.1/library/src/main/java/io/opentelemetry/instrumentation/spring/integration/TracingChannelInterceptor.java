@@ -186,9 +186,10 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   private static void ensureNativeHeadersAreMutable(MessageHeaderAccessor headerAccessor) {
     Object nativeMap = headerAccessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
     if (nativeMap != null && !(nativeMap instanceof LinkedMultiValueMap)) {
+      @SuppressWarnings("unchecked")
+      Map<String, List<String>> map = (Map<String, List<String>>) nativeMap;
       headerAccessor.setHeader(
-          NativeMessageHeaderAccessor.NATIVE_HEADERS,
-          new LinkedMultiValueMap<>((Map<String, List<String>>) nativeMap));
+          NativeMessageHeaderAccessor.NATIVE_HEADERS, new LinkedMultiValueMap<>(map));
     }
   }
 
@@ -250,6 +251,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
   // unwrap spring aop proxy
   // based on org.springframework.test.util.AopTestUtils#getTargetObject
+  @SuppressWarnings("unchecked")
   public static <T> T unwrapProxy(T candidate) {
     try {
       if (AopUtils.isAopProxy(candidate) && candidate instanceof Advised) {

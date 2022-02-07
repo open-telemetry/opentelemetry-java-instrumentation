@@ -10,12 +10,11 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpResponse;
@@ -64,20 +63,20 @@ public final class ApacheHttpClientTracingBuilder {
    * ApacheHttpClientTracingBuilder}.
    */
   public ApacheHttpClientTracing build() {
-    HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> httpAttributesExtractor =
-        new ApacheHttpClientHttpAttributesExtractor(capturedHttpHeaders);
-    SpanNameExtractor<? super ApacheHttpClientRequest> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
-        new ApacheHttpClientNetAttributesExtractor();
+    ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
+        new ApacheHttpClientHttpAttributesGetter();
+    ApacheHttpClientNetAttributesGetter netAttributesGetter =
+        new ApacheHttpClientNetAttributesGetter();
+
     Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
-                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(spanStatusExtractor)
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             // We manually inject because we need to inject internal requests for redirects.
             .newInstrumenter(SpanKindExtractor.alwaysClient());

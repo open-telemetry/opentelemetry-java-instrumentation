@@ -7,11 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import org.apache.tomcat.util.threads.TaskQueue
+import org.apache.tomcat.util.threads.ThreadPoolExecutor
+
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import org.apache.tomcat.util.threads.TaskQueue
-import org.apache.tomcat.util.threads.ThreadPoolExecutor
 
 class ThreadPoolExecutorTest extends AgentInstrumentationSpecification {
 

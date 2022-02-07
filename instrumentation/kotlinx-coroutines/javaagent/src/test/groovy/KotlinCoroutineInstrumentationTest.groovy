@@ -225,4 +225,87 @@ class KotlinCoroutineInstrumentationTest extends AgentInstrumentationSpecificati
     assert seenItersA.equals(expectedIters)
     assert seenItersB.equals(expectedIters)
   }
+
+  def "kotlin traced mono"() {
+    setup:
+    KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
+
+    when:
+    kotlinTest.tracedMono()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          attributes {
+          }
+        }
+        span("child") {
+          childOf span(0)
+          attributes {
+          }
+        }
+      }
+    }
+
+    where:
+    dispatcher << dispatchersToTest
+  }
+
+  def "kotlin traced mono with context propagation operator"() {
+    setup:
+    KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
+
+    when:
+    kotlinTest.tracedMonoContextPropagationOperator()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          attributes {
+          }
+        }
+        span("child") {
+          childOf span(0)
+          attributes {
+          }
+        }
+      }
+    }
+
+    where:
+    dispatcher << dispatchersToTest
+  }
+
+  def "kotlin traced flux"() {
+    setup:
+    KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
+
+    when:
+    kotlinTest.tracedFlux()
+
+    then:
+    assertTraces(1) {
+      trace(0, 4) {
+        span(0) {
+          name "parent"
+          attributes {
+          }
+        }
+        (0..2).each {
+          span("child_$it") {
+            childOf span(0)
+            attributes {
+            }
+          }
+        }
+      }
+    }
+
+    where:
+    dispatcher << dispatchersToTest
+  }
 }

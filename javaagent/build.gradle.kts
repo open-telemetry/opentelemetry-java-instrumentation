@@ -35,14 +35,8 @@ val exporterLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
-// this configuration collects just exporter libs for slim artifact (also placed in the agent classloader & isolated from the instrumented application)
-val exporterSlimLibs by configurations.creating {
-  isCanBeResolved = true
-  isCanBeConsumed = false
-}
-
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
-listOf(baseJavaagentLibs, javaagentLibs, exporterLibs, exporterSlimLibs).forEach {
+listOf(baseJavaagentLibs, javaagentLibs, exporterLibs).forEach {
   it.run {
     exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
@@ -76,9 +70,6 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
   exporterLibs(project(":javaagent-exporters"))
-
-  exporterSlimLibs("io.opentelemetry:opentelemetry-exporter-otlp")
-  exporterSlimLibs("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
 
   // concurrentlinkedhashmap-lru and weak-lock-free are copied in to the instrumentation-api module
   licenseReportDependencies("com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2")
@@ -150,17 +141,16 @@ tasks {
     archiveFileName.set("exporterLibs-relocated.jar")
   }
 
-  val relocateExporterSlimLibs by registering(ShadowJar::class) {
-    configurations = listOf(exporterSlimLibs)
-
-    archiveFileName.set("exporterSlimLibs-relocated.jar")
-  }
-
   // Includes everything needed for OOTB experience
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    dependsOn(relocateJavaagentLibs, relocateExporterLibs)
+    // without an explicit dependency on jar here, :javaagent:test fails on CI because :javaagent:jar
+    // runs after :javaagent:shadowJar and loses (at least) the manifest entries
+    //
+    // (also, note that we cannot disable the jar task completely, because it is necessary to produce
+    // javadoc and sources artifacts which maven central requires)
+    dependsOn(jar, relocateJavaagentLibs, relocateExporterLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
     isolateClasses(relocateExporterLibs.get().outputs.files)
 
@@ -177,21 +167,6 @@ tasks {
         "Can-Redefine-Classes" to true,
         "Can-Retransform-Classes" to true
       )
-    }
-  }
-
-  // Includes instrumentations plus the OTLP/gRPC exporters
-  val slimShadowJar by registering(ShadowJar::class) {
-    configurations = listOf(bootstrapLibs)
-
-    dependsOn(relocateJavaagentLibs, relocateExporterSlimLibs)
-    isolateClasses(relocateJavaagentLibs.get().outputs.files)
-    isolateClasses(relocateExporterSlimLibs.get().outputs.files)
-
-    archiveClassifier.set("slim")
-
-    manifest {
-      attributes(shadowJar.get().manifest.attributes)
     }
   }
 
@@ -220,12 +195,8 @@ tasks {
     add("baseJar", baseJavaagentJar)
   }
 
-  jar {
-    enabled = false
-  }
-
   assemble {
-    dependsOn(shadowJar, slimShadowJar, baseJavaagentJar)
+    dependsOn(shadowJar, baseJavaagentJar)
   }
 
   withType<Test>().configureEach {
@@ -246,15 +217,6 @@ tasks {
 
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
-  }
-
-  publishing {
-    publications {
-      named<MavenPublication>("maven") {
-        artifact(slimShadowJar)
-        project.shadow.component(this)
-      }
-    }
   }
 }
 

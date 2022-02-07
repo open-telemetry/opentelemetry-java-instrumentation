@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.restlet.v2_0
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.restlet.Component
 import org.restlet.Context
 import org.restlet.Request
@@ -163,13 +162,6 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
       }
     })
 
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
-      SemanticAttributes.NET_TRANSPORT
-    ]
   }
 
   @Override

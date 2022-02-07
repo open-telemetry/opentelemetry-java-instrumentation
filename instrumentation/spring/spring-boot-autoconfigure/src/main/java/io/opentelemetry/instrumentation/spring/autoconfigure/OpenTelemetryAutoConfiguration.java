@@ -11,7 +11,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
@@ -33,29 +33,36 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(SamplerProperties.class)
 public class OpenTelemetryAutoConfiguration {
 
-  @Bean
-  @ConditionalOnMissingBean
-  public OpenTelemetry openTelemetry(
-      SamplerProperties samplerProperties,
-      ObjectProvider<ContextPropagators> propagatorsProvider,
-      ObjectProvider<List<SpanExporter>> spanExportersProvider) {
-    SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
+  @Configuration
+  @ConditionalOnMissingBean(OpenTelemetry.class)
+  public static class OpenTelemetryBeanConfig {
 
-    spanExportersProvider.getIfAvailable(Collections::emptyList).stream()
-        // todo SimpleSpanProcessor...is that really what we want here?
-        .map(SimpleSpanProcessor::create)
-        .forEach(tracerProviderBuilder::addSpanProcessor);
+    @Bean
+    @ConditionalOnMissingBean
+    public SdkTracerProvider sdkTracerProvider(
+        SamplerProperties samplerProperties,
+        ObjectProvider<List<SpanExporter>> spanExportersProvider) {
+      SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 
-    SdkTracerProvider tracerProvider =
-        tracerProviderBuilder
-            .setSampler(Sampler.traceIdRatioBased(samplerProperties.getProbability()))
-            .build();
+      spanExportersProvider.getIfAvailable(Collections::emptyList).stream()
+          .map(spanExporter -> BatchSpanProcessor.builder(spanExporter).build())
+          .forEach(tracerProviderBuilder::addSpanProcessor);
 
-    ContextPropagators propagators = propagatorsProvider.getIfAvailable(ContextPropagators::noop);
+      return tracerProviderBuilder
+          .setSampler(Sampler.traceIdRatioBased(samplerProperties.getProbability()))
+          .build();
+    }
 
-    return OpenTelemetrySdk.builder()
-        .setTracerProvider(tracerProvider)
-        .setPropagators(propagators)
-        .build();
+    @Bean
+    public OpenTelemetry openTelemetry(
+        ObjectProvider<ContextPropagators> propagatorsProvider, SdkTracerProvider tracerProvider) {
+
+      ContextPropagators propagators = propagatorsProvider.getIfAvailable(ContextPropagators::noop);
+
+      return OpenTelemetrySdk.builder()
+          .setTracerProvider(tracerProvider)
+          .setPropagators(propagators)
+          .build();
+    }
   }
 }

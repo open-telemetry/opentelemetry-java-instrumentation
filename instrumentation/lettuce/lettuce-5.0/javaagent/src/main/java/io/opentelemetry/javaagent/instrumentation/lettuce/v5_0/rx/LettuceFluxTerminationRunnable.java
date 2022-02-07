@@ -54,7 +54,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
   }
 
   @Override
-  public void accept(Signal signal) {
+  public void accept(Signal<?> signal) {
     if (SignalType.ON_COMPLETE.equals(signal.getType())
         || SignalType.ON_ERROR.equals(signal.getType())) {
       finishSpan(/* isCommandCancelled= */ false, signal.getThrowable());

@@ -39,6 +39,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class OpenTelemetryConnection implements Connection {
 
   private final Connection delegate;
@@ -130,7 +134,7 @@ public class OpenTelemetryConnection implements Connection {
       throws SQLException {
     CallableStatement statement =
         delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
-    return new OpenTelemetryCallableStatement(statement, dbInfo, sql);
+    return new OpenTelemetryCallableStatement<>(statement, dbInfo, sql);
   }
 
   @Override

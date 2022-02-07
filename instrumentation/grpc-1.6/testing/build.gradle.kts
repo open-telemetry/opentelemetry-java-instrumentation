@@ -21,3 +21,13 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.spockframework:spock-core")
 }
+
+tasks {
+  compileJava {
+    with(options) {
+      // We generate stubs using an old version of protobuf to test old versions of gRPC,
+      // where this lint error triggers.
+      compilerArgs.add("-Xlint:-cast")
+    }
+  }
+}

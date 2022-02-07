@@ -12,8 +12,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,18 +81,19 @@ public final class GrpcTracingBuilder {
                         new GrpcRpcAttributesExtractor(), new GrpcAttributesExtractor())
                     .addAttributesExtractors(additionalExtractors));
 
-    GrpcNetClientAttributesExtractor netClientAttributesExtractor =
-        new GrpcNetClientAttributesExtractor();
+    GrpcNetClientAttributesGetter netClientAttributesGetter = new GrpcNetClientAttributesGetter();
 
-    clientInstrumenterBuilder.addAttributesExtractor(netClientAttributesExtractor);
-    serverInstrumenterBuilder.addAttributesExtractor(new GrpcNetServerAttributesExtractor());
+    clientInstrumenterBuilder.addAttributesExtractor(
+        NetClientAttributesExtractor.create(netClientAttributesGetter));
+    serverInstrumenterBuilder.addAttributesExtractor(
+        NetServerAttributesExtractor.create(new GrpcNetServerAttributesGetter()));
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
           AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
     } else {
       clientInstrumenterBuilder.addAttributesExtractor(
-          PeerServiceAttributesExtractor.create(netClientAttributesExtractor));
+          PeerServiceAttributesExtractor.create(netClientAttributesGetter));
     }
 
     return new GrpcTracing(

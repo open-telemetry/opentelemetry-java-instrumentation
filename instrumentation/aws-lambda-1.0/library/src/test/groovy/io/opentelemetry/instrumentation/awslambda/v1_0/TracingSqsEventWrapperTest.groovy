@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
@@ -16,6 +13,9 @@ import io.opentelemetry.semconv.resource.attributes.ResourceAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 class TracingSqsEventWrapperTest extends LibraryInstrumentationSpecification {
 

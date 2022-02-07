@@ -195,7 +195,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     given:
     def uniqueChannelHashes = new HashSet<>()
     def httpClient = createHttpClient()
-      .doOnConnect({ uniqueChannelHashes.add(it.channelHash())})
+      .doOnConnect({ uniqueChannelHashes.add(it.channelHash()) })
     def uri = "http://localhost:${server.httpPort()}/success"
 
     def count = 100

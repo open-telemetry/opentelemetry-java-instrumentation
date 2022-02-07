@@ -8,8 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsPathUtil.normalizePath;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNameSupplier;
-import io.opentelemetry.instrumentation.api.server.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.apache.cxf.jaxrs.model.ClassResourceInfo;
@@ -17,7 +18,7 @@ import org.apache.cxf.jaxrs.model.OperationResourceInfo;
 import org.apache.cxf.jaxrs.model.URITemplate;
 import org.apache.cxf.message.Exchange;
 
-public final class CxfSpanName implements ServerSpanNameSupplier<String> {
+public final class CxfSpanName implements HttpRouteGetter<String> {
 
   public static final CxfSpanName INSTANCE = new CxfSpanName();
 
@@ -25,8 +26,7 @@ public final class CxfSpanName implements ServerSpanNameSupplier<String> {
     Context context = Context.current();
     String jaxrsName = calculateJaxrsName(context, exchange);
 
-    ServerSpanNaming.updateServerSpanName(
-        context, ServerSpanNaming.Source.NESTED_CONTROLLER, this, jaxrsName);
+    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.NESTED_CONTROLLER, this, jaxrsName);
 
     return JaxrsContextPath.init(context, jaxrsName);
   }

@@ -63,7 +63,7 @@ public class FieldMapperTest {
     MethodHandleFactory methodHandleFactory = new MethodHandleFactory();
     Serializer serializer = mock(Serializer.class);
     FieldMapper underTest = new FieldMapper(serializer, methodHandleFactory);
-    Map<String, Collection<WriteRequest>> items = new HashMap();
+    Map<String, Collection<WriteRequest>> items = new HashMap<>();
     BatchWriteItemRequest sdkRequest = BatchWriteItemRequest.builder().requestItems(items).build();
     given(serializer.serialize(items)).willReturn("firstTable,secondTable");
 
@@ -83,7 +83,7 @@ public class FieldMapperTest {
     MethodHandleFactory methodHandleFactory = new MethodHandleFactory();
     Serializer serializer = mock(Serializer.class);
     FieldMapper underTest = new FieldMapper(serializer, methodHandleFactory);
-    Map<String, Collection<ItemCollectionMetrics>> items = new HashMap();
+    Map<String, Collection<ItemCollectionMetrics>> items = new HashMap<>();
     BatchWriteItemResponse sdkResponse =
         BatchWriteItemResponse.builder()
             .consumedCapacity(ConsumedCapacity.builder().build())

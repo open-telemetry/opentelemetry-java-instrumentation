@@ -40,9 +40,10 @@ class KtorHttpServerTest extends HttpServerTest<ApplicationEngine> implements Li
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    def route = expectedHttpRoute(endpoint)
-    return route == null ? "HTTP GET" : route
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    attributes
   }
 
   @Override
@@ -53,13 +54,5 @@ class KtorHttpServerTest extends HttpServerTest<ApplicationEngine> implements Li
       default:
         return super.expectedHttpRoute(endpoint)
     }
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
-      SemanticAttributes.NET_PEER_NAME,
-      SemanticAttributes.NET_TRANSPORT
-    ]
   }
 }

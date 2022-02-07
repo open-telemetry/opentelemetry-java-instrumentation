@@ -7,6 +7,7 @@
 
   <constant name="struts.enable.SlashesInActionNames" value="true"/>
   <constant name="struts.patternMatcher" value="namedVariable"/>
+  <constant name="struts.matcher.appendNamedParameters" value="true"/>
 
   <package name="basic-struts2" extends="struts-default">
     <global-results>

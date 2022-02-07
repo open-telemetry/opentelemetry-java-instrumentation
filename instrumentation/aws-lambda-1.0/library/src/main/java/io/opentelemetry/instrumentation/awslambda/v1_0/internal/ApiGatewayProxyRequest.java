@@ -17,6 +17,10 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public abstract class ApiGatewayProxyRequest {
 
   // TODO(anuraaga): We should create a RequestFactory type of class instead of evaluating this

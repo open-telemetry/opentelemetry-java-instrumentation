@@ -12,10 +12,12 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpNetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpNetAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 import okhttp3.Request;
@@ -58,18 +60,18 @@ public final class OkHttpTracingBuilder {
 
   /** Returns a new {@link OkHttpTracing} with the settings of this {@link OkHttpTracingBuilder}. */
   public OkHttpTracing build() {
-    OkHttpAttributesExtractor httpAttributesExtractor =
-        new OkHttpAttributesExtractor(capturedHttpHeaders);
-    OkHttpNetAttributesExtractor netAttributesExtractor = new OkHttpNetAttributesExtractor();
+    OkHttpAttributesGetter httpAttributesGetter = new OkHttpAttributesGetter();
+    OkHttpNetAttributesGetter attributesGetter = new OkHttpNetAttributesGetter();
 
     Instrumenter<Request, Response> instrumenter =
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())
             .newInstrumenter(alwaysClient());

@@ -34,7 +34,7 @@ dependencies {
   testImplementation("org.testcontainers:elasticsearch")
   testLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.4.0")
 
-  latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.+")
+  latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.+") // see elasticsearch-rest-7.0 module
 }
 
 tasks {

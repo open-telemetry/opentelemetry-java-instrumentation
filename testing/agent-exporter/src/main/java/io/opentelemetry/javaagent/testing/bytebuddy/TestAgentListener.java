@@ -164,6 +164,8 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   /** Used to signal that a transformation was intentionally aborted and is not an error. */
   private static class AbortTransformationException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
     public AbortTransformationException(String message) {
       super(message);
     }

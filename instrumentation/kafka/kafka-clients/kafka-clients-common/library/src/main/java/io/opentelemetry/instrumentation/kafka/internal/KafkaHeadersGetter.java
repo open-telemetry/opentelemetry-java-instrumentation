@@ -13,6 +13,10 @@ import javax.annotation.Nullable;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class KafkaHeadersGetter implements TextMapGetter<Headers> {
   @Override
   public Iterable<String> keys(Headers carrier) {

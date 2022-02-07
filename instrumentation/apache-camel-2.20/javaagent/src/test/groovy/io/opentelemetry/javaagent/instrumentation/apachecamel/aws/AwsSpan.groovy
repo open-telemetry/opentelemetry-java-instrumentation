@@ -24,8 +24,9 @@ class AwsSpan {
       attributes {
         "aws.agent" "java-aws-sdk"
         "aws.endpoint" String
-        "aws.operation" spanName.substring(3)
-        "aws.service" "Amazon S3"
+        "rpc.system" "aws-api"
+        "rpc.method" spanName.substring(3)
+        "rpc.service" "Amazon S3"
         "aws.bucket.name" bucketName
         "http.flavor" "1.1"
         "http.method" method
@@ -50,8 +51,9 @@ class AwsSpan {
       attributes {
         "aws.agent" "java-aws-sdk"
         "aws.endpoint" String
-        "aws.operation" spanName.substring(4)
-        "aws.service" "AmazonSQS"
+        "rpc.system" "aws-api"
+        "rpc.method" spanName.substring(4)
+        "rpc.service" "AmazonSQS"
         "aws.queue.name" { it == null || it == queueName }
         "aws.queue.url" { it == null || it == queueUrl }
         "http.flavor" "1.1"
@@ -78,8 +80,9 @@ class AwsSpan {
       attributes {
         "aws.agent" "java-aws-sdk"
         "aws.endpoint" String
-        "aws.operation" spanName.substring(4)
-        "aws.service" "AmazonSNS"
+        "rpc.system" "aws-api"
+        "rpc.method" spanName.substring(4)
+        "rpc.service" "AmazonSNS"
         "http.flavor" "1.1"
         "http.method" "POST"
         "http.status_code" 200

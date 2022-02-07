@@ -34,12 +34,6 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    def route = expectedHttpRoute(endpoint)
-    return route == null ? "HTTP GET" : route
-  }
-
-  @Override
   boolean testCapturedRequestParameters() {
     true
   }
@@ -75,12 +69,11 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   }
 
   @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
-      SemanticAttributes.HTTP_SERVER_NAME,
-      SemanticAttributes.NET_PEER_NAME,
-      SemanticAttributes.NET_TRANSPORT
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_SERVER_NAME
     ]
+    super.httpAttributes(endpoint) + extra
   }
 
   @Override

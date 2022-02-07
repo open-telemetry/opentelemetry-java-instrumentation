@@ -164,8 +164,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "DynamoDb"
-            "aws.operation" "CreateTable"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
+            "$SemanticAttributes.RPC_METHOD" "CreateTable"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
@@ -199,8 +200,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "DynamoDb"
-            "aws.operation" "Query"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
+            "$SemanticAttributes.RPC_METHOD" "Query"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
@@ -233,8 +235,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "$service"
-            "aws.operation" "${operation}"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "$service"
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
@@ -345,8 +348,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
-            "aws.service" "$service"
-            "aws.operation" "${operation}"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "$service"
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             if (service == "S3") {
@@ -434,8 +438,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
-            "aws.service" "$service"
-            "aws.operation" "${operation}"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "$service"
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             if (service == "S3") {
@@ -532,8 +537,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_URL" "${server.httpUri()}/somebucket/somekey"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "S3"
-            "aws.operation" "GetObject"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "S3"
+            "$SemanticAttributes.RPC_METHOD" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
           }

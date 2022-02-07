@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.javaagent.bootstrap.DefineClassContext;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
+import io.opentelemetry.javaagent.bootstrap.InjectedHelperClassDetector;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +50,10 @@ public class HelperInjector implements Transformer {
 
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(HelperInjector.class);
+
+  static {
+    InjectedHelperClassDetector.internalSetHelperClassDetector(HelperInjector::isInjectedClass);
+  }
 
   // Need this because we can't put null into the injectedClassLoaders map.
   private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
@@ -195,6 +201,7 @@ public class HelperInjector implements Transformer {
         cl -> {
           try {
             logger.debug("Injecting classes onto classloader {} -> {}", cl, helperClassNames);
+            DefineClassContext.helpersInjected();
 
             Map<String, byte[]> classnameToBytes = getHelperMap();
             Map<String, Class<?>> classes;

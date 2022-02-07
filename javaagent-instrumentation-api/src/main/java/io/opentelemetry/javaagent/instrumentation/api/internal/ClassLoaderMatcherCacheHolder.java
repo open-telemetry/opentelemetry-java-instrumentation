@@ -15,6 +15,9 @@ import java.util.List;
  * A holder of all ClassLoaderMatcher caches. We store them in the bootstrap classloader so that
  * instrumentation can invalidate the ClassLoaderMatcher for a particular ClassLoader, e.g. when
  * {@link java.net.URLClassLoader#addURL(URL)} is called.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class ClassLoaderMatcherCacheHolder {
 

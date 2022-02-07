@@ -11,7 +11,6 @@ import spock.lang.Unroll
 import java.util.logging.Level
 import java.util.logging.Logger
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.assertj.core.api.Assertions.assertThat
 import static org.awaitility.Awaitility.await
 
@@ -23,7 +22,7 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
   def "test method=#testMethod with exception=#exception and parent=#parent"() {
     when:
     if (parent) {
-      runUnderTrace("parent") {
+      runWithSpan("parent") {
         if (exception) {
           logger.log(Level."${testMethod.toUpperCase()}", "xyz", new IllegalStateException("hello"))
         } else {

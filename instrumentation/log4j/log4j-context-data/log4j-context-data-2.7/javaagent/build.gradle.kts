@@ -18,5 +18,5 @@ dependencies {
 
   testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2-common:testing"))
 
-  latestDepTestLibrary("org.apache.logging.log4j:log4j-core:2.15.0")
+  latestDepTestLibrary("org.apache.logging.log4j:log4j-core:2.15.+") // see log4j-context-data-2.16
 }

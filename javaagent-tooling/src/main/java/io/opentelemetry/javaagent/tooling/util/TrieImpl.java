@@ -92,6 +92,7 @@ final class TrieImpl<V> implements Trie<V> {
     Node<V> build() {
       int size = children.size();
       char[] chars = new char[size];
+      @SuppressWarnings({"unchecked", "rawtypes"})
       Node<V>[] nodes = new Node[size];
 
       int i = 0;
