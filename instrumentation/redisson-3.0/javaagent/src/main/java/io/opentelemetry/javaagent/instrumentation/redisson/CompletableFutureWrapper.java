@@ -16,6 +16,7 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
   private CompletableFutureWrapper(CompletableFuture<T> delegate, Context context) {
     this.whenComplete(
         (result, error) -> {
+          EndOperationListener<T> endOperationListener = this.endOperationListener;
           if (endOperationListener != null) {
             endOperationListener.accept(result, error);
           }
