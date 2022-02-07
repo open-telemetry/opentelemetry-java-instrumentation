@@ -8,6 +8,9 @@ dependencies {
   api("com.amazonaws:aws-lambda-java-core:1.0.0")
   api("com.amazonaws:aws-lambda-java-events:2.2.1")
 
+  api("org.junit-pioneer:junit-pioneer")
+  api("org.mockito:mockito-junit-jupiter")
+
   implementation("com.google.guava:guava")
 
   implementation("org.codehaus.groovy:groovy-all")
