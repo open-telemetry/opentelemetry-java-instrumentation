@@ -26,8 +26,10 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of {@link InstrumentationTestRunner} that initializes OpenTelemetry SDK and
@@ -86,6 +88,16 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   @Override
   public void afterTestClass() {}
+
+  @Override
+  public void forceFlush() {
+    List<CompletableResultCode> results =
+        Arrays.asList(
+            openTelemetry.getSdkTracerProvider().forceFlush(),
+            openTelemetry.getSdkMeterProvider().forceFlush(),
+            openTelemetry.getSdkLogEmitterProvider().forceFlush());
+    CompletableResultCode.ofAll(results).join(10, TimeUnit.SECONDS);
+  }
 
   @Override
   public void clearAllExportedData() {

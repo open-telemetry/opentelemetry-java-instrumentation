@@ -14,6 +14,7 @@ import java.time.Duration;
 
 @AutoService(SdkMeterProviderConfigurer.class)
 public class AgentTestingMetricsCustomizer implements SdkMeterProviderConfigurer {
+
   @Override
   public void configure(
       SdkMeterProviderBuilder sdkMeterProviderBuilder, ConfigProperties configProperties) {

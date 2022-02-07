@@ -34,6 +34,7 @@ class JedisClientTest extends AgentInstrumentationSpecification {
 
   def setup() {
     jedis.flushAll()
+    testRunner().forceFlush()
     clearExportedData()
   }
 
