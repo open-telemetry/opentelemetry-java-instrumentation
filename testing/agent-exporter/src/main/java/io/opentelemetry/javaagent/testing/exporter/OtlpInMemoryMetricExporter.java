@@ -5,21 +5,23 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import io.grpc.Server;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.stub.StreamObserver;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.linecorp.armeria.common.grpc.protocol.ArmeriaStatusException;
+import com.linecorp.armeria.server.Server;
+import com.linecorp.armeria.server.ServiceRequestContext;
+import com.linecorp.armeria.server.grpc.protocol.AbstractUnaryGrpcService;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
-import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -48,22 +50,17 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
   private final MetricExporter delegate;
 
   OtlpInMemoryMetricExporter() {
-    String serverName = InProcessServerBuilder.generateName();
-
     collector =
-        InProcessServerBuilder.forName(serverName)
-            .directExecutor()
-            .addService(new InMemoryOtlpCollector())
+        Server.builder()
+            .service(
+                "/opentelemetry.proto.collector.metrics.v1.MetricsService/Export",
+                new InMemoryOtlpCollector())
             .build();
-    try {
-      collector.start();
-    } catch (IOException e) {
-      throw new AssertionError("Could not start in-process collector.", e);
-    }
+    collector.start().join();
 
     delegate =
         OtlpGrpcMetricExporter.builder()
-            .setChannel(InProcessChannelBuilder.forName(serverName).directExecutor().build())
+            .setEndpoint("http://localhost:" + collector.activeLocalPort())
             .build();
   }
 
@@ -79,19 +76,22 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   @Override
   public CompletableResultCode shutdown() {
-    collector.shutdown();
+    collector.stop();
     return delegate.shutdown();
   }
 
-  private class InMemoryOtlpCollector extends MetricsServiceGrpc.MetricsServiceImplBase {
+  private final class InMemoryOtlpCollector extends AbstractUnaryGrpcService {
+
+    private final byte[] response = ExportMetricsServiceResponse.getDefaultInstance().toByteArray();
 
     @Override
-    public void export(
-        ExportMetricsServiceRequest request,
-        StreamObserver<ExportMetricsServiceResponse> responseObserver) {
-      collectedRequests.add(request);
-      responseObserver.onNext(ExportMetricsServiceResponse.getDefaultInstance());
-      responseObserver.onCompleted();
+    protected CompletionStage<byte[]> handleMessage(ServiceRequestContext ctx, byte[] message) {
+      try {
+        collectedRequests.add(ExportMetricsServiceRequest.parseFrom(message));
+      } catch (InvalidProtocolBufferException e) {
+        throw new ArmeriaStatusException(3, e.getMessage(), e);
+      }
+      return completedFuture(response);
     }
   }
 }

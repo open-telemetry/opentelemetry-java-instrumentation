@@ -18,9 +18,7 @@ dependencies {
   compileOnly(project(":instrumentation-appender-api-internal"))
   compileOnly(project(":instrumentation-appender-sdk-internal"))
 
-  implementation("io.grpc:grpc-core:1.33.1")
-  implementation("io.grpc:grpc-protobuf:1.33.1")
-  implementation("io.grpc:grpc-stub:1.33.1")
+  implementation("com.linecorp.armeria:armeria-grpc-protocol:1.14.0")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-logs")

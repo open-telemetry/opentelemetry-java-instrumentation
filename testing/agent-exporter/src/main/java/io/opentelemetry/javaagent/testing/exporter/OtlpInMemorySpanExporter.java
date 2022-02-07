@@ -5,21 +5,23 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import io.grpc.Server;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.stub.StreamObserver;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.linecorp.armeria.common.grpc.protocol.ArmeriaStatusException;
+import com.linecorp.armeria.server.Server;
+import com.linecorp.armeria.server.ServiceRequestContext;
+import com.linecorp.armeria.server.grpc.protocol.AbstractUnaryGrpcService;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
-import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -48,22 +50,17 @@ class OtlpInMemorySpanExporter implements SpanExporter {
   private final SpanExporter delegate;
 
   OtlpInMemorySpanExporter() {
-    String serverName = InProcessServerBuilder.generateName();
-
     collector =
-        InProcessServerBuilder.forName(serverName)
-            .directExecutor()
-            .addService(new InMemoryOtlpCollector())
+        Server.builder()
+            .service(
+                "/opentelemetry.proto.collector.trace.v1.TraceService/Export",
+                new InMemoryOtlpCollector())
             .build();
-    try {
-      collector.start();
-    } catch (IOException e) {
-      throw new AssertionError("Could not start in-process collector.", e);
-    }
+    collector.start().join();
 
     delegate =
         OtlpGrpcSpanExporter.builder()
-            .setChannel(InProcessChannelBuilder.forName(serverName).directExecutor().build())
+            .setEndpoint("http://localhost:" + collector.activeLocalPort())
             .build();
   }
 
@@ -82,19 +79,22 @@ class OtlpInMemorySpanExporter implements SpanExporter {
 
   @Override
   public CompletableResultCode shutdown() {
-    collector.shutdown();
+    collector.stop();
     return delegate.shutdown();
   }
 
-  private class InMemoryOtlpCollector extends TraceServiceGrpc.TraceServiceImplBase {
+  private final class InMemoryOtlpCollector extends AbstractUnaryGrpcService {
+
+    private final byte[] response = ExportTraceServiceResponse.getDefaultInstance().toByteArray();
 
     @Override
-    public void export(
-        ExportTraceServiceRequest request,
-        StreamObserver<ExportTraceServiceResponse> responseObserver) {
-      collectedRequests.add(request);
-      responseObserver.onNext(ExportTraceServiceResponse.getDefaultInstance());
-      responseObserver.onCompleted();
+    protected CompletionStage<byte[]> handleMessage(ServiceRequestContext ctx, byte[] message) {
+      try {
+        collectedRequests.add(ExportTraceServiceRequest.parseFrom(message));
+      } catch (InvalidProtocolBufferException e) {
+        throw new ArmeriaStatusException(3, e.getMessage(), e);
+      }
+      return completedFuture(response);
     }
   }
 }
