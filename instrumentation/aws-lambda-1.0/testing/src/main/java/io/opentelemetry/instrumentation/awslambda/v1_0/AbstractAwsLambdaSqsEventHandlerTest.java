@@ -12,12 +12,8 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -92,13 +88,17 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                             entry(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                             entry(
                                                 SemanticAttributes.MESSAGING_OPERATION, "process")))
-                            .hasLinks(
-                                LinkData.create(
-                                    SpanContext.createFromRemoteParent(
-                                        "5759e988bd862e3fe1be46a994272793",
-                                        "53995c3f42cd8ad8",
-                                        TraceFlags.getSampled(),
-                                        TraceState.getDefault())))));
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link -> {
+                                              assertThat(link.getSpanContext().getTraceId())
+                                                  .isEqualTo("5759e988bd862e3fe1be46a994272793");
+                                              assertThat(link.getSpanContext().getSpanId())
+                                                  .isEqualTo("53995c3f42cd8ad8");
+                                            }))));
   }
 
   @Test
@@ -141,13 +141,17 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                             entry(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                             entry(
                                                 SemanticAttributes.MESSAGING_OPERATION, "process")))
-                            .hasLinks(
-                                LinkData.create(
-                                    SpanContext.createFromRemoteParent(
-                                        "5759e988bd862e3fe1be46a994272793",
-                                        "53995c3f42cd8ad8",
-                                        TraceFlags.getSampled(),
-                                        TraceState.getDefault())))));
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link -> {
+                                              assertThat(link.getSpanContext().getTraceId())
+                                                  .isEqualTo("5759e988bd862e3fe1be46a994272793");
+                                              assertThat(link.getSpanContext().getSpanId())
+                                                  .isEqualTo("53995c3f42cd8ad8");
+                                            }))));
   }
 
   // Constructor private in early versions.
