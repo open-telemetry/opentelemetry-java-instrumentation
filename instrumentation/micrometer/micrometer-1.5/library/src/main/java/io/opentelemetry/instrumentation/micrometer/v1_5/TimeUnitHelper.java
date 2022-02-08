@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
@@ -18,7 +19,9 @@ final class TimeUnitHelper {
     if (value == null) {
       return TimeUnit.MILLISECONDS;
     }
-    switch (value) {
+    // short names are UCUM names
+    // long names are just TimeUnit values lowercased
+    switch (value.toLowerCase(Locale.ROOT)) {
       case "ns":
       case "nanoseconds":
         return TimeUnit.NANOSECONDS;
