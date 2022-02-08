@@ -86,7 +86,13 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       DistributionStatisticConfig distributionStatisticConfig,
       PauseDetector pauseDetector) {
     OpenTelemetryTimer timer =
-        new OpenTelemetryTimer(id, clock, distributionStatisticConfig, pauseDetector, otelMeter);
+        new OpenTelemetryTimer(
+            id,
+            clock,
+            distributionStatisticConfig,
+            pauseDetector,
+            otelMeter,
+            asyncInstrumentRegistry);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
@@ -98,7 +104,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig, double scale) {
     OpenTelemetryDistributionSummary distributionSummary =
         new OpenTelemetryDistributionSummary(
-            id, clock, distributionStatisticConfig, scale, otelMeter);
+            id, clock, distributionStatisticConfig, scale, otelMeter, asyncInstrumentRegistry);
     if (distributionSummary.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(distributionSummary, this);
     }
