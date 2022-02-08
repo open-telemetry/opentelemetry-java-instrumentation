@@ -69,10 +69,10 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
         asyncInstrumentRegistry.buildGauge(
             statisticInstrumentName(id, Statistic.MAX),
             description(id),
-            "ms",
+            getUnitString(baseTimeUnit),
             attributes,
             max,
-            m -> m.poll(TimeUnit.MILLISECONDS));
+            m -> m.poll(baseTimeUnit));
   }
 
   boolean isUsingMicrometerHistograms() {

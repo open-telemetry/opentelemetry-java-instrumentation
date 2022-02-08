@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.TimeUnit;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ public abstract class AbstractTimerSecondsTest {
   }
 
   @Test
-  void testTimerWithBaseUnitSeconds() {
+  void testTimerWithBaseUnitSeconds() throws InterruptedException {
     // given
     Timer timer =
         Timer.builder("testTimerSeconds")
@@ -61,13 +62,34 @@ public abstract class AbstractTimerSecondsTest {
                                         .hasCount(3)
                                         .attributes()
                                         .containsOnly(attributeEntry("tag", "value")))));
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testTimerSeconds.max",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test timer")
+                            .hasUnit("s")
+                            .hasDoubleGauge()
+                            .points()
+                            .anySatisfy(
+                                point ->
+                                    assertThat(point)
+                                        .hasValue(12.345)
+                                        .attributes()
+                                        .containsEntry("tag", "value"))));
     testing().clearData();
 
     // when
     Metrics.globalRegistry.remove(timer);
     timer.record(12, TimeUnit.SECONDS);
+    Thread.sleep(10); // give time for any inflight metric export to be received
+    testing().clearData();
 
     // then
+    Thread.sleep(100); // interval of the test metrics exporter
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -79,5 +101,8 @@ public abstract class AbstractTimerSecondsTest {
                             .hasDoubleHistogram()
                             .points()
                             .noneSatisfy(point -> assertThat(point).hasSum(35.345).hasCount(4))));
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME, "testTimerMax.max", AbstractIterableAssert::isEmpty);
   }
 }
