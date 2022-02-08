@@ -37,7 +37,7 @@ final class ReactorNettyHttpClientAttributesGetter
     if (hostAddress instanceof InetSocketAddress) {
       InetSocketAddress inetHostAddress = (InetSocketAddress) hostAddress;
       return (request.isSecure() ? "https://" : "http://")
-          + inetHostAddress.getHostName()
+          + inetHostAddress.getHostString()
           + ":"
           + inetHostAddress.getPort()
           + (uri.startsWith("/") ? "" : "/")

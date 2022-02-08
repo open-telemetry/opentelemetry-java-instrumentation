@@ -20,7 +20,8 @@ public class RabbitChannelNetAttributesGetter
   @Nullable
   @Override
   public String peerName(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
-    return channelAndMethod.getChannel().getConnection().getAddress().getHostName();
+    // not using InetAddress.getHostName() since that can trigger reverse name lookup
+    return null;
   }
 
   @Nullable
