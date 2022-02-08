@@ -91,11 +91,11 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   @Override
   public void clearAllExportedData() {
-    // Flush any pending exports before clearing.
+    // Finish any pending trace or log exports before resetting. There is no such thing as
+    // "finishing" metrics so we don't flush it here.
     List<CompletableResultCode> results =
         Arrays.asList(
             openTelemetry.getSdkTracerProvider().forceFlush(),
-            openTelemetry.getSdkMeterProvider().forceFlush(),
             openTelemetry.getSdkLogEmitterProvider().forceFlush());
     CompletableResultCode.ofAll(results).join(10, TimeUnit.SECONDS);
 
