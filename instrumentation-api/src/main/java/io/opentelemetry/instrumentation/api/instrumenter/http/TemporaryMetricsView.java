@@ -36,8 +36,10 @@ final class TemporaryMetricsView {
   private static Set<AttributeKey> buildDurationClientView() {
     // We pull identifying attributes according to:
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attribute-alternatives
+    // We only pull net.peer.name and net.peer.port because http.url has too high cardinality
     Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
-    view.add(SemanticAttributes.HTTP_URL);
+    view.add(SemanticAttributes.NET_PEER_NAME);
+    view.add(SemanticAttributes.NET_PEER_PORT);
     return view;
   }
 
@@ -93,30 +95,9 @@ final class TemporaryMetricsView {
         (BiConsumer<AttributeKey, Object>)
             (key, value) -> {
               if (view.contains(key)) {
-                // For now, we filter query parameters out of URLs in metrics.
-                if (SemanticAttributes.HTTP_URL.equals(key)
-                    || SemanticAttributes.HTTP_TARGET.equals(key)) {
-                  filtered.put(key, removeQueryParamFromUrlOrTarget(value.toString()));
-                } else {
-                  filtered.put(key, value);
-                }
+                filtered.put(key, value);
               }
             });
-  }
-
-  // Attempt to handle cleaning URLs like http://myServer;jsessionId=1 or targets like
-  // /my/path?queryParam=2
-  private static String removeQueryParamFromUrlOrTarget(String urlOrTarget) {
-    // Note: Maybe not the most robust, but purely to limit cardinality.
-    int idx = -1;
-    for (int i = 0; i < urlOrTarget.length(); ++i) {
-      char ch = urlOrTarget.charAt(i);
-      if (ch == '?' || ch == ';') {
-        idx = i;
-        break;
-      }
-    }
-    return idx == -1 ? urlOrTarget : urlOrTarget.substring(0, idx);
   }
 
   private TemporaryMetricsView() {}
