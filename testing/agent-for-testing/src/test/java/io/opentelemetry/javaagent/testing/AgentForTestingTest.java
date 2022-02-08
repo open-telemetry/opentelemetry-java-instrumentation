@@ -5,33 +5,29 @@
 
 package io.opentelemetry.javaagent.testing;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
-import io.opentelemetry.sdk.trace.data.SpanData;
-import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class AgentForTestingTest {
 
-  @BeforeEach
-  void reset() {
-    AgentTestingExporterAccess.reset();
-  }
+  @RegisterExtension
+  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void empty() {
-    assertEquals(0, AgentTestingExporterAccess.getExportedSpans().size());
+    assertThat(AgentTestingExporterAccess.getExportedSpans()).isEmpty();
   }
 
   @Test
   void exportAndRetrieve() {
-    GlobalOpenTelemetry.getTracer("test").spanBuilder("test").startSpan().end();
+    testing.getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan().end();
 
-    List<SpanData> spans = AgentTestingExporterAccess.getExportedSpans();
-    assertEquals(1, spans.size());
-    assertEquals("test", spans.get(0).getName());
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test")));
   }
 }
