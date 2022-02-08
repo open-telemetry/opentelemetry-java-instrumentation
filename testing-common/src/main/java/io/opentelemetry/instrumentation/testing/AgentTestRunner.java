@@ -64,12 +64,8 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public void forceFlush() {
-    AgentTestingExporterAccess.forceFlush();
-  }
-
-  @Override
   public void clearAllExportedData() {
+    AgentTestingExporterAccess.forceFlush();
     AgentTestingExporterAccess.reset();
   }
 

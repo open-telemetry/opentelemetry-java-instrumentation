@@ -43,8 +43,6 @@ public abstract class InstrumentationTestRunner {
 
   public abstract void afterTestClass();
 
-  public abstract void forceFlush();
-
   public abstract void clearAllExportedData();
 
   public abstract OpenTelemetry getOpenTelemetry();

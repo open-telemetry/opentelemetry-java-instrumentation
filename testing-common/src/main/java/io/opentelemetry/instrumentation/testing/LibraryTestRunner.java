@@ -90,17 +90,15 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   public void afterTestClass() {}
 
   @Override
-  public void forceFlush() {
+  public void clearAllExportedData() {
+    // Flush any pending exports before clearing.
     List<CompletableResultCode> results =
         Arrays.asList(
             openTelemetry.getSdkTracerProvider().forceFlush(),
             openTelemetry.getSdkMeterProvider().forceFlush(),
             openTelemetry.getSdkLogEmitterProvider().forceFlush());
     CompletableResultCode.ofAll(results).join(10, TimeUnit.SECONDS);
-  }
 
-  @Override
-  public void clearAllExportedData() {
     testSpanExporter.reset();
     testMetricExporter.reset();
     forceFlushCalled = false;
