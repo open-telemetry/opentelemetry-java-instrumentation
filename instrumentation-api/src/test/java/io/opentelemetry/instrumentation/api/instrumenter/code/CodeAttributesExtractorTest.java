@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,12 +57,14 @@ class CodeAttributesExtractorTest {
     request.put("filePath", "/tmp/TestClass.java");
     request.put("lineNo", "42");
 
+    Context context = Context.root();
+
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    underTest.onStart(startAttributes, request);
+    underTest.onStart(startAttributes, context, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, request, null, null);
+    underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
     assertThat(startAttributes.build())
@@ -78,7 +81,7 @@ class CodeAttributesExtractorTest {
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Collections.emptyMap());
+    underTest.onStart(attributes, Context.root(), Collections.emptyMap());
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();

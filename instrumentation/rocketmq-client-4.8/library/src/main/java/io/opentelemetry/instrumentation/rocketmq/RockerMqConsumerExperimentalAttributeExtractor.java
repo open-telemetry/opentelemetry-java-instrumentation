@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -23,7 +24,7 @@ class RockerMqConsumerExperimentalAttributeExtractor
       AttributeKey.stringKey("messaging.rocketmq.broker_address");
 
   @Override
-  public void onStart(AttributesBuilder attributes, MessageExt msg) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, MessageExt msg) {
     set(attributes, MESSAGING_ROCKETMQ_TAGS, msg.getTags());
     set(attributes, MESSAGING_ROCKETMQ_QUEUE_ID, (long) msg.getQueueId());
     set(attributes, MESSAGING_ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());
@@ -42,6 +43,7 @@ class RockerMqConsumerExperimentalAttributeExtractor
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       MessageExt consumeMessageContext,
       @Nullable Void unused,
       @Nullable Throwable error) {}

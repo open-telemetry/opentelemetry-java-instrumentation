@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
  *
  * <p>Usually the route is not accessible when the request processing starts; and needs to be set
  * later, after the instrumented operation starts. This class provides several static methods that
- * allow the isntrumentation author to provide the matching HTTP route to the instrumentation when
+ * allow the instrumentation author to provide the matching HTTP route to the instrumentation when
  * it is discovered.
  */
 public final class HttpRouteHolder {
@@ -52,7 +52,7 @@ public final class HttpRouteHolder {
    * <p>If there is a server span in the context, and the context has been customized with a {@link
    * HttpRouteHolder}, then this method will update the route using the provided {@code httpRoute}
    * if and only if the last {@link HttpRouteSource} to update the route using this method has
-   * strictly lower priority than the provided {@link HttpRouteSource}, and the pased value is
+   * strictly lower priority than the provided {@link HttpRouteSource}, and the passed value is
    * non-null.
    *
    * <p>If there is a server span in the context, and the context has NOT been customized with a
@@ -111,7 +111,9 @@ public final class HttpRouteHolder {
     if (httpRouteHolder == null) {
       String httpRoute = httpRouteGetter.get(context, arg1, arg2);
       if (httpRoute != null && !httpRoute.isEmpty()) {
-        updateSpanData(serverSpan, httpRoute);
+        // update both span name and attribute, since there's no HttpRouteHolder in the context
+        serverSpan.updateName(httpRoute);
+        serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, httpRoute);
       }
       return;
     }
@@ -124,18 +126,15 @@ public final class HttpRouteHolder {
       if (route != null
           && !route.isEmpty()
           && (!onlyIfBetterRoute || httpRouteHolder.isBetterRoute(route))) {
-        updateSpanData(serverSpan, route);
+
+        // update just the span name - the attribute will be picked up by the
+        // HttpServerAttributesExtractor at the end of request processing
+        serverSpan.updateName(route);
+
         httpRouteHolder.updatedBySourceOrder = source.order;
         httpRouteHolder.route = route;
       }
     }
-  }
-
-  // TODO: instead of calling setAttribute() consider storing the route in context end retrieving it
-  // in the AttributesExtractor
-  private static void updateSpanData(Span serverSpan, String route) {
-    serverSpan.updateName(route);
-    serverSpan.setAttribute(SemanticAttributes.HTTP_ROUTE, route);
   }
 
   // This is used when setting route from a servlet filter to pick the most descriptive (longest)
@@ -147,11 +146,11 @@ public final class HttpRouteHolder {
   }
 
   /**
-   * Returns the {@code http.route} attribute value that's stored in the passed {@code context}, or
-   * null if it was not set before.
+   * Returns the {@code http.route} attribute value that's stored in the {@code context}, or null if
+   * it was not set before.
    */
   @Nullable
-  public static String getRoute(Context context) {
+  static String getRoute(Context context) {
     HttpRouteHolder httpRouteHolder = context.get(CONTEXT_KEY);
     return httpRouteHolder == null ? null : httpRouteHolder.route;
   }

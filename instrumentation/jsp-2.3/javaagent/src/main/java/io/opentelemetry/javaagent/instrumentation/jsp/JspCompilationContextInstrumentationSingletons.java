@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -46,11 +47,14 @@ public class JspCompilationContextInstrumentationSingletons {
 
     @Override
     public void onStart(
-        AttributesBuilder attributes, JspCompilationContext jspCompilationContext) {}
+        AttributesBuilder attributes,
+        Context parentContext,
+        JspCompilationContext jspCompilationContext) {}
 
     @Override
     public void onEnd(
         AttributesBuilder attributes,
+        Context context,
         JspCompilationContext jspCompilationContext,
         @Nullable Void unused,
         @Nullable Throwable error) {

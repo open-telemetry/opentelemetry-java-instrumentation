@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -109,7 +110,7 @@ class HttpClientAttributesExtractorTest {
                 singletonList("Custom-Request-Header"), singletonList("Custom-Response-Header")));
 
     AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, request);
+    extractor.onStart(attributes, Context.root(), request);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
@@ -119,7 +120,7 @@ class HttpClientAttributesExtractorTest {
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")));
 
-    extractor.onEnd(attributes, request, response, null);
+    extractor.onEnd(attributes, Context.root(), request, response, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
@@ -151,10 +152,10 @@ class HttpClientAttributesExtractorTest {
             new TestHttpClientAttributesGetter(), CapturedHttpHeaders.empty());
 
     AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, request);
+    extractor.onStart(attributes, Context.root(), request);
     assertThat(attributes.build()).isEmpty();
 
-    extractor.onEnd(attributes, request, response, null);
+    extractor.onEnd(attributes, Context.root(), request, response, null);
     assertThat(attributes.build()).isEmpty();
   }
 }

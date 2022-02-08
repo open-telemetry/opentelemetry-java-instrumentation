@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -22,7 +23,8 @@ class AttributesExtractorTest {
       implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    public void onStart(AttributesBuilder attributes, Map<String, String> request) {
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
       set(attributes, AttributeKey.stringKey("animal"), request.get("animal"));
       set(attributes, AttributeKey.stringKey("country"), request.get("country"));
     }
@@ -30,6 +32,7 @@ class AttributesExtractorTest {
     @Override
     public void onEnd(
         AttributesBuilder attributes,
+        Context context,
         Map<String, String> request,
         @Nullable Map<String, String> response,
         @Nullable Throwable error) {
@@ -54,9 +57,11 @@ class AttributesExtractorTest {
     Exception error = new RuntimeException();
 
     AttributesBuilder attributesBuilder = Attributes.builder();
-    extractor.onStart(attributesBuilder, request);
-    extractor.onEnd(attributesBuilder, request, response, null);
-    extractor.onEnd(attributesBuilder, request, null, error);
+    Context context = Context.root();
+
+    extractor.onStart(attributesBuilder, context, request);
+    extractor.onEnd(attributesBuilder, context, request, response, null);
+    extractor.onEnd(attributesBuilder, context, request, null, error);
 
     assertThat(attributesBuilder.build())
         .containsOnly(

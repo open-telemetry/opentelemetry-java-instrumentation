@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
@@ -34,7 +35,8 @@ public final class KafkaConsumerExperimentalAttributesExtractor
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, ConsumerRecord<?, ?> consumerRecord) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, ConsumerRecord<?, ?> consumerRecord) {
     set(attributes, KAFKA_OFFSET, consumerRecord.offset());
 
     // don't record a duration if the message was sent from an old Kafka client
@@ -52,6 +54,7 @@ public final class KafkaConsumerExperimentalAttributesExtractor
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       ConsumerRecord<?, ?> consumerRecord,
       @Nullable Void unused,
       @Nullable Throwable error) {}

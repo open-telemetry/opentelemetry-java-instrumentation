@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -23,11 +24,15 @@ class TwilioExperimentalAttributesExtractor implements AttributesExtractor<Strin
       LoggerFactory.getLogger(TwilioExperimentalAttributesExtractor.class);
 
   @Override
-  public void onStart(AttributesBuilder attributes, String s) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, String s) {}
 
   @Override
   public void onEnd(
-      AttributesBuilder attributes, String s, @Nullable Object result, @Nullable Throwable error) {
+      AttributesBuilder attributes,
+      Context context,
+      String s,
+      @Nullable Object result,
+      @Nullable Throwable error) {
     if (result == null) {
       return;
     }
