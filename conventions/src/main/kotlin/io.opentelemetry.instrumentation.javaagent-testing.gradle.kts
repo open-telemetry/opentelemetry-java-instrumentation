@@ -88,7 +88,12 @@ class JavaagentTestArgumentsProvider(
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO"
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO",
+
+    // suppress test infrastructure logs
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.com.linecorp.armeria=OFF",
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.okhttp3=OFF",
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.netty=OFF",
   )
 }
 

@@ -9,26 +9,27 @@ import java.util.List;
 
 public class AgentTestingExporterFactory {
 
-  static final OtlpInMemorySpanExporter spanExporter = new OtlpInMemorySpanExporter();
-  static final OtlpInMemoryMetricExporter metricExporter = new OtlpInMemoryMetricExporter();
-  static final OtlpInMemoryLogExporter logExporter = new OtlpInMemoryLogExporter();
+  static final OtlpInMemoryCollector collector = new OtlpInMemoryCollector();
+
+  static final OtlpInMemorySpanExporter spanExporter = new OtlpInMemorySpanExporter(collector);
+  static final OtlpInMemoryMetricExporter metricExporter =
+      new OtlpInMemoryMetricExporter(collector);
+  static final OtlpInMemoryLogExporter logExporter = new OtlpInMemoryLogExporter(collector);
 
   public static List<byte[]> getSpanExportRequests() {
-    return spanExporter.getCollectedExportRequests();
+    return collector.getTraceExportRequests();
   }
 
   public static List<byte[]> getMetricExportRequests() {
-    return metricExporter.getCollectedExportRequests();
+    return collector.getMetricsExportRequests();
   }
 
   public static List<byte[]> getLogExportRequests() {
-    return logExporter.getCollectedExportRequests();
+    return collector.getLogsExportRequests();
   }
 
   public static void reset() {
-    spanExporter.reset();
-    metricExporter.reset();
-    logExporter.reset();
+    collector.reset();
   }
 
   public static boolean forceFlushCalled() {

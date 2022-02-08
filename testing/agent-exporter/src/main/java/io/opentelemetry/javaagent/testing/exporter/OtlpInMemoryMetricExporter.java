@@ -5,23 +5,14 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import static java.util.concurrent.CompletableFuture.completedFuture;
-
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.linecorp.armeria.common.grpc.protocol.ArmeriaStatusException;
-import com.linecorp.armeria.server.Server;
-import com.linecorp.armeria.server.ServiceRequestContext;
-import com.linecorp.armeria.server.grpc.protocol.AbstractUnaryGrpcService;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -46,22 +37,15 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
     collectedRequests.clear();
   }
 
-  private final Server collector;
+  private final OtlpInMemoryCollector collector;
   private final MetricExporter delegate;
 
-  OtlpInMemoryMetricExporter() {
-    collector =
-        Server.builder()
-            .service(
-                "/opentelemetry.proto.collector.metrics.v1.MetricsService/Export",
-                new InMemoryOtlpCollector())
-            .build();
-    collector.start().join();
+  OtlpInMemoryMetricExporter(OtlpInMemoryCollector collector) {
+    this.collector = collector;
 
-    delegate =
-        OtlpGrpcMetricExporter.builder()
-            .setEndpoint("http://localhost:" + collector.activeLocalPort())
-            .build();
+    collector.start();
+
+    delegate = OtlpGrpcMetricExporter.builder().setEndpoint(collector.getEndpoint()).build();
   }
 
   @Override
@@ -78,20 +62,5 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
   public CompletableResultCode shutdown() {
     collector.stop();
     return delegate.shutdown();
-  }
-
-  private final class InMemoryOtlpCollector extends AbstractUnaryGrpcService {
-
-    private final byte[] response = ExportMetricsServiceResponse.getDefaultInstance().toByteArray();
-
-    @Override
-    protected CompletionStage<byte[]> handleMessage(ServiceRequestContext ctx, byte[] message) {
-      try {
-        collectedRequests.add(ExportMetricsServiceRequest.parseFrom(message));
-      } catch (InvalidProtocolBufferException e) {
-        throw new ArmeriaStatusException(3, e.getMessage(), e);
-      }
-      return completedFuture(response);
-    }
   }
 }
