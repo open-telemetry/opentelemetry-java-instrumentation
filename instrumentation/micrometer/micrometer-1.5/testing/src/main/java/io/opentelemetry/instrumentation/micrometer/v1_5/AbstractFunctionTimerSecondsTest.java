@@ -16,28 +16,26 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractFunctionTimerTest {
+public abstract class AbstractFunctionTimerSecondsTest {
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
   protected abstract InstrumentationExtension testing();
 
   final TestTimer timerObj = new TestTimer();
-  final TestTimer anotherTimerObj = new TestTimer();
 
   @BeforeEach
   void cleanupMeters() {
     timerObj.reset();
-    anotherTimerObj.reset();
     Metrics.globalRegistry.forEachMeter(Metrics.globalRegistry::remove);
   }
 
   @Test
-  void testFunctionTimer() throws InterruptedException {
+  void testFunctionCounterWithBaseUnitSeconds() throws InterruptedException {
     // given
     FunctionTimer functionTimer =
         FunctionTimer.builder(
-                "testFunctionTimer",
+                "testFunctionTimerSeconds",
                 timerObj,
                 TestTimer::getCount,
                 TestTimer::getTotalTimeNanos,
@@ -53,7 +51,7 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionTimer.count",
+            "testFunctionTimerSeconds.count",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -72,19 +70,19 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionTimer.total_time",
+            "testFunctionTimerSeconds.total_time",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test function timer")
-                            .hasUnit("ms")
+                            .hasUnit("s")
                             .hasDoubleSum()
                             .points()
                             .satisfiesExactly(
                                 point ->
                                     assertThat(point)
-                                        .hasValue(42_000)
+                                        .hasValue(42)
                                         .attributes()
                                         .containsOnly(attributeEntry("tag", "value")))));
 
@@ -97,90 +95,13 @@ public abstract class AbstractFunctionTimerTest {
     Thread.sleep(100); // interval of the test metrics exporter
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "testFunctionTimer.count", AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "testFunctionTimer.total_time", AbstractIterableAssert::isEmpty);
-  }
-
-  @Test
-  void testNanoPrecision() {
-    // given
-    FunctionTimer.builder(
-            "testNanoFunctionTimer",
-            timerObj,
-            TestTimer::getCount,
-            TestTimer::getTotalTimeNanos,
-            TimeUnit.NANOSECONDS)
-        .register(Metrics.globalRegistry);
-
-    // when
-    timerObj.add(1_234_000, TimeUnit.NANOSECONDS);
-
-    // then
+            INSTRUMENTATION_NAME,
+            "testFunctionTimerSeconds.count",
+            AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testNanoFunctionTimer.total_time",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasDoubleSum()
-                            .points()
-                            .satisfiesExactly(
-                                point -> assertThat(point).hasValue(1.234).attributes())));
-  }
-
-  @Test
-  void functionTimersWithSameNameAndDifferentTags() {
-    // given
-    FunctionTimer.builder(
-            "testFunctionTimerWithTags",
-            timerObj,
-            TestTimer::getCount,
-            TestTimer::getTotalTimeNanos,
-            TimeUnit.NANOSECONDS)
-        .tags("tag", "1")
-        .register(Metrics.globalRegistry);
-
-    FunctionTimer.builder(
-            "testFunctionTimerWithTags",
-            anotherTimerObj,
-            TestTimer::getCount,
-            TestTimer::getTotalTimeNanos,
-            TimeUnit.NANOSECONDS)
-        .tags("tag", "2")
-        .register(Metrics.globalRegistry);
-
-    // when
-    timerObj.add(12, TimeUnit.SECONDS);
-    anotherTimerObj.add(42, TimeUnit.SECONDS);
-
-    // then
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testFunctionTimerWithTags.total_time",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasDoubleSum()
-                            .points()
-                            .anySatisfy(
-                                point ->
-                                    assertThat(point)
-                                        .hasValue(12_000)
-                                        .attributes()
-                                        .containsOnly(attributeEntry("tag", "1")))
-                            .anySatisfy(
-                                point ->
-                                    assertThat(point)
-                                        .hasValue(42_000)
-                                        .attributes()
-                                        .containsOnly(attributeEntry("tag", "2")))));
+            "testFunctionTimerSeconds.total_time",
+            AbstractIterableAssert::isEmpty);
   }
 }

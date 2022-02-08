@@ -129,7 +129,13 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       ToDoubleFunction<T> totalTimeFunction,
       TimeUnit totalTimeFunctionUnit) {
     return new OpenTelemetryFunctionTimer<>(
-        id, obj, countFunction, totalTimeFunction, totalTimeFunctionUnit, asyncInstrumentRegistry);
+        id,
+        obj,
+        countFunction,
+        totalTimeFunction,
+        totalTimeFunctionUnit,
+        getBaseTimeUnit(),
+        asyncInstrumentRegistry);
   }
 
   @Override
