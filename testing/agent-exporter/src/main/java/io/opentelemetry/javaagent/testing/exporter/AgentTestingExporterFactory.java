@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import io.opentelemetry.sdk.common.CompletableResultCode;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class AgentTestingExporterFactory {
 
@@ -26,15 +23,6 @@ public class AgentTestingExporterFactory {
 
   public static List<byte[]> getLogExportRequests() {
     return logExporter.getCollectedExportRequests();
-  }
-
-  public static void forceFlush() {
-    // TODO(anuraaga): Flush metrics too.
-    List<CompletableResultCode> results =
-        Arrays.asList(
-            AgentTestingTracingCustomizer.spanProcessor.forceFlush(),
-            AgentTestingLogsCustomizer.logProcessor.forceFlush());
-    CompletableResultCode.ofAll(results).join(10, TimeUnit.SECONDS);
   }
 
   public static void reset() {

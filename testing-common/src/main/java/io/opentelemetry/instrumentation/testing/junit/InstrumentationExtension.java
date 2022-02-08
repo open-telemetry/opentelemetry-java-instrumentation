@@ -108,6 +108,7 @@ public abstract class InstrumentationExtension
   }
 
   @SafeVarargs
+  @SuppressWarnings("varargs")
   public final void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
     testRunner.waitAndAssertTraces(assertions);
   }

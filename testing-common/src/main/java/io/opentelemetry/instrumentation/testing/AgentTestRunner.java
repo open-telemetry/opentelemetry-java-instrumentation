@@ -10,12 +10,14 @@ import ch.qos.logback.classic.Logger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
+import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -65,7 +67,7 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
 
   @Override
   public void clearAllExportedData() {
-    AgentTestingExporterAccess.forceFlush();
+    OpenTelemetrySdkAccess.forceFlush(10, TimeUnit.SECONDS);
     AgentTestingExporterAccess.reset();
   }
 

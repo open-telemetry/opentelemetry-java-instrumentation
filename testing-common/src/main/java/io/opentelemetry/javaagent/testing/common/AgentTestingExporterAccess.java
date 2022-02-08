@@ -84,7 +84,6 @@ public final class AgentTestingExporterAccess {
   private static final MethodHandle getSpanExportRequests;
   private static final MethodHandle getMetricExportRequests;
   private static final MethodHandle getLogExportRequests;
-  private static final MethodHandle forceFlush;
   private static final MethodHandle reset;
   private static final MethodHandle forceFlushCalled;
 
@@ -109,9 +108,6 @@ public final class AgentTestingExporterAccess {
               agentTestingExporterFactoryClass,
               "getLogExportRequests",
               MethodType.methodType(List.class));
-      forceFlush =
-          lookup.findStatic(
-              agentTestingExporterFactoryClass, "forceFlush", MethodType.methodType(void.class));
       reset =
           lookup.findStatic(
               agentTestingExporterFactoryClass, "reset", MethodType.methodType(void.class));
@@ -122,14 +118,6 @@ public final class AgentTestingExporterAccess {
               MethodType.methodType(boolean.class));
     } catch (Exception e) {
       throw new AssertionError("Error accessing fields with reflection.", e);
-    }
-  }
-
-  public static void forceFlush() {
-    try {
-      forceFlush.invokeExact();
-    } catch (Throwable t) {
-      throw new AssertionError("Could not invoke forceFlush", t);
     }
   }
 

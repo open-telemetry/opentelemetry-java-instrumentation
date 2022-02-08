@@ -40,6 +40,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-metrics-testing")
   api("io.opentelemetry:opentelemetry-sdk-logs")
   api(project(":instrumentation-api"))
+  implementation(project(":javaagent-instrumentation-api"))
 
   api("org.assertj:assertj-core")
 
