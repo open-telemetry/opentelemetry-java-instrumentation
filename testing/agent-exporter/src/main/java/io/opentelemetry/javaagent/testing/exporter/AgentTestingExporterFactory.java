@@ -32,6 +32,6 @@ public class AgentTestingExporterFactory {
   }
 
   public static boolean forceFlushCalled() {
-    return AgentTestingTracingCustomizer.spanProcessor.forceFlushCalled;
+    return AgentTestingCustomizer.spanProcessor.forceFlushCalled;
   }
 }
