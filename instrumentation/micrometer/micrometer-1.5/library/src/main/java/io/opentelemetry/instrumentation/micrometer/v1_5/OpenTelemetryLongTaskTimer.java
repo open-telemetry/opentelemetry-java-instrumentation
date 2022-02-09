@@ -8,12 +8,14 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.getUnitString;
 
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.internal.DefaultLongTaskTimer;
+import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
@@ -23,8 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements RemovableMeter {
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
-
+  private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfig distributionStatisticConfig;
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
@@ -36,16 +37,19 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
   OpenTelemetryLongTaskTimer(
       Id id,
       Clock clock,
+      TimeUnit baseTimeUnit,
       DistributionStatisticConfig distributionStatisticConfig,
       Meter otelMeter) {
-    super(id, clock, TimeUnit.MILLISECONDS, distributionStatisticConfig, false);
+    super(id, clock, baseTimeUnit, distributionStatisticConfig, false);
+
+    this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfig = distributionStatisticConfig;
 
     this.otelHistogram =
         otelMeter
             .histogramBuilder(id.getName())
             .setDescription(description(id))
-            .setUnit("ms")
+            .setUnit(getUnitString(baseTimeUnit))
             .build();
     this.otelActiveTasksCounter =
         otelMeter
@@ -101,7 +105,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
       long durationNanos = original.stop();
       if (!removed) {
         otelActiveTasksCounter.add(-1, attributes);
-        double time = durationNanos / NANOS_PER_MS;
+        double time = TimeUtils.nanosToUnit(durationNanos, baseTimeUnit);
         otelHistogram.record(time, attributes);
       }
       return durationNanos;

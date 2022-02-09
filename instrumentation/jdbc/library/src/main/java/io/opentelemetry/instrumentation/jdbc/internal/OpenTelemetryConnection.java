@@ -39,6 +39,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class OpenTelemetryConnection implements Connection {
 
   private final Connection delegate;

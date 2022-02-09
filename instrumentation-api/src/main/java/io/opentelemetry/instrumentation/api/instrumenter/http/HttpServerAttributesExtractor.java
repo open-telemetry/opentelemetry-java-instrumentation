@@ -11,8 +11,8 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHe
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -24,70 +24,75 @@ import javax.annotation.Nullable;
  * return {@code null} from the protected attribute methods, but implement as many as possible for
  * best compliance with the OpenTelemetry specification.
  */
-public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
-    extends HttpCommonAttributesExtractor<REQUEST, RESPONSE> {
+public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
+    extends HttpCommonAttributesExtractor<
+        REQUEST, RESPONSE, HttpServerAttributesGetter<REQUEST, RESPONSE>> {
 
+  /** Creates the HTTP server attributes extractor with default configuration. */
+  public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
+    return create(getter, CapturedHttpHeaders.server(Config.get()));
+  }
+
+  // TODO: there should be a builder for all optional attributes
   /**
    * Creates the HTTP server attributes extractor.
    *
    * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
    *     headers should be captured as span attributes.
    */
-  protected HttpServerAttributesExtractor(CapturedHttpHeaders capturedHttpHeaders) {
-    super(capturedHttpHeaders);
+  public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
+      CapturedHttpHeaders capturedHttpHeaders) {
+    return new HttpServerAttributesExtractor<>(
+        getter, capturedHttpHeaders, HttpRouteHolder::getRoute);
   }
 
-  /** Creates the HTTP server attributes extractor with default configuration. */
-  protected HttpServerAttributesExtractor() {
-    this(CapturedHttpHeaders.server(Config.get()));
+  private final Function<Context, String> httpRouteHolderGetter;
+
+  // visible for tests
+  HttpServerAttributesExtractor(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
+      CapturedHttpHeaders capturedHttpHeaders,
+      Function<Context, String> httpRouteHolderGetter) {
+    super(getter, capturedHttpHeaders);
+    this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
   @Override
-  public final void onStart(AttributesBuilder attributes, REQUEST request) {
-    super.onStart(attributes, request);
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    super.onStart(attributes, parentContext, request);
 
-    set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request));
-    set(attributes, SemanticAttributes.HTTP_SCHEME, scheme(request));
+    set(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request));
+    set(attributes, SemanticAttributes.HTTP_SCHEME, getter.scheme(request));
     set(attributes, SemanticAttributes.HTTP_HOST, host(request));
-    set(attributes, SemanticAttributes.HTTP_TARGET, target(request));
-    set(attributes, SemanticAttributes.HTTP_ROUTE, route(request));
+    set(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
+    set(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
     set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
   @Override
-  public final void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    super.onEnd(attributes, request, response, error);
-    set(attributes, SemanticAttributes.HTTP_SERVER_NAME, serverName(request, response));
+    super.onEnd(attributes, context, request, response, error);
+    set(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request, response));
+    set(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }
-
-  // Attributes that always exist in a request
-
-  @Nullable
-  protected abstract String flavor(REQUEST request);
-
-  @Nullable
-  protected abstract String target(REQUEST request);
 
   @Nullable
   private String host(REQUEST request) {
-    return firstHeaderValue(requestHeader(request, "host"));
+    return firstHeaderValue(getter.requestHeader(request, "host"));
   }
-
-  @Nullable
-  protected abstract String route(REQUEST request);
-
-  @Nullable
-  protected abstract String scheme(REQUEST request);
 
   @Nullable
   private String clientIp(REQUEST request) {
     // try Forwarded
-    String forwarded = firstHeaderValue(requestHeader(request, "forwarded"));
+    String forwarded = firstHeaderValue(getter.requestHeader(request, "forwarded"));
     if (forwarded != null) {
       forwarded = extractForwarded(forwarded);
       if (forwarded != null) {
@@ -96,22 +101,11 @@ public abstract class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try X-Forwarded-For
-    forwarded = firstHeaderValue(requestHeader(request, "x-forwarded-for"));
+    forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-for"));
     if (forwarded != null) {
       return extractForwardedFor(forwarded);
     }
 
     return null;
   }
-
-  // Attributes which are not always available when the request is ready.
-
-  /**
-   * Extracts the {@code http.server_name} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
-   */
-  @Nullable
-  protected abstract String serverName(REQUEST request, @Nullable RESPONSE response);
 }

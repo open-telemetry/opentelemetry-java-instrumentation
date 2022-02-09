@@ -16,6 +16,9 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * A small utility extension that allows deferring executing cleanup code in {@code @Test} methods
  * until the test has finished. All cleanup callbacks added during the test will always be executed
  * after it finishes, no matter the outcome. Inspired by Spock's {@code cleanup:} block.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class AutoCleanupExtension implements AfterEachCallback {
   private final Queue<AutoCloseable> thingsToCleanUp = new ConcurrentLinkedQueue<>();

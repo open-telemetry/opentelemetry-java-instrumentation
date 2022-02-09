@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,15 +42,17 @@ class RpcAttributesExtractorTest {
     request.put("service", "my.Service");
     request.put("method", "Method");
 
+    Context context = Context.root();
+
     TestExtractor extractor = new TestExtractor();
     AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, request);
+    extractor.onStart(attributes, context, request);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.RPC_SYSTEM, "test"),
             entry(SemanticAttributes.RPC_SERVICE, "my.Service"),
             entry(SemanticAttributes.RPC_METHOD, "Method"));
-    extractor.onEnd(attributes, request, null, null);
+    extractor.onEnd(attributes, context, request, null, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.RPC_SYSTEM, "test"),

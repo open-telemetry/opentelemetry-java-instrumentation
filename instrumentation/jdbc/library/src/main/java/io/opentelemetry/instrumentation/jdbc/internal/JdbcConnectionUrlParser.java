@@ -28,6 +28,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Structured as an enum instead of a class hierarchy to allow iterating through the parsers
  * automatically without having to maintain a separate list of parsers.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public enum JdbcConnectionUrlParser {
   GENERIC_URL_LIKE() {

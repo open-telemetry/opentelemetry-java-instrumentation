@@ -47,6 +47,8 @@ class OtlpInMemorySpanExporter implements SpanExporter {
   private final Server collector;
   private final SpanExporter delegate;
 
+  // TODO(anuraaga): https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5314
+  @SuppressWarnings("deprecation")
   OtlpInMemorySpanExporter() {
     String serverName = InProcessServerBuilder.generateName();
 

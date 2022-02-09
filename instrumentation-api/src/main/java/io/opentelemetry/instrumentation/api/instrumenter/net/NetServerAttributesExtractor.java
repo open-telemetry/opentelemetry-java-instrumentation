@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -31,7 +32,7 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     set(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request));
 
     String peerIp = getter.peerIp(request);
@@ -51,6 +52,7 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {}

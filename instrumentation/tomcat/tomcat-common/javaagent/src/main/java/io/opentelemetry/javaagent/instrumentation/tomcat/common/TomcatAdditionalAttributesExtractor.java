@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -27,11 +28,12 @@ public class TomcatAdditionalAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Request request) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, Request request) {}
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       Request request,
       @Nullable Response response,
       @Nullable Throwable error) {

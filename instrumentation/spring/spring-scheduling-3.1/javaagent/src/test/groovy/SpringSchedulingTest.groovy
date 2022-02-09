@@ -25,6 +25,8 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
           name "TriggerTask.run"
           hasNoParent()
           attributes {
+            "code.namespace" "TriggerTask"
+            "code.function" "run"
           }
         }
       }
@@ -46,6 +48,8 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
           name "IntervalTask.run"
           hasNoParent()
           attributes {
+            "code.namespace" "IntervalTask"
+            "code.function" "run"
           }
         }
       }
@@ -67,6 +71,8 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
           nameContains "LambdaTaskConfigurer\$\$Lambda\$"
           hasNoParent()
           attributes {
+            "code.namespace" { it.contains("LambdaTaskConfigurer\$\$Lambda\$") }
+            "code.function" "run"
           }
         }
       }

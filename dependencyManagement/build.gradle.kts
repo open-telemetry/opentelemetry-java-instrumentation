@@ -11,7 +11,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-val otelVersion = "1.10.1"
+val otelVersion = "1.11.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
@@ -52,7 +52,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "com.google.errorprone",
     "2.10.0",
-    listOf("error_prone_annotations", "error_prone_core")
+    listOf("error_prone_annotations", "error_prone_core", "error_prone_test_helpers")
   ),
   DependencySet(
     "io.prometheus",
@@ -73,7 +73,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "org.mockito",
     "4.2.0",
-    listOf("mockito-core", "mockito-junit-jupiter")
+    listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
   ),
   DependencySet(
     "org.slf4j",
@@ -91,6 +91,7 @@ val DEPENDENCIES = listOf(
   "ch.qos.logback:logback-classic:1.2.10",
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
+  "uk.org.webcompere:system-stubs-jupiter:2.0.1",
   "com.uber.nullaway:nullaway:0.9.5",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
@@ -109,6 +110,7 @@ val DEPENDENCIES = listOf(
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
+  "org.junit-pioneer:junit-pioneer:1.5.0",
   "org.objenesis:objenesis:3.2",
   "org.spockframework:spock-core:2.0-groovy-3.0",
   "org.spockframework:spock-junit4:2.0-groovy-3.0",

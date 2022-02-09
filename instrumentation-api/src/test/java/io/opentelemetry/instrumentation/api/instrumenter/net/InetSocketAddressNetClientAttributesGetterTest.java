@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ class InetSocketAddressNetClientAttributesGetterTest {
   void noInetSocketAddress() {
 
     AttributesBuilder attributes = Attributes.builder();
-    extractor.onEnd(attributes, null, null, null);
+    extractor.onEnd(attributes, Context.root(), null, null, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP));
@@ -55,12 +56,14 @@ class InetSocketAddressNetClientAttributesGetterTest {
     InetSocketAddress response = new InetSocketAddress("api.github.com", 456);
     assertThat(request.getAddress().getHostAddress()).isNotNull();
 
+    Context context = Context.root();
+
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, request);
+    extractor.onStart(startAttributes, context, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, request, response, null);
+    extractor.onEnd(endAttributes, context, request, response, null);
 
     // then
     assertThat(startAttributes.build()).isEmpty();
@@ -82,12 +85,14 @@ class InetSocketAddressNetClientAttributesGetterTest {
     InetSocketAddress response = InetSocketAddress.createUnresolved("api.github.com", 456);
     assertThat(request.getAddress()).isNull();
 
+    Context context = Context.root();
+
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, request);
+    extractor.onStart(startAttributes, context, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, request, response, null);
+    extractor.onEnd(endAttributes, context, request, response, null);
 
     // then
     assertThat(startAttributes.build()).isEmpty();

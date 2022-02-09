@@ -9,8 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
@@ -22,6 +20,10 @@ import java.util.List;
 import org.restlet.Request;
 import org.restlet.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class RestletInstrumenterFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.restlet-2.0";
@@ -36,20 +38,15 @@ public class RestletInstrumenterFactory {
       CapturedHttpHeaders capturedHttpHeaders,
       List<AttributesExtractor<Request, Response>> additionalExtractors) {
 
-    HttpServerAttributesExtractor<Request, Response> httpAttributesExtractor =
-        new RestletHttpAttributesExtractor(capturedHttpHeaders);
-    SpanNameExtractor<Request> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<Request, Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
-        NetServerAttributesExtractor.create(new RestletNetAttributesGetter());
+    RestletHttpAttributesGetter httpAttributesGetter = new RestletHttpAttributesGetter();
+    RestletNetAttributesGetter netAttributesGetter = new RestletNetAttributesGetter();
 
     return Instrumenter.<Request, Response>builder(
-            openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-        .setSpanStatusExtractor(spanStatusExtractor)
-        .addAttributesExtractor(httpAttributesExtractor)
-        .addAttributesExtractor(netAttributesExtractor)
+            openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+        .addAttributesExtractor(
+            HttpServerAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+        .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
         .addRequestMetrics(HttpServerMetrics.get())
         .newServerInstrumenter(new RestletHeadersGetter());

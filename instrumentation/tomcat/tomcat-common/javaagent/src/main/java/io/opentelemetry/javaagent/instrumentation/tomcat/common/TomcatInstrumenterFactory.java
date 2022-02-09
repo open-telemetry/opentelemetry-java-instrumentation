@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
@@ -30,23 +28,19 @@ public final class TomcatInstrumenterFactory {
       String instrumentationName,
       ServletAccessor<REQUEST, RESPONSE> accessor,
       TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider) {
-    HttpServerAttributesExtractor<Request, Response> httpAttributesExtractor =
-        new TomcatHttpAttributesExtractor();
-    SpanNameExtractor<Request> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<Request, Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetServerAttributesExtractor<Request, Response> netAttributesExtractor =
-        NetServerAttributesExtractor.create(new TomcatNetAttributesGetter());
+    TomcatHttpAttributesGetter httpAttributesGetter = new TomcatHttpAttributesGetter();
+    TomcatNetAttributesGetter netAttributesGetter = new TomcatNetAttributesGetter();
     AttributesExtractor<Request, Response> additionalAttributeExtractor =
         new TomcatAdditionalAttributesExtractor<>(accessor, servletEntityProvider);
 
     return Instrumenter.<Request, Response>builder(
-            GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
-        .setSpanStatusExtractor(spanStatusExtractor)
+            GlobalOpenTelemetry.get(),
+            instrumentationName,
+            HttpSpanNameExtractor.create(httpAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
-        .addAttributesExtractor(httpAttributesExtractor)
-        .addAttributesExtractor(netAttributesExtractor)
+        .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
+        .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractor(additionalAttributeExtractor)
         .addContextCustomizer(HttpRouteHolder.get())
         .addContextCustomizer(

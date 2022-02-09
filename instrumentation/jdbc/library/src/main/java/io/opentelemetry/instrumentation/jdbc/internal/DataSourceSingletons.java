@@ -12,6 +12,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtr
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 import javax.sql.DataSource;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class DataSourceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 

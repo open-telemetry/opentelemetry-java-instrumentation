@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
@@ -14,32 +15,66 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of {@link io.opentelemetry.api.common.Attributes} for a given request and response.
- * Will be called {@linkplain #onStart(AttributesBuilder, Object) on start} with just the {@link
- * REQUEST} and again {@linkplain #onEnd(AttributesBuilder, Object, Object, Throwable) on end} with
- * both {@link REQUEST} and {@link RESPONSE} to allow populating attributes at each stage of a
- * request's lifecycle. It is best to populate as much as possible in {@link
- * #onStart(AttributesBuilder, Object)} to have it available during sampling.
+ * Will be called {@linkplain #onStart(AttributesBuilder, Context, Object) on start} with just the
+ * {@link REQUEST} and again {@linkplain #onEnd(AttributesBuilder, Context, Object, Object,
+ * Throwable) on end} with both {@link REQUEST} and {@link RESPONSE} to allow populating attributes
+ * at each stage of a request's lifecycle. It is best to populate as much as possible in {@link
+ * #onStart(AttributesBuilder, Context, Object)} to have it available during sampling.
  *
  * @see DbAttributesExtractor
  * @see HttpClientAttributesExtractor
  * @see NetServerAttributesExtractor
  */
 public interface AttributesExtractor<REQUEST, RESPONSE> {
+
+  /**
+   * Extracts attributes from the {@link Context} and the {@link REQUEST} into the {@link
+   * AttributesBuilder} at the beginning of a request.
+   */
+  default void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    onStart(attributes, request);
+  }
+
   /**
    * Extracts attributes from the {@link REQUEST} into the {@link AttributesBuilder} at the
    * beginning of a request.
+   *
+   * @deprecated Use {@link #onStart(AttributesBuilder, Context, Object)} instead.
    */
-  void onStart(AttributesBuilder attributes, REQUEST request);
+  @Deprecated
+  default void onStart(AttributesBuilder attributes, REQUEST request) {
+    throw new UnsupportedOperationException(
+        "This method variant is deprecated and will be removed in the next minor release.");
+  }
+
+  /**
+   * Extracts attributes from the {@link Context}, the {@link REQUEST} and either {@link RESPONSE}
+   * or {@code error} into the {@link AttributesBuilder} at the end of a request.
+   */
+  default void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
+    onEnd(attributes, request, response, error);
+  }
 
   /**
    * Extracts attributes from the {@link REQUEST} and either {@link RESPONSE} or {@code error} into
    * the {@link AttributesBuilder} at the end of a request.
+   *
+   * @deprecated Use {@link #onEnd(AttributesBuilder, Context, Object, Object, Throwable)} instead.
    */
-  void onEnd(
+  @Deprecated
+  default void onEnd(
       AttributesBuilder attributes,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error);
+      @Nullable Throwable error) {
+    throw new UnsupportedOperationException(
+        "This method variant is deprecated and will be removed in the next minor release.");
+  }
 
   /**
    * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code

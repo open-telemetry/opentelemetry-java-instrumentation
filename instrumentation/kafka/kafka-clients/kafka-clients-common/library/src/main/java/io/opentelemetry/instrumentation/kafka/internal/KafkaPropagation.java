@@ -12,6 +12,10 @@ import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.record.RecordBatch;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class KafkaPropagation {
 
   private static final KafkaHeadersSetter SETTER = KafkaHeadersSetter.INSTANCE;

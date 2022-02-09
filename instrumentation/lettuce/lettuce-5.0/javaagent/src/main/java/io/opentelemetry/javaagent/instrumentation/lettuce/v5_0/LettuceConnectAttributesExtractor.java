@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -14,7 +15,7 @@ import javax.annotation.Nullable;
 final class LettuceConnectAttributesExtractor implements AttributesExtractor<RedisURI, Void> {
 
   @Override
-  public void onStart(AttributesBuilder attributes, RedisURI redisUri) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
     attributes.put(SemanticAttributes.DB_SYSTEM, SemanticAttributes.DbSystemValues.REDIS);
 
     int database = redisUri.getDatabase();
@@ -25,5 +26,9 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
 
   @Override
   public void onEnd(
-      AttributesBuilder attributes, RedisURI redisUri, Void unused, @Nullable Throwable error) {}
+      AttributesBuilder attributes,
+      Context context,
+      RedisURI redisUri,
+      Void unused,
+      @Nullable Throwable error) {}
 }

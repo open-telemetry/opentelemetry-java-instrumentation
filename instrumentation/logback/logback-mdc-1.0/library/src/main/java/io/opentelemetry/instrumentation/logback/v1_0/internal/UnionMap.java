@@ -17,6 +17,9 @@ import java.util.Set;
 /**
  * An immutable view over two maps, with keys resolving from the first map first, or otherwise the
  * second if not present in the first.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class UnionMap<K, V> extends AbstractMap<K, V> {
 

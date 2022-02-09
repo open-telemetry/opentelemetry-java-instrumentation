@@ -29,12 +29,11 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:8.0.41")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
 
-  // Jetty 10 seems to refuse to run on java8.
-  latestDepTestLibrary("org.eclipse.jetty:jetty-server:9.+")
-  latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:9.+")
+  latestDepTestLibrary("org.eclipse.jetty:jetty-server:10.+") // see servlet-5.0 module
+  latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:10.+") // see servlet-5.0 module
 
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+")
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+")
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+") // see servlet-5.0 module
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see servlet-5.0 module
 }
 
 tasks.withType<Test>().configureEach {

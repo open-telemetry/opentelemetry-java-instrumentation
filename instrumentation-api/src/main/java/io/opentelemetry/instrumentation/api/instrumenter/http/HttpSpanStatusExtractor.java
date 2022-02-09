@@ -18,42 +18,40 @@ import javax.annotation.Nullable;
 public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
     implements SpanStatusExtractor<REQUEST, RESPONSE> {
 
+  /**
+   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
+   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
+   * default status} otherwise.
+   */
+  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
+      HttpClientAttributesGetter<? super REQUEST, ? super RESPONSE> getter) {
+    return new HttpSpanStatusExtractor<>(getter, HttpStatusConverter.CLIENT);
+  }
+
+  /**
+   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
+   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
+   * default status} otherwise.
+   */
+  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
+      HttpServerAttributesGetter<? super REQUEST, ? super RESPONSE> getter) {
+    return new HttpSpanStatusExtractor<>(getter, HttpStatusConverter.SERVER);
+  }
+
+  private final HttpCommonAttributesGetter<? super REQUEST, ? super RESPONSE> getter;
   private final HttpStatusConverter statusConverter;
 
-  /**
-   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
-   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
-   * default status} otherwise.
-   */
-  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
-    return new HttpSpanStatusExtractor<>(attributesExtractor, HttpStatusConverter.CLIENT);
-  }
-
-  /**
-   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
-   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
-   * default status} otherwise.
-   */
-  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
-      HttpServerAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
-    return new HttpSpanStatusExtractor<>(attributesExtractor, HttpStatusConverter.SERVER);
-  }
-
-  private final HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE>
-      attributesExtractor;
-
   private HttpSpanStatusExtractor(
-      HttpCommonAttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor,
+      HttpCommonAttributesGetter<? super REQUEST, ? super RESPONSE> getter,
       HttpStatusConverter statusConverter) {
-    this.attributesExtractor = attributesExtractor;
+    this.getter = getter;
     this.statusConverter = statusConverter;
   }
 
   @Override
   public StatusCode extract(REQUEST request, @Nullable RESPONSE response, Throwable error) {
     if (response != null) {
-      Integer statusCode = attributesExtractor.statusCode(request, response);
+      Integer statusCode = getter.statusCode(request, response);
       if (statusCode != null) {
         StatusCode statusCodeObj = statusConverter.statusFromHttpStatus(statusCode);
         if (statusCodeObj == StatusCode.ERROR) {

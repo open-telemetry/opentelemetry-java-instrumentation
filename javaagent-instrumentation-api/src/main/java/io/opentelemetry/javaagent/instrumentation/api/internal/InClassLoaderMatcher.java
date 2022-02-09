@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.internal;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class InClassLoaderMatcher {
 
   private static final ThreadLocal<MutableBoolean> inClassLoaderMatcher =

@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.List;
@@ -51,11 +52,14 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, ServletRequestContext<REQUEST> requestContext) {}
+      AttributesBuilder attributes,
+      Context parentContext,
+      ServletRequestContext<REQUEST> requestContext) {}
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {

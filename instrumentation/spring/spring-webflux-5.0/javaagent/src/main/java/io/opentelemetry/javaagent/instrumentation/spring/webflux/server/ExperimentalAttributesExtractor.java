@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.springframework.web.method.HandlerMethod;
@@ -17,13 +18,14 @@ public class ExperimentalAttributesExtractor implements AttributesExtractor<Obje
       AttributeKey.stringKey("spring-webflux.handler.type");
 
   @Override
-  public void onStart(AttributesBuilder attributes, Object handler) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, Object handler) {
     attributes.put(HANDLER_TYPE, getHandlerType(handler));
   }
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       Object handler,
       @Nullable Void unused,
       @Nullable Throwable error) {}

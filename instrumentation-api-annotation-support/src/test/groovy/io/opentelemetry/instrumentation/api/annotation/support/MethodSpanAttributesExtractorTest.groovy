@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.annotation.support
 
 import io.opentelemetry.api.common.AttributesBuilder
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.cache.Cache
 import spock.lang.Specification
 
@@ -17,6 +18,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
   def "extracts attributes for method with attribute names"() {
     given:
     def request = new Object()
+    def context = Context.root()
     def method = TestClass.getDeclaredMethod("method", String, String, String)
     AttributesBuilder builder = Mock()
 
@@ -32,7 +34,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     )
 
     when:
-    extractor.onStart(builder, request)
+    extractor.onStart(builder, context, request)
 
     then:
     1 * builder.put({ it.getKey() == "x" }, "a")
@@ -43,6 +45,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
   def "does not extract attributes for empty attribute name array"() {
     given:
     def request = new Object()
+    def context = Context.root()
     def method = TestClass.getDeclaredMethod("method", String, String, String)
     AttributesBuilder builder = Mock()
 
@@ -58,7 +61,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     )
 
     when:
-    extractor.onStart(builder, request)
+    extractor.onStart(builder, context, request)
 
     then:
     0 * builder.put(*_)
@@ -67,6 +70,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
   def "does not extract attributes for method with attribute names array with fewer elements than parameters"() {
     given:
     def request = new Object()
+    def context = Context.root()
     def method = TestClass.getDeclaredMethod("method", String, String, String)
     AttributesBuilder builder = Mock()
 
@@ -82,7 +86,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     )
 
     when:
-    extractor.onStart(builder, request)
+    extractor.onStart(builder, context, request)
 
     then:
     0 * builder.put(*_)
@@ -91,6 +95,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
   def "extracts attributes for method with attribute names array with null element"() {
     given:
     def request = new Object()
+    def context = Context.root()
     def method = TestClass.getDeclaredMethod("method", String, String, String)
     AttributesBuilder builder = Mock()
 
@@ -106,7 +111,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     )
 
     when:
-    extractor.onStart(builder, request)
+    extractor.onStart(builder, context, request)
 
     then:
     1 * builder.put({ it.getKey() == "x" }, "a")
@@ -117,6 +122,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
   def "does not extracts attribute for method with null argument"() {
     given:
     def request = new Object()
+    def context = Context.root()
     def method = TestClass.getDeclaredMethod("method", String, String, String)
     AttributesBuilder builder = Mock()
 
@@ -132,7 +138,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     )
 
     when:
-    extractor.onStart(builder, request)
+    extractor.onStart(builder, context, request)
 
     then:
     1 * builder.put({ it.getKey() == "x" }, "a")
@@ -143,6 +149,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
   def "applies cached bindings"() {
     given:
     def request = new Object()
+    def context = Context.root()
     def method = TestClass.getDeclaredMethod("method", String, String, String)
     AttributesBuilder builder = Mock()
 
@@ -161,7 +168,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
     )
 
     when:
-    extractor.onStart(builder, request)
+    extractor.onStart(builder, context, request)
 
     then:
     1 * bindings.apply(_, ["a", "b", "c"])
@@ -170,6 +177,7 @@ class MethodSpanAttributesExtractorTest extends Specification {
   def "does not apply cached empty bindings"() {
     given:
     def request = new Object()
+    def context = Context.root()
     def method = TestClass.getDeclaredMethod("method", String, String, String)
     AttributesBuilder builder = Mock()
 
@@ -188,13 +196,14 @@ class MethodSpanAttributesExtractorTest extends Specification {
     )
 
     when:
-    extractor.onStart(builder, request)
+    extractor.onStart(builder, context, request)
 
     then:
     0 * bindings.apply(_, _)
   }
 
   class TestClass {
+    @SuppressWarnings("unused")
     void method(String x, String y, String z) {}
   }
 }

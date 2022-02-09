@@ -26,10 +26,6 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.0.0")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.glassfish.jaxb:jaxb-runtime:2.3.3")
-
-  // hibernate 6 is alpha so use 5 as latest version
-  latestDepTestLibrary("org.hibernate:hibernate-core:5.+")
-  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+")
 }
 
 tasks.withType<Test>().configureEach {

@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -20,15 +21,14 @@ public class AkkaHttpServerSingletons {
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    AkkaHttpServerAttributesExtractor httpAttributesExtractor =
-        new AkkaHttpServerAttributesExtractor();
+    AkkaHttpServerAttributesGetter httpAttributesGetter = new AkkaHttpServerAttributesGetter();
     INSTRUMENTER =
         Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 AkkaHttpUtil.instrumentationName(),
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
             .addRequestMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get())
             .newServerInstrumenter(AkkaHttpServerHeaders.INSTANCE);

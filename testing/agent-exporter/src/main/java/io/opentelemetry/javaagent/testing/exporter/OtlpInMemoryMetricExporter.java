@@ -47,6 +47,8 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
   private final Server collector;
   private final MetricExporter delegate;
 
+  // TODO(anuraaga): https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5314
+  @SuppressWarnings("deprecation")
   OtlpInMemoryMetricExporter() {
     String serverName = InProcessServerBuilder.generateName();
 

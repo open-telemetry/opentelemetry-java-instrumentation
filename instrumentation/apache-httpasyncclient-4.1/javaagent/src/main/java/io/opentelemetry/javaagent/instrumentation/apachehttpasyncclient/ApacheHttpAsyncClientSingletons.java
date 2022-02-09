@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -23,23 +21,19 @@ public final class ApacheHttpAsyncClientSingletons {
   private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    HttpClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> httpAttributesExtractor =
-        new ApacheHttpAsyncClientHttpAttributesExtractor();
-    SpanNameExtractor<? super ApacheHttpClientRequest> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super ApacheHttpClientRequest, ? super HttpResponse> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    ApacheHttpAsyncClientHttpAttributesGetter httpAttributesGetter =
+        new ApacheHttpAsyncClientHttpAttributesGetter();
     ApacheHttpAsyncClientNetAttributesGetter netAttributesGetter =
         new ApacheHttpAsyncClientNetAttributesGetter();
-    NetClientAttributesExtractor<ApacheHttpClientRequest, HttpResponse> netAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesGetter);
 
     INSTRUMENTER =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(spanStatusExtractor)
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);

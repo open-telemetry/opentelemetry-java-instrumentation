@@ -48,8 +48,8 @@ dependencies {
 
   testLibrary("org.springframework.data:spring-data-elasticsearch:3.0.0.RELEASE")
 
-  latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.+")
-  latestDepTestLibrary("org.elasticsearch.client:transport:5.+")
+  latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.+") // see elasticsearch-transport-6.0 module
+  latestDepTestLibrary("org.elasticsearch.client:transport:5.+") // see elasticsearch-transport-6.0 module
   latestDepTestLibrary("org.springframework.data:spring-data-elasticsearch:3.0.+")
 }
 

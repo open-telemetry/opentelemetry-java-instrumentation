@@ -14,6 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jetty.client.api.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class JettyClientWrapUtil {
   private static final Class<?>[] listenerInterfaces = {
     Response.CompleteListener.class,

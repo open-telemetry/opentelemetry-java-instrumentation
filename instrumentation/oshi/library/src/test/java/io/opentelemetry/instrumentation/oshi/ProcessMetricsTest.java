@@ -5,30 +5,22 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.junit.jupiter.api.Test;
+class ProcessMetricsTest extends AbstractProcessMetricsTest {
 
-public class ProcessMetricsTest extends AbstractMetricsTest {
+  @RegisterExtension
+  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @Test
-  public void test() {
+  @Override
+  protected void registerMetrics() {
     ProcessMetrics.registerObservers();
+  }
 
-    waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName("runtime.java.memory")
-                .hasUnit("bytes")
-                .hasLongSum()
-                .points()
-                .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
-        metric ->
-            metric
-                .hasName("runtime.java.cpu_time")
-                .hasUnit("seconds")
-                .hasDoubleGauge()
-                .points()
-                .anySatisfy(point -> assertThat(point.getValue()).isPositive()));
+  @Override
+  protected InstrumentationExtension testing() {
+    return testing;
   }
 }

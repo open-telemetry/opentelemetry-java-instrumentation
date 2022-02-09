@@ -11,6 +11,7 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -19,11 +20,13 @@ final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   @Override
-  public void onStart(AttributesBuilder attributes, CassandraRequest request) {}
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, CassandraRequest request) {}
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       CassandraRequest request,
       @Nullable ExecutionInfo executionInfo,
       @Nullable Throwable error) {

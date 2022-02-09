@@ -15,7 +15,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
-import java.util.concurrent.CompletionStage;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,15 +42,22 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") RedissonRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
       Context parentContext = currentContext();
       InetSocketAddress remoteAddress = (InetSocketAddress) connection.getChannel().remoteAddress();
       request = RedissonRequest.create(remoteAddress, arg);
+      PromiseWrapper<?> promise = request.getPromiseWrapper();
+      if (promise == null) {
+        return;
+      }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
       context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
+
+      promise.setEndOperationListener(new EndOperationListener<>(context, request));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -66,13 +72,10 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      CompletionStage<?> promise = request.getPromise();
-      if (promise == null || throwable != null) {
+      if (throwable != null) {
         instrumenter().end(context, request, null, throwable);
-      } else {
-        // span ended in EndOperationListener
-        promise.whenComplete(new EndOperationListener<>(context, request));
       }
+      // span ended in EndOperationListener
     }
   }
 }

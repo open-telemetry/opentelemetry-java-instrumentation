@@ -41,8 +41,9 @@ class HttpClientMetricsTest {
             .put("http.host", "host")
             .put("http.target", "/")
             .put("http.scheme", "https")
-            .put("net.host.name", "localhost")
-            .put("net.host.port", 1234)
+            .put("net.peer.name", "localhost")
+            .put("net.peer.ip", "0.0.0.0")
+            .put("net.peer.port", 1234)
             .build();
 
     Attributes responseAttributes =
@@ -87,7 +88,8 @@ class HttpClientMetricsTest {
                               .hasSum(150 /* millis */)
                               .attributes()
                               .containsOnly(
-                                  attributeEntry("http.url", "https://localhost:1234/"),
+                                  attributeEntry("net.peer.name", "localhost"),
+                                  attributeEntry("net.peer.port", 1234),
                                   attributeEntry("http.method", "GET"),
                                   attributeEntry("http.flavor", "2.0"),
                                   attributeEntry("http.status_code", 200));

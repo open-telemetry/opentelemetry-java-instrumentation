@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.annotation.support;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Method;
@@ -45,7 +46,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     Method method = methodExtractor.extract(request);
     AttributeBindings bindings = cache.computeIfAbsent(method, this::bind);
     if (!bindings.isEmpty()) {
@@ -57,6 +58,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {}

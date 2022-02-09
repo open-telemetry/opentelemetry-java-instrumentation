@@ -15,12 +15,12 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class LoggingEventMapperTest {
+class LoggingEventMapperTest {
 
   @Test
-  public void testDefault() {
+  void testDefault() {
     // given
     LoggingEventMapper mapper = new LoggingEventMapper(emptyList());
     Map<String, String> contextData = new HashMap<>();
@@ -36,7 +36,7 @@ public class LoggingEventMapperTest {
   }
 
   @Test
-  public void testSome() {
+  void testSome() {
     // given
     LoggingEventMapper mapper = new LoggingEventMapper(singletonList("key2"));
     Map<String, String> contextData = new HashMap<>();
@@ -53,7 +53,7 @@ public class LoggingEventMapperTest {
   }
 
   @Test
-  public void testAll() {
+  void testAll() {
     // given
     LoggingEventMapper mapper = new LoggingEventMapper(singletonList("*"));
     Map<String, String> contextData = new HashMap<>();

@@ -40,27 +40,31 @@ class AwsLambdaFunctionAttributesExtractor
   private volatile String accountId;
 
   @Override
-  public void onStart(AttributesBuilder attributes, AwsLambdaRequest request) {
-    Context context = request.getAwsContext();
-    set(attributes, FAAS_EXECUTION, context.getAwsRequestId());
-    set(attributes, FAAS_ID, getFunctionArn(context));
-    set(attributes, CLOUD_ACCOUNT_ID, getAccountId(getFunctionArn(context)));
+  public void onStart(
+      AttributesBuilder attributes,
+      io.opentelemetry.context.Context parentContext,
+      AwsLambdaRequest request) {
+    Context awsContext = request.getAwsContext();
+    set(attributes, FAAS_EXECUTION, awsContext.getAwsRequestId());
+    set(attributes, FAAS_ID, getFunctionArn(awsContext));
+    set(attributes, CLOUD_ACCOUNT_ID, getAccountId(getFunctionArn(awsContext)));
   }
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      io.opentelemetry.context.Context context,
       AwsLambdaRequest request,
       @Nullable Object response,
       @Nullable Throwable error) {}
 
   @Nullable
-  private static String getFunctionArn(Context context) {
+  private static String getFunctionArn(Context awsContext) {
     if (GET_FUNCTION_ARN == null) {
       return null;
     }
     try {
-      return (String) GET_FUNCTION_ARN.invoke(context);
+      return (String) GET_FUNCTION_ARN.invoke(awsContext);
     } catch (Throwable throwable) {
       return null;
     }

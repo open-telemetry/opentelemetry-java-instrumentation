@@ -14,6 +14,10 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @AutoValue
 public abstract class DbRequest {
 

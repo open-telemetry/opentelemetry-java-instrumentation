@@ -34,7 +34,14 @@ extra["testLatestDeps"] = testLatestDeps
 abstract class TestLatestDepsRule : ComponentMetadataRule {
   override fun execute(context: ComponentMetadataContext) {
     val version = context.details.id.version
-    if (version.contains("-alpha") || version.contains("-beta") || version.contains("-rc")) {
+    if (version.contains("-alpha", true)
+      || version.contains("-beta", true)
+      || version.contains("-rc", true)
+      || version.contains("-m", true) // e.g. spring milestones are published to grails repo
+      || version.contains(".alpha", true) // e.g. netty
+      || version.contains(".beta", true) // e.g. hibernate
+      || version.contains(".cr", true) // e.g. hibernate
+    ) {
       context.details.status = "milestone"
     }
   }
