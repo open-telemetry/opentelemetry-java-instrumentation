@@ -10,6 +10,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class MapUtils {
   public static Map<String, String> lowercaseMap(Map<String, String> source) {
     return emptyIfNull(source).entrySet().stream()

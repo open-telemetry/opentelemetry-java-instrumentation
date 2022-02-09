@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AutoValue_AwsLambdaRequest;
 import java.util.Map;
 
 @AutoValue

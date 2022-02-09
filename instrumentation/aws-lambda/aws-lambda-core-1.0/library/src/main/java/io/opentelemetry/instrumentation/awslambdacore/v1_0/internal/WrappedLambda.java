@@ -14,7 +14,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-/** Model for wrapped lambda function (object, class, method). */
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class WrappedLambda {
 
   public static final String OTEL_LAMBDA_HANDLER_ENV_KEY =
