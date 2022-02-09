@@ -103,7 +103,16 @@ public abstract class RedissonRequest {
   }
 
   @Nullable
-  public CompletionStage<?> getPromise() {
+  public PromiseWrapper<?> getPromiseWrapper() {
+    CompletionStage<?> promise = getPromise();
+    if (promise instanceof PromiseWrapper) {
+      return (PromiseWrapper<?>) promise;
+    }
+    return null;
+  }
+
+  @Nullable
+  private CompletionStage<?> getPromise() {
     Object command = getCommand();
     if (command instanceof CommandData && COMMAND_DATA_GET_PROMISE != null) {
       try {

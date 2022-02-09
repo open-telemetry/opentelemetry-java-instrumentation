@@ -17,6 +17,7 @@ public final class SpringSchedulingSingletons {
               GlobalOpenTelemetry.get(),
               "io.opentelemetry.spring-scheduling-3.1",
               SpringSchedulingSingletons::extractSpanName)
+          .addAttributesExtractor(new SpringSchedulingCodeAttributesExtractor())
           .newInstrumenter();
 
   private static String extractSpanName(Runnable runnable) {

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
@@ -21,7 +22,8 @@ class RockerMqProducerExperimentalAttributeExtractor
       AttributeKey.stringKey("messaging.rocketmq.send_result");
 
   @Override
-  public void onStart(AttributesBuilder attributes, SendMessageContext request) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
     if (request.getMessage() != null) {
       set(attributes, MESSAGING_ROCKETMQ_TAGS, request.getMessage().getTags());
     }
@@ -31,6 +33,7 @@ class RockerMqProducerExperimentalAttributeExtractor
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       SendMessageContext request,
       @Nullable Void unused,
       @Nullable Throwable error) {

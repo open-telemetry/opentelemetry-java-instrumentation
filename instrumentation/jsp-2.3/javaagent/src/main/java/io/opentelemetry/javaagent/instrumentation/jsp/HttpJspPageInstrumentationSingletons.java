@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -55,7 +56,8 @@ public class HttpJspPageInstrumentationSingletons {
       implements AttributesExtractor<HttpServletRequest, Void> {
 
     @Override
-    public void onStart(AttributesBuilder attributes, HttpServletRequest request) {
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, HttpServletRequest request) {
       if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
         return;
       }
@@ -81,6 +83,7 @@ public class HttpJspPageInstrumentationSingletons {
     @Override
     public void onEnd(
         AttributesBuilder attributes,
+        Context context,
         HttpServletRequest httpServletRequest,
         @Nullable Void unused,
         @Nullable Throwable error) {}

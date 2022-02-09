@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
+import java.util.concurrent.TimeUnit;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
 public final class OpenTelemetryMeterRegistryBuilder {
@@ -16,6 +18,9 @@ public final class OpenTelemetryMeterRegistryBuilder {
 
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
+  private TimeUnit baseTimeUnit =
+      TimeUnitHelper.parseConfigValue(
+          Config.get().getString("otel.instrumentation.micrometer.base-time-unit"));
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -27,12 +32,18 @@ public final class OpenTelemetryMeterRegistryBuilder {
     return this;
   }
 
+  /** Sets the base time unit. */
+  public OpenTelemetryMeterRegistryBuilder setBaseTimeUnit(TimeUnit baseTimeUnit) {
+    this.baseTimeUnit = baseTimeUnit;
+    return this;
+  }
+
   /**
    * Returns a new {@link OpenTelemetryMeterRegistry} with the settings of this {@link
    * OpenTelemetryMeterRegistryBuilder}.
    */
   public MeterRegistry build() {
     return new OpenTelemetryMeterRegistry(
-        clock, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
+        clock, baseTimeUnit, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
   }
 }

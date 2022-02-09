@@ -11,7 +11,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-val otelVersion = "1.10.1"
+val otelVersion = "1.11.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and -all
@@ -110,6 +110,7 @@ val DEPENDENCIES = listOf(
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
+  "org.junit-pioneer:junit-pioneer:1.5.0",
   "org.objenesis:objenesis:3.2",
   "org.spockframework:spock-core:2.0-groovy-3.0",
   "org.spockframework:spock-junit4:2.0-groovy-3.0",

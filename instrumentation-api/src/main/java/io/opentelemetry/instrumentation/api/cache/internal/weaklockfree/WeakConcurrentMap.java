@@ -216,6 +216,12 @@ public class WeakConcurrentMap<K, V>
     }
 
     @Override
+    public V getIfPresent(K key) {
+      expungeStaleEntries();
+      return super.getIfPresent(key);
+    }
+
+    @Override
     public boolean containsKey(K key) {
       expungeStaleEntries();
       return super.containsKey(key);
@@ -225,6 +231,12 @@ public class WeakConcurrentMap<K, V>
     public V put(K key, V value) {
       expungeStaleEntries();
       return super.put(key, value);
+    }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+      expungeStaleEntries();
+      return super.putIfAbsent(key, value);
     }
 
     @Override

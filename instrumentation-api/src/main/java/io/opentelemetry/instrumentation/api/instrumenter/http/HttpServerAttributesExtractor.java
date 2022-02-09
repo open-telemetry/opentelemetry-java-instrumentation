@@ -9,8 +9,10 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHe
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHeaderParser.extractForwardedFor;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -42,18 +44,24 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
       CapturedHttpHeaders capturedHttpHeaders) {
-    return new HttpServerAttributesExtractor<>(getter, capturedHttpHeaders);
+    return new HttpServerAttributesExtractor<>(
+        getter, capturedHttpHeaders, HttpRouteHolder::getRoute);
   }
 
-  private HttpServerAttributesExtractor(
+  private final Function<Context, String> httpRouteHolderGetter;
+
+  // visible for tests
+  HttpServerAttributesExtractor(
       HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
-      CapturedHttpHeaders capturedHttpHeaders) {
+      CapturedHttpHeaders capturedHttpHeaders,
+      Function<Context, String> httpRouteHolderGetter) {
     super(getter, capturedHttpHeaders);
+    this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, REQUEST request) {
-    super.onStart(attributes, request);
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    super.onStart(attributes, parentContext, request);
 
     set(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request));
     set(attributes, SemanticAttributes.HTTP_SCHEME, getter.scheme(request));
@@ -66,12 +74,14 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    super.onEnd(attributes, request, response, error);
+    super.onEnd(attributes, context, request, response, error);
     set(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request, response));
+    set(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }
 
   @Nullable

@@ -6,11 +6,14 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.getUnitString;
 
 import io.micrometer.core.instrument.AbstractTimer;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Measurement;
+import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.NoopHistogram;
 import io.micrometer.core.instrument.distribution.TimeWindowMax;
@@ -19,18 +22,21 @@ import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
+import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
-
+  private final Measurements measurements;
+  private final TimeWindowMax max;
+  private final TimeUnit baseTimeUnit;
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
   private final Attributes attributes;
-  private final Measurements measurements;
+  private final AsyncMeasurementHandle maxHandle;
 
   private volatile boolean removed = false;
 
@@ -39,22 +45,34 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
       PauseDetector pauseDetector,
-      Meter otelMeter) {
+      TimeUnit baseTimeUnit,
+      Meter otelMeter,
+      AsyncInstrumentRegistry asyncInstrumentRegistry) {
     super(id, clock, distributionStatisticConfig, pauseDetector, TimeUnit.MILLISECONDS, false);
 
+    if (isUsingMicrometerHistograms()) {
+      measurements = new MicrometerHistogramMeasurements();
+    } else {
+      measurements = NoopMeasurements.INSTANCE;
+    }
+    max = new TimeWindowMax(clock, distributionStatisticConfig);
+
+    this.baseTimeUnit = baseTimeUnit;
+    this.attributes = tagsAsAttributes(id);
     this.otelHistogram =
         otelMeter
             .histogramBuilder(id.getName())
             .setDescription(description(id))
-            .setUnit("ms")
+            .setUnit(getUnitString(baseTimeUnit))
             .build();
-    this.attributes = tagsAsAttributes(id);
-
-    if (isUsingMicrometerHistograms()) {
-      measurements = new MicrometerHistogramMeasurements(clock, distributionStatisticConfig);
-    } else {
-      measurements = NoopMeasurements.INSTANCE;
-    }
+    this.maxHandle =
+        asyncInstrumentRegistry.buildGauge(
+            statisticInstrumentName(id, Statistic.MAX),
+            description(id),
+            getUnitString(baseTimeUnit),
+            attributes,
+            max,
+            m -> m.poll(baseTimeUnit));
   }
 
   boolean isUsingMicrometerHistograms() {
@@ -65,9 +83,10 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   protected void recordNonNegative(long amount, TimeUnit unit) {
     if (amount >= 0 && !removed) {
       long nanos = unit.toNanos(amount);
-      double time = nanos / NANOS_PER_MS;
+      double time = TimeUtils.nanosToUnit(nanos, baseTimeUnit);
       otelHistogram.record(time, attributes);
       measurements.record(nanos);
+      max.record(nanos, TimeUnit.NANOSECONDS);
     }
   }
 
@@ -83,7 +102,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
   @Override
   public double max(TimeUnit unit) {
-    return measurements.max(unit);
+    return max.poll(unit);
   }
 
   @Override
@@ -95,6 +114,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   @Override
   public void onRemove() {
     removed = true;
+    maxHandle.remove();
   }
 
   private interface Measurements {
@@ -103,8 +123,6 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     long count();
 
     double totalTime(TimeUnit unit);
-
-    double max(TimeUnit unit);
   }
 
   // if micrometer histograms are not being used then there's no need to keep any local state
@@ -126,32 +144,19 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
       UnsupportedReadLogger.logWarning();
       return Double.NaN;
     }
-
-    @Override
-    public double max(TimeUnit unit) {
-      UnsupportedReadLogger.logWarning();
-      return Double.NaN;
-    }
   }
 
-  // calculate count, totalTime and max value for the use of micrometer histograms
+  // calculate count and totalTime value for the use of micrometer histograms
   // kinda similar to how DropwizardTimer does that
   private static final class MicrometerHistogramMeasurements implements Measurements {
 
     private final LongAdder count = new LongAdder();
     private final LongAdder totalTime = new LongAdder();
-    private final TimeWindowMax max;
-
-    MicrometerHistogramMeasurements(
-        Clock clock, DistributionStatisticConfig distributionStatisticConfig) {
-      this.max = new TimeWindowMax(clock, distributionStatisticConfig);
-    }
 
     @Override
     public void record(long nanos) {
       count.increment();
       totalTime.add(nanos);
-      max.record(nanos, TimeUnit.NANOSECONDS);
     }
 
     @Override
@@ -162,11 +167,6 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     @Override
     public double totalTime(TimeUnit unit) {
       return TimeUtils.nanosToUnit(totalTime.sum(), unit);
-    }
-
-    @Override
-    public double max(TimeUnit unit) {
-      return max.poll(unit);
     }
   }
 }

@@ -171,7 +171,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     UnsafeAttributes attributesBuilder = new UnsafeAttributes();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onStart(attributesBuilder, request);
+      extractor.onStart(attributesBuilder, parentContext, request);
     }
     Attributes attributes = attributesBuilder;
 
@@ -221,7 +221,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     UnsafeAttributes attributes = new UnsafeAttributes();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onEnd(attributes, request, response, error);
+      extractor.onEnd(attributes, context, request, response, error);
     }
     span.setAllAttributes(attributes);
 
