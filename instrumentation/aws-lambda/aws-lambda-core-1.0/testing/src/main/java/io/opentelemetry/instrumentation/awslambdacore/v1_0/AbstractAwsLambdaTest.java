@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambda.v1_0;
+package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;

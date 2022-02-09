@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
+package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaTest;
+import io.opentelemetry.instrumentation.awslambdacore.v1_0.AbstractAwsLambdaTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.AfterEach;

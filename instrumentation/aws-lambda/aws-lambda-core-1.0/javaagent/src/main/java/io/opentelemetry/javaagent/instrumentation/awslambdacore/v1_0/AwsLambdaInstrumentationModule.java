@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
+package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
 import static java.util.Collections.singletonList;
 
