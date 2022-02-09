@@ -18,9 +18,6 @@ dependencies {
   // allows to get the function ARN
   testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")
 
-  testImplementation("com.fasterxml.jackson.core:jackson-databind")
-  testImplementation("commons-io:commons-io:2.2")
-
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("com.google.guava:guava")

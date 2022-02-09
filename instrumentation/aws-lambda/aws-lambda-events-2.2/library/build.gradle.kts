@@ -26,9 +26,6 @@ dependencies {
   // allows to get the default events
   testLibrary("com.amazonaws:aws-lambda-java-events:3.10.0")
 
-  testImplementation("com.fasterxml.jackson.core:jackson-databind")
-  testImplementation("commons-io:commons-io:2.2")
-
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("com.google.guava:guava")
