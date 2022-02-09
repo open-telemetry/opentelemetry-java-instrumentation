@@ -14,7 +14,12 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:library"))
-  implementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:library"))
+
+  implementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:library")) {
+    // Only needed by wrappers, not the javaagent. Muzzle will catch if we accidentally change this.
+    exclude("com.fasterxml.jackson.core", "jackson-core")
+    exclude("com.fasterxml.jackson.core", "jackson-databind")
+  }
 
   library("com.amazonaws:aws-lambda-java-core:1.0.0")
   // First version to includes support for SQSEvent, currently the most popular message queue used
