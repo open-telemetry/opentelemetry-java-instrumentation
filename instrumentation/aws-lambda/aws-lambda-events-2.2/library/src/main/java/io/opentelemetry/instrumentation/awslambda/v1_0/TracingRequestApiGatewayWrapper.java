@@ -9,12 +9,14 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.util.function.BiFunction;
 
 /**
- * Wrapper for {@link TracingRequestHandler}. Allows for wrapping a lambda proxied through API
- * Gateway, enabling single span tracing and HTTP context propagation.
+ * Wrapper for {@link io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler}.
+ * Allows for wrapping a lambda proxied through API Gateway, enabling single span tracing and HTTP
+ * context propagation.
  */
 public class TracingRequestApiGatewayWrapper
     extends TracingRequestWrapperBase<APIGatewayProxyRequestEvent, Object> {

@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
+import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.util.function.BiFunction;
 
 /**
- * Wrapper for {@link TracingRequestHandler}. Allows for wrapping a regular lambda, not proxied
- * through API Gateway. Therefore, HTTP headers propagation is not supported.
+ * Wrapper for {@link io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler}.
+ * Allows for wrapping a regular lambda, not proxied through API Gateway. Therefore, HTTP headers
+ * propagation is not supported.
  */
 public class TracingRequestWrapper extends TracingRequestWrapperBase<Object, Object> {
   public TracingRequestWrapper() {

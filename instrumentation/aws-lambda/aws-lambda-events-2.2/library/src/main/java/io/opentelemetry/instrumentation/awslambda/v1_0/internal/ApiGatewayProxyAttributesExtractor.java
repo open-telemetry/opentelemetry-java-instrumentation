@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.awslambda.v1_0.internal.MapUtils.emptyIfNull;
-import static io.opentelemetry.instrumentation.awslambda.v1_0.internal.MapUtils.lowercaseMap;
+import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
+import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_TRIGGER;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
@@ -18,7 +18,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaRequest;
+import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
+import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
+import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.InvocationTargetException;

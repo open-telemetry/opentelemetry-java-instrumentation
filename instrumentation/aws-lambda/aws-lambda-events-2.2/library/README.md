@@ -11,7 +11,7 @@ In order to configure a span flush timeout (default is set to 1 second), please 
 Available wrappers:
 - `io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestWrapper` - for wrapping regular handlers (implementing `RequestHandler`)
 - `io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestApiGatewayWrapper` - for wrapping regular handlers (implementing `RequestHandler`) proxied through API Gateway, enabling HTTP context propagation
-- `io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestStreamWrapper` - for wrapping streaming handlers (implementing `RequestStreamHandler`), enabling HTTP context propagation for HTTP requests
+- `io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestStreamWrapper` - for wrapping streaming handlers (implementing `RequestStreamHandler`), enabling HTTP context propagation for HTTP requests
 
 ## Using handlers
 To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
