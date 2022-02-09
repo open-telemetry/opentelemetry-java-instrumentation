@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.getUnitString;
 
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Measurement;
@@ -27,6 +28,7 @@ import javax.annotation.Nullable;
 final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMeter {
 
   private final Id id;
+  private final TimeUnit baseTimeUnit;
   private final AsyncMeasurementHandle countMeasurementHandle;
   private final AsyncMeasurementHandle totalTimeMeasurementHandle;
 
@@ -36,8 +38,11 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
       ToLongFunction<T> countFunction,
       ToDoubleFunction<T> totalTimeFunction,
       TimeUnit totalTimeFunctionUnit,
+      TimeUnit baseTimeUnit,
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
+
     this.id = id;
+    this.baseTimeUnit = baseTimeUnit;
 
     String countMeterName = statisticInstrumentName(id, Statistic.COUNT);
     String totalTimeMeterName = statisticInstrumentName(id, Statistic.TOTAL_TIME);
@@ -51,14 +56,12 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
         asyncInstrumentRegistry.buildDoubleCounter(
             totalTimeMeterName,
             description(id),
-            /* baseUnit = */ "ms",
+            getUnitString(baseTimeUnit),
             attributes,
             obj,
             val ->
                 TimeUtils.convert(
-                    totalTimeFunction.applyAsDouble(val),
-                    totalTimeFunctionUnit,
-                    TimeUnit.MILLISECONDS));
+                    totalTimeFunction.applyAsDouble(val), totalTimeFunctionUnit, baseTimeUnit));
   }
 
   @Override
@@ -81,7 +84,7 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
 
   @Override
   public TimeUnit baseTimeUnit() {
-    return TimeUnit.MILLISECONDS;
+    return baseTimeUnit;
   }
 
   @Override
