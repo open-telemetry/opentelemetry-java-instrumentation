@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AwsLambdaInstrumentationModule extends InstrumentationModule {
   public AwsLambdaInstrumentationModule() {
-    super("aws-lambda", "aws-lambda-1.0");
+    super("aws-lambda", "aws-lambda-core-1.0");
   }
 
   @Override

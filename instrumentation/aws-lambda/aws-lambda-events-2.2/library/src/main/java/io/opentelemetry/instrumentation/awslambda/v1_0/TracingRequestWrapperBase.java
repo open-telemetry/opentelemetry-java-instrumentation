@@ -6,15 +6,20 @@
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.opentelemetry.instrumentation.awslambda.v1_0.internal.AwsLambdaEventsInstrumenterFactory;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler;
+import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 /**
@@ -43,7 +48,10 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
       OpenTelemetrySdk openTelemetrySdk,
       WrappedLambda wrappedLambda,
       BiFunction<I, Class<?>, Object> parameterMapper) {
-    super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
+    super(
+        openTelemetrySdk,
+        WrapperConfiguration.flushTimeout(),
+        AwsLambdaEventsInstrumenterFactory.createInstrumenter(openTelemetrySdk));
     this.wrappedLambda = wrappedLambda;
     this.targetMethod = wrappedLambda.getRequestTargetMethod();
     this.parameterMapper = parameterMapper;
@@ -64,5 +72,13 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
           : new IllegalStateException(e.getTargetException()));
     }
     return result;
+  }
+
+  @Override
+  protected final Map<String, String> extractHttpHeaders(I input) {
+    if (input instanceof APIGatewayProxyRequestEvent) {
+      return MapUtils.emptyIfNull(((APIGatewayProxyRequestEvent) input).getHeaders());
+    }
+    return Collections.emptyMap();
   }
 }

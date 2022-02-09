@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFun
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -64,7 +65,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
 
   @Override
   public final O handleRequest(I input, Context context) {
-    AwsLambdaRequest request = AwsLambdaRequest.create(context, input, Collections.emptyMap());
+    AwsLambdaRequest request = AwsLambdaRequest.create(context, input, extractHttpHeaders(input));
     io.opentelemetry.context.Context parentContext = instrumenter.extract(request);
 
     if (!instrumenter.shouldStart(parentContext, request)) {
@@ -87,4 +88,12 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
   }
 
   protected abstract O doHandleRequest(I input, Context context);
+
+  /**
+   * Returns the HTTP headers for the request extracted from the request handler's input. By default, returns empty
+   * headers.
+   */
+  protected Map<String, String> extractHttpHeaders(I input) {
+    return Collections.emptyMap();
+  }
 }
