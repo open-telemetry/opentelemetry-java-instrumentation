@@ -16,6 +16,7 @@ import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
@@ -59,7 +60,10 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
     this.baseTimeUnit = baseTimeUnit;
     this.otelMeter = otelMeter;
     this.asyncInstrumentRegistry = AsyncInstrumentRegistry.getOrCreate(otelMeter);
-    this.config().onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
+
+    this.config()
+        .namingConvention(NamingConvention.identity)
+        .onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
   }
 
   @Override
