@@ -37,7 +37,7 @@ public class AgentTestingExporterFactory {
     List<CompletableResultCode> results =
         Arrays.asList(
             AgentTestingLogsCustomizer.logProcessor.forceFlush(),
-            AgentTestingTracingCustomizer.spanProcessor.forceFlush());
+            AgentTestingCustomizer.spanProcessor.forceFlush());
     CompletableResultCode.ofAll(results).join(10, TimeUnit.SECONDS);
     collector.reset();
   }
