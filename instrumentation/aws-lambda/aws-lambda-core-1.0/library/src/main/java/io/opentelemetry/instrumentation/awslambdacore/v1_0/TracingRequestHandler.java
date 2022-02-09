@@ -90,8 +90,8 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
   protected abstract O doHandleRequest(I input, Context context);
 
   /**
-   * Returns the HTTP headers for the request extracted from the request handler's input. By default, returns empty
-   * headers.
+   * Returns the HTTP headers for the request extracted from the request handler's input. By
+   * default, returns empty headers.
    */
   protected Map<String, String> extractHttpHeaders(I input) {
     return Collections.emptyMap();

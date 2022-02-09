@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambda.v1_0;
+package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -59,7 +59,7 @@ public class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
   void tracedWithHttpPropagation() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
@@ -118,7 +118,7 @@ public class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
   void handlerTraced_empty() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
@@ -152,7 +152,7 @@ public class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerString::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerString::handleRequest")
   void handlerTraced_string() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
@@ -186,7 +186,7 @@ public class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerInteger::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerInteger::handleRequest")
   void handlerTraced_integer() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
@@ -220,7 +220,7 @@ public class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambda.v1_0.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerCustomType::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerCustomType::handleRequest")
   void handlerTraced_customType() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(

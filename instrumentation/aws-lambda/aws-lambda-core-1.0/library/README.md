@@ -11,7 +11,9 @@ In order to configure a span flush timeout (default is set to 1 second), please 
 Available wrappers:
 - `io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestStreamWrapper` - for wrapping streaming handlers (implementing `RequestStreamHandler`), enabling HTTP context propagation for HTTP requests
 
-For wrappers of non-stream handlers, use [aws-lambda-events-2.2](../../aws-lambda-events-2.2).
+`TracingRequestStreamWrapper` is compatible with all Lambda functions, including those implementing `RequestHandler`. However, when using
+known Lambda event types as parameters, telemetry will be missing important information. When using `RequestHandler`, it
+is recommended to use [aws-lambda-events-2.2](../../aws-lambda-events-2.2/library).
 
 ## Using handlers
 To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
@@ -65,35 +67,6 @@ Maven:
 </dependencies>
 ```
 
-## SQS Handler
-
-This package provides a special handler for SQS-triggered functions to include messaging data.
-If using SQS, it is recommended to use them instead of `TracingRequestHandler`.
-
-If your application processes one message at a time, each independently, it is recommended to extend
-`TracingSQSMessageHandler`. This will create a single span corresponding to a received batch of
-messages along with one span for each of the messages as you process them.
-
-```java
-public class MyMessageHandler extends TracingSQSMessageHandler {
-  @Override
-  protected void handleMessage(SQSMessage message, Context context) {
-    System.out.println(message.getBody());
-  }
-}
-```
-
-If you handle a batch of messages together, for example by aggregating them into a single unit,
-extend `TracingSQSEventHandler` to process a batch at a time.
-
-```java
-public class MyBatchHandler extends TracingSQSEventHandler {
-  @Override
-  protected void handleEvent(SQSEvent event, Context context) {
-    System.out.println(event.getRecords().size());
-  }
-}
-```
 
 ## Trace propagation
 

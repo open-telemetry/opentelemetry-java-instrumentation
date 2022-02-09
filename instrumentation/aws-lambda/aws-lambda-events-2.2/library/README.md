@@ -9,9 +9,12 @@ and use one of wrappers as your lambda `Handler`.
 In order to configure a span flush timeout (default is set to 1 second), please configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT` env property. The value is in seconds.
 
 Available wrappers:
-- `io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestWrapper` - for wrapping regular handlers (implementing `RequestHandler`)
-- `io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestApiGatewayWrapper` - for wrapping regular handlers (implementing `RequestHandler`) proxied through API Gateway, enabling HTTP context propagation
+- `io.opentelemetry.instrumentation.awslambdaevents.v2_2.TracingRequestWrapper` - for wrapping regular handlers (implementing `RequestHandler`)
+- `io.opentelemetry.instrumentation.awslambdaevents.v2_2.TracingRequestApiGatewayWrapper` - for wrapping regular handlers (implementing `RequestHandler`) proxied through API Gateway, enabling HTTP context propagation
 - `io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestStreamWrapper` - for wrapping streaming handlers (implementing `RequestStreamHandler`), enabling HTTP context propagation for HTTP requests
+
+If you are only using `TracingRequestStreamWrapper`, consider using [aws-lambda-core-1.0](../../aws-lambda-core-1.0/library) instead to reduce the size of
+your compiled function.
 
 ## Using handlers
 To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
