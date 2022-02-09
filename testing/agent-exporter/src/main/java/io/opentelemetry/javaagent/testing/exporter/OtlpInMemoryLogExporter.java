@@ -47,6 +47,8 @@ class OtlpInMemoryLogExporter implements LogExporter {
   private final Server collector;
   private final LogExporter delegate;
 
+  // TODO(anuraaga): https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5314
+  @SuppressWarnings("deprecation")
   OtlpInMemoryLogExporter() {
     String serverName = InProcessServerBuilder.generateName();
 
