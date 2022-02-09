@@ -11,9 +11,7 @@ In order to configure a span flush timeout (default is set to 1 second), please 
 Available wrappers:
 - `io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestStreamWrapper` - for wrapping streaming handlers (implementing `RequestStreamHandler`), enabling HTTP context propagation for HTTP requests
 
-`TracingRequestStreamWrapper` is compatible with all Lambda functions, including those implementing `RequestHandler`. However, when using
-known Lambda event types as parameters, telemetry will be missing important information. When using `RequestHandler`, it
-is recommended to use [aws-lambda-events-2.2](../../aws-lambda-events-2.2/library).
+When using known Lambda event types as parameters, use [aws-lambda-events-2.2](../../aws-lambda-events-2.2/library).
 
 ## Using handlers
 To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
