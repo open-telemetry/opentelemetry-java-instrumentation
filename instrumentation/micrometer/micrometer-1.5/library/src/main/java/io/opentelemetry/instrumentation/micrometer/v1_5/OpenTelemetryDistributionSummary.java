@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
@@ -15,6 +16,7 @@ import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Statistic;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.NoopHistogram;
 import io.micrometer.core.instrument.distribution.TimeWindowMax;
@@ -41,6 +43,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
 
   OpenTelemetryDistributionSummary(
       Id id,
+      NamingConvention namingConvention,
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
       double scale,
@@ -55,16 +58,16 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
     }
     max = new TimeWindowMax(clock, distributionStatisticConfig);
 
-    this.attributes = tagsAsAttributes(id);
+    this.attributes = tagsAsAttributes(id, namingConvention);
     this.otelHistogram =
         otelMeter
-            .histogramBuilder(id.getName())
+            .histogramBuilder(name(id, namingConvention))
             .setDescription(description(id))
             .setUnit(baseUnit(id))
             .build();
     this.maxHandle =
         asyncInstrumentRegistry.buildGauge(
-            statisticInstrumentName(id, Statistic.MAX),
+            statisticInstrumentName(id, Statistic.MAX, namingConvention),
             description(id),
             baseUnit(id),
             attributes,
