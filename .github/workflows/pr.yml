@@ -36,12 +36,17 @@ jobs:
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
-      - name: Upload OpenJ9 javacore files if any
+      - name: Upload jvm crash dump files if any
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: javacore-build
-          path: "**/javacore.*.txt"
+          path: |
+            "**/hs_err_pid*.log"
+            "**/javacore.*.txt"
+            "**/Snap.*.trc"
+            "**/core.*.dmp"
+            "**/jitdump.*.dmp"
           if-no-files-found: ignore
 
   build-gradle-plugins:
@@ -107,12 +112,17 @@ jobs:
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
-      - name: Upload OpenJ9 javacore files if any
+      - name: Upload jvm crash dump files if any
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: javacore-test-${{ matrix.test-java-version }}
-          path: "**/javacore.*.txt"
+          path: |
+            "**/hs_err_pid*.log"
+            "**/javacore.*.txt"
+            "**/Snap.*.trc"
+            "**/core.*.dmp"
+            "**/jitdump.*.dmp"
           if-no-files-found: ignore
 
   testLatestDeps:
