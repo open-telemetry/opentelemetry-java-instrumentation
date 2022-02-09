@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;

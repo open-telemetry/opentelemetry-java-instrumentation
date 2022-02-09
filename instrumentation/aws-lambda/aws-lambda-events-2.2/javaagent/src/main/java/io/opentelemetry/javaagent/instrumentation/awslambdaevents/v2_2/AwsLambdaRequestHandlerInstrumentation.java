@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v1_0;
+package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v1_0.AwsLambdaInstrumentationHelper.functionInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v1_0.AwsLambdaInstrumentationHelper.messageInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -63,18 +61,24 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
         @Advice.Local("otelMessageContext") io.opentelemetry.context.Context messageContext,
         @Advice.Local("otelMessageScope") Scope messageScope) {
       input = AwsLambdaRequest.create(context, arg, Collections.emptyMap());
-      io.opentelemetry.context.Context parentContext = functionInstrumenter().extract(input);
+      io.opentelemetry.context.Context parentContext =
+          AwsLambdaInstrumentationHelper.functionInstrumenter().extract(input);
 
-      if (!functionInstrumenter().shouldStart(parentContext, input)) {
+      if (!AwsLambdaInstrumentationHelper.functionInstrumenter()
+          .shouldStart(parentContext, input)) {
         return;
       }
 
-      functionContext = functionInstrumenter().start(parentContext, input);
+      functionContext =
+          AwsLambdaInstrumentationHelper.functionInstrumenter().start(parentContext, input);
       functionScope = functionContext.makeCurrent();
 
       if (arg instanceof SQSEvent) {
-        if (messageInstrumenter().shouldStart(functionContext, (SQSEvent) arg)) {
-          messageContext = messageInstrumenter().start(functionContext, (SQSEvent) arg);
+        if (AwsLambdaInstrumentationHelper.messageInstrumenter()
+            .shouldStart(functionContext, (SQSEvent) arg)) {
+          messageContext =
+              AwsLambdaInstrumentationHelper.messageInstrumenter()
+                  .start(functionContext, (SQSEvent) arg);
           messageScope = messageContext.makeCurrent();
         }
       }
@@ -92,12 +96,14 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
       if (messageScope != null) {
         messageScope.close();
-        messageInstrumenter().end(messageContext, (SQSEvent) arg, null, throwable);
+        AwsLambdaInstrumentationHelper.messageInstrumenter()
+            .end(messageContext, (SQSEvent) arg, null, throwable);
       }
 
       if (functionScope != null) {
         functionScope.close();
-        functionInstrumenter().end(functionContext, input, null, throwable);
+        AwsLambdaInstrumentationHelper.functionInstrumenter()
+            .end(functionContext, input, null, throwable);
       }
 
       OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);

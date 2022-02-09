@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awslambda.v1_0;
+package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;

@@ -12,8 +12,9 @@ import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -45,8 +46,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
     value =
         "io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaStreamWrapperHttpPropagationTest$TestRequestHandler::handleRequest")
 public class AwsLambdaStreamWrapperHttpPropagationTest {
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   @RegisterExtension
   public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -144,11 +143,24 @@ public class AwsLambdaStreamWrapperHttpPropagationTest {
 
   public static final class TestRequestHandler implements RequestStreamHandler {
 
+    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)
         throws IOException {
-      JsonNode root = OBJECT_MAPPER.readTree(input);
-      String body = root.get("body").asText();
+      String body = "";
+      try (JsonParser parser = JSON_FACTORY.createParser(input)) {
+        parser.nextToken();
+        while (parser.nextToken() != JsonToken.END_OBJECT) {
+          parser.nextToken();
+          if (!parser.getCurrentName().equals("body")) {
+            parser.skipChildren();
+            continue;
+          }
+          body = parser.getText();
+          break;
+        }
+      }
       BufferedWriter writer =
           new BufferedWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8));
       if (body.equals("hello")) {
