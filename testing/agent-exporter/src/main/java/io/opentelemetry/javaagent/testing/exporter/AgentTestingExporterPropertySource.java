@@ -15,8 +15,9 @@ public class AgentTestingExporterPropertySource implements ConfigPropertySource 
   @Override
   public Map<String, String> getProperties() {
     Map<String, String> properties = new HashMap<>();
-    properties.put("otel.traces.exporter", "none");
+    properties.put("otel.logs.exporter", "none");
     properties.put("otel.metrics.exporter", "none");
+    properties.put("otel.traces.exporter", "none");
     return properties;
   }
 }
