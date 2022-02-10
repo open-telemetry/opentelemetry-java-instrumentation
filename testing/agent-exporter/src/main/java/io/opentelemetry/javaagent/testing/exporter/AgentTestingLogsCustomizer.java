@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLogEmitterProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
-import io.opentelemetry.sdk.logs.export.BatchLogProcessor;
+import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
 
 @AutoService(AgentListener.class)
 public class AgentTestingLogsCustomizer implements AgentListener {
@@ -24,8 +24,7 @@ public class AgentTestingLogsCustomizer implements AgentListener {
     SdkLogEmitterProvider logEmitterProvider =
         SdkLogEmitterProvider.builder()
             .setResource(autoConfiguredOpenTelemetrySdk.getResource())
-            .addLogProcessor(
-                BatchLogProcessor.builder(AgentTestingExporterFactory.logExporter).build())
+            .addLogProcessor(SimpleLogProcessor.create(AgentTestingExporterFactory.logExporter))
             .build();
 
     AgentLogEmitterProvider.resetForTest();
