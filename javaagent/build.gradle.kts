@@ -65,21 +65,6 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-jaeger")
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-otlp")
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-otlp-logs")
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-otlp-http-trace")
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-otlp-http-metrics")
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-otlp-http-logs")
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-logging-otlp")
-
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-prometheus")
-  javaagentLibs("io.prometheus:simpleclient")
-  javaagentLibs("io.prometheus:simpleclient_httpserver")
-
-  javaagentLibs("io.opentelemetry:opentelemetry-exporter-zipkin")
-
   // concurrentlinkedhashmap-lru and weak-lock-free are copied in to the instrumentation-api module
   licenseReportDependencies("com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2")
   licenseReportDependencies("com.blogspot.mydailyjava:weak-lock-free:0.18")
