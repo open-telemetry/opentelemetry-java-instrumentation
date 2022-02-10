@@ -11,6 +11,8 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 
 public class VaadinSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vaadin-14.2";
@@ -27,13 +29,15 @@ public class VaadinSingletons {
   private static final VaadinHelper HELPER;
 
   static {
+    ClientCallableCodeAttributesGetter clientCallableAttributesGetter =
+        new ClientCallableCodeAttributesGetter();
     CLIENT_CALLABLE_INSTRUMENTER =
         Instrumenter.<VaadinClientCallableRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                VaadinSingletons::clientCallableSpanName)
+                CodeSpanNameExtractor.create(clientCallableAttributesGetter))
             .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
-            .addAttributesExtractor(new ClientCallableCodeAttributesExtractor())
+            .addAttributesExtractor(CodeAttributesExtractor.create(clientCallableAttributesGetter))
             .newInstrumenter();
 
     REQUEST_HANDLER_INSTRUMENTER =
@@ -75,10 +79,6 @@ public class VaadinSingletons {
 
   public static VaadinHelper helper() {
     return HELPER;
-  }
-
-  private static String clientCallableSpanName(VaadinClientCallableRequest request) {
-    return SpanNames.fromMethod(request.getComponentClass(), request.getMethodName());
   }
 
   private static String rpcSpanName(VaadinRpcRequest rpcRequest) {

@@ -19,22 +19,21 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
    * Returns a {@link SpanNameExtractor} that constructs the span name according to the following
    * pattern: {@code <class.simpleName>.<methodName>}.
    */
-  public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      CodeAttributesExtractor<REQUEST, ?> attributesExtractor) {
-    return new CodeSpanNameExtractor<>(attributesExtractor);
+  public static <REQUEST> SpanNameExtractor<REQUEST> create(CodeAttributesGetter<REQUEST> getter) {
+    return new CodeSpanNameExtractor<>(getter);
   }
 
-  private final CodeAttributesExtractor<REQUEST, ?> attributesExtractor;
+  private final CodeAttributesGetter<REQUEST> getter;
 
-  private CodeSpanNameExtractor(CodeAttributesExtractor<REQUEST, ?> attributesExtractor) {
-    this.attributesExtractor = attributesExtractor;
+  private CodeSpanNameExtractor(CodeAttributesGetter<REQUEST> getter) {
+    this.getter = getter;
   }
 
   @Override
   public String extract(REQUEST request) {
-    Class<?> cls = attributesExtractor.codeClass(request);
+    Class<?> cls = getter.codeClass(request);
     String className = cls != null ? ClassNames.simpleName(cls) : "<unknown>";
-    String methodName = defaultString(attributesExtractor.methodName(request));
+    String methodName = defaultString(getter.methodName(request));
     return className + "." + methodName;
   }
 
