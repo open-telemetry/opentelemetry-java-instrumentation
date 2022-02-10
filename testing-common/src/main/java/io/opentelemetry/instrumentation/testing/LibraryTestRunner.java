@@ -115,6 +115,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   @Override
   public List<SpanData> getExportedSpans() {
+    openTelemetry.getSdkTracerProvider().forceFlush().join(10, TimeUnit.SECONDS);
     return testSpanExporter.getFinishedSpanItems();
   }
 

@@ -20,6 +20,7 @@ public class AgentTestingExporterFactory {
   static final OtlpInMemoryLogExporter logExporter = new OtlpInMemoryLogExporter(collector);
 
   public static List<byte[]> getSpanExportRequests() {
+    AgentTestingCustomizer.spanProcessor.forceFlush().join(10, TimeUnit.SECONDS);
     return collector.getTraceExportRequests();
   }
 
@@ -28,6 +29,7 @@ public class AgentTestingExporterFactory {
   }
 
   public static List<byte[]> getLogExportRequests() {
+    AgentTestingLogsCustomizer.logProcessor.forceFlush().join(10, TimeUnit.SECONDS);
     return collector.getLogsExportRequests();
   }
 

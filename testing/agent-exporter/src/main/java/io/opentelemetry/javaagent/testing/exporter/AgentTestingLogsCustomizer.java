@@ -13,13 +13,16 @@ import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLog
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.logs.LogProcessor;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
-import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
+import io.opentelemetry.sdk.logs.export.BatchLogProcessor;
+import java.time.Duration;
 
 @AutoService(AgentListener.class)
 public class AgentTestingLogsCustomizer implements AgentListener {
 
   static final LogProcessor logProcessor =
-      SimpleLogProcessor.create(AgentTestingExporterFactory.logExporter);
+      BatchLogProcessor.builder(AgentTestingExporterFactory.logExporter)
+          .setScheduleDelay(Duration.ofMillis(200))
+          .build();
 
   @Override
   public void beforeAgent(

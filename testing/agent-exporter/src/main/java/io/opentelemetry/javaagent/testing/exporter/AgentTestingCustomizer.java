@@ -19,7 +19,7 @@ import io.opentelemetry.sdk.metrics.export.MetricProducer;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricReaderFactory;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import java.time.Duration;
 import javax.annotation.Nullable;
 
@@ -28,7 +28,9 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
 
   static final AgentTestingSpanProcessor spanProcessor =
       new AgentTestingSpanProcessor(
-          SimpleSpanProcessor.create(AgentTestingExporterFactory.spanExporter));
+          BatchSpanProcessor.builder(AgentTestingExporterFactory.spanExporter)
+              .setScheduleDelay(Duration.ofMillis(200))
+              .build());
 
   static void reset() {
     spanProcessor.forceFlushCalled = false;
