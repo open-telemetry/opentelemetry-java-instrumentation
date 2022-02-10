@@ -15,7 +15,7 @@ muzzle {
   pass {
     group.set("org.elasticsearch")
     module.set("elasticsearch")
-    versions.set("[6.0.0, 8)")
+    versions.set("[6.0.0,8.0.0)")
     // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
     // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
     skip("7.11.0")
