@@ -17,7 +17,7 @@ dependencies {
   implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
   library("com.netflix.hystrix:hystrix-core:1.4.0")
-  library("io.reactivex:rxjava:1.0.7")
+  library("io.reactivex:rxjava:1.0.8")
 }
 
 tasks.withType<Test>().configureEach {
