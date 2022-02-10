@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Measurement;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleCounter;
@@ -28,16 +30,17 @@ final class OpenTelemetryCounter implements Counter, RemovableMeter {
 
   private volatile boolean removed = false;
 
-  OpenTelemetryCounter(Id id, Meter otelMeter) {
+  OpenTelemetryCounter(Id id, NamingConvention namingConvention, Meter otelMeter) {
     this.id = id;
+
+    this.attributes = tagsAsAttributes(id, namingConvention);
     this.otelCounter =
         otelMeter
-            .counterBuilder(id.getName())
+            .counterBuilder(name(id, namingConvention))
             .setDescription(description(id))
             .setUnit(baseUnit(id))
             .ofDoubles()
             .build();
-    this.attributes = tagsAsAttributes(id);
   }
 
   @Override

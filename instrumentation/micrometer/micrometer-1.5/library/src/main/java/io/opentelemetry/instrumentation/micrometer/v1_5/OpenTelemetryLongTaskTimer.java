@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.getUnitString;
@@ -13,6 +14,7 @@ import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.ge
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Statistic;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.internal.DefaultLongTaskTimer;
 import io.micrometer.core.instrument.util.TimeUtils;
@@ -36,6 +38,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
 
   OpenTelemetryLongTaskTimer(
       Id id,
+      NamingConvention namingConvention,
       Clock clock,
       TimeUnit baseTimeUnit,
       DistributionStatisticConfig distributionStatisticConfig,
@@ -47,17 +50,18 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
 
     this.otelHistogram =
         otelMeter
-            .histogramBuilder(id.getName())
+            .histogramBuilder(name(id, namingConvention))
             .setDescription(description(id))
             .setUnit(getUnitString(baseTimeUnit))
             .build();
     this.otelActiveTasksCounter =
         otelMeter
-            .upDownCounterBuilder(statisticInstrumentName(id, Statistic.ACTIVE_TASKS))
+            .upDownCounterBuilder(
+                statisticInstrumentName(id, Statistic.ACTIVE_TASKS, namingConvention))
             .setDescription(description(id))
             .setUnit("tasks")
             .build();
-    this.attributes = tagsAsAttributes(id);
+    this.attributes = tagsAsAttributes(id, namingConvention);
   }
 
   @Override

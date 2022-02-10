@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.getUnitString;
@@ -14,6 +15,7 @@ import io.micrometer.core.instrument.AbstractTimer;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Statistic;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.NoopHistogram;
 import io.micrometer.core.instrument.distribution.TimeWindowMax;
@@ -42,6 +44,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
   OpenTelemetryTimer(
       Id id,
+      NamingConvention namingConvention,
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
       PauseDetector pauseDetector,
@@ -58,16 +61,16 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     max = new TimeWindowMax(clock, distributionStatisticConfig);
 
     this.baseTimeUnit = baseTimeUnit;
-    this.attributes = tagsAsAttributes(id);
+    this.attributes = tagsAsAttributes(id, namingConvention);
     this.otelHistogram =
         otelMeter
-            .histogramBuilder(id.getName())
+            .histogramBuilder(name(id, namingConvention))
             .setDescription(description(id))
             .setUnit(getUnitString(baseTimeUnit))
             .build();
     this.maxHandle =
         asyncInstrumentRegistry.buildGauge(
-            statisticInstrumentName(id, Statistic.MAX),
+            statisticInstrumentName(id, Statistic.MAX, namingConvention),
             description(id),
             getUnitString(baseTimeUnit),
             attributes,

@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.ge
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Statistic;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
@@ -34,6 +35,7 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
 
   OpenTelemetryFunctionTimer(
       Id id,
+      NamingConvention namingConvention,
       T obj,
       ToLongFunction<T> countFunction,
       ToDoubleFunction<T> totalTimeFunction,
@@ -44,9 +46,9 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
     this.id = id;
     this.baseTimeUnit = baseTimeUnit;
 
-    String countMeterName = statisticInstrumentName(id, Statistic.COUNT);
-    String totalTimeMeterName = statisticInstrumentName(id, Statistic.TOTAL_TIME);
-    Attributes attributes = tagsAsAttributes(id);
+    String countMeterName = statisticInstrumentName(id, Statistic.COUNT, namingConvention);
+    String totalTimeMeterName = statisticInstrumentName(id, Statistic.TOTAL_TIME, namingConvention);
+    Attributes attributes = tagsAsAttributes(id, namingConvention);
 
     countMeasurementHandle =
         asyncInstrumentRegistry.buildLongCounter(

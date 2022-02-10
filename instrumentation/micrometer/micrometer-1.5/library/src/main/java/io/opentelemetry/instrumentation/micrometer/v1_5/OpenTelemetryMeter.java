@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAt
 
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
@@ -28,13 +29,16 @@ final class OpenTelemetryMeter implements Meter, RemovableMeter {
   private final List<AsyncMeasurementHandle> measurementHandles;
 
   OpenTelemetryMeter(
-      Id id, Iterable<Measurement> measurements, AsyncInstrumentRegistry asyncInstrumentRegistry) {
+      Id id,
+      NamingConvention namingConvention,
+      Iterable<Measurement> measurements,
+      AsyncInstrumentRegistry asyncInstrumentRegistry) {
     this.id = id;
-    Attributes attributes = tagsAsAttributes(id);
+    Attributes attributes = tagsAsAttributes(id, namingConvention);
 
     List<AsyncMeasurementHandle> measurementHandles = new ArrayList<>();
     for (Measurement measurement : measurements) {
-      String name = statisticInstrumentName(id, measurement.getStatistic());
+      String name = statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
       String description = description(id);
       String baseUnit = baseUnit(id);
 

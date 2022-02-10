@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Measurement;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
 import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
@@ -26,14 +28,21 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   OpenTelemetryGauge(
       Id id,
+      NamingConvention namingConvention,
       @Nullable T obj,
       ToDoubleFunction<T> objMetric,
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
+
     this.id = id;
 
     gaugeMeasurementHandle =
         asyncInstrumentRegistry.buildGauge(
-            id.getName(), description(id), baseUnit(id), tagsAsAttributes(id), obj, objMetric);
+            name(id, namingConvention),
+            description(id),
+            baseUnit(id),
+            tagsAsAttributes(id, namingConvention),
+            obj,
+            objMetric);
   }
 
   @Override

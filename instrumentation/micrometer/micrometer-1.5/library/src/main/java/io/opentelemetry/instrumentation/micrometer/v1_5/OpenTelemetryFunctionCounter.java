@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Measurement;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
 import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
@@ -26,6 +28,7 @@ final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, Removabl
 
   OpenTelemetryFunctionCounter(
       Id id,
+      NamingConvention namingConvention,
       T obj,
       ToDoubleFunction<T> countFunction,
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
@@ -33,7 +36,12 @@ final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, Removabl
 
     countMeasurementHandle =
         asyncInstrumentRegistry.buildDoubleCounter(
-            id.getName(), description(id), baseUnit(id), tagsAsAttributes(id), obj, countFunction);
+            name(id, namingConvention),
+            description(id),
+            baseUnit(id),
+            tagsAsAttributes(id, namingConvention),
+            obj,
+            countFunction);
   }
 
   @Override
