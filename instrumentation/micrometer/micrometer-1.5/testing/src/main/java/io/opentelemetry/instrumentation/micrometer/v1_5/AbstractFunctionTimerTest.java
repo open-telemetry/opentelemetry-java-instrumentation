@@ -72,7 +72,7 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionTimer.total_time",
+            "testFunctionTimer.sum",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -100,7 +100,7 @@ public abstract class AbstractFunctionTimerTest {
             INSTRUMENTATION_NAME, "testFunctionTimer.count", AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "testFunctionTimer.total_time", AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "testFunctionTimer.sum", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -121,7 +121,7 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testNanoFunctionTimer.total_time",
+            "testNanoFunctionTimer.sum",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -162,7 +162,7 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionTimerWithTags.total_time",
+            "testFunctionTimerWithTags.sum",
             metrics ->
                 metrics.anySatisfy(
                     metric ->

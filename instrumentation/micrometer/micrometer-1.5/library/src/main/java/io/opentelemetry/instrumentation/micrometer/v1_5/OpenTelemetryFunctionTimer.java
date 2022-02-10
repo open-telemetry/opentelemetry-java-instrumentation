@@ -6,13 +6,12 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.getUnitString;
 
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Measurement;
-import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.micrometer.core.instrument.util.TimeUtils;
@@ -46,8 +45,8 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
     this.id = id;
     this.baseTimeUnit = baseTimeUnit;
 
-    String countMeterName = statisticInstrumentName(id, Statistic.COUNT, namingConvention);
-    String totalTimeMeterName = statisticInstrumentName(id, Statistic.TOTAL_TIME, namingConvention);
+    String countMeterName = name(id, namingConvention) + ".count";
+    String totalTimeMeterName = name(id, namingConvention) + ".sum";
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
     countMeasurementHandle =

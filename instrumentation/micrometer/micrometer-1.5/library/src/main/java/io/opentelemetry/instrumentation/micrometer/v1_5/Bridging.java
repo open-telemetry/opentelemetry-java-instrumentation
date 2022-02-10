@@ -33,11 +33,7 @@ final class Bridging {
   }
 
   static String name(Meter.Id id, NamingConvention namingConvention) {
-    return name(id.getName(), id, namingConvention);
-  }
-
-  private static String name(String name, Meter.Id id, NamingConvention namingConvention) {
-    return namingConvention.name(name, id.getType(), id.getBaseUnit());
+    return namingConvention.name(id.getName(), id.getType(), id.getBaseUnit());
   }
 
   static String description(Meter.Id id) {
@@ -56,7 +52,7 @@ final class Bridging {
     // use "total_time" instead of "total" to avoid clashing with Statistic.TOTAL
     String statisticStr =
         statistic == Statistic.TOTAL_TIME ? "total_time" : statistic.getTagValueRepresentation();
-    return name(prefix + statisticStr, id, namingConvention);
+    return namingConvention.name(prefix + statisticStr, id.getType(), id.getBaseUnit());
   }
 
   private Bridging() {}
