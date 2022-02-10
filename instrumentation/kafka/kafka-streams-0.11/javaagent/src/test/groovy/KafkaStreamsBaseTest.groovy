@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import java.time.Duration
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.Consumer
@@ -16,13 +17,18 @@ import org.apache.kafka.common.serialization.IntegerDeserializer
 import org.apache.kafka.common.serialization.IntegerSerializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.KafkaContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.containers.wait.strategy.Wait
 import spock.lang.Shared
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class KafkaStreamsBaseTest extends AgentInstrumentationSpecification {
+  private static final Logger logger = LoggerFactory.getLogger("io.opentelemetry.KafkaStreamsBaseTest")
 
   protected static final STREAM_PENDING = "test.pending"
   protected static final STREAM_PROCESSED = "test.processed"
@@ -38,6 +44,9 @@ class KafkaStreamsBaseTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     kafka = new KafkaContainer()
+      .withLogConsumer(new Slf4jLogConsumer(logger))
+      .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
+      .withStartupTimeout(Duration.ofMinutes(1))
     kafka.start()
 
     // create test topic
