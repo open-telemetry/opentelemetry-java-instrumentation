@@ -135,7 +135,9 @@ public final class ArmeriaTracingBuilder {
                 HttpSpanStatusExtractor.create(clientAttributesGetter)))
         .addAttributesExtractor(netClientAttributesExtractor)
         .addAttributesExtractor(
-            HttpClientAttributesExtractor.create(clientAttributesGetter, capturedHttpClientHeaders))
+            HttpClientAttributesExtractor.builder(clientAttributesGetter)
+                .captureHttpHeaders(capturedHttpClientHeaders)
+                .build())
         .addRequestMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(
@@ -144,7 +146,9 @@ public final class ArmeriaTracingBuilder {
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new ArmeriaNetServerAttributesGetter()))
         .addAttributesExtractor(
-            HttpServerAttributesExtractor.create(serverAttributesGetter, capturedHttpServerHeaders))
+            HttpServerAttributesExtractor.builder(serverAttributesGetter)
+                .captureHttpHeaders(capturedHttpServerHeaders)
+                .build())
         .addRequestMetrics(HttpServerMetrics.get())
         .addContextCustomizer(HttpRouteHolder.get());
 

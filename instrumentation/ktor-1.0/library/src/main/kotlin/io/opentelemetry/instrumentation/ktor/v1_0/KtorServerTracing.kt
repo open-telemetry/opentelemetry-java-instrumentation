@@ -102,7 +102,7 @@ class KtorServerTracing private constructor(
       with(instrumenterBuilder) {
         setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
         addAttributesExtractor(NetServerAttributesExtractor.create(KtorNetServerAttributesGetter()))
-        addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter, configuration.capturedHttpHeaders))
+        addAttributesExtractor(HttpServerAttributesExtractor.builder(httpAttributesGetter).captureHttpHeaders(configuration.capturedHttpHeaders).build())
         addRequestMetrics(HttpServerMetrics.get())
         addContextCustomizer(HttpRouteHolder.get())
       }

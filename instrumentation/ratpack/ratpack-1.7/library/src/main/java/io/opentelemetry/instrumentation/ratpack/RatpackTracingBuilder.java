@@ -111,7 +111,9 @@ public final class RatpackTracingBuilder {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributes))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.create(httpAttributes, capturedHttpServerHeaders))
+                HttpServerAttributesExtractor.builder(httpAttributes)
+                    .captureHttpHeaders(capturedHttpServerHeaders)
+                    .build())
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(RatpackGetter.INSTANCE);
@@ -128,7 +130,9 @@ public final class RatpackTracingBuilder {
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
         .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributes))
         .addAttributesExtractor(
-            HttpClientAttributesExtractor.create(httpAttributes, capturedHttpClientHeaders))
+            HttpClientAttributesExtractor.builder(httpAttributes)
+                .captureHttpHeaders(capturedHttpClientHeaders)
+                .build())
         .addAttributesExtractors(additionalHttpClientExtractors)
         .addRequestMetrics(HttpServerMetrics.get())
         .newClientInstrumenter(RequestHeaderSetter.INSTANCE);

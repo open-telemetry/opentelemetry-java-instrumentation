@@ -43,8 +43,9 @@ public class InstrumenterBenchmark {
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
-              HttpClientAttributesExtractor.create(
-                  ConstantHttpAttributesGetter.INSTANCE, CapturedHttpHeaders.empty()))
+              HttpClientAttributesExtractor.builder(ConstantHttpAttributesGetter.INSTANCE)
+                  .captureHttpHeaders(CapturedHttpHeaders.empty())
+                  .build())
           .addAttributesExtractor(
               NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
           .newInstrumenter();
