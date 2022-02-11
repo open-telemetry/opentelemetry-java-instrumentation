@@ -47,6 +47,8 @@ dependencies {
 
   implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
 
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
+
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.slf4j:slf4j-api")
 
