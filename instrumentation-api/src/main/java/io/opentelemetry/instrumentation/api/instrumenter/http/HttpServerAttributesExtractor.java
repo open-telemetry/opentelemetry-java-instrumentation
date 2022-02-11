@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedHeader;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromXForwardedForHeader;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedHeader;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromXForwardedProtoHeader;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -64,7 +66,11 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     set(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request));
-    set(attributes, SemanticAttributes.HTTP_SCHEME, getter.scheme(request));
+    String forwardedProto = forwardedProto(request);
+    set(
+        attributes,
+        SemanticAttributes.HTTP_SCHEME,
+        forwardedProto != null ? forwardedProto : getter.scheme(request));
     set(attributes, SemanticAttributes.HTTP_HOST, host(request));
     set(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
     set(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
@@ -87,6 +93,26 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   private String host(REQUEST request) {
     return firstHeaderValue(getter.requestHeader(request, "host"));
+  }
+
+  @Nullable
+  private String forwardedProto(REQUEST request) {
+    // try Forwarded
+    String forwarded = firstHeaderValue(getter.requestHeader(request, "forwarded"));
+    if (forwarded != null) {
+      forwarded = extractProtoFromForwardedHeader(forwarded);
+      if (forwarded != null) {
+        return forwarded;
+      }
+    }
+
+    // try X-Forwarded-Proto
+    forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-proto"));
+    if (forwarded != null) {
+      return extractProtoFromXForwardedProtoHeader(forwarded);
+    }
+
+    return null;
   }
 
   @Nullable

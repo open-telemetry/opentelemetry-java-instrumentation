@@ -12,6 +12,53 @@ import org.junit.jupiter.api.Test;
 class ForwardedHeaderParserTest {
 
   @Test
+  void extractProtoFromForwardedHeader() {
+    assertThat(ForwardedHeaderParser.extractProtoFromForwardedHeader("for=1.1.1.1;proto=xyz"))
+        .isEqualTo("xyz");
+  }
+
+  @Test
+  void extractProtoFromForwardedHeaderWithTrailingSemicolon() {
+    assertThat(ForwardedHeaderParser.extractProtoFromForwardedHeader("for=1.1.1.1;proto=xyz;"))
+        .isEqualTo("xyz");
+  }
+
+  @Test
+  void extractProtoFromForwardedHeaderWithTrailingComma() {
+    assertThat(ForwardedHeaderParser.extractProtoFromForwardedHeader("for=1.1.1.1;proto=xyz,"))
+        .isEqualTo("xyz");
+  }
+
+  @Test
+  void extractProtoFromForwardedHeaderWithQuotes() {
+    assertThat(ForwardedHeaderParser.extractProtoFromForwardedHeader("for=1.1.1.1;proto=\"xyz\""))
+        .isEqualTo("xyz");
+  }
+
+  @Test
+  void extractProtoFromForwardedHeaderWithQuotesAndTrailingSemicolon() {
+    assertThat(ForwardedHeaderParser.extractProtoFromForwardedHeader("for=1.1.1.1;proto=\"xyz\";"))
+        .isEqualTo("xyz");
+  }
+
+  @Test
+  void extractProtoFromForwardedHeaderWithQuotesAndTrailingComma() {
+    assertThat(ForwardedHeaderParser.extractProtoFromForwardedHeader("for=1.1.1.1;proto=\"xyz\","))
+        .isEqualTo("xyz");
+  }
+
+  @Test
+  void extractProtoFromXForwardedProtoHeader() {
+    assertThat(ForwardedHeaderParser.extractProtoFromXForwardedProtoHeader("xyz")).isEqualTo("xyz");
+  }
+
+  @Test
+  void extractProtoFromXForwardedProtoHeaderWithQuotes() {
+    assertThat(ForwardedHeaderParser.extractProtoFromXForwardedProtoHeader("\"xyz\""))
+        .isEqualTo("xyz");
+  }
+
+  @Test
   void extractClientIpFromForwardedHeader() {
     assertThat(ForwardedHeaderParser.extractClientIpFromForwardedHeader("for=1.1.1.1"))
         .isEqualTo("1.1.1.1");

@@ -10,6 +10,24 @@ import javax.annotation.Nullable;
 final class ForwardedHeaderParser {
 
   @Nullable
+  static String extractProtoFromForwardedHeader(String forwarded) {
+    int start = forwarded.toLowerCase().indexOf("proto=");
+    if (start < 0) {
+      return null;
+    }
+    start += 4; // start is now the index after proto=
+    if (start >= forwarded.length() - 1) { // the value after for= must not be empty
+      return null;
+    }
+    return extractProto(forwarded, start);
+  }
+
+  @Nullable
+  static String extractProtoFromXForwardedProtoHeader(String forwardedProto) {
+    return extractProto(forwardedProto, 0);
+  }
+
+  @Nullable
   static String extractClientIpFromForwardedHeader(String forwarded) {
     int start = forwarded.toLowerCase().indexOf("for=");
     if (start < 0) {
@@ -25,6 +43,26 @@ final class ForwardedHeaderParser {
   @Nullable
   static String extractClientIpFromXForwardedForHeader(String forwardedFor) {
     return extractIpAddress(forwardedFor, 0);
+  }
+
+  @Nullable
+  private static String extractProto(String forwarded, int start) {
+    if (forwarded.length() == start) {
+      return null;
+    }
+    if (forwarded.charAt(start) == '"') {
+      return extractProto(forwarded, start + 1);
+    }
+    for (int i = start; i < forwarded.length() - 1; i++) {
+      char c = forwarded.charAt(i);
+      if (c == ',' || c == ';' || c == '"') {
+        if (i == start) { // empty string
+          return null;
+        }
+        return forwarded.substring(start, i);
+      }
+    }
+    return forwarded.substring(start);
   }
 
   // from https://www.rfc-editor.org/rfc/rfc7239
