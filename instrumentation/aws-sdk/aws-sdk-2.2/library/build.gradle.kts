@@ -13,9 +13,14 @@ dependencies {
   testImplementation("org.assertj:assertj-core")
   testImplementation("org.mockito:mockito-core")
 
-  latestDepTestLibrary("software.amazon.awssdk:kinesis:2.17.114") // issue #5259
-  latestDepTestLibrary("software.amazon.awssdk:aws-core:2.17.114") // issue #5259
-  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:2.17.114") // issue #5259
+  latestDepTestLibrary("software.amazon.awssdk:aws-core:+")
+  latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:+")
+  latestDepTestLibrary("software.amazon.awssdk:dynamodb:+")
+  latestDepTestLibrary("software.amazon.awssdk:ec2:+")
+  latestDepTestLibrary("software.amazon.awssdk:kinesis:+")
+  latestDepTestLibrary("software.amazon.awssdk:rds:+")
+  latestDepTestLibrary("software.amazon.awssdk:s3:+")
+  latestDepTestLibrary("software.amazon.awssdk:sqs:+")
 }
 
 tasks {
