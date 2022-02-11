@@ -30,13 +30,9 @@ val javaagentLibs by configurations.creating {
   isCanBeConsumed = false
   extendsFrom(baseJavaagentLibs)
 }
-// this configuration collects just exporter libs (also placed in the agent classloader & isolated from the instrumented application)
-val exporterLibs by configurations.creating {
-  isCanBeResolved = true
-  isCanBeConsumed = false
-}
+
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
-listOf(baseJavaagentLibs, javaagentLibs, exporterLibs).forEach {
+listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
     exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
@@ -68,8 +64,6 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
-
-  exporterLibs(project(":javaagent-exporters"))
 
   // concurrentlinkedhashmap-lru and weak-lock-free are copied in to the instrumentation-api module
   licenseReportDependencies("com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2")
@@ -135,19 +129,12 @@ tasks {
     excludeBootstrapJars()
   }
 
-  val relocateExporterLibs by registering(ShadowJar::class) {
-    configurations = listOf(exporterLibs)
-
-    archiveFileName.set("exporterLibs-relocated.jar")
-  }
-
   // Includes everything needed for OOTB experience
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    dependsOn(relocateJavaagentLibs, relocateExporterLibs)
+    dependsOn(relocateJavaagentLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
-    isolateClasses(relocateExporterLibs.get().outputs.files)
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
