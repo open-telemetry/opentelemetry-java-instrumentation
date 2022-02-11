@@ -13,9 +13,11 @@ as the last step, which publishes a snapshot build to
 
 Before making the release:
 
+* Close the release milestone if there is one
 * Merge a PR to `main` updating the `CHANGELOG.md`
   * Use the script at `buildscripts/draft-change-log-entries.sh` to help create an initial draft.
     We typically only include end-user facing changes in the change log.
+  * Specify the (estimated) release date (UTC)
 * Run the [Prepare Release Branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
 * Review and merge the two PRs that it creates (one is targeted to the release branch and one is targeted to the `main` branch)
 * Delete the branches from these two PRs since they are created in the main repo
