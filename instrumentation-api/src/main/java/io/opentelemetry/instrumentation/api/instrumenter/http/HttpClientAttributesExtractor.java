@@ -30,15 +30,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
-   * HTTP client attributes extractor.
-   */
-  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new HttpClientAttributesExtractorBuilder<>(getter);
-  }
-
-  /**
    * Creates the HTTP client attributes extractor.
    *
    * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
@@ -50,6 +41,15 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
       CapturedHttpHeaders capturedHttpHeaders) {
     return builder(getter).captureHttpHeaders(capturedHttpHeaders).build();
+  }
+
+  /**
+   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
+   */
+  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
+    return new HttpClientAttributesExtractorBuilder<>(getter);
   }
 
   HttpClientAttributesExtractor(

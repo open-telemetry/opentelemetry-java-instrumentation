@@ -36,15 +36,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns a new {@link HttpServerAttributesExtractorBuilder} that can be used to configure the
-   * HTTP client attributes extractor.
-   */
-  public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new HttpServerAttributesExtractorBuilder<>(getter);
-  }
-
-  /**
    * Creates the HTTP server attributes extractor.
    *
    * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
@@ -56,6 +47,15 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
       CapturedHttpHeaders capturedHttpHeaders) {
     return builder(getter).captureHttpHeaders(capturedHttpHeaders).build();
+  }
+
+  /**
+   * Returns a new {@link HttpServerAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
+   */
+  public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
+    return new HttpServerAttributesExtractorBuilder<>(getter);
   }
 
   private final Function<Context, String> httpRouteHolderGetter;
