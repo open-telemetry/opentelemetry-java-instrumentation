@@ -103,7 +103,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
       boolean isRepositoryOp =
           !Object.class.equals(
               method
-                  .getDeclaringClass()); // Repository.class.isAssignableFrom(method.getDeclaringClass());
+                  .getDeclaringClass());
       ClassAndMethod classAndMethod = ClassAndMethod.create(repositoryInterface, method.getName());
       if (!isRepositoryOp || !instrumenter().shouldStart(parentContext, classAndMethod)) {
         return methodInvocation.proceed();
