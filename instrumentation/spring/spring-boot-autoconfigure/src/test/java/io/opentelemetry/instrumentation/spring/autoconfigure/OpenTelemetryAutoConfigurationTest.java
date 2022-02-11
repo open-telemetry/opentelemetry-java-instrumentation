@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,5 +70,34 @@ class OpenTelemetryAutoConfigurationTest {
                     .hasBean("openTelemetry")
                     .hasBean("customTracerProvider")
                     .doesNotHaveBean("sdkTracerProvider"));
+  }
+
+  @Test
+  @DisplayName(
+      "when spring.application.name is set value should be passed to service name attribute")
+  void shouldDetermineServiceNameBySpringApplicationName() {
+    this.contextRunner
+        .withPropertyValues("spring.application.name=myapp-backend")
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .run(
+            context -> {
+              Resource otelResource = context.getBean("otelResource", Resource.class);
+
+              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("myapp-backend");
+            });
+  }
+
+  @Test
+  @DisplayName(
+      "when spring application name and otel service name are not set service name should be default")
+  void hasDefaultServiceName() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .run(
+            context -> {
+              Resource otelResource = context.getBean("otelResource", Resource.class);
+
+              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("unknown_service:java");
+            });
   }
 }
