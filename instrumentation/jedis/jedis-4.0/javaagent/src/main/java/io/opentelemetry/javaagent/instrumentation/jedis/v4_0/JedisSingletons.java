@@ -9,9 +9,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 public final class JedisSingletons {
@@ -20,15 +19,15 @@ public final class JedisSingletons {
   private static final Instrumenter<JedisRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<JedisRequest, Void> attributesExtractor =
-        new JedisDbAttributesExtractor();
-    SpanNameExtractor<JedisRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
+    JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
     JedisNetAttributesGetter netAttributesGetter = new JedisNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<JedisRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
-            .addAttributesExtractor(attributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());

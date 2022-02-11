@@ -5,42 +5,42 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-final class RedissonDbAttributesExtractor extends DbAttributesExtractor<RedissonRequest, Void> {
+final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest> {
 
   @Override
-  protected String system(RedissonRequest request) {
+  public String system(RedissonRequest request) {
     return SemanticAttributes.DbSystemValues.REDIS;
   }
 
   @Nullable
   @Override
-  protected String user(RedissonRequest request) {
+  public String user(RedissonRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  protected String name(RedissonRequest request) {
+  public String name(RedissonRequest request) {
     return null;
   }
 
   @Override
-  protected String connectionString(RedissonRequest request) {
+  public String connectionString(RedissonRequest request) {
     return null;
   }
 
   @Override
-  protected String statement(RedissonRequest request) {
+  public String statement(RedissonRequest request) {
     return request.getStatement();
   }
 
   @Nullable
   @Override
-  protected String operation(RedissonRequest request) {
+  public String operation(RedissonRequest request) {
     return request.getOperation();
   }
 }

@@ -16,7 +16,7 @@ class MongoSpanNameExtractorTest extends Specification {
 
   def 'test span name with no dbName'() {
     setup:
-    def nameExtractor = new MongoSpanNameExtractor(new MongoDbAttributesExtractor(DEFAULT_MAX_NORMALIZED_QUERY_LENGTH), new MongoAttributesExtractor())
+    def nameExtractor = new MongoSpanNameExtractor(new MongoDbAttributesGetter(DEFAULT_MAX_NORMALIZED_QUERY_LENGTH), new MongoAttributesExtractor())
     def event = new CommandStartedEvent(
       0, null, null, command, new BsonDocument(command, new BsonInt32(1)))
 

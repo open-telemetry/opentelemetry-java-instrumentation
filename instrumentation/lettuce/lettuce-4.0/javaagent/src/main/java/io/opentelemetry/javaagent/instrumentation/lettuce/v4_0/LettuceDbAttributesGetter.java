@@ -6,42 +6,42 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-final class LettuceDbAttributesExtractor
-    extends DbAttributesExtractor<RedisCommand<?, ?, ?>, Void> {
+final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?, ?>> {
+
   @Override
-  protected String system(RedisCommand<?, ?, ?> request) {
+  public String system(RedisCommand<?, ?, ?> request) {
     return SemanticAttributes.DbSystemValues.REDIS;
   }
 
   @Override
   @Nullable
-  protected String user(RedisCommand<?, ?, ?> request) {
+  public String user(RedisCommand<?, ?, ?> request) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String name(RedisCommand<?, ?, ?> request) {
+  public String name(RedisCommand<?, ?, ?> request) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String connectionString(RedisCommand<?, ?, ?> request) {
+  public String connectionString(RedisCommand<?, ?, ?> request) {
     return null;
   }
 
   @Override
-  protected String statement(RedisCommand<?, ?, ?> request) {
+  public String statement(RedisCommand<?, ?, ?> request) {
     return null;
   }
 
   @Override
-  protected String operation(RedisCommand<?, ?, ?> request) {
+  public String operation(RedisCommand<?, ?, ?> request) {
     return request.getType().name();
   }
 }

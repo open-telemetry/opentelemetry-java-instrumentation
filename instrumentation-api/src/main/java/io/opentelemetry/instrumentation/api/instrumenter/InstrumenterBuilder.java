@@ -16,7 +16,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
@@ -169,8 +169,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * <ul>
    *   <li>CLIENT nested spans are suppressed depending on their type: {@linkplain
    *       HttpClientAttributesExtractor HTTP}, {@linkplain RpcAttributesExtractor RPC} or
-   *       {@linkplain DbAttributesExtractor database} clients. If a span with the same type is
-   *       present in the parent context object, new span of the same type will not be started.
+   *       {@linkplain DbClientAttributesExtractor database} clients. If a span with the same type
+   *       is present in the parent context object, new span of the same type will not be started.
    * </ul>
    *
    * <p><strong>When disabled:</strong>

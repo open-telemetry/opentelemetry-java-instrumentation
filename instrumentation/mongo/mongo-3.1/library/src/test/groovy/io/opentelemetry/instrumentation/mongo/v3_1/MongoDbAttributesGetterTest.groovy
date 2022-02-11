@@ -14,11 +14,11 @@ import spock.lang.Specification
 import static io.opentelemetry.instrumentation.mongo.v3_1.MongoTracingBuilder.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH
 import static java.util.Arrays.asList
 
-class MongoDbAttributesExtractorTest extends Specification {
+class MongoDbAttributesGetterTest extends Specification {
 
   def 'should sanitize statements to json'() {
     setup:
-    def extractor = new MongoDbAttributesExtractor(DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
+    def extractor = new MongoDbAttributesGetter(DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
 
     expect:
     sanitizeStatementAcrossVersions(extractor,
@@ -38,7 +38,7 @@ class MongoDbAttributesExtractorTest extends Specification {
 
   def 'should only preserve string value if it is the value of the first top-level key'() {
     setup:
-    def extractor = new MongoDbAttributesExtractor(DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
+    def extractor = new MongoDbAttributesGetter(DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
 
     expect:
     sanitizeStatementAcrossVersions(extractor,
@@ -50,7 +50,7 @@ class MongoDbAttributesExtractorTest extends Specification {
 
   def 'should truncate simple command'() {
     setup:
-    def extractor = new MongoDbAttributesExtractor(20)
+    def extractor = new MongoDbAttributesGetter(20)
 
     def normalized = sanitizeStatementAcrossVersions(extractor,
       new BsonDocument("cmd", new BsonString("c"))
@@ -63,7 +63,7 @@ class MongoDbAttributesExtractorTest extends Specification {
 
   def 'should truncate array'() {
     setup:
-    def extractor = new MongoDbAttributesExtractor(27)
+    def extractor = new MongoDbAttributesGetter(27)
 
     def normalized = sanitizeStatementAcrossVersions(extractor,
       new BsonDocument("cmd", new BsonString("c"))
@@ -74,7 +74,7 @@ class MongoDbAttributesExtractorTest extends Specification {
     normalized == '{"cmd": "c", "f1": ["?", "?' || normalized == '{"cmd": "c", "f1": ["?",'
   }
 
-  def sanitizeStatementAcrossVersions(MongoDbAttributesExtractor extractor, BsonDocument query) {
+  def sanitizeStatementAcrossVersions(MongoDbAttributesGetter extractor, BsonDocument query) {
     return sanitizeAcrossVersions(extractor.sanitizeStatement(query))
   }
 

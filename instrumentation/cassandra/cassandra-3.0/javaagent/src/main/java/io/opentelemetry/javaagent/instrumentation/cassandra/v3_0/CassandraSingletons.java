@@ -9,10 +9,10 @@ import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 public final class CassandraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-3.0";
@@ -22,14 +22,17 @@ public final class CassandraSingletons {
   private static final Instrumenter<CassandraRequest, ExecutionInfo> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<CassandraRequest, ExecutionInfo> attributesExtractor =
-        new CassandraSqlAttributesExtractor();
-    SpanNameExtractor<CassandraRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
+    CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
-            .addAttributesExtractor(attributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(attributesGetter))
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(attributesGetter)
+                    .captureTable(SemanticAttributes.DB_CASSANDRA_TABLE)
+                    .build())
             .addAttributesExtractor(
                 NetClientAttributesExtractor.create(new CassandraNetAttributesGetter()))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
