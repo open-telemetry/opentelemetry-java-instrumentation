@@ -34,6 +34,8 @@
 - Make HttpClientMetrics report low cardinality metrics ([#5319](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5319))
 - Implement NamingConvention support in Micrometer bridge ([#5328](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5328))
 - Add net.peer.name and net.peer.port attributes for grpc client span ([#5324](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5324))
+- Add jaeger remote sampler to agent ([#5346](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5346))
+- Weak cache optimization ([#5344](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5344))
 
 ### 🛠️ Bug fixes
 
@@ -66,7 +68,7 @@
    [#5194](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5194)
    [#5267](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5267))
 - Refactor AttributesExtractor so that it extracts route from Context ([#5288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5288))
-
+- Publish gradle-plugins to Maven Central ([#5333](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5333))
 
 ## Version 1.10.1 - 2022-01-27
 
