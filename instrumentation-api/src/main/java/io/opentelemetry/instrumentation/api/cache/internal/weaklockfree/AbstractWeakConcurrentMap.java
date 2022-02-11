@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -159,6 +160,22 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
       resetLookupKey(lookupKey);
     }
     return previous == null ? target.putIfAbsent(new WeakKey<>(key, this), value) : previous;
+  }
+
+  public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    if (key == null || mappingFunction == null) {
+      throw new NullPointerException();
+    }
+    V previous;
+    L lookupKey = getLookupKey(key);
+    try {
+      previous = target.get(lookupKey);
+    } finally {
+      resetLookupKey(lookupKey);
+    }
+    return previous == null
+        ? target.computeIfAbsent(new WeakKey<>(key, this), ignored -> mappingFunction.apply(key))
+        : previous;
   }
 
   /**
