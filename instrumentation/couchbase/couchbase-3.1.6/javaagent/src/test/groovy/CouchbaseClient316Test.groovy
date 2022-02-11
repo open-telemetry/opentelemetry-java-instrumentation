@@ -41,7 +41,7 @@ class CouchbaseClient316Test extends AgentInstrumentationSpecification {
     cluster = Cluster.connect(couchbase.connectionString, couchbase.username, couchbase.password)
     def bucket = cluster.bucket("test")
     collection = bucket.defaultCollection()
-    bucket.waitUntilReady(Duration.ofSeconds(10))
+    bucket.waitUntilReady(Duration.ofSeconds(30))
   }
 
   def cleanupSpec() {

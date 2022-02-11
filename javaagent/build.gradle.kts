@@ -30,13 +30,9 @@ val javaagentLibs by configurations.creating {
   isCanBeConsumed = false
   extendsFrom(baseJavaagentLibs)
 }
-// this configuration collects just exporter libs (also placed in the agent classloader & isolated from the instrumented application)
-val exporterLibs by configurations.creating {
-  isCanBeResolved = true
-  isCanBeConsumed = false
-}
+
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
-listOf(baseJavaagentLibs, javaagentLibs, exporterLibs).forEach {
+listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
     exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
@@ -68,8 +64,6 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
-
-  exporterLibs(project(":javaagent-exporters"))
 
   // concurrentlinkedhashmap-lru and weak-lock-free are copied in to the instrumentation-api module
   licenseReportDependencies("com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2")
@@ -135,24 +129,12 @@ tasks {
     excludeBootstrapJars()
   }
 
-  val relocateExporterLibs by registering(ShadowJar::class) {
-    configurations = listOf(exporterLibs)
-
-    archiveFileName.set("exporterLibs-relocated.jar")
-  }
-
   // Includes everything needed for OOTB experience
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    // without an explicit dependency on jar here, :javaagent:test fails on CI because :javaagent:jar
-    // runs after :javaagent:shadowJar and loses (at least) the manifest entries
-    //
-    // (also, note that we cannot disable the jar task completely, because it is necessary to produce
-    // javadoc and sources artifacts which maven central requires)
-    dependsOn(jar, relocateJavaagentLibs, relocateExporterLibs)
+    dependsOn(relocateJavaagentLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
-    isolateClasses(relocateExporterLibs.get().outputs.files)
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -186,6 +168,11 @@ tasks {
     }
   }
 
+  jar {
+    // Empty jar that cannot be used for anything and isn't published.
+    archiveClassifier.set("dontuse")
+  }
+
   val baseJar by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = false
@@ -217,6 +204,25 @@ tasks {
 
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
+  }
+
+  // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.
+  // Since we are fully bundled and have no dependencies, Gradle metadata wouldn't provide any advantage over
+  // the POM anyways so in practice we shouldn't be losing anything.
+  withType<GenerateModuleMetadata>().configureEach {
+    enabled = false
+  }
+}
+
+// Don't publish non-shadowed jar (shadowJar is in shadowRuntimeElements)
+with(components["java"] as AdhocComponentWithVariants) {
+  configurations.forEach {
+    withVariantsFromConfiguration(configurations["apiElements"]) {
+      skip()
+    }
+    withVariantsFromConfiguration(configurations["runtimeElements"]) {
+      skip()
+    }
   }
 }
 

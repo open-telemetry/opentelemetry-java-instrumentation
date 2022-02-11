@@ -30,8 +30,24 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
   implementation("io.opentelemetry:opentelemetry-extension-noop-api")
 
-  // Other exporters are in javaagent-exporters
+  // Exporters with dependencies
+  implementation("io.opentelemetry:opentelemetry-exporter-jaeger")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
+  implementation("io.opentelemetry:opentelemetry-exporter-otlp")
+  implementation("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
+  implementation("io.opentelemetry:opentelemetry-exporter-otlp-logs")
+  implementation("io.opentelemetry:opentelemetry-exporter-otlp-http-trace")
+  implementation("io.opentelemetry:opentelemetry-exporter-otlp-http-metrics")
+  implementation("io.opentelemetry:opentelemetry-exporter-otlp-http-logs")
+  implementation("io.opentelemetry:opentelemetry-exporter-logging-otlp")
+
+  implementation("io.opentelemetry:opentelemetry-exporter-prometheus")
+  implementation("io.prometheus:simpleclient")
+  implementation("io.prometheus:simpleclient_httpserver")
+
+  implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
+
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
 
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.slf4j:slf4j-api")
