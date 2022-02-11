@@ -15,7 +15,7 @@ final class ForwardedHeaderParser {
     if (start < 0) {
       return null;
     }
-    start += 4; // start is now the index after proto=
+    start += 6; // start is now the index after proto=
     if (start >= forwarded.length() - 1) { // the value after for= must not be empty
       return null;
     }
@@ -53,7 +53,7 @@ final class ForwardedHeaderParser {
     if (forwarded.charAt(start) == '"') {
       return extractProto(forwarded, start + 1);
     }
-    for (int i = start; i < forwarded.length() - 1; i++) {
+    for (int i = start; i < forwarded.length(); i++) {
       char c = forwarded.charAt(i);
       if (c == ',' || c == ';' || c == '"') {
         if (i == start) { // empty string
@@ -89,7 +89,7 @@ final class ForwardedHeaderParser {
       return forwarded.substring(start + 1, end);
     }
     boolean inIpv4 = false;
-    for (int i = start; i < forwarded.length() - 1; i++) {
+    for (int i = start; i < forwarded.length(); i++) {
       char c = forwarded.charAt(i);
       if (c == '.') {
         inIpv4 = true;
