@@ -116,6 +116,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.Code.OK.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(2) {
@@ -236,6 +238,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.Code.OK.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(2) {
@@ -369,6 +373,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.Code.OK.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(2) {
@@ -465,6 +471,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" grpcStatus.code.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(1) {
@@ -565,6 +573,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.UNKNOWN.code.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(1) {
@@ -740,6 +750,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.OK.code.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(2) {
@@ -871,6 +883,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.CANCELLED.code.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(2) {
@@ -985,6 +999,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "ServerReflectionInfo"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.OK.code.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(1) {
@@ -1093,6 +1109,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_METHOD" "SayHello"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.RPC_GRPC_STATUS_CODE" Status.Code.OK.value()
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" port
           }
         }
         span(2) {

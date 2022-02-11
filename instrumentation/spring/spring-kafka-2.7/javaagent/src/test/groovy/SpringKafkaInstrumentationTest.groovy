@@ -7,6 +7,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.time.Duration
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.boot.SpringApplication
@@ -20,6 +21,7 @@ import org.springframework.kafka.config.TopicBuilder
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.testcontainers.containers.KafkaContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -34,6 +36,8 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     kafka = new KafkaContainer()
+      .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
+      .withStartupTimeout(Duration.ofMinutes(1))
     kafka.start()
 
     def app = new SpringApplication(ConsumerConfig)

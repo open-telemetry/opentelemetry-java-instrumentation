@@ -133,12 +133,7 @@ tasks {
   val shadowJar by existing(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    // without an explicit dependency on jar here, :javaagent:test fails on CI because :javaagent:jar
-    // runs after :javaagent:shadowJar and loses (at least) the manifest entries
-    //
-    // (also, note that we cannot disable the jar task completely, because it is necessary to produce
-    // javadoc and sources artifacts which maven central requires)
-    dependsOn(jar, relocateJavaagentLibs)
+    dependsOn(relocateJavaagentLibs)
     isolateClasses(relocateJavaagentLibs.get().outputs.files)
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -173,6 +168,11 @@ tasks {
     }
   }
 
+  jar {
+    // Empty jar that cannot be used for anything and isn't published.
+    archiveClassifier.set("dontuse")
+  }
+
   val baseJar by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = false
@@ -204,6 +204,25 @@ tasks {
 
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
+  }
+
+  // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.
+  // Since we are fully bundled and have no dependencies, Gradle metadata wouldn't provide any advantage over
+  // the POM anyways so in practice we shouldn't be losing anything.
+  withType<GenerateModuleMetadata>().configureEach {
+    enabled = false
+  }
+}
+
+// Don't publish non-shadowed jar (shadowJar is in shadowRuntimeElements)
+with(components["java"] as AdhocComponentWithVariants) {
+  configurations.forEach {
+    withVariantsFromConfiguration(configurations["apiElements"]) {
+      skip()
+    }
+    withVariantsFromConfiguration(configurations["runtimeElements"]) {
+      skip()
+    }
   }
 }
 
