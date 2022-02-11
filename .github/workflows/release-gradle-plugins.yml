@@ -156,7 +156,6 @@ jobs:
           distribution: adopt
           java-version: 11
 
-        # TODO (trask) cache gradle wrapper?
       - name: Build and publish gradle plugins
         uses: gradle/gradle-build-action@v2
         env:
