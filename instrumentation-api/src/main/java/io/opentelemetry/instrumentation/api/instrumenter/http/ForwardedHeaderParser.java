@@ -7,11 +7,10 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import javax.annotation.Nullable;
 
-final class ForwarderHeaderParser {
+final class ForwardedHeaderParser {
 
-  // VisibleForTesting
   @Nullable
-  static String extractForwarded(String forwarded) {
+  static String extractClientIpFromForwardedHeader(String forwarded) {
     int start = forwarded.toLowerCase().indexOf("for=");
     if (start < 0) {
       return null;
@@ -23,10 +22,9 @@ final class ForwarderHeaderParser {
     return extractIpAddress(forwarded, start);
   }
 
-  // VisibleForTesting
   @Nullable
-  static String extractForwardedFor(String forwarded) {
-    return extractIpAddress(forwarded, 0);
+  static String extractClientIpFromXForwardedForHeader(String forwardedFor) {
+    return extractIpAddress(forwardedFor, 0);
   }
 
   // from https://www.rfc-editor.org/rfc/rfc7239
@@ -67,5 +65,5 @@ final class ForwarderHeaderParser {
     return forwarded.substring(start);
   }
 
-  private ForwarderHeaderParser() {}
+  private ForwardedHeaderParser() {}
 }

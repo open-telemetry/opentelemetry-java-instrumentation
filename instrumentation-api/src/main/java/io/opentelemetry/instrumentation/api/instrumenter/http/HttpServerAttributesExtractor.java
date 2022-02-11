@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHeaderParser.extractForwarded;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHeaderParser.extractForwardedFor;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedHeader;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromXForwardedForHeader;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -94,7 +94,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     // try Forwarded
     String forwarded = firstHeaderValue(getter.requestHeader(request, "forwarded"));
     if (forwarded != null) {
-      forwarded = extractForwarded(forwarded);
+      forwarded = extractClientIpFromForwardedHeader(forwarded);
       if (forwarded != null) {
         return forwarded;
       }
@@ -103,7 +103,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     // try X-Forwarded-For
     forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-for"));
     if (forwarded != null) {
-      return extractForwardedFor(forwarded);
+      return extractClientIpFromXForwardedForHeader(forwarded);
     }
 
     return null;
