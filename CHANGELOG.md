@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 1.11.0 - UNRELEASED
+## Version 1.11.0 - 2022-02-11
 
 ### 🌟 New javaagent instrumentation
 
