@@ -48,12 +48,12 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractProtoFromXForwardedProtoHeader() {
+  void extractProtoFromForwardedProtoHeader() {
     assertThat(ForwardedHeaderParser.extractProtoFromForwardedProtoHeader("xyz")).isEqualTo("xyz");
   }
 
   @Test
-  void extractProtoFromXForwardedProtoHeaderWithQuotes() {
+  void extractProtoFromForwardedProtoHeaderWithQuotes() {
     assertThat(ForwardedHeaderParser.extractProtoFromForwardedProtoHeader("\"xyz\""))
         .isEqualTo("xyz");
   }
@@ -182,13 +182,13 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeader() {
+  void extractClientIpFromForwardedForHeader() {
     assertThat(ForwardedHeaderParser.extractClientIpFromForwardedForHeader("1.1.1.1"))
         .isEqualTo("1.1.1.1");
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithIpv6() {
+  void extractClientIpFromForwardedForHeaderWithIpv6() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "\"[1111:1111:1111:1111:1111:1111:1111:1111]\""))
@@ -196,7 +196,7 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithIpv6Unquoted() {
+  void extractClientIpFromForwardedForHeaderWithIpv6Unquoted() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "[1111:1111:1111:1111:1111:1111:1111:1111]"))
@@ -204,7 +204,7 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithIpv6Unbracketed() {
+  void extractClientIpFromForwardedForHeaderWithIpv6Unbracketed() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "1111:1111:1111:1111:1111:1111:1111:1111"))
@@ -212,13 +212,13 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithPort() {
+  void extractClientIpFromForwardedForHeaderWithPort() {
     assertThat(ForwardedHeaderParser.extractClientIpFromForwardedForHeader("1.1.1.1:2222"))
         .isEqualTo("1.1.1.1");
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithIpv6AndPort() {
+  void extractClientIpFromForwardedForHeaderWithIpv6AndPort() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "\"[1111:1111:1111:1111:1111:1111:1111:1111]:2222\""))
@@ -226,7 +226,7 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithIpv6UnquotedAndPort() {
+  void extractClientIpFromForwardedForHeaderWithIpv6UnquotedAndPort() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "[1111:1111:1111:1111:1111:1111:1111:1111]:2222"))
@@ -234,18 +234,18 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromEmptyXForwardedForHeader() {
+  void extractClientIpFromEmptyForwardedForHeader() {
     assertThat(ForwardedHeaderParser.extractClientIpFromForwardedForHeader("")).isNull();
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithMultiple() {
+  void extractClientIpFromForwardedForHeaderWithMultiple() {
     assertThat(ForwardedHeaderParser.extractClientIpFromForwardedForHeader("1.1.1.1,1.2.3.4"))
         .isEqualTo("1.1.1.1");
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithMultipleIpv6() {
+  void extractClientIpFromForwardedForHeaderWithMultipleIpv6() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "\"[1111:1111:1111:1111:1111:1111:1111:1111]\",1.2.3.4"))
@@ -253,7 +253,7 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithMultipleIpv6Unquoted() {
+  void extractClientIpFromForwardedForHeaderWithMultipleIpv6Unquoted() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "[1111:1111:1111:1111:1111:1111:1111:1111],1.2.3.4"))
@@ -261,7 +261,7 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithMultipleIpv6Unbracketed() {
+  void extractClientIpFromForwardedForHeaderWithMultipleIpv6Unbracketed() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "1111:1111:1111:1111:1111:1111:1111:1111,1.2.3.4"))
@@ -269,13 +269,13 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithMultipleAndPort() {
+  void extractClientIpFromForwardedForHeaderWithMultipleAndPort() {
     assertThat(ForwardedHeaderParser.extractClientIpFromForwardedForHeader("1.1.1.1:2222,1.2.3.4"))
         .isEqualTo("1.1.1.1");
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithMultipleIpv6AndPort() {
+  void extractClientIpFromForwardedForHeaderWithMultipleIpv6AndPort() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "\"[1111:1111:1111:1111:1111:1111:1111:1111]:2222\",1.2.3.4"))
@@ -283,7 +283,7 @@ class ForwardedHeaderParserTest {
   }
 
   @Test
-  void extractClientIpFromXForwardedForHeaderWithMultipleIpv6UnquotedAndPort() {
+  void extractClientIpFromForwardedForHeaderWithMultipleIpv6UnquotedAndPort() {
     assertThat(
             ForwardedHeaderParser.extractClientIpFromForwardedForHeader(
                 "[1111:1111:1111:1111:1111:1111:1111:1111]:2222,1.2.3.4"))
