@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 
 final class ForwardedHeaderParser {
 
+  /** Extract proto (aka scheme) from "Forwarded" http header. */
   @Nullable
   static String extractProtoFromForwardedHeader(String forwarded) {
     int start = forwarded.toLowerCase().indexOf("proto=");
@@ -22,11 +23,13 @@ final class ForwardedHeaderParser {
     return extractProto(forwarded, start);
   }
 
+  /** Extract proto (aka scheme) from "X-Forwarded-Proto" http header. */
   @Nullable
-  static String extractProtoFromXForwardedProtoHeader(String forwardedProto) {
+  static String extractProtoFromForwardedProtoHeader(String forwardedProto) {
     return extractProto(forwardedProto, 0);
   }
 
+  /** Extract client IP address from "Forwarded" http header. */
   @Nullable
   static String extractClientIpFromForwardedHeader(String forwarded) {
     int start = forwarded.toLowerCase().indexOf("for=");
@@ -40,8 +43,9 @@ final class ForwardedHeaderParser {
     return extractIpAddress(forwarded, start);
   }
 
+  /** Extract client IP address from "X-Forwarded-For" http header. */
   @Nullable
-  static String extractClientIpFromXForwardedForHeader(String forwardedFor) {
+  static String extractClientIpFromForwardedForHeader(String forwardedFor) {
     return extractIpAddress(forwardedFor, 0);
   }
 

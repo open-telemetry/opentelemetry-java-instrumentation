@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedForHeader;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedHeader;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromXForwardedForHeader;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedHeader;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromXForwardedProtoHeader;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedProtoHeader;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -109,7 +109,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     // try X-Forwarded-Proto
     forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-proto"));
     if (forwarded != null) {
-      return extractProtoFromXForwardedProtoHeader(forwarded);
+      return extractProtoFromForwardedProtoHeader(forwarded);
     }
 
     return null;
@@ -129,7 +129,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     // try X-Forwarded-For
     forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-for"));
     if (forwarded != null) {
-      return extractClientIpFromXForwardedForHeader(forwarded);
+      return extractClientIpFromForwardedForHeader(forwarded);
     }
 
     return null;
