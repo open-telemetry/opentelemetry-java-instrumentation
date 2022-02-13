@@ -5,6 +5,26 @@ plugins {
 }
 
 dependencies {
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")
+  // Apply common dependencies for instrumentation.
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api") {
+    // OpenTelemetry SDK is not needed for compilation
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
+  }
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling") {
+    // OpenTelemetry SDK is not needed for compilation
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
+  }
+
+  // Used by byte-buddy but not brought in as a transitive dependency
+  compileOnly("com.google.code.findbugs:annotations")
+
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")
