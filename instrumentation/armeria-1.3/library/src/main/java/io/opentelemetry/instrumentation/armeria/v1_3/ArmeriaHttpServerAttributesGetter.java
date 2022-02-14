@@ -96,7 +96,7 @@ final class ArmeriaHttpServerAttributesGetter
   @Nullable
   public String serverName(RequestContext ctx) {
     if (ctx instanceof ServiceRequestContext) {
-      return ((ServiceRequestContext) ctx).config().virtualHost().hostnamePattern();
+      return ((ServiceRequestContext) ctx).config().virtualHost().defaultHostname();
     }
     return null;
   }
