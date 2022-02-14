@@ -3,7 +3,8 @@ plugins {
 }
 
 dependencies {
-  library("com.github.oshi:oshi-core:5.3.1")
+  compileOnly("com.github.oshi:oshi-core:5.3.1")
+  testImplementation("com.github.oshi:oshi-core:5.3.1")
 
   testImplementation(project(":instrumentation:oshi:testing"))
 
