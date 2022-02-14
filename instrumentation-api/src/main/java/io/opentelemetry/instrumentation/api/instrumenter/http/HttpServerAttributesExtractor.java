@@ -68,8 +68,8 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     set(attributes, SemanticAttributes.HTTP_HOST, host(request));
     set(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
     set(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
-    set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
     set(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request));
+    set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
   @Override

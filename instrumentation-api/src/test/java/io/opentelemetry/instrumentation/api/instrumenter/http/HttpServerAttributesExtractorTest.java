@@ -146,6 +146,7 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
+            entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
@@ -160,6 +161,7 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
+            entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
