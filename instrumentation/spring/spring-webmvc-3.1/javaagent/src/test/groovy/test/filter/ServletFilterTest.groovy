@@ -5,12 +5,11 @@
 
 package test.filter
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import test.boot.SecurityConfig
