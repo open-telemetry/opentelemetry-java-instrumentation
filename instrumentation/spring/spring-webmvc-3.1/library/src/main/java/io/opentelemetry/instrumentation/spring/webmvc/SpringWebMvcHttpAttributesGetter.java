@@ -108,7 +108,7 @@ final class SpringWebMvcHttpAttributesGetter
 
   @Override
   @Nullable
-  public String serverName(HttpServletRequest request, @Nullable HttpServletResponse response) {
+  public String serverName(HttpServletRequest request) {
     return null;
   }
 }
