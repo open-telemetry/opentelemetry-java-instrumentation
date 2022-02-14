@@ -101,8 +101,7 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public String serverName(
-      LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
+  public String serverName(LibertyRequest libertyRequest) {
     return null;
   }
 }

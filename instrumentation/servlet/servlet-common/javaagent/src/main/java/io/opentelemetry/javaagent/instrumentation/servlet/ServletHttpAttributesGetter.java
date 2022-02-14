@@ -139,9 +139,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String serverName(
-      ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseContext) {
-    return accessor.getRequestServerName(requestContext.request());
+  public String serverName(ServletRequestContext<REQUEST> requestContext) {
+    return null;
   }
 }

@@ -83,7 +83,7 @@ final class RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public String serverName(Request request, @Nullable Response response) {
+  public String serverName(Request request) {
     return null;
   }
 

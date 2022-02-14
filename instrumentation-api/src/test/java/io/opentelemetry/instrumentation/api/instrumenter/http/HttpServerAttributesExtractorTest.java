@@ -48,7 +48,7 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public String serverName(Map<String, String> request, Map<String, String> response) {
+    public String serverName(Map<String, String> request) {
       return request.get("serverName");
     }
 
