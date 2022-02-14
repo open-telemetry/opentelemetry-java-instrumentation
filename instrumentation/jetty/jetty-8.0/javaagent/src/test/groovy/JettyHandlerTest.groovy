@@ -67,7 +67,6 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes.addAll(SemanticAttributes.HTTP_SERVER_NAME)
     attributes
   }
 

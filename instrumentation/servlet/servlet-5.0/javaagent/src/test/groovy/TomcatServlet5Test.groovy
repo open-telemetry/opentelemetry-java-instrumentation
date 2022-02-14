@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException
@@ -40,14 +38,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
 abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> {
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SERVER_NAME
-    ]
-    super.httpAttributes(endpoint) + extra
-  }
 
   @Override
   Class<?> expectedExceptionClass() {

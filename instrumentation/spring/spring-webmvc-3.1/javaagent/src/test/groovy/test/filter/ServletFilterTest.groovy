@@ -39,14 +39,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
   }
 
   @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SERVER_NAME
-    ]
-    super.httpAttributes(endpoint) + extra
-  }
-
-  @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     endpoint == NOT_FOUND
   }

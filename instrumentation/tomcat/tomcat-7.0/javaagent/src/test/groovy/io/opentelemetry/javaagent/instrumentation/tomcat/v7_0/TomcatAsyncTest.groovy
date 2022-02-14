@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
@@ -107,14 +106,6 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
       default:
         return super.expectedHttpRoute(endpoint)
     }
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SERVER_NAME
-    ]
-    super.httpAttributes(endpoint) + extra
   }
 
   @Override

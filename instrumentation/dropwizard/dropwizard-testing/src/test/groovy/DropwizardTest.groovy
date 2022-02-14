@@ -3,20 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.dropwizard.Application
 import io.dropwizard.Configuration
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -60,14 +59,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   @Override
   void stopServer(DropwizardTestSupport testSupport) {
     testSupport.after()
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SERVER_NAME
-    ]
-    super.httpAttributes(endpoint) + extra
   }
 
   // this override is needed because dropwizard reports peer ip as the client ip

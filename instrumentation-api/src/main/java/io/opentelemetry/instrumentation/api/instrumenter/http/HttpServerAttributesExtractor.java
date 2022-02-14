@@ -69,6 +69,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     set(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
     set(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
     set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
+    set(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request));
   }
 
   @Override
@@ -80,7 +81,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     super.onEnd(attributes, context, request, response, error);
-    set(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request, response));
     set(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }
 
