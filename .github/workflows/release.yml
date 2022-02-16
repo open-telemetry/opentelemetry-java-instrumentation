@@ -135,6 +135,8 @@ jobs:
       - uses: actions/checkout@v2.3.4
         with:
           ref: ${{ github.ref_name }}
+          # tags are needed for the generate-release-contributors.sh script
+          fetch-depth: 0
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -168,11 +170,52 @@ jobs:
           arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
           build-root-directory: gradle-plugins
 
-      - name: Set release version
-        id: set-release-version
+      - name: Set versions
+        id: set-versions
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          v=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
+          if [[ $v =~ ([0-9]+).([0-9]+).0 ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+          else
+            echo "unexpected version: $v"
+            exit 1
+          fi
+          if [[ $minor == 0 ]]; then
+            prior_major=$((major - 1))
+            prior_minor=$(grep -Po "^## Version $prior_major.\K([0-9]+)" CHANGELOG.md  | head -1)
+            prior="$prior_major.$prior_minor"
+          else
+            prior="$major.$((minor - 1)).0"
+          fi
           echo "::set-output name=release-version::$v"
+          echo "::set-output name=prior-version::$prior"
+
+      - name: Generate Release Notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat > release-notes.txt << EOF
+          Note that all artifacts other than `io.opentelemetry.javaagent:opentelemetry-javaagent` have the `-alpha` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
+
+          EOF
+
+          sed -n '4,/^## Version /p' CHANGELOG.md \
+            | head -n -1 \
+            | perl -0pe 's/^\n+//g' \
+            | perl -0pe 's/\n+$/\n/g' \
+            | sed -r 's,\[#([0-9]+)]\(https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/[0-9]+\),#\1,' \
+            | perl -0pe 's/\n +/ /g' \
+            >> release-notes.txt
+
+          cat >> release-notes.txt << EOF
+
+          ### 🙇 Thank you
+          This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
+
+          EOF
+
+          .github/scripts/generate-release-contributors.sh v${{ steps.set-versions.outputs.prior-version }} v${{ steps.set-versions.outputs.release-version }} >> release-notes.txt
 
       - name: Create Release
         id: create_release
@@ -180,11 +223,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.set-release-version.outputs.release-version }}
+          tag_name: v${{ steps.set-versions.outputs.release-version }}
           commitish: ${{ github.ref_name }}
-          release_name: Version ${{ steps.set-release-version.outputs.release-version }}
+          release_name: Version ${{ steps.set-versions.outputs.release-version }}
           draft: true
           prerelease: false
+          body_path: release-notes.txt
 
       - name: Upload Release Asset
         id: upload-release-asset
@@ -193,6 +237,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: javaagent/build/libs/opentelemetry-javaagent-${{ steps.set-release-version.outputs.release-version }}.jar
+          asset_path: javaagent/build/libs/opentelemetry-javaagent-${{ steps.set-versions.outputs.release-version }}.jar
           asset_name: opentelemetry-javaagent.jar
           asset_content_type: application/java-archive

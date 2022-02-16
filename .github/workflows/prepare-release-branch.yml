@@ -13,7 +13,7 @@ jobs:
       - name: Set release branch name
         id: set-release-branch-name
         run: |
-          release_branch_name=$(grep -Eo "[0-9.]+-SNAPSHOT" version.gradle.kts | sed -E 's/([0-9]+)\.([0-9]+)\.([0-9]+)-SNAPSHOT/v\1.\2.x/')
+          release_branch_name=$(grep -Eo "[0-9.]+-SNAPSHOT" version.gradle.kts | sed -E 's/([0-9]+)\.([0-9]+)\.0-SNAPSHOT/v\1.\2.x/')
           echo "::set-output name=release-branch-name::$release_branch_name"
 
       - name: Create release branch
@@ -31,12 +31,12 @@ jobs:
 
       - name: Remove SNAPSHOT from version
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          v=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
           .github/scripts/update-versions.sh "$v-SNAPSHOT" "$v-alpha-SNAPSHOT" "$v" "$v-alpha"
 
       - name: Bump download link version
         run: |
-          new_version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          new_version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
           sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v[0-9]+.[0-9]+.[0-9]+/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$new_version/," README.md
 
       - name: Setup git name
@@ -65,7 +65,7 @@ jobs:
 
       - name: Bump SNAPSHOT version
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          v=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
           if [[ $v =~ ([0-9]+).([0-9]+).0 ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
