@@ -77,7 +77,6 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
           GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
           beanDefinition.setScope(SCOPE_SINGLETON);
           beanDefinition.setBeanClass(clazz);
-          beanDefinition.setBeanClassName(clazz.getName());
 
           ((BeanDefinitionRegistry) beanFactory)
               .registerBeanDefinition("otelAutoDispatcherFilter", beanDefinition);
