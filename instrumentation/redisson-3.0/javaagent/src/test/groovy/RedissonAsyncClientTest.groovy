@@ -8,7 +8,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.redisson.Redisson
 import org.redisson.api.RBucket
 import org.redisson.api.RFuture
-import org.redisson.api.RList
 import org.redisson.api.RSet
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
@@ -89,9 +88,8 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     RFuture<Boolean> result = runWithSpan("parent") {
       RFuture<Boolean> result = rSet.addAsync("s1")
       result.whenComplete({ res, throwable ->
-        new Exception().printStackTrace()
-        RList<String> strings = redisson.getList("list1")
-        strings.add("a")
+        runWithSpan("callback") {
+        }
       })
       return result
     }
@@ -119,17 +117,9 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "RPUSH"
-          kind CLIENT
+          name "callback"
+          kind INTERNAL
           childOf(span(0))
-          attributes {
-            "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT" port
-            "$SemanticAttributes.DB_STATEMENT" "RPUSH list1 ?"
-            "$SemanticAttributes.DB_OPERATION" "RPUSH"
-          }
         }
       }
     }

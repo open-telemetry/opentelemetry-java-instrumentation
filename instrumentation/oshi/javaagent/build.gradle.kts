@@ -7,6 +7,8 @@ muzzle {
     group.set("com.github.oshi")
     module.set("oshi-core")
     versions.set("[5.3.1,)")
+    // Could not parse POM https://repo.maven.apache.org/maven2/com/github/oshi/oshi-core/6.1.1/oshi-core-6.1.1.pom
+    skip("6.1.1")
   }
 }
 
