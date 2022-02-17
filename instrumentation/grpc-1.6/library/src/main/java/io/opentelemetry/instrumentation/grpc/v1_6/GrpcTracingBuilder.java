@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttribut
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -30,8 +31,12 @@ public final class GrpcTracingBuilder {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
-  @Nullable private SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor;
-  @Nullable private SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor;
+  @Nullable private Function<
+      SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+      clientSpanNameExtractorTransformer;
+  @Nullable private Function<
+      SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+      serverSpanNameExtractorTransformer;
 
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalExtractors = new ArrayList<>();
@@ -52,17 +57,17 @@ public final class GrpcTracingBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor}. */
+  /** Sets custom client {@link SpanNameExtractor} via transform function. */
   public GrpcTracingBuilder setClientSpanNameExtractor(
-      SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor) {
-    this.clientSpanNameExtractor = clientSpanNameExtractor;
+      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>> clientSpanNameExtractor) {
+    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor}. */
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
   public GrpcTracingBuilder setServerSpanNameExtractor(
-      SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor) {
-    this.serverSpanNameExtractor = serverSpanNameExtractor;
+      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>> serverSpanNameExtractor) {
+    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
     return this;
   }
 
@@ -85,14 +90,16 @@ public final class GrpcTracingBuilder {
 
   /** Returns a new {@link GrpcTracing} with the settings of this {@link GrpcTracingBuilder}. */
   public GrpcTracing build() {
-    SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor = this.clientSpanNameExtractor;
-    if (clientSpanNameExtractor == null) {
-      clientSpanNameExtractor = new GrpcSpanNameExtractor();
+    SpanNameExtractor<GrpcRequest> originalSpanNameExtractor = new GrpcSpanNameExtractor();
+
+    SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor = originalSpanNameExtractor;
+    if (clientSpanNameExtractorTransformer != null) {
+      clientSpanNameExtractor = clientSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
     }
 
-    SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor = this.serverSpanNameExtractor;
-    if (serverSpanNameExtractor == null) {
-      serverSpanNameExtractor = new GrpcSpanNameExtractor();
+    SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor = originalSpanNameExtractor;
+    if (serverSpanNameExtractorTransformer != null) {
+      serverSpanNameExtractor = serverSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
     }
 
     InstrumenterBuilder<GrpcRequest, Status> clientInstrumenterBuilder =
