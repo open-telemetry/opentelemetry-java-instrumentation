@@ -31,11 +31,13 @@ public final class GrpcTracingBuilder {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
-  @Nullable private Function<
-      SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+
+  @Nullable
+  private Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
       clientSpanNameExtractorTransformer;
-  @Nullable private Function<
-      SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+
+  @Nullable
+  private Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
       serverSpanNameExtractorTransformer;
 
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
@@ -59,14 +61,16 @@ public final class GrpcTracingBuilder {
 
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   public GrpcTracingBuilder setClientSpanNameExtractor(
-      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>> clientSpanNameExtractor) {
+      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+          clientSpanNameExtractor) {
     this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
     return this;
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
   public GrpcTracingBuilder setServerSpanNameExtractor(
-      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>> serverSpanNameExtractor) {
+      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+          serverSpanNameExtractor) {
     this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
     return this;
   }
