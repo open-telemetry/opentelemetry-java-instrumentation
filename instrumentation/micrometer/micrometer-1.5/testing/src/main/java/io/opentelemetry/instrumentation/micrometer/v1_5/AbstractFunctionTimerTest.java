@@ -22,8 +22,8 @@ public abstract class AbstractFunctionTimerTest {
 
   protected abstract InstrumentationExtension testing();
 
-  final MyTimer timerObj = new MyTimer();
-  final MyTimer anotherTimerObj = new MyTimer();
+  final TestTimer timerObj = new TestTimer();
+  final TestTimer anotherTimerObj = new TestTimer();
 
   @BeforeEach
   void cleanupMeters() {
@@ -39,8 +39,8 @@ public abstract class AbstractFunctionTimerTest {
         FunctionTimer.builder(
                 "testFunctionTimer",
                 timerObj,
-                MyTimer::getCount,
-                MyTimer::getTotalTimeNanos,
+                TestTimer::getCount,
+                TestTimer::getTotalTimeNanos,
                 TimeUnit.NANOSECONDS)
             .description("This is a test function timer")
             .tags("tag", "value")
@@ -109,8 +109,8 @@ public abstract class AbstractFunctionTimerTest {
     FunctionTimer.builder(
             "testNanoFunctionTimer",
             timerObj,
-            MyTimer::getCount,
-            MyTimer::getTotalTimeNanos,
+            TestTimer::getCount,
+            TestTimer::getTotalTimeNanos,
             TimeUnit.NANOSECONDS)
         .register(Metrics.globalRegistry);
 
@@ -139,8 +139,8 @@ public abstract class AbstractFunctionTimerTest {
     FunctionTimer.builder(
             "testFunctionTimerWithTags",
             timerObj,
-            MyTimer::getCount,
-            MyTimer::getTotalTimeNanos,
+            TestTimer::getCount,
+            TestTimer::getTotalTimeNanos,
             TimeUnit.NANOSECONDS)
         .tags("tag", "1")
         .register(Metrics.globalRegistry);
@@ -148,8 +148,8 @@ public abstract class AbstractFunctionTimerTest {
     FunctionTimer.builder(
             "testFunctionTimerWithTags",
             anotherTimerObj,
-            MyTimer::getCount,
-            MyTimer::getTotalTimeNanos,
+            TestTimer::getCount,
+            TestTimer::getTotalTimeNanos,
             TimeUnit.NANOSECONDS)
         .tags("tag", "2")
         .register(Metrics.globalRegistry);
@@ -182,28 +182,5 @@ public abstract class AbstractFunctionTimerTest {
                                         .hasValue(42_000)
                                         .attributes()
                                         .containsOnly(attributeEntry("tag", "2")))));
-  }
-
-  static class MyTimer {
-    int count = 0;
-    long totalTimeNanos = 0;
-
-    void add(long time, TimeUnit unit) {
-      count++;
-      totalTimeNanos += unit.toNanos(time);
-    }
-
-    int getCount() {
-      return count;
-    }
-
-    double getTotalTimeNanos() {
-      return totalTimeNanos;
-    }
-
-    void reset() {
-      count = 0;
-      totalTimeNanos = 0;
-    }
   }
 }

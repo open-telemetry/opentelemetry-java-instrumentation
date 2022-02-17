@@ -49,14 +49,14 @@ dependencies {
   testImplementation("org.testcontainers:localstack")
   testImplementation("org.testcontainers:cassandra")
 
-  latestDepTestLibrary("org.apache.camel:camel-core:2.+")
-  latestDepTestLibrary("org.apache.camel:camel-spring-boot-starter:2.+")
-  latestDepTestLibrary("org.apache.camel:camel-jetty-starter:2.+")
-  latestDepTestLibrary("org.apache.camel:camel-http-starter:2.+")
-  latestDepTestLibrary("org.apache.camel:camel-jaxb-starter:2.+")
-  latestDepTestLibrary("org.apache.camel:camel-undertow:2.+")
-  latestDepTestLibrary("org.apache.camel:camel-aws:2.+")
-  latestDepTestLibrary("org.apache.camel:camel-cassandraql:2.+")
+  latestDepTestLibrary("org.apache.camel:camel-core:2.+") // documented limitation
+  latestDepTestLibrary("org.apache.camel:camel-spring-boot-starter:2.+") // documented limitation
+  latestDepTestLibrary("org.apache.camel:camel-jetty-starter:2.+") // documented limitation
+  latestDepTestLibrary("org.apache.camel:camel-http-starter:2.+") // documented limitation
+  latestDepTestLibrary("org.apache.camel:camel-jaxb-starter:2.+") // documented limitation
+  latestDepTestLibrary("org.apache.camel:camel-undertow:2.+") // documented limitation
+  latestDepTestLibrary("org.apache.camel:camel-aws:2.+") // documented limitation
+  latestDepTestLibrary("org.apache.camel:camel-cassandraql:2.+") // documented limitation
 }
 
 tasks {

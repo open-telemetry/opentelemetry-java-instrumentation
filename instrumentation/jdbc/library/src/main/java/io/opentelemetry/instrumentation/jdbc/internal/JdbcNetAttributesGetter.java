@@ -8,6 +8,10 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class JdbcNetAttributesGetter implements NetClientAttributesGetter<DbRequest, Void> {
 
   @Nullable

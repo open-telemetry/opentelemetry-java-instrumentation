@@ -23,7 +23,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 
-  latestDepTestLibrary("io.projectreactor.netty:reactor-netty:(,1.0.0)")
+  latestDepTestLibrary("io.projectreactor.netty:reactor-netty:0.+") // see reactor-netty-1.0 modules
 }
 
 tasks {

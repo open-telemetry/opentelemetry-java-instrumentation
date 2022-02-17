@@ -37,8 +37,11 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 
-  testImplementation("org.elasticsearch.plugin:transport-netty3-client:5.0.0")
-  testImplementation("org.elasticsearch.client:transport:5.0.0")
+  testLibrary("org.elasticsearch.plugin:transport-netty3-client:5.0.0")
+  testLibrary("org.elasticsearch.client:transport:5.0.0")
+
+  latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.0.0")
+  latestDepTestLibrary("org.elasticsearch.client:transport:5.0.0")
 }
 
 tasks.withType<Test>().configureEach {

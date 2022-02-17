@@ -11,6 +11,10 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class KafkaProducerAttributesExtractor
     extends MessagingAttributesExtractor<ProducerRecord<?, ?>, Void> {
 

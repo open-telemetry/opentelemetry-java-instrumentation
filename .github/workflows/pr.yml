@@ -24,7 +24,8 @@ jobs:
       - name: Build
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: build -x javadoc
           cache-read-only: true
 
       - name: Upload deadlock detector artifacts if any
@@ -35,12 +36,17 @@ jobs:
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
-      - name: Upload OpenJ9 javacore files if any
+      - name: Upload jvm crash dump files if any
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: javacore-build
-          path: "**/javacore.*.txt"
+          path: |
+            "**/hs_err_pid*.log"
+            "**/javacore.*.txt"
+            "**/Snap.*.trc"
+            "**/core.*.dmp"
+            "**/jitdump.*.dmp"
           if-no-files-found: ignore
 
   build-gradle-plugins:
@@ -106,20 +112,51 @@ jobs:
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
-      - name: Upload OpenJ9 javacore files if any
+      - name: Upload jvm crash dump files if any
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: javacore-test-${{ matrix.test-java-version }}
-          path: "**/javacore.*.txt"
+          path: |
+            "**/hs_err_pid*.log"
+            "**/javacore.*.txt"
+            "**/Snap.*.trc"
+            "**/core.*.dmp"
+            "**/jitdump.*.dmp"
           if-no-files-found: ignore
 
-  # testLatestDeps is intentionally not included in the PR workflow
-  # because any time a new library version is released to maven central
-  # it can fail due to test code incompatibility with the new library version,
-  # or due to slight changes in emitted telemetry, which can be confusing for contributors
-  # (muzzle can also fail when a new library version is released to maven central
-  # but that happens much less often)
+  testLatestDeps:
+    # testLatestDeps is not included in the PR workflow by default
+    # because any time a new library version is released to maven central
+    # it can fail due to test code incompatibility with the new library version,
+    # or due to slight changes in emitted telemetry, which can be confusing for contributors
+    # (muzzle can also fail when a new library version is released to maven central
+    # but that happens much less often)
+    #
+    # the condition is on the steps below instead of here on the job, because skipping the job
+    # causes the job to show up as canceled in the GitHub UI which prevents the build section from
+    # collapsing when everything (else) is green
+    #
+    # and the name is updated when the steps below are skipped which makes what's happening clearer
+    # in the GitHub UI
+    name: testLatestDeps${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') && ' (skipped)' || ''}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Set up JDK 11 for running Gradle
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Test
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test -PtestLatestDeps=true
+          cache-read-only: true
 
   smoke-test:
     runs-on: ${{ matrix.os }}
@@ -161,6 +198,10 @@ jobs:
           arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
 
   setup-muzzle-matrix:
+    # release branches are excluded
+    # because any time a new library version is released to maven central it can fail
+    # which requires unnecessary release branch maintenance, especially for patches
+    if: ${{ !startsWith(github.base_ref, 'v') }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}

@@ -120,11 +120,10 @@ public final class GrpcTracingBuilder {
                         new GrpcRpcAttributesExtractor(), new GrpcAttributesExtractor())
                     .addAttributesExtractors(additionalExtractors));
 
-    GrpcNetClientAttributesGetter netClientAttributesExtractor =
-        new GrpcNetClientAttributesGetter();
+    GrpcNetClientAttributesGetter netClientAttributesGetter = new GrpcNetClientAttributesGetter();
 
     clientInstrumenterBuilder.addAttributesExtractor(
-        NetClientAttributesExtractor.create(netClientAttributesExtractor));
+        NetClientAttributesExtractor.create(netClientAttributesGetter));
     serverInstrumenterBuilder.addAttributesExtractor(
         NetServerAttributesExtractor.create(new GrpcNetServerAttributesGetter()));
 
@@ -133,7 +132,7 @@ public final class GrpcTracingBuilder {
           AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
     } else {
       clientInstrumenterBuilder.addAttributesExtractor(
-          PeerServiceAttributesExtractor.create(netClientAttributesExtractor));
+          PeerServiceAttributesExtractor.create(netClientAttributesGetter));
     }
 
     return new GrpcTracing(

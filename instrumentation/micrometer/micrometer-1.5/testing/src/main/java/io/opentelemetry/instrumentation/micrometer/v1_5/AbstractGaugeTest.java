@@ -138,6 +138,7 @@ public abstract class AbstractGaugeTest {
     GcUtils.awaitGc(numWeakRef);
 
     // then
+    Thread.sleep(100); // interval of the test metrics exporter
     testing().clearData();
     Thread.sleep(100); // interval of the test metrics exporter
     testing()

@@ -3,6 +3,7 @@ import java.time.Duration
 plugins {
   `kotlin-dsl`
   `maven-publish`
+  signing
 
   id("com.gradle.plugin-publish")
   id("io.github.gradle-nexus.publish-plugin")
@@ -44,8 +45,16 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
-tasks.withType<Test>().configureEach {
-  useJUnitPlatform()
+tasks {
+  withType<Test>().configureEach {
+    useJUnitPlatform()
+  }
+
+  withType<JavaCompile>().configureEach {
+    with(options) {
+      release.set(8)
+    }
+  }
 }
 
 pluginBundle {
@@ -67,6 +76,14 @@ gradlePlugin {
   }
 }
 
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
+  }
+  withJavadocJar()
+  withSourcesJar()
+}
+
 nexusPublishing {
   packageGroup.set("io.opentelemetry")
 
@@ -84,5 +101,51 @@ nexusPublishing {
 tasks {
   publishPlugins {
     enabled = !version.toString().contains("SNAPSHOT")
+  }
+}
+
+afterEvaluate {
+  publishing {
+    publications {
+      named<MavenPublication>("pluginMaven") {
+        pom {
+          name.set("OpenTelemetry Instrumentation Gradle Plugins")
+          description.set("Gradle plugins to assist developing OpenTelemetry instrumentation")
+          url.set("https://github.com/open-telemetry/opentelemetry-java-instrumentation")
+
+          licenses {
+            license {
+              name.set("The Apache License, Version 2.0")
+              url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+          }
+
+          developers {
+            developer {
+              id.set("opentelemetry")
+              name.set("OpenTelemetry")
+              url.set("https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions")
+            }
+          }
+
+          scm {
+            connection.set("scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
+            developerConnection.set("scm:git:git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
+            url.set("git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
+          }
+        }
+      }
+    }
+  }
+
+// Sign only if we have a key to do so
+  val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
+// Stub out entire signing block off of CI since Gradle provides no way of lazy configuration of
+// signing tasks.
+  if (System.getenv("CI") != null && signingKey != null) {
+    signing {
+      useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
+      sign(publishing.publications["pluginMaven"])
+    }
   }
 }

@@ -26,7 +26,8 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: build -x javadoc
 
   build-gradle-plugins:
     runs-on: ubuntu-latest
@@ -84,6 +85,10 @@ jobs:
 
   testLatestDeps:
     runs-on: ubuntu-latest
+    # release branches are excluded
+    # because any time a new library version is released to maven central it can fail
+    # which requires unnecessary release branch maintenance, especially for patches
+    if: ${{ !startsWith(github.ref_name, 'v') }}
     steps:
       - uses: actions/checkout@v2.3.4
 
@@ -145,6 +150,10 @@ jobs:
           arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
 
   setup-muzzle-matrix:
+    # release branches are excluded
+    # because any time a new library version is released to maven central it can fail
+    # which requires unnecessary release branch maintenance, especially for patches
+    if: ${{ !startsWith(github.ref_name, 'v') }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -248,7 +257,7 @@ jobs:
     # it can fail due to test code incompatibility with the new library version,
     # or due to slight changes in emitted telemetry
     needs: [ build, test, smoke-test, examples, muzzle ]
-    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+    if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
     steps:
       - uses: actions/checkout@v2.3.4
 

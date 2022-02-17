@@ -18,14 +18,20 @@ muzzle {
     versions.set("[1.3.9,)")
   }
 }
+
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-kotlin")
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+
   testImplementation("io.opentelemetry:opentelemetry-extension-kotlin")
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+  testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
+
   // Use first version with flow support since we have tests for it.
   testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
+  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.3.0")
 }
 
 tasks {

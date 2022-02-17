@@ -24,7 +24,7 @@ These are the supported libraries and frameworks:
 | [Akka Actors](https://doc.akka.io/docs/akka/current/typed/index.html)                                                             | 2.5+                           |
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                | 10.0+                          |
 | [Apache Axis2](https://axis.apache.org/axis2/java/core/)                                                                          | 1.6+                           |
-| [Apache Camel](https://camel.apache.org/)                                                                                         | 2.20+                          |
+| [Apache Camel](https://camel.apache.org/)                                                                                         | 2.20+ (not including 3.x yet)  |
 | [Apache CXF JAX-RS](https://cxf.apache.org/)                                                                                      | 3.2+                           |
 | [Apache CXF JAX-RS Client](https://cxf.apache.org/)                                                                               | 3.0+                           |
 | [Apache CXF JAX-WS](https://cxf.apache.org/)                                                                                      | 3.0+                           |

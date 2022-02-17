@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1
 
-import static io.opentelemetry.instrumentation.mongo.v3_1.MongoTracingBuilder.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH
-
 import com.mongodb.event.CommandStartedEvent
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import spock.lang.Specification
+
+import static io.opentelemetry.instrumentation.mongo.v3_1.MongoTracingBuilder.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH
 
 class MongoSpanNameExtractorTest extends Specification {
 

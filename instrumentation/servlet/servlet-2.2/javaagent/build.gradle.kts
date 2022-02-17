@@ -29,6 +29,6 @@ dependencies {
   testLibrary("org.eclipse.jetty:jetty-server:7.0.0.v20091005")
   testLibrary("org.eclipse.jetty:jetty-servlet:7.0.0.v20091005")
 
-  latestDepTestLibrary("org.eclipse.jetty:jetty-server:7.+")
-  latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:7.+")
+  latestDepTestLibrary("org.eclipse.jetty:jetty-server:7.+") // see servlet-3.0 module
+  latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:7.+") // see servlet-3.0 module
 }

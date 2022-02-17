@@ -52,11 +52,7 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
   public static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      // we cannot use ContextDataProvider here because one of the classes that we inject implements
-      // this interface, causing the interface to be loaded while it's being transformed, which
-      // leads to duplicate class definition error after the interface is transformed and the
-      // triggering class loader tries to load it.
-      return named("org.apache.logging.log4j.core.impl.ThreadContextDataInjector");
+      return named("org.apache.logging.log4j.core.util.ContextDataProvider");
     }
 
     @Override

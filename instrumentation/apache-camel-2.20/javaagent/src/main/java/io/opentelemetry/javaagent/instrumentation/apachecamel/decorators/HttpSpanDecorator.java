@@ -24,9 +24,9 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.server.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.MalformedURLException;
@@ -97,7 +97,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     attributes.put(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
   }
 
-  private static boolean shouldSetPathAsName(CamelDirection camelDirection) {
+  static boolean shouldSetPathAsName(CamelDirection camelDirection) {
     return CamelDirection.INBOUND.equals(camelDirection);
   }
 
@@ -113,26 +113,21 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  private static boolean shouldUpdateServerSpanName(
-      Span serverSpan, CamelDirection camelDirection) {
-    return (serverSpan != null && shouldSetPathAsName(camelDirection));
-  }
-
-  private void updateServerSpanName(Span serverSpan, Exchange exchange, Endpoint endpoint) {
-    String path = getPath(exchange, endpoint);
-    if (path != null) {
-      // TODO should update SERVER span name/route using ServerSpanNaming
-      serverSpan.updateName(path);
-    }
-  }
-
   @Override
   public void updateServerSpanName(
-      Context context, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
-    if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
-      updateServerSpanName(serverSpan, exchange, endpoint);
+      Context context,
+      Exchange camelExchange,
+      Endpoint camelEndpoint,
+      CamelDirection camelDirection) {
+    if (!shouldSetPathAsName(camelDirection)) {
+      return;
     }
+    HttpRouteHolder.updateHttpRoute(
+        context,
+        HttpRouteSource.CONTROLLER,
+        (c, exchange, endpoint) -> getPath(exchange, endpoint),
+        camelExchange,
+        camelEndpoint);
   }
 
   protected String getHttpUrl(Exchange exchange, Endpoint endpoint) {

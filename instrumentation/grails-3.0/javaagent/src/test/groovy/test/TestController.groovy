@@ -78,7 +78,7 @@ class TestController implements Controller {
   @Action
   def child() {
     HttpServerTest.controller(INDEXED_CHILD) {
-      INDEXED_CHILD.collectSpanAttributes({name -> name == "id" ? params.id : null })
+      INDEXED_CHILD.collectSpanAttributes({ name -> name == "id" ? params.id : null })
       render INDEXED_CHILD.body
     }
   }

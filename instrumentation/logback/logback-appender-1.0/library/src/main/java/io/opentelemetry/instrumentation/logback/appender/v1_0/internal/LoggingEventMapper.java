@@ -26,6 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class LoggingEventMapper {
 
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();

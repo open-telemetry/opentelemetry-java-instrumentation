@@ -14,6 +14,4 @@ dependencies {
   library("org.jboss.resteasy:resteasy-client:3.0.0.Final")
 
   implementation(project(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:javaagent"))
-
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-client:5+")
 }

@@ -24,6 +24,10 @@ import javax.annotation.Nullable;
 // OTel SDK in the agent, and therefore there must be only one AsyncInstrumentRegistry too -
 // otherwise some async metrics would get lost because of duplicate instrument registrations.
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 // TODO: refactor this class, there's too much copy-paste here
 public final class AsyncInstrumentRegistry {
 
@@ -251,6 +255,10 @@ public final class AsyncInstrumentRegistry {
     }
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static final class AsyncMeasurementHandle {
 
     private final MeasurementsRecorder<?> measurementsRecorder;

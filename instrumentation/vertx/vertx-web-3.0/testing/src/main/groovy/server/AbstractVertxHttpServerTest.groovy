@@ -5,10 +5,9 @@
 
 package server
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
@@ -17,9 +16,6 @@ import io.vertx.core.json.JsonObject
 
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
 abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
   @Override
@@ -60,24 +56,4 @@ abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> impleme
     // server spans are ended inside of the controller spans
     return false
   }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
-    switch (endpoint) {
-      case PATH_PARAM:
-        return "/path/:id/param"
-      case NOT_FOUND:
-        return "HTTP GET"
-      default:
-        return endpoint.getPath()
-    }
-  }
-
 }

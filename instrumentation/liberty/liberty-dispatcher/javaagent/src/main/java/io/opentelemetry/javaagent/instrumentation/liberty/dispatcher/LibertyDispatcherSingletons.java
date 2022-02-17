@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
@@ -22,21 +20,19 @@ public final class LibertyDispatcherSingletons {
   private static final Instrumenter<LibertyRequest, LibertyResponse> INSTRUMENTER;
 
   static {
-    HttpServerAttributesExtractor<LibertyRequest, LibertyResponse> httpAttributesExtractor =
-        new LibertyDispatcherHttpAttributesExtractor();
-    SpanNameExtractor<LibertyRequest> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<LibertyRequest, LibertyResponse> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
-    NetServerAttributesExtractor<LibertyRequest, LibertyResponse> netAttributesExtractor =
-        NetServerAttributesExtractor.create(new LibertyDispatcherNetAttributesGetter());
+    LibertyDispatcherHttpAttributesGetter httpAttributesGetter =
+        new LibertyDispatcherHttpAttributesGetter();
+    LibertyDispatcherNetAttributesGetter netAttributesGetter =
+        new LibertyDispatcherNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<LibertyRequest, LibertyResponse>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(spanStatusExtractor)
-            .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addContextCustomizer(HttpRouteHolder.get())
             .addRequestMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);

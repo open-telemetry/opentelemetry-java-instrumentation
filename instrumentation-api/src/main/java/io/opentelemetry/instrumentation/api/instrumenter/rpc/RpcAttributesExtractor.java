@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -23,7 +24,7 @@ public abstract class RpcAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  public final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     set(attributes, SemanticAttributes.RPC_SYSTEM, system(request));
     set(attributes, SemanticAttributes.RPC_SERVICE, service(request));
     set(attributes, SemanticAttributes.RPC_METHOD, method(request));
@@ -32,6 +33,7 @@ public abstract class RpcAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public final void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {

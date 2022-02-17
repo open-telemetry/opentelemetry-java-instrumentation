@@ -156,10 +156,16 @@ jobs:
           distribution: adopt
           java-version: 11
 
-        # TODO (trask) cache gradle wrapper?
       - name: Build and publish gradle plugins
+        uses: gradle/gradle-build-action@v2
         env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
-        run: ../gradlew build publishPlugins
-        working-directory: gradle-plugins
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        with:
+          # Don't use publishToSonatype since we don't want to publish the marker artifact
+          arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
+          build-root-directory: gradle-plugins

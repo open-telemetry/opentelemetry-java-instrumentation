@@ -13,5 +13,5 @@ muzzle {
 dependencies {
   library("commons-httpclient:commons-httpclient:2.0")
 
-  latestDepTestLibrary("commons-httpclient:commons-httpclient:3.+")
+  latestDepTestLibrary("commons-httpclient:commons-httpclient:3.+") // see apache-httpclient-4.0 module
 }

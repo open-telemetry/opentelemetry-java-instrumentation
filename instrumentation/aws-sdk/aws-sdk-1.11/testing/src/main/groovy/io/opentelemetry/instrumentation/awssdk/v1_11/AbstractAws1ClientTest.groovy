@@ -136,8 +136,11 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     // Some users may implicitly subclass the request object to mimic a fluent style
     "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | AmazonKinesisClientBuilder.standard()                             | { c ->
       c.deleteStream(new DeleteStreamRequest() {
-        { withStreamName("somestream") }
-      }) }                                                                                                                                                                                                                    | ["aws.stream.name": "somestream"] | ""
+        {
+          withStreamName("somestream")
+        }
+      })
+    }                                                                                                                                                                                                                         | ["aws.stream.name": "somestream"] | ""
     "EC2"        | "AllocateAddress"   | "POST" | "/"                   | AmazonEC2ClientBuilder.standard()                                 | { c -> c.allocateAddress() }                                                    | [:]                               | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>

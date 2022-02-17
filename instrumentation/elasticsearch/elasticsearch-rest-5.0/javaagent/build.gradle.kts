@@ -32,7 +32,7 @@ dependencies {
   testImplementation("org.testcontainers:elasticsearch")
   testLibrary("org.elasticsearch.client:rest:5.0.0")
 
-  latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.3.+")
+  latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.3.+") // see elasticsearch-rest-6.4 module
 }
 
 tasks {

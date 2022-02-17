@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -24,7 +25,7 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
   public static final String TEMP_DESTINATION_NAME = "(temporary)";
 
   @Override
-  public final void onStart(AttributesBuilder attributes, REQUEST request) {
+  public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     set(attributes, SemanticAttributes.MESSAGING_SYSTEM, system(request));
     set(attributes, SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind(request));
     boolean isTemporaryDestination = temporaryDestination(request);
@@ -55,6 +56,7 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public final void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {

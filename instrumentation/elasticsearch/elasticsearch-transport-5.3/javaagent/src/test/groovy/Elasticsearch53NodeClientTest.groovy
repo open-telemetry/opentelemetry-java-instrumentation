@@ -4,7 +4,6 @@
  */
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.client.Client
 import org.elasticsearch.common.io.FileSystemUtils
@@ -17,6 +16,8 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL

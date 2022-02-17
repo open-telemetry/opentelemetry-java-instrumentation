@@ -22,7 +22,7 @@ public class ProcessMetrics {
   /** Register observers for java runtime metrics. */
   public static void registerObservers() {
     // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
-    Meter meter = GlobalOpenTelemetry.get().getMeterProvider().get(ProcessMetrics.class.getName());
+    Meter meter = GlobalOpenTelemetry.get().getMeterProvider().get("io.opentelemetry.oshi");
     SystemInfo systemInfo = new SystemInfo();
     OperatingSystem osInfo = systemInfo.getOperatingSystem();
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
@@ -30,7 +30,7 @@ public class ProcessMetrics {
     meter
         .upDownCounterBuilder("runtime.java.memory")
         .setDescription("Runtime Java memory")
-        .setUnit("bytes")
+        .setUnit("By")
         .buildWithCallback(
             r -> {
               processInfo.updateAttributes();
@@ -41,12 +41,12 @@ public class ProcessMetrics {
     meter
         .gaugeBuilder("runtime.java.cpu_time")
         .setDescription("Runtime Java CPU time")
-        .setUnit("seconds")
+        .setUnit("ms")
         .buildWithCallback(
             r -> {
               processInfo.updateAttributes();
-              r.record(processInfo.getUserTime() * 1000, Attributes.of(TYPE_KEY, "user"));
-              r.record(processInfo.getKernelTime() * 1000, Attributes.of(TYPE_KEY, "system"));
+              r.record(processInfo.getUserTime(), Attributes.of(TYPE_KEY, "user"));
+              r.record(processInfo.getKernelTime(), Attributes.of(TYPE_KEY, "system"));
             });
   }
 }

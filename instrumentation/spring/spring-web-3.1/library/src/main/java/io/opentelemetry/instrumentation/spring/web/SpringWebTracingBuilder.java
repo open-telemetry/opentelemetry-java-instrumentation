@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -59,17 +60,17 @@ public final class SpringWebTracingBuilder {
    * SpringWebTracingBuilder}.
    */
   public SpringWebTracing build() {
-    SpringWebHttpAttributesExtractor httpAttributesExtractor =
-        new SpringWebHttpAttributesExtractor(capturedHttpHeaders);
+    SpringWebHttpAttributesGetter httpAttributeGetter = new SpringWebHttpAttributesGetter();
     SpringWebNetAttributesGetter netAttributesGetter = new SpringWebNetAttributesGetter();
 
     Instrumenter<HttpRequest, ClientHttpResponse> instrumenter =
         Instrumenter.<HttpRequest, ClientHttpResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesExtractor))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesExtractor))
-            .addAttributesExtractor(httpAttributesExtractor)
+                HttpSpanNameExtractor.create(httpAttributeGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
+            .addAttributesExtractor(
+                HttpClientAttributesExtractor.create(httpAttributeGetter, capturedHttpHeaders))
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())

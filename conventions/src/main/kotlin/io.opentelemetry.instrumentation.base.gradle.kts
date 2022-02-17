@@ -30,6 +30,23 @@ plugins {
 val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 extra["testLatestDeps"] = testLatestDeps
 
+@CacheableRule
+abstract class TestLatestDepsRule : ComponentMetadataRule {
+  override fun execute(context: ComponentMetadataContext) {
+    val version = context.details.id.version
+    if (version.contains("-alpha", true)
+      || version.contains("-beta", true)
+      || version.contains("-rc", true)
+      || version.contains("-m", true) // e.g. spring milestones are published to grails repo
+      || version.contains(".alpha", true) // e.g. netty
+      || version.contains(".beta", true) // e.g. hibernate
+      || version.contains(".cr", true) // e.g. hibernate
+    ) {
+      context.details.status = "milestone"
+    }
+  }
+}
+
 configurations {
   val library by creating {
     isCanBeResolved = false
@@ -53,13 +70,19 @@ configurations {
       val dep = copy()
       if (testLatestDeps) {
         (dep as ExternalDependency).version {
-          require("+")
+          require("latest.release")
         }
       }
       testImplementation.dependencies.add(dep)
     }
   }
   if (testLatestDeps) {
+    dependencies {
+      components {
+        all<TestLatestDepsRule>()
+      }
+    }
+
     latestDepTestLibrary.dependencies.whenObjectAdded {
       val dep = copy()
       val declaredVersion = dep.version

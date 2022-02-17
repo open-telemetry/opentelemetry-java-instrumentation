@@ -11,9 +11,9 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.8"
+  id("com.gradle.enterprise") version "3.8.1"
   id("com.github.burrunan.s3-build-cache") version "1.2"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.6.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.6.2"
 }
 
 dependencyResolutionManagement {
@@ -83,13 +83,14 @@ rootProject.name = "opentelemetry-java-instrumentation"
 
 includeBuild("conventions")
 
+include(":custom-checks")
+
 include(":muzzle")
 
 // agent projects
 include(":opentelemetry-api-shaded-for-instrumenting")
 include(":opentelemetry-ext-annotations-shaded-for-instrumenting")
 include(":javaagent-bootstrap")
-include(":javaagent-exporters")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
 include(":javaagent-tooling:javaagent-tooling-java9")
@@ -133,9 +134,12 @@ include(":instrumentation:armeria-1.3:library")
 include(":instrumentation:armeria-1.3:testing")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
-include(":instrumentation:aws-lambda-1.0:javaagent")
-include(":instrumentation:aws-lambda-1.0:library")
-include(":instrumentation:aws-lambda-1.0:testing")
+include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")
+include(":instrumentation:aws-lambda:aws-lambda-core-1.0:library")
+include(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing")
+include(":instrumentation:aws-lambda:aws-lambda-events-2.2:javaagent")
+include(":instrumentation:aws-lambda:aws-lambda-events-2.2:library")
+include(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent-unit-tests")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:library")
@@ -236,6 +240,7 @@ include(":instrumentation:jdbc:testing")
 include(":instrumentation:jedis:jedis-1.4:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent")
 include(":instrumentation:jedis:jedis-4.0:javaagent")
+include(":instrumentation:jedis:jedis-common:javaagent")
 include(":instrumentation:jetty:jetty-8.0:javaagent")
 include(":instrumentation:jetty:jetty-11.0:javaagent")
 include(":instrumentation:jetty:jetty-common:javaagent")
@@ -309,6 +314,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
 include(":instrumentation:oshi:javaagent")
 include(":instrumentation:oshi:library")
+include(":instrumentation:oshi:testing")
 include(":instrumentation:play:play-2.4:javaagent")
 include(":instrumentation:play:play-2.6:javaagent")
 include(":instrumentation:play-ws:play-ws-1.0:javaagent")
@@ -353,7 +359,7 @@ include(":instrumentation:rxjava:rxjava-3.1.1:library")
 include(":instrumentation:rxjava:rxjava-3.1.1:javaagent")
 include(":instrumentation:rxjava:rxjava-3-common:library")
 include(":instrumentation:rxjava:rxjava-3-common:testing")
-include(":instrumentation:scala-executors:javaagent")
+include(":instrumentation:scala-fork-join-2.8:javaagent")
 include(":instrumentation:servlet:servlet-common:bootstrap")
 include(":instrumentation:servlet:servlet-common:javaagent")
 include(":instrumentation:servlet:servlet-javax-common:javaagent")
@@ -399,7 +405,7 @@ include(":instrumentation:vaadin-14.2:testing")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent")
-include(":instrumentation:vertx:vertx-reactive-3.5:javaagent")
+include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")

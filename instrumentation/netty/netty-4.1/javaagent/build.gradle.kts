@@ -36,12 +36,6 @@ dependencies {
 
   // first version with kqueue, add it only as a compile time dependency
   testCompileOnly("io.netty:netty-transport-native-kqueue:4.1.11.Final:osx-x86_64")
-
-  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:(,5.0)"))
-  latestDepTestLibrary("io.netty:netty-codec-http:(,5.0)")
-  latestDepTestLibrary("io.netty:netty-handler:(,5.0)")
-  latestDepTestLibrary("io.netty:netty-transport-native-epoll:(,5.0):linux-x86_64")
-  latestDepTestLibrary("io.netty:netty-transport-native-kqueue:(,5.0):osx-x86_64")
 }
 
 tasks {

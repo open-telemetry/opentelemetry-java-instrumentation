@@ -285,7 +285,8 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
         "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
         "$SemanticAttributes.HTTP_SERVER_NAME" String
         "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-        "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long } // Optional
+        // Optional
+        "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         "$SemanticAttributes.HTTP_ROUTE" path
         if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {
           "http.request.header.x_test_request" { it == ["test"] }

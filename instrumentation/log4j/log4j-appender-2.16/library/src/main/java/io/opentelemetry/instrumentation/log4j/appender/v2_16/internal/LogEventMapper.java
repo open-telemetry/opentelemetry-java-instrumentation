@@ -27,6 +27,10 @@ import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class LogEventMapper<T> {
 
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";

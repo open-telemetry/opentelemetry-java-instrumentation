@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -19,13 +20,17 @@ class AwsSdkExperimentalAttributesExtractor
   private static final AttributeKey<String> AWS_AGENT = AttributeKey.stringKey("aws.agent");
 
   @Override
-  public void onStart(AttributesBuilder attributes, ExecutionAttributes executionAttributes) {
+  public void onStart(
+      AttributesBuilder attributes,
+      Context parentContext,
+      ExecutionAttributes executionAttributes) {
     attributes.put(AWS_AGENT, COMPONENT_NAME);
   }
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       ExecutionAttributes executionAttributes,
       @Nullable SdkHttpResponse sdkHttpResponse,
       @Nullable Throwable error) {}

@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
+import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -17,11 +16,9 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.testing.assertj.MetricAssertions;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.Collection;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +28,10 @@ class RpcServerMetricsTest {
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+        SdkMeterProvider.builder()
+            .registerMetricReader(metricReader)
+            .setMinimumCollectionInterval(Duration.ZERO)
+            .build();
 
     RequestListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
 
@@ -69,85 +69,63 @@ class RpcServerMetricsTest {
 
     Context context1 = listener.start(parent, requestAttributes, nanos(100));
 
-    // TODO(anuraaga): Remove await from this file after 1.8.0 hopefully fixes
-    // https://github.com/open-telemetry/opentelemetry-java/issues/3725
-    await()
-        .untilAsserted(
-            () -> {
-              Collection<MetricData> metrics = metricReader.collectAllMetrics();
-              assertThat(metrics).isEmpty();
-            });
+    assertThat(metricReader.collectAllMetrics()).isEmpty();
 
     Context context2 = listener.start(Context.root(), requestAttributes, nanos(150));
 
-    await()
-        .untilAsserted(
-            () -> {
-              Collection<MetricData> metrics = metricReader.collectAllMetrics();
-              assertThat(metrics).isEmpty();
-            });
+    assertThat(metricReader.collectAllMetrics()).isEmpty();
 
     listener.end(context1, responseAttributes1, nanos(250));
 
-    await()
-        .untilAsserted(
-            () -> {
-              Collection<MetricData> metrics = metricReader.collectAllMetrics();
-              assertThat(metrics).hasSize(1);
-              assertThat(metrics)
-                  .anySatisfy(
-                      metric ->
-                          MetricAssertions.assertThat(metric)
-                              .hasName("rpc.server.duration")
-                              .hasUnit("ms")
-                              .hasDoubleHistogram()
-                              .points()
-                              .satisfiesExactly(
-                                  point -> {
-                                    MetricAssertions.assertThat(point)
-                                        .hasSum(150 /* millis */)
-                                        .attributes()
-                                        .containsOnly(
-                                            attributeEntry("rpc.system", "grpc"),
-                                            attributeEntry("rpc.service", "myservice.EchoService"),
-                                            attributeEntry("rpc.method", "exampleMethod"),
-                                            attributeEntry("net.host.name", "example.com"),
-                                            attributeEntry("net.transport", "ip_tcp"));
-                                    MetricAssertions.assertThat(point).exemplars().hasSize(1);
-                                    MetricAssertions.assertThat(point.getExemplars().get(0))
-                                        .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                        .hasSpanId("090a0b0c0d0e0f00");
-                                  }));
-            });
+    assertThat(metricReader.collectAllMetrics())
+        .hasSize(1)
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("rpc.server.duration")
+                    .hasUnit("ms")
+                    .hasDoubleHistogram()
+                    .points()
+                    .satisfiesExactly(
+                        point -> {
+                          assertThat(point)
+                              .hasSum(150 /* millis */)
+                              .attributes()
+                              .containsOnly(
+                                  attributeEntry("rpc.system", "grpc"),
+                                  attributeEntry("rpc.service", "myservice.EchoService"),
+                                  attributeEntry("rpc.method", "exampleMethod"),
+                                  attributeEntry("net.host.name", "example.com"),
+                                  attributeEntry("net.transport", "ip_tcp"));
+                          assertThat(point).exemplars().hasSize(1);
+                          assertThat(point.getExemplars().get(0))
+                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                              .hasSpanId("090a0b0c0d0e0f00");
+                        }));
 
     listener.end(context2, responseAttributes2, nanos(300));
 
-    await()
-        .untilAsserted(
-            () -> {
-              Collection<MetricData> metrics = metricReader.collectAllMetrics();
-              assertThat(metrics).hasSize(1);
-              assertThat(metrics)
-                  .anySatisfy(
-                      metric ->
-                          MetricAssertions.assertThat(metric)
-                              .hasName("rpc.server.duration")
-                              .hasUnit("ms")
-                              .hasDoubleHistogram()
-                              .points()
-                              .satisfiesExactly(
-                                  point -> {
-                                    MetricAssertions.assertThat(point)
-                                        .hasSum(150 /* millis */)
-                                        .attributes()
-                                        .containsOnly(
-                                            attributeEntry("rpc.system", "grpc"),
-                                            attributeEntry("rpc.service", "myservice.EchoService"),
-                                            attributeEntry("rpc.method", "exampleMethod"),
-                                            attributeEntry("net.host.ip", "127.0.0.1"),
-                                            attributeEntry("net.transport", "ip_tcp"));
-                                  }));
-            });
+    assertThat(metricReader.collectAllMetrics())
+        .hasSize(1)
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("rpc.server.duration")
+                    .hasUnit("ms")
+                    .hasDoubleHistogram()
+                    .points()
+                    .satisfiesExactly(
+                        point -> {
+                          assertThat(point)
+                              .hasSum(150 /* millis */)
+                              .attributes()
+                              .containsOnly(
+                                  attributeEntry("rpc.system", "grpc"),
+                                  attributeEntry("rpc.service", "myservice.EchoService"),
+                                  attributeEntry("rpc.method", "exampleMethod"),
+                                  attributeEntry("net.host.ip", "127.0.0.1"),
+                                  attributeEntry("net.transport", "ip_tcp"));
+                        }));
   }
 
   private static long nanos(int millis) {

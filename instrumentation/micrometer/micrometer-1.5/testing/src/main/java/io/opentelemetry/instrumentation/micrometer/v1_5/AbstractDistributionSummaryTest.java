@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -168,5 +169,51 @@ public abstract class AbstractDistributionSummaryTest {
                             .anySatisfy(
                                 point ->
                                     assertThat(point).attributes().containsEntry("phi", "0.99"))));
+  }
+
+  @Test
+  void testMicrometerMax() throws InterruptedException {
+    // given
+    DistributionSummary summary =
+        DistributionSummary.builder("testSummaryMax")
+            .description("This is a test distribution summary")
+            .baseUnit("things")
+            .tags("tag", "value")
+            .register(Metrics.globalRegistry);
+
+    // when
+    summary.record(1);
+    summary.record(2);
+    summary.record(4);
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testSummaryMax.max",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test distribution summary")
+                            .hasDoubleGauge()
+                            .points()
+                            .anySatisfy(
+                                point ->
+                                    assertThat(point)
+                                        .hasValue(4)
+                                        .attributes()
+                                        .containsEntry("tag", "value"))));
+
+    // when
+    Metrics.globalRegistry.remove(summary);
+    Thread.sleep(10); // give time for any inflight metric export to be received
+    testing().clearData();
+
+    // then
+    Thread.sleep(100); // interval of the test metrics exporter
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME, "testSummaryMax.max", AbstractIterableAssert::isEmpty);
   }
 }

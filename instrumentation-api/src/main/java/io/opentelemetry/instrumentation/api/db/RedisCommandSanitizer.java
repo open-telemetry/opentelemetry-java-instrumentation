@@ -52,7 +52,7 @@ public final class RedisCommandSanitizer {
     CommandSanitizer setMultiField = new MultiKeyValue(0);
 
     // Cluster
-    for (String command : asList("CLUSTER", "READONLY", "READWRITE")) {
+    for (String command : asList("CLUSTER", "FAILOVER", "READONLY", "READWRITE")) {
       sanitizers.put(command, KeepAllArgs.INSTANCE);
     }
 
@@ -60,13 +60,23 @@ public final class RedisCommandSanitizer {
     sanitizers.put("AUTH", DEFAULT);
     // HELLO can contain AUTH data
     sanitizers.put("HELLO", keepTwoArgs);
-    for (String command : asList("CLIENT", "ECHO", "PING", "QUIT", "SELECT")) {
+    for (String command : asList("CLIENT", "ECHO", "PING", "QUIT", "RESET", "SELECT")) {
       sanitizers.put(command, KeepAllArgs.INSTANCE);
     }
 
     // Geo
     for (String command :
-        asList("GEOADD", "GEODIST", "GEOHASH", "GEOPOS", "GEORADIUS", "GEORADIUSBYMEMBER")) {
+        asList(
+            "GEOADD",
+            "GEODIST",
+            "GEOHASH",
+            "GEOPOS",
+            "GEORADIUS",
+            "GEORADIUS_RO",
+            "GEORADIUSBYMEMBER",
+            "GEORADIUSBYMEMBER_RO",
+            "GEOSEARCH",
+            "GEOSEARCHSTORE")) {
       sanitizers.put(command, KeepAllArgs.INSTANCE);
     }
 
@@ -85,6 +95,7 @@ public final class RedisCommandSanitizer {
             "HKEYS",
             "HLEN",
             "HMGET",
+            "HRANDFIELD",
             "HSCAN",
             "HSTRLEN",
             "HVALS")) {
@@ -103,23 +114,27 @@ public final class RedisCommandSanitizer {
     sanitizers.put("RESTORE", keepTwoArgs);
     for (String command :
         asList(
+            "COPY",
             "DEL",
             "DUMP",
             "EXISTS",
             "EXPIRE",
             "EXPIREAT",
+            "EXPIRETIME",
             "KEYS",
             "MOVE",
             "OBJECT",
             "PERSIST",
             "PEXPIRE",
             "PEXPIREAT",
+            "PEXPIRETIME",
             "PTTL",
             "RANDOMKEY",
             "RENAME",
             "RENAMENX",
             "SCAN",
             "SORT",
+            "SORT_RO",
             "TOUCH",
             "TTL",
             "TYPE",
@@ -140,12 +155,14 @@ public final class RedisCommandSanitizer {
     for (String command :
         asList(
             "BLMOVE",
+            "BLMPOP",
             "BLPOP",
             "BRPOP",
             "BRPOPLPUSH",
             "LINDEX",
             "LLEN",
             "LMOVE",
+            "LMPOP",
             "LPOP",
             "LRANGE",
             "LTRIM",
@@ -157,13 +174,23 @@ public final class RedisCommandSanitizer {
     // Pub/Sub
     sanitizers.put("PUBLISH", keepOneArg);
     for (String command :
-        asList("PSUBSCRIBE", "PUBSUB", "PUNSUBSCRIBE", "SUBSCRIBE", "UNSUBSCRIBE")) {
+        asList(
+            "PSUBSCRIBE",
+            "PUBSUB",
+            "PUNSUBSCRIBE",
+            "SPUBLISH",
+            "SSUBSCRIBE",
+            "SUBSCRIBE",
+            "SUNSUBSCRIBE",
+            "UNSUBSCRIBE")) {
       sanitizers.put(command, KeepAllArgs.INSTANCE);
     }
 
     // Scripting
     sanitizers.put("EVAL", Eval.INSTANCE);
+    sanitizers.put("EVAL_RO", Eval.INSTANCE);
     sanitizers.put("EVALSHA", Eval.INSTANCE);
+    sanitizers.put("EVALSHA_RO", Eval.INSTANCE);
     sanitizers.put("SCRIPT", KeepAllArgs.INSTANCE);
 
     // Server
@@ -211,6 +238,7 @@ public final class RedisCommandSanitizer {
             "SDIFF",
             "SDIFFSTORE",
             "SINTER",
+            "SINTERCARD",
             "SINTERSTORE",
             "SMEMBERS",
             "SPOP",
@@ -239,14 +267,21 @@ public final class RedisCommandSanitizer {
     sanitizers.put("ZSCORE", keepOneArg);
     for (String command :
         asList(
+            "BZMPOP",
             "BZPOPMAX",
             "BZPOPMIN",
             "ZCARD",
+            "ZDIFF",
+            "ZDIFFSTORE",
             "ZINTER",
+            "ZINTERCARD",
             "ZINTERSTORE",
+            "ZMPOP",
             "ZPOPMAX",
             "ZPOPMIN",
+            "ZRANDMEMBER",
             "ZRANGE",
+            "ZRANGESTORE",
             "ZREMRANGEBYRANK",
             "ZREVRANGE",
             "ZSCAN",
@@ -260,6 +295,7 @@ public final class RedisCommandSanitizer {
     for (String command :
         asList(
             "XACK",
+            "XAUTOCLAIM",
             "XCLAIM",
             "XDEL",
             "XGROUP",
@@ -288,16 +324,20 @@ public final class RedisCommandSanitizer {
         asList(
             "BITCOUNT",
             "BITFIELD",
+            "BITFIELD_RO",
             "BITOP",
             "BITPOS",
             "DECR",
             "DECRBY",
             "GET",
             "GETBIT",
+            "GETDEL",
+            "GETEX",
             "GETRANGE",
             "INCR",
             "INCRBY",
             "INCRBYFLOAT",
+            "LCS",
             "MGET",
             "SETBIT",
             "STRALGO",
@@ -329,7 +369,7 @@ public final class RedisCommandSanitizer {
       if (arg instanceof byte[]) {
         return new String((byte[]) arg, StandardCharsets.UTF_8);
       } else {
-        return arg.toString();
+        return String.valueOf(arg);
       }
     }
 

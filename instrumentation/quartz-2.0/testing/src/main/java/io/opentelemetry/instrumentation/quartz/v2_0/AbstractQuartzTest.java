@@ -14,6 +14,9 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -119,6 +122,12 @@ public abstract class AbstractQuartzTest {
     @Override
     public void execute(JobExecutionContext context) {
       GlobalOpenTelemetry.getTracer("jobtracer").spanBuilder("child").startSpan().end();
+      // ensure that JobExecutionContext is serializable
+      try {
+        new ObjectOutputStream(new ByteArrayOutputStream()).writeObject(context);
+      } catch (IOException e) {
+        throw new IllegalStateException(e);
+      }
     }
   }
 

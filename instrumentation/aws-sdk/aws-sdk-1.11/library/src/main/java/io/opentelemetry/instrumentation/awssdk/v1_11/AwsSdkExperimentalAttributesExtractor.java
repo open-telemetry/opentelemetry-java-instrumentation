@@ -18,6 +18,7 @@ import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -26,7 +27,7 @@ class AwsSdkExperimentalAttributesExtractor
   private static final String COMPONENT_NAME = "java-aws-sdk";
 
   @Override
-  public void onStart(AttributesBuilder attributes, Request<?> request) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     set(attributes, AWS_AGENT, COMPONENT_NAME);
     set(attributes, AWS_ENDPOINT, request.getEndpoint().toString());
 
@@ -41,6 +42,7 @@ class AwsSdkExperimentalAttributesExtractor
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       Request<?> request,
       @Nullable Response<?> response,
       @Nullable Throwable error) {

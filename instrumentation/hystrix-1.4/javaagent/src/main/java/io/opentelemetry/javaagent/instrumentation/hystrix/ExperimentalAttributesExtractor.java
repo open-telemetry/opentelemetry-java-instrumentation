@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -20,7 +21,8 @@ final class ExperimentalAttributesExtractor implements AttributesExtractor<Hystr
       booleanKey("hystrix.circuit_open");
 
   @Override
-  public void onStart(AttributesBuilder attributes, HystrixRequest hystrixRequest) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, HystrixRequest hystrixRequest) {
     String commandName = hystrixRequest.command().getCommandKey().name();
     String groupName = hystrixRequest.command().getCommandGroup().name();
     boolean circuitOpen = hystrixRequest.command().isCircuitBreakerOpen();
@@ -33,6 +35,7 @@ final class ExperimentalAttributesExtractor implements AttributesExtractor<Hystr
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       HystrixRequest hystrixRequest,
       @Nullable Void unused,
       @Nullable Throwable error) {}

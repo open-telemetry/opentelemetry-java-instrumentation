@@ -81,7 +81,8 @@ class InstrumenterTest {
       implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    public void onStart(AttributesBuilder attributes, Map<String, String> request) {
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
       attributes.put("req1", request.get("req1"));
       attributes.put("req2", request.get("req2"));
     }
@@ -89,6 +90,7 @@ class InstrumenterTest {
     @Override
     public void onEnd(
         AttributesBuilder attributes,
+        Context context,
         Map<String, String> request,
         Map<String, String> response,
         @Nullable Throwable error) {
@@ -101,7 +103,8 @@ class InstrumenterTest {
       implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    public void onStart(AttributesBuilder attributes, Map<String, String> request) {
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
       attributes.put("req3", request.get("req3"));
       attributes.put("req2", request.get("req2_2"));
     }
@@ -109,6 +112,7 @@ class InstrumenterTest {
     @Override
     public void onEnd(
         AttributesBuilder attributes,
+        Context context,
         Map<String, String> request,
         Map<String, String> response,
         @Nullable Throwable error) {

@@ -16,6 +16,7 @@ import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
@@ -49,31 +50,44 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
     return new OpenTelemetryMeterRegistryBuilder(openTelemetry);
   }
 
+  private final TimeUnit baseTimeUnit;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
   private final AsyncInstrumentRegistry asyncInstrumentRegistry;
 
-  OpenTelemetryMeterRegistry(Clock clock, io.opentelemetry.api.metrics.Meter otelMeter) {
+  OpenTelemetryMeterRegistry(
+      Clock clock, TimeUnit baseTimeUnit, io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
+    this.baseTimeUnit = baseTimeUnit;
     this.otelMeter = otelMeter;
     this.asyncInstrumentRegistry = AsyncInstrumentRegistry.getOrCreate(otelMeter);
-    this.config().onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
+
+    this.config()
+        .namingConvention(NamingConvention.identity)
+        .onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
   }
 
   @Override
   protected <T> Gauge newGauge(Meter.Id id, @Nullable T obj, ToDoubleFunction<T> valueFunction) {
-    return new OpenTelemetryGauge<>(id, obj, valueFunction, asyncInstrumentRegistry);
+    return new OpenTelemetryGauge<>(
+        id, config().namingConvention(), obj, valueFunction, asyncInstrumentRegistry);
   }
 
   @Override
   protected Counter newCounter(Meter.Id id) {
-    return new OpenTelemetryCounter(id, otelMeter);
+    return new OpenTelemetryCounter(id, config().namingConvention(), otelMeter);
   }
 
   @Override
   protected LongTaskTimer newLongTaskTimer(
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig) {
     OpenTelemetryLongTaskTimer timer =
-        new OpenTelemetryLongTaskTimer(id, clock, distributionStatisticConfig, otelMeter);
+        new OpenTelemetryLongTaskTimer(
+            id,
+            config().namingConvention(),
+            clock,
+            getBaseTimeUnit(),
+            distributionStatisticConfig,
+            otelMeter);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
@@ -86,7 +100,15 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       DistributionStatisticConfig distributionStatisticConfig,
       PauseDetector pauseDetector) {
     OpenTelemetryTimer timer =
-        new OpenTelemetryTimer(id, clock, distributionStatisticConfig, pauseDetector, otelMeter);
+        new OpenTelemetryTimer(
+            id,
+            config().namingConvention(),
+            clock,
+            distributionStatisticConfig,
+            pauseDetector,
+            getBaseTimeUnit(),
+            otelMeter,
+            asyncInstrumentRegistry);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
@@ -98,7 +120,13 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig, double scale) {
     OpenTelemetryDistributionSummary distributionSummary =
         new OpenTelemetryDistributionSummary(
-            id, clock, distributionStatisticConfig, scale, otelMeter);
+            id,
+            config().namingConvention(),
+            clock,
+            distributionStatisticConfig,
+            scale,
+            otelMeter,
+            asyncInstrumentRegistry);
     if (distributionSummary.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(distributionSummary, this);
     }
@@ -107,7 +135,8 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> measurements) {
-    return new OpenTelemetryMeter(id, measurements, asyncInstrumentRegistry);
+    return new OpenTelemetryMeter(
+        id, config().namingConvention(), measurements, asyncInstrumentRegistry);
   }
 
   @Override
@@ -118,18 +147,26 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       ToDoubleFunction<T> totalTimeFunction,
       TimeUnit totalTimeFunctionUnit) {
     return new OpenTelemetryFunctionTimer<>(
-        id, obj, countFunction, totalTimeFunction, totalTimeFunctionUnit, asyncInstrumentRegistry);
+        id,
+        config().namingConvention(),
+        obj,
+        countFunction,
+        totalTimeFunction,
+        totalTimeFunctionUnit,
+        getBaseTimeUnit(),
+        asyncInstrumentRegistry);
   }
 
   @Override
   protected <T> FunctionCounter newFunctionCounter(
       Meter.Id id, T obj, ToDoubleFunction<T> countFunction) {
-    return new OpenTelemetryFunctionCounter<>(id, obj, countFunction, asyncInstrumentRegistry);
+    return new OpenTelemetryFunctionCounter<>(
+        id, config().namingConvention(), obj, countFunction, asyncInstrumentRegistry);
   }
 
   @Override
   protected TimeUnit getBaseTimeUnit() {
-    return TimeUnit.MILLISECONDS;
+    return baseTimeUnit;
   }
 
   @Override

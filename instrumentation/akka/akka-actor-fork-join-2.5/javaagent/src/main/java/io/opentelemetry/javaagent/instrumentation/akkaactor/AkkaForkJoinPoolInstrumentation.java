@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkaactor;
 
-import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -40,7 +39,7 @@ public class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
         AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
-        nameMatches("invoke")
+        named("invoke")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
         AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
   }

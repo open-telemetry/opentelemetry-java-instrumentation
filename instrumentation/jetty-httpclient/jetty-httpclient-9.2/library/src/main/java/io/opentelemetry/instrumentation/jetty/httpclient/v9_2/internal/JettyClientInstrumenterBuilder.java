@@ -9,8 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
@@ -22,6 +20,10 @@ import java.util.List;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class JettyClientInstrumenterBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-httpclient-9.2";
@@ -49,22 +51,18 @@ public final class JettyClientInstrumenterBuilder {
   }
 
   public Instrumenter<Request, Response> build() {
-    HttpClientAttributesExtractor<Request, Response> httpAttributesExtractor =
-        new JettyClientHttpAttributesExtractor(capturedHttpHeaders);
-    SpanNameExtractor<Request> spanNameExtractor =
-        HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<Request, Response> spanStatusExtractor =
-        HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    JettyClientHttpAttributesGetter httpAttributesGetter = new JettyClientHttpAttributesGetter();
     JettyHttpClientNetAttributesGetter netAttributesGetter =
         new JettyHttpClientNetAttributesGetter();
-    NetClientAttributesExtractor<Request, Response> attributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesGetter);
 
     return Instrumenter.<Request, Response>builder(
-            this.openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-        .setSpanStatusExtractor(spanStatusExtractor)
-        .addAttributesExtractor(httpAttributesExtractor)
-        .addAttributesExtractor(attributesExtractor)
+            this.openTelemetry,
+            INSTRUMENTATION_NAME,
+            HttpSpanNameExtractor.create(httpAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+        .addAttributesExtractor(
+            HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
         .addRequestMetrics(HttpClientMetrics.get())
         .newClientInstrumenter(HttpHeaderSetter.INSTANCE);

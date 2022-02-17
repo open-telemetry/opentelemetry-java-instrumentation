@@ -5,34 +5,22 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.junit.jupiter.api.Test;
+class SystemMetricsTest extends AbstractSystemMetricsTest {
 
-public class SystemMetricsTest extends AbstractMetricsTest {
+  @RegisterExtension
+  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @Test
-  public void test() {
+  @Override
+  protected void registerMetrics() {
     SystemMetrics.registerObservers();
+  }
 
-    waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName("system.memory.usage")
-                .hasUnit("By")
-                .hasLongSum()
-                .points()
-                .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
-        metric ->
-            metric
-                .hasName("system.memory.utilization")
-                .hasUnit("1")
-                .hasDoubleGauge()
-                .points()
-                .anySatisfy(point -> assertThat(point.getValue()).isPositive()),
-        metric -> metric.hasName("system.network.io").hasUnit("By").hasLongSum(),
-        metric -> metric.hasName("system.network.packets").hasUnit("packets").hasLongSum(),
-        metric -> metric.hasName("system.network.errors").hasUnit("errors").hasLongSum(),
-        metric -> metric.hasName("system.disk.operations").hasUnit("operations").hasLongSum());
+  @Override
+  protected InstrumentationExtension testing() {
+    return testing;
   }
 }
