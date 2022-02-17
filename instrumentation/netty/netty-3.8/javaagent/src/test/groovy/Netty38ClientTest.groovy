@@ -27,6 +27,8 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   def getClientConfig() {
     def builder = new AsyncHttpClientConfig.Builder()
       .setUserAgent("test-user-agent")
+      // with connection pooling is enabled there are occasional failures in high concurrency test
+      .setAllowPoolingConnection(false)
 
     if (builder.metaClass.getMetaMethod("setConnectTimeout", int) != null) {
       builder.setConnectTimeout(CONNECT_TIMEOUT_MS)
