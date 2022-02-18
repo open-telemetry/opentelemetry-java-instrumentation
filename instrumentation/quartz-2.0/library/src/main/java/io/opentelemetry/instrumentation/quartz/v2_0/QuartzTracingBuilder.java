@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import org.quartz.JobExecutionContext;
@@ -43,7 +44,8 @@ public final class QuartzTracingBuilder {
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new QuartzSpanNameExtractor());
 
     instrumenter.setErrorCauseExtractor(new QuartzErrorCauseExtractor());
-    instrumenter.addAttributesExtractor(new QuartzCodeAttributesExtractor());
+    instrumenter.addAttributesExtractor(
+        CodeAttributesExtractor.create(new QuartzCodeAttributesGetter()));
     instrumenter.addAttributesExtractors(additionalExtractors);
 
     return new QuartzTracing(new TracingJobListener(instrumenter.newInstrumenter()));
