@@ -124,11 +124,6 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
-  public String getRequestRemoteHost(HttpServletRequest request) {
-    return request.getRemoteHost();
-  }
-
-  @Override
   public int getRequestContentLength(HttpServletRequest request) {
     return request.getContentLength();
   }
