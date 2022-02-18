@@ -8,14 +8,12 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
 import io.micrometer.core.instrument.AbstractDistributionSummary;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Measurement;
-import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.NoopHistogram;
@@ -59,15 +57,17 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
     max = new TimeWindowMax(clock, distributionStatisticConfig);
 
     this.attributes = tagsAsAttributes(id, namingConvention);
+
+    String conventionName = name(id, namingConvention);
     this.otelHistogram =
         otelMeter
-            .histogramBuilder(name(id, namingConvention))
+            .histogramBuilder(conventionName)
             .setDescription(description(id))
             .setUnit(baseUnit(id))
             .build();
     this.maxHandle =
         asyncInstrumentRegistry.buildGauge(
-            statisticInstrumentName(id, Statistic.MAX, namingConvention),
+            conventionName + ".max",
             description(id),
             baseUnit(id),
             attributes,

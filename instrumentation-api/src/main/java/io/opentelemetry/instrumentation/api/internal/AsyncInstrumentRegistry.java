@@ -64,6 +64,8 @@ public final class AsyncInstrumentRegistry {
   private final Map<String, LongMeasurementsRecorder> longCounters = new ConcurrentHashMap<>();
   private final Map<String, DoubleMeasurementsRecorder> upDownDoubleCounters =
       new ConcurrentHashMap<>();
+  private final Map<String, LongMeasurementsRecorder> upDownLongCounters =
+      new ConcurrentHashMap<>();
 
   AsyncInstrumentRegistry(Meter meter) {
     this.meter = new WeakReference<>(meter);
@@ -150,7 +152,7 @@ public final class AsyncInstrumentRegistry {
       String description,
       String baseUnit,
       Attributes attributes,
-      T obj,
+      @Nullable T obj,
       ToDoubleFunction<T> objMetric) {
 
     DoubleMeasurementsRecorder recorder =
@@ -167,6 +169,31 @@ public final class AsyncInstrumentRegistry {
               return recorderCallback;
             });
     recorder.addMeasurement(attributes, new DoubleMeasurementSource<>(obj, objMetric));
+
+    return new AsyncMeasurementHandle(recorder, attributes);
+  }
+
+  public <T> AsyncMeasurementHandle buildUpDownLongCounter(
+      String name,
+      String description,
+      String baseUnit,
+      Attributes attributes,
+      @Nullable T obj,
+      ToLongFunction<T> objMetric) {
+
+    LongMeasurementsRecorder recorder =
+        upDownLongCounters.computeIfAbsent(
+            name,
+            n -> {
+              LongMeasurementsRecorder recorderCallback = new LongMeasurementsRecorder();
+              otelMeter()
+                  .upDownCounterBuilder(name)
+                  .setDescription(description)
+                  .setUnit(baseUnit)
+                  .buildWithCallback(recorderCallback);
+              return recorderCallback;
+            });
+    recorder.addMeasurement(attributes, new LongMeasurementSource<>(obj, objMetric));
 
     return new AsyncMeasurementHandle(recorder, attributes);
   }

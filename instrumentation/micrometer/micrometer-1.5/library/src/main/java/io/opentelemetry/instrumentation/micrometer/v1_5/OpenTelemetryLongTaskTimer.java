@@ -7,34 +7,25 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.TimeUnitHelper.getUnitString;
 
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Measurement;
-import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.internal.DefaultLongTaskTimer;
-import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongUpDownCounter;
-import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
+import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements RemovableMeter {
 
-  private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfig distributionStatisticConfig;
-  // TODO: use bound instruments when they're available
-  private final DoubleHistogram otelHistogram;
-  private final LongUpDownCounter otelActiveTasksCounter;
-  private final Attributes attributes;
-
-  private volatile boolean removed = false;
+  private final AsyncMeasurementHandle activeTasksHandle;
+  private final AsyncMeasurementHandle durationHandle;
 
   OpenTelemetryLongTaskTimer(
       Id id,
@@ -42,37 +33,29 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
       Clock clock,
       TimeUnit baseTimeUnit,
       DistributionStatisticConfig distributionStatisticConfig,
-      Meter otelMeter) {
+      AsyncInstrumentRegistry asyncInstrumentRegistry) {
     super(id, clock, baseTimeUnit, distributionStatisticConfig, false);
 
-    this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfig = distributionStatisticConfig;
 
-    this.otelHistogram =
-        otelMeter
-            .histogramBuilder(name(id, namingConvention))
-            .setDescription(description(id))
-            .setUnit(getUnitString(baseTimeUnit))
-            .build();
-    this.otelActiveTasksCounter =
-        otelMeter
-            .upDownCounterBuilder(
-                statisticInstrumentName(id, Statistic.ACTIVE_TASKS, namingConvention))
-            .setDescription(description(id))
-            .setUnit("tasks")
-            .build();
-    this.attributes = tagsAsAttributes(id, namingConvention);
-  }
-
-  @Override
-  public Sample start() {
-    Sample original = super.start();
-    if (removed) {
-      return original;
-    }
-
-    otelActiveTasksCounter.add(1, attributes);
-    return new OpenTelemetrySample(original);
+    String conventionName = name(id, namingConvention);
+    Attributes attributes = tagsAsAttributes(id, namingConvention);
+    this.activeTasksHandle =
+        asyncInstrumentRegistry.buildUpDownLongCounter(
+            conventionName + ".active",
+            description(id),
+            "tasks",
+            attributes,
+            this,
+            DefaultLongTaskTimer::activeTasks);
+    this.durationHandle =
+        asyncInstrumentRegistry.buildUpDownDoubleCounter(
+            conventionName + ".duration",
+            description(id),
+            getUnitString(baseTimeUnit),
+            attributes,
+            this,
+            t -> t.duration(baseTimeUnit));
   }
 
   @Override
@@ -83,41 +66,12 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
 
   @Override
   public void onRemove() {
-    removed = true;
+    activeTasksHandle.remove();
+    durationHandle.remove();
   }
 
   boolean isUsingMicrometerHistograms() {
     return distributionStatisticConfig.isPublishingPercentiles()
         || distributionStatisticConfig.isPublishingHistogram();
-  }
-
-  private final class OpenTelemetrySample extends Sample {
-
-    private final Sample original;
-    private volatile boolean stopped = false;
-
-    private OpenTelemetrySample(Sample original) {
-      this.original = original;
-    }
-
-    @Override
-    public long stop() {
-      if (stopped) {
-        return -1;
-      }
-      stopped = true;
-      long durationNanos = original.stop();
-      if (!removed) {
-        otelActiveTasksCounter.add(-1, attributes);
-        double time = TimeUtils.nanosToUnit(durationNanos, baseTimeUnit);
-        otelHistogram.record(time, attributes);
-      }
-      return durationNanos;
-    }
-
-    @Override
-    public double duration(TimeUnit unit) {
-      return stopped ? -1 : original.duration(unit);
-    }
   }
 }
