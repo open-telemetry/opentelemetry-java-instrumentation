@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.common;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 
@@ -16,25 +15,22 @@ public class JaxWsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-common";
 
   private static final Instrumenter<JaxWsRequest, Void> INSTRUMENTER;
-  private static final SpanNameExtractor<JaxWsRequest> SPAN_NAME_EXTRACTOR;
 
   static {
-    CodeAttributesExtractor<JaxWsRequest, Void> codeAttributes = new JaxWsCodeAttributesExtractor();
-    SPAN_NAME_EXTRACTOR = CodeSpanNameExtractor.create(codeAttributes);
+    JaxWsCodeAttributesGetter codeAttributesGetter = new JaxWsCodeAttributesGetter();
+
     INSTRUMENTER =
         Instrumenter.<JaxWsRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JaxWsRequest::spanName)
-            .addAttributesExtractor(codeAttributes)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
             .newInstrumenter();
   }
 
   public static Instrumenter<JaxWsRequest, Void> instrumenter() {
     return INSTRUMENTER;
-  }
-
-  public static SpanNameExtractor<JaxWsRequest> spanNameExtractor() {
-    return SPAN_NAME_EXTRACTOR;
   }
 
   private JaxWsSingletons() {}

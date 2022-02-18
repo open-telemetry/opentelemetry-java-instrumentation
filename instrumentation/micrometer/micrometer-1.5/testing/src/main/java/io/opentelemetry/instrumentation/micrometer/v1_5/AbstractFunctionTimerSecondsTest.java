@@ -31,7 +31,7 @@ public abstract class AbstractFunctionTimerSecondsTest {
   }
 
   @Test
-  void testFunctionCounterWithBaseUnitSeconds() throws InterruptedException {
+  void testFunctionTimerWithBaseUnitSeconds() throws InterruptedException {
     // given
     FunctionTimer functionTimer =
         FunctionTimer.builder(
@@ -70,7 +70,7 @@ public abstract class AbstractFunctionTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionTimerSeconds.total_time",
+            "testFunctionTimerSeconds.sum",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -100,8 +100,6 @@ public abstract class AbstractFunctionTimerSecondsTest {
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "testFunctionTimerSeconds.total_time",
-            AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "testFunctionTimerSeconds.sum", AbstractIterableAssert::isEmpty);
   }
 }

@@ -16,37 +16,35 @@ import javax.annotation.Nullable;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#source-code-attributes">source
  * code attributes</a>.
  */
-public abstract class CodeAttributesExtractor<REQUEST, RESPONSE>
+public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  @Override
-  public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    Class<?> cls = codeClass(request);
-    if (cls != null) {
-      set(attributes, SemanticAttributes.CODE_NAMESPACE, cls.getName());
-    }
-    set(attributes, SemanticAttributes.CODE_FUNCTION, methodName(request));
-    set(attributes, SemanticAttributes.CODE_FILEPATH, filePath(request));
-    set(attributes, SemanticAttributes.CODE_LINENO, lineNumber(request));
+  /** Creates the code attributes extractor. */
+  public static <REQUEST, RESPONSE> CodeAttributesExtractor<REQUEST, RESPONSE> create(
+      CodeAttributesGetter<REQUEST> getter) {
+    return new CodeAttributesExtractor<>(getter);
+  }
+
+  private final CodeAttributesGetter<REQUEST> getter;
+
+  private CodeAttributesExtractor(CodeAttributesGetter<REQUEST> getter) {
+    this.getter = getter;
   }
 
   @Override
-  public final void onEnd(
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    Class<?> cls = getter.codeClass(request);
+    if (cls != null) {
+      set(attributes, SemanticAttributes.CODE_NAMESPACE, cls.getName());
+    }
+    set(attributes, SemanticAttributes.CODE_FUNCTION, getter.methodName(request));
+  }
+
+  @Override
+  public void onEnd(
       AttributesBuilder attributes,
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {}
-
-  @Nullable
-  protected abstract Class<?> codeClass(REQUEST request);
-
-  @Nullable
-  protected abstract String methodName(REQUEST request);
-
-  @Nullable
-  protected abstract String filePath(REQUEST request);
-
-  @Nullable
-  protected abstract Long lineNumber(REQUEST request);
 }

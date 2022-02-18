@@ -5,15 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import javax.annotation.Nullable;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
-public class SpringSchedulingCodeAttributesExtractor
-    extends CodeAttributesExtractor<Runnable, Void> {
+public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGetter<Runnable> {
 
   @Override
-  protected Class<?> codeClass(Runnable runnable) {
+  public Class<?> codeClass(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
       return scheduledMethodRunnable.getTarget().getClass();
@@ -23,24 +21,12 @@ public class SpringSchedulingCodeAttributesExtractor
   }
 
   @Override
-  protected String methodName(Runnable runnable) {
+  public String methodName(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
       return scheduledMethodRunnable.getMethod().getName();
     } else {
       return "run";
     }
-  }
-
-  @Override
-  @Nullable
-  protected String filePath(Runnable runnable) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  protected Long lineNumber(Runnable runnable) {
-    return null;
   }
 }

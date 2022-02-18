@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.TimeUnit;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -58,6 +59,27 @@ public abstract class AbstractLongTaskTimerSecondsTest {
                                         .hasValue(1)
                                         .attributes()
                                         .containsOnly(attributeEntry("tag", "value")))));
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testLongTaskTimerSeconds.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDescription("This is a test long task timer")
+                            .hasUnit("s")
+                            .hasDoubleSum()
+                            .isNotMonotonic()
+                            .points()
+                            .satisfiesExactly(
+                                point -> {
+                                  assertThat(point)
+                                      .attributes()
+                                      .containsOnly(attributeEntry("tag", "value"));
+                                  // any value >0 - duration of currently running tasks
+                                  assertThat(point.getValue()).isPositive();
+                                })));
 
     // when
     TimeUnit.MILLISECONDS.sleep(100);
@@ -67,31 +89,28 @@ public abstract class AbstractLongTaskTimerSecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimerSeconds",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test long task timer")
-                            .hasUnit("s")
-                            .hasDoubleHistogram()
-                            .points()
-                            .satisfiesExactly(
-                                point ->
-                                    assertThat(point)
-                                        .hasSumGreaterThan(0.1)
-                                        .hasCount(1)
-                                        .attributes()
-                                        .containsOnly(attributeEntry("tag", "value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
             "testLongTaskTimerSeconds.active",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
                             .hasLongSum()
+                            .points()
+                            .satisfiesExactly(
+                                point ->
+                                    assertThat(point)
+                                        .hasValue(0)
+                                        .attributes()
+                                        .containsOnly(attributeEntry("tag", "value")))));
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testLongTaskTimerSeconds.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasDoubleSum()
                             .points()
                             .satisfiesExactly(
                                 point ->
@@ -103,42 +122,18 @@ public abstract class AbstractLongTaskTimerSecondsTest {
 
     // when timer is removed from the registry
     Metrics.globalRegistry.remove(timer);
-    sample = timer.start();
+    timer.start();
 
     // then no tasks are active after starting a new sample
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             "testLongTaskTimerSeconds.active",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasLongSum()
-                            .points()
-                            .satisfiesExactly(
-                                point ->
-                                    assertThat(point)
-                                        .hasValue(0)
-                                        .attributes()
-                                        .containsOnly(attributeEntry("tag", "value")))));
-
-    // when
-    TimeUnit.MILLISECONDS.sleep(100);
-    sample.stop();
-
-    // then sample of a removed timer does not record any data
+            AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimerSeconds",
-            metrics ->
-                metrics.allSatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleHistogram()
-                            .points()
-                            .noneSatisfy(
-                                point -> assertThat(point).hasSumGreaterThan(0.2).hasCount(2))));
+            "testLongTaskTimerSeconds.duration",
+            AbstractIterableAssert::isEmpty);
   }
 }

@@ -87,7 +87,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             clock,
             getBaseTimeUnit(),
             distributionStatisticConfig,
-            otelMeter);
+            asyncInstrumentRegistry);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
