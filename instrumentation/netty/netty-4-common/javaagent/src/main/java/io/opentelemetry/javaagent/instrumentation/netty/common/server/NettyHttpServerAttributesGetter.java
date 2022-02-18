@@ -92,8 +92,7 @@ final class NettyHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public String serverName(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+  public String serverName(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 }

@@ -102,7 +102,7 @@ public class UndertowHttpAttributesGetter
 
   @Override
   @Nullable
-  public String serverName(HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
+  public String serverName(HttpServerExchange exchange) {
     return null;
   }
 }

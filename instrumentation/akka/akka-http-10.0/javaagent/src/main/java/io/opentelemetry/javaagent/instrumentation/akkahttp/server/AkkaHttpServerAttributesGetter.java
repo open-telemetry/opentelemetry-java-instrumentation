@@ -89,7 +89,7 @@ class AkkaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public String serverName(HttpRequest request, @Nullable HttpResponse httpResponse) {
+  public String serverName(HttpRequest request) {
     return null;
   }
 }

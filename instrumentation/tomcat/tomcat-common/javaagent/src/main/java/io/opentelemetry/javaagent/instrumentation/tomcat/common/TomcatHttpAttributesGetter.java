@@ -101,7 +101,7 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public String serverName(Request request, @Nullable Response response) {
-    return request.serverName().toString();
+  public String serverName(Request request) {
+    return null;
   }
 }

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
 /**
@@ -33,14 +31,11 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   String scheme(REQUEST request);
 
-  // Attributes which are not always available when the request is ready.
-
   /**
-   * Extracts the {@code http.server_name} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
+   * The primary server name of the matched virtual host. This should be obtained via configuration,
+   * not from the Host header. If no such configuration can be obtained, this method should return
+   * {@code null}.
    */
   @Nullable
-  String serverName(REQUEST request, @Nullable RESPONSE response);
+  String serverName(REQUEST request);
 }
