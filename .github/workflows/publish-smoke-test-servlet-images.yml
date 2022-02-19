@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-latest
+          - windows-2019
           - ubuntu-latest
         smoke-test-server:
           - jetty
@@ -29,13 +29,13 @@ jobs:
           - websphere
           - wildfly
         exclude:
-          - os: windows-latest
+          - os: windows-2019
             smoke-test-server: websphere
       fail-fast: false
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
 
       - uses: actions/checkout@v2.3.4
 
@@ -56,14 +56,14 @@ jobs:
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Build Linux docker images
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2019'
         uses: gradle/gradle-build-action@v2
         with:
           arguments: buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
           build-root-directory: smoke-tests/images/servlet
 
       - name: Build Windows docker images
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         uses: gradle/gradle-build-action@v2
         with:
           arguments: buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
