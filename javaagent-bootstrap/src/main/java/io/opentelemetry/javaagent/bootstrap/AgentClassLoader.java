@@ -69,9 +69,10 @@ public class AgentClassLoader extends URLClassLoader {
    *
    * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
+   * @param parent Classloader parent. Should null (bootstrap), or the platform classloader for java
    */
-  public AgentClassLoader(File javaagentFile, String internalJarFileName) {
-    super(new URL[] {}, null);
+  public AgentClassLoader(File javaagentFile, String internalJarFileName, ClassLoader parent) {
+    super(new URL[] {}, parent);
     if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
     }

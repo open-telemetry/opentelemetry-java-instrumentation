@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
 import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installOpenTelemetrySdk;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
@@ -254,10 +255,6 @@ public class AgentInstaller {
         agentListener.afterAgent(config, autoConfiguredSdk);
       }
     }
-  }
-
-  private static boolean isJavaBefore9() {
-    return System.getProperty("java.version").startsWith("1.");
   }
 
   private static void addByteBuddyRawSetting() {

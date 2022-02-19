@@ -14,7 +14,7 @@ class UnsafeTest extends Specification {
     setup:
     ByteBuddyAgent.install()
     URL testJarLocation = AgentClassLoader.getProtectionDomain().getCodeSource().getLocation()
-    AgentClassLoader loader = new AgentClassLoader(new File(testJarLocation.toURI()), "")
+    AgentClassLoader loader = new AgentClassLoader(new File(testJarLocation.toURI()), "", null)
     UnsafeInitializer.initialize(ByteBuddyAgent.getInstrumentation(), loader, false)
 
     expect:
