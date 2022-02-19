@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -71,7 +73,7 @@ public class AgentClassLoader extends URLClassLoader {
    * @param internalJarFileName File name of the internal jar
    */
   public AgentClassLoader(File javaagentFile, String internalJarFileName) {
-    super(new URL[] {}, null);
+    super(new URL[] {}, getParentClassLoader());
     if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
     }
@@ -110,6 +112,36 @@ public class AgentClassLoader extends URLClassLoader {
       }
 
       addURL(url);
+    }
+  }
+
+  private static ClassLoader getParentClassLoader() {
+    if (JAVA_VERSION > 8) {
+      ClassLoader platformClassLoader = getPlatformLoader();
+      return new ClassLoader(null) {
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+          // prometheus exporter uses jdk http server, load it from the platform class loader
+          if (name != null && name.startsWith("com.sun.net.httpserver.")) {
+            return platformClassLoader.loadClass(name);
+          }
+          return super.loadClass(name, resolve);
+        }
+      };
+    }
+    return null;
+  }
+
+  private static ClassLoader getPlatformLoader() {
+    /*
+     Must invoke ClassLoader.getPlatformClassLoader by reflection to remain
+     compatible with java 8.
+    */
+    try {
+      Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
+      return (ClassLoader) method.invoke(null);
+    } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException exception) {
+      throw new IllegalStateException(exception);
     }
   }
 
