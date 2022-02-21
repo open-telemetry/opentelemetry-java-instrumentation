@@ -1,0 +1,51 @@
+name: Prepare Patch Release
+on:
+  workflow_dispatch:
+
+jobs:
+  prepare-patch-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set versions
+        id: set-versions
+        run: |
+          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          if [[ $v =~ ([0-9]+.[0-9]+).([0-9]+) ]]; then
+            major_minor="${BASH_REMATCH[1]}"
+            patch="${BASH_REMATCH[2]}"
+          else
+            echo "unexpected version: $v"
+            exit 1
+          fi
+          echo "::set-output name=release-version::$major_minor.$((patch + 1))"
+          echo "::set-output name=prior-version::$v"
+
+      - name: Bump version
+        run: |
+          .github/scripts/update-versions.sh "${{ steps.set-versions.outputs.prior-version }}" "${{ steps.set-versions.outputs.prior-version }}-alpha" "${{ steps.set-versions.outputs.release-version }}" "${{ steps.set-versions.outputs.release-version }}-alpha"
+
+      - name: Bump download link version
+        run: |
+          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${{ steps.set-versions.outputs.prior-version }}/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${{ steps.set-versions.outputs.release-version }}/," README.md
+
+      - name: Setup git name
+        run: |
+          git config user.name opentelemetry-java-bot
+          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
+
+      - name: Create pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          msg="Prepare patch release ${{ steps.set-versions.outputs.release-version }}"
+          git add -u
+          git commit -m "$msg"
+          git push origin HEAD:prepare-patch-release-${{ steps.set-versions.outputs.release-version }}
+          gh pr create --title "$msg" \
+                       --body "$msg" \
+                       --head prepare-patch-release-${{ steps.set-versions.outputs.release-version }} \
+                       --base ${{ github.ref_name }}
