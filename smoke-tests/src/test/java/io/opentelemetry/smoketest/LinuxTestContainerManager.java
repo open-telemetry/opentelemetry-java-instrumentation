@@ -6,6 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -69,14 +70,20 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
+      List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
       String[] command) {
 
     Consumer<OutputFrame> output = new ToStringConsumer();
+    List<Integer> ports = new ArrayList<>();
+    ports.add(TARGET_PORT);
+    if (extraPorts != null) {
+      ports.addAll(extraPorts);
+    }
     target =
         new GenericContainer<>(DockerImageName.parse(targetImageName))
             .withStartupTimeout(Duration.ofMinutes(5))
-            .withExposedPorts(TARGET_PORT)
+            .withExposedPorts(ports.toArray(new Integer[0]))
             .withNetwork(network)
             .withLogConsumer(output)
             .withLogConsumer(new Slf4jLogConsumer(appLogger))

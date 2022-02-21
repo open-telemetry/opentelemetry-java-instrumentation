@@ -58,6 +58,14 @@ abstract class SmokeTest extends Specification {
     return []
   }
 
+  /**
+   * Subclasses can override this method to provide additional ports that should be exposed from the
+   * target container
+   */
+  protected List<ResourceMapping> getExtraPorts() {
+    return []
+  }
+
   def setupSpec() {
     containerManager.startEnvironmentOnce()
     telemetryRetriever = new TelemetryRetriever(containerManager.getBackendMappedPort())
@@ -69,7 +77,7 @@ abstract class SmokeTest extends Specification {
 
   def startTarget(String jdk, String serverVersion, boolean windows) {
     def targetImage = getTargetImage(jdk, serverVersion, windows)
-    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, extraResources, getWaitStrategy(), getCommand())
+    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, extraResources, extraPorts, getWaitStrategy(), getCommand())
   }
 
   protected abstract String getTargetImage(String jdk)
