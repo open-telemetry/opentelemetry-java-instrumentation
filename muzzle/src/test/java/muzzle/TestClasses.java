@@ -14,6 +14,7 @@ import net.bytebuddy.asm.Advice;
 public class TestClasses {
 
   public static class MethodBodyAdvice {
+    @SuppressWarnings("ReturnValueIgnored")
     @Advice.OnMethodEnter
     public static void methodBodyAdvice() {
       A a = new A();
@@ -24,6 +25,7 @@ public class TestClasses {
       a.publicB.methodWithArrays(new String[0]);
       B.staticMethod();
       A.staticB.method("bar");
+      new int[0].clone();
     }
 
     public static class A {
