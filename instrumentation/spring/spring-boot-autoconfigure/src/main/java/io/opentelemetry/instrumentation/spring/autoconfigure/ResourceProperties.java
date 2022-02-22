@@ -8,17 +8,19 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
 @ConfigurationProperties(prefix = "otel.resource")
+@ConstructorBinding
 public class ResourceProperties {
 
-  private Map<String, String> attributes = new HashMap<>();
+  private final Map<String, String> attributes;
+
+  public ResourceProperties(Map<String, String> attributes) {
+    this.attributes = attributes == null ? new HashMap<>() : attributes;
+  }
 
   public Map<String, String> getAttributes() {
     return attributes;
-  }
-
-  public void setAttributes(Map<String, String> attributes) {
-    this.attributes = attributes;
   }
 }
