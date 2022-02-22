@@ -27,3 +27,9 @@ that can be used if you prefer that over using the Java agent:
 * [Spring RestTemplate](../instrumentation/spring/spring-web-3.1/library)
 * [Spring Web MVC](../instrumentation/spring/spring-webmvc-3.1/library)
 * [Spring WebFlux Client](../instrumentation/spring/spring-webflux-5.0/library)
+
+And some libraries are publishing their own OpenTelemetry instrumentation (yay!), e.g.
+
+* [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)
+
+If you know of additional libraries that are publishing their own OpenTelemetry instrumentation, please let us know!
