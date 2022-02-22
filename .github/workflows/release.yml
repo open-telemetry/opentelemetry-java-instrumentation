@@ -131,6 +131,8 @@ jobs:
   release:
     needs: [ test, smoke-test, examples ]
     runs-on: ubuntu-latest
+    outputs:
+      release-version: ${{ steps.set-versions.outputs.release-version }}
     steps:
       - uses: actions/checkout@v2.3.4
         with:
@@ -240,3 +242,28 @@ jobs:
           asset_path: javaagent/build/libs/opentelemetry-javaagent-${{ steps.set-versions.outputs.release-version }}.jar
           asset_name: opentelemetry-javaagent.jar
           asset_content_type: application/java-archive
+
+  create-pull-request-against-main:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Bump download link version
+        run: |
+          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v[0-9]+.[0-9]+.[0-9]+/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${{ needs.release.outputs.release-version }}/," README.md
+
+      - name: Setup git name
+        run: |
+          git config user.name opentelemetry-java-bot
+          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
+
+      - name: Create pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          msg="Bump download link version"
+          git add -u
+          git commit -m "$msg"
+          git push origin HEAD:bump-download-link-version
+          gh pr create --title "$msg" --body "$msg" --head bump-download-link-version --base main

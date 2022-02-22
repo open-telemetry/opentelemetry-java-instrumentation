@@ -20,7 +20,7 @@ Before making the release:
   * Specify the (estimated) release date (UTC)
 * Run the [Prepare Release Branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
 * Review and merge the two PRs that it creates (one is targeted to the release branch and one is targeted to the `main` branch)
-* Delete the branches from these two PRs since they are created in the main repo
+  * Delete the branches from these two PRs since they are created in the main repo
 
 Open the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 
@@ -40,8 +40,8 @@ find the draft release created by the release workflow, and
 
 After making the release:
 
-* Merge a PR to `main` with the following change
-  * Bump the version in the download link in the root `README.md` file
+* Review and merge the PR that the release workflow creates titled "Bump download link version"
+  * Delete the branch from the PR since it is created in the main repo
 
 ## Patch Release
 
@@ -61,7 +61,7 @@ Before making the release:
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `v1.9.x`, and click the "Run workflow" button below that.
 * Review and merge the PR that it creates
-* Delete the branch from the PR since it is created in the main repo
+  * Delete the branch from the PR since it is created in the main repo
 
 Open the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 
@@ -73,6 +73,6 @@ and pushes a git tag with the version number.
 
 After making the release:
 
-* Merge a PR to `main` with the following change
-  * Change log updates from the patch release
-  * Bump the version in the download link in the root `README.md` file
+* Review and merge the PR that the release workflow creates titled "Bump download link version"
+  * Delete the branch from the PR since it is created in the main repo
+* Merge a PR to `main` with the change log updates from the patch release
