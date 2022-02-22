@@ -76,8 +76,6 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .exec()
             .getId();
 
-    String backendSuffix = "-windows-20210611.927888723";
-
     String backendImageName =
         "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20210918.1248928123";
     if (!imageExists(backendImageName)) {
@@ -134,8 +132,13 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
+      List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
       String[] cmd) {
+    if (extraPorts != null && !extraPorts.isEmpty()) {
+      throw new UnsupportedOperationException("extra ports not supported");
+    }
+
     stopTarget();
 
     if (!imageExists(targetImageName)) {
