@@ -14,7 +14,7 @@ that can be used if you prefer that over using the Java agent:
 * [Lettuce](../instrumentation/lettuce/lettuce-5.1/library)
 * [Log4j appender](../instrumentation/log4j/log4j-appender-2.16/library)
 * [Log4j thread context](../instrumentation/log4j/log4j-context-data/log4j-context-data-2.16/library-autoconfigure)
-* [Logback](../instrumentation//logback/logback-appender-1.0/library)
+* [Logback](../instrumentation/logback/logback-appender-1.0/library)
 * [MongoDB Driver](../instrumentation/mongo/mongo-3.1/library)
 * [OkHttp](../instrumentation/okhttp/okhttp-3.0/library)
 * [OSHI](../instrumentation/oshi/library)
