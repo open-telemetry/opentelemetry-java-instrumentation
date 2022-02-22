@@ -30,6 +30,6 @@ that can be used if you prefer that over using the Java agent:
 
 And some libraries are publishing their own OpenTelemetry instrumentation (yay!), e.g.
 
-* [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)
+* [http4k](https://www.http4k.org/guide/reference/opentelemetry/)
 
 If you know of additional libraries that are publishing their own OpenTelemetry instrumentation, please let us know!
