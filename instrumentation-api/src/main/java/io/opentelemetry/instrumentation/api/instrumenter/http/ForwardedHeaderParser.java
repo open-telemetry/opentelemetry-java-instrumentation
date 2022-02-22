@@ -7,11 +7,31 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import javax.annotation.Nullable;
 
-final class ForwarderHeaderParser {
+final class ForwardedHeaderParser {
 
-  // VisibleForTesting
+  /** Extract proto (aka scheme) from "Forwarded" http header. */
   @Nullable
-  static String extractForwarded(String forwarded) {
+  static String extractProtoFromForwardedHeader(String forwarded) {
+    int start = forwarded.toLowerCase().indexOf("proto=");
+    if (start < 0) {
+      return null;
+    }
+    start += 6; // start is now the index after proto=
+    if (start >= forwarded.length() - 1) { // the value after for= must not be empty
+      return null;
+    }
+    return extractProto(forwarded, start);
+  }
+
+  /** Extract proto (aka scheme) from "X-Forwarded-Proto" http header. */
+  @Nullable
+  static String extractProtoFromForwardedProtoHeader(String forwardedProto) {
+    return extractProto(forwardedProto, 0);
+  }
+
+  /** Extract client IP address from "Forwarded" http header. */
+  @Nullable
+  static String extractClientIpFromForwardedHeader(String forwarded) {
     int start = forwarded.toLowerCase().indexOf("for=");
     if (start < 0) {
       return null;
@@ -23,10 +43,30 @@ final class ForwarderHeaderParser {
     return extractIpAddress(forwarded, start);
   }
 
-  // VisibleForTesting
+  /** Extract client IP address from "X-Forwarded-For" http header. */
   @Nullable
-  static String extractForwardedFor(String forwarded) {
-    return extractIpAddress(forwarded, 0);
+  static String extractClientIpFromForwardedForHeader(String forwardedFor) {
+    return extractIpAddress(forwardedFor, 0);
+  }
+
+  @Nullable
+  private static String extractProto(String forwarded, int start) {
+    if (forwarded.length() == start) {
+      return null;
+    }
+    if (forwarded.charAt(start) == '"') {
+      return extractProto(forwarded, start + 1);
+    }
+    for (int i = start; i < forwarded.length(); i++) {
+      char c = forwarded.charAt(i);
+      if (c == ',' || c == ';' || c == '"') {
+        if (i == start) { // empty string
+          return null;
+        }
+        return forwarded.substring(start, i);
+      }
+    }
+    return forwarded.substring(start);
   }
 
   // from https://www.rfc-editor.org/rfc/rfc7239
@@ -53,7 +93,7 @@ final class ForwarderHeaderParser {
       return forwarded.substring(start + 1, end);
     }
     boolean inIpv4 = false;
-    for (int i = start; i < forwarded.length() - 1; i++) {
+    for (int i = start; i < forwarded.length(); i++) {
       char c = forwarded.charAt(i);
       if (c == '.') {
         inIpv4 = true;
@@ -67,5 +107,5 @@ final class ForwarderHeaderParser {
     return forwarded.substring(start);
   }
 
-  private ForwarderHeaderParser() {}
+  private ForwardedHeaderParser() {}
 }

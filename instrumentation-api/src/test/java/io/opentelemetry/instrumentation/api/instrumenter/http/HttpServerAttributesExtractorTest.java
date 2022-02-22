@@ -109,7 +109,7 @@ class HttpServerAttributesExtractorTest {
     request.put("method", "POST");
     request.put("url", "http://github.com");
     request.put("target", "/repositories/1");
-    request.put("scheme", "https");
+    request.put("scheme", "http");
     request.put("requestContentLength", "10");
     request.put("requestContentLengthUncompressed", "11");
     request.put("flavor", "http/2");
@@ -117,7 +117,7 @@ class HttpServerAttributesExtractorTest {
     request.put("serverName", "server");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.host", "github.com");
-    request.put("header.forwarded", "for=1.1.1.1");
+    request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
 
     Map<String, String> response = new HashMap<>();
@@ -195,5 +195,22 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, null, null);
     assertThat(attributes.build())
         .containsOnly(entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"));
+  }
+
+  @Test
+  void extractClientIpFromX_Forwarded_Proto() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.x-forwarded-proto", "https");
+
+    HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(
+            new TestHttpServerAttributesExtractor(), CapturedHttpHeaders.empty());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    assertThat(attributes.build()).containsOnly(entry(SemanticAttributes.HTTP_SCHEME, "https"));
+
+    extractor.onEnd(attributes, Context.root(), request, null, null);
+    assertThat(attributes.build()).containsOnly(entry(SemanticAttributes.HTTP_SCHEME, "https"));
   }
 }
