@@ -81,6 +81,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
 
     assertTraces(1) {
       trace(0, 4) {
+        def list = Arrays.asList("RESOLVE", "CONNECT", "SSL handshake")
+        spans.subList(1, 4).sort(Comparator.comparing { item -> list.indexOf(item.name) })
         span(0) {
           name "parent"
           status ERROR
@@ -149,6 +151,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 6) {
+        def list = Arrays.asList("RESOLVE", "CONNECT", "SSL handshake")
+        spans.subList(1, 4).sort(Comparator.comparing { item -> list.indexOf(item.name) })
         span(0) {
           name "parent"
         }
