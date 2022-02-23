@@ -1,29 +1,9 @@
 plugins {
-  id("otel.javaagent-instrumentation")
-}
-
-muzzle {
-  pass {
-    group.set("javax.ws.rs")
-    module.set("javax.ws.rs-api")
-    versions.set("[2.0,)")
-  }
-  pass {
-    // We want to support the dropwizard clients too.
-    group.set("io.dropwizard")
-    module.set("dropwizard-client")
-    versions.set("[0.8.0,)")
-    assertInverse.set(true)
-  }
+  id("otel.javaagent-testing")
 }
 
 dependencies {
-  compileOnly("javax.ws.rs:javax.ws.rs-api:2.0.1")
-  compileOnly("javax.annotation:javax.annotation-api:1.3.2")
-
-  testInstrumentation(project(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-cxf-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-jersey-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-resteasy-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
 
   testImplementation("javax.ws.rs:javax.ws.rs-api:2.0.1")
 
