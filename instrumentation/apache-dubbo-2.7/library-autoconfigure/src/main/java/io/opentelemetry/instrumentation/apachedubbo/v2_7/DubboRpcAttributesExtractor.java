@@ -11,7 +11,7 @@ import org.apache.dubbo.rpc.Result;
 final class DubboRpcAttributesExtractor extends RpcAttributesExtractor<DubboRequest, Result> {
   @Override
   protected String system(DubboRequest request) {
-    return "dubbo";
+    return "apache-dubbo";
   }
 
   @Override
