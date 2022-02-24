@@ -61,7 +61,6 @@ These are the supported libraries and frameworks:
 | [GWT](http://www.gwtproject.org/)                                                                                                 | 2.0+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                           | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                 | Java 8+                        |
-| [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)                                                 | 3.270.0+                       |
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                     | 1.4+                           |
 | [Java Executors](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html)                                    | Java 8+                        |
 | [Java Http Client](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html)           | Java 11+                       |
@@ -115,8 +114,6 @@ These are the supported libraries and frameworks:
 | [Vert.x Web](https://vertx.io/docs/vertx-web/java/)                                                                               | 3.0+                           |
 | [Vert.x HttpClient](https://vertx.io/docs/apidocs/io/vertx/core/http/HttpClient.html)                                             | 3.0+                           |
 | [Vert.x RxJava2](https://vertx.io/docs/vertx-rx/java2/)                                                                           | 3.5+                           |
-
-<sup>&dagger;</sup> OpenTelemetry support provided by the library
 
 ## Application Servers
 

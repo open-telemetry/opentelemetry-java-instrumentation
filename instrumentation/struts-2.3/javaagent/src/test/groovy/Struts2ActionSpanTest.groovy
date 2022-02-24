@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -27,14 +26,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 
 class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestTrait {
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SERVER_NAME
-    ]
-    super.httpAttributes(endpoint) + extra
-  }
 
   @Override
   boolean testPathParam() {

@@ -76,7 +76,6 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     [
-      SemanticAttributes.HTTP_SERVER_NAME,
       SemanticAttributes.NET_TRANSPORT
     ] as Set
   }

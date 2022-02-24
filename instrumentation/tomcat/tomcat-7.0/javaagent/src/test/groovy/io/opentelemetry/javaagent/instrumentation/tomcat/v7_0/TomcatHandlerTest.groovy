@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
 import org.apache.catalina.connector.Response
@@ -66,14 +65,6 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   @Override
   void stopServer(Tomcat tomcat) {
     tomcat.getServer().stop()
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SERVER_NAME
-    ]
-    super.httpAttributes(endpoint) + extra
   }
 
   @Override

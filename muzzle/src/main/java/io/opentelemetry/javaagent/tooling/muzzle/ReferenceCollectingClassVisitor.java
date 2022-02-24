@@ -362,6 +362,12 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
               ? underlyingType(Type.getType(owner))
               : Type.getType("L" + owner + ";");
 
+      // method invoked on a primitive array type
+      if (ownerType.getSort() != Type.OBJECT) {
+        super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+        return;
+      }
+
       { // ref for method return type
         Type returnType = underlyingType(methodType.getReturnType());
         if (returnType.getSort() == Type.OBJECT) {

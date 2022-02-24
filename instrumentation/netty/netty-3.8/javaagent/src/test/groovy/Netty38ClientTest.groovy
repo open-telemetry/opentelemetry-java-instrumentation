@@ -43,6 +43,12 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
     } else {
       builder.setMaximumNumberOfRedirects(3)
     }
+    // with connection pooling is enabled there are occasional failures in high concurrency test
+    if (builder.metaClass.getMetaMethod("setAllowPoolingConnections", boolean) != null) {
+      builder.setAllowPoolingConnections(false)
+    } else {
+      builder.setAllowPoolingConnection(false)
+    }
 
     return builder.build()
   }

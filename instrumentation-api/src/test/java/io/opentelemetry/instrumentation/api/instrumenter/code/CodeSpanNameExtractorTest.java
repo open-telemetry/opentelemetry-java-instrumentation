@@ -16,17 +16,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class CodeSpanNameExtractorTest {
-  @Mock CodeAttributesExtractor<Object, Void> attributesExtractor;
+  @Mock CodeAttributesGetter<Object> getter;
 
   @Test
   void shouldExtractFullSpanName() {
     // given
     Object request = new Object();
 
-    willReturn(TestClass.class).given(attributesExtractor).codeClass(request);
-    willReturn("doSomething").given(attributesExtractor).methodName(request);
+    willReturn(TestClass.class).given(getter).codeClass(request);
+    willReturn("doSomething").given(getter).methodName(request);
 
-    SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(attributesExtractor);
+    SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
     // when
     String spanName = underTest.extract(request);
@@ -41,10 +41,10 @@ class CodeSpanNameExtractorTest {
     AnonymousBaseClass anon = new AnonymousBaseClass() {};
     Object request = new Object();
 
-    willReturn(anon.getClass()).given(attributesExtractor).codeClass(request);
-    willReturn("doSomething").given(attributesExtractor).methodName(request);
+    willReturn(anon.getClass()).given(getter).codeClass(request);
+    willReturn("doSomething").given(getter).methodName(request);
 
-    SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(attributesExtractor);
+    SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
     // when
     String spanName = underTest.extract(request);

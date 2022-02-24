@@ -796,11 +796,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           // Optional
           "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         }
-        if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
-          // currently reports '/*' which is a fallback route.
-          "$SemanticAttributes.HTTP_ROUTE" String
-        }
         if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
           "$SemanticAttributes.HTTP_SERVER_NAME" String
         }

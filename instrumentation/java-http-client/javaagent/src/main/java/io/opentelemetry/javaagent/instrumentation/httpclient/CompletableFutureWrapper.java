@@ -14,10 +14,6 @@ public final class CompletableFutureWrapper {
   private CompletableFutureWrapper() {}
 
   public static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
-    if (context == Context.root()) {
-      return future;
-    }
-
     CompletableFuture<T> result = new CompletableFuture<>();
     future.whenComplete(
         (T value, Throwable throwable) -> {

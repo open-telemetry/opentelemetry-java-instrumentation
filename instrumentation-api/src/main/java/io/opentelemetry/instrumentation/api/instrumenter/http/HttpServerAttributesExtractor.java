@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHeaderParser.extractForwarded;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwarderHeaderParser.extractForwardedFor;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedForHeader;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedHeader;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedHeader;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedProtoHeader;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -64,10 +66,15 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     set(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request));
-    set(attributes, SemanticAttributes.HTTP_SCHEME, getter.scheme(request));
+    String forwardedProto = forwardedProto(request);
+    set(
+        attributes,
+        SemanticAttributes.HTTP_SCHEME,
+        forwardedProto != null ? forwardedProto : getter.scheme(request));
     set(attributes, SemanticAttributes.HTTP_HOST, host(request));
     set(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
     set(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
+    set(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request));
     set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
@@ -80,7 +87,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     super.onEnd(attributes, context, request, response, error);
-    set(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request, response));
     set(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }
 
@@ -90,11 +96,31 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Nullable
+  private String forwardedProto(REQUEST request) {
+    // try Forwarded
+    String forwarded = firstHeaderValue(getter.requestHeader(request, "forwarded"));
+    if (forwarded != null) {
+      forwarded = extractProtoFromForwardedHeader(forwarded);
+      if (forwarded != null) {
+        return forwarded;
+      }
+    }
+
+    // try X-Forwarded-Proto
+    forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-proto"));
+    if (forwarded != null) {
+      return extractProtoFromForwardedProtoHeader(forwarded);
+    }
+
+    return null;
+  }
+
+  @Nullable
   private String clientIp(REQUEST request) {
     // try Forwarded
     String forwarded = firstHeaderValue(getter.requestHeader(request, "forwarded"));
     if (forwarded != null) {
-      forwarded = extractForwarded(forwarded);
+      forwarded = extractClientIpFromForwardedHeader(forwarded);
       if (forwarded != null) {
         return forwarded;
       }
@@ -103,7 +129,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     // try X-Forwarded-For
     forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-for"));
     if (forwarded != null) {
-      return extractForwardedFor(forwarded);
+      return extractClientIpFromForwardedForHeader(forwarded);
     }
 
     return null;

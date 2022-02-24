@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 import javax.sql.DataSource;
@@ -22,15 +21,14 @@ public final class DataSourceSingletons {
   private static final Instrumenter<DataSource, Void> INSTRUMENTER;
 
   static {
-    CodeAttributesExtractor<DataSource, Void> attributesExtractor =
-        new DataSourceCodeAttributesExtractor();
-    SpanNameExtractor<DataSource> spanNameExtractor =
-        CodeSpanNameExtractor.create(attributesExtractor);
+    DataSourceCodeAttributesGetter codeAttributesGetter = new DataSourceCodeAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<DataSource, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(attributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .newInstrumenter();
   }
 

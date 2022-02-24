@@ -6,9 +6,14 @@
 package io.opentelemetry.instrumentation.api.util;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
 
 @AutoValue
 public abstract class ClassAndMethod {
+
+  public static CodeAttributesGetter<ClassAndMethod> codeAttributesGetter() {
+    return ClassAndMethodAttributesGetter.INSTANCE;
+  }
 
   public static ClassAndMethod create(Class<?> declaringClass, String methodName) {
     return new AutoValue_ClassAndMethod(declaringClass, methodName);

@@ -100,7 +100,7 @@ final class GrizzlyHttpAttributesGetter
 
   @Nullable
   @Override
-  public String serverName(HttpRequestPacket request, @Nullable HttpResponsePacket response) {
+  public String serverName(HttpRequestPacket request) {
     return null;
   }
 }

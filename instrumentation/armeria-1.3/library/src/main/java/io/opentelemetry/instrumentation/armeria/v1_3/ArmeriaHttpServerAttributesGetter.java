@@ -94,9 +94,9 @@ final class ArmeriaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public String serverName(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public String serverName(RequestContext ctx) {
     if (ctx instanceof ServiceRequestContext) {
-      return ((ServiceRequestContext) ctx).config().virtualHost().hostnamePattern();
+      return ((ServiceRequestContext) ctx).config().virtualHost().defaultHostname();
     }
     return null;
   }

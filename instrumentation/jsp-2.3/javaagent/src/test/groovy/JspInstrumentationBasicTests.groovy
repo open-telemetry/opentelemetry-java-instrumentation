@@ -99,7 +99,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             // Optional
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
@@ -158,7 +157,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
           }
@@ -211,7 +209,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_ROUTE" route
@@ -274,7 +271,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
           }
@@ -341,7 +337,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
           }
@@ -389,7 +384,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
           }
@@ -469,7 +463,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
           }
@@ -518,7 +511,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
           }

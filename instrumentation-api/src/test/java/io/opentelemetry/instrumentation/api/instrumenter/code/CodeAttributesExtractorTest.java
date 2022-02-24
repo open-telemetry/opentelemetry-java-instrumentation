@@ -19,34 +19,22 @@ import org.junit.jupiter.api.Test;
 
 class CodeAttributesExtractorTest {
 
-  static final CodeAttributesExtractor<Map<String, String>, Void> underTest =
-      new CodeAttributesExtractor<Map<String, String>, Void>() {
-        @Override
-        protected Class<?> codeClass(Map<String, String> request) {
-          try {
-            String className = request.get("class");
-            return className == null ? null : Class.forName(className);
-          } catch (ClassNotFoundException e) {
-            throw new AssertionError(e);
-          }
-        }
+  static final class TestAtttributesGetter implements CodeAttributesGetter<Map<String, String>> {
+    @Override
+    public Class<?> codeClass(Map<String, String> request) {
+      try {
+        String className = request.get("class");
+        return className == null ? null : Class.forName(className);
+      } catch (ClassNotFoundException e) {
+        throw new AssertionError(e);
+      }
+    }
 
-        @Override
-        protected String methodName(Map<String, String> request) {
-          return request.get("methodName");
-        }
-
-        @Override
-        protected String filePath(Map<String, String> request) {
-          return request.get("filePath");
-        }
-
-        @Override
-        protected Long lineNumber(Map<String, String> request) {
-          String lineNo = request.get("lineNo");
-          return lineNo == null ? null : Long.parseLong(lineNo);
-        }
-      };
+    @Override
+    public String methodName(Map<String, String> request) {
+      return request.get("methodName");
+    }
+  }
 
   @Test
   void shouldExtractAllAttributes() {
@@ -54,10 +42,11 @@ class CodeAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("class", TestClass.class.getName());
     request.put("methodName", "doSomething");
-    request.put("filePath", "/tmp/TestClass.java");
-    request.put("lineNo", "42");
 
     Context context = Context.root();
+
+    CodeAttributesExtractor<Map<String, String>, Void> underTest =
+        CodeAttributesExtractor.create(new TestAtttributesGetter());
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -70,15 +59,17 @@ class CodeAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.CODE_NAMESPACE, TestClass.class.getName()),
-            entry(SemanticAttributes.CODE_FUNCTION, "doSomething"),
-            entry(SemanticAttributes.CODE_FILEPATH, "/tmp/TestClass.java"),
-            entry(SemanticAttributes.CODE_LINENO, 42L));
+            entry(SemanticAttributes.CODE_FUNCTION, "doSomething"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
+    // given
+    CodeAttributesExtractor<Map<String, String>, Void> underTest =
+        CodeAttributesExtractor.create(new TestAtttributesGetter());
+
     // when
     AttributesBuilder attributes = Attributes.builder();
     underTest.onStart(attributes, Context.root(), Collections.emptyMap());

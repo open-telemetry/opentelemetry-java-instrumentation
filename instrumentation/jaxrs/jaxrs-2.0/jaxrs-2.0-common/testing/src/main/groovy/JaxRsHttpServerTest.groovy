@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -190,14 +189,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
   }
 
   @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SERVER_NAME
-    ]
-    super.httpAttributes(endpoint) + extra
-  }
-
-  @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
@@ -283,7 +274,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
         "$SemanticAttributes.HTTP_FLAVOR" "1.1"
         "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
         "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
-        "$SemanticAttributes.HTTP_SERVER_NAME" String
         "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         // Optional
         "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }

@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attri
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
@@ -178,7 +179,7 @@ class NamingConventionTest {
                                     .containsOnly(attributeEntry("test.tag", "test.value")))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.renamedFunctionTimer.total_time",
+        "test.renamedFunctionTimer.sum",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -206,6 +207,43 @@ class NamingConventionTest {
                 metric ->
                     assertThat(metric)
                         .hasDoubleGauge()
+                        .points()
+                        .satisfiesExactly(
+                            point ->
+                                assertThat(point)
+                                    .attributes()
+                                    .containsOnly(attributeEntry("test.tag", "test.value")))));
+  }
+
+  @Test
+  void renameLongTaskTimer() {
+    // when
+    LongTaskTimer timer = Metrics.more().longTaskTimer("renamedLongTaskTimer", "tag", "value");
+    timer.start().stop();
+
+    // then
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "test.renamedLongTaskTimer.active",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSum()
+                        .points()
+                        .satisfiesExactly(
+                            point ->
+                                assertThat(point)
+                                    .attributes()
+                                    .containsOnly(attributeEntry("test.tag", "test.value")))));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "test.renamedLongTaskTimer.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDoubleSum()
                         .points()
                         .satisfiesExactly(
                             point ->

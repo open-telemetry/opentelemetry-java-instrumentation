@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.11.1 - 2022-02-21
+
+### 🛠️ Bug fixes
+
+- Regression in loading the prometheus exporter
+  ([#5408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5408))
+
 ## Version 1.11.0 - 2022-02-11
 
 ### 🌟 New javaagent instrumentation
@@ -112,6 +119,8 @@
   ([#5333](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5333))
 
 ## Version 1.10.1 - 2022-01-27
+
+### 🛠️ Bug fixes
 
 - Regression in project reactor context propagation instrumentation
   ([#5188](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5188))

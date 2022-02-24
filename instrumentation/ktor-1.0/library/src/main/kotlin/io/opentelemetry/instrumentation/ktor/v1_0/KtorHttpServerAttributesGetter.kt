@@ -66,7 +66,7 @@ internal class KtorHttpServerAttributesGetter :
     return request.origin.scheme
   }
 
-  override fun serverName(request: ApplicationRequest, response: ApplicationResponse?): String? {
+  override fun serverName(request: ApplicationRequest): String? {
     return null
   }
 }
