@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class SpringSchedulingTest extends AgentInstrumentationSpecification {
@@ -54,7 +55,6 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
         }
       }
     }
-
   }
 
   def "schedule lambda test"() {
@@ -80,5 +80,29 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
 
     cleanup:
     context.close()
+  }
+
+  // by putting the scheduled method directly on the TaskConfig, this verifies the case where the
+  // class is enhanced and so has a different class name, e.g. TaskConfig$$EnhancerByCGLIB$$b910c4a9
+  def "schedule enhanced class test"() {
+    setup:
+    def context = new AnnotationConfigApplicationContext(EnhancedClassTaskConfig)
+    def latch = context.getBean(CountDownLatch)
+
+    latch.await(5, TimeUnit.SECONDS)
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "EnhancedClassTaskConfig.run"
+          hasNoParent()
+          attributes {
+            "code.namespace" "EnhancedClassTaskConfig"
+            "code.function" "run"
+          }
+        }
+      }
+    }
   }
 }
