@@ -118,10 +118,11 @@ public abstract class AbstractLongTaskTimerTest {
                                         .hasValue(0)
                                         .attributes()
                                         .containsOnly(attributeEntry("tag", "value")))));
-    testing().clearData();
 
     // when timer is removed from the registry
     Metrics.globalRegistry.remove(timer);
+    Thread.sleep(10); // give time for any in flight metric export to be received
+    testing().clearData();
     timer.start();
 
     // then no tasks are active after starting a new sample
