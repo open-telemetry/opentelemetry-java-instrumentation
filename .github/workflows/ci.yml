@@ -192,20 +192,11 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Run muzzle
-        # using retry because of sporadic gradle download failures
-        uses: nick-invision/retry@v2.6.0
+        uses: gradle/gradle-build-action@v2
         with:
-          # timing out has not been a problem, these jobs typically finish in 2-3 minutes
-          timeout_minutes: 15
-          max_attempts: 3
-          command: ./gradlew ${{ matrix.module }}:muzzle
+          arguments: ${{ matrix.module }}:muzzle
+          cache-read-only: true
 
   examples:
     runs-on: ubuntu-latest
