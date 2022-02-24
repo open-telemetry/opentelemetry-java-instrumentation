@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesGetter;
@@ -19,6 +20,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttribut
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -29,6 +31,14 @@ public final class GrpcTracingBuilder {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
+
+  @Nullable
+  private Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+      clientSpanNameExtractorTransformer;
+
+  @Nullable
+  private Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+      serverSpanNameExtractorTransformer;
 
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalExtractors = new ArrayList<>();
@@ -49,9 +59,26 @@ public final class GrpcTracingBuilder {
     return this;
   }
 
+  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  public GrpcTracingBuilder setClientSpanNameExtractor(
+      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+          clientSpanNameExtractor) {
+    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+    return this;
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  public GrpcTracingBuilder setServerSpanNameExtractor(
+      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+          serverSpanNameExtractor) {
+    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+    return this;
+  }
+
   /** Sets the {@code peer.service} attribute for http client spans. */
-  public void setPeerService(String peerService) {
+  public GrpcTracingBuilder setPeerService(String peerService) {
     this.peerService = peerService;
+    return this;
   }
 
   /**
@@ -67,10 +94,22 @@ public final class GrpcTracingBuilder {
 
   /** Returns a new {@link GrpcTracing} with the settings of this {@link GrpcTracingBuilder}. */
   public GrpcTracing build() {
+    SpanNameExtractor<GrpcRequest> originalSpanNameExtractor = new GrpcSpanNameExtractor();
+
+    SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor = originalSpanNameExtractor;
+    if (clientSpanNameExtractorTransformer != null) {
+      clientSpanNameExtractor = clientSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
+    }
+
+    SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor = originalSpanNameExtractor;
+    if (serverSpanNameExtractorTransformer != null) {
+      serverSpanNameExtractor = serverSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
+    }
+
     InstrumenterBuilder<GrpcRequest, Status> clientInstrumenterBuilder =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor);
     InstrumenterBuilder<GrpcRequest, Status> serverInstrumenterBuilder =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor);
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(
