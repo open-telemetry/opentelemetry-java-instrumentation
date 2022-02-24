@@ -57,6 +57,8 @@
   ([#5328](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5328))
 - Add net.peer.name and net.peer.port attributes for grpc client span
   ([#5324](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5324))
+- Split lambda instrumentation into core and events
+  ([#5326](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5326))
 - Add jaeger remote sampler to agent
   ([#5346](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5346))
 - Weak cache optimization
