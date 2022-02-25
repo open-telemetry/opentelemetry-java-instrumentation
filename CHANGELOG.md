@@ -906,8 +906,8 @@ Due to an issue in the publishing infrastructure, a bad release was published as
 ### 🛠️ Bug fixes
 
 - gRPC context bridging issues
-  ([#2564](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issue/2564),
-  [#2959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issue/2959))
+  ([#2564](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2564),
+  [#2959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2959))
 - URL credentials of the form `https://username:password@www.example.com/` no longer captured
   ([#2707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2707))
 - Spring MVC instrumentation can cause Spring MVC to misroute requests under some conditions

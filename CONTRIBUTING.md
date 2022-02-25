@@ -16,7 +16,8 @@ See [Running the tests](./docs/contributing/running-tests.md) for more details.
 
 For developers testing code changes before a release is complete, there are
 snapshot builds of the `main` branch. They are available from
-the Sonatype OSS snapshots repository at https://oss.sonatype.org/content/repositories/snapshots/ ([browse](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/))
+the Sonatype OSS snapshots repository at `https://oss.sonatype.org/content/repositories/snapshots/`
+([browse](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/))
 
 #### Building from source
 
