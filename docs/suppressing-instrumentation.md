@@ -151,11 +151,11 @@ For example, if we have a database client which uses Reactor Netty http client w
 - `CLIENT` span with http semantic attributes from Reactor Netty instrumentation
 - `CLIENT` span with http semantic attributes from Netty instrumentation
 
-With default suppresion, we would have 1 span:
+With default suppression, we would have 1 span:
 
 - `CLIENT` span with database semantic attributes from the database client instrumentation
 
-With suppresion by type, we would have 2 nested spans:
+With suppression by type, we would have 2 nested spans:
 
 - `CLIENT` span with database semantic attributes from the database client instrumentation
 - `CLIENT` span with http semantic attributes from Reactor Netty instrumentation
