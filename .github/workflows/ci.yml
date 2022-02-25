@@ -241,12 +241,30 @@ jobs:
           arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
           build-root-directory: examples/extension
 
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Check markdown links
+        run: |
+          npm install -g markdown-link-check
+          find . -type f \
+                 -name '*.md' \
+                 -not -path './.github/*' \
+                 -not -path './node_modules/*' \
+                 -print0 \
+            | xargs -0 -n1 markdown-link-check --config .github/scripts/markdown_link_check_config.json
+
   snapshot:
     runs-on: ubuntu-latest
     # intentionally not blocking snapshot publishing on testLatestDeps
     # because any time a new library version is released to maven central
     # it can fail due to test code incompatibility with the new library version,
     # or due to slight changes in emitted telemetry
+    #
+    # also not blocking snapshot publishing on markdown-link-check because links to external urls
+    # can break at any time
     needs: [ build, test, smoke-test, examples, muzzle ]
     if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
     steps:

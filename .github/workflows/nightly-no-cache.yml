@@ -181,6 +181,9 @@ jobs:
           arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
           build-root-directory: examples/extension
 
+  # markdown-link-check is intentionally not included in the nightly-no-cache build because
+  # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
+
   issue:
     name: Open issue on failure
     needs: [ build, test, testLatestDeps, smoke-test, examples ]
