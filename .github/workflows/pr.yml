@@ -49,6 +49,17 @@ jobs:
             "**/jitdump.*.dmp"
           if-no-files-found: ignore
 
+  markdown-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Check markdown links
+        run: |
+          npm install -g markdown-link-check
+          find . -type f -name '*.md' -not -path './.github/*' -not -path './node_modules/*' -print0 \
+            | xargs -0 -n1 markdown-link-check --config .github/scripts/markdown_link_check_config.json
+
   build-gradle-plugins:
     runs-on: ubuntu-latest
     steps:
@@ -296,7 +307,7 @@ jobs:
           build-root-directory: examples/extension
 
   accept-pr:
-    needs: [ build, test, smoke-test, muzzle, examples ]
+    needs: [ build, markdown-checks, test, smoke-test, muzzle, examples ]
     runs-on: ubuntu-latest
     if: always()
     steps:
