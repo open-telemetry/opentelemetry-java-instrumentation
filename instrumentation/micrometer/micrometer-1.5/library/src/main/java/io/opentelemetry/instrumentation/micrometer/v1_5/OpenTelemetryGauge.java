@@ -35,10 +35,11 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
     this.id = id;
 
+    String conventionName = name(id, namingConvention);
     gaugeMeasurementHandle =
         asyncInstrumentRegistry.buildGauge(
-            name(id, namingConvention),
-            description(id),
+            conventionName,
+            description(conventionName, id),
             baseUnit(id),
             tagsAsAttributes(id, namingConvention),
             obj,

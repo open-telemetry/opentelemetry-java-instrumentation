@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.cache.Cache;
 final class Bridging {
 
   private static final Cache<String, AttributeKey<String>> tagsCache = Cache.bounded(1024);
+  private static final Cache<String, String> descriptionsCache = Cache.bounded(1024);
 
   static Attributes tagsAsAttributes(Meter.Id id, NamingConvention namingConvention) {
     Iterable<Tag> tags = id.getTagsAsIterable();
@@ -36,9 +37,12 @@ final class Bridging {
     return namingConvention.name(id.getName(), id.getType(), id.getBaseUnit());
   }
 
-  static String description(Meter.Id id) {
-    String description = id.getDescription();
-    return description == null ? "" : description;
+  static String description(String name, Meter.Id id) {
+    return descriptionsCache.computeIfAbsent(
+        name, n -> {
+          String description = id.getDescription();
+          return description == null ? "" : description;
+        });
   }
 
   static String baseUnit(Meter.Id id) {

@@ -34,10 +34,11 @@ final class OpenTelemetryCounter implements Counter, RemovableMeter {
     this.id = id;
 
     this.attributes = tagsAsAttributes(id, namingConvention);
+    String conventionName = name(id, namingConvention);
     this.otelCounter =
         otelMeter
-            .counterBuilder(name(id, namingConvention))
-            .setDescription(description(id))
+            .counterBuilder(conventionName)
+            .setDescription(description(conventionName, id))
             .setUnit(baseUnit(id))
             .ofDoubles()
             .build();

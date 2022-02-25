@@ -39,7 +39,7 @@ final class OpenTelemetryMeter implements Meter, RemovableMeter {
     List<AsyncMeasurementHandle> measurementHandles = new ArrayList<>();
     for (Measurement measurement : measurements) {
       String name = statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
-      String description = description(id);
+      String description = description(name, id);
       String baseUnit = baseUnit(id);
 
       switch (measurement.getStatistic()) {

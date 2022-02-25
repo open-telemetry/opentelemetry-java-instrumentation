@@ -65,13 +65,13 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     this.otelHistogram =
         otelMeter
             .histogramBuilder(conventionName)
-            .setDescription(description(id))
+            .setDescription(description(conventionName, id))
             .setUnit(getUnitString(baseTimeUnit))
             .build();
     this.maxHandle =
         asyncInstrumentRegistry.buildGauge(
             conventionName + ".max",
-            description(id),
+            description(conventionName, id),
             getUnitString(baseTimeUnit),
             attributes,
             max,

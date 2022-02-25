@@ -45,18 +45,22 @@ final class OpenTelemetryFunctionTimer<T> implements FunctionTimer, RemovableMet
     this.id = id;
     this.baseTimeUnit = baseTimeUnit;
 
-    String countMeterName = name(id, namingConvention) + ".count";
-    String totalTimeMeterName = name(id, namingConvention) + ".sum";
+    String conventionName = name(id, namingConvention);
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
     countMeasurementHandle =
         asyncInstrumentRegistry.buildLongCounter(
-            countMeterName, description(id), /* baseUnit = */ "1", attributes, obj, countFunction);
+            conventionName + ".count",
+            description(conventionName, id),
+            /* baseUnit = */ "1",
+            attributes,
+            obj,
+            countFunction);
 
     totalTimeMeasurementHandle =
         asyncInstrumentRegistry.buildDoubleCounter(
-            totalTimeMeterName,
-            description(id),
+            conventionName + ".sum",
+            description(conventionName, id),
             getUnitString(baseTimeUnit),
             attributes,
             obj,
