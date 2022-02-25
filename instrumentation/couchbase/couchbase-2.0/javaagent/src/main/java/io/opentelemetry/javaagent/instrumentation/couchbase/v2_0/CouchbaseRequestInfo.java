@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 @AutoValue
-public abstract class CouchbaseRequest {
+public abstract class CouchbaseRequestInfo {
 
   private static final ClassValue<Map<String, String>> methodOperationNames =
       new ClassValue<Map<String, String>>() {
@@ -22,19 +22,24 @@ public abstract class CouchbaseRequest {
         }
       };
 
-  public static CouchbaseRequest create(
+  private String peerName;
+  private Integer peerPort;
+  private String localAddress;
+  private String operationId;
+
+  public static CouchbaseRequestInfo create(
       @Nullable String bucket, Class<?> declaringClass, String methodName) {
     String operation =
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequest(bucket, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, true);
   }
 
-  public static CouchbaseRequest create(@Nullable String bucket, Object query) {
+  public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
     SqlStatementInfo statement = CouchbaseQuerySanitizer.sanitize(query);
 
-    return new AutoValue_CouchbaseRequest(
+    return new AutoValue_CouchbaseRequestInfo(
         bucket, statement.getFullStatement(), statement.getOperation(), false);
   }
 
@@ -54,4 +59,40 @@ public abstract class CouchbaseRequest {
   public abstract String operation();
 
   public abstract boolean isMethodCall();
+
+  @Nullable
+  public String getPeerName() {
+    return peerName;
+  }
+
+  public void setPeerName(String peerName) {
+    this.peerName = peerName;
+  }
+
+  @Nullable
+  public Integer getPeerPort() {
+    return peerPort;
+  }
+
+  public void setPeerPort(Integer peerPort) {
+    this.peerPort = peerPort;
+  }
+
+  @Nullable
+  public String getLocalAddress() {
+    return localAddress;
+  }
+
+  public void setLocalAddress(String localAddress) {
+    this.localAddress = localAddress;
+  }
+
+  @Nullable
+  public String getOperationId() {
+    return operationId;
+  }
+
+  public void setOperationId(String operationId) {
+    this.operationId = operationId;
+  }
 }
