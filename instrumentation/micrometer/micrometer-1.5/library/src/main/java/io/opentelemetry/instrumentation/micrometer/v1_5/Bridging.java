@@ -39,7 +39,8 @@ final class Bridging {
 
   static String description(String name, Meter.Id id) {
     return descriptionsCache.computeIfAbsent(
-        name, n -> {
+        name,
+        n -> {
           String description = id.getDescription();
           return description == null ? "" : description;
         });

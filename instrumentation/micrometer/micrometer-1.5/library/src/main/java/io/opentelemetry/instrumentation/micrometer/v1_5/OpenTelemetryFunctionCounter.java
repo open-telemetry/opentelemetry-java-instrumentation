@@ -5,7 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.*;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.description;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Measurement;
