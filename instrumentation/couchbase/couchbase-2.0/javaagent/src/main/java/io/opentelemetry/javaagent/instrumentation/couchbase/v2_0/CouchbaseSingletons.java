@@ -37,7 +37,7 @@ public final class CouchbaseSingletons {
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
-                    CouchbaseRequestInfoHolder.init(context, couchbaseRequest));
+                    CouchbaseRequestInfo.init(context, couchbaseRequest));
 
     if (Config.get()
         .getBoolean("otel.instrumentation.couchbase.experimental-span-attributes", false)) {

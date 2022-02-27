@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.context.ContextKey.named;
+
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +17,9 @@ import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class CouchbaseRequestInfo {
+
+  private static final ContextKey<CouchbaseRequestInfo> KEY =
+      named("opentelemetry-couchbase-request-key");
 
   private static final ClassValue<Map<String, String>> methodOperationNames =
       new ClassValue<Map<String, String>>() {
@@ -47,6 +54,15 @@ public abstract class CouchbaseRequestInfo {
     String className =
         declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
     return className + "." + methodName;
+  }
+
+  public static Context init(Context context, CouchbaseRequestInfo couchbaseRequest) {
+    return context.with(KEY, couchbaseRequest);
+  }
+
+  @Nullable
+  public static CouchbaseRequestInfo get(Context context) {
+    return context.get(KEY);
   }
 
   @Nullable

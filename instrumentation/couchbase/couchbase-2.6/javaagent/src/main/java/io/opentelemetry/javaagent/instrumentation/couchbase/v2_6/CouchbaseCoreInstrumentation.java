@@ -17,7 +17,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseRequestInfo;
-import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseRequestInfoHolder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -53,7 +52,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
       }
 
       Context currentContext = Java8BytecodeBridge.currentContext();
-      requestInfo = CouchbaseRequestInfoHolder.get(currentContext);
+      requestInfo = CouchbaseRequestInfo.get(currentContext);
       if (requestInfo != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the request info it is added to the context store
