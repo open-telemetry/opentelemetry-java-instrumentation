@@ -49,9 +49,6 @@ jobs:
             "**/jitdump.*.dmp"
           if-no-files-found: ignore
 
-  # markdown-link-check is not included in the PR build because links to external urls can break at
-  # any time, which can be confusing for contributors
-
   build-gradle-plugins:
     runs-on: ubuntu-latest
     steps:
@@ -297,6 +294,9 @@ jobs:
           cache-read-only: true
           arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
           build-root-directory: examples/extension
+
+  # markdown-link-check is not included in the PR build because links to external urls can break at
+  # any time, which can be confusing for contributors
 
   accept-pr:
     needs: [ build, test, smoke-test, muzzle, examples ]
