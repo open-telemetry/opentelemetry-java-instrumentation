@@ -27,11 +27,6 @@ class NetServerAttributesExtractorTest {
     }
 
     @Override
-    public String peerName(Map<String, String> request) {
-      return request.get("peerName");
-    }
-
-    @Override
     public Integer peerPort(Map<String, String> request) {
       return Integer.valueOf(request.get("peerPort"));
     }
@@ -72,7 +67,6 @@ class NetServerAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, "TCP"),
-            entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L),
             entry(SemanticAttributes.NET_PEER_IP, "1.2.3.4"));
 

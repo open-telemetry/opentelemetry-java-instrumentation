@@ -19,12 +19,6 @@ public class LibertyDispatcherNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(LibertyRequest libertyRequest) {
-    return libertyRequest.peerName();
-  }
-
-  @Override
-  @Nullable
   public Integer peerPort(LibertyRequest libertyRequest) {
     return libertyRequest.getServerPort();
   }

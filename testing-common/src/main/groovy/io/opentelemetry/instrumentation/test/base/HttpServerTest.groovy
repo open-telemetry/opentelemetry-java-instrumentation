@@ -167,7 +167,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     [
       SemanticAttributes.HTTP_ROUTE,
       SemanticAttributes.NET_TRANSPORT,
-      SemanticAttributes.NET_PEER_NAME,
       SemanticAttributes.NET_PEER_PORT
     ] as Set
   }
@@ -695,10 +694,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         }
-        if (httpAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-          // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-          "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
-        }
         if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
           "$SemanticAttributes.NET_PEER_PORT" { (it instanceof Long && it.intValue() != port) }
         }
@@ -759,10 +754,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       attributes {
         if (httpAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
           "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-        }
-        if (httpAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-          // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-          "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
         }
         if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
           "$SemanticAttributes.NET_PEER_PORT" { (it instanceof Long && it.intValue() != port) }

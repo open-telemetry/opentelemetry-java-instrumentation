@@ -17,12 +17,6 @@ final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<Http
     return null;
   }
 
-  @Nullable
-  @Override
-  public String peerName(HttpRequestPacket request) {
-    return request.getRemoteHost();
-  }
-
   @Override
   public Integer peerPort(HttpRequestPacket request) {
     return request.getRemotePort();

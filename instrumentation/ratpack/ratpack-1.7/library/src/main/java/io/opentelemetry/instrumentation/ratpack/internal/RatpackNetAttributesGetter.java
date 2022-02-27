@@ -16,15 +16,8 @@ import ratpack.http.Request;
  */
 public final class RatpackNetAttributesGetter implements NetServerAttributesGetter<Request> {
   @Override
-  @Nullable
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
-  }
-
-  @Override
-  @Nullable
-  public String peerName(Request request) {
-    return null;
   }
 
   @Override
