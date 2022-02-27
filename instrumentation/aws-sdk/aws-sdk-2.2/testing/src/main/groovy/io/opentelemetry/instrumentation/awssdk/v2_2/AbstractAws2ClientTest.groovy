@@ -45,6 +45,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
+import software.amazon.awssdk.services.s3.model.S3Exception
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
@@ -517,10 +518,24 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       .build()
 
     when:
-    client.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build())
+    def thrown = null
+    try {
+      client.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build())
+    } catch (Exception e) {
+      thrown = e
+    }
 
     then:
-    thrown SdkClientException
+    thrown != null
+    def expectedMessage
+    if (thrown.getClass() == SdkClientException) {
+      expectedMessage = "Unable to execute HTTP request: Read timed out"
+    } else if (thrown.getClass() == S3Exception) {
+      // aws-core 2.17.136 and later
+      expectedMessage = "null (Service: S3, Status Code: 500, Request ID: null)"
+    } else {
+      throw new AssertionError("Unexpected exception thrown: " + thrown.getClass())
+    }
 
     assertTraces(1) {
       trace(0, 1) {
@@ -528,7 +543,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           name "S3.GetObject"
           kind CLIENT
           status ERROR
-          errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
+          errorEvent thrown.getClass(), expectedMessage
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
