@@ -186,7 +186,6 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: ${{ matrix.module }}:muzzle
-          cache-read-only: true
 
   examples:
     runs-on: ubuntu-latest
@@ -227,7 +226,6 @@ jobs:
       - name: Run muzzle check against extension
         uses: gradle/gradle-build-action@v2
         with:
-          cache-read-only: true
           arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
           build-root-directory: examples/extension
 
