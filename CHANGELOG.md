@@ -9,6 +9,16 @@
 
 ## Version 1.11.0 - 2022-02-11
 
+### Migration notes
+
+- The previous release (1.10.0) deprecated the entire `io.opentelemetry.instrumentation.api.tracer`
+  package in the `instrumentation-api` artifact, and the package was removed in this release.
+- The javaagent `-slim` artifact has been dropped in this release, because the exporters are much
+  smaller now and there is no longer a significant size difference between the `-slim` and default
+  artifacts.
+- The `opentelemetry-aws-lambda-1.0` has been split into two artifacts
+  `opentelemetry-aws-lambda-core-1.0` and `opentelemetry-aws-lambda-events-2.2`.
+
 ### 🌟 New javaagent instrumentation
 
 - Spring RMI instrumentation ([#5033](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5033))
@@ -134,6 +144,13 @@
   ([#5218](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5218))
 
 ## Version 1.10.0 - 2022-01-15
+
+### Migration notes
+
+- The `opentelemetry-log4j-2.13.2` artifact has been renamed to `opentelemetry-context-data-2.16-autoconfigure`
+- The `opentelemetry-logback-1.0` artifact has been renamed to `opentelemetry-logback-mdc-1.0`
+- The `opentelemetry-ratpack-1.4` artifact has been renamed to `opentelemetry-ratpack-1.7`
+  and only supports Ratpack 1.7 and above now
 
 ### 🌟 New javaagent instrumentation
 

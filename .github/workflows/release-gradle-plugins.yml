@@ -104,12 +104,6 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
-
       - name: Local publish of artifacts
         uses: gradle/gradle-build-action@v2
         with:

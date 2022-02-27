@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - v*
+      - v[0-9]+.[0-9]+.[0-9]+
   workflow_dispatch:
 
 jobs:
@@ -167,14 +167,13 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
+      - name: List instrumentations to file
+        uses: gradle/gradle-build-action@v2
         with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          arguments: instrumentation:listInstrumentations
 
       - id: set-matrix
-        run: echo "::set-output name=matrix::{\"module\":[\"$(./gradlew -q instrumentation:listInstrumentations | xargs echo | sed 's/ /","/g')\"]}"
+        run: echo "::set-output name=matrix::{\"module\":[\"$(cat instrumentation-list.txt | xargs echo | sed 's/ /","/g')\"]}"
 
   muzzle:
     needs: setup-muzzle-matrix

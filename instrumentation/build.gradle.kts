@@ -25,10 +25,12 @@ tasks {
     group = "Help"
     description = "List all available instrumentation modules"
     doFirst {
-      subprojects
-        .filter { it.plugins.hasPlugin("io.opentelemetry.instrumentation.muzzle-check") }
-        .map { it.path }
-        .forEach { println(it) }
+      File("instrumentation-list.txt").printWriter().use { out ->
+        subprojects
+          .filter { it.plugins.hasPlugin("io.opentelemetry.instrumentation.muzzle-check") }
+          .map { it.path }
+          .forEach { out.println(it) }
+      }
     }
   }
 }
