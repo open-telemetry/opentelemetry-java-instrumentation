@@ -61,7 +61,8 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CouchbaseRequest request = CouchbaseRequest.create(bucket, declaringClass, methodName);
+      CouchbaseRequestInfo request =
+          CouchbaseRequestInfo.create(bucket, declaringClass, methodName);
       result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
@@ -87,10 +88,10 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      CouchbaseRequest request =
+      CouchbaseRequestInfo request =
           query == null
-              ? CouchbaseRequest.create(bucket, declaringClass, methodName)
-              : CouchbaseRequest.create(bucket, query);
+              ? CouchbaseRequestInfo.create(bucket, declaringClass, methodName)
+              : CouchbaseRequestInfo.create(bucket, query);
       result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
