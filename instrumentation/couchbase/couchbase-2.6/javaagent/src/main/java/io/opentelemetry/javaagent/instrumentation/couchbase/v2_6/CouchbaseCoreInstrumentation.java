@@ -11,11 +11,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseRequestInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,23 +44,21 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
 
-      Span parentSpan = Java8BytecodeBridge.currentSpan();
-      if (parentSpan != null) {
+      VirtualField<CouchbaseRequest, CouchbaseRequestInfo> virtualField =
+          VirtualField.find(CouchbaseRequest.class, CouchbaseRequestInfo.class);
+      CouchbaseRequestInfo requestInfo = virtualField.get(request);
+      if (requestInfo != null) {
+        return;
+      }
+
+      Context currentContext = Java8BytecodeBridge.currentContext();
+      requestInfo = CouchbaseRequestInfo.get(currentContext);
+      if (requestInfo != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
-        // To transfer the span, the span is added to the context store
+        // To transfer the request info it is added to the context store
+        virtualField.set(request, requestInfo);
 
-        VirtualField<CouchbaseRequest, Span> virtualField =
-            VirtualField.find(CouchbaseRequest.class, Span.class);
-
-        Span span = virtualField.get(request);
-
-        if (span == null) {
-          span = parentSpan;
-          virtualField.set(request, span);
-          if (CouchbaseConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-            span.setAttribute("couchbase.operation_id", request.operationId());
-          }
-        }
+        requestInfo.setOperationId(request.operationId());
       }
     }
   }

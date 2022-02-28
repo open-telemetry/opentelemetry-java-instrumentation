@@ -24,16 +24,6 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
 
   @Override
   @Nullable
-  public final String peerName(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
-    if (address == null) {
-      return null;
-    }
-    return address.getHostString();
-  }
-
-  @Override
-  @Nullable
   public final Integer peerPort(REQUEST request) {
     InetSocketAddress address = getAddress(request);
     if (address == null) {

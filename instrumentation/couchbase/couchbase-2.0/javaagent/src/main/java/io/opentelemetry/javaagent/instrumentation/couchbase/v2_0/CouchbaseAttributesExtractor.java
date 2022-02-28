@@ -9,39 +9,39 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtracto
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-final class CouchbaseAttributesExtractor extends DbAttributesExtractor<CouchbaseRequest, Void> {
+final class CouchbaseAttributesExtractor extends DbAttributesExtractor<CouchbaseRequestInfo, Void> {
   @Override
-  protected String system(CouchbaseRequest couchbaseRequest) {
+  protected String system(CouchbaseRequestInfo couchbaseRequest) {
     return SemanticAttributes.DbSystemValues.COUCHBASE;
   }
 
   @Override
   @Nullable
-  protected String user(CouchbaseRequest couchbaseRequest) {
+  protected String user(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String name(CouchbaseRequest couchbaseRequest) {
+  protected String name(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.bucket();
   }
 
   @Override
   @Nullable
-  protected String connectionString(CouchbaseRequest couchbaseRequest) {
+  protected String connectionString(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String statement(CouchbaseRequest couchbaseRequest) {
+  protected String statement(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.statement();
   }
 
   @Override
   @Nullable
-  protected String operation(CouchbaseRequest couchbaseRequest) {
+  protected String operation(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
   }
 }
