@@ -12,5 +12,6 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 class Aws2ClientTest extends AbstractAws2ClientTest implements LibraryTestTrait {
   @Override
   ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
+    return ClientOverrideConfiguration.builder()
   }
 }
