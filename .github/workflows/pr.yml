@@ -139,7 +139,7 @@ jobs:
     #
     # and the name is updated when the steps below are skipped which makes what's happening clearer
     # in the GitHub UI
-    name: testLatestDeps${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') && ' (skipped)' || ''}}
+    name: testLatestDeps${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') && ' (skipped)' || '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
@@ -159,43 +159,7 @@ jobs:
           cache-read-only: true
 
   smoke-test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - windows-2019
-          - ubuntu-latest
-        smoke-test-suite:
-          - jetty
-          - liberty
-          - payara
-          - tomcat
-          - tomee
-          - websphere
-          - wildfly
-          - other
-        exclude:
-          - os: windows-2019
-            smoke-test-suite: websphere
-      fail-fast: false
-    steps:
-      - name: Support longpaths
-        run: git config --system core.longpaths true
-        if: matrix.os == 'windows-2019'
-
-      - uses: actions/checkout@v2.3.4
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Test
-        uses: gradle/gradle-build-action@v2
-        with:
-          cache-read-only: true
-          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
+    uses: ./.github/workflows/smoke-test.yml
 
   muzzle:
     # release branches are excluded
