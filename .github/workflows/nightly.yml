@@ -182,9 +182,24 @@ jobs:
         run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
 
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Check markdown links
+        run: |
+          npm install -g markdown-link-check
+          find . -type f \
+                 -name '*.md' \
+                 -not -path './.github/*' \
+                 -not -path './node_modules/*' \
+                 -print0 \
+            | xargs -0 -n1 markdown-link-check --config .github/scripts/markdown_link_check_config.json
+
   issue:
     name: Open issue on failure
-    needs: [ build, test, testLatestDeps, smoke-test, examples ]
+    needs: [ build, test, testLatestDeps, smoke-test, examples, markdown-link-check ]
     runs-on: ubuntu-latest
     if: always()
     steps:

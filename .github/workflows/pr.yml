@@ -241,6 +241,9 @@ jobs:
         run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
 
+  # markdown-link-check is not included in the PR build because links to external urls can break at
+  # any time, which can be confusing for contributors
+
   accept-pr:
     needs: [ build, test, smoke-test, muzzle, examples ]
     runs-on: ubuntu-latest
