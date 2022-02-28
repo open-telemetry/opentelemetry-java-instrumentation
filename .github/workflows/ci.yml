@@ -149,61 +149,12 @@ jobs:
         with:
           arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
 
-  setup-muzzle-matrix:
+  muzzle:
     # release branches are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
     if: ${{ !startsWith(github.ref_name, 'v') }}
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v2.3.4
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: List instrumentations to file
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: instrumentation:listInstrumentations
-
-      - id: set-matrix
-        run: echo "::set-output name=matrix::{\"module\":[\"$(cat instrumentation-list.txt | xargs echo | sed 's/ /","/g')\"]}"
-
-  muzzle:
-    needs: setup-muzzle-matrix
-    runs-on: ubuntu-latest
-    strategy:
-      matrix: ${{fromJson(needs.setup-muzzle-matrix.outputs.matrix)}}
-      fail-fast: false
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v2.3.4
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Set up gradle cache
-        uses: gradle/gradle-build-action@v2
-        with:
-          cache-read-only: true
-
-      - name: Run muzzle
-        # using retry because of sporadic gradle download failures
-        uses: nick-invision/retry@v2.6.0
-        with:
-          # timing out has not been a problem, these jobs typically finish in 2-3 minutes
-          timeout_minutes: 15
-          max_attempts: 3
-          command: ./gradlew ${{ matrix.module }}:muzzle
+    uses: ./.github/workflows/muzzle.yml
 
   examples:
     runs-on: ubuntu-latest
