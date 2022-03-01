@@ -3,6 +3,9 @@ name: Smoke test
 on:
   workflow_call:
     inputs:
+      skip-windows:
+        type: boolean
+        required: false
       cache-read-only:
         type: boolean
         required: false
@@ -35,6 +38,7 @@ jobs:
           - wildfly
           - other
         exclude:
+          - os: ${{ inputs.skip-windows && 'windows-2019' || '' }}
           - os: windows-2019
             smoke-test-suite: websphere
       fail-fast: false

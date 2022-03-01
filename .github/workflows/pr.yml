@@ -160,6 +160,9 @@ jobs:
 
   smoke-test:
     uses: ./.github/workflows/smoke-test.yml
+    with:
+      # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
+      skip-windows: true
 
   muzzle:
     # release branches are excluded
