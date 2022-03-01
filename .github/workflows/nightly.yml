@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -31,7 +31,7 @@ jobs:
   build-gradle-plugins:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -58,7 +58,7 @@ jobs:
           - openj9
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - id: setup-test-java
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
@@ -85,7 +85,7 @@ jobs:
   testLatestDeps:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -115,7 +115,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -150,7 +150,7 @@ jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Check markdown links
         run: |
@@ -172,7 +172,7 @@ jobs:
       # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
       - uses: technote-space/workflow-conclusion-action@v2.2
 
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - uses: JasonEtco/create-an-issue@v2.6
         if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure

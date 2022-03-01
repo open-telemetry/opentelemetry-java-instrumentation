@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -32,7 +32,7 @@ jobs:
   build-gradle-plugins:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -59,7 +59,7 @@ jobs:
           - openj9
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - id: setup-test-java
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
@@ -90,7 +90,7 @@ jobs:
     # which requires unnecessary release branch maintenance, especially for patches
     if: ${{ !startsWith(github.ref_name, 'v') }}
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -124,7 +124,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -159,7 +159,7 @@ jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Check markdown links
         run: |
@@ -183,7 +183,7 @@ jobs:
     needs: [ build, test, smoke-test, examples, muzzle ]
     if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2

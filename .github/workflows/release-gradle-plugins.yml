@@ -21,7 +21,7 @@ jobs:
           - 11
           - 15
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.inputs.release-branch-name }}
 
@@ -58,7 +58,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.inputs.release-branch-name }}
 
@@ -96,7 +96,7 @@ jobs:
     needs: [ test, smoke-test, examples ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.inputs.release-branch-name }}
 
