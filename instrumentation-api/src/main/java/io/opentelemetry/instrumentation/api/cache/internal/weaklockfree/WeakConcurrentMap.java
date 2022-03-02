@@ -74,9 +74,7 @@ public class WeakConcurrentMap<K, V>
 
   private final boolean reuseKeys;
 
-  /**
-   * @param cleanerThread {@code true} if a thread should be started that removes stale entries.
-   */
+  /** @param cleanerThread {@code true} if a thread should be started that removes stale entries. */
   public WeakConcurrentMap(boolean cleanerThread) {
     this(cleanerThread, isPersistentClassLoader(LookupKey.class.getClassLoader()));
   }
@@ -154,9 +152,7 @@ public class WeakConcurrentMap<K, V>
     lookupKey.reset();
   }
 
-  /**
-   * @return The cleaner thread or {@code null} if no such thread was set.
-   */
+  /** @return The cleaner thread or {@code null} if no such thread was set. */
   public Thread getCleanerThread() {
     return thread;
   }
