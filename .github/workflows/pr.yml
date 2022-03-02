@@ -220,7 +220,7 @@ jobs:
         run: |
           curl -L -o ./install-misspell.sh https://git.io/misspell
           sh ./install-misspell.sh
-          ./bin/misspell -error ./**/*.md
+          ./bin/misspell -error ./**/*
 
   accept-pr:
     needs: [ build, build-gradle-plugins, test, smoke-test, muzzle, examples, markdown-misspell-check ]
