@@ -8,7 +8,7 @@ jobs:
     outputs:
       release-branch-name: ${{ steps.set-release-branch-name.outputs.release-branch-name }}
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set release branch name
         id: set-release-branch-name
@@ -25,7 +25,7 @@ jobs:
     needs: prepare-release-branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
         with:
           ref: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
 
@@ -61,7 +61,7 @@ jobs:
     needs: prepare-release-branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Bump SNAPSHOT version
         run: |
