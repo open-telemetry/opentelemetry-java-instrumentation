@@ -10,6 +10,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLogEmitterProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -21,6 +22,10 @@ public final class Log4jHelper {
 
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
+
+  private static final boolean captureExperimentalAttributes =
+      Config.get()
+          .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
 
   // TODO (trask) capture MDC
   public static void capture(Category logger, Priority level, Object message, Throwable throwable) {
@@ -42,10 +47,10 @@ public final class Log4jHelper {
       builder.setSeverityText(level.toString());
     }
 
+    AttributesBuilder attributes = Attributes.builder();
+
     // throwable
     if (throwable != null) {
-      AttributesBuilder attributes = Attributes.builder();
-
       // TODO (trask) extract method for recording exception into
       // instrumentation-appender-api-internal
       attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
@@ -53,9 +58,15 @@ public final class Log4jHelper {
       StringWriter writer = new StringWriter();
       throwable.printStackTrace(new PrintWriter(writer));
       attributes.put(SemanticAttributes.EXCEPTION_STACKTRACE, writer.toString());
-
-      builder.setAttributes(attributes.build());
     }
+
+    if (captureExperimentalAttributes) {
+      Thread currentThread = Thread.currentThread();
+      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
+      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+    }
+
+    builder.setAttributes(attributes.build());
 
     // span context
     builder.setContext(Context.current());

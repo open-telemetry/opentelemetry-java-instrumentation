@@ -29,3 +29,8 @@ configurations {
     exclude("org.slf4j", "log4j-over-slf4j")
   }
 }
+
+tasks.withType<Test>().configureEach {
+  // TODO run tests both with and without experimental log attributes
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+}

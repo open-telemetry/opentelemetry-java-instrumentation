@@ -9,3 +9,8 @@ dependencies {
 
   testImplementation("org.awaitility:awaitility")
 }
+
+tasks.withType<Test>().configureEach {
+  // TODO run tests both with and without experimental log attributes
+  jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
+}
