@@ -8,40 +8,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Build
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        uses: gradle/gradle-build-action@v2
-        with:
-          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: build --no-build-cache -x javadoc
-
-  build-gradle-plugins:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Build
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: build --no-build-cache
-          build-root-directory: gradle-plugins
+    uses: ./.github/workflows/build.yml
+    with:
+      no-build-cache: true
 
   test:
     runs-on: ubuntu-latest
