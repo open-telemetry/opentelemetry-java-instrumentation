@@ -139,24 +139,10 @@ jobs:
     #
     # and the name is updated when the steps below are skipped which makes what's happening clearer
     # in the GitHub UI
-    name: testLatestDeps${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') && ' (skipped)' || '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Test
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test -PtestLatestDeps=true
-          cache-read-only: true
+    uses: ./.github/workflows/test-latest-deps.yml
+    with:
+      skip: ${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
+      cache-read-only: true
 
   smoke-test:
     uses: ./.github/workflows/smoke-test.yml
