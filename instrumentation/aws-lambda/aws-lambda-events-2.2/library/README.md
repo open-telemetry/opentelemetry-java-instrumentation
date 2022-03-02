@@ -105,7 +105,7 @@ Context propagation for this instrumentation can be done either with X-Ray propa
 
 ### X-Ray propagation
 This instrumentation supports propagating traces using the `X-Amzn-Trace-Id` format for both normal
-requests and SQS requests. X-Ray propagation is always enabled, there is no need to configure it explicitely.
+requests and SQS requests. X-Ray propagation is always enabled, there is no need to configure it explicitly.
 
 ### HTTP headers based propagation
 For API Gateway (HTTP) requests instrumented by using one of following methods:
@@ -124,4 +124,4 @@ In order to enable requested propagation for a handler, configure it on the SDK 
   }
 ```
 
-If using the wrappers, set the `OTEL_PROPAGATORS` environment variable as descibed [here](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#propagator).
+If using the wrappers, set the `OTEL_PROPAGATORS` environment variable as described [here](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#propagator).

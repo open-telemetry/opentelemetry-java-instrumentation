@@ -9,7 +9,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
@@ -33,7 +33,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-matrix.outputs.matrix)}}
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2

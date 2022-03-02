@@ -35,6 +35,10 @@ public final class LogEventMapper<T> {
 
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
+  private static final boolean captureExperimentalAttributes =
+      Config.get()
+          .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
+
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
       Cache.bounded(100);
   private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
@@ -109,6 +113,12 @@ public final class LogEventMapper<T> {
     }
 
     captureContextDataAttributes(attributes, contextData);
+
+    if (captureExperimentalAttributes) {
+      Thread currentThread = Thread.currentThread();
+      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
+      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+    }
 
     builder.setAttributes(attributes.build());
 

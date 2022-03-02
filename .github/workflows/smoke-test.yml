@@ -47,7 +47,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-2019'
 
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2

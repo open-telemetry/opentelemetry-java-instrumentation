@@ -36,6 +36,10 @@ public final class LogEventMapper {
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
 
+  private static final boolean captureExperimentalAttributes =
+      Config.get()
+          .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
+
   private final Map<String, AttributeKey<String>> captureMdcAttributes;
 
   // cached as an optimization
@@ -87,6 +91,12 @@ public final class LogEventMapper {
     }
 
     captureMdcAttributes(attributes);
+
+    if (captureExperimentalAttributes) {
+      Thread currentThread = Thread.currentThread();
+      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
+      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+    }
 
     builder.setAttributes(attributes.build());
 
