@@ -9,6 +9,13 @@ on:
       no-build-cache:
         type: boolean
         required: false
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY:
+        required: false
+      GE_CACHE_USERNAME:
+        required: false
+      GE_CACHE_PASSWORD:
+        required: false
 
 jobs:
   build:

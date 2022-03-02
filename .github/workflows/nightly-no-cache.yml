@@ -11,6 +11,8 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       no-build-cache: true
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   test:
     runs-on: ubuntu-latest
