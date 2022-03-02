@@ -163,6 +163,7 @@ jobs:
     with:
       # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
       skip-windows: true
+      cache-read-only: true
 
   muzzle:
     # release branches are excluded
