@@ -76,7 +76,7 @@ final class OpenTelemetryFallbackErrorHandler implements ClientErrorHandler, Ser
       logger.warn(
           "Logging error using OpenTelemetryFallbackErrorHandler. This indicates "
               + "OpenTelemetry could not find a registered error handler which is not expected. "
-              + "Log messages will only be outputed to console.");
+              + "Log messages will only be outputted to console.");
     }
 
     // Warned once in static initializer, this is just to trigger classload.

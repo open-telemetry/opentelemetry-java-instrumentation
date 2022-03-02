@@ -34,7 +34,7 @@ For each agent defined in a configuration, the test runner (using [testcontainer
 
 And this repeats for every agent configured in each test configuration.
 
-After all the tests are complete, the results are collected and commited back to the `/results` subdirectory as csv and summary text files.
+After all the tests are complete, the results are collected and committed back to the `/results` subdirectory as csv and summary text files.
 
 ## What do we measure?
 

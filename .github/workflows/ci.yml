@@ -171,6 +171,17 @@ jobs:
                  -print0 \
             | xargs -0 -n1 markdown-link-check --config .github/scripts/markdown_link_check_config.json
 
+  markdown-misspell-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Check markdown for common misspellings
+        run: |
+          curl -L -o ./install-misspell.sh https://git.io/misspell
+          sh ./install-misspell.sh
+          ./bin/misspell -error ./**/*
+
   snapshot:
     runs-on: ubuntu-latest
     # intentionally not blocking snapshot publishing on testLatestDeps
@@ -180,7 +191,7 @@ jobs:
     #
     # also not blocking snapshot publishing on markdown-link-check because links to external urls
     # can break at any time
-    needs: [ build, test, smoke-test, examples, muzzle ]
+    needs: [ build, test, smoke-test, examples, muzzle, markdown-misspell-check ]
     if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
     steps:
       - uses: actions/checkout@v2.3.4

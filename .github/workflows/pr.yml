@@ -211,8 +211,19 @@ jobs:
   # markdown-link-check is not included in the PR build because links to external urls can break at
   # any time, which can be confusing for contributors
 
+  markdown-misspell-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Check markdown for common misspellings
+        run: |
+          curl -L -o ./install-misspell.sh https://git.io/misspell
+          sh ./install-misspell.sh
+          ./bin/misspell -error ./**/*
+
   accept-pr:
-    needs: [ build, test, smoke-test, muzzle, examples ]
+    needs: [ build, build-gradle-plugins, test, smoke-test, muzzle, examples, markdown-misspell-check ]
     runs-on: ubuntu-latest
     if: always()
     steps:
