@@ -5,6 +5,9 @@
     },
     {
       "pattern": "^https://mvnrepository\\.com/artifact/io\\.opentelemetry$"
+    },
+    {
+      "pattern": "^http://code\\.google\\.com/p/concurrentlinkedhashmap$"
     }
   ],
   "retryOn429": true
