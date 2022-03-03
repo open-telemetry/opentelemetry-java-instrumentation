@@ -1,0 +1,66 @@
+name: Smoke test
+
+on:
+  workflow_call:
+    inputs:
+      skip-windows:
+        type: boolean
+        required: false
+      cache-read-only:
+        type: boolean
+        required: false
+      no-build-cache:
+        type: boolean
+        required: false
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY:
+        required: false
+      GE_CACHE_USERNAME:
+        required: false
+      GE_CACHE_PASSWORD:
+        required: false
+
+jobs:
+  smoke-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - windows-2019
+          - ubuntu-latest
+        smoke-test-suite:
+          - jetty
+          - liberty
+          - payara
+          - tomcat
+          - tomee
+          - websphere
+          - wildfly
+          - other
+        exclude:
+          - os: ${{ inputs.skip-windows && 'windows-2019' || '' }}
+          - os: windows-2019
+            smoke-test-suite: websphere
+      fail-fast: false
+    steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+        if: matrix.os == 'windows-2019'
+
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Test
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}"
+          cache-read-only: ${{ inputs.cache-read-only }}

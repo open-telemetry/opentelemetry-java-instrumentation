@@ -9,10 +9,8 @@ jobs:
   run-overhead-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v2.3.4
-      - name: checkout
-        uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           ref: gh-pages
           path: gh-pages
@@ -51,7 +49,7 @@ jobs:
       # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
       - uses: technote-space/workflow-conclusion-action@v2.2
 
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
       - uses: JasonEtco/create-an-issue@v2.6
         if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure

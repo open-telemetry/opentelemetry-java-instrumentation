@@ -372,7 +372,7 @@ public class OpenTelemetryConfig {}
 
 This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/jaeger), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
 
-If an exporter is present in the classpath during runtime and a spring bean of the exporter is missing from the spring application context. An exporter bean is initialized and added to a simple span processor in the active tracer provider. Check out the implementation [here](/src/main/java/io/opentelemetry/instrumentation/spring/autoconfigure/OpenTelemetryAutoConfiguration.java).
+If an exporter is present in the classpath during runtime and a spring bean of the exporter is missing from the spring application context. An exporter bean is initialized and added to a simple span processor in the active tracer provider. Check out the implementation [here](./src/main/java/io/opentelemetry/instrumentation/spring/autoconfigure/OpenTelemetryAutoConfiguration.java).
 
 
 #### Configuration Properties
@@ -381,32 +381,32 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 | Feature          | Property                                 | Default Value | ConditionalOnClass     |
 |------------------|------------------------------------------|---------------|------------------------|
-| spring-web       | otel.springboot.httpclients.enabled      | true          | RestTemplate           |
-| spring-webmvc    | otel.springboot.httpclients.enabled      | true          | OncePerRequestFilter   |
-| spring-webflux   | otel.springboot.httpclients.enabled      | true          | WebClient              |
-| @WithSpan        | otel.springboot.aspects.enabled          | true          | WithSpan, Aspect       |
-| Otlp Exporter    | otel.exporter.otlp.enabled               | true          | OtlpGrpcSpanExporter   |
-| Jaeger Exporter  | otel.exporter.jaeger.enabled             | true          | JaegerGrpcSpanExporter |
-| Zipkin Exporter  | otel.exporter.zipkin.enabled             | true          | ZipkinSpanExporter     |
-| Logging Exporter | otel.exporter.logging.enabled            | true          | LoggingSpanExporter    |
+| spring-web       | otel.springboot.httpclients.enabled      | `true`        | RestTemplate           |
+| spring-webmvc    | otel.springboot.httpclients.enabled      | `true`        | OncePerRequestFilter   |
+| spring-webflux   | otel.springboot.httpclients.enabled      | `true`        | WebClient              |
+| @WithSpan        | otel.springboot.aspects.enabled          | `true`        | WithSpan, Aspect       |
+| Otlp Exporter    | otel.exporter.otlp.enabled               | `true`        | OtlpGrpcSpanExporter   |
+| Jaeger Exporter  | otel.exporter.jaeger.enabled             | `true`        | JaegerGrpcSpanExporter |
+| Zipkin Exporter  | otel.exporter.zipkin.enabled             | `true`        | ZipkinSpanExporter     |
+| Logging Exporter | otel.exporter.logging.enabled            | `true`        | LoggingSpanExporter    |
 
 <!-- Slf4j Log Correlation  otel.springboot.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
 
 ##### Exporter Properties
 
-| Feature         | Property                      | Default Value                      |
-|-----------------|-------------------------------|------------------------------------|
-| Otlp Exporter   | otel.exporter.otlp.endpoint   | localhost:4317                    |
-|                 | otel.exporter.otlp.timeout    | 1s                                 |
-| Jaeger Exporter | otel.exporter.jaeger.endpoint | localhost:14250                    |
-|                 | otel.exporter.jaeger.timeout  | 1s                                 |
-| Zipkin Exporter | otel.exporter.jaeger.endpoint | http://localhost:9411/api/v2/spans |
+| Feature         | Property                      | Default Value                        |
+|-----------------|-------------------------------|--------------------------------------|
+| Otlp Exporter   | otel.exporter.otlp.endpoint   | `localhost:4317`                     |
+|                 | otel.exporter.otlp.timeout    | `1s`                                 |
+| Jaeger Exporter | otel.exporter.jaeger.endpoint | `localhost:14250`                    |
+|                 | otel.exporter.jaeger.timeout  | `1s`                                 |
+| Zipkin Exporter | otel.exporter.jaeger.endpoint | `http://localhost:9411/api/v2/spans` |
 
 ##### Tracer Properties
 
-| Feature | Property                       | Default Value |
-|---------|--------------------------------|---------------|
-| Tracer  | otel.traces.sampler.probability | 1.0           |
+| Feature | Property                        | Default Value |
+|---------|---------------------------------|---------------|
+| Tracer  | otel.traces.sampler.probability | `1.0`         |
 
 ### Starter Guide
 

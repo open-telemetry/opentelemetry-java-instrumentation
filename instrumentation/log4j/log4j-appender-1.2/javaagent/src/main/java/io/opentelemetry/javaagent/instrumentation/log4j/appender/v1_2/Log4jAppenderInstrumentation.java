@@ -56,7 +56,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       // framework delegates to another
       callDepth = CallDepth.forClass(LogEmitterProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        Log4jHelper.capture(logger, level, message, t);
+        LogEventMapper.INSTANCE.capture(logger, level, message, t);
       }
     }
 

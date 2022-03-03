@@ -95,7 +95,7 @@ public class WeakConcurrentMap<K, V>
       return classLoader == null // bootstrap class loader
           || classLoader == ClassLoader.getSystemClassLoader()
           || classLoader
-              == ClassLoader.getSystemClassLoader().getParent(); // ext/platfrom class loader;
+              == ClassLoader.getSystemClassLoader().getParent(); // ext/platform class loader;
     } catch (Throwable ignored) {
       return false;
     }

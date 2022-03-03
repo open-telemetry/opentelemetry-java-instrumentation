@@ -10,7 +10,7 @@ The [second section](#manual-instrumentation-using-handlers-and-filters)  will b
 
 The [third section](#auto-instrumentation-using-spring-starters) with build on the first two sections. We will use spring auto-configurations and instrumentation tools packaged in OpenTelemetry [Spring Starters](starters) to streamline the set up of OpenTelemetry using Spring. With these tools you will be able to setup distributed tracing with little to no changes to existing configurations and easily customize traces with minor additions to application code.
 
-In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace requests between these services using two different approaches. Finally, in section three we will explore tools documented in [opentelemetry-spring-boot-autoconfigure](/spring-boot-autoconfigure/README.md#features) which can improve this process.
+In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace requests between these services using two different approaches. Finally, in section three we will explore tools documented in [opentelemetry-spring-boot-autoconfigure](./spring-boot-autoconfigure/README.md#features) which can improve this process.
 
 # Settings 
 
@@ -751,7 +751,7 @@ public class TimeServiceApplication {
 
 ### Generating Trace - LoggingSpanExporter
 
-To generate a trace, run MainServiceApplication and TimeServiceApplication, and then send a request to `localhost:8080/message`. Shown below is the output of the default span exporter - (LoggingSpanExporter)[https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging].
+To generate a trace, run MainServiceApplication and TimeServiceApplication, and then send a request to `localhost:8080/message`. Shown below is the output of the default span exporter - [LoggingSpanExporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging).
 
 #### MainService
 

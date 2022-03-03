@@ -30,6 +30,10 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
+  boolean testRedirects() {
+    false
+  }
+
   @Override
   Invocation.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
     return internalBuildRequest(uri, headers)
@@ -108,7 +112,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
             "$SemanticAttributes.HTTP_METHOD" method
             "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_USER_AGENT" { it == null || String }
           }
         }
         serverSpan(it, 1, span(0))
@@ -132,11 +136,6 @@ class JerseyClientTest extends JaxRsClientTest {
   }
 
   @Override
-  int maxRedirects() {
-    20
-  }
-
-  @Override
   SingleConnection createSingleConnection(String host, int port) {
     // Jersey JAX-RS client uses HttpURLConnection internally, which does not support pipelining nor
     // waiting for a connection in the pool to become available. Therefore a high concurrency test
@@ -154,10 +153,6 @@ class ResteasyClientTest extends JaxRsClientTest {
       .establishConnectionTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
   }
 
-  boolean testRedirects() {
-    false
-  }
-
   @Override
   SingleConnection createSingleConnection(String host, int port) {
     return new ResteasySingleConnection(host, port)
@@ -167,13 +162,21 @@ class ResteasyClientTest extends JaxRsClientTest {
 class CxfClientTest extends JaxRsClientTest {
 
   @Override
+  Throwable clientSpanError(URI uri, Throwable exception) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "https://192.0.2.1/": // non routable address
+        if (exception.getCause() != null) {
+          exception = exception.getCause()
+        }
+    }
+    return exception
+  }
+
+  @Override
   ClientBuilder builder() {
     return new ClientBuilderImpl()
       .property("http.connection.timeout", (long) CONNECT_TIMEOUT_MS)
-  }
-
-  boolean testRedirects() {
-    false
   }
 
   @Override

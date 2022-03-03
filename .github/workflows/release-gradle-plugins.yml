@@ -21,7 +21,7 @@ jobs:
           - 11
           - 15
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.inputs.release-branch-name }}
 
@@ -49,43 +49,7 @@ jobs:
   # or due to slight changes in emitted telemetry
 
   smoke-test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - windows-2019
-          - ubuntu-latest
-        smoke-test-suite:
-          - jetty
-          - liberty
-          - payara
-          - tomcat
-          - tomee
-          - websphere
-          - wildfly
-          - other
-        exclude:
-          - os: windows-2019
-            smoke-test-suite: websphere
-    steps:
-      - name: Support longpaths
-        run: git config --system core.longpaths true
-        if: matrix.os == 'windows-2019'
-
-      - uses: actions/checkout@v2.3.4
-        with:
-          ref: ${{ github.event.inputs.release-branch-name }}
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Test
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
+    uses: ./.github/workflows/smoke-test.yml
 
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,
@@ -94,7 +58,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.inputs.release-branch-name }}
 
@@ -132,7 +96,7 @@ jobs:
     needs: [ test, smoke-test, examples ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.inputs.release-branch-name }}
 
