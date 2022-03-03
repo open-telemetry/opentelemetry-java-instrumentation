@@ -107,39 +107,9 @@ jobs:
   # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
 
   examples:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Set up gradle cache
-        uses: gradle/gradle-build-action@v2
-
-      - name: Local publish of artifacts
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
-
-      - name: Local publish of gradle plugins
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
-        working-directory: gradle-plugins
-
-      - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
-        working-directory: examples/distro
-
-      - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
-        working-directory: examples/extension
-
-      - name: Run muzzle check against extension
-        run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/extension
+    uses: ./.github/workflows/examples.yml
+    with:
+      no-build-cache: true
 
   # markdown-link-check is intentionally not included in the nightly-no-cache build because
   # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
