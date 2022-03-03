@@ -40,7 +40,7 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: assemble -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          arguments: build -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Upload deadlock detector artifacts if any
