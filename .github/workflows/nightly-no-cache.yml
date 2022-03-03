@@ -15,57 +15,18 @@ jobs:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        test-java-version:
-          - 8
-          - 11
-          - 15
-        vm:
-          - hotspot
-          - openj9
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v3
-
-      - id: setup-test-java
-        name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt-${{ matrix.vm }}
-          java-version: ${{ matrix.test-java-version }}
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Test
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false --no-build-cache
+    uses: ./.github/workflows/test.yml
+    with:
+      no-build-cache: true
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   testLatestDeps:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Test
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test -PtestLatestDeps=true --no-build-cache
+    uses: ./.github/workflows/test-latest-deps.yml
+    with:
+      no-build-cache: true
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   smoke-test:
     uses: ./.github/workflows/smoke-test.yml
@@ -78,39 +39,9 @@ jobs:
   # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
 
   examples:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Set up gradle cache
-        uses: gradle/gradle-build-action@v2
-
-      - name: Local publish of artifacts
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
-
-      - name: Local publish of gradle plugins
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
-        working-directory: gradle-plugins
-
-      - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
-        working-directory: examples/distro
-
-      - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts --no-build-cache
-        working-directory: examples/extension
-
-      - name: Run muzzle check against extension
-        run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/extension
+    uses: ./.github/workflows/examples.yml
+    with:
+      no-build-cache: true
 
   # markdown-link-check is intentionally not included in the nightly-no-cache build because
   # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
