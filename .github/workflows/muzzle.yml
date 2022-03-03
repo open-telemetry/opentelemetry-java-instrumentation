@@ -40,10 +40,9 @@ jobs:
         with:
           distribution: adopt
           java-version: 11
-      - name: Set up gradle cache
-        uses: gradle/gradle-build-action@v2
-        with:
-          cache-read-only: true
+
+      # don't use gradle-build-action because all the parallel muzzle jobs cause the cache service
+      # to respond with 429 (to both muzzle and other jobs running in parallel)
 
       - name: Run muzzle
         # using retry because of sporadic gradle download failures
