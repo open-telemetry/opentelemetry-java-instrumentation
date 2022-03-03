@@ -57,7 +57,8 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          cache-read-only: ${{ inputs.cache-read-only }}
+          # only push cache for one matrix option since github action cache space is limited
+          cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
 
       - name: Upload deadlock detector artifacts if any
         if: always()
