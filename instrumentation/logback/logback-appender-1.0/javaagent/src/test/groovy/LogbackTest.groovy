@@ -26,16 +26,16 @@ class LogbackTest extends AgentInstrumentationSpecification {
     if (parent) {
       runWithSpan("parent") {
         if (exception) {
-          logger."$testMethod"("xyz", new IllegalStateException("hello"))
+          logger."$testMethod"("xyz: {}", 123, new IllegalStateException("hello"))
         } else {
-          logger."$testMethod"("xyz")
+          logger."$testMethod"("xyz: {}", 123)
         }
       }
     } else {
       if (exception) {
-        logger."$testMethod"("xyz", new IllegalStateException("hello"))
+        logger."$testMethod"("xyz: {}", 123, new IllegalStateException("hello"))
       } else {
-        logger."$testMethod"("xyz")
+        logger."$testMethod"("xyz: {}", 123)
       }
     }
 
@@ -51,7 +51,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
             assertThat(logs).hasSize(1)
           })
       def log = logs.get(0)
-      assertThat(log.getBody().asString()).isEqualTo("xyz")
+      assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
       assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo(loggerName)
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
@@ -106,7 +106,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     MDC.put("key1", "val1")
     MDC.put("key2", "val2")
     try {
-      abcLogger.info("xyz")
+      abcLogger.info("xyz: {}", 123)
     } finally {
       MDC.clear()
     }
@@ -119,7 +119,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
           assertThat(logs).hasSize(1)
         })
     def log = logs.get(0)
-    assertThat(log.getBody().asString()).isEqualTo("xyz")
+    assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
     assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
