@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_19;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -44,7 +44,7 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new EmptyTypeInstrumentation());
+    return asList(new EmptyTypeInstrumentation(), new AzureHttpClientInstrumentation());
   }
 
   public static class EmptyTypeInstrumentation implements TypeInstrumentation {
