@@ -37,6 +37,7 @@ final class Bridging {
     return namingConvention.name(id.getName(), id.getType(), id.getBaseUnit());
   }
 
+  // TODO: remove the cache usage once the SDK is able to handle different descriptions
   static String description(String name, Meter.Id id) {
     return descriptionsCache.computeIfAbsent(
         name,
