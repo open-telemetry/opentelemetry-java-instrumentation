@@ -39,18 +39,17 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Build Linux docker images
-        if: matrix.os != 'windows-2019'
+      - name: Set up gradle cache
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
-          build-root-directory: smoke-tests/images/servlet
           cache-read-only: true
+
+      - name: Build Linux docker images
+        if: matrix.os != 'windows-2019'
+        run: ./gradlew buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        working-directory: smoke-tests/images/servlet
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-2019'
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
-          build-root-directory: smoke-tests/images/servlet
-          cache-read-only: true
+        run: ./gradlew buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        working-directory: smoke-tests/images/servlet

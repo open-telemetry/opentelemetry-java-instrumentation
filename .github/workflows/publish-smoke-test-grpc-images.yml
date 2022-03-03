@@ -31,29 +31,24 @@ jobs:
       - name: Set Tag
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
-      - name: Build Java 8 Docker Image
+      - name: Set up gradle cache
         uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-          build-root-directory: smoke-tests/images/grpc
+
+      - name: Build Java 8 Docker Image
+        run: ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
+        working-directory: smoke-tests/images/grpc
 
       - name: Build Java 11 Docker Image
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-          build-root-directory: smoke-tests/images/grpc
+        run: ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
+        working-directory: smoke-tests/images/grpc
 
       - name: Build Java 17 Docker Image
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jib -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-          build-root-directory: smoke-tests/images/grpc
+        run: ./gradlew jib -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
+        working-directory: smoke-tests/images/grpc
 
       - name: Build Java 18 Docker Image
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jib -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-          build-root-directory: smoke-tests/images/grpc
+        run: ./gradlew jib -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
+        working-directory: smoke-tests/images/grpc
 
   issue:
     name: Open issue on failure
