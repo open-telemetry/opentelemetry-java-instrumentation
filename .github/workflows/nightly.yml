@@ -83,24 +83,11 @@ jobs:
           arguments: test -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
   testLatestDeps:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Test
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test -PtestLatestDeps=true
+    uses: ./.github/workflows/test-latest-deps.yml
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   smoke-test:
     uses: ./.github/workflows/smoke-test.yml
