@@ -63,4 +63,5 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}"
-          cache-read-only: ${{ inputs.cache-read-only }}
+          # only push cache for one matrix option per OS since github action cache space is limited
+          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
