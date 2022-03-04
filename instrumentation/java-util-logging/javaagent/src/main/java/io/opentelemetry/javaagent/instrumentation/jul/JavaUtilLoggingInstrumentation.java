@@ -38,6 +38,13 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, named("java.util.logging.LogRecord"))),
         JavaUtilLoggingInstrumentation.class.getName() + "$LogAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(isPublic())
+            .and(named("logRaw"))
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
+        JavaUtilLoggingInstrumentation.class.getName() + "$LogAdvice");
   }
 
   @SuppressWarnings("unused")
