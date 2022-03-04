@@ -27,16 +27,16 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     if (parent) {
       runWithSpan("parent") {
         if (exception) {
-          logger."$testMethod"("xyz", new IllegalStateException("hello"))
+          logger."$testMethod"("xyz: {}", 123, new IllegalStateException("hello"))
         } else {
-          logger."$testMethod"("xyz")
+          logger."$testMethod"("xyz: {}", 123)
         }
       }
     } else {
       if (exception) {
-        logger."$testMethod"("xyz", new IllegalStateException("hello"))
+        logger."$testMethod"("xyz: {}", 123, new IllegalStateException("hello"))
       } else {
-        logger."$testMethod"("xyz")
+        logger."$testMethod"("xyz: {}", 123)
       }
     }
 
@@ -52,7 +52,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
             assertThat(logs).hasSize(1)
           })
       def log = logs.get(0)
-      assertThat(log.getBody().asString()).isEqualTo("xyz")
+      assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
       assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
@@ -101,7 +101,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     ThreadContext.put("key1", "val1")
     ThreadContext.put("key2", "val2")
     try {
-      logger.info("xyz")
+      logger.info("xyz: {}", 123)
     } finally {
       ThreadContext.clearMap()
     }
@@ -114,7 +114,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
           assertThat(logs).hasSize(1)
         })
     def log = logs.get(0)
-    assertThat(log.getBody().asString()).isEqualTo("xyz")
+    assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
     assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")

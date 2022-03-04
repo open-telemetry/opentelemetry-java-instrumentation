@@ -82,7 +82,7 @@ public final class LoggingEventMapper {
    */
   private void mapLoggingEvent(LogBuilder builder, ILoggingEvent loggingEvent) {
     // message
-    String message = loggingEvent.getMessage();
+    String message = loggingEvent.getFormattedMessage();
     if (message != null) {
       builder.setBody(message);
     }

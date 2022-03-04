@@ -19,19 +19,23 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
   private static final Logger logger = Logger.getLogger("abc")
 
   @Unroll
-  def "test method=#testMethod with exception=#exception and parent=#parent"() {
+  def "test method=#testMethod with testArgs=#testArgs and parent=#parent"() {
     when:
     if (parent) {
       runWithSpan("parent") {
-        if (exception) {
+        if (testArgs == "exception") {
           logger.log(Level."${testMethod.toUpperCase()}", "xyz", new IllegalStateException("hello"))
+        } else if (testArgs == "params") {
+          logger.log(Level."${testMethod.toUpperCase()}", "xyz: {0}", 123)
         } else {
           logger."$testMethod"("xyz")
         }
       }
     } else {
-      if (exception) {
+      if (testArgs == "exception") {
         logger.log(Level."${testMethod.toUpperCase()}", "xyz", new IllegalStateException("hello"))
+      } else if (testArgs == "params") {
+        logger.log(Level."${testMethod.toUpperCase()}", "xyz: {0}", 123)
       } else {
         logger."$testMethod"("xyz")
       }
@@ -49,11 +53,15 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
             assertThat(logs).hasSize(1)
           })
       def log = logs.get(0)
-      assertThat(log.getBody().asString()).isEqualTo("xyz")
+      if (testArgs == "params") {
+        assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
+      } else {
+        assertThat(log.getBody().asString()).isEqualTo("xyz")
+      }
       assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
-      if (exception) {
+      if (testArgs == "exception") {
         assertThat(log.getAttributes().size()).isEqualTo(5)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
@@ -77,14 +85,14 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
     }
 
     where:
-    [args, exception, parent] << [
+    [args, testArgs, parent] << [
       [
         ["fine", null, null],
         ["info", Severity.INFO, "INFO"],
         ["warning", Severity.WARN, "WARNING"],
         ["severe", Severity.ERROR, "SEVERE"]
       ],
-      [true, false],
+      ["none", "exception", "param"],
       [true, false]
     ].combinations()
 
