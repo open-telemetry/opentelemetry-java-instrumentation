@@ -84,7 +84,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     @SuppressWarnings("rawtypes")
     @Override
     public Collection<Class> classes() {
-      // java complier does not see groovy clases
+      // java compiler does not see groovy classes
       return Arrays.asList(
           load("test.TestController"), load("test.ErrorController"), load("test.UrlMappings"));
     }
