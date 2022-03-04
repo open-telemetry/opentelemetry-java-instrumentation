@@ -50,7 +50,7 @@ jobs:
         with:
           # timing out has not been a problem, these jobs typically finish in 2-3 minutes
           timeout_minutes: 15
-          # give maven central a minute to hopefully recover
-          retry_wait_seconds: 60
+          # give maven central some time to hopefully recover
+          retry_wait_seconds: 120
           max_attempts: 5
           command: ./gradlew ${{ matrix.module }}:muzzle
