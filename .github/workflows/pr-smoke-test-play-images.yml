@@ -18,25 +18,21 @@ jobs:
           distribution: adopt
           java-version: 11
 
-      - name: Build Java 8 Docker Image
+      - name: Set up gradle cache
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: jibDockerBuild -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
-          build-root-directory: smoke-tests/images/play
           cache-read-only: true
 
+      - name: Build Java 8 Docker Image
+        run: ./gradlew jibDockerBuild -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+        working-directory: smoke-tests/images/play
+
       - name: Build Java 11 Docker Image
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
-          build-root-directory: smoke-tests/images/play
-          cache-read-only: true
+        run: ./gradlew jibDockerBuild -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+        working-directory: smoke-tests/images/play
 
         # Play doesn't support Java 16 (or 17) yet
         # https://github.com/playframework/playframework/pull/10819
       - name: Build Java 15 Docker Image
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jibDockerBuild -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain
-          build-root-directory: smoke-tests/images/play
-          cache-read-only: true
+        run: ./gradlew jibDockerBuild -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain
+        working-directory: smoke-tests/images/play

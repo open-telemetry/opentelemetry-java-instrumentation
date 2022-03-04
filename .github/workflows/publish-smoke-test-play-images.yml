@@ -31,25 +31,22 @@ jobs:
       - name: Set Tag
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
-      - name: Build Java 8 Docker Image
+      - name: Set up gradle cache
         uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-          build-root-directory: smoke-tests/images/play
+
+      - name: Build Java 8 Docker Image
+        run: ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
+        working-directory: smoke-tests/images/play
 
       - name: Build Java 11 Docker Image
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-          build-root-directory: smoke-tests/images/play
+        run: ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
+        working-directory: smoke-tests/images/play
 
         # Play doesn't support Java 16 (or 17) yet
         # https://github.com/playframework/playframework/pull/10819
       - name: Build Java 15 Docker Image
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-          build-root-directory: smoke-tests/images/play
+        run: ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
+        working-directory: smoke-tests/images/play
 
   issue:
     name: Open issue on failure

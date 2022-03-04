@@ -55,19 +55,21 @@ jobs:
       - name: Set Tag
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
-      - name: Build Linux docker images
-        if: matrix.os != 'windows-2019'
+      - name: Set up gradle cache
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
-          build-root-directory: smoke-tests/images/servlet
+          # only push cache for one matrix option per OS since github action cache space is limited
+          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+
+      - name: Build Linux docker images
+        if: matrix.os != 'windows-2019'
+        run: ./gradlew buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        working-directory: smoke-tests/images/servlet
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-2019'
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
-          build-root-directory: smoke-tests/images/servlet
+        run: ./gradlew buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        working-directory: smoke-tests/images/servlet
 
   issue:
     name: Open issue on failure
