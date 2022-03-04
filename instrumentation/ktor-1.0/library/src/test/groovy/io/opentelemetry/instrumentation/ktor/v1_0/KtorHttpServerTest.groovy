@@ -9,11 +9,12 @@ import io.ktor.server.engine.ApplicationEngine
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.TimeUnit
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
 
 class KtorHttpServerTest extends HttpServerTest<ApplicationEngine> implements LibraryTestTrait {
 

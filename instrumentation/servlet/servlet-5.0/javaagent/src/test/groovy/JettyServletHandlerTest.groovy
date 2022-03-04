@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException

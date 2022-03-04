@@ -6,6 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
@@ -20,12 +21,12 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
 

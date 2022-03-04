@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.ratpack.server
 
 import io.opentelemetry.instrumentation.ratpack.RatpackTracing
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import ratpack.server.RatpackServerSpec
 
 class RatpackHttpServerTest extends AbstractRatpackHttpServerTest implements LibraryTestTrait {

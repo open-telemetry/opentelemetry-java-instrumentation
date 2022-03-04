@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;

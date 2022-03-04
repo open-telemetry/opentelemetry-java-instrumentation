@@ -9,6 +9,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
@@ -19,15 +20,15 @@ import javax.servlet.Servlet
 import javax.servlet.ServletException
 import java.nio.file.Files
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 @Unroll
 class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {

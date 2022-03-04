@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 
@@ -24,15 +25,15 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements AgentTestTrait {
 

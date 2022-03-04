@@ -5,6 +5,7 @@
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
@@ -14,7 +15,7 @@ import javax.servlet.Servlet
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
 
 class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
 

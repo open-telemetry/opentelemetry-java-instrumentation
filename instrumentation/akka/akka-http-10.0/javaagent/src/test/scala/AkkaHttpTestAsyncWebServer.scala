@@ -11,7 +11,8 @@ import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import groovy.lang.Closure
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint._
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
@@ -23,8 +24,7 @@ object AkkaHttpTestAsyncWebServer {
   val asyncHandler: HttpRequest => Future[HttpResponse] = {
     case HttpRequest(GET, uri: Uri, _, _, _) =>
       Future {
-        val endpoint =
-          HttpServerTest.ServerEndpoint.forPath(uri.path.toString())
+        val endpoint = ServerEndpoint.forPath(uri.path.toString())
         HttpServerTest.controller(
           endpoint,
           new Closure[HttpResponse](()) {

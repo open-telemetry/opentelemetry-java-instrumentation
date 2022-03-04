@@ -199,9 +199,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   void verifyExtension() {
     if (testing == null) {
       throw new AssertionError(
-          "Subclasses of AbstractHttpClientTest must register either "
-              + "HttpClientLibraryInstrumentationExtension or "
-              + "HttpClientAgentInstrumentationExtension");
+          "Subclasses of AbstractHttpClientTest must register HttpClientInstrumentationExtension");
     }
   }
 

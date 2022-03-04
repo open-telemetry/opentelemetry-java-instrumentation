@@ -26,20 +26,21 @@ import io.netty.util.CharsetUtil
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentTestTrait {
 
@@ -64,7 +65,7 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
               if (msg instanceof HttpRequest) {
                 def request = msg as HttpRequest
                 def uri = URI.create(request.uri())
-                ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
+                  ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
                 ctx.write controller(endpoint) {
                   ByteBuf content = null
                   FullHttpResponse response

@@ -6,6 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.glassfish.grizzly.filterchain.BaseFilter
 import org.glassfish.grizzly.filterchain.FilterChain
@@ -29,15 +30,15 @@ import org.glassfish.grizzly.utils.IdleTimeoutFilter
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 import static java.lang.String.valueOf
 import static java.nio.charset.Charset.defaultCharset
 import static java.util.concurrent.TimeUnit.MILLISECONDS
@@ -150,7 +151,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
       String uri = request.getRequestURI()
       Map<String, String> headers = new HashMap<>()
 
-      HttpServerTest.ServerEndpoint endpoint
+      ServerEndpoint endpoint
       Closure closure
       switch (uri) {
         case "/success":
@@ -198,12 +199,12 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
 
     static class ResponseParameters {
       Map<String, String> headers
-      HttpServerTest.ServerEndpoint endpoint
+      ServerEndpoint endpoint
       int status
       byte[] responseBody
       Closure closure
 
-      ResponseParameters(HttpServerTest.ServerEndpoint endpoint,
+      ResponseParameters(ServerEndpoint endpoint,
                          int status,
                          byte[] responseBody,
                          Map<String, String> headers,
@@ -223,7 +224,7 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
         return responseBody
       }
 
-      HttpServerTest.ServerEndpoint getEndpoint() {
+      ServerEndpoint getEndpoint() {
         return endpoint
       }
 

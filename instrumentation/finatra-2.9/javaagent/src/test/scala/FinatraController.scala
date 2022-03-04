@@ -7,7 +7,7 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.Controller
 import com.twitter.util.Future
 import groovy.lang.Closure
-import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint._
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 import io.opentelemetry.instrumentation.test.base.HttpServerTest.controller
 
 class FinatraController extends Controller {
