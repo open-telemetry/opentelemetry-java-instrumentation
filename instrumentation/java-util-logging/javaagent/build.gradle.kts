@@ -7,10 +7,6 @@ dependencies {
 
   compileOnly(project(":instrumentation-appender-api-internal"))
 
-  // the JBoss instrumentation in this artifact is needed
-  // for jboss-logmanager versions 1.1.0.GA through latest 2.x
-  testLibrary("org.jboss.logmanager:jboss-logmanager:1.1.0.GA")
-
   testImplementation("org.awaitility:awaitility")
 }
 
