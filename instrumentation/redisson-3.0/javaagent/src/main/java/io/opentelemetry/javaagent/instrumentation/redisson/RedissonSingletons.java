@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 public final class RedissonSingletons {
@@ -19,17 +18,16 @@ public final class RedissonSingletons {
   private static final Instrumenter<RedissonRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<RedissonRequest, Void> dbAttributesExtractor =
-        new RedissonDbAttributesExtractor();
-    NetClientAttributesExtractor<RedissonRequest, Void> netAttributeExtractor =
-        NetClientAttributesExtractor.create(new RedissonNetAttributesGetter());
-    SpanNameExtractor<RedissonRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
+    RedissonDbAttributesGetter dbAttributesGetter = new RedissonDbAttributesGetter();
+    RedissonNetAttributesGetter netAttributesGetter = new RedissonNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<RedissonRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
-            .addAttributesExtractor(dbAttributesExtractor)
-            .addAttributesExtractor(netAttributeExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

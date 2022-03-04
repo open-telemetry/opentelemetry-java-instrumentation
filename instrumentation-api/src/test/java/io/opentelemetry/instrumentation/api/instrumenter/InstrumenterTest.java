@@ -24,7 +24,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
@@ -171,7 +171,7 @@ class InstrumenterTest {
   @Mock
   HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpServerAttributes;
 
-  @Mock DbAttributesExtractor<Map<String, String>, Map<String, String>> mockDbAttributes;
+  @Mock DbClientAttributesExtractor<Map<String, String>, Map<String, String>> mockDbAttributes;
 
   @Mock
   MessagingAttributesExtractor<Map<String, String>, Map<String, String>> mockMessagingAttributes;

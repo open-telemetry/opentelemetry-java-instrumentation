@@ -12,7 +12,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 public final class CouchbaseSingletons {
@@ -22,18 +23,16 @@ public final class CouchbaseSingletons {
   private static final Instrumenter<CouchbaseRequestInfo, Void> INSTRUMENTER;
 
   static {
-    CouchbaseAttributesExtractor couchbaseAttributesExtractor = new CouchbaseAttributesExtractor();
+    CouchbaseAttributesGetter couchbaseAttributesGetter = new CouchbaseAttributesGetter();
     SpanNameExtractor<CouchbaseRequestInfo> spanNameExtractor =
-        new CouchbaseSpanNameExtractor(DbSpanNameExtractor.create(couchbaseAttributesExtractor));
+        new CouchbaseSpanNameExtractor(DbClientSpanNameExtractor.create(couchbaseAttributesGetter));
     CouchbaseNetAttributesGetter netAttributesGetter = new CouchbaseNetAttributesGetter();
-    NetClientAttributesExtractor<CouchbaseRequestInfo, Void> netClientAttributesExtractor =
-        NetClientAttributesExtractor.create(netAttributesGetter);
 
     InstrumenterBuilder<CouchbaseRequestInfo, Void> builder =
         Instrumenter.<CouchbaseRequestInfo, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(couchbaseAttributesExtractor)
-            .addAttributesExtractor(netClientAttributesExtractor)
+            .addAttributesExtractor(DbClientAttributesExtractor.create(couchbaseAttributesGetter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->

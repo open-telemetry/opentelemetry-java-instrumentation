@@ -6,44 +6,45 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.instrumenter.ClassNames;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
 import redis.RedisCommand;
 
-final class RediscalaAttributesExtractor extends DbAttributesExtractor<RedisCommand<?, ?>, Void> {
+final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?>> {
+
   @Override
-  protected String system(RedisCommand<?, ?> redisCommand) {
+  public String system(RedisCommand<?, ?> redisCommand) {
     return SemanticAttributes.DbSystemValues.REDIS;
   }
 
   @Override
   @Nullable
-  protected String user(RedisCommand<?, ?> redisCommand) {
+  public String user(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String name(RedisCommand<?, ?> redisCommand) {
+  public String name(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String connectionString(RedisCommand<?, ?> redisCommand) {
+  public String connectionString(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String statement(RedisCommand<?, ?> redisCommand) {
+  public String statement(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
-  protected String operation(RedisCommand<?, ?> redisCommand) {
+  public String operation(RedisCommand<?, ?> redisCommand) {
     return ClassNames.simpleName(redisCommand.getClass()).toUpperCase(Locale.ROOT);
   }
 }

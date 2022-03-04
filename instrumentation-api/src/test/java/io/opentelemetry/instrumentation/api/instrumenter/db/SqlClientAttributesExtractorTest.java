@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.db;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -18,41 +17,36 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-class SqlAttributesExtractorTest {
-  AttributeKey<String> dbTableAttribute;
-  final SqlAttributesExtractor<Map<String, String>, Void> underTest =
-      new SqlAttributesExtractor<Map<String, String>, Void>() {
+class SqlClientAttributesExtractorTest {
 
-        @Override
-        protected AttributeKey<String> dbTableAttribute() {
-          return dbTableAttribute;
-        }
+  static final class TestAttributesGetter
+      implements SqlClientAttributesGetter<Map<String, String>> {
 
-        @Override
-        protected String rawStatement(Map<String, String> map) {
-          return map.get("db.statement");
-        }
+    @Override
+    public String rawStatement(Map<String, String> map) {
+      return map.get("db.statement");
+    }
 
-        @Override
-        protected String system(Map<String, String> map) {
-          return map.get("db.system");
-        }
+    @Override
+    public String system(Map<String, String> map) {
+      return map.get("db.system");
+    }
 
-        @Override
-        protected String user(Map<String, String> map) {
-          return map.get("db.user");
-        }
+    @Override
+    public String user(Map<String, String> map) {
+      return map.get("db.user");
+    }
 
-        @Override
-        protected String name(Map<String, String> map) {
-          return map.get("db.name");
-        }
+    @Override
+    public String name(Map<String, String> map) {
+      return map.get("db.name");
+    }
 
-        @Override
-        protected String connectionString(Map<String, String> map) {
-          return map.get("db.connection_string");
-        }
-      };
+    @Override
+    public String connectionString(Map<String, String> map) {
+      return map.get("db.connection_string");
+    }
+  }
 
   @Test
   void shouldExtractAllAttributes() {
@@ -64,9 +58,10 @@ class SqlAttributesExtractorTest {
     request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
 
-    dbTableAttribute = SemanticAttributes.DB_SQL_TABLE;
-
     Context context = Context.root();
+
+    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -93,11 +88,12 @@ class SqlAttributesExtractorTest {
   void shouldNotExtractTableIfAttributeIsNotSet() {
     // given
     Map<String, String> request = new HashMap<>();
-    request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
-
-    dbTableAttribute = null;
+    request.put("db.statement", "SELECT *");
 
     Context context = Context.root();
+
+    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when
     AttributesBuilder attributes = Attributes.builder();
@@ -106,12 +102,41 @@ class SqlAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(SemanticAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
+            entry(SemanticAttributes.DB_STATEMENT, "SELECT *"),
             entry(SemanticAttributes.DB_OPERATION, "SELECT"));
   }
 
   @Test
+  void shouldExtractTableToSpecifiedKey() {
+    // given
+    Map<String, String> request = new HashMap<>();
+    request.put("db.statement", "SELECT * FROM table");
+
+    Context context = Context.root();
+
+    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+        SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
+            .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
+            .build();
+
+    // when
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onStart(attributes, context, request);
+
+    // then
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.DB_STATEMENT, "SELECT * FROM table"),
+            entry(SemanticAttributes.DB_OPERATION, "SELECT"),
+            entry(SemanticAttributes.DB_CASSANDRA_TABLE, "table"));
+  }
+
+  @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
+    // when
+    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestAttributesGetter());
+
     // when
     AttributesBuilder attributes = Attributes.builder();
     underTest.onStart(attributes, Context.root(), Collections.emptyMap());

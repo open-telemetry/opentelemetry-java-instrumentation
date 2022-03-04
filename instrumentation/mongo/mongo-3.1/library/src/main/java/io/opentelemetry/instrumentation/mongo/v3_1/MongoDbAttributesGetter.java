@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -23,7 +23,7 @@ import org.bson.BsonValue;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
-class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEvent, Void> {
+class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent> {
 
   @Nullable private static final Method IS_TRUNCATED_METHOD;
   private static final String HIDDEN_CHAR = "?";
@@ -39,31 +39,31 @@ class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEve
   private final int maxNormalizedQueryLength;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
-  MongoDbAttributesExtractor(int maxNormalizedQueryLength) {
+  MongoDbAttributesGetter(int maxNormalizedQueryLength) {
     this.maxNormalizedQueryLength = maxNormalizedQueryLength;
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
   }
 
   @Override
-  protected String system(CommandStartedEvent event) {
+  public String system(CommandStartedEvent event) {
     return SemanticAttributes.DbSystemValues.MONGODB;
   }
 
   @Override
   @Nullable
-  protected String user(CommandStartedEvent event) {
+  public String user(CommandStartedEvent event) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String name(CommandStartedEvent event) {
+  public String name(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
 
   @Override
   @Nullable
-  protected String connectionString(CommandStartedEvent event) {
+  public String connectionString(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
       ServerAddress sa = connectionDescription.getServerAddress();
@@ -80,13 +80,13 @@ class MongoDbAttributesExtractor extends DbAttributesExtractor<CommandStartedEve
   }
 
   @Override
-  protected String statement(CommandStartedEvent event) {
+  public String statement(CommandStartedEvent event) {
     return sanitizeStatement(event.getCommand());
   }
 
   @Override
   @Nullable
-  protected String operation(CommandStartedEvent event) {
+  public String operation(CommandStartedEvent event) {
     return event.getCommandName();
   }
 

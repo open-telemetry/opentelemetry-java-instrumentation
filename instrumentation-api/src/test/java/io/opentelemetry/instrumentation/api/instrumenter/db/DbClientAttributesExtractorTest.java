@@ -17,39 +17,39 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-class DbAttributesExtractorTest {
-  static final DbAttributesExtractor<Map<String, String>, Void> underTest =
-      new DbAttributesExtractor<Map<String, String>, Void>() {
-        @Override
-        protected String system(Map<String, String> map) {
-          return map.get("db.system");
-        }
+class DbClientAttributesExtractorTest {
 
-        @Override
-        protected String user(Map<String, String> map) {
-          return map.get("db.user");
-        }
+  static final class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>> {
+    @Override
+    public String system(Map<String, String> map) {
+      return map.get("db.system");
+    }
 
-        @Override
-        protected String name(Map<String, String> map) {
-          return map.get("db.name");
-        }
+    @Override
+    public String user(Map<String, String> map) {
+      return map.get("db.user");
+    }
 
-        @Override
-        protected String connectionString(Map<String, String> map) {
-          return map.get("db.connection_string");
-        }
+    @Override
+    public String name(Map<String, String> map) {
+      return map.get("db.name");
+    }
 
-        @Override
-        protected String statement(Map<String, String> map) {
-          return map.get("db.statement");
-        }
+    @Override
+    public String connectionString(Map<String, String> map) {
+      return map.get("db.connection_string");
+    }
 
-        @Override
-        protected String operation(Map<String, String> map) {
-          return map.get("db.operation");
-        }
-      };
+    @Override
+    public String statement(Map<String, String> map) {
+      return map.get("db.statement");
+    }
+
+    @Override
+    public String operation(Map<String, String> map) {
+      return map.get("db.operation");
+    }
+  }
 
   @Test
   void shouldExtractAllAvailableAttributes() {
@@ -63,6 +63,9 @@ class DbAttributesExtractorTest {
     request.put("db.operation", "SELECT");
 
     Context context = Context.root();
+
+    DbClientAttributesExtractor<Map<String, String>, Void> underTest =
+        DbClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -86,6 +89,10 @@ class DbAttributesExtractorTest {
 
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
+    // given
+    DbClientAttributesExtractor<Map<String, String>, Void> underTest =
+        DbClientAttributesExtractor.create(new TestAttributesGetter());
+
     // when
     AttributesBuilder attributes = Attributes.builder();
     underTest.onStart(attributes, Context.root(), Collections.emptyMap());

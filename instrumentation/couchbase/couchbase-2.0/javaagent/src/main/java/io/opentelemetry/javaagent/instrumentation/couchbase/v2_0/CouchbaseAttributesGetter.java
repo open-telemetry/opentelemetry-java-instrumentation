@@ -5,43 +5,44 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-final class CouchbaseAttributesExtractor extends DbAttributesExtractor<CouchbaseRequestInfo, Void> {
+final class CouchbaseAttributesGetter implements DbClientAttributesGetter<CouchbaseRequestInfo> {
+
   @Override
-  protected String system(CouchbaseRequestInfo couchbaseRequest) {
+  public String system(CouchbaseRequestInfo couchbaseRequest) {
     return SemanticAttributes.DbSystemValues.COUCHBASE;
   }
 
   @Override
   @Nullable
-  protected String user(CouchbaseRequestInfo couchbaseRequest) {
+  public String user(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String name(CouchbaseRequestInfo couchbaseRequest) {
+  public String name(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.bucket();
   }
 
   @Override
   @Nullable
-  protected String connectionString(CouchbaseRequestInfo couchbaseRequest) {
+  public String connectionString(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String statement(CouchbaseRequestInfo couchbaseRequest) {
+  public String statement(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.statement();
   }
 
   @Override
   @Nullable
-  protected String operation(CouchbaseRequestInfo couchbaseRequest) {
+  public String operation(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
   }
 }

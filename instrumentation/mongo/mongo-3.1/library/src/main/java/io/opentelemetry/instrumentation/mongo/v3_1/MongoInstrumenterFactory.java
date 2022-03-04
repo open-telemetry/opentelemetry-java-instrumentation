@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 
 class MongoInstrumenterFactory {
@@ -22,14 +23,14 @@ class MongoInstrumenterFactory {
   static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry, int maxNormalizedQueryLength) {
 
-    MongoDbAttributesExtractor dbAttributesExtractor =
-        new MongoDbAttributesExtractor(maxNormalizedQueryLength);
+    MongoDbAttributesGetter dbAttributesGetter =
+        new MongoDbAttributesGetter(maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
-        new MongoSpanNameExtractor(dbAttributesExtractor, attributesExtractor);
+        new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
 
     return Instrumenter.<CommandStartedEvent, Void>builder(
             openTelemetry, "io.opentelemetry.mongo-3.1", spanNameExtractor)
-        .addAttributesExtractor(dbAttributesExtractor)
+        .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(netAttributesExtractor)
         .addAttributesExtractor(attributesExtractor)
         .newInstrumenter(SpanKindExtractor.alwaysClient());
