@@ -67,7 +67,7 @@ public final class KafkaInstrumenterFactory {
         .addAttributesExtractor(attributesExtractor)
         .addAttributesExtractors(extractors)
         .setTimeExtractor(new KafkaConsumerTimeExtractor())
-        .setDisabled(ExperimentalConfig.get().suppressMessagingReceiveSpans())
+        .setDisabled(!ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -102,13 +102,13 @@ public final class KafkaInstrumenterFactory {
 
     if (!KafkaPropagation.isPropagationEnabled()) {
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
-    } else if (ExperimentalConfig.get().suppressMessagingReceiveSpans()) {
-      return builder.newConsumerInstrumenter(KafkaConsumerRecordGetter.INSTANCE);
-    } else {
+    } else if (ExperimentalConfig.get().messagingReceiveInstrumentationEnabled()) {
       builder.addSpanLinksExtractor(
           SpanLinksExtractor.fromUpstreamRequest(
               GlobalOpenTelemetry.getPropagators(), KafkaConsumerRecordGetter.INSTANCE));
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
+    } else {
+      return builder.newConsumerInstrumenter(KafkaConsumerRecordGetter.INSTANCE);
     }
   }
 

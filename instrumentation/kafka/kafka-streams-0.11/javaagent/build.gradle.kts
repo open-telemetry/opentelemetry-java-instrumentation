@@ -37,7 +37,6 @@ tasks {
       isFailOnNoMatchingTests = false
     }
     include("**/KafkaStreamsSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
   }
 
   test {
@@ -46,5 +45,6 @@ tasks {
       excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
       isFailOnNoMatchingTests = false
     }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 }

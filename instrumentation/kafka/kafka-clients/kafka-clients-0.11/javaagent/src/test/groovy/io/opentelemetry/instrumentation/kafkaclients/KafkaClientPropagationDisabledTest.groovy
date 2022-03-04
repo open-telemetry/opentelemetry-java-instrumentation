@@ -60,22 +60,10 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
           }
         }
       }
-      trace(1, 3) {
+      trace(1, 2) {
         span(0) {
-          name SHARED_TOPIC + " receive"
-          kind CONSUMER
-          hasNoParent()
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-          }
-        }
-        span(1) {
           name SHARED_TOPIC + " process"
           kind CONSUMER
-          childOf span(0)
           hasNoLinks()
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
@@ -87,9 +75,9 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
             "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
           }
-          span(2) {
+          span(1) {
             name "processing"
-            childOf span(1)
+            childOf span(0)
           }
         }
       }
