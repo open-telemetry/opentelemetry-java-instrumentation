@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.db;
 
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+
 /**
  * Extractor of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md">database
@@ -14,7 +18,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.db;
  * attribute extraction from request/response objects.
  */
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
-    extends DbCommonAttributesExtractor<REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST>> {
+    extends DbClientCommonAttributesExtractor<
+        REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST>> {
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> DbClientAttributesExtractor<REQUEST, RESPONSE> create(
@@ -24,5 +29,13 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
 
   DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST> getter) {
     super(getter);
+  }
+
+  @Override
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    super.onStart(attributes, parentContext, request);
+
+    set(attributes, SemanticAttributes.DB_STATEMENT, getter.statement(request));
+    set(attributes, SemanticAttributes.DB_OPERATION, getter.operation(request));
   }
 }

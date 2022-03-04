@@ -61,9 +61,7 @@ class SqlClientAttributesExtractorTest {
     Context context = Context.root();
 
     SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
-        SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
-            .captureTable(SemanticAttributes.DB_SQL_TABLE)
-            .build();
+        SqlClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -90,7 +88,7 @@ class SqlClientAttributesExtractorTest {
   void shouldNotExtractTableIfAttributeIsNotSet() {
     // given
     Map<String, String> request = new HashMap<>();
-    request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
+    request.put("db.statement", "SELECT *");
 
     Context context = Context.root();
 
@@ -104,8 +102,33 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(SemanticAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
+            entry(SemanticAttributes.DB_STATEMENT, "SELECT *"),
             entry(SemanticAttributes.DB_OPERATION, "SELECT"));
+  }
+
+  @Test
+  void shouldExtractTableToSpecifiedKey() {
+    // given
+    Map<String, String> request = new HashMap<>();
+    request.put("db.statement", "SELECT * FROM table");
+
+    Context context = Context.root();
+
+    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+        SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
+            .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
+            .build();
+
+    // when
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onStart(attributes, context, request);
+
+    // then
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.DB_STATEMENT, "SELECT * FROM table"),
+            entry(SemanticAttributes.DB_OPERATION, "SELECT"),
+            entry(SemanticAttributes.DB_CASSANDRA_TABLE, "table"));
   }
 
   @Test

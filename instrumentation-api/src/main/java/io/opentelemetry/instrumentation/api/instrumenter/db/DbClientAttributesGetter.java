@@ -18,19 +18,7 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
-public interface DbClientAttributesGetter<REQUEST> {
-
-  @Nullable
-  String system(REQUEST request);
-
-  @Nullable
-  String user(REQUEST request);
-
-  @Nullable
-  String name(REQUEST request);
-
-  @Nullable
-  String connectionString(REQUEST request);
+public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttributesGetter<REQUEST> {
 
   @Nullable
   String statement(REQUEST request);

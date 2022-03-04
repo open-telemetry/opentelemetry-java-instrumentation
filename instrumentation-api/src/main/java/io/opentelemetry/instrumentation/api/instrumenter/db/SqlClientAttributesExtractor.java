@@ -8,14 +8,23 @@ package io.opentelemetry.instrumentation.api.instrumenter.db;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 /**
  * Extractor of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md">database
  * attributes</a>. This class is designed with SQL (or SQL-like) database clients in mind.
+ *
+ * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
+ * <code>{@linkplain SemanticAttributes#DB_SQL_TABLE db.sql.table}</code> attrubute. The raw SQL
+ * statements returned by the {@link SqlClientAttributesGetter#rawStatement(Object)} method are
+ * sanitized before use, all statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
-    extends DbCommonAttributesExtractor<REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST>> {
+    extends DbClientCommonAttributesExtractor<
+        REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST>> {
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> SqlClientAttributesExtractor<REQUEST, RESPONSE> create(
@@ -43,8 +52,11 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
-    if (dbTableAttribute != null) {
-      set(attributes, dbTableAttribute, getter.table(request));
-    }
+
+    SqlStatementInfo sanitizedStatement =
+        SqlStatementSanitizer.sanitize(getter.rawStatement(request));
+    set(attributes, SemanticAttributes.DB_STATEMENT, sanitizedStatement.getFullStatement());
+    set(attributes, SemanticAttributes.DB_OPERATION, sanitizedStatement.getOperation());
+    set(attributes, dbTableAttribute, sanitizedStatement.getTable());
   }
 }

@@ -11,13 +11,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-abstract class DbCommonAttributesExtractor<
-        REQUEST, RESPONSE, GETTER extends DbClientAttributesGetter<REQUEST>>
+abstract class DbClientCommonAttributesExtractor<
+        REQUEST, RESPONSE, GETTER extends DbClientCommonAttributesGetter<REQUEST>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   final GETTER getter;
 
-  DbCommonAttributesExtractor(GETTER getter) {
+  DbClientCommonAttributesExtractor(GETTER getter) {
     this.getter = getter;
   }
 
@@ -27,8 +27,6 @@ abstract class DbCommonAttributesExtractor<
     set(attributes, SemanticAttributes.DB_USER, getter.user(request));
     set(attributes, SemanticAttributes.DB_NAME, getter.name(request));
     set(attributes, SemanticAttributes.DB_CONNECTION_STRING, getter.connectionString(request));
-    set(attributes, SemanticAttributes.DB_STATEMENT, getter.statement(request));
-    set(attributes, SemanticAttributes.DB_OPERATION, getter.operation(request));
   }
 
   @Override

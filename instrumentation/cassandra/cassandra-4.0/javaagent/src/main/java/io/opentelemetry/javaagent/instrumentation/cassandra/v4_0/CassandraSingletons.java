@@ -30,7 +30,7 @@ public final class CassandraSingletons {
                 DbClientSpanNameExtractor.create(attributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
-                    .captureTable(SemanticAttributes.DB_CASSANDRA_TABLE)
+                    .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
                     .build())
             .addAttributesExtractor(
                 NetClientAttributesExtractor.create(new CassandraNetAttributesGetter()))
