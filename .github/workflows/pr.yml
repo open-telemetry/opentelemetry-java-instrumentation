@@ -8,64 +8,9 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Start deadlock detector
-        run: .github/scripts/deadlock-detector.sh
-
-      - name: Build
-        uses: gradle/gradle-build-action@v2
-        with:
-          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: build -x javadoc
-          cache-read-only: true
-
-      - name: Upload deadlock detector artifacts if any
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: deadlock-detector-build
-          path: /tmp/deadlock-detector-*
-          if-no-files-found: ignore
-
-      - name: Upload jvm crash dump files if any
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: javacore-build
-          path: |
-            "**/hs_err_pid*.log"
-            "**/javacore.*.txt"
-            "**/Snap.*.trc"
-            "**/core.*.dmp"
-            "**/jitdump.*.dmp"
-          if-no-files-found: ignore
-
-  build-gradle-plugins:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Build
-        uses: gradle/gradle-build-action@v2
-        with:
-          cache-read-only: true
-          arguments: build
-          build-root-directory: gradle-plugins
+    uses: ./.github/workflows/build.yml
+    with:
+      cache-read-only: true
 
   test:
     uses: ./.github/workflows/test.yml
@@ -125,7 +70,7 @@ jobs:
           ./bin/misspell -error ./**/*
 
   accept-pr:
-    needs: [ build, build-gradle-plugins, test, smoke-test, muzzle, examples, markdown-misspell-check ]
+    needs: [ build, test, smoke-test, muzzle, examples, markdown-misspell-check ]
     runs-on: ubuntu-latest
     if: always()
     steps:
