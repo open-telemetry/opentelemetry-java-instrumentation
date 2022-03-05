@@ -37,7 +37,7 @@ jobs:
       - name: Bump download link version
         run: |
           new_version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
-          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v[0-9]+.[0-9]+.[0-9]+/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$new_version/," README.md
+          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$new_version/," README.md
 
       - name: Setup git name
         run: |
