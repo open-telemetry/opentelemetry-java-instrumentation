@@ -426,6 +426,8 @@ public abstract class AbstractHttpServerTest<SERVER> {
     testing.waitAndAssertTraces(assertions);
   }
 
+  // NOTE: this method does not currently implement asserting all the span types that groovy
+  // HttpServerTest does
   protected void assertTheTraces(
       int size,
       String traceId,

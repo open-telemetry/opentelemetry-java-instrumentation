@@ -214,6 +214,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.testCaptureRequestParameters = testCapturedRequestParameters()
     }
 
+    // Override trace assertion method. We can call java assertions from groovy but not the other
+    // way around. As we have a bunch of groovy tests that do custom assertions we need to duplicate
+    // the main trace assertion method to groovy to be able to call these assertions.
     @Override
     void assertTheTraces(
         int size,
@@ -226,6 +229,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       HttpServerTest.this.assertTheTraces(size, traceId, parentId, method, endpoint, errorMessage, response)
     }
 
+    @Override
     void assertHighConcurrency(int count) {
       HttpServerTest.this.assertHighConcurrency(count)
     }

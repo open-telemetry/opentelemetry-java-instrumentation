@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import grails.boot.GrailsApp;
 import grails.boot.config.GrailsAutoConfiguration;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -158,7 +159,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     } else {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
     }
-    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(attrs -> assertThat(attrs).isEmpty());
+    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
     return span;
   }
 
@@ -167,19 +168,18 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
       String method, ServerEndpoint endpoint) {
     List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
     spanAssertions.add(
-        span -> {
-          span.hasName(endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index")
-              .hasKind(SpanKind.INTERNAL)
-              .hasAttributesSatisfying(attrs -> assertThat(attrs).isEmpty());
-        });
+        span ->
+            span.hasName(
+                    endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index")
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfying(Attributes::isEmpty));
     if (endpoint == NOT_FOUND) {
       spanAssertions.add(
-          span -> {
-            span.satisfies(
-                    spanData -> Assertions.assertThat(spanData.getName()).endsWith(".sendError"))
-                .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfying(attrs -> assertThat(attrs).isEmpty());
-          });
+          span ->
+              span.satisfies(
+                      spanData -> Assertions.assertThat(spanData.getName()).endsWith(".sendError"))
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasAttributesSatisfying(Attributes::isEmpty));
     }
     return spanAssertions;
   }
