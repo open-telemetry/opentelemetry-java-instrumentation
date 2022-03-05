@@ -36,7 +36,7 @@ public final class JavaUtilLoggingHelper {
       return;
     }
 
-    String instrumentationName = logRecord.getLoggerName();
+    String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
@@ -28,7 +28,7 @@ final class SpanKeyExtractor {
         spanKeys.add(SpanKey.HTTP_CLIENT);
       } else if (attributeExtractor instanceof RpcAttributesExtractor) {
         spanKeys.add(SpanKey.RPC_CLIENT);
-      } else if (attributeExtractor instanceof DbAttributesExtractor) {
+      } else if (attributeExtractor instanceof DbClientAttributesExtractor) {
         spanKeys.add(SpanKey.DB_CLIENT);
       } else if (attributeExtractor instanceof MessagingAttributesExtractor) {
         spanKeys.add(

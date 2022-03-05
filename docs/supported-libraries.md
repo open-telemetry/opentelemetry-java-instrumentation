@@ -42,6 +42,7 @@ These are the supported libraries and frameworks:
 | [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                           | 1.9+                           |
 | [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)                                                      | 1.0+                           |
 | [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                   | 1.11.x and 2.2.0+              |
+| [Azure Core](https://docs.microsoft.com/en-us/java/api/overview/azure/core-readme)                                                | 1.14+                          |
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                       | 3.0+                           |
 | [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                            | 2.0+ and 3.1+                  |
 | [Dropwizard Views](https://www.dropwizard.io/en/latest/manual/views.html)                                                         | 0.7+                           |
