@@ -32,11 +32,13 @@ class AzureSdkTest {
     List<HttpPipelinePolicy> list = new ArrayList<>();
     HttpPolicyProviders.addAfterRetryPolicies(list);
 
-    assertThat(list).hasSize(1);
-    assertThat(list.get(0).getClass().getName())
-        .isEqualTo(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded"
-                + ".com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy");
+    assertThat(list)
+        .satisfiesExactly(
+            item ->
+                assertThat(item.getClass().getName())
+                    .isEqualTo(
+                        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_19.shaded"
+                            + ".com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy"));
   }
 
   @Test
