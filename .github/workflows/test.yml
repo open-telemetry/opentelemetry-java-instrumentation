@@ -37,7 +37,7 @@ jobs:
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
         uses: actions/setup-java@v2
         with:
-          distribution: temurin-${{ matrix.vm }}
+          distribution: adopt-${{ matrix.vm }}
           java-version: ${{ matrix.test-java-version }}
 
       - name: Set up JDK 11 for running Gradle
