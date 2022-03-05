@@ -67,7 +67,7 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
         if (msg.getMessage() instanceof HttpRequest) {
           def request = msg.getMessage() as HttpRequest
           def uri = URI.create(request.getUri())
-            ServerEndpoint endpoint = forPath(uri.path)
+          ServerEndpoint endpoint = forPath(uri.path)
           ctx.sendDownstream controller(endpoint) {
             HttpResponse response
             ChannelBuffer responseContent = null

@@ -66,7 +66,7 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
               if (msg instanceof HttpRequest) {
                 def request = msg as HttpRequest
                 def uri = URI.create(request.uri)
-                  ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
+                ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
                 ctx.write controller(endpoint) {
                   ByteBuf content = null
                   FullHttpResponse response
