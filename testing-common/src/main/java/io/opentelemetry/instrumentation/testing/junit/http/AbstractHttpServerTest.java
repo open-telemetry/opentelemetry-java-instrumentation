@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeader
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -44,6 +43,8 @@ import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -60,9 +61,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHttpServerTest<SERVER> {
+  private static final Logger logger = LoggerFactory.getLogger(AbstractHttpServerTest.class);
+
   private static final String TEST_REQUEST_HEADER = "X-Test-Request";
   private static final String TEST_RESPONSE_HEADER = "X-Test-Response";
 
@@ -92,31 +97,27 @@ public abstract class AbstractHttpServerTest<SERVER> {
     }
 
     server = setupServer();
-    echo(
-        getClass().getName()
-            + " http server started at: http://localhost:"
-            + port
-            + options.contextPath);
+    if (server != null) {
+      logger.info(
+          getClass().getName()
+              + " http server started at: http://localhost:"
+              + port
+              + options.contextPath);
+    }
   }
 
   @AfterAll
   void cleanup() {
     if (server == null) {
-      echo(getClass().getName() + " can't stop null server");
+      logger.info(getClass().getName() + " can't stop null server");
       return;
     }
     stopServer(server);
     server = null;
-    echo(getClass().getName() + " http server stopped at: http://localhost:" + port + "/");
+    logger.info(getClass().getName() + " http server stopped at: http://localhost:" + port + "/");
   }
 
-  private static void echo(String message) {
-    // CHECKSTYLE:OFF
-    System.out.println(message);
-    // CHECKSTYLE:ON
-  }
-
-  public URI buildAddress() {
+  protected URI buildAddress() {
     try {
       return new URI("http://localhost:" + port + options.contextPath + "/");
     } catch (URISyntaxException exception) {
@@ -488,35 +489,36 @@ public abstract class AbstractHttpServerTest<SERVER> {
     testing.waitAndAssertTraces(assertions);
   }
 
-  public SpanDataAssert assertControllerSpan(
+  protected SpanDataAssert assertControllerSpan(
       SpanDataAssert span, String errorMessage, Class<? extends Throwable> exceptionClass) {
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (errorMessage != null) {
       span.hasStatus(StatusData.error());
-      assertException(span, exceptionClass, errorMessage);
+      span.hasException(getExceptionInstance(exceptionClass, errorMessage));
     }
     return span;
   }
 
-  public SpanDataAssert assertHandlerSpan(
+  protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     throw new UnsupportedOperationException(
         "assertHandlerSpan not implemented in " + getClass().getName());
   }
 
-  public SpanDataAssert assertResponseSpan(
+  protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     throw new UnsupportedOperationException(
         "assertResponseSpan not implemented in " + getClass().getName());
   }
 
-  public List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
+  protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
     throw new UnsupportedOperationException(
         "errorPageSpanAssertions not implemented in " + getClass().getName());
   }
 
-  SpanDataAssert assertServerSpan(SpanDataAssert span, String method, ServerEndpoint endpoint) {
+  protected SpanDataAssert assertServerSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
     Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
 
     span.hasName(options.expectedServerSpanNameMapper.apply(endpoint, method))
@@ -526,9 +528,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     }
 
     if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.apply(endpoint)) {
-      // TODO unfortunately hasException requires an instance
-      // span.hasException(options.expectedException);
-      assertException(span, options.expectedExceptionClass, endpoint.body);
+      span.hasException(getExceptionInstance(options.expectedExceptionClass, endpoint.body));
     }
 
     span.hasAttributesSatisfying(
@@ -625,33 +625,19 @@ public abstract class AbstractHttpServerTest<SERVER> {
     return span;
   }
 
-  private static void assertException(
-      SpanDataAssert span, Class<?> exceptionClass, String exceptionMessage) {
-    span.hasEventsSatisfying(
-        events ->
-            assertThat(events)
-                .anySatisfy(event -> assertException(event, exceptionClass, exceptionMessage)));
+  private static Throwable getExceptionInstance(Class<?> exceptionClass, String exceptionMessage) {
+    try {
+      Constructor<?> constructor = exceptionClass.getDeclaredConstructor(String.class);
+      return (Throwable) constructor.newInstance(exceptionMessage);
+    } catch (NoSuchMethodException
+        | InstantiationException
+        | IllegalAccessException
+        | InvocationTargetException exception) {
+      throw new IllegalStateException(exception);
+    }
   }
 
-  private static void assertException(
-      EventData event, Class<?> exceptionClass, String exceptionMessage) {
-    assertThat(event).hasName(SemanticAttributes.EXCEPTION_EVENT_NAME);
-    assertThat(event)
-        .hasAttributesSatisfying(
-            attributes ->
-                assertThat(attributes)
-                    .as("exception.type")
-                    .containsEntry(
-                        SemanticAttributes.EXCEPTION_TYPE, exceptionClass.getCanonicalName()));
-    assertThat(event)
-        .hasAttributesSatisfying(
-            attributes ->
-                assertThat(attributes)
-                    .as("exception.message")
-                    .containsEntry(SemanticAttributes.EXCEPTION_MESSAGE, exceptionMessage));
-  }
-
-  SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
+  protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     String method = "GET";
     assertServerSpan(span, method, endpoint);
@@ -666,7 +652,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     return span;
   }
 
-  SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
+  protected SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfying(
