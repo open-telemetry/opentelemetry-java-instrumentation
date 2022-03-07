@@ -56,14 +56,22 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Check markdown links
-        run: |
-          npm install -g markdown-link-check
-          find . -type f \
-                 -name '*.md' \
-                 -not -path './.github/*' \
-                 -not -path './node_modules/*' \
-                 -print0 \
-            | xargs -0 -n1 markdown-link-check --config .github/scripts/markdown_link_check_config.json
+        # using retry because of sporadic external site failures
+        uses: nick-invision/retry@v2.6.0
+        with:
+          # timing out has not been a problem
+          timeout_minutes: 15
+          # give external site some time to hopefully recover
+          retry_wait_seconds: 120
+          max_attempts: 5
+          command: |
+            npm install -g markdown-link-check
+            find . -type f \
+                   -name '*.md' \
+                   -not -path './.github/*' \
+                   -not -path './node_modules/*' \
+                   -print0 \
+              | xargs -0 -n1 markdown-link-check --config .github/scripts/markdown_link_check_config.json
 
   markdown-misspell-check:
     runs-on: ubuntu-latest
