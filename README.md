@@ -116,14 +116,13 @@ For most users, the out-of-the-box instrumentation is completely sufficient and 
 be done.  Sometimes, however, users wish to add attributes to the otherwise automatic spans,
 or they might want to manually create spans for their own custom code.
 
-[See here for detailed instructions](docs/manual-instrumentation.md).
-
+For detailed instructions, see [Manual instrumentation][manual].
 
 ## Logger MDC (Mapped Diagnostic Context) auto-instrumentation
 
-It is possible to inject trace information like trace id and span id into your custom application logs.
-
-See [Logger MDC auto-instrumentation](docs/logger-mdc-instrumentation.md)
+It is possible to inject trace information like trace IDs and span IDs into your
+custom application logs. For details, see [Logger MDC
+auto-instrumentation](docs/logger-mdc-instrumentation.md).
 
 ## Troubleshooting
 
@@ -163,3 +162,5 @@ Thanks to all the people who already contributed!
 <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
 </a>
+
+[manual]: https://opentelemetry.io/docs/instrumentation/java/manual/
