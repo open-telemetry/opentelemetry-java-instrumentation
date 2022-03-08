@@ -21,7 +21,6 @@ import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
@@ -52,14 +51,12 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   private final TimeUnit baseTimeUnit;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
-  private final AsyncInstrumentRegistry asyncInstrumentRegistry;
 
   OpenTelemetryMeterRegistry(
       Clock clock, TimeUnit baseTimeUnit, io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.baseTimeUnit = baseTimeUnit;
     this.otelMeter = otelMeter;
-    this.asyncInstrumentRegistry = AsyncInstrumentRegistry.getOrCreate(otelMeter);
 
     this.config()
         .namingConvention(NamingConvention.identity)
@@ -68,8 +65,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected <T> Gauge newGauge(Meter.Id id, @Nullable T obj, ToDoubleFunction<T> valueFunction) {
-    return new OpenTelemetryGauge<>(
-        id, config().namingConvention(), obj, valueFunction, asyncInstrumentRegistry);
+    return new OpenTelemetryGauge<>(id, config().namingConvention(), obj, valueFunction, otelMeter);
   }
 
   @Override
@@ -87,7 +83,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             clock,
             getBaseTimeUnit(),
             distributionStatisticConfig,
-            asyncInstrumentRegistry);
+            otelMeter);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
@@ -107,8 +103,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             distributionStatisticConfig,
             pauseDetector,
             getBaseTimeUnit(),
-            otelMeter,
-            asyncInstrumentRegistry);
+            otelMeter);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
@@ -120,13 +115,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig, double scale) {
     OpenTelemetryDistributionSummary distributionSummary =
         new OpenTelemetryDistributionSummary(
-            id,
-            config().namingConvention(),
-            clock,
-            distributionStatisticConfig,
-            scale,
-            otelMeter,
-            asyncInstrumentRegistry);
+            id, config().namingConvention(), clock, distributionStatisticConfig, scale, otelMeter);
     if (distributionSummary.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(distributionSummary, this);
     }
@@ -135,8 +124,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> measurements) {
-    return new OpenTelemetryMeter(
-        id, config().namingConvention(), measurements, asyncInstrumentRegistry);
+    return new OpenTelemetryMeter(id, config().namingConvention(), measurements, otelMeter);
   }
 
   @Override
@@ -154,14 +142,14 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
         totalTimeFunction,
         totalTimeFunctionUnit,
         getBaseTimeUnit(),
-        asyncInstrumentRegistry);
+        otelMeter);
   }
 
   @Override
   protected <T> FunctionCounter newFunctionCounter(
       Meter.Id id, T obj, ToDoubleFunction<T> countFunction) {
     return new OpenTelemetryFunctionCounter<>(
-        id, config().namingConvention(), obj, countFunction, asyncInstrumentRegistry);
+        id, config().namingConvention(), obj, countFunction, otelMeter);
   }
 
   @Override

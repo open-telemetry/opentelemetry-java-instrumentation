@@ -15,8 +15,6 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,36 +24,46 @@ import javax.annotation.Nullable;
 final class OpenTelemetryMeter implements Meter, RemovableMeter {
 
   private final Id id;
-  private final List<AsyncMeasurementHandle> measurementHandles;
+  private final List<AutoCloseable> observableInstruments;
 
   OpenTelemetryMeter(
       Id id,
       NamingConvention namingConvention,
       Iterable<Measurement> measurements,
-      AsyncInstrumentRegistry asyncInstrumentRegistry) {
+      io.opentelemetry.api.metrics.Meter otelMeter) {
     this.id = id;
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
-    List<AsyncMeasurementHandle> measurementHandles = new ArrayList<>();
+    List<AutoCloseable> observableInstruments = new ArrayList<>();
     for (Measurement measurement : measurements) {
       String name = statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
       String description = description(name, id);
       String baseUnit = baseUnit(id);
+      DoubleMeasurementRecorder<Measurement> callback =
+          new DoubleMeasurementRecorder<>(measurement, Measurement::getValue, attributes);
 
       switch (measurement.getStatistic()) {
         case TOTAL:
           // fall through
         case TOTAL_TIME:
         case COUNT:
-          measurementHandles.add(
-              asyncInstrumentRegistry.buildDoubleCounter(
-                  name, description, baseUnit, attributes, measurement, Measurement::getValue));
+          observableInstruments.add(
+              otelMeter
+                  .counterBuilder(name)
+                  .ofDoubles()
+                  .setDescription(description)
+                  .setUnit(baseUnit)
+                  .buildWithCallback(callback));
           break;
 
         case ACTIVE_TASKS:
-          measurementHandles.add(
-              asyncInstrumentRegistry.buildUpDownDoubleCounter(
-                  name, description, baseUnit, attributes, measurement, Measurement::getValue));
+          observableInstruments.add(
+              otelMeter
+                  .upDownCounterBuilder(name)
+                  .ofDoubles()
+                  .setDescription(description)
+                  .setUnit(baseUnit)
+                  .buildWithCallback(callback));
           break;
 
         case DURATION:
@@ -63,13 +71,16 @@ final class OpenTelemetryMeter implements Meter, RemovableMeter {
         case MAX:
         case VALUE:
         case UNKNOWN:
-          measurementHandles.add(
-              asyncInstrumentRegistry.buildGauge(
-                  name, description, baseUnit, attributes, measurement, Measurement::getValue));
+          observableInstruments.add(
+              otelMeter
+                  .gaugeBuilder(name)
+                  .setDescription(description)
+                  .setUnit(baseUnit)
+                  .buildWithCallback(callback));
           break;
       }
     }
-    this.measurementHandles = measurementHandles;
+    this.observableInstruments = observableInstruments;
   }
 
   @Override
@@ -85,7 +96,13 @@ final class OpenTelemetryMeter implements Meter, RemovableMeter {
 
   @Override
   public void onRemove() {
-    measurementHandles.forEach(AsyncMeasurementHandle::remove);
+    try {
+      for (AutoCloseable observableInstrument : observableInstruments) {
+        observableInstrument.close();
+      }
+    } catch (Exception e) {
+      throw new IllegalStateException("SDK instruments should never throw on close()", e);
+    }
   }
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")

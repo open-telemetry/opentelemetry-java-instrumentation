@@ -14,8 +14,8 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import java.util.Collections;
 import java.util.function.ToDoubleFunction;
 import javax.annotation.Nullable;
@@ -24,26 +24,26 @@ import javax.annotation.Nullable;
 final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   private final Id id;
-  private final AsyncMeasurementHandle gaugeMeasurementHandle;
+  private final ObservableDoubleGauge observableGauge;
 
   OpenTelemetryGauge(
       Id id,
       NamingConvention namingConvention,
       @Nullable T obj,
       ToDoubleFunction<T> objMetric,
-      AsyncInstrumentRegistry asyncInstrumentRegistry) {
+      Meter otelMeter) {
 
     this.id = id;
 
-    String conventionName = name(id, namingConvention);
-    gaugeMeasurementHandle =
-        asyncInstrumentRegistry.buildGauge(
-            conventionName,
-            description(conventionName, id),
-            baseUnit(id),
-            tagsAsAttributes(id, namingConvention),
-            obj,
-            objMetric);
+    String name = name(id, namingConvention);
+    observableGauge =
+        otelMeter
+            .gaugeBuilder(name)
+            .setDescription(description(name, id))
+            .setUnit(baseUnit(id))
+            .buildWithCallback(
+                new DoubleMeasurementRecorder<>(
+                    obj, objMetric, tagsAsAttributes(id, namingConvention)));
   }
 
   @Override
@@ -65,7 +65,7 @@ final class OpenTelemetryGauge<T> implements Gauge, RemovableMeter {
 
   @Override
   public void onRemove() {
-    gaugeMeasurementHandle.remove();
+    observableGauge.close();
   }
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")

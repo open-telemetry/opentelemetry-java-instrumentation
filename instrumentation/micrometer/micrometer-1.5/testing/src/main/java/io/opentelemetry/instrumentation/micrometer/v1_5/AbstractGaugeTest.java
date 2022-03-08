@@ -80,7 +80,7 @@ public abstract class AbstractGaugeTest {
         .register(Metrics.globalRegistry);
     Gauge.builder("testGaugeWithTags", () -> 42)
         .description("ignored")
-        .baseUnit("ignored")
+        .baseUnit("items")
         .tags("tag", "2")
         .register(Metrics.globalRegistry);
 
