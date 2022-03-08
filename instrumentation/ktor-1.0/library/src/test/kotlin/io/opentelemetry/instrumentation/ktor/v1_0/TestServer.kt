@@ -19,8 +19,8 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.*
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.*
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutionException
 
@@ -90,7 +90,7 @@ class TestServer {
     }
 
     // Copy in HttpServerTest.controller but make it a suspending function
-    private suspend fun controller(endpoint: HttpServerTest.ServerEndpoint, wrapped: suspend () -> Unit) {
+    private suspend fun controller(endpoint: ServerEndpoint, wrapped: suspend () -> Unit) {
       assert(Span.current().spanContext.isValid, { "Controller should have a parent span. " })
       if (endpoint == NOT_FOUND) {
         wrapped()

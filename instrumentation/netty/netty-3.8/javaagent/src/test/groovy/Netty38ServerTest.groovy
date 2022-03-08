@@ -6,6 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.jboss.netty.bootstrap.ServerBootstrap
 import org.jboss.netty.buffer.ChannelBuffer
@@ -33,15 +34,15 @@ import org.jboss.netty.logging.InternalLoggerFactory
 import org.jboss.netty.logging.Slf4JLoggerFactory
 import org.jboss.netty.util.CharsetUtil
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.forPath
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.forPath
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LOCATION
@@ -66,7 +67,7 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
         if (msg.getMessage() instanceof HttpRequest) {
           def request = msg.getMessage() as HttpRequest
           def uri = URI.create(request.getUri())
-          HttpServerTest.ServerEndpoint endpoint = forPath(uri.path)
+          ServerEndpoint endpoint = forPath(uri.path)
           ctx.sendDownstream controller(endpoint) {
             HttpResponse response
             ChannelBuffer responseContent = null

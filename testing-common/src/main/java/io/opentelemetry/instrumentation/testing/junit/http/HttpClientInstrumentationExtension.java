@@ -54,7 +54,7 @@ public final class HttpClientInstrumentationExtension extends InstrumentationExt
 
     if (!(testInstance instanceof AbstractHttpClientTest)) {
       throw new AssertionError(
-          "HttpClientLibraryInstrumentationExtension can only be applied to a subclass of "
+          "HttpClientInstrumentationExtension can only be applied to a subclass of "
               + "AbstractHttpClientTest");
     }
 

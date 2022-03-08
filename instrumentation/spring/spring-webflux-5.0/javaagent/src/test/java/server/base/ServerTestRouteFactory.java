@@ -9,7 +9,7 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;

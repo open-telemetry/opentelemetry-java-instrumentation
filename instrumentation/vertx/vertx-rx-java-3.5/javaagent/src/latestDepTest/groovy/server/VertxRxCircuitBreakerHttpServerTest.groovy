@@ -5,21 +5,21 @@
 
 package server
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.core.Promise
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker
 import io.vertx.reactivex.core.AbstractVerticle
 import io.vertx.reactivex.ext.web.Router
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
 
@@ -49,7 +49,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           if (it.failed()) {
             throw it.cause()
           }
-          HttpServerTest.ServerEndpoint endpoint = it.result()
+          ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
           }
@@ -62,7 +62,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           if (it.failed()) {
             throw it.cause()
           }
-          HttpServerTest.ServerEndpoint endpoint = it.result()
+          ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             endpoint.collectSpanAttributes { ctx.request().params().get(it) }
             ctx.response().setStatusCode(endpoint.status).end()
@@ -76,7 +76,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           if (it.failed()) {
             throw it.cause()
           }
-          HttpServerTest.ServerEndpoint endpoint = it.result()
+          ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).end(ctx.request().query())
           }
@@ -89,7 +89,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           if (it.failed()) {
             throw it.cause()
           }
-          HttpServerTest.ServerEndpoint endpoint = it.result()
+          ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).putHeader("location", endpoint.body).end()
           }
@@ -102,7 +102,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           if (it.failed()) {
             throw it.cause()
           }
-          HttpServerTest.ServerEndpoint endpoint = it.result()
+          ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
           }
@@ -129,7 +129,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           if (it.failed()) {
             throw it.cause()
           }
-          HttpServerTest.ServerEndpoint endpoint = it.result()
+          ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).end(ctx.request().getParam("id"))
           }
@@ -142,7 +142,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           if (it.failed()) {
             throw it.cause()
           }
-          HttpServerTest.ServerEndpoint endpoint = it.result()
+          ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status)
               .putHeader("X-Test-Response", ctx.request().getHeader("X-Test-Request"))
@@ -159,7 +159,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
   }
 
   @Override
-  boolean hasExceptionOnServerSpan(HttpServerTest.ServerEndpoint endpoint) {
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     return endpoint != EXCEPTION && super.hasExceptionOnServerSpan(endpoint)
   }
 }

@@ -10,7 +10,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
-import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint._
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 
 import scala.concurrent.Await
 

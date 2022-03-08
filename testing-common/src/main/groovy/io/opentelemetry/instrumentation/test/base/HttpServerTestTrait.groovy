@@ -9,6 +9,7 @@ import ch.qos.logback.classic.Level
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.testing.internal.armeria.client.ClientFactory
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.client.logging.LoggingClient
@@ -26,8 +27,8 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
   static {
     LoggerUtils.setLevel(SERVER_LOGGER, Level.DEBUG)
   }
-  static final String TEST_CLIENT_IP = "1.1.1.1"
-  static final String TEST_USER_AGENT = "test-user-agent"
+  static final String TEST_CLIENT_IP = AbstractHttpServerTest.TEST_CLIENT_IP
+  static final String TEST_USER_AGENT = AbstractHttpServerTest.TEST_USER_AGENT
 
   // not using SERVER as type because it triggers a bug in groovy and java joint compilation
   static Object server

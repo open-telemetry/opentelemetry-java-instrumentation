@@ -8,7 +8,7 @@ package test
 import grails.artefact.Controller
 import grails.web.Action
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 
 class ErrorController implements Controller {
 
