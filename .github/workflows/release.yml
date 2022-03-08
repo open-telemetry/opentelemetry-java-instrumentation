@@ -94,7 +94,7 @@ jobs:
 
           EOF
 
-          sed -n '4,/^## Version /p' CHANGELOG.md \
+          sed -n '/^## Version ${{ github.event.outputs.release-version }}/,/^## Version /p' CHANGELOG.md \
             | head -n -1 \
             | perl -0pe 's/^\n+//g' \
             | perl -0pe 's/\n+$/\n/g' \
@@ -118,7 +118,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ steps.set-versions.outputs.release-version }}
-          commitish: ${{ github.ref_name }}
           release_name: Version ${{ steps.set-versions.outputs.release-version }}
           draft: true
           prerelease: false
