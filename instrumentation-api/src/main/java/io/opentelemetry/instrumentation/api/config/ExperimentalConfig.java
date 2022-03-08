@@ -32,8 +32,13 @@ public final class ExperimentalConfig {
     return config.getBoolean("otel.instrumentation.common.experimental.suppress-view-spans", false);
   }
 
-  public boolean suppressMessagingReceiveSpans() {
+  public boolean messagingReceiveInstrumentationEnabled() {
+    // TODO: remove that `suppress...` flag after 1.13 release
+    boolean receiveSpansSuppressed =
+        config.getBoolean(
+            "otel.instrumentation.common.experimental.suppress-messaging-receive-spans", true);
     return config.getBoolean(
-        "otel.instrumentation.common.experimental.suppress-messaging-receive-spans", false);
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+        !receiveSpansSuppressed);
   }
 }

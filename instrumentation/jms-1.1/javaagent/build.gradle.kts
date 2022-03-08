@@ -30,7 +30,6 @@ tasks {
       isFailOnNoMatchingTests = false
     }
     include("**/SpringListenerJms1SuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
   }
 
   val jms2Test by existing(Test::class) {
@@ -39,13 +38,13 @@ tasks {
       // running a single test in the default test set will fail
       isFailOnNoMatchingTests = false
     }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   val jms2TestReceiveSpansDisabled by existing(Test::class) {
     filter {
       isFailOnNoMatchingTests = false
     }
-    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
   }
 
   test {
@@ -57,6 +56,7 @@ tasks {
       excludeTestsMatching("SpringListenerJms1SuppressReceiveSpansTest")
       isFailOnNoMatchingTests = false
     }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 }
 
