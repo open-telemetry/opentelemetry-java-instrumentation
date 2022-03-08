@@ -33,8 +33,6 @@ and pushes a git tag with the version number.
 Once the GitHub workflow completes, go to Github
 [release page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases),
 find the draft release created by the release workflow, and
-* Copy the change log into it
-* Use the script at `.github/scripts/generate-release-contributors.sh` to generate the list of release contributors
 * Select the checkbox for "Create a discussion for this release"
 * Press the "Publish release" button
 
@@ -70,6 +68,12 @@ e.g. `v1.9.x`, and click the "Run workflow" button below that.
 
 This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
 and pushes a git tag with the version number.
+
+Once the GitHub workflow completes, go to Github
+[release page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases),
+find the draft release created by the release workflow, and
+* Select the checkbox for "Create a discussion for this release"
+* Press the "Publish release" button
 
 After making the release:
 
