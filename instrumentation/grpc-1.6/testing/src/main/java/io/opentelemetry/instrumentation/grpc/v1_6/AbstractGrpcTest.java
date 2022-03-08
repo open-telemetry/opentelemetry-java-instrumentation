@@ -761,10 +761,10 @@ public abstract class AbstractGrpcTest {
                     .intercept(
                         new ServerInterceptor() {
                           @Override
-                          public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-                              ServerCall<ReqT, RespT> call,
+                          public <REQ, RESP> ServerCall.Listener<REQ> interceptCall(
+                              ServerCall<REQ, RESP> call,
                               Metadata headers,
-                              ServerCallHandler<ReqT, RespT> next) {
+                              ServerCallHandler<REQ, RESP> next) {
                             if (!Span.fromContext(io.opentelemetry.context.Context.current())
                                 .getSpanContext()
                                 .isValid()) {
@@ -783,8 +783,8 @@ public abstract class AbstractGrpcTest {
                 .intercept(
                     new ClientInterceptor() {
                       @Override
-                      public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-                          MethodDescriptor<ReqT, RespT> method,
+                      public <REQ, RESP> ClientCall<REQ, RESP> interceptCall(
+                          MethodDescriptor<REQ, RESP> method,
                           CallOptions callOptions,
                           Channel next) {
                         if (!Span.fromContext(io.opentelemetry.context.Context.current())
