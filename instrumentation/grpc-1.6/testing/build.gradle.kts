@@ -17,9 +17,8 @@ dependencies {
 
   implementation("com.google.guava:guava")
 
-  implementation("org.codehaus.groovy:groovy-all")
+  api("org.junit-pioneer:junit-pioneer")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
 }
 
 tasks {
