@@ -152,10 +152,15 @@ interface HelperReferenceWrapper {
   class Factory {
     private final TypePool classpathPool;
     private final Map<String, ClassRef> helperReferences;
+    private final HelperClassPredicate helperClassPredicate;
 
-    public Factory(TypePool classpathPool, Map<String, ClassRef> helperReferences) {
+    public Factory(
+        TypePool classpathPool,
+        Map<String, ClassRef> helperReferences,
+        HelperClassPredicate helperClassPredicate) {
       this.classpathPool = classpathPool;
       this.helperReferences = helperReferences;
+      this.helperClassPredicate = helperClassPredicate;
     }
 
     public HelperReferenceWrapper create(ClassRef reference) {
@@ -163,9 +168,11 @@ interface HelperReferenceWrapper {
     }
 
     private HelperReferenceWrapper create(String className) {
-      Resolution resolution = classpathPool.describe(className);
-      if (resolution.isResolved()) {
-        return new ClasspathType(resolution.resolve());
+      if (!helperClassPredicate.isHelperClass(className)) {
+        Resolution resolution = classpathPool.describe(className);
+        if (resolution.isResolved()) {
+          return new ClasspathType(resolution.resolve());
+        }
       }
       // checking helper references is needed when one helper class A extends another helper class B
       // and the subclass A also implements a library interface C

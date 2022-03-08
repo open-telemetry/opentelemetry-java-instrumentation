@@ -30,17 +30,17 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.LoggerFactory;
 
-/*
- * Some class loaders do not delegate to their parent, so classes in those class loaders
- * will not be able to see classes in the bootstrap class loader.
+/**
+ * Some class loaders do not delegate to their parent, so classes in those class loaders will not be
+ * able to see classes in the bootstrap class loader.
  *
- * In particular, instrumentation on classes in those class loaders will not be able to see
- * the shaded OpenTelemetry API classes in the bootstrap class loader.
+ * <p>In particular, instrumentation on classes in those class loaders will not be able to see the
+ * shaded OpenTelemetry API classes in the bootstrap class loader.
  *
- * This instrumentation forces all class loaders to delegate to the bootstrap class loader
- * for the classes that we have put in the bootstrap class loader.
+ * <p>This instrumentation forces all class loaders to delegate to the bootstrap class loader for
+ * the classes that we have put in the bootstrap class loader.
  */
-public class ClassLoaderInstrumentation implements TypeInstrumentation {
+public class BootDelegationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -67,7 +67,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(1, boolean.class))))
             .and(isPublic().or(isProtected()))
             .and(not(isStatic())),
-        ClassLoaderInstrumentation.class.getName() + "$LoadClassAdvice");
+        BootDelegationInstrumentation.class.getName() + "$LoadClassAdvice");
   }
 
   public static class Holder {
@@ -100,7 +100,8 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
   public static class LoadClassAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(@Advice.Argument(0) String name) {
+    public static Class<?> onEnter(
+        @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
       // need to use call depth here to prevent re-entry from call to Class.forName() below
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come

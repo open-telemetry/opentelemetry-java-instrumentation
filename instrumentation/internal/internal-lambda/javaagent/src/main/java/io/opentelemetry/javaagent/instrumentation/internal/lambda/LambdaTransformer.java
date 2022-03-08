@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.lambda;
 
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
-import io.opentelemetry.javaagent.bootstrap.InjectedHelperClassDetector;
+import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import java.lang.instrument.ClassFileTransformer;
 
 /** Helper class for transforming lambda class bytes. */
@@ -31,7 +31,7 @@ public final class LambdaTransformer {
   @SuppressWarnings("unused")
   public static byte[] transform(byte[] classBytes, String slashClassName, Class<?> targetClass) {
     // Skip transforming lambdas of injected helper classes.
-    if (InjectedHelperClassDetector.isHelperClass(targetClass)) {
+    if (InjectedClassHelper.isHelperClass(targetClass)) {
       return classBytes;
     }
 
