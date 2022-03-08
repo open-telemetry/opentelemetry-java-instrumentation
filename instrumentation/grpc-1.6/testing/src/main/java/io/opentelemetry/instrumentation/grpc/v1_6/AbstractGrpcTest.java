@@ -739,13 +739,13 @@ public abstract class AbstractGrpcTest {
           public void sayHello(
               Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
             if (!key.get().equals("meow")) {
-              responseObserver.onError(new AssertionError((Object) "context not preserved"));
+              responseObserver.onError(new AssertionError("context not preserved"));
               return;
             }
             if (!Span.fromContext(io.opentelemetry.context.Context.current())
                 .getSpanContext()
                 .isValid()) {
-              responseObserver.onError(new AssertionError((Object) "span not attached"));
+              responseObserver.onError(new AssertionError("span not attached"));
               return;
             }
             Helloworld.Response reply =
@@ -768,8 +768,7 @@ public abstract class AbstractGrpcTest {
                             if (!Span.fromContext(io.opentelemetry.context.Context.current())
                                 .getSpanContext()
                                 .isValid()) {
-                              throw new AssertionError(
-                                  (Object) "span not attached in server interceptor");
+                              throw new AssertionError("span not attached in server interceptor");
                             }
                             Context ctx = Context.current().withValue(key, "meow");
                             return Contexts.interceptCall(ctx, call, headers, next);
@@ -790,8 +789,7 @@ public abstract class AbstractGrpcTest {
                         if (!Span.fromContext(io.opentelemetry.context.Context.current())
                             .getSpanContext()
                             .isValid()) {
-                          throw new AssertionError(
-                              (Object) "span not attached in client interceptor");
+                          throw new AssertionError("span not attached in client interceptor");
                         }
                         Context ctx = Context.current().withValue(key, "meow");
                         Context oldCtx = ctx.attach();
@@ -820,13 +818,13 @@ public abstract class AbstractGrpcTest {
                       @Override
                       public void onNext(Helloworld.Response r) {
                         if (!key.get().equals("meow")) {
-                          error.set(new AssertionError((Object) "context not preserved"));
+                          error.set(new AssertionError("context not preserved"));
                           return;
                         }
                         if (!Span.fromContext(io.opentelemetry.context.Context.current())
                             .getSpanContext()
                             .isValid()) {
-                          error.set(new AssertionError((Object) "span not attached"));
+                          error.set(new AssertionError("span not attached"));
                           return;
                         }
                         response.set(r);
@@ -1124,7 +1122,6 @@ public abstract class AbstractGrpcTest {
               @Override
               public void onCompleted() {
                 latch.countDown();
-                ;
               }
             });
 
