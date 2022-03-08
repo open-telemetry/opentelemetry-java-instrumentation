@@ -45,4 +45,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: test -PtestLatestDeps=true ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          cache-read-only: ${{ inputs.cache-read-only }}
+          # testLatestDeps dependencies bundle is over 2gb, which causes restoring it to fail with:
+          #     RangeError [ERR_OUT_OF_RANGE]: The value of "length" is out of range.
+          #     It must be >= 0 && <= 2147483647. Received 2299528741
+          cache-read-only: true
