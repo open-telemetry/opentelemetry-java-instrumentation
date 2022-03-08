@@ -34,10 +34,11 @@ final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, Removabl
       AsyncInstrumentRegistry asyncInstrumentRegistry) {
     this.id = id;
 
+    String conventionName = name(id, namingConvention);
     countMeasurementHandle =
         asyncInstrumentRegistry.buildDoubleCounter(
-            name(id, namingConvention),
-            description(id),
+            conventionName,
+            description(conventionName, id),
             baseUnit(id),
             tagsAsAttributes(id, namingConvention),
             obj,

@@ -43,7 +43,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
     this.activeTasksHandle =
         asyncInstrumentRegistry.buildUpDownLongCounter(
             conventionName + ".active",
-            description(id),
+            description(conventionName, id),
             "tasks",
             attributes,
             this,
@@ -51,7 +51,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
     this.durationHandle =
         asyncInstrumentRegistry.buildUpDownDoubleCounter(
             conventionName + ".duration",
-            description(id),
+            description(conventionName, id),
             getUnitString(baseTimeUnit),
             attributes,
             this,
