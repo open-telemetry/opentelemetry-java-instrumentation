@@ -39,12 +39,6 @@ public abstract class CapturedHttpHeaders {
   private static final String CLIENT_RESPONSE_PROPERTY =
       "otel.instrumentation.http.capture-headers.client.response";
 
-  // TODO: remove the experimental properties after 1.8.0 release
-  private static final String EXPERIMENTAL_CLIENT_REQUEST_PROPERTY =
-      "otel.instrumentation.common.experimental.capture-http-headers.client.request";
-  private static final String EXPERIMENTAL_CLIENT_RESPONSE_PROPERTY =
-      "otel.instrumentation.common.experimental.capture-http-headers.client.response";
-
   /**
    * Returns a configuration that captures HTTP client request and response headers as configured in
    * the received {@code config}.
@@ -52,24 +46,14 @@ public abstract class CapturedHttpHeaders {
   public static CapturedHttpHeaders client(Config config) {
     // fall back to the experimental properties if the stable one isn't supplied
     return CapturedHttpHeaders.create(
-        config.getList(
-            CLIENT_REQUEST_PROPERTY,
-            config.getList(EXPERIMENTAL_CLIENT_REQUEST_PROPERTY, emptyList())),
-        config.getList(
-            CLIENT_RESPONSE_PROPERTY,
-            config.getList(EXPERIMENTAL_CLIENT_RESPONSE_PROPERTY, emptyList())));
+        config.getList(CLIENT_REQUEST_PROPERTY, emptyList()),
+        config.getList(CLIENT_RESPONSE_PROPERTY, emptyList()));
   }
 
   private static final String SERVER_REQUEST_PROPERTY =
       "otel.instrumentation.http.capture-headers.server.request";
   private static final String SERVER_RESPONSE_PROPERTY =
       "otel.instrumentation.http.capture-headers.server.response";
-
-  // TODO: remove the experimental properties after 1.8.0 release
-  private static final String EXPERIMENTAL_SERVER_REQUEST_PROPERTY =
-      "otel.instrumentation.common.experimental.capture-http-headers.server.request";
-  private static final String EXPERIMENTAL_SERVER_RESPONSE_PROPERTY =
-      "otel.instrumentation.common.experimental.capture-http-headers.server.response";
 
   /**
    * Returns a configuration that captures HTTP server request and response headers as configured in
@@ -78,12 +62,8 @@ public abstract class CapturedHttpHeaders {
   public static CapturedHttpHeaders server(Config config) {
     // fall back to the experimental properties if the stable one isn't supplied
     return CapturedHttpHeaders.create(
-        config.getList(
-            SERVER_REQUEST_PROPERTY,
-            config.getList(EXPERIMENTAL_SERVER_REQUEST_PROPERTY, emptyList())),
-        config.getList(
-            SERVER_RESPONSE_PROPERTY,
-            config.getList(EXPERIMENTAL_SERVER_RESPONSE_PROPERTY, emptyList())));
+        config.getList(SERVER_REQUEST_PROPERTY, emptyList()),
+        config.getList(SERVER_RESPONSE_PROPERTY, emptyList()));
   }
 
   /**
