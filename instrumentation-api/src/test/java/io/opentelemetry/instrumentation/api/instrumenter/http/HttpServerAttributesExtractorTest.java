@@ -184,8 +184,9 @@ class HttpServerAttributesExtractorTest {
     request.put("header.x-forwarded-for", "1.1.1.1");
 
     HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(
-            new TestHttpServerAttributesExtractor(), CapturedHttpHeaders.empty());
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesExtractor())
+            .captureHttpHeaders(CapturedHttpHeaders.empty())
+            .build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -203,8 +204,9 @@ class HttpServerAttributesExtractorTest {
     request.put("header.x-forwarded-proto", "https");
 
     HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(
-            new TestHttpServerAttributesExtractor(), CapturedHttpHeaders.empty());
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesExtractor())
+            .captureHttpHeaders(CapturedHttpHeaders.empty())
+            .build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);

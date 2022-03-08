@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -27,23 +26,33 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   /** Creates the HTTP client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return create(getter, CapturedHttpHeaders.client(Config.get()));
+    return builder(getter).build();
   }
 
-  // TODO: there should be a builder for all optional attributes
   /**
    * Creates the HTTP client attributes extractor.
    *
    * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
    *     headers should be captured as span attributes.
+   * @deprecated Use {@link #builder(HttpClientAttributesGetter)} instead.
    */
+  @Deprecated
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
       CapturedHttpHeaders capturedHttpHeaders) {
-    return new HttpClientAttributesExtractor<>(getter, capturedHttpHeaders);
+    return builder(getter).captureHttpHeaders(capturedHttpHeaders).build();
   }
 
-  private HttpClientAttributesExtractor(
+  /**
+   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
+   */
+  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
+    return new HttpClientAttributesExtractorBuilder<>(getter);
+  }
+
+  HttpClientAttributesExtractor(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
       CapturedHttpHeaders capturedHttpHeaders) {
     super(getter, capturedHttpHeaders);

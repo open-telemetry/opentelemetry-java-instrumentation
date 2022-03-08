@@ -70,7 +70,9 @@ public final class OkHttpTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
+                    .captureHttpHeaders(capturedHttpHeaders)
+                    .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())

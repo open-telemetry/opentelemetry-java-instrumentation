@@ -75,7 +75,9 @@ public final class ApacheHttpClientTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
+                    .captureHttpHeaders(capturedHttpHeaders)
+                    .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             // We manually inject because we need to inject internal requests for redirects.

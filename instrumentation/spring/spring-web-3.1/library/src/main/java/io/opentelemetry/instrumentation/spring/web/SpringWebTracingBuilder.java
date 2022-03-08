@@ -70,7 +70,9 @@ public final class SpringWebTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributeGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(httpAttributeGetter, capturedHttpHeaders))
+                HttpClientAttributesExtractor.builder(httpAttributeGetter)
+                    .captureHttpHeaders(capturedHttpHeaders)
+                    .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())

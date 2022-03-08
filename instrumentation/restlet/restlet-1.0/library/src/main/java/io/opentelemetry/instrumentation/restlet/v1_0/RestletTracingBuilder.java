@@ -70,7 +70,9 @@ public final class RestletTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+                HttpServerAttributesExtractor.builder(httpAttributesGetter)
+                    .captureHttpHeaders(capturedHttpHeaders)
+                    .build())
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpServerMetrics.get())

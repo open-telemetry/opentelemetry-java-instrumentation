@@ -76,7 +76,9 @@ public final class SpringWebfluxTracingBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
+                    .captureHttpHeaders(capturedHttpHeaders)
+                    .build())
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
