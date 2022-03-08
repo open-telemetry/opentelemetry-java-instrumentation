@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public final class HttpServerTestOptions {
 
@@ -35,12 +36,11 @@ public final class HttpServerTestOptions {
   String contextPath = "";
   Class<? extends Throwable> expectedExceptionClass = Exception.class;
 
-  Function<ServerEndpoint, Boolean> hasHandlerSpan = unused -> false;
-  Function<ServerEndpoint, Boolean> hasResponseSpan = unused -> false;
-  Function<ServerEndpoint, Boolean> hasErrorPageSpans = unused -> false;
+  Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
+  Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
+  Predicate<ServerEndpoint> hasErrorPageSpans = unused -> false;
 
-  Function<ServerEndpoint, Boolean> hasExceptionOnServerSpan =
-      endpoint -> !hasHandlerSpan.apply(endpoint);
+  Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
 
   boolean testRedirect = true;
   boolean testError = true;
@@ -87,25 +87,23 @@ public final class HttpServerTestOptions {
     return this;
   }
 
-  public HttpServerTestOptions setHasHandlerSpan(Function<ServerEndpoint, Boolean> hasHandlerSpan) {
+  public HttpServerTestOptions setHasHandlerSpan(Predicate<ServerEndpoint> hasHandlerSpan) {
     this.hasHandlerSpan = hasHandlerSpan;
     return this;
   }
 
-  public HttpServerTestOptions setHasResponseSpan(
-      Function<ServerEndpoint, Boolean> hasResponseSpan) {
+  public HttpServerTestOptions setHasResponseSpan(Predicate<ServerEndpoint> hasResponseSpan) {
     this.hasResponseSpan = hasResponseSpan;
     return this;
   }
 
-  public HttpServerTestOptions setHasErrorPageSpans(
-      Function<ServerEndpoint, Boolean> hasErrorPageSpans) {
+  public HttpServerTestOptions setHasErrorPageSpans(Predicate<ServerEndpoint> hasErrorPageSpans) {
     this.hasErrorPageSpans = hasErrorPageSpans;
     return this;
   }
 
   public HttpServerTestOptions setHasExceptionOnServerSpan(
-      Function<ServerEndpoint, Boolean> hasExceptionOnServerSpan) {
+      Predicate<ServerEndpoint> hasExceptionOnServerSpan) {
     this.hasExceptionOnServerSpan = hasExceptionOnServerSpan;
     return this;
   }

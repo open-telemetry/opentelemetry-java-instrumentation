@@ -410,7 +410,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
             spanAssertions.add(
                 span -> assertIndexedServerSpan(span, requestId).hasParent(rootSpan));
 
-            if (options.hasHandlerSpan.apply(endpoint)) {
+            if (options.hasHandlerSpan.test(endpoint)) {
               spanAssertions.add(
                   span -> assertHandlerSpan(span, "GET", endpoint).hasParent(trace.getSpan(1)));
             }
@@ -452,7 +452,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
                   }
                 });
 
-            if (options.hasHandlerSpan.apply(endpoint)) {
+            if (options.hasHandlerSpan.test(endpoint)) {
               spanAssertions.add(
                   span -> {
                     assertHandlerSpan(span, method, endpoint);
@@ -469,7 +469,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
                   });
             }
 
-            if (options.hasResponseSpan.apply(endpoint)) {
+            if (options.hasResponseSpan.test(endpoint)) {
               int parentIndex = spanAssertions.size() - 1;
               spanAssertions.add(
                   span -> {
@@ -478,7 +478,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
                   });
             }
 
-            if (options.hasErrorPageSpans.apply(endpoint)) {
+            if (options.hasErrorPageSpans.test(endpoint)) {
               spanAssertions.addAll(errorPageSpanAssertions(method, endpoint));
             }
 
@@ -527,7 +527,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
       span.hasStatus(StatusData.error());
     }
 
-    if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.apply(endpoint)) {
+    if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
       span.hasException(getExceptionInstance(options.expectedExceptionClass, endpoint.body));
     }
 
