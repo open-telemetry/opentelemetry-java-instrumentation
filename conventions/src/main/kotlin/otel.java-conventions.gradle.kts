@@ -212,11 +212,8 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   return true
 }
 
-class TestcontainersBuildService : BuildService<BuildServiceParameters.None?> {
-  override fun getParameters(): BuildServiceParameters.None? {
-    return null
-  }
-}
+abstract class TestcontainersBuildService : BuildService<BuildServiceParameters.None>
+
 // To limit number of concurrently running resource intensive tests add
 // tasks {
 //   test {
