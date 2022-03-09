@@ -65,14 +65,16 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
           // Firstly check whether DispatcherServlet is present. We need to load an instrumented
           // class from spring-webmvc to trigger injection that makes
           // OpenTelemetryHandlerMappingFilter available.
-          beanFactory
-              .getBeanClassLoader()
-              .loadClass("org.springframework.web.servlet.DispatcherServlet");
-
-          // Now attempt to load our injected instrumentation class.
-          Class<?> clazz =
+          Class<?> dispatcherServletClass =
               beanFactory
                   .getBeanClassLoader()
+                  .loadClass("org.springframework.web.servlet.DispatcherServlet");
+
+          // Now attempt to load our injected instrumentation class from the same class loader as
+          // DispatcherServlet
+          Class<?> clazz =
+              dispatcherServletClass
+                  .getClassLoader()
                   .loadClass("org.springframework.web.servlet.OpenTelemetryHandlerMappingFilter");
           GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
           beanDefinition.setScope(SCOPE_SINGLETON);

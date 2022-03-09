@@ -39,6 +39,7 @@ class HelperInjectionTest extends Specification {
 
     when:
     injector.transform(null, null, emptyLoader.get(), null)
+    HelperInjector.loadHelperClass(emptyLoader.get(), helperClassName)
     emptyLoader.get().loadClass(helperClassName)
     then:
     isClassLoaded(helperClassName, emptyLoader.get())

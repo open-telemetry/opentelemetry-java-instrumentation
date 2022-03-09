@@ -134,7 +134,8 @@ public final class ReferenceMatcher {
     List<Mismatch> mismatches = emptyList();
 
     HelperReferenceWrapper helperWrapper =
-        new HelperReferenceWrapper.Factory(typePool, references).create(helperClass);
+        new HelperReferenceWrapper.Factory(typePool, references, helperClassPredicate)
+            .create(helperClass);
 
     Set<HelperReferenceWrapper.Field> undeclaredFields =
         helperClass.getFields().stream()

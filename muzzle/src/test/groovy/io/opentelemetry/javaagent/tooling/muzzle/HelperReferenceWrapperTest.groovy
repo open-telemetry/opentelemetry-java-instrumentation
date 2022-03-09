@@ -46,7 +46,8 @@ class HelperReferenceWrapperTest extends Specification {
     ]
 
     when:
-    def helperWrapper = new HelperReferenceWrapper.Factory(typePool, references).create(helperClass)
+    def helperClassPredicate = new HelperClassPredicate({ false })
+    def helperWrapper = new HelperReferenceWrapper.Factory(typePool, references, helperClassPredicate).create(helperClass)
 
     then:
     with(helperWrapper) { helper ->

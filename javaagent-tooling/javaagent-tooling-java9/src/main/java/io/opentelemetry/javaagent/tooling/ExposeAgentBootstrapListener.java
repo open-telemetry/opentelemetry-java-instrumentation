@@ -16,7 +16,10 @@ import net.bytebuddy.utility.JavaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Ensures that transformed classes can read agent classes in bootstrap class loader. */
+/**
+ * Ensures that transformed classes can read agent classes in bootstrap class loader and injected
+ * classes in unnamed module of their class loader.
+ */
 public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter {
   private static final Logger logger = LoggerFactory.getLogger(ExposeAgentBootstrapListener.class);
   // unnamed module in bootstrap class loader
@@ -29,7 +32,6 @@ public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter 
     this.instrumentation = instrumentation;
   }
 
-  @SuppressWarnings("ReferenceEquality")
   @Override
   public void onTransformation(
       TypeDescription typeDescription,
@@ -37,14 +39,24 @@ public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter 
       JavaModule javaModule,
       boolean b,
       DynamicType dynamicType) {
-    if (javaModule != JavaModule.UNSUPPORTED
-        && javaModule.isNamed()
-        && !javaModule.canRead(agentBootstrapModule)) {
-      logger.debug("Adding module read from {} to {}", javaModule, agentBootstrapModule);
+    // expose agent classes in unnamed module of bootstrap class loader
+    exposeModule(javaModule, agentBootstrapModule);
+    if (classLoader != null) {
+      // expose classes in unnamed module of current class loader
+      // this is needed so that advice code can access injected helper classes
+      exposeModule(javaModule, JavaModule.of(classLoader.getUnnamedModule()));
+    }
+  }
+
+  private void exposeModule(JavaModule fromModule, JavaModule targetModule) {
+    if (fromModule != JavaModule.UNSUPPORTED
+        && fromModule.isNamed()
+        && !fromModule.canRead(targetModule)) {
+      logger.debug("Adding module read from {} to {}", fromModule, targetModule);
       ClassInjector.UsingInstrumentation.redefineModule(
           instrumentation,
-          javaModule,
-          Collections.singleton(agentBootstrapModule),
+          fromModule,
+          Collections.singleton(targetModule),
           Collections.emptyMap(),
           Collections.emptyMap(),
           Collections.emptySet(),

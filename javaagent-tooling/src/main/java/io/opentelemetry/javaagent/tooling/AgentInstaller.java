@@ -217,7 +217,11 @@ public class AgentInstaller {
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))
-        .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()));
+        .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()))
+        .or(
+            (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
+              return HelperInjector.isInjectedClass(classLoader, typeDescription.getName());
+            });
   }
 
   private static void runAfterAgentListeners(
