@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
  * return {@code null} from the protected attribute methods, but implement as many as possible for
  * best compliance with the OpenTelemetry specification.
  */
+@SuppressWarnings("deprecation") // suppress CapturedHttpHeaders deprecation
 public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, HttpServerAttributesGetter<REQUEST, RESPONSE>> {

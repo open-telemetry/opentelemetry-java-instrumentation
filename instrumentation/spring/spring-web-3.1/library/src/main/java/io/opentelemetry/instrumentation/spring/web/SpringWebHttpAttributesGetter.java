@@ -15,8 +15,9 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
-final class SpringWebHttpAttributesGetter
+enum SpringWebHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, ClientHttpResponse> {
+  INSTANCE;
 
   @Override
   public String method(HttpRequest httpRequest) {

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.restlet.v2_0.spring
 
 import io.opentelemetry.instrumentation.restlet.v2_0.RestletTracing
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import org.restlet.Request
 import org.restlet.Response
 import org.restlet.Restlet
@@ -25,7 +26,8 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
   Restlet wrapRestlet(Restlet restlet, String path) {
 
     RestletTracing tracing = RestletTracing.builder(openTelemetry)
-      .captureHttpHeaders(capturedHttpHeadersForTesting())
+      .setCapturedRequestHeaders([AbstractHttpServerTest.TEST_REQUEST_HEADER])
+      .setCapturedResponseHeaders([AbstractHttpServerTest.TEST_RESPONSE_HEADER])
       .build()
 
     def tracingFilter = tracing.newFilter(path)

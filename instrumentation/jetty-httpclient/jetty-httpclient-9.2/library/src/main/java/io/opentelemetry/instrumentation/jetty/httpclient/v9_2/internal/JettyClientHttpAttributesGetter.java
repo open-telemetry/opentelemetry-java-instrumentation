@@ -20,8 +20,8 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class JettyClientHttpAttributesGetter
-    implements HttpClientAttributesGetter<Request, Response> {
+enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
+  INSTANCE;
 
   private static final Logger logger =
       LoggerFactory.getLogger(JettyClientHttpAttributesGetter.class);

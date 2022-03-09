@@ -15,8 +15,9 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class ArmeriaHttpClientAttributesGetter
+enum ArmeriaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<RequestContext, RequestLog> {
+  INSTANCE;
 
   @Override
   public String method(RequestContext ctx) {

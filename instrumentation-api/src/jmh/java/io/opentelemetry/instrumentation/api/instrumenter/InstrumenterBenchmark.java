@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -43,9 +42,7 @@ public class InstrumenterBenchmark {
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
-              HttpClientAttributesExtractor.builder(ConstantHttpAttributesGetter.INSTANCE)
-                  .captureHttpHeaders(CapturedHttpHeaders.empty())
-                  .build())
+              HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
               NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
           .newInstrumenter();

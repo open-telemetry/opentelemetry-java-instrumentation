@@ -16,8 +16,9 @@ import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-final class SpringWebfluxHttpAttributesGetter
+enum SpringWebfluxHttpAttributesGetter
     implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
+  INSTANCE;
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 

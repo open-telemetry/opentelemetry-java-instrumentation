@@ -6,12 +6,11 @@
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
@@ -28,7 +27,9 @@ public final class ApacheHttpClientTracingBuilder {
 
   private final List<AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>>
       additionalExtractors = new ArrayList<>();
-  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.client(Config.get());
+  private final HttpClientAttributesExtractorBuilder<ApacheHttpClientRequest, HttpResponse>
+      httpAttributesExtractorBuilder =
+          HttpClientAttributesExtractor.builder(ApacheHttpClientHttpAttributesGetter.INSTANCE);
 
   ApacheHttpClientTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -49,12 +50,37 @@ public final class ApacheHttpClientTracingBuilder {
    * Configure the instrumentation to capture chosen HTTP request and response headers as span
    * attributes.
    *
-   * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
-   *     HTTP request and response names.
+   * @param capturedHttpHeaders An instance of {@link
+   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   * @deprecated Use {@link #setCapturedRequestHeaders(List)} and {@link
+   *     #setCapturedResponseHeaders(List)} instead.
    */
+  @Deprecated
   public ApacheHttpClientTracingBuilder captureHttpHeaders(
-      CapturedHttpHeaders capturedHttpHeaders) {
-    this.capturedHttpHeaders = capturedHttpHeaders;
+      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
+          capturedHttpHeaders) {
+    httpAttributesExtractorBuilder.captureHttpHeaders(capturedHttpHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
+  public ApacheHttpClientTracingBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+    httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
+  public ApacheHttpClientTracingBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+    httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -64,7 +90,7 @@ public final class ApacheHttpClientTracingBuilder {
    */
   public ApacheHttpClientTracing build() {
     ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
-        new ApacheHttpClientHttpAttributesGetter();
+        ApacheHttpClientHttpAttributesGetter.INSTANCE;
     ApacheHttpClientNetAttributesGetter netAttributesGetter =
         new ApacheHttpClientNetAttributesGetter();
 
@@ -74,10 +100,7 @@ public final class ApacheHttpClientTracingBuilder {
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter)
-                    .captureHttpHeaders(capturedHttpHeaders)
-                    .build())
+            .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             // We manually inject because we need to inject internal requests for redirects.

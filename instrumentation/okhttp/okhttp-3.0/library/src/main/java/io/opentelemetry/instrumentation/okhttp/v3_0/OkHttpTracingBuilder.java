@@ -8,11 +8,10 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -30,7 +29,9 @@ public final class OkHttpTracingBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<Request, Response>> additionalExtractors =
       new ArrayList<>();
-  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.client(Config.get());
+  private final HttpClientAttributesExtractorBuilder<Request, Response>
+      httpAttributesExtractorBuilder =
+          HttpClientAttributesExtractor.builder(OkHttpAttributesGetter.INSTANCE);
 
   OkHttpTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -50,17 +51,43 @@ public final class OkHttpTracingBuilder {
    * Configure the instrumentation to capture chosen HTTP request and response headers as span
    * attributes.
    *
-   * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
-   *     HTTP request and response names.
+   * @param capturedHttpHeaders An instance of {@link
+   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   * @deprecated Use {@link #setCapturedRequestHeaders(List)} and {@link
+   *     #setCapturedResponseHeaders(List)} instead.
    */
-  public OkHttpTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
-    this.capturedHttpHeaders = capturedHttpHeaders;
+  @Deprecated
+  public OkHttpTracingBuilder captureHttpHeaders(
+      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
+          capturedHttpHeaders) {
+    httpAttributesExtractorBuilder.captureHttpHeaders(capturedHttpHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
+  public OkHttpTracingBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+    httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
+  public OkHttpTracingBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+    httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
   /** Returns a new {@link OkHttpTracing} with the settings of this {@link OkHttpTracingBuilder}. */
   public OkHttpTracing build() {
-    OkHttpAttributesGetter httpAttributesGetter = new OkHttpAttributesGetter();
+    OkHttpAttributesGetter httpAttributesGetter = OkHttpAttributesGetter.INSTANCE;
     OkHttpNetAttributesGetter attributesGetter = new OkHttpNetAttributesGetter();
 
     Instrumenter<Request, Response> instrumenter =
@@ -69,10 +96,7 @@ public final class OkHttpTracingBuilder {
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter)
-                    .captureHttpHeaders(capturedHttpHeaders)
-                    .build())
+            .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addRequestMetrics(HttpClientMetrics.get())

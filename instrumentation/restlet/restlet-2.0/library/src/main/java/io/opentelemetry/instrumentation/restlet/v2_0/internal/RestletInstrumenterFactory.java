@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
@@ -30,24 +28,23 @@ public class RestletInstrumenterFactory {
 
   public static Instrumenter<Request, Response> newServerInstrumenter(OpenTelemetry openTelemetry) {
     return newServerInstrumenter(
-        openTelemetry, CapturedHttpHeaders.server(Config.get()), Collections.emptyList());
+        openTelemetry,
+        HttpServerAttributesExtractor.create(RestletHttpAttributesGetter.INSTANCE),
+        Collections.emptyList());
   }
 
   public static Instrumenter<Request, Response> newServerInstrumenter(
       OpenTelemetry openTelemetry,
-      CapturedHttpHeaders capturedHttpHeaders,
+      HttpServerAttributesExtractor<Request, Response> httpServerAttributesExtractor,
       List<AttributesExtractor<Request, Response>> additionalExtractors) {
 
-    RestletHttpAttributesGetter httpAttributesGetter = new RestletHttpAttributesGetter();
+    RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
     RestletNetAttributesGetter netAttributesGetter = new RestletNetAttributesGetter();
 
     return Instrumenter.<Request, Response>builder(
             openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributesGetter))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-        .addAttributesExtractor(
-            HttpServerAttributesExtractor.builder(httpAttributesGetter)
-                .captureHttpHeaders(capturedHttpHeaders)
-                .build())
+        .addAttributesExtractor(httpServerAttributesExtractor)
         .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
         .addRequestMetrics(HttpServerMetrics.get())

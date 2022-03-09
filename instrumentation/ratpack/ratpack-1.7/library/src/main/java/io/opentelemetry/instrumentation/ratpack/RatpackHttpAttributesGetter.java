@@ -14,7 +14,8 @@ import ratpack.http.Request;
 import ratpack.http.Response;
 import ratpack.server.PublicAddress;
 
-final class RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+  INSTANCE;
 
   @Override
   public String method(Request request) {

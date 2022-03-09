@@ -20,7 +20,8 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.util.Series;
 
-final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+  INSTANCE;
 
   @Override
   public String method(Request request) {

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.ratpack.server
 
 import io.opentelemetry.instrumentation.ratpack.RatpackTracing
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import ratpack.server.RatpackServerSpec
 
@@ -14,7 +15,8 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest im
   @Override
   void configure(RatpackServerSpec serverSpec) {
     RatpackTracing tracing = RatpackTracing.builder(openTelemetry)
-      .captureHttpServerHeaders(capturedHttpHeadersForTesting())
+      .setCapturedServerRequestHeaders([AbstractHttpServerTest.TEST_REQUEST_HEADER])
+      .setCapturedServerResponseHeaders([AbstractHttpServerTest.TEST_RESPONSE_HEADER])
       .build()
     serverSpec.registryOf {
       tracing.configureServerRegistry(it)

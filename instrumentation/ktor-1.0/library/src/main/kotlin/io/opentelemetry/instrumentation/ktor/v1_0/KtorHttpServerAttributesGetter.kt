@@ -11,8 +11,9 @@ import io.ktor.response.*
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
-internal class KtorHttpServerAttributesGetter :
+internal enum class KtorHttpServerAttributesGetter :
   HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
+  INSTANCE;
 
   override fun method(request: ApplicationRequest): String {
     return request.httpMethod.value

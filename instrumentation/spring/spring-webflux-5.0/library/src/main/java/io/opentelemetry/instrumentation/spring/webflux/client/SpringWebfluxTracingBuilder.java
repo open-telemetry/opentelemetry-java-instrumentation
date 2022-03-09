@@ -8,13 +8,12 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -30,7 +29,9 @@ public final class SpringWebfluxTracingBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<ClientRequest, ClientResponse>> additionalExtractors =
       new ArrayList<>();
-  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.client(Config.get());
+  private final HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>
+      httpAttributesExtractorBuilder =
+          HttpClientAttributesExtractor.builder(SpringWebfluxHttpAttributesGetter.INSTANCE);
 
   SpringWebfluxTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -50,11 +51,37 @@ public final class SpringWebfluxTracingBuilder {
    * Configure the instrumentation to capture chosen HTTP request and response headers as span
    * attributes.
    *
-   * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
-   *     HTTP request and response names.
+   * @param capturedHttpHeaders An instance of {@link
+   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   * @deprecated Use {@link #setCapturedRequestHeaders(List)} and {@link
+   *     #setCapturedResponseHeaders(List)} instead.
    */
-  public SpringWebfluxTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
-    this.capturedHttpHeaders = capturedHttpHeaders;
+  @Deprecated
+  public SpringWebfluxTracingBuilder captureHttpHeaders(
+      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
+          capturedHttpHeaders) {
+    httpAttributesExtractorBuilder.captureHttpHeaders(capturedHttpHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
+  public SpringWebfluxTracingBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+    httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
+  public SpringWebfluxTracingBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+    httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -64,7 +91,7 @@ public final class SpringWebfluxTracingBuilder {
    */
   public SpringWebfluxTracing build() {
     SpringWebfluxHttpAttributesGetter httpAttributesGetter =
-        new SpringWebfluxHttpAttributesGetter();
+        SpringWebfluxHttpAttributesGetter.INSTANCE;
     SpringWebfluxNetAttributesGetter attributesGetter = new SpringWebfluxNetAttributesGetter();
     NetClientAttributesExtractor<ClientRequest, ClientResponse> attributesExtractor =
         NetClientAttributesExtractor.create(attributesGetter);
@@ -75,10 +102,7 @@ public final class SpringWebfluxTracingBuilder {
                 "io.opentelemetry.spring-webflux-5.0",
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter)
-                    .captureHttpHeaders(capturedHttpHeaders)
-                    .build())
+            .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)

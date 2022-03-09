@@ -23,8 +23,16 @@ import java.util.stream.Collectors;
  * attribute key. The HTTP response header values will be captured under the {@code
  * http.response.header.<name>} attribute key. The {@code <name>} part in the attribute key is the
  * normalized header name: lowercase, with dashes replaced by underscores.
+ *
+ * @deprecated This class should no longer be used directly. Use the {@link
+ *     HttpClientAttributesExtractorBuilder#setCapturedRequestHeaders(List)}, {@link
+ *     HttpClientAttributesExtractorBuilder#setCapturedResponseHeaders(List)}, {@link
+ *     HttpServerAttributesExtractorBuilder#setCapturedRequestHeaders(List)} and {@link
+ *     HttpServerAttributesExtractorBuilder#setCapturedResponseHeaders(List)} methods instead.
  */
+@Deprecated
 @AutoValue
+@AutoValue.CopyAnnotations
 public abstract class CapturedHttpHeaders {
 
   private static final CapturedHttpHeaders EMPTY = create(emptyList(), emptyList());

@@ -12,8 +12,9 @@ import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
-final class RatpackHttpClientAttributesGetter
+enum RatpackHttpClientAttributesGetter
     implements HttpClientAttributesGetter<RequestSpec, HttpResponse> {
+  INSTANCE;
 
   @Nullable
   @Override
@@ -21,7 +22,6 @@ final class RatpackHttpClientAttributesGetter
     return requestSpec.getUri().toString();
   }
 
-  @Nullable
   @Override
   public String flavor(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
