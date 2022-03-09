@@ -45,21 +45,17 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
 }
 
-// exclude groovy 4 from testing-common
+// testing-common pulls in groovy 4 and spock as a dependencies, exclude them
 configurations.configureEach {
   exclude("org.apache.groovy", "groovy")
   exclude("org.apache.groovy", "groovy-json")
+  exclude("org.spockframework", "spock-core")
 }
 
 configurations.configureEach {
   if (!name.contains("muzzle")) {
     resolutionStrategy {
       eachDependency {
-        // groovy compilation fails when spock is removed
-        // just set spock and groovy to compatible versions
-        if (requested.group == "org.spockframework") {
-          useVersion("2.1-groovy-3.0")
-        }
         if (requested.group == "org.codehaus.groovy") {
           useVersion("3.0.9")
         }
