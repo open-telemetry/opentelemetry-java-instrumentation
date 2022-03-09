@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  testImplementation("org.codehaus.groovy:groovy-all")
+  testImplementation("org.apache.groovy:groovy")
   testImplementation("org.spockframework:spock-core")
 
   testImplementation(project(":instrumentation-api"))

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -18,7 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 
 class TestServlet2 {
 
-  static class Sync extends AbstractHttpServlet {
+  static class Sync extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       req.getRequestDispatcher()
