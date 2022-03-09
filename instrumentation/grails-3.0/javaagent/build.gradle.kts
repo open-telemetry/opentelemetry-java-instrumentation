@@ -45,7 +45,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
 }
 
-// testing-common pulls in groovy 4 and spock as a dependencies, exclude them
+// testing-common pulls in groovy 4 and spock as dependencies, exclude them
 configurations.configureEach {
   exclude("org.apache.groovy", "groovy")
   exclude("org.apache.groovy", "groovy-json")
