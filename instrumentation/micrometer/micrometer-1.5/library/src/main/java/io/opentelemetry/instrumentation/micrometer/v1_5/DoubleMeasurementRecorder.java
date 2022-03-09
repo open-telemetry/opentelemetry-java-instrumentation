@@ -14,6 +14,9 @@ import javax.annotation.Nullable;
 
 final class DoubleMeasurementRecorder<T> implements Consumer<ObservableDoubleMeasurement> {
 
+  // using a weak reference here so that the existence of the micrometer Meter does not block the
+  // measured object from being GC'd; e.g. a Gauge (or any other async instrument) must not block
+  // garbage collection of the object that it measures
   private final WeakReference<T> objWeakRef;
   private final ToDoubleFunction<T> metricFunction;
   private final Attributes attributes;
