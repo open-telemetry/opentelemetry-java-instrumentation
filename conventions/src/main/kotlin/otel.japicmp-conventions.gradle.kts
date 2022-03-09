@@ -51,28 +51,28 @@ tasks {
     val apiNewVersion: String? by project
     val newArtifact = apiNewVersion?.let { findArtifact(it) }
       ?: file(getByName<Jar>("jar").archiveFile)
-    newClasspath = files(newArtifact)
+    newClasspath.from(files(newArtifact))
 
     // only output changes, not everything
-    isOnlyModified = true
+    onlyModified.set(true)
 
     // the japicmp "old" version is either the user-specified one, or the latest release.
     val apiBaseVersion: String? by project
     val baselineVersion = apiBaseVersion ?: latestReleasedVersion
-    oldClasspath = try {
+    oldClasspath.from(try {
       files(findArtifact(baselineVersion))
     } catch (e: Exception) {
       // if we can't find the baseline artifact, this is probably one that's never been published before,
       // so publish the whole API. We do that by flipping this flag, and comparing the current against nothing.
-      isOnlyModified = false
+      onlyModified.set(false)
       files()
-    }
+    })
 
     // this is needed so that we only consider the current artifact, and not dependencies
-    isIgnoreMissingClasses = true
-    packageExcludes = listOf("*.internal", "*.internal.*")
+    ignoreMissingClasses.set(true)
+    packageExcludes.addAll("*.internal", "*.internal.*")
     val baseVersionString = if (apiBaseVersion == null) "latest" else baselineVersion
     val newVersionString = if (apiNewVersion == null) "current" else apiNewVersion
-    txtOutputFile = file("$rootDir/docs/apidiffs/${newVersionString}_vs_$baseVersionString/${base.archivesName.get()}.txt")
+    txtOutputFile.set(file("$rootDir/docs/apidiffs/${newVersionString}_vs_$baseVersionString/${base.archivesName.get()}.txt"))
   }
 }

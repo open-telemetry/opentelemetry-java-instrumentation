@@ -390,8 +390,9 @@
   <!-- skip jflex generated files -->
   <module name="SuppressionSingleFilter">
     <property name="checks" value=".*"/>
+    <!-- TODO(anuraaga): Fix path after https://github.com/jprante/gradle-plugin-jflex/issues/20 -->
     <property name="files"
-      value="instrumentation-api[/\\]build[/\\]generated[/\\]sources[/\\]jflex"/>
+      value="instrumentation-api[/\\]build[/\\]generated[/\\]sources[/\\]main"/>
   </module>
   <module name="SuppressionSingleFilter">
     <property name="checks" value="MethodName"/>

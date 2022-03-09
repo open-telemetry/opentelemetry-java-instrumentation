@@ -11,16 +11,6 @@ plugins {
   id("otel.jmh-conventions")
 }
 
-sourceSets {
-  main {
-    java {
-      // gradle-jflex-plugin has a bug in that it always looks for the last srcDir in this source
-      // set to generate into. By default it would be the src/main directory itself.
-      srcDir("$buildDir/generated/sources/jflex")
-    }
-  }
-}
-
 group = "io.opentelemetry.instrumentation"
 
 dependencies {
