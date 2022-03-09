@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Ensures that transformed classes can read agent classes in bootstrap class loader an injected
+ * Ensures that transformed classes can read agent classes in bootstrap class loader and injected
  * classes in unnamed module of their class loader.
  */
 public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter {
@@ -32,7 +32,6 @@ public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter 
     this.instrumentation = instrumentation;
   }
 
-  @SuppressWarnings("ReferenceEquality")
   @Override
   public void onTransformation(
       TypeDescription typeDescription,
@@ -40,8 +39,11 @@ public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter 
       JavaModule javaModule,
       boolean b,
       DynamicType dynamicType) {
+    // expose agent classes in unnamed module of bootstrap class loader
     exposeModule(javaModule, agentBootstrapModule);
     if (classLoader != null) {
+      // expose classes in unnamed module of current class loader
+      // this is needed so that advice code can access injected helper classes
       exposeModule(javaModule, JavaModule.of(classLoader.getUnnamedModule()));
     }
   }

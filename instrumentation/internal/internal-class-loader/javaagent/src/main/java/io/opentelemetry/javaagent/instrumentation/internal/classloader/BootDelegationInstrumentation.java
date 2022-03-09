@@ -100,8 +100,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
   public static class LoadClassAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(
-        @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
+    public static Class<?> onEnter(@Advice.Argument(0) String name) {
       // need to use call depth here to prevent re-entry from call to Class.forName() below
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come

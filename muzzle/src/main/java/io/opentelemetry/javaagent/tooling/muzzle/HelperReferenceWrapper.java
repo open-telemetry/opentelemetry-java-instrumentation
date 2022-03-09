@@ -168,6 +168,10 @@ interface HelperReferenceWrapper {
     }
 
     private HelperReferenceWrapper create(String className) {
+      // Looking up an injected helper is recorded in AgentCachingPoolStrategy as a failed resolve
+      // because injected helper can't be found by the TypePool that is used here. If that helper is
+      // defined before it gets evicted there will be a stack trace about resource not found which
+      // is flagged as a transformation failure that makes tests fail.
       if (!helperClassPredicate.isHelperClass(className)) {
         Resolution resolution = classpathPool.describe(className);
         if (resolution.isResolved()) {

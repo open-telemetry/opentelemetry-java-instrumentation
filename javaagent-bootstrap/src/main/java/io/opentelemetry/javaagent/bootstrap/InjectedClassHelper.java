@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 /** Helper class for detecting and loading injected helper classes. */
@@ -13,11 +14,11 @@ public final class InjectedClassHelper {
 
   private InjectedClassHelper() {}
 
-  private static volatile BiFunction<ClassLoader, String, Boolean> helperClassDetector;
+  private static volatile BiPredicate<ClassLoader, String> helperClassDetector;
 
   /** Sets the {@link Function} for detecting injected helper classes. */
   public static void internalSetHelperClassDetector(
-      BiFunction<ClassLoader, String, Boolean> helperClassDetector) {
+      BiPredicate<ClassLoader, String> helperClassDetector) {
     if (InjectedClassHelper.helperClassDetector != null) {
       // Only possible by misuse of this API, just ignore.
       return;
@@ -33,7 +34,7 @@ public final class InjectedClassHelper {
     if (helperClassDetector == null) {
       return false;
     }
-    return helperClassDetector.apply(classLoader, className);
+    return helperClassDetector.test(classLoader, className);
   }
 
   private static volatile BiFunction<ClassLoader, String, Class<?>> helperClassLoader;
