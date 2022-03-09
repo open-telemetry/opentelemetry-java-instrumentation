@@ -16,7 +16,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -26,7 +25,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -68,8 +66,8 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractHttpServerTest<SERVER> {
   private static final Logger logger = LoggerFactory.getLogger(AbstractHttpServerTest.class);
 
-  private static final String TEST_REQUEST_HEADER = "X-Test-Request";
-  private static final String TEST_RESPONSE_HEADER = "X-Test-Response";
+  public static final String TEST_REQUEST_HEADER = "X-Test-Request";
+  public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
 
   public static final String TEST_CLIENT_IP = "1.1.1.1";
   public static final String TEST_USER_AGENT = "test-user-agent";
@@ -133,11 +131,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
       throw new AssertionError(
           "Subclasses of AbstractHttpServerTest must register HttpServerInstrumentationExtension");
     }
-  }
-
-  public static CapturedHttpHeaders capturedHttpHeadersForTesting() {
-    return CapturedHttpHeaders.create(
-        singletonList(TEST_REQUEST_HEADER), singletonList(TEST_RESPONSE_HEADER));
   }
 
   String resolveAddress(ServerEndpoint uri) {

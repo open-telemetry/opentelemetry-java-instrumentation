@@ -20,6 +20,7 @@ import javax.annotation.Nullable;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#common-attributes">HTTP
  * attributes</a> that are common to client and server instrumentations.
  */
+@SuppressWarnings("deprecation") // suppress CapturedHttpHeaders deprecation
 abstract class HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, GETTER extends HttpCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {

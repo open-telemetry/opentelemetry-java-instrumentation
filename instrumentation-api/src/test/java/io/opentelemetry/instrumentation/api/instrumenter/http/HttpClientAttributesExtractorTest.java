@@ -105,10 +105,8 @@ class HttpClientAttributesExtractorTest {
 
     HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
-            .captureHttpHeaders(
-                CapturedHttpHeaders.create(
-                    singletonList("Custom-Request-Header"),
-                    singletonList("Custom-Response-Header")))
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
             .build();
 
     AttributesBuilder attributes = Attributes.builder();
@@ -151,7 +149,8 @@ class HttpClientAttributesExtractorTest {
 
     HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
-            .captureHttpHeaders(CapturedHttpHeaders.empty())
+            .setCapturedRequestHeaders(emptyList())
+            .setCapturedResponseHeaders(emptyList())
             .build();
 
     AttributesBuilder attributes = Attributes.builder();

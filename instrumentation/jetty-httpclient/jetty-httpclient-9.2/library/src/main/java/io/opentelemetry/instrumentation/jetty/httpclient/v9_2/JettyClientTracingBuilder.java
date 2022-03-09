@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterBuilder;
+import java.util.List;
 import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -49,11 +49,39 @@ public final class JettyClientTracingBuilder {
    * Configure the instrumentation to capture chosen HTTP request and response headers as span
    * attributes.
    *
-   * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
-   *     HTTP request and response names.
+   * @param capturedHttpHeaders An instance of {@link
+   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   * @deprecated Use {@link #setCapturedRequestHeaders(List)} and {@link
+   *     #setCapturedResponseHeaders(List)} instead.
    */
-  public JettyClientTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
-    instrumenterBuilder.captureHttpHeaders(capturedHttpHeaders);
+  @Deprecated
+  public JettyClientTracingBuilder captureHttpHeaders(
+      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
+          capturedHttpHeaders) {
+    instrumenterBuilder
+        .setCapturedRequestHeaders(capturedHttpHeaders.requestHeaders())
+        .setCapturedResponseHeaders(capturedHttpHeaders.responseHeaders());
+    return this;
+  }
+
+  /**
+   * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
+  public JettyClientTracingBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+    instrumenterBuilder.setCapturedRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
+  public JettyClientTracingBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+    instrumenterBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 

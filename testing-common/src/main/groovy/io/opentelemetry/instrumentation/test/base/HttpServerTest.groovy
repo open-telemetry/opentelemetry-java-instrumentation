@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
@@ -45,10 +44,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   def cleanupSpec() {
     cleanupServer()
-  }
-
-  static CapturedHttpHeaders capturedHttpHeadersForTesting() {
-    return AbstractHttpServerTest.capturedHttpHeadersForTesting()
   }
 
   String expectedServerSpanName(ServerEndpoint endpoint, String method) {
@@ -219,13 +214,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     // the main trace assertion method to groovy to be able to call these assertions.
     @Override
     void assertTheTraces(
-        int size,
-        String traceId,
-        String parentId,
-        String method,
-        ServerEndpoint endpoint,
-        String errorMessage,
-        AggregatedHttpResponse response) {
+      int size,
+      String traceId,
+      String parentId,
+      String method,
+      ServerEndpoint endpoint,
+      String errorMessage,
+      AggregatedHttpResponse response) {
       HttpServerTest.this.assertTheTraces(size, traceId, parentId, method, endpoint, errorMessage, response)
     }
 

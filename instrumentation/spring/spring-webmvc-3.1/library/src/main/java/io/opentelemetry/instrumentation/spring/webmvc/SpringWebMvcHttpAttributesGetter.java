@@ -15,8 +15,9 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-final class SpringWebMvcHttpAttributesGetter
+enum SpringWebMvcHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServletRequest, HttpServletResponse> {
+  INSTANCE;
 
   @Override
   @Nullable

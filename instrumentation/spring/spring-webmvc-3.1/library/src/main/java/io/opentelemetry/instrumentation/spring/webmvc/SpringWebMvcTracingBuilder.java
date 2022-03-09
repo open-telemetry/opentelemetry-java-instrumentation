@@ -6,12 +6,11 @@
 package io.opentelemetry.instrumentation.spring.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -29,7 +28,9 @@ public final class SpringWebMvcTracingBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<HttpServletRequest, HttpServletResponse>>
       additionalExtractors = new ArrayList<>();
-  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.server(Config.get());
+  private final HttpServerAttributesExtractorBuilder<HttpServletRequest, HttpServletResponse>
+      httpAttributesExtractorBuilder =
+          HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
 
   SpringWebMvcTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -49,11 +50,37 @@ public final class SpringWebMvcTracingBuilder {
    * Configure the instrumentation to capture chosen HTTP request and response headers as span
    * attributes.
    *
-   * @param capturedHttpHeaders An instance of {@link CapturedHttpHeaders} containing the configured
-   *     HTTP request and response names.
+   * @param capturedHttpHeaders An instance of {@link
+   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
+   *     configured HTTP request and response names.
+   * @deprecated Use {@link #setCapturedRequestHeaders(List)} and {@link
+   *     #setCapturedResponseHeaders(List)} instead.
    */
-  public SpringWebMvcTracingBuilder captureHttpHeaders(CapturedHttpHeaders capturedHttpHeaders) {
-    this.capturedHttpHeaders = capturedHttpHeaders;
+  @Deprecated
+  public SpringWebMvcTracingBuilder captureHttpHeaders(
+      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
+          capturedHttpHeaders) {
+    this.httpAttributesExtractorBuilder.captureHttpHeaders(capturedHttpHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
+  public SpringWebMvcTracingBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+    httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
+  public SpringWebMvcTracingBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+    httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -62,7 +89,8 @@ public final class SpringWebMvcTracingBuilder {
    * SpringWebMvcTracingBuilder}.
    */
   public SpringWebMvcTracing build() {
-    SpringWebMvcHttpAttributesGetter httpAttributesGetter = new SpringWebMvcHttpAttributesGetter();
+    SpringWebMvcHttpAttributesGetter httpAttributesGetter =
+        SpringWebMvcHttpAttributesGetter.INSTANCE;
 
     Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter =
         Instrumenter.<HttpServletRequest, HttpServletResponse>builder(
@@ -70,10 +98,7 @@ public final class SpringWebMvcTracingBuilder {
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter)
-                    .captureHttpHeaders(capturedHttpHeaders)
-                    .build())
+            .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractor(new StatusCodeExtractor())
             .addAttributesExtractor(
                 NetServerAttributesExtractor.create(new SpringWebMvcNetAttributesGetter()))

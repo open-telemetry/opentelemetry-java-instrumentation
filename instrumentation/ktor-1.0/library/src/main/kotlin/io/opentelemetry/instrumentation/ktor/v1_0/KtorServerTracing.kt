@@ -14,11 +14,9 @@ import io.ktor.util.pipeline.*
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor
@@ -35,9 +33,9 @@ class KtorServerTracing private constructor(
   class Configuration {
     internal lateinit var openTelemetry: OpenTelemetry
 
-    internal var capturedHttpHeaders = CapturedHttpHeaders.server(Config.get())
-
     internal val additionalExtractors = mutableListOf<AttributesExtractor<in ApplicationRequest, in ApplicationResponse>>()
+
+    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
 
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
@@ -54,8 +52,17 @@ class KtorServerTracing private constructor(
       additionalExtractors.add(extractor)
     }
 
-    fun captureHttpHeaders(capturedHttpHeaders: CapturedHttpHeaders) {
-      this.capturedHttpHeaders = capturedHttpHeaders
+    @Deprecated("Use the new setCapturedRequestHeaders() and setCapturedResponseHeaders() methods instead")
+    fun captureHttpHeaders(capturedHttpHeaders: io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders) {
+      httpAttributesExtractorBuilder.captureHttpHeaders(capturedHttpHeaders)
+    }
+
+    fun setCapturedRequestHeaders(requestHeaders: List<String>) {
+      httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders)
+    }
+
+    fun setCapturedResponseHeaders(responseHeaders: List<String>) {
+      httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders)
     }
 
     internal fun isOpenTelemetryInitialized(): Boolean = this::openTelemetry.isInitialized
@@ -89,7 +96,7 @@ class KtorServerTracing private constructor(
         throw IllegalArgumentException("OpenTelemetry must be set")
       }
 
-      val httpAttributesGetter = KtorHttpServerAttributesGetter()
+      val httpAttributesGetter = KtorHttpServerAttributesGetter.INSTANCE
 
       val instrumenterBuilder = Instrumenter.builder<ApplicationRequest, ApplicationResponse>(
         configuration.openTelemetry,
@@ -102,7 +109,7 @@ class KtorServerTracing private constructor(
       with(instrumenterBuilder) {
         setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
         addAttributesExtractor(NetServerAttributesExtractor.create(KtorNetServerAttributesGetter()))
-        addAttributesExtractor(HttpServerAttributesExtractor.builder(httpAttributesGetter).captureHttpHeaders(configuration.capturedHttpHeaders).build())
+        addAttributesExtractor(configuration.httpAttributesExtractorBuilder.build())
         addRequestMetrics(HttpServerMetrics.get())
         addContextCustomizer(HttpRouteHolder.get())
       }

@@ -10,17 +10,17 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -39,11 +39,16 @@ public final class ArmeriaTracingBuilder {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
-  private CapturedHttpHeaders capturedHttpClientHeaders = CapturedHttpHeaders.client(Config.get());
-  private CapturedHttpHeaders capturedHttpServerHeaders = CapturedHttpHeaders.server(Config.get());
 
   private final List<AttributesExtractor<? super RequestContext, ? super RequestLog>>
       additionalExtractors = new ArrayList<>();
+
+  private final HttpClientAttributesExtractorBuilder<RequestContext, RequestLog>
+      httpClientAttributesExtractorBuilder =
+          HttpClientAttributesExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
+  private final HttpServerAttributesExtractorBuilder<RequestContext, RequestLog>
+      httpServerAttributesExtractorBuilder =
+          HttpServerAttributesExtractor.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
 
   private Function<
           SpanStatusExtractor<RequestContext, RequestLog>,
@@ -74,20 +79,46 @@ public final class ArmeriaTracingBuilder {
   }
 
   /** Sets the {@code peer.service} attribute for http client spans. */
-  public void setPeerService(String peerService) {
+  public ArmeriaTracingBuilder setPeerService(String peerService) {
     this.peerService = peerService;
+    return this;
   }
 
   /**
    * Configure the HTTP client instrumentation to capture chosen HTTP request and response headers
    * as span attributes.
    *
-   * @param capturedHttpClientHeaders An instance of {@link CapturedHttpHeaders} containing the
+   * @param capturedHttpClientHeaders An instance of {@link
+   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
    *     configured HTTP request and response names.
+   * @deprecated Use {@link #setCapturedClientRequestHeaders(List)} and {@link
+   *     #setCapturedClientResponseHeaders(List)} instead.
    */
+  @Deprecated
   public ArmeriaTracingBuilder captureHttpClientHeaders(
-      CapturedHttpHeaders capturedHttpClientHeaders) {
-    this.capturedHttpClientHeaders = capturedHttpClientHeaders;
+      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
+          capturedHttpClientHeaders) {
+    httpClientAttributesExtractorBuilder.captureHttpHeaders(capturedHttpClientHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP client request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
+  public ArmeriaTracingBuilder setCapturedClientRequestHeaders(List<String> requestHeaders) {
+    httpClientAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP client response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
+  public ArmeriaTracingBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
+    httpClientAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -95,20 +126,45 @@ public final class ArmeriaTracingBuilder {
    * Configure the HTTP server instrumentation to capture chosen HTTP request and response headers
    * as span attributes.
    *
-   * @param capturedHttpServerHeaders An instance of {@link CapturedHttpHeaders} containing the
+   * @param capturedHttpServerHeaders An instance of {@link
+   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
    *     configured HTTP request and response names.
+   * @deprecated Use {@link #setCapturedServerRequestHeaders(List)} and {@link
+   *     #setCapturedServerResponseHeaders(List)} instead.
    */
+  @Deprecated
   public ArmeriaTracingBuilder captureHttpServerHeaders(
-      CapturedHttpHeaders capturedHttpServerHeaders) {
-    this.capturedHttpServerHeaders = capturedHttpServerHeaders;
+      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
+          capturedHttpServerHeaders) {
+    httpServerAttributesExtractorBuilder.captureHttpHeaders(capturedHttpServerHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP server request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
+  public ArmeriaTracingBuilder setCapturedServerRequestHeaders(List<String> requestHeaders) {
+    httpServerAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
+   * Configures the HTTP server response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
+  public ArmeriaTracingBuilder setCapturedServerResponseHeaders(List<String> responseHeaders) {
+    httpServerAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
   public ArmeriaTracing build() {
     ArmeriaHttpClientAttributesGetter clientAttributesGetter =
-        new ArmeriaHttpClientAttributesGetter();
+        ArmeriaHttpClientAttributesGetter.INSTANCE;
     ArmeriaHttpServerAttributesGetter serverAttributesGetter =
-        new ArmeriaHttpServerAttributesGetter();
+        ArmeriaHttpServerAttributesGetter.INSTANCE;
 
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
         Instrumenter.builder(
@@ -134,10 +190,7 @@ public final class ArmeriaTracingBuilder {
             statusExtractorTransformer.apply(
                 HttpSpanStatusExtractor.create(clientAttributesGetter)))
         .addAttributesExtractor(netClientAttributesExtractor)
-        .addAttributesExtractor(
-            HttpClientAttributesExtractor.builder(clientAttributesGetter)
-                .captureHttpHeaders(capturedHttpClientHeaders)
-                .build())
+        .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
         .addRequestMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(
@@ -145,10 +198,7 @@ public final class ArmeriaTracingBuilder {
                 HttpSpanStatusExtractor.create(serverAttributesGetter)))
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new ArmeriaNetServerAttributesGetter()))
-        .addAttributesExtractor(
-            HttpServerAttributesExtractor.builder(serverAttributesGetter)
-                .captureHttpHeaders(capturedHttpServerHeaders)
-                .build())
+        .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
         .addRequestMetrics(HttpServerMetrics.get())
         .addContextCustomizer(HttpRouteHolder.get());
 
