@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
-import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import javax.servlet.ServletException
 import javax.servlet.annotation.WebServlet
+import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.CountDownLatch
@@ -23,7 +23,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 @WebServlet(asyncSupported = true)
-class AsyncServlet extends AbstractHttpServlet {
+class AsyncServlet extends HttpServlet {
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) {
     ServerEndpoint endpoint = ServerEndpoint.forPath(req.servletPath)

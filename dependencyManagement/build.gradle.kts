@@ -14,8 +14,8 @@ rootProject.extra["versions"] = dependencyVersions
 val otelVersion = "1.12.0"
 rootProject.extra["otelVersion"] = otelVersion
 
-// Need both BOM and -all
-val groovyVersion = "3.0.9"
+// Need both BOM and groovy jars
+val groovyVersion = "4.0.1"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions
@@ -32,7 +32,7 @@ val groovyVersion = "3.0.9"
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.13.1",
   "com.google.guava:guava-bom:31.0.1-jre",
-  "org.codehaus.groovy:groovy-bom:${groovyVersion}",
+  "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
   "org.junit:junit-bom:5.8.2"
@@ -109,11 +109,12 @@ val DEPENDENCIES = listOf(
   "org.awaitility:awaitility:4.1.1",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
-  "org.codehaus.groovy:groovy-all:${groovyVersion}",
+  "org.apache.groovy:groovy:${groovyVersion}",
+  "org.apache.groovy:groovy-json:${groovyVersion}",
   "org.junit-pioneer:junit-pioneer:1.5.0",
   "org.objenesis:objenesis:3.2",
-  "org.spockframework:spock-core:2.0-groovy-3.0",
-  "org.spockframework:spock-junit4:2.0-groovy-3.0",
+  "org.spockframework:spock-core:2.2-M1-groovy-4.0",
+  "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
   "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE",
 )

@@ -6,7 +6,7 @@ dependencies {
   api(project(":testing-common"))
   api("javax.ws.rs:javax.ws.rs-api:2.0")
 
-  implementation("org.codehaus.groovy:groovy-all")
+  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.spockframework:spock-core")
   implementation("org.slf4j:slf4j-api")

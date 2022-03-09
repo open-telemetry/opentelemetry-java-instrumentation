@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import javax.servlet.http.HttpServlet
 import spock.lang.Subject
 
 import javax.servlet.ServletOutputStream
@@ -30,7 +30,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
   }
 
   def setup() {
-    def servlet = new AbstractHttpServlet() {}
+    def servlet = new HttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
     clearExportedData()
@@ -93,7 +93,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
         throw ex
       }
     }
-    def servlet = new AbstractHttpServlet() {}
+    def servlet = new HttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
     clearExportedData()
