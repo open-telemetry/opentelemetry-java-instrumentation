@@ -77,18 +77,18 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "org.slf4j",
-    "1.7.32",
+    "1.7.36",
     listOf("slf4j-api", "slf4j-simple", "log4j-over-slf4j", "jcl-over-slf4j", "jul-to-slf4j")
   ),
   DependencySet(
     "org.testcontainers",
-    "1.16.2",
+    "1.16.3",
     listOf("testcontainers", "junit-jupiter", "cassandra", "couchbase", "elasticsearch", "kafka", "localstack", "selenium")
   )
 )
 
 val DEPENDENCIES = listOf(
-  "ch.qos.logback:logback-classic:1.2.10",
+  "ch.qos.logback:logback-classic:1.2.11",
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
@@ -116,7 +116,8 @@ val DEPENDENCIES = listOf(
   "org.spockframework:spock-core:2.2-M1-groovy-4.0",
   "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
-  "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE",
+  // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
+  "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE"
 )
 
 javaPlatform {
