@@ -14,6 +14,8 @@ import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletHandler
 import spock.lang.IgnoreIf
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+
 @IgnoreIf({ !jvm.java11Compatible })
 class JettyServletHandlerTest extends AbstractServlet5Test<Object, Object> {
 
@@ -69,7 +71,7 @@ class JettyServletHandlerTest extends AbstractServlet5Test<Object, Object> {
   }
 
   @Override
-  Class<?> expectedExceptionClass() {
-    ServletException
+  Throwable expectedException() {
+    new ServletException(EXCEPTION.body)
   }
 }

@@ -34,7 +34,7 @@ public final class HttpServerTestOptions {
   Function<ServerEndpoint, String> expectedHttpRoute = unused -> null;
   Function<ServerEndpoint, String> peerIp = unused -> "127.0.0.1";
   String contextPath = "";
-  Class<? extends Throwable> expectedExceptionClass = Exception.class;
+  Throwable expectedException = new Exception(ServerEndpoint.EXCEPTION.getBody());
 
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
@@ -81,9 +81,8 @@ public final class HttpServerTestOptions {
     return this;
   }
 
-  public HttpServerTestOptions setExpectedExceptionClass(
-      Class<? extends Throwable> expectedExceptionClass) {
-    this.expectedExceptionClass = expectedExceptionClass;
+  public HttpServerTestOptions setExpectedException(Throwable expectedException) {
+    this.expectedException = expectedException;
     return this;
   }
 
