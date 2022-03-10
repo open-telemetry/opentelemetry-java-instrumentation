@@ -18,12 +18,23 @@ public final class OpenTelemetryMeterRegistryBuilder {
 
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
-  private TimeUnit baseTimeUnit =
-      TimeUnitHelper.parseConfigValue(
-          Config.get().getString("otel.instrumentation.micrometer.base-time-unit"));
+  private TimeUnit baseTimeUnit;
+  private boolean prometheusMode;
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+
+    Config config = Config.get();
+
+    prometheusMode =
+        config.getBoolean("otel.instrumentation.micrometer.prometheus-mode.enabled", false);
+
+    // use seconds as the default unit if prometheus mode is enabled
+    TimeUnit defaultBaseTimeUnit = prometheusMode ? TimeUnit.SECONDS : TimeUnit.MILLISECONDS;
+    baseTimeUnit =
+        TimeUnitHelper.parseConfigValue(
+            config.getString("otel.instrumentation.micrometer.base-time-unit"),
+            defaultBaseTimeUnit);
   }
 
   /** Sets a custom {@link Clock}. Useful for testing. */
@@ -39,11 +50,26 @@ public final class OpenTelemetryMeterRegistryBuilder {
   }
 
   /**
+   * Enables the "Prometheus mode" - this will simulate the behavior of Micrometer's {@code
+   * PrometheusMeterRegistry}. The instruments will be renamed to match Micrometer instrument
+   * naming, and the base time unit will be set to seconds.
+   *
+   * <p>Set this to {@code true} if you are using the Prometheus metrics exporter.
+   */
+  public OpenTelemetryMeterRegistryBuilder setPrometheusMode(boolean prometheusMode) {
+    this.prometheusMode = prometheusMode;
+    return setBaseTimeUnit(TimeUnit.SECONDS);
+  }
+
+  /**
    * Returns a new {@link OpenTelemetryMeterRegistry} with the settings of this {@link
    * OpenTelemetryMeterRegistryBuilder}.
    */
   public MeterRegistry build() {
     return new OpenTelemetryMeterRegistry(
-        clock, baseTimeUnit, openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
+        clock,
+        baseTimeUnit,
+        prometheusMode,
+        openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
   }
 }

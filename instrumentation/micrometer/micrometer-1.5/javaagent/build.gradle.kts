@@ -20,6 +20,14 @@ dependencies {
 }
 
 tasks {
+  val testPrometheusMode by registering(Test::class) {
+    filter {
+      includeTestsMatching("*PrometheusModeTest")
+    }
+    include("**/*PrometheusModeTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
+  }
+
   val testBaseTimeUnit by registering(Test::class) {
     filter {
       includeTestsMatching("*TimerSecondsTest")
@@ -31,10 +39,12 @@ tasks {
   test {
     filter {
       excludeTestsMatching("*TimerSecondsTest")
+      excludeTestsMatching("*PrometheusModeTest")
     }
   }
 
   check {
     dependsOn(testBaseTimeUnit)
+    dependsOn(testPrometheusMode)
   }
 }
