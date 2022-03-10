@@ -391,7 +391,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  void controllerSpan(TraceAssert trace, int index, Object parent, Throwable expectedException) {
+  void controllerSpan(TraceAssert trace, int index, Object parent, Throwable expectedException = null) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
     def assertion = junitTest.assertControllerSpan(OpenTelemetryAssertions.assertThat(spanData), expectedException)
