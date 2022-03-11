@@ -110,8 +110,8 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
   }
 
   @Override
-  Class<?> expectedExceptionClass() {
-    ServletException
+  Throwable expectedException() {
+    new ServletException(EXCEPTION.body)
   }
 
   @Override

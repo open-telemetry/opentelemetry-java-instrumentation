@@ -29,8 +29,8 @@ abstract class JettyServlet5Test extends AbstractServlet5Test<Object, Object> {
   }
 
   @Override
-  Class<?> expectedExceptionClass() {
-    ServletException
+  Throwable expectedException() {
+    new ServletException(EXCEPTION.body)
   }
 
   @Override

@@ -41,8 +41,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -162,7 +160,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
       assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
     }
 
-    assertTheTraces(count, null, null, method, SUCCESS, null, responses.get(0));
+    assertTheTraces(count, null, null, method, SUCCESS, responses.get(0));
   }
 
   @Test
@@ -182,7 +180,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
-    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response);
+    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, response);
   }
 
   @Test
@@ -200,7 +198,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
-    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response);
+    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, response);
   }
 
   @ParameterizedTest
@@ -215,7 +213,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     assertThat(response.status().code()).isEqualTo(endpoint.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(endpoint.getBody());
 
-    assertTheTraces(1, null, null, method, endpoint, null, response);
+    assertTheTraces(1, null, null, method, endpoint, response);
   }
 
   @Test
@@ -234,7 +232,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
                 assertThat(new URI(location).normalize().toString())
                     .isEqualTo(address.resolve(REDIRECT.getBody()).toString()));
 
-    assertTheTraces(1, null, null, method, REDIRECT, null, response);
+    assertTheTraces(1, null, null, method, REDIRECT, response);
   }
 
   @Test
@@ -250,7 +248,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
       assertThat(response.contentUtf8()).isEqualTo(ERROR.getBody());
     }
 
-    assertTheTraces(1, null, null, method, ERROR, null, response);
+    assertTheTraces(1, null, null, method, ERROR, response);
   }
 
   @Test
@@ -267,7 +265,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
 
       assertThat(response.status().code()).isEqualTo(EXCEPTION.getStatus());
 
-      assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body, response);
+      assertTheTraces(1, null, null, method, EXCEPTION, response);
     } finally {
       Awaitility.reset();
     }
@@ -283,7 +281,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
 
     assertThat(response.status().code()).isEqualTo(NOT_FOUND.getStatus());
 
-    assertTheTraces(1, null, null, method, NOT_FOUND, null, response);
+    assertTheTraces(1, null, null, method, NOT_FOUND, response);
   }
 
   @Test
@@ -297,7 +295,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     assertThat(response.status().code()).isEqualTo(PATH_PARAM.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(PATH_PARAM.getBody());
 
-    assertTheTraces(1, null, null, method, PATH_PARAM, null, response);
+    assertTheTraces(1, null, null, method, PATH_PARAM, response);
   }
 
   @Test
@@ -314,7 +312,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     assertThat(response.status().code()).isEqualTo(CAPTURE_HEADERS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(CAPTURE_HEADERS.getBody());
 
-    assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, null, response);
+    assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, response);
   }
 
   @Test
@@ -333,7 +331,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     assertThat(response.status().code()).isEqualTo(CAPTURE_PARAMETERS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(CAPTURE_PARAMETERS.getBody());
 
-    assertTheTraces(1, null, null, "POST", CAPTURE_PARAMETERS, null, response);
+    assertTheTraces(1, null, null, "POST", CAPTURE_PARAMETERS, response);
   }
 
   /**
@@ -428,7 +426,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
       String parentId,
       String method,
       ServerEndpoint endpoint,
-      String errorMessage,
       AggregatedHttpResponse response) {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < size; i++) {
@@ -457,7 +454,8 @@ public abstract class AbstractHttpServerTest<SERVER> {
               int parentIndex = spanAssertions.size() - 1;
               spanAssertions.add(
                   span -> {
-                    assertControllerSpan(span, errorMessage, options.expectedExceptionClass);
+                    assertControllerSpan(
+                        span, endpoint == EXCEPTION ? options.expectedException : null);
                     span.hasParent(trace.getSpan(parentIndex));
                   });
             }
@@ -482,12 +480,11 @@ public abstract class AbstractHttpServerTest<SERVER> {
     testing.waitAndAssertTraces(assertions);
   }
 
-  protected SpanDataAssert assertControllerSpan(
-      SpanDataAssert span, String errorMessage, Class<? extends Throwable> exceptionClass) {
+  protected SpanDataAssert assertControllerSpan(SpanDataAssert span, Throwable expectedException) {
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
-    if (errorMessage != null) {
+    if (expectedException != null) {
       span.hasStatus(StatusData.error());
-      span.hasException(getExceptionInstance(exceptionClass, errorMessage));
+      span.hasException(expectedException);
     }
     return span;
   }
@@ -521,7 +518,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
     }
 
     if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
-      span.hasException(getExceptionInstance(options.expectedExceptionClass, endpoint.body));
+      span.hasException(options.expectedException);
     }
 
     span.hasAttributesSatisfying(
@@ -616,18 +613,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
         });
 
     return span;
-  }
-
-  private static Throwable getExceptionInstance(Class<?> exceptionClass, String exceptionMessage) {
-    try {
-      Constructor<?> constructor = exceptionClass.getDeclaredConstructor(String.class);
-      return (Throwable) constructor.newInstance(exceptionMessage);
-    } catch (NoSuchMethodException
-        | InstantiationException
-        | IllegalAccessException
-        | InvocationTargetException exception) {
-      throw new IllegalStateException(exception);
-    }
   }
 
   protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {

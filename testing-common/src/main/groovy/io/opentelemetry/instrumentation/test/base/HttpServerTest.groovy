@@ -26,6 +26,7 @@ import spock.lang.Unroll
 
 import java.util.concurrent.Callable
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
@@ -127,8 +128,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
-  Class<?> expectedExceptionClass() {
-    Exception
+  Throwable expectedException() {
+    new Exception(EXCEPTION.body)
   }
 
   boolean testRedirect() {
@@ -194,7 +195,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.httpAttributes = { endpoint ->
         HttpServerTest.this.httpAttributes(endpoint)
       }
-      options.expectedExceptionClass = expectedExceptionClass()
+      options.expectedException = expectedException()
       options.hasExceptionOnServerSpan = { endpoint ->
         HttpServerTest.this.hasExceptionOnServerSpan(endpoint)
       }
@@ -214,14 +215,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     // the main trace assertion method to groovy to be able to call these assertions.
     @Override
     void assertTheTraces(
-      int size,
-      String traceId,
-      String parentId,
-      String method,
-      ServerEndpoint endpoint,
-      String errorMessage,
-      AggregatedHttpResponse response) {
-      HttpServerTest.this.assertTheTraces(size, traceId, parentId, method, endpoint, errorMessage, response)
+        int size,
+        String traceId,
+        String parentId,
+        String method,
+        ServerEndpoint endpoint,
+        AggregatedHttpResponse response) {
+      HttpServerTest.this.assertTheTraces(size, traceId, parentId, method, endpoint, response)
     }
 
     @Override
@@ -339,7 +339,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   //FIXME: add tests for POST with large/chunked data
 
-  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, AggregatedHttpResponse response = null) {
+  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, AggregatedHttpResponse response = null) {
     def spanCount = 1 // server span
     if (hasResponseSpan(endpoint)) {
       spanCount++
@@ -374,7 +374,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
             if (hasHandlerSpan(endpoint) && hasHandlerAsControllerParentSpan(endpoint)) {
               controllerSpanIndex++
             }
-            controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
+            controllerSpan(it, spanIndex++, span(controllerSpanIndex), endpoint == EXCEPTION ? expectedException() : null)
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
             }
@@ -391,10 +391,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
+  void controllerSpan(TraceAssert trace, int index, Object parent, Throwable expectedException = null) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertControllerSpan(OpenTelemetryAssertions.assertThat(spanData), errorMessage, exceptionClass)
+    def assertion = junitTest.assertControllerSpan(OpenTelemetryAssertions.assertThat(spanData), expectedException)
     if (parent == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {

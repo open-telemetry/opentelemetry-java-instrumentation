@@ -41,8 +41,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue
 abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
 
   @Override
-  Class<?> expectedExceptionClass() {
-    ServletException
+  Throwable expectedException() {
+    new ServletException(EXCEPTION.body)
   }
 
   @Override
