@@ -51,21 +51,8 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
   public static class EmptyTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      // we cannot use com.azure.core.http.policy.AfterRetryPolicyProvider
-      // or com.azure.core.util.tracing.Tracer here because we inject classes that implement these
-      // interfaces, causing the first one of these interfaces to be transformed to cause itself to
-      // be loaded (again), which leads to duplicate class definition error after the interface is
-      // transformed and the triggering class loader tries to load it.
-      //
-      // this is a list of all classes that call one of these:
-      // * ServiceLoader.load(AfterRetryPolicyProvider.class)
-      // * ServiceLoader.load(Tracer.class)
-      return named("com.azure.core.http.policy.HttpPolicyProviders")
-          .or(named("com.azure.core.util.tracing.TracerProxy"))
-          .or(named("com.azure.cosmos.CosmosAsyncClient"))
-          .or(named("com.azure.messaging.eventhubs.EventHubClientBuilder"))
-          .or(named("com.azure.messaging.eventhubs.EventProcessorClientBuilder"))
-          .or(named("com.azure.messaging.servicebus.ServiceBusClientBuilder"));
+      return named("com.azure.core.http.policy.AfterRetryPolicyProvider")
+          .or(named("com.azure.core.util.tracing.Tracer"));
     }
 
     @Override
