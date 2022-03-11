@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
  */
 public final class ContextStorageOverride extends Context.Storage {
 
-  private static final Context.Storage delegate = new ContextStorageBridge();
+  private static final Context.Storage delegate = new ContextStorageBridge(true);
 
   @Override
   public Context doAttach(Context toAttach) {

@@ -20,7 +20,7 @@ public final class GrpcSingletons {
 
   public static final ServerInterceptor SERVER_INTERCEPTOR;
 
-  public static final Context.Storage STORAGE = new ContextStorageBridge();
+  public static final Context.Storage STORAGE = new ContextStorageBridge(false);
 
   static {
     boolean experimentalSpanAttributes =
