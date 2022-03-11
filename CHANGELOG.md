@@ -52,6 +52,8 @@
   ([#5468](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5468))
 - Fix duplicate class definition of ContextDataProvider
   ([#5528](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5528))
+- Do not propagate gRPC deadline when propagating OTel context via javaagent
+  ([#5543](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5543))
 
 ### 🧰 Tooling
 
