@@ -7,8 +7,12 @@ package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -21,7 +25,7 @@ import javax.annotation.Nullable;
  * best compliance with the OpenTelemetry specification.
  */
 public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
   public static final String TEMP_DESTINATION_NAME = "(temporary)";
 
   @Override
@@ -96,4 +100,22 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   protected abstract String messageId(REQUEST request, @Nullable RESPONSE response);
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @UnstableApi
+  @Override
+  public Stream<SpanKey> internalGetSpanKeys() {
+    switch (operation()) {
+      case SEND:
+        return Stream.of(SpanKey.PRODUCER);
+      case RECEIVE:
+        return Stream.of(SpanKey.CONSUMER_RECEIVE);
+      case PROCESS:
+        return Stream.of(SpanKey.CONSUMER_PROCESS);
+    }
+    throw new IllegalStateException("Can't possibly happen");
+  }
 }

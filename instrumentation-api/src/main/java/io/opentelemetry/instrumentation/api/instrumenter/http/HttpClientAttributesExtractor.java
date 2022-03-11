@@ -7,8 +7,12 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -22,7 +26,8 @@ import javax.annotation.Nullable;
  */
 public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
-        REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>> {
+        REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>>
+    implements SpanKeyProvider {
 
   /** Creates the HTTP client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
@@ -61,5 +66,15 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     super.onEnd(attributes, context, request, response, error);
     set(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request, response));
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @UnstableApi
+  @Override
+  public Stream<SpanKey> internalGetSpanKeys() {
+    return Stream.of(SpanKey.HTTP_CLIENT);
   }
 }

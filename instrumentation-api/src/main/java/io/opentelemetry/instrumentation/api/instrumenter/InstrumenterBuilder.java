@@ -21,10 +21,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -260,12 +262,20 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressionStrategy getSpanSuppressionStrategy() {
-    Set<SpanKey> spanKeys = SpanKeyExtractor.determineSpanKeys(attributesExtractors);
+    Set<SpanKey> spanKeys = getSpanKeysFromAttributesExtractors();
     if (enableSpanSuppressionByType) {
       return SpanSuppressionStrategy.from(spanKeys);
     }
     // if not enabled, preserve current behavior, not distinguishing CLIENT instrumentation types
     return SpanSuppressionStrategy.suppressNestedClients(spanKeys);
+  }
+
+  private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
+    return attributesExtractors.stream()
+        .filter(SpanKeyProvider.class::isInstance)
+        .map(SpanKeyProvider.class::cast)
+        .flatMap(SpanKeyProvider::internalGetSpanKeys)
+        .collect(Collectors.toSet());
   }
 
   private interface InstrumenterConstructor<RQ, RS> {

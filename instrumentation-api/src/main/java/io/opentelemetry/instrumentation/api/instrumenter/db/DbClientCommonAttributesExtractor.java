@@ -7,13 +7,17 @@ package io.opentelemetry.instrumentation.api.instrumenter.db;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 abstract class DbClientCommonAttributesExtractor<
         REQUEST, RESPONSE, GETTER extends DbClientCommonAttributesGetter<REQUEST>>
-    implements AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   final GETTER getter;
 
@@ -36,4 +40,14 @@ abstract class DbClientCommonAttributesExtractor<
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {}
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @UnstableApi
+  @Override
+  public Stream<SpanKey> internalGetSpanKeys() {
+    return Stream.of(SpanKey.DB_CLIENT);
+  }
 }
