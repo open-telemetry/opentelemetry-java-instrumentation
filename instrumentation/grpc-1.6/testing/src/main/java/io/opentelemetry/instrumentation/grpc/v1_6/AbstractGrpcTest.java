@@ -49,6 +49,9 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -1368,6 +1371,78 @@ public abstract class AbstractGrpcTest {
                                                             "SENT"),
                                                         entry(
                                                             SemanticAttributes.MESSAGE_ID, 2L))))));
+  }
+
+  @Test
+  void twoServers() throws Exception {
+    Server backend =
+        configureServer(
+                ServerBuilder.forPort(0)
+                    .addService(
+                        new GreeterGrpc.GreeterImplBase() {
+                          @Override
+                          public void sayHello(
+                              Helloworld.Request request,
+                              StreamObserver<Helloworld.Response> responseObserver) {
+                            responseObserver.onNext(
+                                Helloworld.Response.newBuilder()
+                                    .setMessage(request.getName())
+                                    .build());
+                            responseObserver.onCompleted();
+                          }
+                        }))
+            .build()
+            .start();
+    ManagedChannel backendChannel = createChannel(backend);
+    closer.add(() -> backendChannel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> backend.shutdownNow().awaitTermination());
+    GreeterGrpc.GreeterBlockingStub backendStub = GreeterGrpc.newBlockingStub(backendChannel);
+
+    ExecutorService executorService = Executors.newFixedThreadPool(1);
+    closer.add(executorService::shutdownNow);
+    Executor executor = Context.currentContextExecutor(executorService);
+
+    AtomicReference<Throwable> error = new AtomicReference<>();
+
+    Server frontend =
+        configureServer(
+                ServerBuilder.forPort(0)
+                    .addService(
+                        new GreeterGrpc.GreeterImplBase() {
+                          @Override
+                          public void sayHello(
+                              Helloworld.Request request,
+                              StreamObserver<Helloworld.Response> responseObserver) {
+                            responseObserver.onNext(
+                                Helloworld.Response.newBuilder()
+                                    .setMessage(request.getName())
+                                    .build());
+                            responseObserver.onCompleted();
+
+                            executor.execute(
+                                () -> {
+                                  try {
+                                    backendStub.sayHello(request);
+                                  } catch (Throwable t) {
+                                    error.set(t);
+                                  }
+                                });
+                          }
+                        }))
+            .build()
+            .start();
+    ManagedChannel frontendChannel = createChannel(frontend);
+    closer.add(() -> frontendChannel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> frontend.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterBlockingStub frontendStub = GreeterGrpc.newBlockingStub(frontendChannel);
+    frontendStub.sayHello(Helloworld.Request.newBuilder().setName("test").build());
+
+    testing()
+        .waitAndAssertTraces(
+            trace -> trace.hasSpansSatisfyingExactly(span -> {}, span -> {}, span -> {}));
+
+    assertThat(error).hasValue(null);
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
