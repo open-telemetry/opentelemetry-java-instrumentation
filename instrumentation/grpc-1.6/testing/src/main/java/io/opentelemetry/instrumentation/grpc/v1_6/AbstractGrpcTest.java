@@ -49,7 +49,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -1373,8 +1372,10 @@ public abstract class AbstractGrpcTest {
                                                             SemanticAttributes.MESSAGE_ID, 2L))))));
   }
 
+  // Regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4169
   @Test
-  void twoServers() throws Exception {
+  void clientCallAfterServerCompleted() throws Exception {
     Server backend =
         configureServer(
                 ServerBuilder.forPort(0)
@@ -1398,10 +1399,11 @@ public abstract class AbstractGrpcTest {
     closer.add(() -> backend.shutdownNow().awaitTermination());
     GreeterGrpc.GreeterBlockingStub backendStub = GreeterGrpc.newBlockingStub(backendChannel);
 
-    ExecutorService executorService = Executors.newFixedThreadPool(1);
-    closer.add(executorService::shutdownNow);
-    Executor executor = Context.currentContextExecutor(executorService);
+    // This executor does not propagate context without the javaagent available.
+    ExecutorService executor = Executors.newFixedThreadPool(1);
+    closer.add(executor::shutdownNow);
 
+    CountDownLatch clientCallDone = new CountDownLatch(1);
     AtomicReference<Throwable> error = new AtomicReference<>();
 
     Server frontend =
@@ -1426,6 +1428,7 @@ public abstract class AbstractGrpcTest {
                                   } catch (Throwable t) {
                                     error.set(t);
                                   }
+                                  clientCallDone.countDown();
                                 });
                           }
                         }))
@@ -1438,9 +1441,14 @@ public abstract class AbstractGrpcTest {
     GreeterGrpc.GreeterBlockingStub frontendStub = GreeterGrpc.newBlockingStub(frontendChannel);
     frontendStub.sayHello(Helloworld.Request.newBuilder().setName("test").build());
 
-    testing()
-        .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(span -> {}, span -> {}, span -> {}));
+    // We don't assert on telemetry - the intention of this test is to verify that adding
+    // instrumentation, either as
+    // library or javaagent, does not cause exceptions in the business logic. The produced telemetry
+    // will be different
+    // for the two cases due to lack of context propagation in the library case, but that isn't what
+    // we're testing here.
+
+    clientCallDone.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
   }

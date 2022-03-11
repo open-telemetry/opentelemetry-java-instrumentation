@@ -28,6 +28,12 @@ public final class ContextStorageBridge extends Context.Storage {
       Context.key("otel-context");
   private static final Context.Key<Scope> OTEL_SCOPE = Context.key("otel-scope");
 
+  private final boolean propagateGrpcDeadline;
+
+  public ContextStorageBridge(boolean propagateGrpcDeadline) {
+    this.propagateGrpcDeadline = propagateGrpcDeadline;
+  }
+
   @Override
   public Context doAttach(Context toAttach) {
     io.opentelemetry.context.Context otelContext = io.opentelemetry.context.Context.current();
@@ -87,6 +93,20 @@ public final class ContextStorageBridge extends Context.Storage {
       // This context has already been previously attached and associated with an OTel context. Just
       // create a new context referring to the current OTel context to reflect the current stack.
       // The previous context is unaffected and will continue to live in its own stack.
+
+      if (!propagateGrpcDeadline) {
+        // Because we are propagating gRPC context via OpenTelemetry here, we may also propagate a
+        // deadline where it
+        // wasn't present before. Notably, this could happen with no user intention when using the
+        // javaagent which will
+        // add OpenTelemetry propagation automatically, and cause that code to fail with a deadline
+        // cancellation. While
+        // ideally we could propagate deadline as well as gRPC intended, we cannot have existing
+        // code fail because it
+        // added the javaagent and choose to fork here.
+        current = current.fork();
+      }
+
       return current.withValue(OTEL_CONTEXT, otelContext);
     }
     return current;
