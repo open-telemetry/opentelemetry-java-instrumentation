@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
-import com.amazonaws.Response;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
 
-final class AwsSdkRpcAttributesExtractor extends RpcAttributesExtractor<Request<?>, Response<?>> {
+enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>> {
+  INSTANCE;
 
   private static final ClassValue<String> OPERATION_NAME =
       new ClassValue<String>() {
@@ -28,17 +28,17 @@ final class AwsSdkRpcAttributesExtractor extends RpcAttributesExtractor<Request<
       };
 
   @Override
-  protected String system(Request<?> request) {
+  public String system(Request<?> request) {
     return "aws-api";
   }
 
   @Override
-  protected String service(Request<?> request) {
+  public String service(Request<?> request) {
     return request.getServiceName();
   }
 
   @Override
-  protected String method(Request<?> request) {
+  public String method(Request<?> request) {
     return OPERATION_NAME.get(request.getOriginalRequest().getClass());
   }
 }

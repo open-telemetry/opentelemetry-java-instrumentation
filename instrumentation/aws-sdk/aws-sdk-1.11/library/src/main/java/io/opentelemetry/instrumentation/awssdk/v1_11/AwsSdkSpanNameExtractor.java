@@ -11,12 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class AwsSdkSpanNameExtractor implements SpanNameExtractor<Request<?>> {
 
-  private final AwsSdkRpcAttributesExtractor rpcAttributes;
+  private final AwsSdkRpcAttributesGetter rpcAttributes = AwsSdkRpcAttributesGetter.INSTANCE;
   private final NamesCache namesCache = new NamesCache();
-
-  AwsSdkSpanNameExtractor(AwsSdkRpcAttributesExtractor rpcAttributes) {
-    this.rpcAttributes = rpcAttributes;
-  }
 
   @Override
   public String extract(Request<?> request) {

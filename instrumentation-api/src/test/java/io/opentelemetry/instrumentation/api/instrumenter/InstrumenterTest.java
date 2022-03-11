@@ -31,7 +31,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperat
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
@@ -176,7 +176,7 @@ class InstrumenterTest {
   @Mock
   MessagingAttributesExtractor<Map<String, String>, Map<String, String>> mockMessagingAttributes;
 
-  @Mock RpcAttributesExtractor<Map<String, String>, Map<String, String>> mockRpcAttributes;
+  @Mock RpcClientAttributesExtractor<Map<String, String>, Map<String, String>> mockRpcAttributes;
   @Mock NetServerAttributesExtractor<Map<String, String>, Map<String, String>> mockNetAttributes;
 
   @Test

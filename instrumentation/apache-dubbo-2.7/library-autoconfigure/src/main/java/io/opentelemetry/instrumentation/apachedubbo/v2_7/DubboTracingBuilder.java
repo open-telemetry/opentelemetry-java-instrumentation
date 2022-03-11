@@ -15,11 +15,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesEx
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
 
@@ -54,29 +55,25 @@ public final class DubboTracingBuilder {
 
   /** Returns a new {@link DubboTracing} with the settings of this {@link DubboTracingBuilder}. */
   public DubboTracing build() {
-    DubboRpcAttributesExtractor rpcAttributesExtractor = new DubboRpcAttributesExtractor();
+    DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
     SpanNameExtractor<DubboRequest> spanNameExtractor =
-        RpcSpanNameExtractor.create(rpcAttributesExtractor);
-
+        RpcSpanNameExtractor.create(rpcAttributesGetter);
     DubboNetClientAttributesGetter netClientAttributesGetter = new DubboNetClientAttributesGetter();
-    NetClientAttributesExtractor<DubboRequest, Result> netClientAttributesExtractor =
-        NetClientAttributesExtractor.create(netClientAttributesGetter);
 
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
+        Instrumenter.<DubboRequest, Result>builder(
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractors(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(
+                NetServerAttributesExtractor.create(new DubboNetServerAttributesGetter()))
+            .addAttributesExtractors(attributesExtractors);
+
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
-
-    Stream.of(serverInstrumenterBuilder, clientInstrumenterBuilder)
-        .forEach(
-            instrumenter ->
-                instrumenter
-                    .addAttributesExtractors(rpcAttributesExtractor)
-                    .addAttributesExtractors(attributesExtractors));
-
-    serverInstrumenterBuilder.addAttributesExtractor(
-        NetServerAttributesExtractor.create(new DubboNetServerAttributesGetter()));
-    clientInstrumenterBuilder.addAttributesExtractor(netClientAttributesExtractor);
+        Instrumenter.<DubboRequest, Result>builder(
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesGetter))
+            .addAttributesExtractors(attributesExtractors);
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
