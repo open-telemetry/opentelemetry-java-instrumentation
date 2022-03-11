@@ -1,5 +1,77 @@
 # Changelog
 
+## Version 1.12.0 - 2022-03-11
+
+### 🌟 New javaagent instrumentation
+
+- Add Azure SDK instrumentation
+  ([#5467](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5467))
+
+### 📈 Enhancements
+
+- Use repository interface name in spring data operation name
+  ([#5352](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5352))
+- Change the way Micrometer LongTaskTimer is bridged
+  ([#5338](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5338))
+- Updates to http.server_name
+  ([#5369](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5369))
+- Support forwarded proto field and x-forwarded-proto
+  ([#5357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5357))
+- Remove server span peer name
+  ([#5404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5404))
+- Add peer service support back to couchbase26
+  ([#5451](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5451))
+- Remove duplicative JAXRS HttpClient instrumentation
+  ([#5430](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5430))
+- Add experimental thread attributes for logs
+  ([#5474](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5474))
+- Add log4j 1.2 appender MDC capture
+  ([#5475](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5475))
+- Capture logback formatted message
+  ([#5497](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5497))
+- Add JBoss java.util.logging support
+  ([#5498](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5498))
+- Disable the messaging receive span telemetry by default
+  ([#5500](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5500))
+- Remove old experimental properties in CapturedHttpHeaders
+  ([#5524](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5524))
+- Avoid conflicts in Micrometer description mapping
+  ([#5452](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5452))
+
+### 🛠️ Bug fixes
+
+- Fix another reverse lookup
+  ([#5393](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5393))
+- Regression in loading the prometheus exporter
+  ([#5408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5408))
+- Fix muzzle failure on calls to primitive array clone
+  ([#5405](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5405))
+- Fix regression in spring-scheduling span name
+  ([#5436](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5436))
+- Fix android desugaring for HashMap.forEach
+  ([#5468](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5468))
+- Fix duplicate class definition of ContextDataProvider
+  ([#5528](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5528))
+
+### 🧰 Tooling
+
+- Split out CodeAttributesGetter
+  ([#5342](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5342))
+- Add prometheus smoke test
+  ([#5417](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5417))
+- Set custom gRPC client/server span name extractor
+  ([#5244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5244))
+- Split out DbClientAttributesGetter and SqlClientAttributesGetter
+  ([#5354](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5354))
+- Add builders for setting optional attributes on HTTP extractors
+  ([#5347](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5347))
+- Write http server tests in java
+  ([#5501](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5501))
+- Deprecate CapturedHttpHeaders and replace it with builder methods
+  ([#5533](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5533))
+- Update to Groovy 4
+  ([#5532](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5532))
+
 ## Version 1.11.1 - 2022-02-21
 
 ### 🛠️ Bug fixes
