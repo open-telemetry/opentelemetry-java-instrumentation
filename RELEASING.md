@@ -36,11 +36,6 @@ find the draft release created by the release workflow, and
 * Select the checkbox for "Create a discussion for this release"
 * Press the "Publish release" button
 
-After making the release:
-
-* Merge a PR to `main` with the following change
-  * Bump the version in the download link in the root `README.md` file
-
 ## Patch Release
 
 All patch releases should include only bug-fixes, and must avoid
@@ -77,6 +72,4 @@ find the draft release created by the release workflow, and
 
 After making the release:
 
-* Merge a PR to `main` with the following change
-  * Change log updates from the patch release
-  * Bump the version in the download link in the root `README.md` file
+* Merge a PR to `main` with the change log updates from the patch release
