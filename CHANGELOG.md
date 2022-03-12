@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 1.12.0 - 2022-03-11
+## Version 1.12.0 - 2022-03-12
 
 ### 🌟 New javaagent instrumentation
 
@@ -52,6 +52,8 @@
   ([#5468](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5468))
 - Fix duplicate class definition of ContextDataProvider
   ([#5528](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5528))
+- Do not propagate gRPC deadline when propagating OTel context via javaagent
+  ([#5543](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5543))
 
 ### 🧰 Tooling
 
