@@ -22,8 +22,8 @@ subprojects {
     versions = [
       opentelemetry              : "1.9.1",
       opentelemetryAlpha         : "1.9.1-alpha",
-      opentelemetryJavaagent     : "1.12.0-SNAPSHOT",
-      opentelemetryJavaagentAlpha: "1.12.0-alpha-SNAPSHOT",
+      opentelemetryJavaagent     : "1.13.0-SNAPSHOT",
+      opentelemetryJavaagentAlpha: "1.13.0-alpha-SNAPSHOT",
       bytebuddy                  : "1.10.18",
       guava                      : "30.1-jre"
     ]
