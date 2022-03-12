@@ -1,7 +1,7 @@
 allprojects {
   if (findProperty("otel.stable") != "true") {
-    version = "1.12.0-alpha-SNAPSHOT"
+    version = "1.12.0-alpha"
   } else {
-    version = "1.12.0-SNAPSHOT"
+    version = "1.12.0"
   }
 }
