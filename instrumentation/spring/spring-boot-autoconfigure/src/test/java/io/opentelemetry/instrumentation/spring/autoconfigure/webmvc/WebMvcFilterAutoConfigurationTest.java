@@ -7,10 +7,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import javax.servlet.Filter;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -23,11 +21,6 @@ class WebMvcFilterAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   OpenTelemetryAutoConfiguration.class, WebMvcFilterAutoConfiguration.class));
-
-  @AfterEach
-  void tearDown() {
-    GlobalOpenTelemetry.resetForTest();
-  }
 
   @Test
   @DisplayName("when web is ENABLED should initialize WebMvcTracingFilter bean")

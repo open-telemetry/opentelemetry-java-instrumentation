@@ -7,10 +7,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -29,11 +27,6 @@ class OpenTelemetryAutoConfigurationTest {
   }
 
   private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
-
-  @AfterEach
-  void tearDown() {
-    GlobalOpenTelemetry.resetForTest();
-  }
 
   @Test
   @DisplayName(
