@@ -46,24 +46,6 @@ public final class RestletTracingBuilder {
   }
 
   /**
-   * Configure the instrumentation to capture chosen HTTP request and response headers as span
-   * attributes.
-   *
-   * @param capturedHttpHeaders An instance of {@link
-   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
-   *     configured HTTP request and response names.
-   * @deprecated Use {@link #setCapturedRequestHeaders(List)} and {@link
-   *     #setCapturedResponseHeaders(List)} instead.
-   */
-  @Deprecated
-  public RestletTracingBuilder captureHttpHeaders(
-      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
-          capturedHttpHeaders) {
-    httpAttributesExtractorBuilder.captureHttpHeaders(capturedHttpHeaders);
-    return this;
-  }
-
-  /**
    * Configures the HTTP request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.

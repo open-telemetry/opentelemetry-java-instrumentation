@@ -85,24 +85,6 @@ public final class ArmeriaTracingBuilder {
   }
 
   /**
-   * Configure the HTTP client instrumentation to capture chosen HTTP request and response headers
-   * as span attributes.
-   *
-   * @param capturedHttpClientHeaders An instance of {@link
-   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
-   *     configured HTTP request and response names.
-   * @deprecated Use {@link #setCapturedClientRequestHeaders(List)} and {@link
-   *     #setCapturedClientResponseHeaders(List)} instead.
-   */
-  @Deprecated
-  public ArmeriaTracingBuilder captureHttpClientHeaders(
-      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
-          capturedHttpClientHeaders) {
-    httpClientAttributesExtractorBuilder.captureHttpHeaders(capturedHttpClientHeaders);
-    return this;
-  }
-
-  /**
    * Configures the HTTP client request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
@@ -119,24 +101,6 @@ public final class ArmeriaTracingBuilder {
    */
   public ArmeriaTracingBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
     httpClientAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
-    return this;
-  }
-
-  /**
-   * Configure the HTTP server instrumentation to capture chosen HTTP request and response headers
-   * as span attributes.
-   *
-   * @param capturedHttpServerHeaders An instance of {@link
-   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
-   *     configured HTTP request and response names.
-   * @deprecated Use {@link #setCapturedServerRequestHeaders(List)} and {@link
-   *     #setCapturedServerResponseHeaders(List)} instead.
-   */
-  @Deprecated
-  public ArmeriaTracingBuilder captureHttpServerHeaders(
-      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
-          capturedHttpServerHeaders) {
-    httpServerAttributesExtractorBuilder.captureHttpHeaders(capturedHttpServerHeaders);
     return this;
   }
 

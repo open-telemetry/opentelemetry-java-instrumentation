@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 
 import com.google.auto.value.AutoValue;
@@ -93,18 +91,6 @@ public abstract class Config {
   }
 
   /**
-   * Returns a boolean-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * @deprecated Use the {@link #getBoolean(String, boolean)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Boolean getBoolean(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseBoolean);
-  }
-
-  /**
    * Returns a boolean-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured.
    */
@@ -113,100 +99,32 @@ public abstract class Config {
   }
 
   /**
-   * Returns a integer-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * @throws ConfigParsingException if the property is not a valid integer.
-   * @deprecated Use the {@link #getInt(String, int)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Integer getInt(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseInt);
-  }
-
-  /**
    * Returns a integer-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
-   * {@link #getInt(String)}.
+   * {@code name} has not been configured or when parsing has failed.
    */
   public int getInt(String name, int defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseInt, defaultValue);
   }
 
   /**
-   * Returns a long-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * @throws ConfigParsingException if the property is not a valid long.
-   * @deprecated Use the {@link #getLong(String, long)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Long getLong(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseLong);
-  }
-
-  /**
    * Returns a long-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
-   * {@link #getLong(String)}.
+   * {@code name} has not been configured or when parsing has failed.
    */
   public long getLong(String name, long defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseLong, defaultValue);
   }
 
   /**
-   * Returns a double-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * @throws ConfigParsingException if the property is not a valid long.
-   * @deprecated Use the {@link #getDouble(String, double)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Double getDouble(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseDouble);
-  }
-
-  /**
    * Returns a double-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
-   * {@link #getDouble(String)}.
+   * {@code name} has not been configured or when parsing has failed.
    */
   public double getDouble(String name, double defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseDouble, defaultValue);
   }
 
   /**
-   * Returns a duration-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * <p>Durations can be of the form "{number}{unit}", where unit is one of:
-   *
-   * <ul>
-   *   <li>ms
-   *   <li>s
-   *   <li>m
-   *   <li>h
-   *   <li>d
-   * </ul>
-   *
-   * <p>If no unit is specified, milliseconds is the assumed duration unit.
-   *
-   * @throws ConfigParsingException if the property is not a valid long.
-   * @deprecated Use the {@link #getDuration(String, Duration)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Duration getDuration(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseDuration);
-  }
-
-  /**
    * Returns a duration-valued configuration property or {@code defaultValue} if a property with
-   * name {@code name} has not been configured or when parsing has failed. This is the safe variant
-   * of {@link #getDuration(String)}.
+   * name {@code name} has not been configured or when parsing has failed.
    *
    * <p>Durations can be of the form "{number}{unit}", where unit is one of:
    *
@@ -225,19 +143,6 @@ public abstract class Config {
   }
 
   /**
-   * Returns a list-valued configuration property or an empty list if a property with name {@code
-   * name} has not been configured. The format of the original value must be comma-separated, e.g.
-   * {@code one,two,three}.
-   *
-   * @deprecated Use the {@link #getList(String, List)} variant instead.
-   */
-  @Deprecated
-  public List<String> getList(String name) {
-    List<String> list = getTypedProperty(name, ConfigValueParsers::parseList);
-    return list == null ? emptyList() : list;
-  }
-
-  /**
    * Returns a list-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured. The format of the original value must be comma-separated,
    * e.g. {@code one,two,three}.
@@ -247,25 +152,10 @@ public abstract class Config {
   }
 
   /**
-   * Returns a map-valued configuration property or an empty map if a property with name {@code
-   * name} has not been configured. The format of the original value must be comma-separated for
-   * each key, with an '=' separating the key and value, e.g. {@code
-   * key=value,anotherKey=anotherValue}.
-   *
-   * @throws ConfigParsingException if the property is not a valid long.
-   * @deprecated Use the {@link #getMap(String, Map)} variant instead.
-   */
-  @Deprecated
-  public Map<String, String> getMap(String name) {
-    Map<String, String> map = getTypedProperty(name, ConfigValueParsers::parseMap);
-    return map == null ? emptyMap() : map;
-  }
-
-  /**
    * Returns a map-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
-   * {@link #getMap(String)}. The format of the original value must be comma-separated for each key,
-   * with an '=' separating the key and value, e.g. {@code key=value,anotherKey=anotherValue}.
+   * {@code name} has not been configured or when parsing has failed. The format of the original
+   * value must be comma-separated for each key, with an '=' separating the key and value, e.g.
+   * {@code key=value,anotherKey=anotherValue}.
    */
   public Map<String, String> getMap(String name, Map<String, String> defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseMap, defaultValue);

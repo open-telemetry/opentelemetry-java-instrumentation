@@ -52,11 +52,6 @@ class KtorServerTracing private constructor(
       additionalExtractors.add(extractor)
     }
 
-    @Deprecated("Use the new setCapturedRequestHeaders() and setCapturedResponseHeaders() methods instead")
-    fun captureHttpHeaders(capturedHttpHeaders: io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders) {
-      httpAttributesExtractorBuilder.captureHttpHeaders(capturedHttpHeaders)
-    }
-
     fun setCapturedRequestHeaders(requestHeaders: List<String>) {
       httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders)
     }

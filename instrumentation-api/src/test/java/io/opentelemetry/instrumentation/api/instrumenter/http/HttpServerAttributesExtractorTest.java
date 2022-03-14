@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // suppress CapturedHttpHeaders deprecation
 class HttpServerAttributesExtractorTest {
 
   static class TestHttpServerAttributesExtractor
@@ -132,8 +131,8 @@ class HttpServerAttributesExtractorTest {
     HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         new HttpServerAttributesExtractor<>(
             new TestHttpServerAttributesExtractor(),
-            CapturedHttpHeaders.create(
-                singletonList("Custom-Request-Header"), singletonList("Custom-Response-Header")),
+            singletonList("Custom-Request-Header"),
+            singletonList("Custom-Response-Header"),
             routeFromContext);
 
     AttributesBuilder attributes = Attributes.builder();

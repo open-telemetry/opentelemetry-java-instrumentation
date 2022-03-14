@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpHeaderAttributes.requestAttributeKey;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpHeaderAttributes.responseAttributeKey;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.lowercase;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -20,17 +21,19 @@ import javax.annotation.Nullable;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#common-attributes">HTTP
  * attributes</a> that are common to client and server instrumentations.
  */
-@SuppressWarnings("deprecation") // suppress CapturedHttpHeaders deprecation
 abstract class HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, GETTER extends HttpCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   final GETTER getter;
-  private final CapturedHttpHeaders capturedHttpHeaders;
+  private final List<String> capturedRequestHeaders;
+  private final List<String> capturedResponseHeaders;
 
-  HttpCommonAttributesExtractor(GETTER getter, CapturedHttpHeaders capturedHttpHeaders) {
+  HttpCommonAttributesExtractor(
+      GETTER getter, List<String> capturedRequestHeaders, List<String> capturedResponseHeaders) {
     this.getter = getter;
-    this.capturedHttpHeaders = capturedHttpHeaders;
+    this.capturedRequestHeaders = lowercase(capturedRequestHeaders);
+    this.capturedResponseHeaders = lowercase(capturedResponseHeaders);
   }
 
   @Override
@@ -38,7 +41,7 @@ abstract class HttpCommonAttributesExtractor<
     set(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
     set(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
 
-    for (String name : capturedHttpHeaders.requestHeaders()) {
+    for (String name : capturedRequestHeaders) {
       List<String> values = getter.requestHeader(request, name);
       if (!values.isEmpty()) {
         set(attributes, requestAttributeKey(name), values);
@@ -77,7 +80,7 @@ abstract class HttpCommonAttributesExtractor<
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
           getter.responseContentLengthUncompressed(request, response));
 
-      for (String name : capturedHttpHeaders.responseHeaders()) {
+      for (String name : capturedResponseHeaders) {
         List<String> values = getter.responseHeader(request, response, name);
         if (!values.isEmpty()) {
           set(attributes, responseAttributeKey(name), values);
