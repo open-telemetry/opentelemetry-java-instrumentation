@@ -44,7 +44,7 @@ jobs:
           msg="Prepare patch release ${{ steps.set-versions.outputs.release-version }}"
           git add -u
           git commit -m "$msg"
-          git push origin HEAD:prepare-patch-release-${{ steps.set-versions.outputs.release-version }}
+          git push origin HEAD:opentelemetry-java-bot/prepare-patch-release-${{ steps.set-versions.outputs.release-version }}
           gh pr create --title "$msg" \
                        --body "$msg" \
                        --head prepare-patch-release-${{ steps.set-versions.outputs.release-version }} \
