@@ -51,6 +51,11 @@ jobs:
     uses: ./.github/workflows/examples.yml
 
   markdown-link-check:
+    # release branches are excluded
+    # because links to external urls can break at any time which requires unnecessary release branch
+    # maintenance, especially for patches (and also because the README.md javaagent download link
+    # has to be updated on release branches before the release download has been published)
+    if: ${{ !startsWith(github.ref_name, 'v') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

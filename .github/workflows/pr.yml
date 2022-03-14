@@ -44,7 +44,7 @@ jobs:
       cache-read-only: true
 
   muzzle:
-    # release branches are excluded
+    # release branch PRs are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
     if: ${{ !startsWith(github.base_ref, 'v') }}
