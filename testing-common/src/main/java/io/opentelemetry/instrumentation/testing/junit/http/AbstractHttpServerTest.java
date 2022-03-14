@@ -81,6 +81,10 @@ public abstract class AbstractHttpServerTest<SERVER> {
 
   protected abstract void stopServer(SERVER server);
 
+  protected final InstrumentationTestRunner testing() {
+    return testing;
+  }
+
   @BeforeAll
   void setupOptions() {
     options.expectedServerSpanNameMapper = this::expectedServerSpanName;
@@ -511,8 +515,13 @@ public abstract class AbstractHttpServerTest<SERVER> {
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
 
-    span.hasName(options.expectedServerSpanNameMapper.apply(endpoint, method))
-        .hasKind(SpanKind.SERVER);
+    String expectedRoute = options.expectedHttpRoute.apply(endpoint);
+    String name =
+        expectedRoute != null
+            ? expectedRoute
+            : options.expectedServerSpanNameMapper.apply(endpoint, method);
+
+    span.hasName(name).hasKind(SpanKind.SERVER);
     if (endpoint.status >= 500) {
       span.hasStatus(StatusData.error());
     }
@@ -593,7 +602,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
                     entry -> assertThat(entry).isInstanceOf(String.class));
           }
           if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-            String expectedRoute = options.expectedHttpRoute.apply(endpoint);
             if (expectedRoute != null) {
               assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
             }
