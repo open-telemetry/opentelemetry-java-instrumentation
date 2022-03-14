@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -57,7 +58,7 @@ public final class DubboTracingBuilder {
   public DubboTracing build() {
     DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
     SpanNameExtractor<DubboRequest> spanNameExtractor =
-        RpcSpanNameExtractor.create(rpcAttributesGetter);
+        RpcSpanNameExtractor.create((RpcClientAttributesGetter<DubboRequest>) rpcAttributesGetter);
     DubboNetClientAttributesGetter netClientAttributesGetter = new DubboNetClientAttributesGetter();
 
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =

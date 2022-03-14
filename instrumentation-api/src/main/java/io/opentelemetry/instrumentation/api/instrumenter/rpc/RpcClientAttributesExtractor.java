@@ -14,19 +14,19 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/rpc.md">RPC
  * client attributes</a>.
  *
- * <p>This class delegates to a type-specific {@link RpcAttributesGetter} for individual attribute
- * extraction from request/response objects.
+ * <p>This class delegates to a type-specific {@link RpcCommonAttributesGetter} for individual
+ * attribute extraction from request/response objects.
  */
 public final class RpcClientAttributesExtractor<REQUEST, RESPONSE>
     extends RpcCommonAttributesExtractor<REQUEST, RESPONSE> implements SpanKeyProvider {
 
   /** Creates the RPC client attributes extractor. */
   public static <REQUEST, RESPONSE> RpcClientAttributesExtractor<REQUEST, RESPONSE> create(
-      RpcAttributesGetter<REQUEST> getter) {
+      RpcClientAttributesGetter<REQUEST> getter) {
     return new RpcClientAttributesExtractor<>(getter);
   }
 
-  private RpcClientAttributesExtractor(RpcAttributesGetter<REQUEST> getter) {
+  private RpcClientAttributesExtractor(RpcCommonAttributesGetter<REQUEST> getter) {
     super(getter);
   }
 

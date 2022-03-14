@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesGetter;
 import java.lang.reflect.Method;
 
-enum RmiClientAttributesGetter implements RpcAttributesGetter<Method> {
+enum RmiClientAttributesGetter implements RpcClientAttributesGetter<Method> {
   INSTANCE;
 
   @Override

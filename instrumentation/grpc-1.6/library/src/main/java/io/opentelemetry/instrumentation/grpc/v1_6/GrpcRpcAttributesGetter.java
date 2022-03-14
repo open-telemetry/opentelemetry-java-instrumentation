@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesGetter;
 import javax.annotation.Nullable;
 
-enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
+enum GrpcRpcAttributesGetter
+    implements RpcClientAttributesGetter<GrpcRequest>, RpcServerAttributesGetter<GrpcRequest> {
   INSTANCE;
 
   @Override

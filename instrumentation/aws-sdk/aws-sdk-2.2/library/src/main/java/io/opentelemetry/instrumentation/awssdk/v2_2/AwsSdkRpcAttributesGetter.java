@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesGetter;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
-enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttributes> {
+enum AwsSdkRpcAttributesGetter implements RpcClientAttributesGetter<ExecutionAttributes> {
   INSTANCE;
 
   @Override

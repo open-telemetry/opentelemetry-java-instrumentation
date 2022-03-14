@@ -14,9 +14,9 @@ import javax.annotation.Nullable;
 abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final RpcAttributesGetter<REQUEST> getter;
+  private final RpcCommonAttributesGetter<REQUEST> getter;
 
-  RpcCommonAttributesExtractor(RpcAttributesGetter<REQUEST> getter) {
+  RpcCommonAttributesExtractor(RpcCommonAttributesGetter<REQUEST> getter) {
     this.getter = getter;
   }
 
