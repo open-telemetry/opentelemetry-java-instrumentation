@@ -17,7 +17,7 @@ public final class AttributeKeys {
   //
   // note: this attribute key is also used by ratpack instrumentation
   public static final AttributeKey<Context> SERVER_CONTEXT =
-      AttributeKey.valueOf(AttributeKeys.class, "server-span");
+      AttributeKey.valueOf(AttributeKeys.class, "server-context");
 
   public static final AttributeKey<Context> CLIENT_CONTEXT =
       AttributeKey.valueOf(AttributeKeys.class, "client-context");
