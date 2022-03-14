@@ -10,6 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
 public final class OpenTelemetryMeterRegistryBuilder {
@@ -18,23 +19,12 @@ public final class OpenTelemetryMeterRegistryBuilder {
 
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
-  private TimeUnit baseTimeUnit;
-  private boolean prometheusMode;
+  @Nullable private TimeUnit baseTimeUnit = null;
+  private boolean prometheusMode =
+      Config.get().getBoolean("otel.instrumentation.micrometer.prometheus-mode.enabled", false);
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-
-    Config config = Config.get();
-
-    prometheusMode =
-        config.getBoolean("otel.instrumentation.micrometer.prometheus-mode.enabled", false);
-
-    // use seconds as the default unit if prometheus mode is enabled
-    TimeUnit defaultBaseTimeUnit = prometheusMode ? TimeUnit.SECONDS : TimeUnit.MILLISECONDS;
-    baseTimeUnit =
-        TimeUnitHelper.parseConfigValue(
-            config.getString("otel.instrumentation.micrometer.base-time-unit"),
-            defaultBaseTimeUnit);
   }
 
   /** Sets a custom {@link Clock}. Useful for testing. */
@@ -58,7 +48,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
    */
   public OpenTelemetryMeterRegistryBuilder setPrometheusMode(boolean prometheusMode) {
     this.prometheusMode = prometheusMode;
-    return setBaseTimeUnit(TimeUnit.SECONDS);
+    return this;
   }
 
   /**
@@ -66,6 +56,17 @@ public final class OpenTelemetryMeterRegistryBuilder {
    * OpenTelemetryMeterRegistryBuilder}.
    */
   public MeterRegistry build() {
+    if (prometheusMode) {
+      // prometheus mode overrides any unit settings with SECONDS
+      setBaseTimeUnit(TimeUnit.SECONDS);
+    } else if (baseTimeUnit == null) {
+      // if the unit was not manually set, try to initialize it using config
+      setBaseTimeUnit(
+          TimeUnitHelper.parseConfigValue(
+              Config.get().getString("otel.instrumentation.micrometer.base-time-unit"),
+              TimeUnit.MILLISECONDS));
+    }
+
     return new OpenTelemetryMeterRegistry(
         clock,
         baseTimeUnit,

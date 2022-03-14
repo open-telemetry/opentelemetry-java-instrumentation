@@ -9,6 +9,9 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.config.NamingConvention;
 import javax.annotation.Nullable;
 
+// This naming strategy does not replace '.' with '_', and it does not append '_total' to counter
+// names - the reason behind it is that this is already done by the Prometheus exporter; see the
+// io.opentelemetry.exporter.prometheus.MetricAdapter class
 enum PrometheusModeNamingConvention implements NamingConvention {
   INSTANCE;
 
