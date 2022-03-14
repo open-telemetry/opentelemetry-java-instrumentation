@@ -1,1 +1,1 @@
-com.example.javaagent.DemoSdkTracerProviderConfigurer
+com.example.javaagent.DemoAutoConfigurationCustomizerProvider
