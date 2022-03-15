@@ -20,8 +20,8 @@ subprojects {
 
   ext {
     versions = [
-      opentelemetry              : "1.9.1",
-      opentelemetryAlpha         : "1.9.1-alpha",
+      opentelemetry              : "1.12.0",
+      opentelemetryAlpha         : "1.12.0-alpha",
       opentelemetryJavaagent     : "1.13.0-SNAPSHOT",
       opentelemetryJavaagentAlpha: "1.13.0-alpha-SNAPSHOT",
       bytebuddy                  : "1.10.18",
