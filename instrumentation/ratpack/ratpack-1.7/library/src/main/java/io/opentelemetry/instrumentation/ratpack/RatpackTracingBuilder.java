@@ -66,41 +66,6 @@ public final class RatpackTracingBuilder {
   }
 
   /**
-   * Configure the instrumentation to capture chosen HTTP request and response headers as span
-   * attributes.
-   *
-   * @param capturedHttpHeaders An instance of {@link
-   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
-   *     configured HTTP request and response names.
-   * @deprecated Use {@link #setCapturedServerRequestHeaders(List)} and {@link
-   *     #setCapturedServerResponseHeaders(List)} instead.
-   */
-  @Deprecated
-  public RatpackTracingBuilder captureHttpHeaders(
-      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
-          capturedHttpHeaders) {
-    return captureHttpServerHeaders(capturedHttpHeaders);
-  }
-
-  /**
-   * Configure the HTTP server instrumentation to capture chosen HTTP request and response headers
-   * as span attributes.
-   *
-   * @param capturedHttpServerHeaders An instance of {@link
-   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
-   *     configured HTTP request and response names.
-   * @deprecated Use {@link #setCapturedServerRequestHeaders(List)} and {@link
-   *     #setCapturedServerResponseHeaders(List)} instead.
-   */
-  @Deprecated
-  public RatpackTracingBuilder captureHttpServerHeaders(
-      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
-          capturedHttpServerHeaders) {
-    httpServerAttributesExtractorBuilder.captureHttpHeaders(capturedHttpServerHeaders);
-    return this;
-  }
-
-  /**
    * Configures the HTTP server request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
@@ -117,24 +82,6 @@ public final class RatpackTracingBuilder {
    */
   public RatpackTracingBuilder setCapturedServerResponseHeaders(List<String> responseHeaders) {
     httpServerAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
-    return this;
-  }
-
-  /**
-   * Configure the HTTP client instrumentation to capture chosen HTTP request and response headers
-   * as span attributes.
-   *
-   * @param capturedHttpClientHeaders An instance of {@link
-   *     io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders} containing the
-   *     configured HTTP request and response names.
-   * @deprecated Use {@link #setCapturedClientRequestHeaders(List)} and {@link
-   *     #setCapturedClientResponseHeaders(List)} instead.
-   */
-  @Deprecated
-  public RatpackTracingBuilder captureHttpClientHeaders(
-      io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
-          capturedHttpClientHeaders) {
-    httpClientAttributesExtractorBuilder.captureHttpHeaders(capturedHttpClientHeaders);
     return this;
   }
 

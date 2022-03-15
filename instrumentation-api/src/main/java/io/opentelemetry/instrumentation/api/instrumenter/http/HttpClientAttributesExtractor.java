@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -19,7 +20,6 @@ import javax.annotation.Nullable;
  * return {@code null} from the protected attribute methods, but implement as many as possible for
  * best compliance with the OpenTelemetry specification.
  */
-@SuppressWarnings("deprecation") // suppress CapturedHttpHeaders deprecation
 public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>> {
@@ -28,20 +28,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return builder(getter).build();
-  }
-
-  /**
-   * Creates the HTTP client attributes extractor.
-   *
-   * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
-   *     headers should be captured as span attributes.
-   * @deprecated Use {@link #builder(HttpClientAttributesGetter)} instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
-      CapturedHttpHeaders capturedHttpHeaders) {
-    return builder(getter).captureHttpHeaders(capturedHttpHeaders).build();
   }
 
   /**
@@ -55,8 +41,9 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
   HttpClientAttributesExtractor(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
-      CapturedHttpHeaders capturedHttpHeaders) {
-    super(getter, capturedHttpHeaders);
+      List<String> capturedRequestHeaders,
+      List<String> responseHeaders) {
+    super(getter, capturedRequestHeaders, responseHeaders);
   }
 
   @Override
