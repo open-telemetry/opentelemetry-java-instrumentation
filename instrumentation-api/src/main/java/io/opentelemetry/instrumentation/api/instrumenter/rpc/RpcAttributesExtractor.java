@@ -7,7 +7,10 @@ package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -21,7 +24,7 @@ import javax.annotation.Nullable;
  * specification.
  */
 public abstract class RpcAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
@@ -48,4 +51,14 @@ public abstract class RpcAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   protected abstract String method(REQUEST request);
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @UnstableApi
+  @Override
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.RPC_CLIENT;
+  }
 }

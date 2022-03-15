@@ -560,6 +560,8 @@ class InstrumenterTest {
 
   @Test
   void clientNestedSuppressed_whenSameInstrumentationType() {
+    when(mockDbAttributes.internalGetSpanKey()).thenCallRealMethod();
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
         getInstrumenterWithType(true, mockDbAttributes);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
@@ -616,6 +618,8 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_http() {
+    when(mockHttpClientAttributes.internalGetSpanKey()).thenCallRealMethod();
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockHttpClientAttributes, new AttributesExtractor1());
 
@@ -627,6 +631,8 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_db() {
+    when(mockDbAttributes.internalGetSpanKey()).thenCallRealMethod();
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockDbAttributes, new AttributesExtractor2());
 
@@ -638,6 +644,8 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_rpc() {
+    when(mockRpcAttributes.internalGetSpanKey()).thenCallRealMethod();
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockRpcAttributes);
 
@@ -650,6 +658,7 @@ class InstrumenterTest {
   @Test
   void instrumentationTypeDetected_producer() {
     when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
+    when(mockMessagingAttributes.internalGetSpanKey()).thenCallRealMethod();
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockMessagingAttributes);
@@ -663,6 +672,7 @@ class InstrumenterTest {
   @Test
   void instrumentationTypeDetected_mix() {
     when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
+    when(mockMessagingAttributes.internalGetSpanKey()).thenCallRealMethod();
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(
