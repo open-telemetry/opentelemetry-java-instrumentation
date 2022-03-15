@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -274,7 +275,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return attributesExtractors.stream()
         .filter(SpanKeyProvider.class::isInstance)
         .map(SpanKeyProvider.class::cast)
-        .flatMap(SpanKeyProvider::internalGetSpanKeys)
+        .flatMap(
+            provider -> {
+              SpanKey spanKey = provider.internalGetSpanKey();
+              return spanKey == null ? Stream.of() : Stream.of(spanKey);
+            })
         .collect(Collectors.toSet());
   }
 

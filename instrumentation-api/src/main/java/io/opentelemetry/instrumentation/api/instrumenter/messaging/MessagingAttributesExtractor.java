@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -107,14 +106,14 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
    */
   @UnstableApi
   @Override
-  public Stream<SpanKey> internalGetSpanKeys() {
+  public SpanKey internalGetSpanKey() {
     switch (operation()) {
       case SEND:
-        return Stream.of(SpanKey.PRODUCER);
+        return SpanKey.PRODUCER;
       case RECEIVE:
-        return Stream.of(SpanKey.CONSUMER_RECEIVE);
+        return SpanKey.CONSUMER_RECEIVE;
       case PROCESS:
-        return Stream.of(SpanKey.CONSUMER_PROCESS);
+        return SpanKey.CONSUMER_PROCESS;
     }
     throw new IllegalStateException("Can't possibly happen");
   }

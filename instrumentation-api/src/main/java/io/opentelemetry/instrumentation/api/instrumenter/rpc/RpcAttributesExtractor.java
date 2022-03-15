@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -59,7 +58,7 @@ public abstract class RpcAttributesExtractor<REQUEST, RESPONSE>
    */
   @UnstableApi
   @Override
-  public Stream<SpanKey> internalGetSpanKeys() {
-    return Stream.of(SpanKey.RPC_CLIENT);
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.RPC_CLIENT;
   }
 }

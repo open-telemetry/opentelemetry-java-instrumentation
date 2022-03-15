@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 abstract class DbClientCommonAttributesExtractor<
@@ -47,7 +46,7 @@ abstract class DbClientCommonAttributesExtractor<
    */
   @UnstableApi
   @Override
-  public Stream<SpanKey> internalGetSpanKeys() {
-    return Stream.of(SpanKey.DB_CLIENT);
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.DB_CLIENT;
   }
 }

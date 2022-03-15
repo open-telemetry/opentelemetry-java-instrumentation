@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -74,7 +73,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
    */
   @UnstableApi
   @Override
-  public Stream<SpanKey> internalGetSpanKeys() {
-    return Stream.of(SpanKey.HTTP_CLIENT);
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.HTTP_CLIENT;
   }
 }

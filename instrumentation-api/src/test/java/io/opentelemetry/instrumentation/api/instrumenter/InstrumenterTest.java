@@ -560,7 +560,7 @@ class InstrumenterTest {
 
   @Test
   void clientNestedSuppressed_whenSameInstrumentationType() {
-    when(mockDbAttributes.internalGetSpanKeys()).thenCallRealMethod();
+    when(mockDbAttributes.internalGetSpanKey()).thenCallRealMethod();
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
         getInstrumenterWithType(true, mockDbAttributes);
@@ -618,7 +618,7 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_http() {
-    when(mockHttpClientAttributes.internalGetSpanKeys()).thenCallRealMethod();
+    when(mockHttpClientAttributes.internalGetSpanKey()).thenCallRealMethod();
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockHttpClientAttributes, new AttributesExtractor1());
@@ -631,7 +631,7 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_db() {
-    when(mockDbAttributes.internalGetSpanKeys()).thenCallRealMethod();
+    when(mockDbAttributes.internalGetSpanKey()).thenCallRealMethod();
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockDbAttributes, new AttributesExtractor2());
@@ -644,7 +644,7 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_rpc() {
-    when(mockRpcAttributes.internalGetSpanKeys()).thenCallRealMethod();
+    when(mockRpcAttributes.internalGetSpanKey()).thenCallRealMethod();
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockRpcAttributes);
@@ -658,7 +658,7 @@ class InstrumenterTest {
   @Test
   void instrumentationTypeDetected_producer() {
     when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
-    when(mockMessagingAttributes.internalGetSpanKeys()).thenCallRealMethod();
+    when(mockMessagingAttributes.internalGetSpanKey()).thenCallRealMethod();
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockMessagingAttributes);
@@ -672,7 +672,7 @@ class InstrumenterTest {
   @Test
   void instrumentationTypeDetected_mix() {
     when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
-    when(mockMessagingAttributes.internalGetSpanKeys()).thenCallRealMethod();
+    when(mockMessagingAttributes.internalGetSpanKey()).thenCallRealMethod();
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(
