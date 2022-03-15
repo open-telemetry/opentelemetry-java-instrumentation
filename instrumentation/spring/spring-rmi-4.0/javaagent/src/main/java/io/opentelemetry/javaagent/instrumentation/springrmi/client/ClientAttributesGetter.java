@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.springrmi.client;
 
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
 import java.lang.reflect.Method;
 
-public enum ClientAttributesGetter implements RpcClientAttributesGetter<Method> {
+public enum ClientAttributesGetter implements RpcAttributesGetter<Method> {
   INSTANCE;
 
   @Override

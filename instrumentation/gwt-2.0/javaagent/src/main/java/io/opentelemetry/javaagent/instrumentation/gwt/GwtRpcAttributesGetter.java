@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
 import java.lang.reflect.Method;
 
-enum GwtRpcAttributesGetter implements RpcServerAttributesGetter<Method> {
+enum GwtRpcAttributesGetter implements RpcAttributesGetter<Method> {
   INSTANCE;
 
   @Override

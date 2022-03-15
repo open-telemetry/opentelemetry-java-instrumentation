@@ -15,22 +15,13 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
    * conventions: {@code <rpc.service>/<rpc.method>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      RpcClientAttributesGetter<REQUEST> getter) {
-    return new RpcSpanNameExtractor<>(getter);
+      RpcAttributesGetter<REQUEST> attributesExtractor) {
+    return new RpcSpanNameExtractor<>(attributesExtractor);
   }
 
-  /**
-   * Returns a {@link SpanNameExtractor} that constructs the span name according to RPC semantic
-   * conventions: {@code <rpc.service>/<rpc.method>}.
-   */
-  public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      RpcServerAttributesGetter<REQUEST> getter) {
-    return new RpcSpanNameExtractor<>(getter);
-  }
+  private final RpcAttributesGetter<REQUEST> getter;
 
-  private final RpcCommonAttributesGetter<REQUEST> getter;
-
-  private RpcSpanNameExtractor(RpcCommonAttributesGetter<REQUEST> getter) {
+  private RpcSpanNameExtractor(RpcAttributesGetter<REQUEST> getter) {
     this.getter = getter;
   }
 

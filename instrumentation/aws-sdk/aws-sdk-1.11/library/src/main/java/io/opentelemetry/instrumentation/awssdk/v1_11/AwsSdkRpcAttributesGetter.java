@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
 
-enum AwsSdkRpcAttributesGetter implements RpcClientAttributesGetter<Request<?>> {
+enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>> {
   INSTANCE;
 
   private static final ClassValue<String> OPERATION_NAME =

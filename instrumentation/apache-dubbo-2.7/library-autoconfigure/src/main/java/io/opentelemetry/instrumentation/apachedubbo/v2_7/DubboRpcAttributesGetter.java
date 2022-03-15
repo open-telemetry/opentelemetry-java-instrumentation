@@ -5,11 +5,9 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
 
-enum DubboRpcAttributesGetter
-    implements RpcClientAttributesGetter<DubboRequest>, RpcServerAttributesGetter<DubboRequest> {
+enum DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest> {
   INSTANCE;
 
   @Override
