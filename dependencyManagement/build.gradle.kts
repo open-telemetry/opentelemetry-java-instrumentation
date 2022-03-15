@@ -116,6 +116,7 @@ val DEPENDENCIES = listOf(
   "org.spockframework:spock-core:2.2-M1-groovy-4.0",
   "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
+  "org.scala-lang.modules:scala-java8-compat_2.11:1.0.2",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE"
 )
