@@ -219,14 +219,17 @@ public abstract class AbstractGraphqlTest {
 
   @Test
   void validationError() {
+    // spotless wants to move the query on a single line
+    // spotless:off
     ExecutionResult result =
         graphql.execute(
-            "" //
-                + "  query {\n" //
-                + "    book(id: \"a\") {\n" //
-                + "      name\n" //
-                + "    }\n" //
+            ""
+                + "  query {\n"
+                + "    book(id: \"a\") {\n"
+                + "      name\n"
+                + "    }\n"
                 + "  }");
+    // spotless:on
 
     assertThat(result.getErrors()).hasSize(1);
     assertThat(result.getErrors().get(0).getErrorType().toString()).isEqualTo("ValidationError");
