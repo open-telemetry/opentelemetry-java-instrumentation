@@ -97,10 +97,18 @@ public abstract class AbstractGraphqlTest {
   }
 
   private DataFetcher<Map<String, String>> getBookByIdDataFetcher() {
-    return dataFetchingEnvironment -> {
-      String bookId = dataFetchingEnvironment.getArgument("id");
-      return books.stream().filter(book -> book.get("id").equals(bookId)).findFirst().orElse(null);
-    };
+    return dataFetchingEnvironment ->
+        getTesting()
+            .runWithSpan(
+                "fetchBookById",
+                () -> {
+                  new Exception().printStackTrace();
+                  String bookId = dataFetchingEnvironment.getArgument("id");
+                  return books.stream()
+                      .filter(book -> book.get("id").equals(bookId))
+                      .findFirst()
+                      .orElse(null);
+                });
   }
 
   private DataFetcher<Map<String, String>> getAuthorDataFetcher() {
@@ -142,7 +150,8 @@ public abstract class AbstractGraphqlTest {
                                 equalTo(AttributeKey.stringKey("graphql.operation.type"), "QUERY"),
                                 normalizedQueryEqualsTo(
                                     AttributeKey.stringKey("graphql.source"),
-                                    "query findBookById { bookById(id: ?) { name } }"))));
+                                    "query findBookById { bookById(id: ?) { name } }")),
+                    span -> span.hasName("fetchBookById").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -170,7 +179,8 @@ public abstract class AbstractGraphqlTest {
                                 equalTo(AttributeKey.stringKey("graphql.operation.type"), "QUERY"),
                                 normalizedQueryEqualsTo(
                                     AttributeKey.stringKey("graphql.source"),
-                                    "query { bookById(id: ?) { name } }"))));
+                                    "query { bookById(id: ?) { name } }")),
+                    span -> span.hasName("fetchBookById").hasParent(trace.getSpan(0))));
   }
 
   @Test

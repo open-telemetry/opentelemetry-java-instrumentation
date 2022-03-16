@@ -13,6 +13,7 @@ import graphql.execution.instrumentation.SimpleInstrumentation;
 import graphql.execution.instrumentation.SimpleInstrumentationContext;
 import graphql.execution.instrumentation.parameters.InstrumentationExecuteOperationParameters;
 import graphql.execution.instrumentation.parameters.InstrumentationExecutionParameters;
+import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters;
 import graphql.language.AstPrinter;
 import graphql.language.AstTransformer;
 import graphql.language.BooleanValue;
@@ -24,6 +25,7 @@ import graphql.language.OperationDefinition;
 import graphql.language.OperationDefinition.Operation;
 import graphql.language.Value;
 import graphql.language.VariableReference;
+import graphql.schema.DataFetcher;
 import graphql.util.TraversalControl;
 import graphql.util.TraverserContext;
 import graphql.util.TreeTransformerUtil;
@@ -66,12 +68,9 @@ public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
     Context context = instrumenter.start(parentContext, parameters);
     OpenTelemetryInstrumentationState state = parameters.getInstrumentationState();
     state.setContext(context);
-    Scope scope = context.makeCurrent();
 
     return SimpleInstrumentationContext.whenCompleted(
         (result, throwable) -> {
-          scope.close();
-
           Span span = Span.fromContext(context);
           for (GraphQLError error : result.getErrors()) {
             AttributesBuilder attributes = Attributes.builder();
@@ -151,5 +150,19 @@ public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
         };
     AstTransformer astTransformer = new AstTransformer();
     return astTransformer.transform(node, visitor);
+  }
+
+  @Override
+  public DataFetcher<?> instrumentDataFetcher(
+      DataFetcher<?> dataFetcher, InstrumentationFieldFetchParameters parameters) {
+    OpenTelemetryInstrumentationState state = parameters.getInstrumentationState();
+    Context context = state.getContext();
+
+    return (DataFetcher<Object>)
+        environment -> {
+          try (Scope scope = context.makeCurrent()) {
+            return dataFetcher.get(environment);
+          }
+        };
   }
 }
