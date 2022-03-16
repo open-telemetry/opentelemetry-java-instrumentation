@@ -450,7 +450,7 @@ public class AgentClassLoader extends URLClassLoader {
       if (name != null && name.startsWith("com.sun.net.httpserver.")) {
         return platformClassLoader.loadClass(name);
       }
-      return Class.forName(name, resolve, null);
+      return Class.forName(name, false, null);
     }
 
     private static ClassLoader getPlatformLoader() {
