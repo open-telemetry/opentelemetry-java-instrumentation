@@ -22,5 +22,5 @@ jobs:
       - name: Run muzzle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: instrumentation:muzzle
+          arguments: instrumentation:muzzle --max-workers=4
           cache-read-only: ${{ inputs.cache-read-only }}
