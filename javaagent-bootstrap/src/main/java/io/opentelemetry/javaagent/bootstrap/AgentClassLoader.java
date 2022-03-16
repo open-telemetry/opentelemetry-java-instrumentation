@@ -117,32 +117,9 @@ public class AgentClassLoader extends URLClassLoader {
 
   private static ClassLoader getParentClassLoader() {
     if (JAVA_VERSION > 8) {
-      ClassLoader platformClassLoader = getPlatformLoader();
-      return new ClassLoader(null) {
-        @Override
-        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-          // prometheus exporter uses jdk http server, load it from the platform class loader
-          if (name != null && name.startsWith("com.sun.net.httpserver.")) {
-            return platformClassLoader.loadClass(name);
-          }
-          return super.loadClass(name, resolve);
-        }
-      };
+      return new JdkHttpServerClassLoader();
     }
     return null;
-  }
-
-  private static ClassLoader getPlatformLoader() {
-    /*
-     Must invoke ClassLoader.getPlatformClassLoader by reflection to remain
-     compatible with java 8.
-    */
-    try {
-      Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
-      return (ClassLoader) method.invoke(null);
-    } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException exception) {
-      throw new IllegalStateException(exception);
-    }
   }
 
   private static int getJavaVersion() {
@@ -449,6 +426,43 @@ public class AgentClassLoader extends URLClassLoader {
         // Ignore
       }
       return -1;
+    }
+  }
+
+  private static class JdkHttpServerClassLoader extends ClassLoader {
+
+    static {
+      registerAsParallelCapable();
+    }
+
+    private static final ClassLoader platformClassLoader = getPlatformLoader();
+
+    public JdkHttpServerClassLoader() {
+      super(null);
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      // prometheus exporter uses jdk http server, load it from the platform class loader
+      if (name != null && name.startsWith("com.sun.net.httpserver.")) {
+        return platformClassLoader.loadClass(name);
+      }
+      return super.loadClass(name, resolve);
+    }
+
+    private static ClassLoader getPlatformLoader() {
+      /*
+       Must invoke ClassLoader.getPlatformClassLoader by reflection to remain
+       compatible with java 8.
+      */
+      try {
+        Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
+        return (ClassLoader) method.invoke(null);
+      } catch (InvocationTargetException
+          | NoSuchMethodException
+          | IllegalAccessException exception) {
+        throw new IllegalStateException(exception);
+      }
     }
   }
 }
