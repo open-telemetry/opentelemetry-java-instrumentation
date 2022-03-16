@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.finatra
+
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.Controller
 import com.twitter.util.Future
 import groovy.lang.Closure
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 import io.opentelemetry.instrumentation.test.base.HttpServerTest.controller
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 
 class FinatraController extends Controller {
   any(SUCCESS.getPath) { request: Request =>
