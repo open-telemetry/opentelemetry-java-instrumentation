@@ -45,7 +45,7 @@ public final class GraphqlSingletons {
     }
     boolean containsOurInstrumentation =
         instrumentationList.stream()
-            .anyMatch(instr -> instr instanceof OpenTelemetryInstrumentation);
+            .anyMatch(OpenTelemetryInstrumentation.class::isInstance);
     if (!containsOurInstrumentation) {
       instrumentationList.add(0, ourInstrumentation);
     }

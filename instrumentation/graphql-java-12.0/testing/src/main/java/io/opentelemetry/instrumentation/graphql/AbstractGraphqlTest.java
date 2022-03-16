@@ -102,7 +102,6 @@ public abstract class AbstractGraphqlTest {
             .runWithSpan(
                 "fetchBookById",
                 () -> {
-                  new Exception().printStackTrace();
                   String bookId = dataFetchingEnvironment.getArgument("id");
                   return books.stream()
                       .filter(book -> book.get("id").equals(bookId))
