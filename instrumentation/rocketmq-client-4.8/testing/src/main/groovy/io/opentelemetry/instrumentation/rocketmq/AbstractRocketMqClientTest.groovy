@@ -88,6 +88,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
       }
     })
     result.get(10, TimeUnit.SECONDS).sendStatus == SendStatus.SEND_OK
+    // waiting longer than assertTraces below does on its own because of CI flakiness
     tracingMessageListener.waitForMessages()
 
     then:
@@ -138,6 +139,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
       SendResult sendResult = producer.send(msg)
       assert sendResult.sendStatus == SendStatus.SEND_OK
     }
+    // waiting longer than assertTraces below does on its own because of CI flakiness
     tracingMessageListener.waitForMessages()
 
     then:
