@@ -15,16 +15,16 @@ public final class RestResponseListener implements ResponseListener {
 
   private final ResponseListener listener;
   private final Context parentContext;
-  private final Instrumenter<String, Response> instrumenter;
+  private final Instrumenter<ElasticsearchRestRequest, Response> instrumenter;
   private final Context context;
-  private final String request;
+  private final ElasticsearchRestRequest request;
 
   public RestResponseListener(
       ResponseListener listener,
       Context parentContext,
-      Instrumenter<String, Response> instrumenter,
+      Instrumenter<ElasticsearchRestRequest, Response> instrumenter,
       Context context,
-      String request) {
+      ElasticsearchRestRequest request) {
     this.listener = listener;
     this.parentContext = parentContext;
     this.instrumenter = instrumenter;

@@ -11,16 +11,16 @@ import javax.annotation.Nullable;
 import org.elasticsearch.client.Response;
 
 final class ElasticsearchRestNetResponseAttributesGetter
-    implements NetClientAttributesGetter<String, Response> {
+    implements NetClientAttributesGetter<ElasticsearchRestRequest, Response> {
 
   @Override
-  public String transport(String operation, Response response) {
+  public String transport(ElasticsearchRestRequest request, Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(String operation, @Nullable Response response) {
+  public String peerName(ElasticsearchRestRequest request, @Nullable Response response) {
     if (response != null) {
       return response.getHost().getHostName();
     }
@@ -29,7 +29,7 @@ final class ElasticsearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public Integer peerPort(String operation, @Nullable Response response) {
+  public Integer peerPort(ElasticsearchRestRequest request, @Nullable Response response) {
     if (response != null) {
       return response.getHost().getPort();
     }
@@ -38,7 +38,7 @@ final class ElasticsearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String peerIp(String operation, @Nullable Response response) {
+  public String peerIp(ElasticsearchRestRequest request, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() != null) {
       return response.getHost().getAddress().getHostAddress();
     }

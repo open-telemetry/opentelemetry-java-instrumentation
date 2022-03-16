@@ -9,40 +9,41 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGe
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-final class ElasticsearchRestAttributesGetter implements DbClientAttributesGetter<String> {
+final class ElasticsearchRestAttributesGetter
+    implements DbClientAttributesGetter<ElasticsearchRestRequest> {
 
   @Override
-  public String system(String operation) {
+  public String system(ElasticsearchRestRequest request) {
     return SemanticAttributes.DbSystemValues.ELASTICSEARCH;
   }
 
   @Override
   @Nullable
-  public String user(String operation) {
+  public String user(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String name(String operation) {
+  public String name(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String connectionString(String operation) {
+  public String connectionString(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String statement(String operation) {
-    return null;
+  public String statement(ElasticsearchRestRequest request) {
+    return request.getMethod() + " " + request.getOperation();
   }
 
   @Override
   @Nullable
-  public String operation(String operation) {
-    return operation;
+  public String operation(ElasticsearchRestRequest request) {
+    return request.getMethod();
   }
 }
