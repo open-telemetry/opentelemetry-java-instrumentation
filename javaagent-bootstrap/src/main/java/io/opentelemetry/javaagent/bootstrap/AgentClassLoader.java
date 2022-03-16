@@ -432,6 +432,9 @@ public class AgentClassLoader extends URLClassLoader {
   private static class JdkHttpServerClassLoader extends ClassLoader {
 
     static {
+      // this class loader doesn't load any classes, so this is technically unnecessary,
+      // but included for safety, just in case we every change Class.forName() below back to
+      // super.loadClass()
       registerAsParallelCapable();
     }
 
@@ -447,7 +450,7 @@ public class AgentClassLoader extends URLClassLoader {
       if (name != null && name.startsWith("com.sun.net.httpserver.")) {
         return platformClassLoader.loadClass(name);
       }
-      return super.loadClass(name, resolve);
+      return Class.forName(name, resolve, null);
     }
 
     private static ClassLoader getPlatformLoader() {
