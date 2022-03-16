@@ -113,7 +113,7 @@ class Greeter(message: String, receiverActor: ActorRef) extends Actor {
 }
 
 object Receiver {
-  def props: Props = Props[Receiver]
+  def props: Props = Props[Receiver]()
 
   final case class Greeting(greeting: String)
 
