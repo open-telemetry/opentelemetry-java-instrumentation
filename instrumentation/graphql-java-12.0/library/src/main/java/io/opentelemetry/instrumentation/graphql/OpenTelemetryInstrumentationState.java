@@ -15,35 +15,35 @@ final class OpenTelemetryInstrumentationState implements InstrumentationState {
   private String operationName;
   private String query;
 
-  public Context getContext() {
+  Context getContext() {
     return context;
   }
 
-  public void setContext(Context context) {
+  void setContext(Context context) {
     this.context = context;
   }
 
-  public Operation getOperation() {
+  Operation getOperation() {
     return operation;
   }
 
-  public void setOperation(Operation operation) {
+  void setOperation(Operation operation) {
     this.operation = operation;
   }
 
-  public String getOperationName() {
+  String getOperationName() {
     return operationName;
   }
 
-  public void setOperationName(String operationName) {
+  void setOperationName(String operationName) {
     this.operationName = operationName;
   }
 
-  public String getQuery() {
+  String getQuery() {
     return query;
   }
 
-  public void setQuery(String query) {
+  void setQuery(String query) {
     this.query = query;
   }
 }

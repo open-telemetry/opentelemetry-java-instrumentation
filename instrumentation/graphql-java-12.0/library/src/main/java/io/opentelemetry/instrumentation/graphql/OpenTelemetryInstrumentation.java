@@ -35,7 +35,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
-final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
+public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
   private final Instrumenter<InstrumentationExecutionParameters, ExecutionResult> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean sanitizeQuery;
