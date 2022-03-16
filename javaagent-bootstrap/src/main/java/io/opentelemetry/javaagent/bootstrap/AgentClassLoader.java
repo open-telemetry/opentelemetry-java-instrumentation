@@ -435,7 +435,7 @@ public class AgentClassLoader extends URLClassLoader {
       registerAsParallelCapable();
     }
 
-    private static final ClassLoader platformClassLoader = getPlatformLoader();
+    private final ClassLoader platformClassLoader = getPlatformLoader();
 
     public JdkHttpServerClassLoader() {
       super(null);
