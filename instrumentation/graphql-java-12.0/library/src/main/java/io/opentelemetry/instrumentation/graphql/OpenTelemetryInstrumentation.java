@@ -35,12 +35,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
-public final class GraphqlTracingInstrumentation extends SimpleInstrumentation {
+public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
   private final Instrumenter<InstrumentationExecutionParameters, ExecutionResult> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean sanitizeQuery;
 
-  GraphqlTracingInstrumentation(
+  OpenTelemetryInstrumentation(
       Instrumenter<InstrumentationExecutionParameters, ExecutionResult> instrumenter,
       boolean captureExperimentalSpanAttributes,
       boolean sanitizeQuery) {
@@ -51,7 +51,7 @@ public final class GraphqlTracingInstrumentation extends SimpleInstrumentation {
 
   @Override
   public InstrumentationState createState() {
-    return new GraphqlTracingInstrumentationState();
+    return new OpenTelemetryInstrumentationState();
   }
 
   @Override
@@ -64,7 +64,7 @@ public final class GraphqlTracingInstrumentation extends SimpleInstrumentation {
     }
 
     Context context = instrumenter.start(parentContext, parameters);
-    GraphqlTracingInstrumentationState state = parameters.getInstrumentationState();
+    OpenTelemetryInstrumentationState state = parameters.getInstrumentationState();
     state.setContext(context);
     Scope scope = context.makeCurrent();
 
@@ -89,7 +89,7 @@ public final class GraphqlTracingInstrumentation extends SimpleInstrumentation {
   public InstrumentationContext<ExecutionResult> beginExecuteOperation(
       InstrumentationExecuteOperationParameters parameters) {
 
-    GraphqlTracingInstrumentationState state = parameters.getInstrumentationState();
+    OpenTelemetryInstrumentationState state = parameters.getInstrumentationState();
     Span span = Span.fromContext(state.getContext());
 
     Operation operation = parameters.getExecutionContext().getOperationDefinition().getOperation();

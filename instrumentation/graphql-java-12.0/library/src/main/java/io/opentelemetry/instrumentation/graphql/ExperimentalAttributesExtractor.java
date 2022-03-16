@@ -36,7 +36,7 @@ public class ExperimentalAttributesExtractor
       InstrumentationExecutionParameters request,
       @Nullable ExecutionResult response,
       @Nullable Throwable error) {
-    GraphqlTracingInstrumentationState state = request.getInstrumentationState();
+    OpenTelemetryInstrumentationState state = request.getInstrumentationState();
     attributes.put(OPERATION_NAME, state.getOperationName());
     if (state.getOperation() != null) {
       attributes.put(OPERATION_TYPE, state.getOperation().name());

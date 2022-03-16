@@ -10,7 +10,7 @@ import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.graphql.GraphQLTracing;
-import io.opentelemetry.instrumentation.graphql.GraphqlTracingInstrumentation;
+import io.opentelemetry.instrumentation.graphql.OpenTelemetryInstrumentation;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +34,7 @@ public final class GraphqlSingletons {
     if (instrumentation == null) {
       return ourInstrumentation;
     }
-    if (instrumentation instanceof GraphqlTracingInstrumentation) {
+    if (instrumentation instanceof OpenTelemetryInstrumentation) {
       return instrumentation;
     }
     List<Instrumentation> instrumentationList = new ArrayList<>();
@@ -45,7 +45,7 @@ public final class GraphqlSingletons {
     }
     boolean containsOurInstrumentation =
         instrumentationList.stream()
-            .anyMatch(instr -> instr instanceof GraphqlTracingInstrumentation);
+            .anyMatch(instr -> instr instanceof OpenTelemetryInstrumentation);
     if (!containsOurInstrumentation) {
       instrumentationList.add(0, ourInstrumentation);
     }

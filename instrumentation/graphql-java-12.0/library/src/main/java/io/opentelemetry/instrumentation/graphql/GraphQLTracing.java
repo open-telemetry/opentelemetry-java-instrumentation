@@ -62,7 +62,7 @@ public class GraphQLTracing {
    * Returns a new {@link Instrumentation} that generates telemetry for received GraphQL requests.
    */
   public Instrumentation newInstrumentation() {
-    return new GraphqlTracingInstrumentation(
+    return new OpenTelemetryInstrumentation(
         instrumenter, captureExperimentalSpanAttributes, sanitizeQuery);
   }
 }

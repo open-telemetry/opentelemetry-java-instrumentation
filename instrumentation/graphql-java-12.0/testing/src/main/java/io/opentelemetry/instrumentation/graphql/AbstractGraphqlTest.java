@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.graphql;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -20,6 +22,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -132,20 +135,14 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("QUERY findBookById")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfying(
-                                attrs -> {
-                                  assertThat(attrs)
-                                      .containsEntry("graphql.operation.name", "findBookById")
-                                      .containsEntry("graphql.operation.type", "QUERY");
-                                  String querySource =
-                                      String.valueOf(
-                                          attrs
-                                              .asMap()
-                                              .get(AttributeKey.stringKey("graphql.source")));
-                                  String normalized = querySource.replaceAll("(?s)\\s+", " ");
-                                  assertThat(normalized)
-                                      .isEqualTo("query findBookById { bookById(id: ?) { name } }");
-                                })));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    AttributeKey.stringKey("graphql.operation.name"),
+                                    "findBookById"),
+                                equalTo(AttributeKey.stringKey("graphql.operation.type"), "QUERY"),
+                                normalizedQueryEqualsTo(
+                                    AttributeKey.stringKey("graphql.source"),
+                                    "query findBookById { bookById(id: ?) { name } }"))));
   }
 
   @Test
@@ -169,19 +166,11 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("QUERY")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfying(
-                                attrs -> {
-                                  assertThat(attrs)
-                                      .containsEntry("graphql.operation.type", "QUERY");
-                                  String querySource =
-                                      String.valueOf(
-                                          attrs
-                                              .asMap()
-                                              .get(AttributeKey.stringKey("graphql.source")));
-                                  String normalized = querySource.replaceAll("(?s)\\s+", " ");
-                                  assertThat(normalized)
-                                      .isEqualTo("query { bookById(id: ?) { name } }");
-                                })));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(AttributeKey.stringKey("graphql.operation.type"), "QUERY"),
+                                normalizedQueryEqualsTo(
+                                    AttributeKey.stringKey("graphql.source"),
+                                    "query { bookById(id: ?) { name } }"))));
   }
 
   @Test
@@ -285,20 +274,25 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("MUTATION addNewBook")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfying(
-                                attrs -> {
-                                  assertThat(attrs)
-                                      .containsEntry("graphql.operation.name", "addNewBook")
-                                      .containsEntry("graphql.operation.type", "MUTATION");
-                                  String querySource =
-                                      String.valueOf(
-                                          attrs
-                                              .asMap()
-                                              .get(AttributeKey.stringKey("graphql.source")));
-                                  String normalized = querySource.replaceAll("(?s)\\s+", " ");
-                                  assertThat(normalized)
-                                      .isEqualTo(
-                                          "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }");
-                                })));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    AttributeKey.stringKey("graphql.operation.name"), "addNewBook"),
+                                equalTo(
+                                    AttributeKey.stringKey("graphql.operation.type"), "MUTATION"),
+                                normalizedQueryEqualsTo(
+                                    AttributeKey.stringKey("graphql.source"),
+                                    "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
+  }
+
+  private static AttributeAssertion normalizedQueryEqualsTo(
+      AttributeKey<String> key, String value) {
+    return satisfies(
+        key,
+        stringAssert ->
+            stringAssert.satisfies(
+                querySource -> {
+                  String normalized = querySource.replaceAll("(?s)\\s+", " ");
+                  assertThat(normalized).isEqualTo(value);
+                }));
   }
 }
