@@ -18,12 +18,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
 
-import java.util.concurrent.{CountDownLatch, Executors}
+import java.util.concurrent.Executors
 import org.junit.jupiter.api.extension.RegisterExtension
 
-import scala.compat.java8.FunctionConverters._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import java.util.function.Predicate
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
@@ -53,11 +52,10 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
 
   override protected def configure(options: HttpServerTestOptions): Unit = {
     options.setTestPathParam(true)
-    options.setHasHandlerSpan(
-      (
-          (endpoint: ServerEndpoint) => endpoint != ServerEndpoint.NOT_FOUND
-      ).asJava
-    )
+    options.setHasHandlerSpan(new Predicate[ServerEndpoint] {
+      override def test(endpoint: ServerEndpoint): Boolean =
+        endpoint != ServerEndpoint.NOT_FOUND
+    })
   }
 
   override protected def assertHandlerSpan(

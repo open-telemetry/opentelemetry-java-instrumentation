@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.finatra
 
 import com.twitter.finatra.http.HttpServer
-import com.twitter.util.Promise
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
@@ -21,7 +20,7 @@ import io.opentelemetry.sdk.trace.data.StatusData
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util.concurrent.Executors
-import scala.compat.java8.FunctionConverters._
+import java.util.function.Predicate
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
@@ -51,11 +50,10 @@ class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
   }
 
   override protected def configure(options: HttpServerTestOptions): Unit = {
-    options.setHasHandlerSpan(
-      (
-          (endpoint: ServerEndpoint) => endpoint != ServerEndpoint.NOT_FOUND
-      ).asJava
-    )
+    options.setHasHandlerSpan(new Predicate[ServerEndpoint] {
+      override def test(endpoint: ServerEndpoint): Boolean =
+        endpoint != ServerEndpoint.NOT_FOUND
+    })
   }
 
   override protected def assertHandlerSpan(
