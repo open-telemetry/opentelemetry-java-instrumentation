@@ -9,7 +9,7 @@ import graphql.execution.instrumentation.InstrumentationState;
 import graphql.language.OperationDefinition.Operation;
 import io.opentelemetry.context.Context;
 
-class OpenTelemetryInstrumentationState implements InstrumentationState {
+final class OpenTelemetryInstrumentationState implements InstrumentationState {
   private Context context;
   private Operation operation;
   private String operationName;

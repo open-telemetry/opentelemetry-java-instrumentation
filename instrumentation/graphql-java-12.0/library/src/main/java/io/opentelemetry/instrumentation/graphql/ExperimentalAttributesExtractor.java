@@ -13,7 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-public class ExperimentalAttributesExtractor
+final class ExperimentalAttributesExtractor
     implements AttributesExtractor<InstrumentationExecutionParameters, ExecutionResult> {
   // https://github.com/open-telemetry/opentelemetry-js-contrib/blob/main/plugins/node/opentelemetry-instrumentation-graphql/src/enums/AttributeNames.ts
   private static final AttributeKey<String> OPERATION_NAME =

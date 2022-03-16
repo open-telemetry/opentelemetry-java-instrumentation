@@ -9,7 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 
 /** A builder of {@link GraphQLTracing}. */
 @SuppressWarnings("AbbreviationAsWordInName")
-public class GraphQLTracingBuilder {
+public final class GraphQLTracingBuilder {
 
   private final OpenTelemetry openTelemetry;
 

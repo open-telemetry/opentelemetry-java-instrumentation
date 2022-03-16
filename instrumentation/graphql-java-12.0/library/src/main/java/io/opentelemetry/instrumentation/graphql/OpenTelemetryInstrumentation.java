@@ -35,7 +35,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
-public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
+final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
   private final Instrumenter<InstrumentationExecutionParameters, ExecutionResult> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean sanitizeQuery;
@@ -92,10 +92,9 @@ public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
     OpenTelemetryInstrumentationState state = parameters.getInstrumentationState();
     Span span = Span.fromContext(state.getContext());
 
-    Operation operation = parameters.getExecutionContext().getOperationDefinition().getOperation();
-
     OperationDefinition operationDefinition =
         parameters.getExecutionContext().getOperationDefinition();
+    Operation operation = operationDefinition.getOperation();
     String operationName = operationDefinition.getName();
 
     String spanName = operation.name();

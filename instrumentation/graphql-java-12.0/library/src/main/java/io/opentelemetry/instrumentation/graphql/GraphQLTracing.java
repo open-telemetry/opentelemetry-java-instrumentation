@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 
 @SuppressWarnings("AbbreviationAsWordInName")
-public class GraphQLTracing {
+public final class GraphQLTracing {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.graphql-java-12.0";
 
   /** Returns a new {@link GraphQLTracing} configured with the given {@link OpenTelemetry}. */
