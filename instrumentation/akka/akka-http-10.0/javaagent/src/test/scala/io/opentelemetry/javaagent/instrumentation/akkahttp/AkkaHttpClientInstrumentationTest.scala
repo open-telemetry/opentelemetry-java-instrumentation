@@ -19,11 +19,13 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpClientTestOptions,
   SingleConnection
 }
+
 import java.net.URI
 import java.util
 import java.util.concurrent.Executor
 import org.junit.jupiter.api.extension.RegisterExtension
-import scala.compat.java8.FunctionConverters._
+
+import java.util.function.BiFunction
 import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
@@ -96,7 +98,9 @@ class AkkaHttpClientInstrumentationTest
     // singleConnection test would require instrumentation to support requests made through pools
     // (newHostConnectionPool, superPool, etc), which is currently not supported.
     options.setSingleConnectionFactory(
-      ((_: String, _: Integer) => null.asInstanceOf[SingleConnection]).asJava
+      new BiFunction[String, Integer, SingleConnection] {
+        override def apply(t: String, u: Integer): SingleConnection = null
+      }
     )
   }
 }

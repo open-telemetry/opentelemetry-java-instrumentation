@@ -14,7 +14,9 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   ServerEndpoint
 }
 
-import scala.compat.java8.FunctionConverters._
+import java.util
+import java.util.Collections
+import java.util.function.Function
 
 abstract class AbstractHttpServerInstrumentationTest
     extends AbstractHttpServerTest[Object] {
@@ -24,7 +26,10 @@ abstract class AbstractHttpServerInstrumentationTest
   ): Unit = {
     options.setTestCaptureHttpHeaders(false)
     options.setHttpAttributes(
-      ((_: ServerEndpoint) => Set[AttributeKey[_]]().asJava).asJava
+      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
+        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] =
+          Collections.emptySet()
+      }
     )
   }
 }
