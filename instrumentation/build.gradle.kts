@@ -3,6 +3,7 @@ plugins {
 }
 
 val instrumentationProjectTest = tasks.named("test")
+val instrumentationProjectMuzzle = tasks.register("muzzle")
 
 subprojects {
   val subProj = this
@@ -18,19 +19,9 @@ subprojects {
       testCompileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
     }
   }
-}
-
-tasks {
-  register("listInstrumentations") {
-    group = "Help"
-    description = "List all available instrumentation modules"
-    doFirst {
-      File("instrumentation-list.txt").printWriter().use { out ->
-        subprojects
-          .filter { it.plugins.hasPlugin("io.opentelemetry.instrumentation.muzzle-check") }
-          .map { it.path }
-          .forEach { out.println(it) }
-      }
+  plugins.withId("io.opentelemetry.instrumentation.muzzle-check") {
+    instrumentationProjectMuzzle.configure {
+      dependsOn(subProj.tasks.named("muzzle"))
     }
   }
 }
