@@ -26,6 +26,12 @@ dependencies {
   testImplementation("com.typesafe.akka:akka-actor_2.11:2.5.0")
 
   latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:+")
+
+  if (!(findProperty("testLatestDeps") as Boolean)) {
+    testImplementation("org.scala-lang.modules:scala-java8-compat_2.11")
+  } else {
+    testImplementation("org.scala-lang.modules:scala-java8-compat_2.13")
+  }
 }
 
 if (findProperty("testLatestDeps") as Boolean) {

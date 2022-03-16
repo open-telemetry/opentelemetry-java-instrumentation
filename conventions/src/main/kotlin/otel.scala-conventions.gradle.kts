@@ -6,11 +6,6 @@ plugins {
 
 dependencies {
   testImplementation("org.scala-lang:scala-library")
-  if (!(findProperty("testLatestDeps") as Boolean)) {
-    testImplementation("org.scala-lang.modules:scala-java8-compat_2.11")
-  } else {
-    testImplementation("org.scala-lang.modules:scala-java8-compat_2.13")
-  }
 }
 
 tasks {
