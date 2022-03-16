@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
   testImplementation("org.scala-lang:scala-library")
-  testImplementation("org.scala-lang.modules:scala-java8-compat_2.11")
 }
 
 tasks {
