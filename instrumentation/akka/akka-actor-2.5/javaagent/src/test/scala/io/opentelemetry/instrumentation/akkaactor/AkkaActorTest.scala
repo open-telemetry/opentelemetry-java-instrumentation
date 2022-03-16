@@ -16,6 +16,8 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+
+import java.util.function.Consumer
 import scala.compat.java8.FunctionConverters._
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -34,24 +36,26 @@ class AkkaActorTest {
 
     val assertions = (1 to count)
       .map(_ =>
-        ((trace: TraceAssert) => {
-          trace.hasSpansSatisfyingExactly(
-            ((span: SpanDataAssert) => {
-              span
-                .hasName("parent")
-                .hasAttributes(Attributes.empty())
-              ()
-            }).asJava,
-            ((span: SpanDataAssert) => {
-              span
-                .hasName("Howdy, Akka")
-                .hasParent(trace.getSpan(0))
-                .hasAttributes(Attributes.empty())
-              ()
-            }).asJava
-          )
-          ()
-        }).asJava
+        new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(
+              new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span
+                    .hasName("parent")
+                    .hasAttributes(Attributes.empty())
+                }
+              },
+              new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span
+                    .hasName("Howdy, Akka")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributes(Attributes.empty())
+                }
+              }
+            )
+        }
       )
       .asJava
 
@@ -68,24 +72,26 @@ class AkkaActorTest {
 
     val assertions = (1 to count)
       .map(_ =>
-        ((trace: TraceAssert) => {
-          trace.hasSpansSatisfyingExactly(
-            ((span: SpanDataAssert) => {
-              span
-                .hasName("parent")
-                .hasAttributes(Attributes.empty())
-              ()
-            }).asJava,
-            ((span: SpanDataAssert) => {
-              span
-                .hasName("Howdy, Akka")
-                .hasParent(trace.getSpan(0))
-                .hasAttributes(Attributes.empty())
-              ()
-            }).asJava
-          )
-          ()
-        }).asJava
+        new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(
+              new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span
+                    .hasName("parent")
+                    .hasAttributes(Attributes.empty())
+                }
+              },
+              new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span
+                    .hasName("Howdy, Akka")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributes(Attributes.empty())
+                }
+              }
+            )
+        }
       )
       .asJava
 
@@ -102,24 +108,26 @@ class AkkaActorTest {
 
     val assertions = (1 to count)
       .map(_ =>
-        ((trace: TraceAssert) => {
-          trace.hasSpansSatisfyingExactly(
-            ((span: SpanDataAssert) => {
-              span
-                .hasName("parent")
-                .hasAttributes(Attributes.empty())
-              ()
-            }).asJava,
-            ((span: SpanDataAssert) => {
-              span
-                .hasName("Hello, Akka")
-                .hasParent(trace.getSpan(0))
-                .hasAttributes(Attributes.empty())
-              ()
-            }).asJava
-          )
-          ()
-        }).asJava
+        new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(
+              new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span
+                    .hasName("parent")
+                    .hasAttributes(Attributes.empty())
+                }
+              },
+              new Consumer[SpanDataAssert] {
+                override def accept(span: SpanDataAssert): Unit = {
+                  span
+                    .hasName("Hello, Akka")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributes(Attributes.empty())
+                }
+              }
+            )
+        }
       )
       .asJava
 
