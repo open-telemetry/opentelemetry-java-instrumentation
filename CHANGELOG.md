@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 1.12.1 - 2022-03-17
+
+### 🛠️ Bug fixes
+
+- Elasticsearch rest client low cardinality span name
+  ([#5584](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5584))
+- Fix possible deadlock
+  ([#5585](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5585))
+
 ## Version 1.12.0 - 2022-03-12
 
 ### 🌟 New javaagent instrumentation
