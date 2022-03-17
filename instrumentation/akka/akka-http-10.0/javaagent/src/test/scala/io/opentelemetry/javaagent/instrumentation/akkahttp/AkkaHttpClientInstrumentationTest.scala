@@ -40,7 +40,8 @@ class AkkaHttpClientInstrumentationTest
     HttpClientInstrumentationExtension.forAgent()
 
   val system: ActorSystem = ActorSystem.create()
-  val materializer: ActorMaterializer = ActorMaterializer.create(system)
+  implicit val materializer: ActorMaterializer =
+    ActorMaterializer.create(system)
 
   override protected def buildRequest(
       method: String,
@@ -63,7 +64,7 @@ class AkkaHttpClientInstrumentationTest
       headers: util.Map[String, String]
   ): Int = {
     val response = Await.result(
-      Http.get(system).singleRequest(request)(materializer),
+      Http.get(system).singleRequest(request),
       10 seconds
     )
     response.discardEntityBytes(materializer)
@@ -83,9 +84,9 @@ class AkkaHttpClientInstrumentationTest
       })
     Http
       .get(system)
-      .singleRequest(request)(materializer)
+      .singleRequest(request)
       .onComplete {
-        case Success(response) => {
+        case Success(response: HttpResponse) => {
           response.discardEntityBytes(materializer)
           requestResult.complete(response.status.intValue())
         }
