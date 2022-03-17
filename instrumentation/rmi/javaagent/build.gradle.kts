@@ -13,6 +13,8 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   bootstrap(project(":instrumentation:rmi:bootstrap"))
+
+  implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
 }
 
 // We cannot use "--release" javac option here because that will forbid importing "sun.rmi" package.
