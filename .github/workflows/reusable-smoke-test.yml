@@ -1,4 +1,4 @@
-name: Smoke test
+name: Reusable - Smoke test
 
 on:
   workflow_call:

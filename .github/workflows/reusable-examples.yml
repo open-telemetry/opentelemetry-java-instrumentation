@@ -1,4 +1,4 @@
-name: Examples
+name: Reusable - Examples
 
 on:
   workflow_call:

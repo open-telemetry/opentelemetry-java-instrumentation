@@ -1,4 +1,4 @@
-name: Nightly build without cache
+name: Nightly (--no-build-cache)
 
 on:
   schedule:
