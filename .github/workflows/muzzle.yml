@@ -29,5 +29,5 @@ jobs:
       - name: Run muzzle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: ${{ matrix.task }} --max-workers=4
+          arguments: ${{ matrix.task }}
           cache-read-only: ${{ inputs.cache-read-only }}
