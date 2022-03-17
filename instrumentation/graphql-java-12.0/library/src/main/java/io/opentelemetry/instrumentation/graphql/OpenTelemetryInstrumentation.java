@@ -19,6 +19,7 @@ import graphql.language.AstTransformer;
 import graphql.language.BooleanValue;
 import graphql.language.EnumValue;
 import graphql.language.Node;
+import graphql.language.NodeVisitor;
 import graphql.language.NodeVisitorStub;
 import graphql.language.NullValue;
 import graphql.language.OperationDefinition;
@@ -37,7 +38,10 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
-public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
+final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
+  private static final NodeVisitor sanitizingVisitor = new SanitizingVisitor();
+  private static final AstTransformer astTransformer = new AstTransformer();
+
   private final Instrumenter<InstrumentationExecutionParameters, ExecutionResult> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean sanitizeQuery;
@@ -116,42 +120,6 @@ public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
     return SimpleInstrumentationContext.noOp();
   }
 
-  private static Node<?> sanitize(Node<?> node) {
-    @SuppressWarnings("rawtypes")
-    NodeVisitorStub visitor =
-        new NodeVisitorStub() {
-          @Override
-          protected TraversalControl visitValue(Value<?> node, TraverserContext<Node> context) {
-            // replace values with ?
-            EnumValue newValue = new EnumValue("?");
-            return TreeTransformerUtil.changeNode(context, newValue);
-          }
-
-          private TraversalControl visitSafeValue(Value<?> node, TraverserContext<Node> context) {
-            return super.visitValue(node, context);
-          }
-
-          @Override
-          public TraversalControl visitVariableReference(
-              VariableReference node, TraverserContext<Node> context) {
-            return visitSafeValue(node, context);
-          }
-
-          @Override
-          public TraversalControl visitBooleanValue(
-              BooleanValue node, TraverserContext<Node> context) {
-            return visitSafeValue(node, context);
-          }
-
-          @Override
-          public TraversalControl visitNullValue(NullValue node, TraverserContext<Node> context) {
-            return visitSafeValue(node, context);
-          }
-        };
-    AstTransformer astTransformer = new AstTransformer();
-    return astTransformer.transform(node, visitor);
-  }
-
   @Override
   public DataFetcher<?> instrumentDataFetcher(
       DataFetcher<?> dataFetcher, InstrumentationFieldFetchParameters parameters) {
@@ -164,5 +132,40 @@ public final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
             return dataFetcher.get(environment);
           }
         };
+  }
+
+  private static Node<?> sanitize(Node<?> node) {
+    return astTransformer.transform(node, sanitizingVisitor);
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static class SanitizingVisitor extends NodeVisitorStub {
+
+    @Override
+    protected TraversalControl visitValue(Value<?> node, TraverserContext<Node> context) {
+      // replace values with ?
+      EnumValue newValue = new EnumValue("?");
+      return TreeTransformerUtil.changeNode(context, newValue);
+    }
+
+    private TraversalControl visitSafeValue(Value<?> node, TraverserContext<Node> context) {
+      return super.visitValue(node, context);
+    }
+
+    @Override
+    public TraversalControl visitVariableReference(
+        VariableReference node, TraverserContext<Node> context) {
+      return visitSafeValue(node, context);
+    }
+
+    @Override
+    public TraversalControl visitBooleanValue(BooleanValue node, TraverserContext<Node> context) {
+      return visitSafeValue(node, context);
+    }
+
+    @Override
+    public TraversalControl visitNullValue(NullValue node, TraverserContext<Node> context) {
+      return visitSafeValue(node, context);
+    }
   }
 }
