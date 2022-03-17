@@ -10,6 +10,13 @@ on:
 jobs:
   muzzle:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task:
+          - :instrumentation:muzzle1
+          - :instrumentation:muzzle2
+          - :instrumentation:muzzle3
+          - :instrumentation:muzzle4
     steps:
       - uses: actions/checkout@v3
 
@@ -22,5 +29,5 @@ jobs:
       - name: Run muzzle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: instrumentation:muzzle --max-workers=4
+          arguments: ${{ matrix.task }} --max-workers=4
           cache-read-only: ${{ inputs.cache-read-only }}

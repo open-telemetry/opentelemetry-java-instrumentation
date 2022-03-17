@@ -154,8 +154,8 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
   // removing leading ':' if present
   val taskName = it.removePrefix(":")
   val projectPath = project.path.substring(1)
-  // Either the specific muzzle task in this project or the top level, full-project muzzle task.
-  taskName == "${projectPath}:muzzle" || taskName == "instrumentation:muzzle"
+  // Either the specific muzzle task in this project or a top level muzzle task.
+  taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle")
 }
 
 if (hasRelevantTask) {
