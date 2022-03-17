@@ -8,38 +8,38 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/reusable-build.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   test:
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/reusable-test.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   testLatestDeps:
-    uses: ./.github/workflows/test-latest-deps.yml
+    uses: ./.github/workflows/reusable-test-latest-deps.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   smoke-test:
-    uses: ./.github/workflows/smoke-test.yml
+    uses: ./.github/workflows/reusable-smoke-test.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   muzzle:
-    uses: ./.github/workflows/muzzle.yml
+    uses: ./.github/workflows/reusable-muzzle.yml
 
   examples:
-    uses: ./.github/workflows/examples.yml
+    uses: ./.github/workflows/reusable-examples.yml
 
   markdown-link-check:
     runs-on: ubuntu-latest

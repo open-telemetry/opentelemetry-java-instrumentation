@@ -8,28 +8,28 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/reusable-build.yml
     with:
       no-build-cache: true
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   test:
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/reusable-test.yml
     with:
       no-build-cache: true
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   testLatestDeps:
-    uses: ./.github/workflows/test-latest-deps.yml
+    uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
       no-build-cache: true
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   smoke-test:
-    uses: ./.github/workflows/smoke-test.yml
+    uses: ./.github/workflows/reusable-smoke-test.yml
     with:
       no-build-cache: true
     secrets:
@@ -39,7 +39,7 @@ jobs:
   # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
 
   examples:
-    uses: ./.github/workflows/examples.yml
+    uses: ./.github/workflows/reusable-examples.yml
     with:
       no-build-cache: true
 
