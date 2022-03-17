@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestRequest;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.RestResponseListener;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -47,12 +48,12 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener,
-        @Advice.Local("otelRequest") String otelRequest,
+        @Advice.Local("otelRequest") ElasticsearchRestRequest otelRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      otelRequest = request.getMethod() + " " + request.getEndpoint();
+      otelRequest = ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint());
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -68,7 +69,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") String otelRequest,
+        @Advice.Local("otelRequest") ElasticsearchRestRequest otelRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 

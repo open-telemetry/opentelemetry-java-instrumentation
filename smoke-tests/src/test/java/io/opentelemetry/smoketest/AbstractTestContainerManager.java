@@ -14,7 +14,6 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
 
   protected static final String BACKEND_ALIAS = "backend";
   protected static final String TARGET_AGENT_FILENAME = "opentelemetry-javaagent.jar";
-  protected static final String COLLECTOR_CONFIG_RESOURCE = "/otel.yaml";
 
   private boolean started = false;
 
