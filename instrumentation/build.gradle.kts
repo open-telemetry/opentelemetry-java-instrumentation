@@ -4,8 +4,16 @@ plugins {
 
 val instrumentationProjectTest = tasks.named("test")
 
-val muzzleTasks = mutableListOf<Task>()
+// batching up the muzzle tasks alphabetically into 4 chunks
+// to split them up into separate CI jobs (but not too many CI job)
+val instrumentationProjectMuzzle = listOf(
+  tasks.create("muzzle1"),
+  tasks.create("muzzle2"),
+  tasks.create("muzzle3"),
+  tasks.create("muzzle4")
+)
 
+var counter = 0
 subprojects {
   val subProj = this
   plugins.withId("java") {
@@ -22,27 +30,8 @@ subprojects {
   }
 
   plugins.withId("io.opentelemetry.instrumentation.muzzle-check") {
-    muzzleTasks.add(subProj.tasks.named("muzzle").get())
+    // relying on predictable ordering of iteration over subprojects since we are splitting these
+    // muzzleX tasks across different github action jobs
+    instrumentationProjectMuzzle[counter++ % 4].dependsOn(subProj.tasks.named("muzzle"))
   }
-}
-
-// TODO (trask) how to know that muzzleTasks populated above before used below?
-
-// batching up the muzzle tasks alphabetically into 4 chunks
-// to split them up into separate CI jobs (but not too many CI job)
-val instrumentationProjectMuzzle1 = tasks.register("muzzle1")
-instrumentationProjectMuzzle1.configure {
-  dependsOn(muzzleTasks.sortedWith(compareBy { it.path }).subList(0, muzzleTasks.size / 4))
-}
-val instrumentationProjectMuzzle2 = tasks.register("muzzle2")
-instrumentationProjectMuzzle2.configure {
-  dependsOn(muzzleTasks.sortedWith(compareBy { it.path }).subList(muzzleTasks.size / 4, muzzleTasks.size / 2))
-}
-val instrumentationProjectMuzzle3 = tasks.register("muzzle3")
-instrumentationProjectMuzzle3.configure {
-  dependsOn(muzzleTasks.sortedWith(compareBy { it.path }).subList(muzzleTasks.size / 2, 3 * muzzleTasks.size / 4))
-}
-val instrumentationProjectMuzzle4 = tasks.register("muzzle4")
-instrumentationProjectMuzzle4.configure {
-  dependsOn(muzzleTasks.sortedWith(compareBy { it.path }).subList(3 * muzzleTasks.size / 4, muzzleTasks.size))
 }
