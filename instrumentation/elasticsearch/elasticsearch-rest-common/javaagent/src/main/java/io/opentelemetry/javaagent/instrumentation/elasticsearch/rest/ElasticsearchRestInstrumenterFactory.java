@@ -16,13 +16,14 @@ import org.elasticsearch.client.Response;
 
 public final class ElasticsearchRestInstrumenterFactory {
 
-  public static Instrumenter<String, Response> create(String instrumentationName) {
+  public static Instrumenter<ElasticsearchRestRequest, Response> create(
+      String instrumentationName) {
     ElasticsearchRestAttributesGetter dbClientAttributesGetter =
         new ElasticsearchRestAttributesGetter();
     ElasticsearchRestNetResponseAttributesGetter netAttributesGetter =
         new ElasticsearchRestNetResponseAttributesGetter();
 
-    return Instrumenter.<String, Response>builder(
+    return Instrumenter.<ElasticsearchRestRequest, Response>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             DbClientSpanNameExtractor.create(dbClientAttributesGetter))
