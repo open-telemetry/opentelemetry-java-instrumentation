@@ -29,7 +29,7 @@ class FinatraServer extends HttpServer {
   }
 
   def awaitReady(): FinatraServer = {
-    latch.await(10, TimeUnit.SECONDS)
+    latch.await(1, TimeUnit.MINUTES)
     this
   }
 }
