@@ -8,6 +8,7 @@ spotless {
   java {
     googleJavaFormat()
     licenseHeaderFile(rootProject.file("buildscripts/spotless.license.java"), "(package|import|public|// Includes work from:)")
+    toggleOffOn()
     target("src/**/*.java")
   }
   plugins.withId("groovy") {
