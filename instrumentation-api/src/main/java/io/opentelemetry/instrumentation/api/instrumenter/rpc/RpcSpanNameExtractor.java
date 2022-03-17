@@ -15,20 +15,20 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
    * conventions: {@code <rpc.service>/<rpc.method>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      RpcAttributesExtractor<REQUEST, ?> attributesExtractor) {
+      RpcAttributesGetter<REQUEST> attributesExtractor) {
     return new RpcSpanNameExtractor<>(attributesExtractor);
   }
 
-  private final RpcAttributesExtractor<REQUEST, ?> attributesExtractor;
+  private final RpcAttributesGetter<REQUEST> getter;
 
-  private RpcSpanNameExtractor(RpcAttributesExtractor<REQUEST, ?> attributesExtractor) {
-    this.attributesExtractor = attributesExtractor;
+  private RpcSpanNameExtractor(RpcAttributesGetter<REQUEST> getter) {
+    this.getter = getter;
   }
 
   @Override
   public String extract(REQUEST request) {
-    String service = attributesExtractor.service(request);
-    String method = attributesExtractor.method(request);
+    String service = getter.service(request);
+    String method = getter.method(request);
     if (service == null || method == null) {
       return "RPC request";
     }

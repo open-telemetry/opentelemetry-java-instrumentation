@@ -5,19 +5,20 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import io.grpc.Status;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
 import javax.annotation.Nullable;
 
-final class GrpcRpcAttributesExtractor extends RpcAttributesExtractor<GrpcRequest, Status> {
+enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
+  INSTANCE;
+
   @Override
-  protected String system(GrpcRequest request) {
+  public String system(GrpcRequest request) {
     return "grpc";
   }
 
   @Override
   @Nullable
-  protected String service(GrpcRequest request) {
+  public String service(GrpcRequest request) {
     String fullMethodName = request.getMethod().getFullMethodName();
     int slashIndex = fullMethodName.lastIndexOf('/');
     if (slashIndex == -1) {
@@ -28,7 +29,7 @@ final class GrpcRpcAttributesExtractor extends RpcAttributesExtractor<GrpcReques
 
   @Override
   @Nullable
-  protected String method(GrpcRequest request) {
+  public String method(GrpcRequest request) {
     String fullMethodName = request.getMethod().getFullMethodName();
     int slashIndex = fullMethodName.lastIndexOf('/');
     if (slashIndex == -1) {

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rmi.client;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import java.lang.reflect.Method;
 
@@ -16,14 +17,14 @@ public final class RmiClientSingletons {
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 
   static {
-    RmiClientAttributesExtractor attributesExtractor = new RmiClientAttributesExtractor();
+    RmiClientAttributesGetter rpcAttributesGetter = RmiClientAttributesGetter.INSTANCE;
 
     INSTRUMENTER =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
-                RpcSpanNameExtractor.create(attributesExtractor))
-            .addAttributesExtractor(attributesExtractor)
+                RpcSpanNameExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

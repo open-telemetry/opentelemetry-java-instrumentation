@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,8 +22,8 @@ final class AwsSdkInstrumenterFactory {
 
   private static final AttributesExtractor<Request<?>, Response<?>> httpAttributesExtractor =
       HttpClientAttributesExtractor.create(new AwsSdkHttpAttributesGetter());
-  private static final AwsSdkRpcAttributesExtractor rpcAttributesExtractor =
-      new AwsSdkRpcAttributesExtractor();
+  private static final AttributesExtractor<Request<?>, Response<?>> rpcAttributesExtractor =
+      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
   private static final AttributesExtractor<Request<?>, Response<?>> netAttributesExtractor =
       NetClientAttributesExtractor.create(new AwsSdkNetAttributesGetter());
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
@@ -39,8 +40,7 @@ final class AwsSdkInstrumenterFactory {
               rpcAttributesExtractor,
               netAttributesExtractor,
               experimentalAttributesExtractor);
-  private static final AwsSdkSpanNameExtractor spanName =
-      new AwsSdkSpanNameExtractor(rpcAttributesExtractor);
+  private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
   static Instrumenter<Request<?>, Response<?>> requestInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {

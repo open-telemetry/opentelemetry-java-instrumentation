@@ -5,23 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.springrmi.client;
 
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
 import java.lang.reflect.Method;
 
-public final class ClientAttributesExtractor extends RpcAttributesExtractor<Method, Void> {
+public enum ClientAttributesGetter implements RpcAttributesGetter<Method> {
+  INSTANCE;
 
   @Override
-  protected String system(Method method) {
+  public String system(Method method) {
     return "spring_rmi";
   }
 
   @Override
-  protected String service(Method method) {
+  public String service(Method method) {
     return method.getDeclaringClass().getName();
   }
 
   @Override
-  protected String method(Method method) {
+  public String method(Method method) {
     return method.getName();
   }
 }

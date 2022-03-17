@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -171,7 +171,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    *
    * <ul>
    *   <li>CLIENT nested spans are suppressed depending on their type: {@linkplain
-   *       HttpClientAttributesExtractor HTTP}, {@linkplain RpcAttributesExtractor RPC} or
+   *       HttpClientAttributesExtractor HTTP}, {@linkplain RpcClientAttributesExtractor RPC} or
    *       {@linkplain DbClientAttributesExtractor database} clients. If a span with the same type
    *       is present in the parent context object, new span of the same type will not be started.
    * </ul>
