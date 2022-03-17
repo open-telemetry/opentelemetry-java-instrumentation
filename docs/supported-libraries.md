@@ -138,8 +138,8 @@ These are the JVMs and operating systems that the integration tests are run agai
 
 | JVM                                               | Versions  | OS                             |
 | ------------------------------------------------- | --------- | ------------------------------ |
-| [AdoptOpenJDK Hotspot](https://adoptopenjdk.net/) | 8, 11, 15 | Ubuntu 18, Windows Server 2019 |
-| [AdoptOpenJDK OpenJ9](https://adoptopenjdk.net/)  | 8, 11, 15 | Ubuntu 18, Windows Server 2019 |
+| [AdoptOpenJDK Hotspot](https://adoptopenjdk.net/) | 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
+| [AdoptOpenJDK OpenJ9](https://adoptopenjdk.net/)  | 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
 
 ## Disabled instrumentations
 
