@@ -25,10 +25,10 @@ jobs:
         test-java-version:
           - 8
           - 11
-          - 15
+          - 17
         vm:
-          - hotspot
-          - openj9
+          - temurin
+          - adopt-openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
@@ -37,7 +37,7 @@ jobs:
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
         uses: actions/setup-java@v2
         with:
-          distribution: adopt-${{ matrix.vm }}
+          distribution: ${{ matrix.vm }}
           java-version: ${{ matrix.test-java-version }}
 
       - name: Set up JDK 11 for running Gradle

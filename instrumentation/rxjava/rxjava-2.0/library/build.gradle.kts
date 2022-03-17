@@ -10,5 +10,9 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+  // required on jdk17, uses spock Mock that needs access to jdk internals
+  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
   jvmArgs("-Dio.opentelemetry.context.enableStrictContext=false")
 }
