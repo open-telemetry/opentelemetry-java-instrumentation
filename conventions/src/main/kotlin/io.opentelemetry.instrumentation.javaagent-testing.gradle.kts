@@ -39,8 +39,14 @@ dependencies {
 
   // Used by byte-buddy but not brought in as a transitive dependency
   compileOnly("com.google.code.findbugs:annotations")
+}
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+testing {
+  suites.withType(JvmTestSuite::class).configureEach {
+    dependencies {
+      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+    }
+  }
 }
 
 val testInstrumentation by configurations.creating {

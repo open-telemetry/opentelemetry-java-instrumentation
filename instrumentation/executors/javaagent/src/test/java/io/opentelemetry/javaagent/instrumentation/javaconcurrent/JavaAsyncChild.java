@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import java.util.concurrent.Callable;
@@ -55,8 +57,13 @@ public class JavaAsyncChild extends ForkJoinTask<Object> implements Runnable, Ca
     return null;
   }
 
-  public void waitForCompletion() throws InterruptedException {
-    latch.await();
+  public void waitForCompletion() {
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new AssertionError(e);
+    }
   }
 
   private void runImpl() {
