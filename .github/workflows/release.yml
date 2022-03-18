@@ -67,25 +67,32 @@ jobs:
       - name: Set versions
         id: set-versions
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
-          if [[ $v =~ ([0-9]+).([0-9]+).0 ]]; then
+          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          if [[ $v =~ ([0-9]+).([0-9]+).([0-9]+) ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
           else
             echo "unexpected version: $v"
             exit 1
           fi
-          if [[ $minor == 0 ]]; then
-            prior_major=$((major - 1))
-            prior_minor=$(grep -Po "^## Version $prior_major.\K([0-9]+)" CHANGELOG.md  | head -1)
-            prior="$prior_major.$prior_minor"
+          if [[ $patch == 0 ]]; then
+            if [[ $minor == 0 ]]; then
+              prior_major=$((major - 1))
+              prior_minor=$(grep -Po "^## Version $prior_major.\K([0-9]+)" CHANGELOG.md  | head -1)
+              prior="$prior_major.$prior_minor"
+            else
+              prior="$major.$((minor - 1)).0"
+            fi
           else
-            prior="$major.$((minor - 1)).0"
+              prior="$major.$minor.$((patch - 1))"
           fi
           echo "::set-output name=release-version::$v"
           echo "::set-output name=prior-version::$prior"
+          echo "::set-output name=patch-version::$patch"
 
-      - name: Generate Release Notes
+      - name: Generate release notes
+        if: ${{ steps.set-versions.outputs.patch-version == 0 }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -111,6 +118,25 @@ jobs:
           EOF
 
           .github/scripts/generate-release-contributors.sh v${{ steps.set-versions.outputs.prior-version }} v${{ steps.set-versions.outputs.release-version }} >> release-notes.txt
+
+      - name: Generate patch release notes
+        if: ${{ steps.set-versions.outputs.patch-version != 0 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat > release-notes.txt << EOF
+          This is a patch release on the previous ${{ steps.set-versions.outputs.prior-version }} release, fixing the issue(s) below.
+
+          EOF
+
+          sed -n '/^## Version ${{ steps.set-versions.outputs.release-version }}/,/^## Version /p' CHANGELOG.md \
+            | tail -n +2 \
+            | head -n -1 \
+            | perl -0pe 's/^\n+//g' \
+            | perl -0pe 's/\n+$/\n/g' \
+            | sed -r 's,\[#([0-9]+)]\(https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/[0-9]+\),#\1,' \
+            | perl -0pe 's/\n +/ /g' \
+            >> release-notes.txt
 
       - name: Create Release
         id: create_release
