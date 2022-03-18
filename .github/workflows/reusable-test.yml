@@ -46,6 +46,13 @@ jobs:
           distribution: temurin
           java-version: 11
 
+      # vaadin tests use pnpm
+      - name: Cache pnpm modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-test-cache-pnpm-modules
+
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh
 

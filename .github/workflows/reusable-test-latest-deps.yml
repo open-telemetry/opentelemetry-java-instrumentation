@@ -40,6 +40,13 @@ jobs:
           distribution: temurin
           java-version: 11
 
+      # vaadin tests use pnpm
+      - name: Cache pnpm modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-test-latest-cache-pnpm-modules
+
       - name: Test
         if: ${{ !inputs.skip }}
         uses: gradle/gradle-build-action@v2
