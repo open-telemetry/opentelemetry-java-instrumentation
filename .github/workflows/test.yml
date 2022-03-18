@@ -46,6 +46,7 @@ jobs:
           distribution: temurin
           java-version: 11
 
+      # vaadin tests use pnmp
       - name: Cache pnpm modules
         uses: actions/cache@v2
         with:
