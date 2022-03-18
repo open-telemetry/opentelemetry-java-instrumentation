@@ -39,7 +39,6 @@ tasks {
     filter {
       includeTestsMatching("ReactorNettyConnectionSpanTest")
       includeTestsMatching("ReactorNettyClientSslTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
@@ -47,11 +46,13 @@ tasks {
   }
 
   test {
-    dependsOn(testConnectionSpan)
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
       excludeTestsMatching("ReactorNettyClientSslTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testConnectionSpan)
   }
 }

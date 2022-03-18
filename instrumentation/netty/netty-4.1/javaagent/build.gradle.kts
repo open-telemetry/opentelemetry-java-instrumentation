@@ -43,7 +43,6 @@ tasks {
     filter {
       includeTestsMatching("Netty41ConnectionSpanTest")
       includeTestsMatching("Netty41ClientSslTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
@@ -53,12 +52,14 @@ tasks {
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
-    dependsOn(testConnectionSpan)
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
       excludeTestsMatching("Netty41ClientSslTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testConnectionSpan)
   }
 }
 
