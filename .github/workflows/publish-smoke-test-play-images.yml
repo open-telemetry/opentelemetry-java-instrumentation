@@ -52,7 +52,7 @@ jobs:
 
   issue:
     name: Open issue on failure
-    needs: publish
+    needs: [ publish, publish-java-15 ]
     runs-on: ubuntu-latest
     if: always()
     steps:
