@@ -38,3 +38,9 @@ dependencies {
   latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.+")
   latestDepTestLibrary("com.couchbase.client:java-client:2.+")
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}

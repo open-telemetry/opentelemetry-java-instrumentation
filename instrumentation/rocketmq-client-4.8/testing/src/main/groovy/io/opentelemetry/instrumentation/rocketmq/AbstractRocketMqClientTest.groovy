@@ -8,10 +8,13 @@ package io.opentelemetry.instrumentation.rocketmq
 import base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
 import org.apache.rocketmq.client.producer.DefaultMQProducer
 import org.apache.rocketmq.client.producer.SendCallback
 import org.apache.rocketmq.client.producer.SendResult
+import org.apache.rocketmq.client.producer.SendStatus
 import org.apache.rocketmq.common.message.Message
 import org.apache.rocketmq.remoting.common.RemotingHelper
 import spock.lang.Shared
@@ -66,17 +69,27 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     BaseConf.deleteTempDir()
   }
 
+  def setup() {
+    tracingMessageListener.reset()
+  }
+
   def "test rocketmq produce callback"() {
+    CompletableFuture<SendResult> result = new CompletableFuture<>()
     when:
     producer.send(msg, new SendCallback() {
       @Override
       void onSuccess(SendResult sendResult) {
+        result.complete(sendResult)
       }
 
       @Override
       void onException(Throwable throwable) {
+        result.completeExceptionally(throwable)
       }
     })
+    result.get(10, TimeUnit.SECONDS).sendStatus == SendStatus.SEND_OK
+    // waiting longer than assertTraces below does on its own because of CI flakiness
+    tracingMessageListener.waitForMessages()
 
     then:
     assertTraces(1) {
@@ -123,8 +136,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   def "test rocketmq produce and consume"() {
     when:
     runWithSpan("parent") {
-      producer.send(msg)
+      SendResult sendResult = producer.send(msg)
+      assert sendResult.sendStatus == SendStatus.SEND_OK
     }
+    // waiting longer than assertTraces below does on its own because of CI flakiness
+    tracingMessageListener.waitForMessages()
 
     then:
     assertTraces(1) {
