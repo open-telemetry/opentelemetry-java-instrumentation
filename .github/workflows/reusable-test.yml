@@ -40,11 +40,11 @@ jobs:
           distribution: ${{ matrix.vm == 'hotspot' && 'temurin' || 'adopt-openj9'}}
           java-version: ${{ matrix.test-java-version }}
 
-      - name: Set up JDK 11 for running Gradle
+      - name: Set up JDK for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: temurin
-          java-version: 11
+          java-version: 17
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules

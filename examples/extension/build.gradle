@@ -10,8 +10,8 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id "com.github.johnrengelman.shadow" version "6.1.0"
-  id "com.diffplug.spotless" version "6.1.2"
+  id "com.github.johnrengelman.shadow" version "7.1.2"
+  id "com.diffplug.spotless" version "6.3.0"
 
   id "io.opentelemetry.instrumentation.muzzle-generation" version "1.13.0-alpha-SNAPSHOT"
   id "io.opentelemetry.instrumentation.muzzle-check" version "1.13.0-alpha-SNAPSHOT"
