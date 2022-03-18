@@ -1,4 +1,4 @@
-name: Muzzle
+name: Reusable - Muzzle
 
 on:
   workflow_call:

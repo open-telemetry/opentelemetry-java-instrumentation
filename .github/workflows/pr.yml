@@ -1,4 +1,4 @@
-name: PR build
+name: PR
 
 on: pull_request
 
@@ -8,12 +8,12 @@ concurrency:
 
 jobs:
   build:
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/reusable-build.yml
     with:
       cache-read-only: true
 
   test:
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/reusable-test.yml
     with:
       cache-read-only: true
 
@@ -31,13 +31,13 @@ jobs:
     #
     # and the name is updated when the steps below are skipped which makes what's happening clearer
     # in the GitHub UI
-    uses: ./.github/workflows/test-latest-deps.yml
+    uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
       skip: ${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
       cache-read-only: true
 
   smoke-test:
-    uses: ./.github/workflows/smoke-test.yml
+    uses: ./.github/workflows/reusable-smoke-test.yml
     with:
       # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
       skip-windows: true
@@ -48,12 +48,12 @@ jobs:
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
     if: ${{ !startsWith(github.base_ref, 'v') }}
-    uses: ./.github/workflows/muzzle.yml
+    uses: ./.github/workflows/reusable-muzzle.yml
     with:
       cache-read-only: true
 
   examples:
-    uses: ./.github/workflows/examples.yml
+    uses: ./.github/workflows/reusable-examples.yml
     with:
       cache-read-only: true
 

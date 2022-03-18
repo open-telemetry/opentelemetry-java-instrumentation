@@ -19,7 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingSpanNameExtractorTest {
-  @Mock MessagingAttributesExtractor<Message, Void> attributesExtractor;
+
+  @Mock MessagingAttributesGetter<Message, Void> getter;
 
   @ParameterizedTest
   @MethodSource("spanNameParams")
@@ -32,13 +33,12 @@ class MessagingSpanNameExtractorTest {
     Message message = new Message();
 
     if (isTemporaryQueue) {
-      given(attributesExtractor.temporaryDestination(message)).willReturn(true);
+      given(getter.temporaryDestination(message)).willReturn(true);
     } else {
-      given(attributesExtractor.destination(message)).willReturn(destinationName);
+      given(getter.destination(message)).willReturn(destinationName);
     }
-    given(attributesExtractor.operation()).willReturn(operation);
 
-    SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(attributesExtractor);
+    SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(getter, operation);
 
     // when
     String spanName = underTest.extract(message);

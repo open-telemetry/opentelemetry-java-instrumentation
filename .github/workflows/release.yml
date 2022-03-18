@@ -5,7 +5,7 @@ on:
 
 jobs:
   test:
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/reusable-test.yml
 
   # testLatestDeps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
@@ -13,14 +13,14 @@ jobs:
   # or due to slight changes in emitted telemetry
 
   smoke-test:
-    uses: ./.github/workflows/smoke-test.yml
+    uses: ./.github/workflows/reusable-smoke-test.yml
 
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,
   # and this is not a reason to hold up the release
 
   examples:
-    uses: ./.github/workflows/examples.yml
+    uses: ./.github/workflows/reusable-examples.yml
 
   release:
     needs: [ test, smoke-test, examples ]
