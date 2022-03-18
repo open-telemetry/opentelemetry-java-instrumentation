@@ -35,7 +35,6 @@ tasks {
   val testPropagationDisabled by registering(Test::class) {
     filter {
       includeTestsMatching("KafkaClientPropagationDisabledTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/KafkaClientPropagationDisabledTest.*")
     jvmArgs("-Dotel.instrumentation.kafka.client-propagation.enabled=false")
@@ -44,19 +43,20 @@ tasks {
   val testReceiveSpansDisabled by registering(Test::class) {
     filter {
       includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
   test {
-    dependsOn(testPropagationDisabled)
-    dependsOn(testReceiveSpansDisabled)
     filter {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-      isFailOnNoMatchingTests = false
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testPropagationDisabled)
+    dependsOn(testReceiveSpansDisabled)
   }
 }

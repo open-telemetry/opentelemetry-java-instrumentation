@@ -30,17 +30,18 @@ tasks {
   val testConnectionSpan by registering(Test::class) {
     filter {
       includeTestsMatching("ReactorNettyConnectionSpanTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/ReactorNettyConnectionSpanTest.*")
     jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
   }
 
   test {
-    dependsOn(testConnectionSpan)
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testConnectionSpan)
   }
 }

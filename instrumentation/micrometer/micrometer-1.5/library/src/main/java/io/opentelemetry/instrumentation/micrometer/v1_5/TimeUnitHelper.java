@@ -15,9 +15,9 @@ final class TimeUnitHelper {
 
   private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryMeterRegistry.class);
 
-  static TimeUnit parseConfigValue(@Nullable String value) {
+  static TimeUnit parseConfigValue(@Nullable String value, TimeUnit defaultUnit) {
     if (value == null) {
-      return TimeUnit.MILLISECONDS;
+      return defaultUnit;
     }
     // short names are UCUM names
     // long names are just TimeUnit values lowercased
@@ -45,9 +45,10 @@ final class TimeUnitHelper {
         return TimeUnit.DAYS;
       default:
         logger.warn(
-            "Invalid base time unit: '{}'; using microseconds as the base time unit instead",
-            value);
-        return TimeUnit.MILLISECONDS;
+            "Invalid base time unit: '{}'; using '{}' as the base time unit instead",
+            value,
+            getUnitString(defaultUnit));
+        return defaultUnit;
     }
   }
 

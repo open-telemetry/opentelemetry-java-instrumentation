@@ -53,10 +53,6 @@ dependencies {
 }
 
 tasks {
-  named<GroovyCompile>("compileLatestDepTestGroovy") {
-    classpath = classpath.plus(files(sourceSets["latestDepTest"].scala.classesDirectory))
-  }
-
   if (findProperty("testLatestDeps") as Boolean) {
     // Separate task
     named("test") {

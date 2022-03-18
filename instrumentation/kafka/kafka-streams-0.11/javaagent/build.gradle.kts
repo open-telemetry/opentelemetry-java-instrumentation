@@ -34,17 +34,18 @@ tasks {
   val testReceiveSpansDisabled by registering(Test::class) {
     filter {
       includeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/KafkaStreamsSuppressReceiveSpansTest.*")
   }
 
   test {
-    dependsOn(testReceiveSpansDisabled)
     filter {
       excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
-      isFailOnNoMatchingTests = false
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testReceiveSpansDisabled)
   }
 }

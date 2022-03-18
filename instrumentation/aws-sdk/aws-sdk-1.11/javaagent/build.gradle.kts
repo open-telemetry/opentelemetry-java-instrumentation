@@ -85,14 +85,7 @@ dependencies {
 }
 
 tasks {
-  val test_before_1_11_106 by existing(Test::class) {
-    filter {
-      // this is needed because "test.dependsOn test_before_1_11_106", and so without this,
-      // running a single test in the default test set will fail
-      setFailOnNoMatchingTests(false)
-    }
-  }
-
+  val test_before_1_11_106 by existing
   val testSqs by existing
 
   if (!(findProperty("testLatestDeps") as Boolean)) {

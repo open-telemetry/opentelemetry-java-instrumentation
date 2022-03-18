@@ -374,7 +374,10 @@ public abstract class AbstractHttpServerTest<SERVER> {
           () -> {
             Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index);
             propagator.inject(Context.current(), request, setter);
-            client.execute(request.build()).aggregate().thenRun(latch::countDown);
+            client
+                .execute(request.build())
+                .aggregate()
+                .whenComplete((result, throwable) -> latch.countDown());
           });
     }
     latch.await();
