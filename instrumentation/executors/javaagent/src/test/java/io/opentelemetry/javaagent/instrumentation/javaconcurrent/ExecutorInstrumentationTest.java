@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -24,32 +22,32 @@ import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.api.function.ThrowingConsumer;
 
-@SuppressWarnings("ClassCanBeStatic")
-class ExecutorInstrumentationTest {
+abstract class ExecutorInstrumentationTest<T extends ExecutorService>
+    extends AbstractExecutorServiceTest<T, JavaAsyncChild> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @Nested
-  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-  class ThreadPoolExecutorTest extends AbstractExecutorServiceTest<ThreadPoolExecutor> {
+  ExecutorInstrumentationTest(T executor) {
+    super(executor, testing);
+  }
+
+  @Override
+  protected JavaAsyncChild newTask(boolean doTraceableWork, boolean blockThread) {
+    return new JavaAsyncChild(doTraceableWork, blockThread);
+  }
+
+  static class ThreadPoolExecutorTest extends ExecutorInstrumentationTest<ThreadPoolExecutor> {
     ThreadPoolExecutorTest() {
       super(new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<>(20)));
     }
   }
 
-  @Nested
-  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-  class ScheduledThreadPoolExecutorTest
-      extends AbstractExecutorServiceTest<ScheduledThreadPoolExecutor> {
+  static class ScheduledThreadPoolExecutorTest
+      extends ExecutorInstrumentationTest<ScheduledThreadPoolExecutor> {
     ScheduledThreadPoolExecutorTest() {
       super(new ScheduledThreadPoolExecutor(1));
     }
@@ -96,9 +94,7 @@ class ExecutorInstrumentationTest {
     }
   }
 
-  @Nested
-  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-  class ForkJoinPoolTest extends AbstractExecutorServiceTest<ForkJoinPool> {
+  static class ForkJoinPoolTest extends ExecutorInstrumentationTest<ForkJoinPool> {
     ForkJoinPoolTest() {
       super(new ForkJoinPool(20));
     }
@@ -115,155 +111,11 @@ class ExecutorInstrumentationTest {
   }
 
   // CustomThreadPoolExecutor would normally be disabled except enabled by system property.
-  @Nested
-  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-  class CustomThreadPoolExecutorTest extends AbstractExecutorServiceTest<CustomThreadPoolExecutor> {
+  static class CustomThreadPoolExecutorTest
+      extends ExecutorInstrumentationTest<CustomThreadPoolExecutor> {
     CustomThreadPoolExecutorTest() {
       super(new CustomThreadPoolExecutor());
     }
-  }
-
-  abstract static class AbstractExecutorServiceTest<T extends ExecutorService> {
-    private final T executor;
-
-    AbstractExecutorServiceTest(T executor) {
-      this.executor = executor;
-    }
-
-    T executor() {
-      return executor;
-    }
-
-    @AfterAll
-    void shutdown() throws Exception {
-      executor.shutdown();
-      executor.awaitTermination(10, TimeUnit.SECONDS);
-    }
-
-    @Test
-    void executeRunnable() {
-      executeTwoTasks(executor::execute);
-    }
-
-    @Test
-    void submitRunnable() {
-      executeTwoTasks(task -> executor.submit((Runnable) task));
-    }
-
-    @Test
-    void submitCallable() {
-      executeTwoTasks(task -> executor.submit((Callable<?>) task));
-    }
-
-    @Test
-    void invokeAll() {
-      executeTwoTasks(task -> executor.invokeAll(Collections.singleton(task)));
-    }
-
-    @Test
-    void invokeAllWithTimeout() {
-      executeTwoTasks(
-          task -> executor.invokeAll(Collections.singleton(task), 10, TimeUnit.SECONDS));
-    }
-
-    @Test
-    void invokeAny() {
-      executeTwoTasks(task -> executor.invokeAny(Collections.singleton(task)));
-    }
-
-    @Test
-    void invokeAnyWithTimeout() {
-      executeTwoTasks(
-          task -> executor.invokeAny(Collections.singleton(task), 10, TimeUnit.SECONDS));
-    }
-
-    @Test
-    void executeLambdaRunnable() {
-      executeTwoTasks(task -> executor.execute(() -> task.run()));
-    }
-
-    @Test
-    void submitLambdaRunnable() {
-      executeTwoTasks(task -> executor.submit(() -> task.run()));
-    }
-
-    @Test
-    void submitLambdaCallable() {
-      executeTwoTasks(
-          task ->
-              executor.submit(
-                  () -> {
-                    task.run();
-                    return null;
-                  }));
-    }
-
-    @Test
-    void submitRunnableAndCancel() {
-      executeAndCancelTasks(task -> executor.submit((Runnable) task));
-    }
-
-    @Test
-    void submitCallableAndCancel() {
-      executeAndCancelTasks(task -> executor.submit((Callable<?>) task));
-    }
-  }
-
-  static void executeTwoTasks(ThrowingConsumer<JavaAsyncChild> task) {
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          // this child will have a span
-          JavaAsyncChild child1 = new JavaAsyncChild();
-          // this child won't
-          JavaAsyncChild child2 = new JavaAsyncChild(false, false);
-          try {
-            task.accept(child1);
-            task.accept(child2);
-          } catch (Throwable t) {
-            throw new AssertionError(t);
-          }
-          child1.waitForCompletion();
-          child2.waitForCompletion();
-        });
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("asyncChild")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
-  }
-
-  static void executeAndCancelTasks(Function<JavaAsyncChild, Future<?>> task) {
-    List<JavaAsyncChild> children = new ArrayList<>();
-    List<Future<?>> jobFutures = new ArrayList<>();
-
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          for (int i = 0; i < 20; i++) {
-            // Our current instrumentation instrumentation does not behave very well
-            // if we try to reuse Callable/Runnable. Namely we would be getting 'orphaned'
-            // child traces sometimes since state can contain only one parent span - and
-            // we do not really have a good way for attributing work to correct parent span
-            // if we reuse Callable/Runnable.
-            // Solution for now is to never reuse a Callable/Runnable.
-            JavaAsyncChild child = new JavaAsyncChild(true, true);
-            children.add(child);
-            Future<?> f = task.apply(child);
-            jobFutures.add(f);
-          }
-
-          jobFutures.forEach(f -> f.cancel(false));
-          children.forEach(JavaAsyncChild::unblock);
-        });
-
-    // Just check there is a single trace, this test is primarily to make sure that scopes aren't
-    // leak on
-    // cancellation.
-    testing.waitAndAssertTraces(trace -> {});
   }
 
   @SuppressWarnings("RedundantOverride")

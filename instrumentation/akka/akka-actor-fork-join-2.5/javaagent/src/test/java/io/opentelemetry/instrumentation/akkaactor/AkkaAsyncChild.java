@@ -3,25 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.akkaactor;
+
+import akka.dispatch.forkjoin.ForkJoinTask;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
-import java.util.concurrent.Callable;
+import io.opentelemetry.javaagent.instrumentation.javaconcurrent.TestTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-import scala.concurrent.forkjoin.ForkJoinTask;
 
-public class ScalaAsyncChild extends ForkJoinTask<Object> implements Runnable, Callable<Object> {
+final class AkkaAsyncChild extends ForkJoinTask<Object> implements TestTask {
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
   private final CountDownLatch latch = new CountDownLatch(1);
 
-  public ScalaAsyncChild() {
-    this(/* doTraceableWork= */ true, /* blockThread= */ false);
-  }
-
-  public ScalaAsyncChild(boolean doTraceableWork, boolean blockThread) {
+  public AkkaAsyncChild(boolean doTraceableWork, boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }
@@ -40,6 +38,7 @@ public class ScalaAsyncChild extends ForkJoinTask<Object> implements Runnable, C
     return true;
   }
 
+  @Override
   public void unblock() {
     blockThread.set(false);
   }
@@ -55,8 +54,14 @@ public class ScalaAsyncChild extends ForkJoinTask<Object> implements Runnable, C
     return null;
   }
 
-  public void waitForCompletion() throws InterruptedException {
-    latch.await();
+  @Override
+  public void waitForCompletion() {
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new AssertionError(e);
+    }
   }
 
   private void runImpl() {
