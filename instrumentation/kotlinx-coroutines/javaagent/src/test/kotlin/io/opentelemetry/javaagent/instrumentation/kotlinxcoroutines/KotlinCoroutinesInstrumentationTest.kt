@@ -49,6 +49,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
+import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -352,7 +353,7 @@ class KotlinCoroutinesInstrumentationTest {
       }
     }
 
-    await().untilAsserted {
+    await().atMost(Duration.ofSeconds(30)).untilAsserted {
       val traces = testing.waitForTraces(assertions.size)
       assertThat(traces).satisfiesExactlyInAnyOrder(*assertions.toTypedArray())
     }
