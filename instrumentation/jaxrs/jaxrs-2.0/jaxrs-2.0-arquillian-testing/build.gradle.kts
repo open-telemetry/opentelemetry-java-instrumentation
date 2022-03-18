@@ -1,5 +1,5 @@
 plugins {
-  id("otel.javaagent-testing")
+  id("otel.java-conventions")
 }
 
 dependencies {

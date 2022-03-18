@@ -64,7 +64,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: deadlock-detector-test-${{ matrix.test-java-version }}
+          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 

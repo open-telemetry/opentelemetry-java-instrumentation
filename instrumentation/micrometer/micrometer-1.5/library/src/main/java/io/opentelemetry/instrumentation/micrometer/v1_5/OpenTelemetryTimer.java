@@ -81,7 +81,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
   @Override
   protected void recordNonNegative(long amount, TimeUnit unit) {
-    if (amount >= 0 && !removed) {
+    if (!removed) {
       long nanos = unit.toNanos(amount);
       double time = TimeUtils.nanosToUnit(nanos, baseTimeUnit);
       otelHistogram.record(time, attributes);
