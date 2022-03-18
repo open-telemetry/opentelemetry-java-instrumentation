@@ -5,31 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-public class RabbitDeliveryAttributesExtractor
-    extends MessagingAttributesExtractor<DeliveryRequest, Void> {
-  @Override
-  public MessageOperation operation() {
-    return MessageOperation.PROCESS;
-  }
+enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<DeliveryRequest, Void> {
+  INSTANCE;
 
   @Override
-  protected String system(DeliveryRequest request) {
+  public String system(DeliveryRequest request) {
     return "rabbitmq";
   }
 
   @Override
-  protected String destinationKind(DeliveryRequest request) {
+  public String destinationKind(DeliveryRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.QUEUE;
   }
 
   @Nullable
   @Override
-  protected String destination(DeliveryRequest request) {
+  public String destination(DeliveryRequest request) {
     if (request.getEnvelope() != null) {
       return normalizeExchangeName(request.getEnvelope().getExchange());
     } else {
@@ -42,37 +37,37 @@ public class RabbitDeliveryAttributesExtractor
   }
 
   @Override
-  protected boolean temporaryDestination(DeliveryRequest request) {
+  public boolean temporaryDestination(DeliveryRequest request) {
     return false;
   }
 
   @Nullable
   @Override
-  protected String protocol(DeliveryRequest request) {
+  public String protocol(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  protected String protocolVersion(DeliveryRequest request) {
+  public String protocolVersion(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  protected String url(DeliveryRequest request) {
+  public String url(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  protected String conversationId(DeliveryRequest request) {
+  public String conversationId(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  protected Long messagePayloadSize(DeliveryRequest request) {
+  public Long messagePayloadSize(DeliveryRequest request) {
     if (request.getBody() != null) {
       return (long) request.getBody().length;
     }
@@ -81,13 +76,13 @@ public class RabbitDeliveryAttributesExtractor
 
   @Nullable
   @Override
-  protected Long messagePayloadCompressedSize(DeliveryRequest request) {
+  public Long messagePayloadCompressedSize(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  protected String messageId(DeliveryRequest request, @Nullable Void unused) {
+  public String messageId(DeliveryRequest request, @Nullable Void unused) {
     return null;
   }
 }

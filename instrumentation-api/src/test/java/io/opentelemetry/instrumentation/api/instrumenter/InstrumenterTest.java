@@ -27,7 +27,6 @@ import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
@@ -657,8 +656,7 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_producer() {
-    when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
-    when(mockMessagingAttributes.internalGetSpanKey()).thenCallRealMethod();
+    when(mockMessagingAttributes.internalGetSpanKey()).thenReturn(SpanKey.PRODUCER);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockMessagingAttributes);
@@ -671,8 +669,7 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_mix() {
-    when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
-    when(mockMessagingAttributes.internalGetSpanKey()).thenCallRealMethod();
+    when(mockMessagingAttributes.internalGetSpanKey()).thenReturn(SpanKey.PRODUCER);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(

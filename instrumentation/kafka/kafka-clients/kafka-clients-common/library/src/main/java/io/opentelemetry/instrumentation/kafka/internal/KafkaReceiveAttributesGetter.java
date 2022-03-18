@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,27 +16,23 @@ import org.apache.kafka.common.TopicPartition;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class KafkaReceiveAttributesExtractor
-    extends MessagingAttributesExtractor<ReceivedRecords, Void> {
+public enum KafkaReceiveAttributesGetter
+    implements MessagingAttributesGetter<ReceivedRecords, Void> {
+  INSTANCE;
 
   @Override
-  public MessageOperation operation() {
-    return MessageOperation.RECEIVE;
-  }
-
-  @Override
-  protected String system(ReceivedRecords receivedRecords) {
+  public String system(ReceivedRecords receivedRecords) {
     return "kafka";
   }
 
   @Override
-  protected String destinationKind(ReceivedRecords receivedRecords) {
+  public String destinationKind(ReceivedRecords receivedRecords) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
   @Nullable
-  protected String destination(ReceivedRecords receivedRecords) {
+  public String destination(ReceivedRecords receivedRecords) {
     Set<String> topics =
         receivedRecords.records().partitions().stream()
             .map(TopicPartition::topic)
@@ -47,49 +42,49 @@ public final class KafkaReceiveAttributesExtractor
   }
 
   @Override
-  protected boolean temporaryDestination(ReceivedRecords receivedRecords) {
+  public boolean temporaryDestination(ReceivedRecords receivedRecords) {
     return false;
   }
 
   @Override
   @Nullable
-  protected String protocol(ReceivedRecords receivedRecords) {
+  public String protocol(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String protocolVersion(ReceivedRecords receivedRecords) {
+  public String protocolVersion(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String url(ReceivedRecords receivedRecords) {
+  public String url(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String conversationId(ReceivedRecords receivedRecords) {
+  public String conversationId(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  protected Long messagePayloadSize(ReceivedRecords receivedRecords) {
+  public Long messagePayloadSize(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  protected Long messagePayloadCompressedSize(ReceivedRecords receivedRecords) {
+  public Long messagePayloadCompressedSize(ReceivedRecords receivedRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String messageId(ReceivedRecords receivedRecords, @Nullable Void unused) {
+  public String messageId(ReceivedRecords receivedRecords, @Nullable Void unused) {
     return null;
   }
 }
