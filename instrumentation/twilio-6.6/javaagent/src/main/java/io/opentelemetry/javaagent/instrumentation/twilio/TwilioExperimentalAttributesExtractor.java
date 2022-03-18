@@ -14,14 +14,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class TwilioExperimentalAttributesExtractor implements AttributesExtractor<String, Object> {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(TwilioExperimentalAttributesExtractor.class);
+      Logger.getLogger(TwilioExperimentalAttributesExtractor.class.getName());
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, String s) {}
@@ -44,7 +44,7 @@ class TwilioExperimentalAttributesExtractor implements AttributesExtractor<Strin
             Uninterruptibles.getUninterruptibly(
                 (ListenableFuture<?>) result, 0, TimeUnit.MICROSECONDS);
       } catch (Exception e) {
-        logger.debug("Error unwrapping result", e);
+        logger.log(Level.FINE, "Error unwrapping result", e);
       }
     }
 

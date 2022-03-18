@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jms.JMSException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
   INSTANCE;
 
-  private static final Logger logger = LoggerFactory.getLogger(MessagePropertySetter.class);
+  private static final Logger logger = Logger.getLogger(MessagePropertySetter.class.getName());
 
   static final String DASH = "__dash__";
 
@@ -23,8 +23,8 @@ enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
     try {
       carrier.message().setStringProperty(propName, value);
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Failure setting jms property: {}", propName, e);
+      if (logger.isLoggable(Level.FINE)) {
+        logger.log(Level.FINE, "Failure setting jms property: " + propName, e);
       }
     }
   }

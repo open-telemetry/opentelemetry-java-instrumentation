@@ -17,8 +17,8 @@ import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * {@link RequestListener} which keeps track of <a
@@ -33,7 +33,7 @@ public final class HttpClientMetrics implements RequestListener {
   private static final ContextKey<State> HTTP_CLIENT_REQUEST_METRICS_STATE =
       ContextKey.named("http-client-request-metrics-state");
 
-  private static final Logger logger = LoggerFactory.getLogger(HttpClientMetrics.class);
+  private static final Logger logger = Logger.getLogger(HttpClientMetrics.class.getName());
 
   /**
    * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
@@ -67,8 +67,13 @@ public final class HttpClientMetrics implements RequestListener {
   public void end(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(HTTP_CLIENT_REQUEST_METRICS_STATE);
     if (state == null) {
-      logger.debug(
-          "No state present when ending context {}. Cannot record HTTP request metrics.", context);
+      if (logger.isLoggable(Level.FINE)) {
+        logger.log(
+            Level.FINE,
+            "No state present when ending context "
+                + context
+                + ". Cannot record HTTP request metrics.");
+      }
       return;
     }
     duration.record(

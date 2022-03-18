@@ -11,20 +11,20 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpF
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
   INSTANCE;
 
   private static final Logger logger =
-      LoggerFactory.getLogger(JettyClientHttpAttributesGetter.class);
+      Logger.getLogger(JettyClientHttpAttributesGetter.class.getName());
 
   @Override
   @Nullable
@@ -113,10 +113,13 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
     try {
       longFromField = httpField != null ? Long.getLong(httpField.getValue()) : null;
     } catch (NumberFormatException t) {
-      logger.debug(
-          "Value {} is not  not valid number format for header field: {}",
-          httpField.getValue(),
-          httpField.getName());
+      if (logger.isLoggable(Level.FINE)) {
+        logger.fine(
+            "Value "
+                + httpField.getValue()
+                + " is not valid number format for header field: "
+                + httpField.getName());
+      }
     }
     return longFromField;
   }

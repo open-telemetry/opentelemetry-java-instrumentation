@@ -10,9 +10,9 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class JdbcUtils {
 
-  private static final Logger logger = LoggerFactory.getLogger(JdbcUtils.class);
+  private static final Logger logger = Logger.getLogger(JdbcUtils.class.getName());
 
   @Nullable private static Field c3poField = null;
 
@@ -62,7 +62,7 @@ public final class JdbcUtils {
       }
     } catch (Throwable e) {
       // Had some problem getting the connection.
-      logger.debug("Could not get connection for StatementAdvice", e);
+      logger.log(Level.FINE, "Could not get connection for StatementAdvice", e);
       return null;
     }
     return connection;

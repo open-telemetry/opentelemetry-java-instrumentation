@@ -10,12 +10,12 @@ import io.opentelemetry.context.Scope;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<?>>> {
 
-  private static final Logger logger = LoggerFactory.getLogger(AsyncResultConsumerWrapper.class);
+  private static final Logger logger = Logger.getLogger(AsyncResultConsumerWrapper.class.getName());
 
   private final Consumer<Handler<AsyncResult<?>>> delegate;
   private final Context executionContext;
@@ -40,7 +40,9 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   public static Consumer<Handler<AsyncResult<?>>> wrapIfNeeded(
       Consumer<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultConsumerWrapper)) {
-      logger.debug("Wrapping consumer {}", delegate);
+      if (logger.isLoggable(Level.FINE)) {
+        logger.fine("Wrapping consumer " + delegate);
+      }
       return new AsyncResultConsumerWrapper(delegate, executionContext);
     }
     return delegate;

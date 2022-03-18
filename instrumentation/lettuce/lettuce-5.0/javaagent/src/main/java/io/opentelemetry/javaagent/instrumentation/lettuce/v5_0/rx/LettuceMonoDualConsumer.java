@@ -11,7 +11,7 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 import reactor.core.publisher.Mono;
 
 public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T, Throwable> {
@@ -38,8 +38,8 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
     if (context != null) {
       instrumenter().end(context, command, null, throwable);
     } else {
-      LoggerFactory.getLogger(Mono.class)
-          .error(
+      Logger.getLogger(Mono.class.getName())
+          .severe(
               "Failed to finish this.span, BiConsumer cannot find this.span because "
                   + "it probably wasn't started.");
     }

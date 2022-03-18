@@ -19,8 +19,8 @@ import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * {@link RequestListener} which keeps track of <a
@@ -35,7 +35,7 @@ public final class HttpServerMetrics implements RequestListener {
   private static final ContextKey<State> HTTP_SERVER_REQUEST_METRICS_STATE =
       ContextKey.named("http-server-request-metrics-state");
 
-  private static final Logger logger = LoggerFactory.getLogger(HttpServerMetrics.class);
+  private static final Logger logger = Logger.getLogger(HttpServerMetrics.class.getName());
 
   /**
    * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
@@ -79,8 +79,13 @@ public final class HttpServerMetrics implements RequestListener {
   public void end(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
-      logger.debug(
-          "No state present when ending context {}. Cannot reset HTTP request metrics.", context);
+      if (logger.isLoggable(Level.FINE)) {
+        logger.log(
+            Level.FINE,
+            "No state present when ending context "
+                + context
+                + ". Cannot record HTTP request metrics.");
+      }
       return;
     }
     activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()));

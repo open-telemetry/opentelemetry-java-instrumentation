@@ -17,8 +17,6 @@ dependencies {
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-semconv")
 
-  implementation("org.slf4j:slf4j-api")
-
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 

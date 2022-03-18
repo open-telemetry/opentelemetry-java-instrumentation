@@ -17,12 +17,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 class OtlpInMemorySpanExporter implements SpanExporter {
 
-  private static final Logger logger = LoggerFactory.getLogger(OtlpInMemorySpanExporter.class);
+  private static final Logger logger = Logger.getLogger(OtlpInMemorySpanExporter.class.getName());
 
   private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
 
@@ -37,7 +36,7 @@ class OtlpInMemorySpanExporter implements SpanExporter {
   @Override
   public CompletableResultCode export(Collection<SpanData> spans) {
     for (SpanData span : spans) {
-      logger.info("Exporting span {}", span);
+      logger.info("Exporting span " + span);
     }
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     try {

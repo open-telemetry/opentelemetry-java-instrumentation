@@ -11,12 +11,12 @@ import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinit
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An element matcher that matches a super type. This is different from {@link
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
 
-  private static final Logger logger = LoggerFactory.getLogger(SafeHasSuperTypeMatcher.class);
+  private static final Logger logger = Logger.getLogger(SafeHasSuperTypeMatcher.class.getName());
 
   /** The matcher to apply to any super type of the matched type. */
   private final ElementMatcher<TypeDescription.Generic> matcher;
@@ -102,12 +102,13 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     try {
       return typeDefinition.getSuperClass();
     } catch (Throwable e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(
-            "{} trying to get super class for target {}: {}",
-            e.getClass().getSimpleName(),
-            safeTypeDefinitionName(typeDefinition),
-            e.getMessage());
+      if (logger.isLoggable(Level.FINE)) {
+        logger.fine(
+            e.getClass().getSimpleName()
+                + " trying to get super class for target "
+                + safeTypeDefinitionName(typeDefinition)
+                + ": "
+                + e.getMessage());
       }
       return null;
     }
@@ -192,12 +193,13 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     }
 
     private static void logException(TypeDefinition typeDefinition, Throwable e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(
-            "{} trying to get interfaces for target {}: {}",
-            e.getClass().getSimpleName(),
-            safeTypeDefinitionName(typeDefinition),
-            e.getMessage());
+      if (logger.isLoggable(Level.FINE)) {
+        logger.fine(
+            e.getClass().getSimpleName()
+                + " trying to get interfaces for target "
+                + safeTypeDefinitionName(typeDefinition)
+                + ": "
+                + e.getMessage());
       }
     }
   }

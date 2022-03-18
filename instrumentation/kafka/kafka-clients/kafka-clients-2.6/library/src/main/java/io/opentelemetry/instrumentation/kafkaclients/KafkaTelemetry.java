@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -17,6 +19,7 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRecordGetter
 import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
+import java.util.logging.Logger;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -25,11 +28,9 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.Headers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class KafkaTelemetry {
-  private static final Logger logger = LoggerFactory.getLogger(KafkaTelemetry.class);
+  private static final Logger logger = Logger.getLogger(KafkaTelemetry.class.getName());
 
   private static final TextMapGetter<ConsumerRecord<?, ?>> GETTER =
       KafkaConsumerRecordGetter.INSTANCE;
@@ -93,7 +94,7 @@ public final class KafkaTelemetry {
         propagator().inject(current, record.headers(), SETTER);
       } catch (Throwable t) {
         // it can happen if headers are read only (when record is sent second time)
-        logger.error("failed to inject span context. sending record second time?", t);
+        logger.log(WARNING, "failed to inject span context. sending record second time?", t);
       }
     }
 

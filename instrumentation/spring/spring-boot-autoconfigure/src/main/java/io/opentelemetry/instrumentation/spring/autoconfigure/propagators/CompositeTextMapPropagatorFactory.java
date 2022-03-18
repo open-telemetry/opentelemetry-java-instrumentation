@@ -15,8 +15,7 @@ import io.opentelemetry.extension.trace.propagation.OtTracePropagator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.util.ClassUtils;
 
@@ -24,7 +23,7 @@ import org.springframework.util.ClassUtils;
 public final class CompositeTextMapPropagatorFactory {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(CompositeTextMapPropagatorFactory.class);
+      Logger.getLogger(CompositeTextMapPropagatorFactory.class.getName());
 
   static TextMapPropagator getCompositeTextMapPropagator(
       BeanFactory beanFactory, List<String> types) {
@@ -80,7 +79,7 @@ public final class CompositeTextMapPropagatorFactory {
           propagators.add(W3CBaggagePropagator.getInstance());
           break;
         default:
-          logger.warn("Unsupported type of propagator: {}", type);
+          logger.warning("Unsupported type of propagator: " + type);
           break;
       }
     }

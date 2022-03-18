@@ -11,15 +11,15 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;
 import java.rmi.server.ObjID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sun.rmi.transport.Connection;
 import sun.rmi.transport.StreamRemoteCall;
 import sun.rmi.transport.TransportConstants;
 
 public class ContextPropagator {
 
-  private static final Logger logger = LoggerFactory.getLogger(ContextPropagator.class);
+  private static final Logger logger = Logger.getLogger(ContextPropagator.class.getName());
 
   // Internal RMI object ids that we don't want to trace
   private static final ObjID ACTIVATOR_ID = new ObjID(ObjID.ACTIVATOR_ID);
@@ -51,7 +51,7 @@ public class ContextPropagator {
       VirtualField<Connection, Boolean> knownConnections, Connection c, Context context) {
     if (checkIfContextCanBePassed(knownConnections, c)) {
       if (!syntheticCall(c, ContextPayload.from(context), CONTEXT_PAYLOAD_OPERATION_ID)) {
-        logger.debug("Couldn't send context payload");
+        logger.fine("Couldn't send context payload");
       }
     }
   }
@@ -99,10 +99,10 @@ public class ContextPropagator {
           if (ex instanceof NoSuchObjectException) {
             return false;
           } else {
-            logger.debug("Server error when executing synthetic call", ex);
+            logger.log(Level.FINE, "Server error when executing synthetic call", ex);
           }
         } else {
-          logger.debug("Error executing synthetic call", e);
+          logger.log(Level.FINE, "Error executing synthetic call", e);
         }
         return false;
       } finally {
@@ -110,7 +110,7 @@ public class ContextPropagator {
       }
 
     } catch (IOException e) {
-      logger.debug("Communication error executing synthetic call", e);
+      logger.log(Level.FINE, "Communication error executing synthetic call", e);
       return false;
     }
     return true;

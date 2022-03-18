@@ -14,14 +14,13 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * JettyHttpClient9TracingInterceptor does three jobs stimulated from the Jetty Request object from
@@ -40,7 +39,7 @@ public class JettyHttpClient9TracingInterceptor
         Response.CompleteListener {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(JettyHttpClient9TracingInterceptor.class);
+      Logger.getLogger(JettyHttpClient9TracingInterceptor.class.getName());
 
   private static final Class<?>[] requestlistenerInterfaces = {
     Request.BeginListener.class,
@@ -74,7 +73,7 @@ public class JettyHttpClient9TracingInterceptor
         jettyRequest.getRequestListeners(JettyHttpClient9TracingInterceptor.class);
 
     if (!current.isEmpty()) {
-      logger.warn("A tracing interceptor is already in place for this request! ");
+      logger.warning("A tracing interceptor is already in place for this request!");
       return;
     }
     startSpan(jettyRequest);
@@ -174,7 +173,7 @@ public class JettyHttpClient9TracingInterceptor
     if (this.context != null) {
       instrumenter.end(this.context, response.getRequest(), response, null);
     } else {
-      logger.debug("onComplete - could not find an otel context");
+      logger.fine("onComplete - could not find an otel context");
     }
   }
 }

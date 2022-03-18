@@ -11,7 +11,5 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation("org.slf4j:slf4j-api")
-
   testImplementation(project(":instrumentation:jdbc:testing"))
 }

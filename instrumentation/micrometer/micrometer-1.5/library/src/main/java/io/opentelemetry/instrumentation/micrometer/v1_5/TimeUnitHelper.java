@@ -7,13 +7,12 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class TimeUnitHelper {
 
-  private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryMeterRegistry.class);
+  private static final Logger logger = Logger.getLogger(OpenTelemetryMeterRegistry.class.getName());
 
   static TimeUnit parseConfigValue(@Nullable String value, TimeUnit defaultUnit) {
     if (value == null) {
@@ -44,10 +43,12 @@ final class TimeUnitHelper {
       case "days":
         return TimeUnit.DAYS;
       default:
-        logger.warn(
-            "Invalid base time unit: '{}'; using '{}' as the base time unit instead",
-            value,
-            getUnitString(defaultUnit));
+        logger.warning(
+            "Invalid base time unit: '"
+                + value
+                + "'; using '"
+                + getUnitString(defaultUnit)
+                + "' as the base time unit instead");
         return defaultUnit;
     }
   }

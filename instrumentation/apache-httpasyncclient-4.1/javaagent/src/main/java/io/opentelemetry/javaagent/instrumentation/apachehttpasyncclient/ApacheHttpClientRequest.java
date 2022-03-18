@@ -11,17 +11,17 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class ApacheHttpClientRequest {
 
-  private static final Logger logger = LoggerFactory.getLogger(ApacheHttpClientRequest.class);
+  private static final Logger logger = Logger.getLogger(ApacheHttpClientRequest.class.getName());
 
   @Nullable private final URI uri;
 
@@ -82,7 +82,9 @@ public final class ApacheHttpClientRequest {
     if (major == 2 && minor == 0) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
-    logger.debug("unexpected http protocol version: " + protocolVersion);
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("unexpected http protocol version: " + protocolVersion);
+    }
     return null;
   }
 
@@ -104,7 +106,9 @@ public final class ApacheHttpClientRequest {
       case "https":
         return 443;
       default:
-        logger.debug("no default port mapping for scheme: {}", uri.getScheme());
+        if (logger.isLoggable(Level.FINE)) {
+          logger.fine("no default port mapping for scheme: " + uri.getScheme());
+        }
         return null;
     }
   }
@@ -115,7 +119,7 @@ public final class ApacheHttpClientRequest {
       // this can be relative or absolute
       return new URI(httpRequest.getRequestLine().getUri());
     } catch (URISyntaxException e) {
-      logger.debug(e.getMessage(), e);
+      logger.log(Level.FINE, e.getMessage(), e);
       return null;
     }
   }
@@ -138,7 +142,7 @@ public final class ApacheHttpClientRequest {
           uri.getQuery(),
           uri.getFragment());
     } catch (URISyntaxException e) {
-      logger.debug(e.getMessage(), e);
+      logger.log(Level.FINE, e.getMessage(), e);
       return null;
     }
   }

@@ -10,20 +10,20 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.ProtocolVersion;
 import org.apache.hc.core5.net.URIAuthority;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ClassicHttpRequest, HttpResponse> {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(ApacheHttpClientHttpAttributesGetter.class);
+      Logger.getLogger(ApacheHttpClientHttpAttributesGetter.class.getName());
 
   @Override
   public String method(ClassicHttpRequest request) {
@@ -108,7 +108,9 @@ final class ApacheHttpClientHttpAttributesGetter
     if (major == 2 && minor == 0) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
-    logger.debug("unexpected http protocol version: " + protocolVersion);
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("unexpected http protocol version: " + protocolVersion);
+    }
     return null;
   }
 

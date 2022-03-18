@@ -6,15 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.jms.JMSException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWithDestination, Void> {
   INSTANCE;
 
-  private static final Logger logger = LoggerFactory.getLogger(JmsMessageAttributesGetter.class);
+  private static final Logger logger = Logger.getLogger(JmsMessageAttributesGetter.class.getName());
 
   @Override
   public String system(MessageWithDestination messageWithDestination) {
@@ -62,7 +62,7 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
     try {
       return messageWithDestination.message().getJMSCorrelationID();
     } catch (JMSException e) {
-      logger.debug("Failure getting JMS correlation id", e);
+      logger.log(Level.FINE, "Failure getting JMS correlation id", e);
       return null;
     }
   }
@@ -85,7 +85,7 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
     try {
       return messageWithDestination.message().getJMSMessageID();
     } catch (JMSException e) {
-      logger.debug("Failure getting JMS message id", e);
+      logger.log(Level.FINE, "Failure getting JMS message id", e);
       return null;
     }
   }

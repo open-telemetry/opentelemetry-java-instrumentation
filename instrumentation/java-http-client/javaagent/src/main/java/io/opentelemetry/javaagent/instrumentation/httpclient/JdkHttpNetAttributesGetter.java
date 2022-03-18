@@ -9,14 +9,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JdkHttpNetAttributesGetter
     implements NetClientAttributesGetter<HttpRequest, HttpResponse<?>> {
 
-  private static final Logger logger = LoggerFactory.getLogger(JdkHttpNetAttributesGetter.class);
+  private static final Logger logger = Logger.getLogger(JdkHttpNetAttributesGetter.class.getName());
 
   @Override
   public String transport(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
@@ -46,7 +46,9 @@ public class JdkHttpNetAttributesGetter
       case "https":
         return 443;
       default:
-        logger.debug("no default port mapping for scheme: {}", scheme);
+        if (logger.isLoggable(Level.FINE)) {
+          logger.fine("no default port mapping for scheme: " + scheme);
+        }
         return null;
     }
   }

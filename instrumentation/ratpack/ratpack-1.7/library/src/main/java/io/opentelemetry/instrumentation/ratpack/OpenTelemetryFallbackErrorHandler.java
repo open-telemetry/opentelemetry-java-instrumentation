@@ -22,8 +22,8 @@
 
 package io.opentelemetry.instrumentation.ratpack;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import ratpack.error.ClientErrorHandler;
 import ratpack.error.ServerErrorHandler;
 import ratpack.handling.Context;
@@ -36,24 +36,27 @@ final class OpenTelemetryFallbackErrorHandler implements ClientErrorHandler, Ser
   static final OpenTelemetryFallbackErrorHandler INSTANCE = new OpenTelemetryFallbackErrorHandler();
 
   private static final Logger logger =
-      LoggerFactory.getLogger(OpenTelemetryFallbackErrorHandler.class);
+      Logger.getLogger(OpenTelemetryFallbackErrorHandler.class.getName());
 
   OpenTelemetryFallbackErrorHandler() {}
 
   @Override
   public void error(Context context, int statusCode) {
-    if (logger.isWarnEnabled()) {
+    if (logger.isLoggable(Level.WARNING)) {
       WarnOnce.execute();
-      logger.warn(getMsg(ClientErrorHandler.class, "client error", context));
+      logger.warning(getMsg(ClientErrorHandler.class, "client error", context));
     }
     context.getResponse().status(statusCode).send();
   }
 
   @Override
   public void error(Context context, Throwable throwable) {
-    if (logger.isWarnEnabled()) {
+    if (logger.isLoggable(Level.WARNING)) {
       WarnOnce.execute();
-      logger.warn(getMsg(ServerErrorHandler.class, "server error", context) + "\n", throwable);
+      logger.log(
+          Level.WARNING,
+          getMsg(ServerErrorHandler.class, "server error", context) + "\n",
+          throwable);
     }
     context.getResponse().status(500).send();
   }
@@ -73,7 +76,7 @@ final class OpenTelemetryFallbackErrorHandler implements ClientErrorHandler, Ser
 
   private static class WarnOnce {
     static {
-      logger.warn(
+      logger.warning(
           "Logging error using OpenTelemetryFallbackErrorHandler. This indicates "
               + "OpenTelemetry could not find a registered error handler which is not expected. "
               + "Log messages will only be outputted to console.");

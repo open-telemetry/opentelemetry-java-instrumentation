@@ -22,16 +22,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestAgentListener implements AgentBuilder.Listener {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestAgentListener.class);
+  private static final Logger logger = Logger.getLogger(TestAgentListener.class.getName());
 
   private static final Trie<IgnoreAllow> ADDITIONAL_LIBRARIES_TRIE;
   private static final Trie<IgnoreAllow> OTHER_IGNORES_TRIE;
@@ -149,10 +149,9 @@ public class TestAgentListener implements AgentBuilder.Listener {
       }
     }
     if (!(throwable instanceof AbortTransformationException)) {
-      logger.error(
-          "Unexpected instrumentation error when instrumenting {} on {}",
-          typeName,
-          classLoader,
+      logger.log(
+          Level.SEVERE,
+          "Unexpected instrumentation error when instrumenting " + typeName + " on " + classLoader,
           throwable);
       instrumentationErrorCount.incrementAndGet();
     }

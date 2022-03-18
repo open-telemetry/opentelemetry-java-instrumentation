@@ -20,5 +20,4 @@ dependencies {
 
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-common")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  compileOnly("org.slf4j:slf4j-api")
 }

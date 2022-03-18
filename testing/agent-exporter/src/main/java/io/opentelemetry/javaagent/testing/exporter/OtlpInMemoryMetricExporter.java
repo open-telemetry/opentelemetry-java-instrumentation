@@ -17,12 +17,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class OtlpInMemoryMetricExporter implements MetricExporter {
-
-  private static final Logger logger = LoggerFactory.getLogger(OtlpInMemoryMetricExporter.class);
 
   private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
 
