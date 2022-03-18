@@ -12,3 +12,9 @@ dependencies {
   // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
   latestDepTestLibrary("io.micrometer:micrometer-core:1.+")
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17, uses spock Mock that needs access to jdk internals
+  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}

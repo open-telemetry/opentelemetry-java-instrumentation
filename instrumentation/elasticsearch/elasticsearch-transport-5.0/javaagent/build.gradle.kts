@@ -47,4 +47,7 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

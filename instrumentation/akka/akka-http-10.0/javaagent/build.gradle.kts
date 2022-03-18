@@ -51,3 +51,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.5:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent"))
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}

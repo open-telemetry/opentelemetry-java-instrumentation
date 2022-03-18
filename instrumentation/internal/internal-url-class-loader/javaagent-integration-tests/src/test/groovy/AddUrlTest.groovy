@@ -40,5 +40,12 @@ class AddUrlTest extends AgentInstrumentationSpecification {
     TestURLClassLoader() {
       super(new URL[0], (ClassLoader) null)
     }
+
+    // silence CodeNarc. URLClassLoader#addURL is protected, this method is public
+    @SuppressWarnings("UnnecessaryOverridingMethod")
+    @Override
+    void addURL(URL url) {
+      super.addURL(url)
+    }
   }
 }
