@@ -11,6 +11,16 @@ on:
 
 jobs:
   publish:
+    uses: ./.github/workflows/reusable-smoke-test-images.yml
+    with:
+      build-root-directory: smoke-tests/images/play
+      publish: true
+      # Play doesn't support Java 16+ yet
+      # https://github.com/playframework/playframework/pull/10819
+      skip-java-17: true
+      skip-java-18: true
+
+  publish-java-15:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,14 +44,6 @@ jobs:
       - name: Set up gradle cache
         uses: gradle/gradle-build-action@v2
 
-      - name: Build Java 8 Docker Image
-        run: ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-        working-directory: smoke-tests/images/play
-
-      - name: Build Java 11 Docker Image
-        run: ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-        working-directory: smoke-tests/images/play
-
         # Play doesn't support Java 16 (or 17) yet
         # https://github.com/playframework/playframework/pull/10819
       - name: Build Java 15 Docker Image
@@ -50,7 +52,7 @@ jobs:
 
   issue:
     name: Open issue on failure
-    needs: publish
+    needs: [ publish, publish-java-15 ]
     runs-on: ubuntu-latest
     if: always()
     steps:

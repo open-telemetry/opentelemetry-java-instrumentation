@@ -14,6 +14,8 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +49,10 @@ public class RabbitSingletons {
   private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter() {
     return Instrumenter.<ChannelAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
-        .addAttributesExtractors(
-            new RabbitChannelAttributesExtractor(),
+        .addAttributesExtractor(
+            MessagingAttributesExtractor.create(
+                RabbitChannelAttributesGetter.INSTANCE, MessageOperation.SEND))
+        .addAttributesExtractor(
             NetClientAttributesExtractor.create(new RabbitChannelNetAttributesGetter()))
         .newInstrumenter(
             channelAndMethod ->
@@ -57,7 +61,9 @@ public class RabbitSingletons {
 
   private static Instrumenter<ReceiveRequest, GetResponse> createReceiveInstrumenter() {
     List<AttributesExtractor<ReceiveRequest, GetResponse>> extractors = new ArrayList<>();
-    extractors.add(new RabbitReceiveAttributesExtractor());
+    extractors.add(
+        MessagingAttributesExtractor.create(
+            RabbitReceiveAttributesGetter.INSTANCE, MessageOperation.RECEIVE));
     extractors.add(NetClientAttributesExtractor.create(new RabbitReceiveNetAttributesGetter()));
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
@@ -72,7 +78,9 @@ public class RabbitSingletons {
 
   private static Instrumenter<DeliveryRequest, Void> createDeliverInstrumenter() {
     List<AttributesExtractor<DeliveryRequest, Void>> extractors = new ArrayList<>();
-    extractors.add(new RabbitDeliveryAttributesExtractor());
+    extractors.add(
+        MessagingAttributesExtractor.create(
+            RabbitDeliveryAttributesGetter.INSTANCE, MessageOperation.PROCESS));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());

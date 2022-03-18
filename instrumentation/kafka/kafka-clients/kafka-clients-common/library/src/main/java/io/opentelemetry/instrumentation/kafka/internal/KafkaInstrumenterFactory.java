@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import java.util.Collections;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -36,13 +36,15 @@ public final class KafkaInstrumenterFactory {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       Iterable<AttributesExtractor<ProducerRecord<?, ?>, Void>> extractors) {
-    KafkaProducerAttributesExtractor attributesExtractor = new KafkaProducerAttributesExtractor();
-    SpanNameExtractor<ProducerRecord<?, ?>> spanNameExtractor =
-        MessagingSpanNameExtractor.create(attributesExtractor);
+
+    KafkaProducerAttributesGetter getter = KafkaProducerAttributesGetter.INSTANCE;
+    MessageOperation operation = MessageOperation.SEND;
 
     return Instrumenter.<ProducerRecord<?, ?>, Void>builder(
-            openTelemetry, instrumentationName, spanNameExtractor)
-        .addAttributesExtractor(attributesExtractor)
+            openTelemetry,
+            instrumentationName,
+            MessagingSpanNameExtractor.create(getter, operation))
+        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .addAttributesExtractors(extractors)
         .addAttributesExtractor(new KafkaProducerAdditionalAttributesExtractor())
         .newInstrumenter(SpanKindExtractor.alwaysProducer());
@@ -58,13 +60,15 @@ public final class KafkaInstrumenterFactory {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       Iterable<AttributesExtractor<ReceivedRecords, Void>> extractors) {
-    KafkaReceiveAttributesExtractor attributesExtractor = new KafkaReceiveAttributesExtractor();
-    SpanNameExtractor<ReceivedRecords> spanNameExtractor =
-        MessagingSpanNameExtractor.create(attributesExtractor);
+
+    KafkaReceiveAttributesGetter getter = KafkaReceiveAttributesGetter.INSTANCE;
+    MessageOperation operation = MessageOperation.RECEIVE;
 
     return Instrumenter.<ReceivedRecords, Void>builder(
-            openTelemetry, instrumentationName, spanNameExtractor)
-        .addAttributesExtractor(attributesExtractor)
+            openTelemetry,
+            instrumentationName,
+            MessagingSpanNameExtractor.create(getter, operation))
+        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .addAttributesExtractors(extractors)
         .setTimeExtractor(new KafkaConsumerTimeExtractor())
         .setDisabled(!ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
@@ -85,15 +89,15 @@ public final class KafkaInstrumenterFactory {
       OpenTelemetry openTelemetry,
       MessageOperation operation,
       Iterable<AttributesExtractor<ConsumerRecord<?, ?>, Void>> extractors) {
-    KafkaConsumerAttributesExtractor attributesExtractor =
-        new KafkaConsumerAttributesExtractor(operation);
-    SpanNameExtractor<ConsumerRecord<?, ?>> spanNameExtractor =
-        MessagingSpanNameExtractor.create(attributesExtractor);
+
+    KafkaConsumerAttributesGetter getter = KafkaConsumerAttributesGetter.INSTANCE;
 
     InstrumenterBuilder<ConsumerRecord<?, ?>, Void> builder =
         Instrumenter.<ConsumerRecord<?, ?>, Void>builder(
-                openTelemetry, instrumentationName, spanNameExtractor)
-            .addAttributesExtractor(attributesExtractor)
+                openTelemetry,
+                instrumentationName,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
             .addAttributesExtractor(new KafkaConsumerAdditionalAttributesExtractor())
             .addAttributesExtractors(extractors);
     if (KafkaConsumerExperimentalAttributesExtractor.isEnabled()) {

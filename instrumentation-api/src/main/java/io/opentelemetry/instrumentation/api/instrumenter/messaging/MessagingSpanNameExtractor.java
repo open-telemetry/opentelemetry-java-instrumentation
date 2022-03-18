@@ -14,32 +14,34 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#span-name">
    * messaging semantic conventions</a>: {@code <destination name> <operation name>}.
    *
-   * @see MessagingAttributesExtractor#destination(Object) used to extract {@code <destination
-   *     name>}.
-   * @see MessagingAttributesExtractor#operation() used to extract {@code <operation name>}.
+   * @see MessagingAttributesGetter#destination(Object) used to extract {@code <destination name>}.
+   * @see MessageOperation used to extract {@code <operation name>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      MessagingAttributesExtractor<REQUEST, ?> attributesExtractor) {
-    return new MessagingSpanNameExtractor<>(attributesExtractor);
+      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
+    return new MessagingSpanNameExtractor<>(getter, operation);
   }
 
-  private final MessagingAttributesExtractor<REQUEST, ?> attributesExtractor;
+  private final MessagingAttributesGetter<REQUEST, ?> getter;
+  private final MessageOperation operation;
 
-  private MessagingSpanNameExtractor(MessagingAttributesExtractor<REQUEST, ?> attributesExtractor) {
-    this.attributesExtractor = attributesExtractor;
+  private MessagingSpanNameExtractor(
+      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
+    this.getter = getter;
+    this.operation = operation;
   }
 
+  @SuppressWarnings("deprecation") // operationName
   @Override
   public String extract(REQUEST request) {
     String destinationName =
-        attributesExtractor.temporaryDestination(request)
+        getter.temporaryDestination(request)
             ? MessagingAttributesExtractor.TEMP_DESTINATION_NAME
-            : attributesExtractor.destination(request);
+            : getter.destination(request);
     if (destinationName == null) {
       destinationName = "unknown";
     }
 
-    MessageOperation operation = attributesExtractor.operation();
     return destinationName + " " + operation.operationName();
   }
 }

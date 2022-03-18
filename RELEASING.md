@@ -20,7 +20,6 @@ Before making the release:
   * Specify the (estimated) release date (UTC)
 * Run the [Prepare Release Branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
 * Review and merge the two PRs that it creates (one is targeted to the release branch and one is targeted to the `main` branch)
-* Delete the branches from these two PRs since they are created in the main repo
 
 Open the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 
@@ -54,7 +53,6 @@ Before making the release:
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `v1.9.x`, and click the "Run workflow" button below that.
 * Review and merge the PR that it creates
-* Delete the branch from the PR since it is created in the main repo
 
 Open the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 

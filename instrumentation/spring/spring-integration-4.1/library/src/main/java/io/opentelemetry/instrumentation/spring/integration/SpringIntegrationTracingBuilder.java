@@ -9,6 +9,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +55,9 @@ public final class SpringIntegrationTracingBuilder {
                 INSTRUMENTATION_NAME,
                 SpringIntegrationTracingBuilder::consumerSpanName)
             .addAttributesExtractors(additionalAttributeExtractors)
-            .addAttributesExtractor(SpringMessagingAttributesExtractor.process())
+            .addAttributesExtractor(
+                MessagingAttributesExtractor.create(
+                    SpringMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS))
             .newConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
 
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
@@ -62,7 +66,9 @@ public final class SpringIntegrationTracingBuilder {
                 INSTRUMENTATION_NAME,
                 SpringIntegrationTracingBuilder::producerSpanName)
             .addAttributesExtractors(additionalAttributeExtractors)
-            .addAttributesExtractor(SpringMessagingAttributesExtractor.send())
+            .addAttributesExtractor(
+                MessagingAttributesExtractor.create(
+                    SpringMessagingAttributesGetter.INSTANCE, MessageOperation.SEND))
             .newInstrumenter(SpanKindExtractor.alwaysProducer());
     return new SpringIntegrationTracing(
         openTelemetry.getPropagators(), consumerInstrumenter, producerInstrumenter);
