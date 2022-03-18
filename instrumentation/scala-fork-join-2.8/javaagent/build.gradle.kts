@@ -24,6 +24,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 
+  testImplementation(project(":instrumentation:executors:testing"))
+
   add("slickTestImplementation", project(":testing-common"))
   add("slickTestImplementation", "org.scala-lang:scala-library")
   add("slickTestImplementation", "com.typesafe.slick:slick_2.11:3.2.0")

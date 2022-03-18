@@ -8,6 +8,10 @@ muzzle {
   }
 }
 
+dependencies {
+  testImplementation(project(":instrumentation:executors:testing"))
+}
+
 testing {
   suites {
     // CompletableFuture behaves differently if ForkJoinPool has no parallelism
@@ -16,6 +20,10 @@ testing {
         java {
           setSrcDirs(listOf("src/test/java"))
         }
+      }
+
+      dependencies {
+        implementation(project(":instrumentation:executors:testing"))
       }
 
       targets {

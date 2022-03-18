@@ -7,23 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class JavaAsyncChild extends ForkJoinTask<Object> implements Runnable, Callable<Object> {
+final class JavaAsyncChild extends ForkJoinTask<Object> implements TestTask {
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
   private final CountDownLatch latch = new CountDownLatch(1);
 
-  public JavaAsyncChild() {
-    this(/* doTraceableWork= */ true, /* blockThread= */ false);
-  }
-
-  public JavaAsyncChild(boolean doTraceableWork, boolean blockThread) {
+  JavaAsyncChild(boolean doTraceableWork, boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }
@@ -42,6 +37,7 @@ public class JavaAsyncChild extends ForkJoinTask<Object> implements Runnable, Ca
     return true;
   }
 
+  @Override
   public void unblock() {
     blockThread.set(false);
   }
@@ -57,6 +53,7 @@ public class JavaAsyncChild extends ForkJoinTask<Object> implements Runnable, Ca
     return null;
   }
 
+  @Override
   public void waitForCompletion() {
     try {
       latch.await();
