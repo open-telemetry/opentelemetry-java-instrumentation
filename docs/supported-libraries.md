@@ -136,10 +136,10 @@ These are the application servers that the smoke tests are run against:
 
 These are the JVMs and operating systems that the integration tests are run against:
 
-| JVM                                               | Versions  | OS                             |
-| ------------------------------------------------- | --------- | ------------------------------ |
-| [AdoptOpenJDK Hotspot](https://adoptopenjdk.net/) | 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
-| [AdoptOpenJDK OpenJ9](https://adoptopenjdk.net/)  | 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
+| JVM                                                                                        | Versions  | OS                             |
+| ------------------------------------------------------------------------------------------ | --------- | ------------------------------ |
+| [OpenJDK (Eclipse Temurin)](https://adoptium.net/)                                         | 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
+| [OpenJ9 (IBM Semeru Runtimes)](https://developer.ibm.com/languages/java/semeru-runtimes/)  | 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
 
 ## Disabled instrumentations
 
