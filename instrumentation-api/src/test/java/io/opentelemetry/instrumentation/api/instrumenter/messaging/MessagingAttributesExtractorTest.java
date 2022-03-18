@@ -25,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // operationName
 class MessagingAttributesExtractorTest {
 
   @ParameterizedTest
@@ -49,7 +50,8 @@ class MessagingAttributesExtractorTest {
     request.put("payloadSize", "100");
     request.put("payloadCompressedSize", "10");
 
-    TestMessagingAttributesExtractor underTest = new TestMessagingAttributesExtractor(operation);
+    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation);
 
     Context context = Context.root();
 
@@ -95,8 +97,8 @@ class MessagingAttributesExtractorTest {
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
-    TestMessagingAttributesExtractor underTest =
-        new TestMessagingAttributesExtractor(MessageOperation.SEND);
+    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.SEND);
 
     Context context = Context.root();
 
@@ -113,74 +115,63 @@ class MessagingAttributesExtractorTest {
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
-  static class TestMessagingAttributesExtractor
-      extends MessagingAttributesExtractor<Map<String, String>, String> {
-
-    private final MessageOperation operation;
-
-    TestMessagingAttributesExtractor(MessageOperation operation) {
-      this.operation = operation;
-    }
+  enum TestGetter implements MessagingAttributesGetter<Map<String, String>, String> {
+    INSTANCE;
 
     @Override
-    public MessageOperation operation() {
-      return operation;
-    }
-
-    @Override
-    protected String system(Map<String, String> request) {
+    public String system(Map<String, String> request) {
       return request.get("system");
     }
 
     @Override
-    protected String destinationKind(Map<String, String> request) {
+    public String destinationKind(Map<String, String> request) {
       return request.get("destinationKind");
     }
 
     @Override
-    protected String destination(Map<String, String> request) {
+    public String destination(Map<String, String> request) {
       return request.get("destination");
     }
 
     @Override
-    protected boolean temporaryDestination(Map<String, String> request) {
+    public boolean temporaryDestination(Map<String, String> request) {
       return request.containsKey("temporaryDestination");
     }
 
     @Override
-    protected String protocol(Map<String, String> request) {
+    public String protocol(Map<String, String> request) {
       return request.get("protocol");
     }
 
     @Override
-    protected String protocolVersion(Map<String, String> request) {
+    public String protocolVersion(Map<String, String> request) {
       return request.get("protocolVersion");
     }
 
     @Override
-    protected String url(Map<String, String> request) {
+    public String url(Map<String, String> request) {
       return request.get("url");
     }
 
     @Override
-    protected String conversationId(Map<String, String> request) {
+    public String conversationId(Map<String, String> request) {
       return request.get("conversationId");
     }
 
     @Override
-    protected Long messagePayloadSize(Map<String, String> request) {
+    public Long messagePayloadSize(Map<String, String> request) {
       String payloadSize = request.get("payloadSize");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
     @Override
-    protected Long messagePayloadCompressedSize(Map<String, String> request) {
+    public Long messagePayloadCompressedSize(Map<String, String> request) {
       String payloadSize = request.get("payloadCompressedSize");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
     @Override
-    protected String messageId(Map<String, String> request, String response) {
+    public String messageId(Map<String, String> request, String response) {
       return response;
     }
   }

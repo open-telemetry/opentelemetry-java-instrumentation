@@ -12,8 +12,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
-class RockerMqConsumerExperimentalAttributeExtractor
+enum RocketMqConsumerExperimentalAttributeExtractor
     implements AttributesExtractor<MessageExt, Void> {
+  INSTANCE;
+
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_TAGS =
       AttributeKey.stringKey("messaging.rocketmq.tags");
   private static final AttributeKey<Long> MESSAGING_ROCKETMQ_QUEUE_ID =

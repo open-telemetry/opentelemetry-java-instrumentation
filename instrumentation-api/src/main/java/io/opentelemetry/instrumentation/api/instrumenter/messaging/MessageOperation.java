@@ -21,7 +21,10 @@ public enum MessageOperation {
    * Returns the operation name as defined in <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#operation-names">the
    * specification</a>.
+   *
+   * @deprecated This method is going to be made non-public in the next release.
    */
+  @Deprecated
   public String operationName() {
     return name().toLowerCase(Locale.ROOT);
   }
