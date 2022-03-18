@@ -42,13 +42,9 @@ jobs:
 
       - name: Cache pnpm modules
         uses: actions/cache@v2
-        env:
-          cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-test-latest-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-latest-${{ env.cache-name }}-
+          key: ${{ runner.os }}-test-latest-cache-pnpm-modules
 
       - name: Test
         if: ${{ !inputs.skip }}

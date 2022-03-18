@@ -48,13 +48,9 @@ jobs:
 
       - name: Cache pnpm modules
         uses: actions/cache@v2
-        env:
-          cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
+          key: ${{ runner.os }}-test-cache-pnpm-modules
 
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh

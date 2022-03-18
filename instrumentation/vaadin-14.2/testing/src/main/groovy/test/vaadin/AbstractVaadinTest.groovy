@@ -24,6 +24,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
 
+// FIXME remove this line, added to make sure this test is run
 abstract class AbstractVaadinTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<ConfigurableApplicationContext> {
   private static final Logger logger = LoggerFactory.getLogger(AbstractVaadinTest)
 
