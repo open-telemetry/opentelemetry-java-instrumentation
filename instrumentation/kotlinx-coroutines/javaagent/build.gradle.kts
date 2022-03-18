@@ -40,12 +40,4 @@ tasks {
       jvmTarget = "1.8"
     }
   }
-
-  val compileTestKotlin by existing(AbstractCompile::class)
-
-  named<GroovyCompile>("compileTestGroovy") {
-    // Note: look like it should be `classpath += files(sourceSets.test.kotlin.classesDirectory)`
-    // instead, but kotlin plugin doesn't support it (yet?)
-    classpath = classpath.plus(files(compileTestKotlin.get().destinationDir))
-  }
 }
