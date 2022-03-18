@@ -30,8 +30,9 @@ subprojects {
   }
 
   plugins.withId("io.opentelemetry.instrumentation.muzzle-check") {
-    // relying on predictable ordering of iteration over subprojects since we are splitting these
-    // muzzleX tasks across different github action jobs
+    // relying on predictable ordering of subprojects
+    // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
+    // since we are splitting these muzzleX tasks across different github action jobs
     instrumentationProjectMuzzle[counter++ % 4].dependsOn(subProj.tasks.named("muzzle"))
   }
 }
