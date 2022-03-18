@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.instrumentation.ratpack.RatpackTracing
+import io.opentelemetry.instrumentation.ratpack.RatpackTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
@@ -42,7 +42,7 @@ class InstrumentedHttpClientTest extends Specification {
     .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
     .setTracerProvider(tracerProvider).build()
 
-  RatpackTracing ratpackTracing = RatpackTracing.create(openTelemetry)
+  RatpackTelemetry ratpackTracing = RatpackTelemetry.create(openTelemetry)
 
   def cleanup() {
     spanExporter.reset()

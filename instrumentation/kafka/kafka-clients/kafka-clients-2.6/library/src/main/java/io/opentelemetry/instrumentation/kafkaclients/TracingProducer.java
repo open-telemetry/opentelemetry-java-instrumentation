@@ -22,9 +22,9 @@ import org.apache.kafka.common.TopicPartition;
 
 class TracingProducer<K, V> implements Producer<K, V> {
   private final Producer<K, V> producer;
-  private final KafkaTracing tracing;
+  private final KafkaTelemetry tracing;
 
-  TracingProducer(Producer<K, V> producer, KafkaTracing tracing) {
+  TracingProducer(Producer<K, V> producer, KafkaTelemetry tracing) {
     this.producer = producer;
     this.tracing = tracing;
   }

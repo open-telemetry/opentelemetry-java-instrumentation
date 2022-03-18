@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTracing;
+import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -32,7 +32,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
       Config.get().getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes", false);
 
   private final ExecutionInterceptor delegate =
-      AwsSdkTracing.builder(GlobalOpenTelemetry.get())
+      AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES)
           .build()
           .newExecutionInterceptor();

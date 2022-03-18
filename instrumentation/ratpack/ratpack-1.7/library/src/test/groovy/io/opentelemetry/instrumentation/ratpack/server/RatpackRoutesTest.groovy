@@ -6,14 +6,14 @@
 package io.opentelemetry.instrumentation.ratpack.server
 
 
-import io.opentelemetry.instrumentation.ratpack.RatpackTracing
+import io.opentelemetry.instrumentation.ratpack.RatpackTelemetry
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import ratpack.server.RatpackServerSpec
 
 class RatpackRoutesTest extends AbstractRatpackRoutesTest implements LibraryTestTrait {
   @Override
   void configure(RatpackServerSpec serverSpec) {
-    RatpackTracing tracing = RatpackTracing.create(openTelemetry)
+    RatpackTelemetry tracing = RatpackTelemetry.create(openTelemetry)
     serverSpec.registryOf {
       tracing.configureServerRegistry(it)
     }

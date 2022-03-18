@@ -9,7 +9,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTracing;
+import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTelemetry;
 import java.util.List;
 import org.springframework.messaging.support.ChannelInterceptor;
 
@@ -22,7 +22,7 @@ public final class SpringIntegrationSingletons {
               singletonList("*"));
 
   private static final ChannelInterceptor INTERCEPTOR =
-      SpringIntegrationTracing.create(GlobalOpenTelemetry.get()).newChannelInterceptor();
+      SpringIntegrationTelemetry.create(GlobalOpenTelemetry.get()).newChannelInterceptor();
 
   public static String[] patterns() {
     return PATTERNS.toArray(new String[0]);

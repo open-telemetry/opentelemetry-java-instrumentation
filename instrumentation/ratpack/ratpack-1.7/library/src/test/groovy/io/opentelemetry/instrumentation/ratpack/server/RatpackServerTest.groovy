@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.ratpack.server
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.instrumentation.ratpack.RatpackTracing
+import io.opentelemetry.instrumentation.ratpack.RatpackTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
@@ -31,7 +31,7 @@ class RatpackServerTest extends Specification {
     .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
     .setTracerProvider(tracerProvider).build()
 
-  def ratpackTracing = RatpackTracing.create(openTelemetry)
+  def ratpackTracing = RatpackTelemetry.create(openTelemetry)
 
   def cleanup() {
     spanExporter.reset()

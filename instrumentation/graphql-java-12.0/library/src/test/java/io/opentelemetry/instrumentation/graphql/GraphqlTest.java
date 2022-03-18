@@ -22,8 +22,8 @@ public class GraphqlTest extends AbstractGraphqlTest {
 
   @Override
   protected void configure(GraphQL.Builder builder) {
-    GraphQLTracing tracing =
-        GraphQLTracing.builder(testing.getOpenTelemetry())
+    GraphQLTelemetry tracing =
+        GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .build();
     builder.instrumentation(tracing.newInstrumentation());

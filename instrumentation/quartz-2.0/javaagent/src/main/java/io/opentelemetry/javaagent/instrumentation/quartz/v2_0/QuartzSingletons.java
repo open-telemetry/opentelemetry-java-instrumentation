@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.quartz.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.quartz.v2_0.QuartzTracing;
+import io.opentelemetry.instrumentation.quartz.v2_0.QuartzTelemetry;
 
 public final class QuartzSingletons {
 
-  public static final QuartzTracing TRACING = QuartzTracing.create(GlobalOpenTelemetry.get());
+  public static final QuartzTelemetry TRACING = QuartzTelemetry.create(GlobalOpenTelemetry.get());
 
   private QuartzSingletons() {}
 }

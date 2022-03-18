@@ -26,9 +26,9 @@ import org.apache.kafka.common.TopicPartition;
 
 class TracingConsumer<K, V> implements Consumer<K, V> {
   private final Consumer<K, V> consumer;
-  private final KafkaTracing tracing;
+  private final KafkaTelemetry tracing;
 
-  TracingConsumer(Consumer<K, V> consumer, KafkaTracing tracing) {
+  TracingConsumer(Consumer<K, V> consumer, KafkaTelemetry tracing) {
     this.consumer = consumer;
     this.tracing = tracing;
   }

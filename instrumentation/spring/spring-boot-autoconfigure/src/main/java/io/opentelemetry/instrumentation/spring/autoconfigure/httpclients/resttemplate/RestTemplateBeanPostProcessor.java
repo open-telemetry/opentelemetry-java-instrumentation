@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.web.SpringWebTracing;
+import io.opentelemetry.instrumentation.spring.web.SpringWebTelemetry;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -30,7 +30,7 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
     OpenTelemetry openTelemetry = openTelemetryProvider.getIfUnique();
     if (openTelemetry != null) {
       ClientHttpRequestInterceptor interceptor =
-          SpringWebTracing.create(openTelemetry).newInterceptor();
+          SpringWebTelemetry.create(openTelemetry).newInterceptor();
       addRestTemplateInterceptorIfNotPresent(restTemplate, interceptor);
     }
     return restTemplate;

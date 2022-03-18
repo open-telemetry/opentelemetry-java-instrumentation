@@ -11,7 +11,7 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements LibraryTestTrait 
   @Override
   def configureClient(def client) {
     client.withRequestHandlers(
-      AwsSdkTracing.builder(getOpenTelemetry())
+      AwsSdkTelemetry.builder(getOpenTelemetry())
         .setCaptureExperimentalSpanAttributes(true)
         .build()
         .newRequestHandler())

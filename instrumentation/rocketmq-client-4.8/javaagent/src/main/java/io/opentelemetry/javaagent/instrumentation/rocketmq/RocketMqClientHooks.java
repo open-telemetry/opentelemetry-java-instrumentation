@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.rocketmq;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.rocketmq.RocketMqTracing;
+import io.opentelemetry.instrumentation.rocketmq.RocketMqTelemetry;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
 public final class RocketMqClientHooks {
-  private static final RocketMqTracing TRACING =
-      RocketMqTracing.builder(GlobalOpenTelemetry.get())
+  private static final RocketMqTelemetry TRACING =
+      RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
           .setPropagationEnabled(
               Config.get().getBoolean("otel.instrumentation.rocketmq-client.propagation", true))
           .setCaptureExperimentalSpanAttributes(

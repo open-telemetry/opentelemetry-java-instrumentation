@@ -20,7 +20,7 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
 
   @Unroll
   def "test wrappers"() throws Exception {
-    KafkaTracing tracing = KafkaTracing.create(getOpenTelemetry())
+    KafkaTelemetry tracing = KafkaTelemetry.create(getOpenTelemetry())
 
     when:
     String greeting = "Hello Kafka!"

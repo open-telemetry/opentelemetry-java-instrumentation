@@ -7,7 +7,7 @@ package io.opententelemetry.instrumentation.restlet.v1_0
 
 import com.noelios.restlet.StatusFilter
 import io.opentelemetry.instrumentation.restlet.v1_0.AbstractRestletServerTest
-import io.opentelemetry.instrumentation.restlet.v1_0.RestletTracing
+import io.opentelemetry.instrumentation.restlet.v1_0.RestletTelemetry
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import org.restlet.Restlet
@@ -16,7 +16,7 @@ class RestletServerTest extends AbstractRestletServerTest implements LibraryTest
 
   @Override
   Restlet wrapRestlet(Restlet restlet, String path) {
-    RestletTracing tracing = RestletTracing.builder(openTelemetry)
+    RestletTelemetry tracing = RestletTelemetry.builder(openTelemetry)
       .setCapturedRequestHeaders([AbstractHttpServerTest.TEST_REQUEST_HEADER])
       .setCapturedResponseHeaders([AbstractHttpServerTest.TEST_RESPONSE_HEADER])
       .build()
