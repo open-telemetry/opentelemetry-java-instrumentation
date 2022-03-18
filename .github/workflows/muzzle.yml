@@ -2,36 +2,21 @@ name: Muzzle
 
 on:
   workflow_call:
+    inputs:
+      cache-read-only:
+        type: boolean
+        required: false
 
 jobs:
-  setup-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: temurin
-          java-version: 11
-
-      - name: List instrumentations to file
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: instrumentation:listInstrumentations
-          cache-read-only: true
-
-      - id: set-matrix
-        run: echo "::set-output name=matrix::{\"module\":[\"$(cat instrumentation-list.txt | xargs echo | sed 's/ /","/g')\"]}"
-
-  run:
-    needs: setup-matrix
+  muzzle:
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{fromJson(needs.setup-matrix.outputs.matrix)}}
-      fail-fast: false
+      matrix:
+        task:
+          - :instrumentation:muzzle1
+          - :instrumentation:muzzle2
+          - :instrumentation:muzzle3
+          - :instrumentation:muzzle4
     steps:
       - uses: actions/checkout@v3
 
@@ -41,16 +26,8 @@ jobs:
           distribution: temurin
           java-version: 11
 
-      # don't use gradle-build-action because all the parallel muzzle jobs cause the cache service
-      # to respond with 429 (to both muzzle and other jobs running in parallel)
-
       - name: Run muzzle
-        # using retry because of sporadic gradle download failures
-        uses: nick-invision/retry@v2.6.0
+        uses: gradle/gradle-build-action@v2
         with:
-          # timing out has not been a problem, these jobs typically finish in 2-3 minutes
-          timeout_minutes: 15
-          # give maven central some time to hopefully recover (120 seconds has not proven to be enough)
-          retry_wait_seconds: 300
-          max_attempts: 5
-          command: ./gradlew ${{ matrix.module }}:muzzle
+          arguments: ${{ matrix.task }}
+          cache-read-only: ${{ inputs.cache-read-only }}

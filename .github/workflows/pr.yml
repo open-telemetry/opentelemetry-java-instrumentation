@@ -49,6 +49,8 @@ jobs:
     # which requires unnecessary release branch maintenance, especially for patches
     if: ${{ !startsWith(github.base_ref, 'v') }}
     uses: ./.github/workflows/muzzle.yml
+    with:
+      cache-read-only: true
 
   examples:
     uses: ./.github/workflows/examples.yml
