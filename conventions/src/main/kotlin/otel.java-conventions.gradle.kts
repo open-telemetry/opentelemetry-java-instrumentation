@@ -27,7 +27,7 @@ afterEvaluate {
 }
 
 // Version to use to compile code and run tests.
-val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_11
+val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_17
 
 java {
   toolchain {
