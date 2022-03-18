@@ -23,17 +23,18 @@ tasks {
   val testBaseTimeUnit by registering(Test::class) {
     filter {
       includeTestsMatching("*TimerSecondsTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/*TimerSecondsTest.*")
     jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=seconds")
   }
 
   test {
-    dependsOn(testBaseTimeUnit)
     filter {
       excludeTestsMatching("*TimerSecondsTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testBaseTimeUnit)
   }
 }

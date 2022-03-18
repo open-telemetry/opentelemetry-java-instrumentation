@@ -50,19 +50,19 @@ tasks {
   val testStatementSanitizerConfig by registering(Test::class) {
     filter {
       includeTestsMatching("StatementSanitizationConfigTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/StatementSanitizationConfigTest.*")
     jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=false")
   }
 
   test {
-    dependsOn(testStatementSanitizerConfig)
-
     filter {
       excludeTestsMatching("StatementSanitizationConfigTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testStatementSanitizerConfig)
   }
 
   // TODO this should live in jmh-conventions

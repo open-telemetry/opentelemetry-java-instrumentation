@@ -20,19 +20,19 @@ tasks {
   val testWithProducerInstrumentation by registering(Test::class) {
     filter {
       includeTestsMatching("SpringCloudStreamProducerTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/SpringCloudStreamProducerTest.*")
     jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
   }
 
   test {
-    dependsOn(testWithProducerInstrumentation)
-
     filter {
       excludeTestsMatching("SpringCloudStreamProducerTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testWithProducerInstrumentation)
   }
 
   withType<Test>().configureEach {
