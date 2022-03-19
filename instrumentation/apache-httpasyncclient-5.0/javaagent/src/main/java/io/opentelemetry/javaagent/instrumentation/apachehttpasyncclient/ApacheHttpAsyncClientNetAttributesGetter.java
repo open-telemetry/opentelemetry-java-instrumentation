@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.HttpResponse;
 
 final class ApacheHttpAsyncClientNetAttributesGetter
     implements NetClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {

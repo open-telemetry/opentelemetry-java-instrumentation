@@ -12,10 +12,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.apache.http.Header;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.ProtocolVersion;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.ProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ public final class ApacheHttpClientRequest {
   }
 
   public String getMethod() {
-    return delegate.getRequestLine().getMethod();
+    return delegate.getMethod();
   }
 
   public String getUrl() {
@@ -66,7 +66,7 @@ public final class ApacheHttpClientRequest {
   }
 
   public String getFlavor() {
-    ProtocolVersion protocolVersion = delegate.getProtocolVersion();
+    ProtocolVersion protocolVersion = delegate.getVersion();
     String protocol = protocolVersion.getProtocol();
     if (!protocol.equals("HTTP")) {
       return null;
@@ -113,7 +113,7 @@ public final class ApacheHttpClientRequest {
   private static URI getUri(HttpRequest httpRequest) {
     try {
       // this can be relative or absolute
-      return new URI(httpRequest.getRequestLine().getUri());
+      return httpRequest.getUri();
     } catch (URISyntaxException e) {
       logger.debug(e.getMessage(), e);
       return null;

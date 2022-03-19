@@ -22,16 +22,15 @@ import java.io.IOException;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.http.HttpException;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.nio.ContentEncoder;
-import org.apache.http.nio.IOControl;
-import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.concurrent.FutureCallback;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.nio.AsyncRequestProducer;
+import org.apache.hc.core5.http.nio.ContentEncoder;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +38,12 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.apache.http.nio.client.HttpAsyncClient");
+    return hasClassesNamed("org.apache.hc.client5.http.async.HttpAsyncClient");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.apache.http.nio.client.HttpAsyncClient"));
+    return implementsInterface(named("org.apache.hc.client5.http.async.HttpAsyncClient"));
   }
 
   @Override
@@ -52,11 +51,12 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("execute"))
-            .and(takesArguments(4))
-            .and(takesArgument(0, named("org.apache.http.nio.protocol.HttpAsyncRequestProducer")))
-            .and(takesArgument(1, named("org.apache.http.nio.protocol.HttpAsyncResponseConsumer")))
-            .and(takesArgument(2, named("org.apache.http.protocol.HttpContext")))
-            .and(takesArgument(3, named("org.apache.http.concurrent.FutureCallback"))),
+            .and(takesArguments(5))
+            .and(takesArgument(0, named("org.apache.hc.core5.http.nio.AsyncRequestProducer")))
+            .and(takesArgument(1, named("org.apache.hc.core5.http.nio.AsyncResponseConsumer")))
+            .and(takesArgument(2, named("org.apache.hc.core5.http.nio.HandlerFactory")))
+            .and(takesArgument(3, named("org.apache.hc.core5.http.protocol.HttpContext")))
+            .and(takesArgument(4, named("org.apache.hc.core5.concurrent.FutureCallback"))),
         ApacheHttpAsyncClientInstrumentation.class.getName() + "$ClientAdvice");
   }
 
@@ -65,9 +65,9 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
-        @Advice.Argument(2) HttpContext httpContext,
-        @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
+        @Advice.Argument(value = 0, readOnly = false) AsyncRequestProducer requestProducer,
+        @Advice.Argument(3) HttpContext httpContext,
+        @Advice.Argument(value = 4, readOnly = false) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
 
@@ -79,14 +79,14 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     }
   }
 
-  public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
+  public static class DelegatingRequestProducer implements AsyncRequestProducer {
     private final Context parentContext;
-    private final HttpAsyncRequestProducer delegate;
+    private final AsyncRequestProducer delegate;
     private final WrappedFutureCallback<?> wrappedFutureCallback;
 
     public DelegatingRequestProducer(
         Context parentContext,
-        HttpAsyncRequestProducer delegate,
+        AsyncRequestProducer delegate,
         WrappedFutureCallback<?> wrappedFutureCallback) {
       this.parentContext = parentContext;
       this.delegate = delegate;

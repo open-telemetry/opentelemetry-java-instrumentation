@@ -13,10 +13,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.HttpResponse;
 
 public final class ApacheHttpAsyncClientSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpasyncclient-4.1";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpasyncclient-5.0";
 
   private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
 

@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.apache.http.HttpHost
-import org.apache.http.HttpResponse
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.concurrent.FutureCallback
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient
-import org.apache.http.impl.nio.client.HttpAsyncClients
-import org.apache.http.message.BasicHeader
+import org.apache.hc.client5.http.config.RequestConfig
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient
+import org.apache.hc.client5.http.impl.async.HttpAsyncClients
+import org.apache.hc.core5.concurrent.FutureCallback
+import org.apache.hc.core5.http.HttpHost
+import org.apache.hc.core5.http.HttpResponse
+import org.apache.hc.core5.http.message.BasicHeader
+import org.apache.hc.core5.util.Timeout
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
@@ -24,12 +26,12 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()
-    .setConnectTimeout(CONNECT_TIMEOUT_MS)
+    .setConnectTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
     .build()
 
   @Shared
   RequestConfig requestWithReadTimeoutConfig = RequestConfig.copy(requestConfig)
-    .setSocketTimeout(READ_TIMEOUT_MS)
+    .setResponseTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
     .build()
 
   @AutoCleanup

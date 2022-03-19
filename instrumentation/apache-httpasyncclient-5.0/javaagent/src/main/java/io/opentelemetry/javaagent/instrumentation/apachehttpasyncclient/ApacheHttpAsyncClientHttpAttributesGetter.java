@@ -10,8 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.A
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
+import org.apache.hc.core5.http.HttpResponse;
 
 final class ApacheHttpAsyncClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
@@ -48,8 +47,7 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   @Override
   @Nullable
   public Integer statusCode(ApacheHttpClientRequest request, HttpResponse response) {
-    StatusLine statusLine = response.getStatusLine();
-    return statusLine != null ? statusLine.getStatusCode() : null;
+    return response != null ? response.getCode() : null;
   }
 
   @Override
