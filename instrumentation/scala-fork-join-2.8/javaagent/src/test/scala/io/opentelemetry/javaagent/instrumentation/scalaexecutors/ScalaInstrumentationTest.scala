@@ -11,7 +11,12 @@ import io.opentelemetry.instrumentation.testing.junit.{
   InstrumentationExtension
 }
 import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
-import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
+import io.opentelemetry.sdk.testing.assertj.{
+  OpenTelemetryAssertions,
+  SpanDataAssert,
+  TraceAssert
+}
+import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.function.Consumer
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -242,28 +247,32 @@ class ScalaInstrumentationTest {
     testing.waitAndAssertTraces(
       new Consumer[TraceAssert] {
         override def accept(trace: TraceAssert): Unit =
-          trace.hasSpansSatisfyingExactly(
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+          trace.satisfiesExactlyInAnyOrder(
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("parent")
                   .hasNoParent()
             },
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("timeout1")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("timeout2")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("timeout3")
                   .hasParent(trace.getSpan(0))
             }
