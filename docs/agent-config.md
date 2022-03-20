@@ -11,8 +11,7 @@ Please report any bugs or unexpected behavior you find.
 
 * [SDK Autoconfiguration](#sdk-autoconfiguration)
 * [Configuring the agent](#configuring-the-agent)
-* [Peer service name](#peer-service-name)
-* [DB statement sanitization](#db-statement-sanitization)
+* [Common instrumentation configuration](#common-instrumentation-configuration)
 * [Suppressing specific auto-instrumentation](#suppressing-specific-auto-instrumentation)
 
 ## SDK Autoconfiguration
