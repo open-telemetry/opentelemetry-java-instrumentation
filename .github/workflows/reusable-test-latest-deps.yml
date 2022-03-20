@@ -50,6 +50,10 @@ jobs:
       - name: Test
         if: ${{ !inputs.skip }}
         uses: gradle/gradle-build-action@v2
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           arguments: test -PtestLatestDeps=true ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           # testLatestDeps dependencies bundle is over 2gb, which causes restoring it to fail with:
