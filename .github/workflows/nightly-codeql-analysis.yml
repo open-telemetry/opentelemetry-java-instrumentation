@@ -12,19 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: java
-
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v2
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v1
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: java
+
+      - uses: gradle/gradle-build-action@v2
+        env:
+          # see https://github.com/github/codeql-action/issues/972
+          JAVA_TOOL_OPTIONS: "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"
+        with:
+          # skipping build cache is needed so that all modules will be analyzed
+          arguments: assemble --no-build-cache
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1
