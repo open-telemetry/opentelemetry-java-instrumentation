@@ -31,8 +31,7 @@ javaagent jar attached and release notes based on the change log.
 
 ## Patch Release
 
-All patch releases should include only bug-fixes, and must avoid
-adding/modifying the public APIs.
+All patch releases should include only bug-fixes, and must avoid adding/modifying the public APIs.
 
 In general, patch releases are only made for bug-fixes for the following types of issues:
 * Regressions
