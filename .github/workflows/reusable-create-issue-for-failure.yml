@@ -1,0 +1,27 @@
+name: Reusable - Create issue for failure
+
+on:
+  workflow_call:
+
+jobs:
+  create-issue:
+    name: Create issue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat > body.txt << EOF
+          [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed.
+
+          Please take a look and fix it ASAP.
+          EOF
+
+          gh issue create --title "$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER failed" \
+                          --label bug \
+                          --label area:build \
+                          --label priority:p1 \
+                          --body-file body.txt

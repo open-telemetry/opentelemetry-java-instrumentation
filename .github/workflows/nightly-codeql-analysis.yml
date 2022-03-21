@@ -37,18 +37,5 @@ jobs:
   issue:
     name: Open issue on failure
     needs: analyze
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      # run this action to get workflow conclusion
-      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
-      - uses: technote-space/workflow-conclusion-action@v2.2
-
-      - uses: actions/checkout@v3
-
-      - uses: JasonEtco/create-an-issue@v2.6
-        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          filename: .github/templates/workflow-failed.md
+    if: failure()
+    uses: ./.github/workflows/reusable-create-issue-for-failure.yml
