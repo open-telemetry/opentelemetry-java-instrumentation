@@ -14,6 +14,7 @@ import net.bytebuddy.description.type.TypeDescription
 import org.objectweb.asm.Opcodes
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass
 import static net.bytebuddy.matcher.ElementMatchers.named
@@ -24,6 +25,7 @@ class ExtendsClassMatcherTest extends Specification {
     AgentTooling.poolStrategy()
       .typePool(AgentTooling.locationStrategy().classFileLocator(this.class.classLoader, null), this.class.classLoader)
 
+  @Unroll
   def "test matcher #matcherClass.simpleName -> #type.simpleName"() {
     expect:
     extendsClass(matcher).matches(argument) == result
@@ -54,9 +56,7 @@ class ExtendsClassMatcherTest extends Specification {
     noExceptionThrown()
     1 * type.getModifiers() >> Opcodes.ACC_ABSTRACT
     1 * type.asGenericType() >> typeGeneric
-    1 * type.getTypeName() >> "type-name"
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
-    1 * typeGeneric.getTypeName() >> "typeGeneric-name"
     1 * type.getSuperClass() >> { throw new Exception("getSuperClass exception") }
     0 * _
   }
