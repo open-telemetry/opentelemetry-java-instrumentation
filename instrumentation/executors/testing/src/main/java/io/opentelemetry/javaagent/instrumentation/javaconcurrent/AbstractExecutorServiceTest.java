@@ -161,8 +161,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
         });
 
     // Just check there is a single trace, this test is primarily to make sure that scopes aren't
-    // leak on
-    // cancellation.
+    // leaked on cancellation.
     testing.waitAndAssertTraces(trace -> {});
   }
 }

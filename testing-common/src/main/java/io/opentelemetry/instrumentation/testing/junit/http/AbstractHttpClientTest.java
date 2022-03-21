@@ -832,19 +832,21 @@ public abstract class AbstractHttpClientTest<REQUEST> {
             } catch (InterruptedException e) {
               throw new AssertionError(e);
             }
-            Integer result = testing.runWithSpan(
-                "Parent span " + index,
-                () -> {
-                  Span.current().setAttribute("test.request.id", index);
-                  try {
-                    return singleConnection.doRequest(
-                        path, Collections.singletonMap("test-request-id", String.valueOf(index)));
-                  } catch (InterruptedException e) {
-                    throw new AssertionError(e);
-                  } catch (Exception e) {
-                    throw new AssertionError(e);
-                  }
-                });
+            Integer result =
+                testing.runWithSpan(
+                    "Parent span " + index,
+                    () -> {
+                      Span.current().setAttribute("test.request.id", index);
+                      try {
+                        return singleConnection.doRequest(
+                            path,
+                            Collections.singletonMap("test-request-id", String.valueOf(index)));
+                      } catch (InterruptedException e) {
+                        throw new AssertionError(e);
+                      } catch (Exception e) {
+                        throw new AssertionError(e);
+                      }
+                    });
             assertThat(result).isEqualTo(200);
           };
       pool.submit(job);

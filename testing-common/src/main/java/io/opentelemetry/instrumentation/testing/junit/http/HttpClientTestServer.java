@@ -29,6 +29,7 @@ import javax.net.ssl.KeyManagerFactory;
 
 public final class HttpClientTestServer extends ServerExtension {
   private static final String LONG_STRING;
+
   static {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < 100_000; i++) {
