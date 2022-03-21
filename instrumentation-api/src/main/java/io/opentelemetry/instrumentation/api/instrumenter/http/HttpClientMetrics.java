@@ -67,13 +67,10 @@ public final class HttpClientMetrics implements RequestListener {
   public void end(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(HTTP_CLIENT_REQUEST_METRICS_STATE);
     if (state == null) {
-      if (logger.isLoggable(Level.FINE)) {
-        logger.log(
-            Level.FINE,
-            "No state present when ending context "
-                + context
-                + ". Cannot record HTTP request metrics.");
-      }
+      logger.log(
+          Level.FINE,
+          "No state present when ending context {0}. Cannot record HTTP request metrics.",
+          context);
       return;
     }
     duration.record(

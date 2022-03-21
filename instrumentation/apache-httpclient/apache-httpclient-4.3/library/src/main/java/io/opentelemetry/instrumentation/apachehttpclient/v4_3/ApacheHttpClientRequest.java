@@ -89,9 +89,7 @@ public final class ApacheHttpClientRequest {
     if (major == 2 && minor == 0) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("unexpected http protocol version: " + protocolVersion);
-    }
+    logger.log(Level.FINE, "unexpected http protocol version: {0}", protocolVersion);
     return null;
   }
 
@@ -115,9 +113,7 @@ public final class ApacheHttpClientRequest {
       case "https":
         return 443;
       default:
-        if (logger.isLoggable(Level.FINE)) {
-          logger.fine("no default port mapping for scheme: " + uri.getScheme());
-        }
+        logger.log(Level.FINE, "no default port mapping for scheme: {0}", uri.getScheme());
         return null;
     }
   }

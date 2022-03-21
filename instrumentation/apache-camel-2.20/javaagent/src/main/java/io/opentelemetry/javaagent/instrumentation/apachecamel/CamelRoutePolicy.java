@@ -74,17 +74,13 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     SpanDecorator sd = getSpanDecorator(route.getEndpoint());
     Context parentContext = Context.current();
     Context context = spanOnExchangeBegin(route, exchange, sd, parentContext);
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("[Route start] Receiver span started " + context);
-    }
+    logger.log(Level.FINE, "[Route start] Receiver span started {0}", context);
   }
 
   /** Route exchange done. Get active CAMEL span, finish, remove from CAMEL holder. */
   @Override
   public void onExchangeDone(Route route, Exchange exchange) {
     Context context = ActiveContextManager.deactivate(exchange);
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("[Route finished] Receiver span finished " + context);
-    }
+    logger.log(Level.FINE, "[Route finished] Receiver span finished {0}", context);
   }
 }

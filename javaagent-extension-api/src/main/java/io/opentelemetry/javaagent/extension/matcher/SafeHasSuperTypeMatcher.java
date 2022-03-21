@@ -102,14 +102,12 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     try {
       return typeDefinition.getSuperClass();
     } catch (Throwable e) {
-      if (logger.isLoggable(Level.FINE)) {
-        logger.fine(
-            e.getClass().getSimpleName()
-                + " trying to get super class for target "
-                + safeTypeDefinitionName(typeDefinition)
-                + ": "
-                + e.getMessage());
-      }
+      logger.log(
+          Level.FINE,
+          "{0} trying to get super class for target {1}: {2}",
+          new String[] {
+            e.getClass().getSimpleName(), safeTypeDefinitionName(typeDefinition), e.getMessage()
+          });
       return null;
     }
   }
@@ -193,14 +191,12 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     }
 
     private static void logException(TypeDefinition typeDefinition, Throwable e) {
-      if (logger.isLoggable(Level.FINE)) {
-        logger.fine(
-            e.getClass().getSimpleName()
-                + " trying to get interfaces for target "
-                + safeTypeDefinitionName(typeDefinition)
-                + ": "
-                + e.getMessage());
-      }
+      logger.log(
+          Level.FINE,
+          "{0} trying to get interfaces for target {1}: {2}",
+          new String[] {
+            e.getClass().getSimpleName(), safeTypeDefinitionName(typeDefinition), e.getMessage()
+          });
     }
   }
 }

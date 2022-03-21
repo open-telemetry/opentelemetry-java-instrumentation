@@ -79,10 +79,8 @@ public class FutureInstrumentation implements TypeInstrumentation {
       @Override
       public boolean matches(TypeDescription target) {
         boolean allowed = ALLOWED_FUTURES.contains(target.getName());
-        if (!allowed
-            && logger.isLoggable(Level.FINE)
-            && hasFutureInterfaceMatcher.matches(target)) {
-          logger.fine("Skipping future instrumentation for " + target.getName());
+        if (!allowed && hasFutureInterfaceMatcher.matches(target)) {
+          logger.log(Level.FINE, "Skipping future instrumentation for {0}", target.getName());
         }
         return allowed;
       }

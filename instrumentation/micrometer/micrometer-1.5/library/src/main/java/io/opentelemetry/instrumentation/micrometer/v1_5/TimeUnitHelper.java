@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -43,12 +44,10 @@ final class TimeUnitHelper {
       case "days":
         return TimeUnit.DAYS;
       default:
-        logger.warning(
-            "Invalid base time unit: '"
-                + value
-                + "'; using '"
-                + getUnitString(defaultUnit)
-                + "' as the base time unit instead");
+        logger.log(
+            Level.WARNING,
+            "Invalid base time unit: '{0}'; using '{1}' as the base time unit instead",
+            new String[] {value, getUnitString(defaultUnit)});
         return defaultUnit;
     }
   }

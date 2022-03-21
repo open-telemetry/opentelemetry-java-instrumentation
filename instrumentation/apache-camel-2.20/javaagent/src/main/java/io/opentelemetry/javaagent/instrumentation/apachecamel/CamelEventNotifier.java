@@ -66,9 +66,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
     ActiveContextManager.activate(context, request);
     CamelPropagationUtil.injectParent(context, ese.getExchange().getIn().getHeaders());
 
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("[Exchange sending] Initiator span started: " + context);
-    }
+    logger.log(Level.FINE, "[Exchange sending] Initiator span started: {0}", context);
   }
 
   private static Context startOnExchangeSending(CamelRequest request) {
@@ -87,9 +85,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
     }
 
     Context context = ActiveContextManager.deactivate(event.getExchange());
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("[Exchange sent] Initiator span finished: " + context);
-    }
+    logger.log(Level.FINE, "[Exchange sent] Initiator span finished: {0}", context);
   }
 
   @Override

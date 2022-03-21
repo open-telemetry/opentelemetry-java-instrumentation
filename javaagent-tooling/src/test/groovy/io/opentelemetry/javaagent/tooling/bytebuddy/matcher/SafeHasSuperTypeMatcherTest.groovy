@@ -61,8 +61,10 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     noExceptionThrown()
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
+    1 * typeGeneric.getTypeName() >> "typeGeneric-name"
     1 * type.getInterfaces() >> { throw new Exception("getInterfaces exception") }
     1 * type.getSuperClass() >> { throw new Exception("getSuperClass exception") }
+    2 * type.getTypeName() >> "type-name"
     0 * _
   }
 
@@ -84,5 +86,6 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     1 * interfaces.iterator() >> it
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
+    1 * typeGeneric.getTypeName() >> "typeGeneric-name"
   }
 }

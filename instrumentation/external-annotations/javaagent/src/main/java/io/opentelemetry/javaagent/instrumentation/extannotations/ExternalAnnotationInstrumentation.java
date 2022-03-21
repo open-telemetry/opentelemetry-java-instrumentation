@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.ByteCodeElement;
@@ -116,10 +117,10 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     } else if (configString.isEmpty()) {
       return Collections.emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
-      logger.warning(
-          "Invalid trace annotations config '"
-              + configString
-              + "'. Must match 'package.Annotation$Name;*'.");
+      logger.log(
+          Level.WARNING,
+          "Invalid trace annotations config '{0}'. Must match 'package.Annotation$Name;*'.",
+          configString);
       return Collections.emptySet();
     } else {
       Set<String> annotations = new HashSet<>();

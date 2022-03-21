@@ -30,11 +30,10 @@ public final class PropagatedContext {
       Context currentPropagatedContext = contextUpdater.get(this);
       if (currentPropagatedContext != context) {
         if (logger.isLoggable(Level.FINE)) {
-          logger.fine(
-              "Failed to propagate context because previous propagated context is already set; new: "
-                  + context
-                  + ", old: "
-                  + currentPropagatedContext);
+          logger.log(
+              Level.FINE,
+              "Failed to propagate context because previous propagated context is already set; new: {0}, old: {1}",
+              new Object[] {context, currentPropagatedContext});
         }
       }
     }

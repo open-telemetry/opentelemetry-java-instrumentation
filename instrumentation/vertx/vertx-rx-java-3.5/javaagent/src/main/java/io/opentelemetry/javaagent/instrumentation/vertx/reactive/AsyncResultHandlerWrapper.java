@@ -39,9 +39,7 @@ public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>
   public static Handler<Handler<AsyncResult<?>>> wrapIfNeeded(
       Handler<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultHandlerWrapper)) {
-      if (logger.isLoggable(Level.FINE)) {
-        logger.fine("Wrapping handler " + delegate);
-      }
+      logger.log(Level.FINE, "Wrapping handler {0}", delegate);
       return new AsyncResultHandlerWrapper(delegate, executionContext);
     }
     return delegate;

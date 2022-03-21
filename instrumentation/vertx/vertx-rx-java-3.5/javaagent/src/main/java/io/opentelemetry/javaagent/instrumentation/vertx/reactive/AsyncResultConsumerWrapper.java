@@ -40,9 +40,7 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   public static Consumer<Handler<AsyncResult<?>>> wrapIfNeeded(
       Consumer<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultConsumerWrapper)) {
-      if (logger.isLoggable(Level.FINE)) {
-        logger.fine("Wrapping consumer " + delegate);
-      }
+      logger.log(Level.FINE, "Wrapping consumer {0}", delegate);
       return new AsyncResultConsumerWrapper(delegate, executionContext);
     }
     return delegate;

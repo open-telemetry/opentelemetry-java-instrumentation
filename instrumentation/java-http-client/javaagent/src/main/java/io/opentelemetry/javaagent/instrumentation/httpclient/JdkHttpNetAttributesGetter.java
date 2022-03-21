@@ -46,9 +46,7 @@ public class JdkHttpNetAttributesGetter
       case "https":
         return 443;
       default:
-        if (logger.isLoggable(Level.FINE)) {
-          logger.fine("no default port mapping for scheme: " + scheme);
-        }
+        logger.log(Level.FINE, "no default port mapping for scheme: {0}", scheme);
         return null;
     }
   }

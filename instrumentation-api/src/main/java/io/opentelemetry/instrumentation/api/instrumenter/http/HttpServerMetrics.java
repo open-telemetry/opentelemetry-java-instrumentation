@@ -82,9 +82,8 @@ public final class HttpServerMetrics implements RequestListener {
       if (logger.isLoggable(Level.FINE)) {
         logger.log(
             Level.FINE,
-            "No state present when ending context "
-                + context
-                + ". Cannot record HTTP request metrics.");
+            "No state present when ending context {0}. Cannot record HTTP request metrics.",
+            context);
       }
       return;
     }

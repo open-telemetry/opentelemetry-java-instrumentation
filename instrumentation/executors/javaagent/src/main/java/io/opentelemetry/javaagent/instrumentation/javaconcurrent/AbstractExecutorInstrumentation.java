@@ -131,10 +131,9 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
                     }
                   }
 
-                  if (!allowed
-                      && logger.isLoggable(Level.FINE)
-                      && hasExecutorInterfaceMatcher.matches(target)) {
-                    logger.fine("Skipping executor instrumentation for " + target.getName());
+                  if (!allowed && hasExecutorInterfaceMatcher.matches(target)) {
+                    logger.log(
+                        Level.FINE, "Skipping executor instrumentation for {0}", target.getName());
                   }
                   return allowed;
                 }

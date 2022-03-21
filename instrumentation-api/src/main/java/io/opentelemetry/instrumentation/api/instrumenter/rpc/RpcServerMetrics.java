@@ -70,9 +70,8 @@ public final class RpcServerMetrics implements RequestListener {
       if (logger.isLoggable(Level.FINE)) {
         logger.log(
             Level.FINE,
-            "No state present when ending context "
-                + context
-                + ". Cannot record RPC request metrics.");
+            "No state present when ending context {0}. Cannot record RPC request metrics.",
+            context);
       }
       return;
     }

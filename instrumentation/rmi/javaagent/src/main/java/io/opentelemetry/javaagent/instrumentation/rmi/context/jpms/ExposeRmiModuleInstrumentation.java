@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.loading.ClassInjector;
@@ -70,8 +71,10 @@ public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
                 Collections.emptyMap());
 
             instrumented.set(true);
-            logger.fine(
-                "Exposed package \"sun.rmi.server\" in module " + module + " to unnamed module");
+            logger.log(
+                Level.FINE,
+                "Exposed package \"sun.rmi.server\" in module {0} to unnamed module",
+                module);
           }
           return builder;
         });

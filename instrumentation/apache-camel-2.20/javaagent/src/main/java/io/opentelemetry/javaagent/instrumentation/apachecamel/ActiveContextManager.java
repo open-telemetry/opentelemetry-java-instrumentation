@@ -53,9 +53,7 @@ class ActiveContextManager {
     ContextWithScope parent = exchange.getProperty(ACTIVE_CONTEXT_PROPERTY, ContextWithScope.class);
     ContextWithScope contextWithScope = ContextWithScope.activate(parent, context, request);
     exchange.setProperty(ACTIVE_CONTEXT_PROPERTY, contextWithScope);
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine("Activated a span: " + contextWithScope);
-    }
+    logger.log(Level.FINE, "Activated a span: {0}", contextWithScope);
   }
 
   /**
@@ -72,9 +70,7 @@ class ActiveContextManager {
     if (contextWithScope != null) {
       contextWithScope.deactivate(exchange.getException());
       exchange.setProperty(ACTIVE_CONTEXT_PROPERTY, contextWithScope.getParent());
-      if (logger.isLoggable(Level.FINE)) {
-        logger.fine("Deactivated span: " + contextWithScope);
-      }
+      logger.log(Level.FINE, "Deactivated span: {0}", contextWithScope);
       return contextWithScope.context;
     }
 
