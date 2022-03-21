@@ -65,8 +65,11 @@ public final class HttpClientTestServer extends ServerExtension {
               if (testRequestId != null) {
                 headers.set("test-request-id", testRequestId);
               }
-              // return HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."));
-              return HttpResponse.of(headers.build(), HttpData.ofAscii(LONG_STRING));
+              if (testRequestId != null) {
+                return HttpResponse.of(headers.build(), HttpData.ofAscii(LONG_STRING));
+              } else {
+                return HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."));
+              }
             })
         .service(
             "/client-error",
