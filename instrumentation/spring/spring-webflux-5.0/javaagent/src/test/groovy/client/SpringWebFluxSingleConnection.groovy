@@ -21,6 +21,7 @@ import java.util.concurrent.TimeoutException
 
 class SpringWebFluxSingleConnection implements SingleConnection {
   private final ReactorClientHttpConnector connector
+  private final WebClient webClient
   private final String host
   private final int port
 
@@ -28,7 +29,7 @@ class SpringWebFluxSingleConnection implements SingleConnection {
     if (isOldVersion) {
       connector = new ReactorClientHttpConnector({ HttpClientOptions.Builder clientOptions ->
         clientOptions.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, HttpClientTest.CONNECT_TIMEOUT_MS)
-        clientOptions.poolResources(PoolResources.fixed("pool", 1, HttpClientTest.CONNECT_TIMEOUT_MS))
+        clientOptions.poolResources(PoolResources.fixed("pool", 1))
       })
     } else {
       def httpClient = HttpClient.create().tcpConfiguration({ tcpClient ->
@@ -40,6 +41,7 @@ class SpringWebFluxSingleConnection implements SingleConnection {
 
     this.host = host
     this.port = port
+    this.webClient = WebClient.builder().clientConnector(connector).build()
   }
 
   @Override
@@ -53,11 +55,13 @@ class SpringWebFluxSingleConnection implements SingleConnection {
       throw new ExecutionException(e)
     }
 
-    def request = WebClient.builder().clientConnector(connector).build().method(HttpMethod.GET)
+    def request = webClient.method(HttpMethod.GET)
       .uri(uri)
       .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
 
     def response = request.exchange().block()
+    // read response body, this will close the request and release the connection so that it can be reused
+    response.bodyToMono(String.class).block()
 
     String responseId = response.headers().asHttpHeaders().getFirst(REQUEST_ID_HEADER)
     if (requestId != responseId) {
