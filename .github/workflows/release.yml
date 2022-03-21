@@ -138,25 +138,14 @@ jobs:
             | perl -0pe 's/\n +/ /g' \
             >> release-notes.txt
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.4
+      - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.set-versions.outputs.release-version }}
-          release_name: Version ${{ steps.set-versions.outputs.release-version }}
-          draft: true
-          prerelease: false
-          body_path: release-notes.txt
-
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: javaagent/build/libs/opentelemetry-javaagent-${{ steps.set-versions.outputs.release-version }}.jar
-          asset_name: opentelemetry-javaagent.jar
-          asset_content_type: application/java-archive
+        run: |
+          cp javaagent/build/libs/opentelemetry-javaagent-${{ steps.set-versions.outputs.release-version }}.jar opentelemetry-javaagent.jar
+          gh release create --target ${{ github.ref_name }} \
+                            --title "Version ${{ steps.set-versions.outputs.release-version }}" \
+                            --notes-file release-notes.txt \
+                            --discussion-category announcements \
+                            v${{ steps.set-versions.outputs.release-version }} \
+                            opentelemetry-javaagent.jar
