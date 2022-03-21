@@ -88,7 +88,7 @@ public abstract class AbstractFunctionTimerSecondsTest {
 
     // when
     Metrics.globalRegistry.remove(functionTimer);
-    Thread.sleep(10); // give time for any inflight metric export to be received
+    Thread.sleep(100); // give time for any inflight metric export to be received
     testing().clearData();
 
     // then
