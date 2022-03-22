@@ -71,7 +71,7 @@ jobs:
           sh ./install-misspell.sh
           ./bin/misspell -error ./**/*
 
-  required-status-check:
+  accept-pr:
     needs: [ build, test, smoke-test, muzzle, examples, markdown-misspell-check ]
     runs-on: ubuntu-latest
     if: always()
