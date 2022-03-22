@@ -51,7 +51,7 @@ public class ShenYuPluginUtils {
   }
 
   /**
-   * Many Plugins in ShenYu, so record these in Deque
+   * Many Plugins in ShenYu, so record these in Deque.
    */
   protected static class ShenYuPlugin {
     private final Deque<OnSpanEnd> onSpanEndDeque;
