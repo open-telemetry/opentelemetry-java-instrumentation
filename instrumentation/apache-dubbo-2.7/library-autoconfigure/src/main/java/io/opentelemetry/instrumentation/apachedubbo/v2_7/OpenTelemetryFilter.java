@@ -18,7 +18,7 @@ public final class OpenTelemetryFilter implements Filter {
   private final Filter delegate;
 
   public OpenTelemetryFilter() {
-    delegate = DubboTracing.create(GlobalOpenTelemetry.get()).newFilter();
+    delegate = DubboTelemetry.create(GlobalOpenTelemetry.get()).newFilter();
   }
 
   @Override

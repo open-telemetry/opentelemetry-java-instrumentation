@@ -11,7 +11,7 @@ import org.bson.BsonInt32
 import org.bson.BsonString
 import spock.lang.Specification
 
-import static io.opentelemetry.instrumentation.mongo.v3_1.MongoTracingBuilder.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH
+import static MongoTelemetryBuilder.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH
 import static java.util.Arrays.asList
 
 class MongoDbAttributesGetterTest extends Specification {

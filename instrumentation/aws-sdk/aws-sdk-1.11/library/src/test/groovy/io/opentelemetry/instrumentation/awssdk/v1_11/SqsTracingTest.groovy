@@ -12,7 +12,7 @@ class SqsTracingTest extends AbstractSqsTracingTest implements LibraryTestTrait 
   @Override
   AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client.withRequestHandlers(
-      AwsSdkTracing.builder(getOpenTelemetry())
+      AwsSdkTelemetry.builder(getOpenTelemetry())
         .setCaptureExperimentalSpanAttributes(true)
         .build()
         .newRequestHandler())

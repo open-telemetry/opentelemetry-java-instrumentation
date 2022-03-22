@@ -20,7 +20,7 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   @Override
   protected ServerBuilder configureServer(ServerBuilder sb) {
     return sb.decorator(
-        ArmeriaTracing.builder(testing.getOpenTelemetry())
+        ArmeriaTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedServerRequestHeaders(
                 Collections.singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
             .setCapturedServerResponseHeaders(

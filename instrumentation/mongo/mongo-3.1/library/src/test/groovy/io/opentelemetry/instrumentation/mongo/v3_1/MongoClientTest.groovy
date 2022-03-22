@@ -11,6 +11,6 @@ import io.opentelemetry.instrumentation.test.LibraryTestTrait
 class MongoClientTest extends AbstractMongo31ClientTest implements LibraryTestTrait {
   @Override
   void configureMongoClientOptions(MongoClientOptions.Builder options) {
-    options.addCommandListener(MongoTracing.create(openTelemetry).newCommandListener())
+    options.addCommandListener(MongoTelemetry.create(openTelemetry).newCommandListener())
   }
 }

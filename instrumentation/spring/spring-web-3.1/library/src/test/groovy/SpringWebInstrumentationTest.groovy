@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.instrumentation.spring.web.SpringWebTracing
+import io.opentelemetry.instrumentation.spring.web.SpringWebTelemetry
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
@@ -23,7 +23,7 @@ class SpringWebInstrumentationTest extends HttpClientTest<HttpEntity<String>> im
   def setupSpec() {
     if (restTemplate == null) {
       restTemplate = new RestTemplate()
-      restTemplate.getInterceptors().add(SpringWebTracing.create(getOpenTelemetry()).newInterceptor())
+      restTemplate.getInterceptors().add(SpringWebTelemetry.create(getOpenTelemetry()).newInterceptor())
     }
   }
 

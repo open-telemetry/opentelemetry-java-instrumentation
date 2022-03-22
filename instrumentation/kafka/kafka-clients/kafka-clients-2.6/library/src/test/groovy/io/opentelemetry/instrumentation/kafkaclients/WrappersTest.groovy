@@ -20,11 +20,11 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
 
   @Unroll
   def "test wrappers"() throws Exception {
-    KafkaTracing tracing = KafkaTracing.create(getOpenTelemetry())
+    KafkaTelemetry telemetry = KafkaTelemetry.create(getOpenTelemetry())
 
     when:
     String greeting = "Hello Kafka!"
-    def wrappedProducer = tracing.wrap(producer)
+    def wrappedProducer = telemetry.wrap(producer)
     runWithSpan("parent") {
       wrappedProducer.send(new ProducerRecord(SHARED_TOPIC, greeting)) { meta, ex ->
         if (ex == null) {
@@ -38,7 +38,7 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
     then:
     awaitUntilConsumerIsReady()
     // check that the message was received
-    def wrappedConsumer = tracing.wrap(consumer)
+    def wrappedConsumer = telemetry.wrap(consumer)
     def records = wrappedConsumer.poll(Duration.ofSeconds(5).toMillis())
     records.count() == 1
     for (record in records) {

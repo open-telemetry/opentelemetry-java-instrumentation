@@ -16,7 +16,7 @@ class QuartzTest extends AbstractQuartzTest {
 
   @Override
   protected void configureScheduler(Scheduler scheduler) {
-    QuartzTracing.create(testing.getOpenTelemetry()).configure(scheduler);
+    QuartzTelemetry.create(testing.getOpenTelemetry()).configure(scheduler);
   }
 
   @Override
