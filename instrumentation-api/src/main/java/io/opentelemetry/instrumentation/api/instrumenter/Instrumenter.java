@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -100,7 +101,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
       attributesExtractors;
   private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
   private final List<? extends RequestListener> requestListeners;
-  private final List<? extends RequestListener> requestMetricListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final TimeExtractor<REQUEST, RESPONSE> timeExtractor;
   private final boolean disabled;
@@ -117,7 +117,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
     this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
     this.requestListeners = new ArrayList<>(builder.requestListeners);
-    this.requestMetricListeners = new ArrayList<>(builder.requestMetricListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.timeExtractor = builder.timeExtractor;
     this.disabled = builder.disabled;
@@ -177,6 +176,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Context context = parentContext;
 
+    spanBuilder.setAllAttributes(attributes);
+    Span span = spanBuilder.startSpan();
+    context = context.with(span);
+
     for (ContextCustomizer<? super REQUEST> contextCustomizer : contextCustomizers) {
       context = contextCustomizer.start(context, request, attributes);
     }
@@ -184,19 +187,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
     if (!requestListeners.isEmpty()) {
       long startNanos = getNanos(startTime);
       for (RequestListener requestListener : requestListeners) {
-        context = requestListener.start(context, attributes, startNanos);
-      }
-    }
-
-    spanBuilder.setAllAttributes(attributes);
-    Span span = spanBuilder.startSpan();
-    context = context.with(span);
-
-    // request metric listeners need to run after the span has been added to the context in order
-    // for them to generate exemplars
-    if (!requestMetricListeners.isEmpty()) {
-      long startNanos = getNanos(startTime);
-      for (RequestListener requestListener : requestMetricListeners) {
         context = requestListener.start(context, attributes, startNanos);
       }
     }
@@ -230,14 +220,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
       endTime = timeExtractor.extractEndTime(request, response, error);
     }
 
-    if (!requestListeners.isEmpty() || !requestMetricListeners.isEmpty()) {
+    if (!requestListeners.isEmpty()) {
       long endNanos = getNanos(endTime);
-      // TODO (trask) call end in the reverse order that start was called?
-      for (RequestListener requestListener : requestMetricListeners) {
-        requestListener.end(context, attributes, endNanos);
-      }
-      for (RequestListener requestListener : requestListeners) {
-        requestListener.end(context, attributes, endNanos);
+      ListIterator<? extends RequestListener> i =
+          requestListeners.listIterator(requestListeners.size());
+      while (i.hasPrevious()) {
+        i.previous().end(context, attributes, endNanos);
       }
     }
 
