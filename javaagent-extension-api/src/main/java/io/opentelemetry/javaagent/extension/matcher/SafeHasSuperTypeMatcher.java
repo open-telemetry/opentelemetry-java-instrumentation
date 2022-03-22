@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.extension.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.SafeErasureMatcher.safeAsErasure;
 import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
+import static java.util.logging.Level.FINE;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -103,7 +103,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
       return typeDefinition.getSuperClass();
     } catch (Throwable e) {
       logger.log(
-          Level.FINE,
+          FINE,
           "{0} trying to get super class for target {1}: {2}",
           new String[] {
             e.getClass().getSimpleName(), safeTypeDefinitionName(typeDefinition), e.getMessage()
@@ -192,7 +192,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
 
     private static void logException(TypeDefinition typeDefinition, Throwable e) {
       logger.log(
-          Level.FINE,
+          FINE,
           "{0} trying to get interfaces for target {1}: {2}",
           new String[] {
             e.getClass().getSimpleName(), safeTypeDefinitionName(typeDefinition), e.getMessage()

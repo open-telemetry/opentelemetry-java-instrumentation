@@ -24,10 +24,10 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
@@ -53,7 +53,7 @@ class ActiveContextManager {
     ContextWithScope parent = exchange.getProperty(ACTIVE_CONTEXT_PROPERTY, ContextWithScope.class);
     ContextWithScope contextWithScope = ContextWithScope.activate(parent, context, request);
     exchange.setProperty(ACTIVE_CONTEXT_PROPERTY, contextWithScope);
-    logger.log(Level.FINE, "Activated a span: {0}", contextWithScope);
+    logger.log(FINE, "Activated a span: {0}", contextWithScope);
   }
 
   /**
@@ -70,7 +70,7 @@ class ActiveContextManager {
     if (contextWithScope != null) {
       contextWithScope.deactivate(exchange.getException());
       exchange.setProperty(ACTIVE_CONTEXT_PROPERTY, contextWithScope.getParent());
-      logger.log(Level.FINE, "Deactivated span: {0}", contextWithScope);
+      logger.log(FINE, "Deactivated span: {0}", contextWithScope);
       return contextWithScope.context;
     }
 

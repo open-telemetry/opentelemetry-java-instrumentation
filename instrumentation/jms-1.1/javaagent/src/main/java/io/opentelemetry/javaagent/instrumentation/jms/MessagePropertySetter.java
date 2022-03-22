@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.context.propagation.TextMapSetter;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jms.JMSException;
 
@@ -23,8 +24,8 @@ enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
     try {
       carrier.message().setStringProperty(propName, value);
     } catch (JMSException e) {
-      if (logger.isLoggable(Level.FINE)) {
-        logger.log(Level.FINE, "Failure setting jms property: " + propName, e);
+      if (logger.isLoggable(FINE)) {
+        logger.log(FINE, "Failure setting jms property: " + propName, e);
       }
     }
   }

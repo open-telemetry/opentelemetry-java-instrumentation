@@ -25,11 +25,11 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.getSpanDecorator;
 import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
@@ -74,13 +74,13 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     SpanDecorator sd = getSpanDecorator(route.getEndpoint());
     Context parentContext = Context.current();
     Context context = spanOnExchangeBegin(route, exchange, sd, parentContext);
-    logger.log(Level.FINE, "[Route start] Receiver span started {0}", context);
+    logger.log(FINE, "[Route start] Receiver span started {0}", context);
   }
 
   /** Route exchange done. Get active CAMEL span, finish, remove from CAMEL holder. */
   @Override
   public void onExchangeDone(Route route, Exchange exchange) {
     Context context = ActiveContextManager.deactivate(exchange);
-    logger.log(Level.FINE, "[Route finished] Receiver span finished {0}", context);
+    logger.log(FINE, "[Route finished] Receiver span finished {0}", context);
   }
 }

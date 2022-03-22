@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.extension.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
+import static java.util.logging.Level.FINE;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -56,7 +56,7 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
       return typeDefinition.asErasure();
     } catch (Throwable e) {
       logger.log(
-          Level.FINE,
+          FINE,
           "{0} trying to get erasure for target {1}: {2}",
           new String[] {
             e.getClass().getSimpleName(), safeTypeDefinitionName(typeDefinition), e.getMessage()

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
+import static java.util.logging.Level.FINE;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -12,7 +14,6 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 final class HeadersFactory {
@@ -51,7 +52,7 @@ final class HeadersFactory {
         return headers;
       }
     } catch (Exception e) {
-      logger.log(Level.FINE, "Could not get headers from request", e);
+      logger.log(FINE, "Could not get headers from request", e);
     }
     return Collections.emptyMap();
   }

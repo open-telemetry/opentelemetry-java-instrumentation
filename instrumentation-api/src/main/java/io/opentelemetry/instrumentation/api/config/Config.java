@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.api.config;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -166,8 +166,8 @@ public abstract class Config {
       T value = getTypedProperty(name, parser);
       return value == null ? defaultValue : value;
     } catch (RuntimeException t) {
-      if (logger.isLoggable(Level.FINE)) {
-        logger.log(Level.FINE, "Error occurred during parsing: " + t.getMessage(), t);
+      if (logger.isLoggable(FINE)) {
+        logger.log(FINE, "Error occurred during parsing: " + t.getMessage(), t);
       }
       return defaultValue;
     }

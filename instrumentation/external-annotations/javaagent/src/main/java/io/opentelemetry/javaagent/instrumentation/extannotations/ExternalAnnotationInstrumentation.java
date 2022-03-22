@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationSingletons.instrumenter;
+import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
@@ -29,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.ByteCodeElement;
@@ -118,7 +118,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
       return Collections.emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Invalid trace annotations config '{0}'. Must match 'package.Annotation$Name;*'.",
           configString);
       return Collections.emptySet();

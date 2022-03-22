@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
 
+import static java.util.logging.Level.FINE;
+
 import application.io.opentelemetry.api.baggage.Baggage;
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.context.Context;
@@ -18,7 +20,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -121,11 +122,9 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     if (applicationContext instanceof AgentContextWrapper) {
       return ((AgentContextWrapper) applicationContext).toAgentContext();
     }
-    if (logger.isLoggable(Level.FINE)) {
+    if (logger.isLoggable(FINE)) {
       logger.log(
-          Level.FINE,
-          "unexpected context: " + applicationContext,
-          new Exception("unexpected context"));
+          FINE, "unexpected context: " + applicationContext, new Exception("unexpected context"));
     }
     return io.opentelemetry.context.Context.root();
   }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
+import static java.util.logging.Level.FINE;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.twilio.rest.api.v2010.account.Call;
@@ -14,7 +16,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -44,7 +45,7 @@ class TwilioExperimentalAttributesExtractor implements AttributesExtractor<Strin
             Uninterruptibles.getUninterruptibly(
                 (ListenableFuture<?>) result, 0, TimeUnit.MICROSECONDS);
       } catch (Exception e) {
-        logger.log(Level.FINE, "Error unwrapping result", e);
+        logger.log(FINE, "Error unwrapping result", e);
       }
     }
 

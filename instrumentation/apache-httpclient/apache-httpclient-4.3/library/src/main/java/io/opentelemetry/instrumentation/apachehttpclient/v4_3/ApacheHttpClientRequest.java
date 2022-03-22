@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.http.Header;
@@ -89,7 +90,7 @@ public final class ApacheHttpClientRequest {
     if (major == 2 && minor == 0) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
-    logger.log(Level.FINE, "unexpected http protocol version: {0}", protocolVersion);
+    logger.log(FINE, "unexpected http protocol version: {0}", protocolVersion);
     return null;
   }
 
@@ -113,7 +114,7 @@ public final class ApacheHttpClientRequest {
       case "https":
         return 443;
       default:
-        logger.log(Level.FINE, "no default port mapping for scheme: {0}", uri.getScheme());
+        logger.log(FINE, "no default port mapping for scheme: {0}", uri.getScheme());
         return null;
     }
   }
@@ -124,7 +125,7 @@ public final class ApacheHttpClientRequest {
       // this can be relative or absolute
       return new URI(httpRequest.getRequestLine().getUri());
     } catch (URISyntaxException e) {
-      logger.log(Level.FINE, e.getMessage(), e);
+      logger.log(FINE, e.getMessage(), e);
       return null;
     }
   }
@@ -141,7 +142,7 @@ public final class ApacheHttpClientRequest {
           uri.getQuery(),
           uri.getFragment());
     } catch (URISyntaxException e) {
-      logger.log(Level.FINE, e.getMessage(), e);
+      logger.log(FINE, e.getMessage(), e);
       return null;
     }
   }

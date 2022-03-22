@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.logging.Level.SEVERE;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -73,7 +75,7 @@ public final class ContextPropagationDebug {
       logger.severe("Unexpected non-root current context found when extracting remote context!");
       Span currentSpan = Span.fromContextOrNull(current);
       if (currentSpan != null) {
-        logger.severe("It contains this span: " + currentSpan);
+        logger.log(SEVERE, "It contains this span: {0}", currentSpan);
       }
 
       debugContextPropagation(current);
@@ -120,7 +122,7 @@ public final class ContextPropagationDebug {
           sb.append("\nwhich was propagated from:");
         }
       }
-      logger.severe("a context leak was detected. it was propagated from: " + sb);
+      logger.log(SEVERE, "a context leak was detected. it was propagated from: {0}", sb);
     }
   }
 

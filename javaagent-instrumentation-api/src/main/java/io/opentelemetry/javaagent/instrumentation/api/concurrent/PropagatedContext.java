@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.context.Context;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** Represents a {@link Context} attached to a concurrent task instance. */
@@ -29,12 +30,10 @@ public final class PropagatedContext {
     if (!result) {
       Context currentPropagatedContext = contextUpdater.get(this);
       if (currentPropagatedContext != context) {
-        if (logger.isLoggable(Level.FINE)) {
-          logger.log(
-              Level.FINE,
-              "Failed to propagate context because previous propagated context is already set; new: {0}, old: {1}",
-              new Object[] {context, currentPropagatedContext});
-        }
+        logger.log(
+            FINE,
+            "Failed to propagate context because previous propagated context is already set; new: {0}, old: {1}",
+            new Object[] {context, currentPropagatedContext});
       }
     }
   }

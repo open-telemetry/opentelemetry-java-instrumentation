@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context.jpms;
 
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
@@ -13,7 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.loading.ClassInjector;
@@ -72,9 +72,7 @@ public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
 
             instrumented.set(true);
             logger.log(
-                Level.FINE,
-                "Exposed package \"sun.rmi.server\" in module {0} to unnamed module",
-                module);
+                FINE, "Exposed package \"sun.rmi.server\" in module {0} to unnamed module", module);
           }
           return builder;
         });

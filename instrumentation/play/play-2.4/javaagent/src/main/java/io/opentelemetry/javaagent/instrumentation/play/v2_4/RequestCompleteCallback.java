@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
 import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import play.api.mvc.Result;
 import scala.runtime.AbstractFunction1;
@@ -29,7 +29,7 @@ public class RequestCompleteCallback extends AbstractFunction1<Try<Result>, Obje
     try {
       instrumenter().end(context, null, null, result.isFailure() ? result.failed().get() : null);
     } catch (Throwable t) {
-      logger.log(Level.FINE, "error in play instrumentation", t);
+      logger.log(FINE, "error in play instrumentation", t);
     }
     return null;
   }

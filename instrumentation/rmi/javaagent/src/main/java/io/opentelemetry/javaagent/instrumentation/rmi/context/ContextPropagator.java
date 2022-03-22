@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;
 import java.rmi.server.ObjID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import sun.rmi.transport.Connection;
 import sun.rmi.transport.StreamRemoteCall;
@@ -99,10 +100,10 @@ public class ContextPropagator {
           if (ex instanceof NoSuchObjectException) {
             return false;
           } else {
-            logger.log(Level.FINE, "Server error when executing synthetic call", ex);
+            logger.log(FINE, "Server error when executing synthetic call", ex);
           }
         } else {
-          logger.log(Level.FINE, "Error executing synthetic call", e);
+          logger.log(FINE, "Error executing synthetic call", e);
         }
         return false;
       } finally {
@@ -110,7 +111,7 @@ public class ContextPropagator {
       }
 
     } catch (IOException e) {
-      logger.log(Level.FINE, "Communication error executing synthetic call", e);
+      logger.log(FINE, "Communication error executing synthetic call", e);
       return false;
     }
     return true;

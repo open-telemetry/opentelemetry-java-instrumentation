@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -15,7 +17,6 @@ import io.opentelemetry.extension.trace.propagation.OtTracePropagator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.util.ClassUtils;
@@ -80,7 +81,7 @@ public final class CompositeTextMapPropagatorFactory {
           propagators.add(W3CBaggagePropagator.getInstance());
           break;
         default:
-          logger.log(Level.WARNING, "Unsupported type of propagator: {0}", type);
+          logger.log(WARNING, "Unsupported type of propagator: {0}", type);
           break;
       }
     }

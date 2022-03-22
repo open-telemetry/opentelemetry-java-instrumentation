@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -14,7 +16,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** ContextPayload wraps context information shared between client and server. */
@@ -49,7 +50,7 @@ public class ContextPayload {
         return new ContextPayload(map);
       }
     } catch (ClassCastException | ClassNotFoundException ex) {
-      logger.log(Level.FINE, "Error reading object", ex);
+      logger.log(FINE, "Error reading object", ex);
     }
 
     return null;

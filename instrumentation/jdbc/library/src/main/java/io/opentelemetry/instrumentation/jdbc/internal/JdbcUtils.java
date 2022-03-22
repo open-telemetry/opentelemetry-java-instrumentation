@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static java.util.logging.Level.FINE;
+
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -62,7 +63,7 @@ public final class JdbcUtils {
       }
     } catch (Throwable e) {
       // Had some problem getting the connection.
-      logger.log(Level.FINE, "Could not get connection for StatementAdvice", e);
+      logger.log(FINE, "Could not get connection for StatementAdvice", e);
       return null;
     }
     return connection;

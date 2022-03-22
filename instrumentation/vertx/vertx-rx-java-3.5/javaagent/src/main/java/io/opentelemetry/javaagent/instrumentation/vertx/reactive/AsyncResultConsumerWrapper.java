@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<?>>> {
@@ -40,7 +41,7 @@ public class AsyncResultConsumerWrapper implements Consumer<Handler<AsyncResult<
   public static Consumer<Handler<AsyncResult<?>>> wrapIfNeeded(
       Consumer<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultConsumerWrapper)) {
-      logger.log(Level.FINE, "Wrapping consumer {0}", delegate);
+      logger.log(FINE, "Wrapping consumer {0}", delegate);
       return new AsyncResultConsumerWrapper(delegate, executionContext);
     }
     return delegate;

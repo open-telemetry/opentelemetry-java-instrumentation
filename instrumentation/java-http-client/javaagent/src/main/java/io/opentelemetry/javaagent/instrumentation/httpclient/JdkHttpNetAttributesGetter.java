@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -46,7 +47,7 @@ public class JdkHttpNetAttributesGetter
       case "https":
         return 443;
       default:
-        logger.log(Level.FINE, "no default port mapping for scheme: {0}", scheme);
+        logger.log(FINE, "no default port mapping for scheme: {0}", scheme);
         return null;
     }
   }

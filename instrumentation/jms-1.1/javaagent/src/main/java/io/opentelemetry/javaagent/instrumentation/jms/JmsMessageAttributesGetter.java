@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.jms.JMSException;
@@ -62,7 +63,7 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
     try {
       return messageWithDestination.message().getJMSCorrelationID();
     } catch (JMSException e) {
-      logger.log(Level.FINE, "Failure getting JMS correlation id", e);
+      logger.log(FINE, "Failure getting JMS correlation id", e);
       return null;
     }
   }
@@ -85,7 +86,7 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
     try {
       return messageWithDestination.message().getJMSMessageID();
     } catch (JMSException e) {
-      logger.log(Level.FINE, "Failure getting JMS message id", e);
+      logger.log(FINE, "Failure getting JMS message id", e);
       return null;
     }
   }

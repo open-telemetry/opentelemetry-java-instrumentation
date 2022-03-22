@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
+import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -70,7 +70,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
     public static void onEnter() {
       Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
           .log(
-              Level.WARNING,
+              WARNING,
               "You are currently using the OpenTelemetry Instrumentation Java Agent;"
                   + " all GlobalOpenTelemetry.set calls are ignored - the agent provides"
                   + " the global OpenTelemetry object used by your application.",

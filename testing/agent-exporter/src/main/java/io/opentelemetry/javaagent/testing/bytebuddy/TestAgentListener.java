@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.testing.bytebuddy;
 
+import static java.util.logging.Level.SEVERE;
+
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
@@ -22,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -150,7 +151,7 @@ public class TestAgentListener implements AgentBuilder.Listener {
     }
     if (!(throwable instanceof AbortTransformationException)) {
       logger.log(
-          Level.SEVERE,
+          SEVERE,
           "Unexpected instrumentation error when instrumenting " + typeName + " on " + classLoader,
           throwable);
       instrumentationErrorCount.incrementAndGet();

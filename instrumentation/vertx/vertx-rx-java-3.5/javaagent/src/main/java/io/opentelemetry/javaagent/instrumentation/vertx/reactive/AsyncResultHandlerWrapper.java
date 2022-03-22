@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>>> {
@@ -39,7 +40,7 @@ public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>
   public static Handler<Handler<AsyncResult<?>>> wrapIfNeeded(
       Handler<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultHandlerWrapper)) {
-      logger.log(Level.FINE, "Wrapping handler {0}", delegate);
+      logger.log(FINE, "Wrapping handler {0}", delegate);
       return new AsyncResultHandlerWrapper(delegate, executionContext);
     }
     return delegate;

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
+import static java.util.logging.Level.INFO;
+
 import io.opentelemetry.exporter.internal.otlp.logs.LogsRequestMarshaler;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.data.LogData;
@@ -36,7 +38,7 @@ class OtlpInMemoryLogExporter implements LogExporter {
   @Override
   public CompletableResultCode export(Collection<LogData> logs) {
     for (LogData log : logs) {
-      logger.info("Exporting log " + log);
+      logger.log(INFO, "Exporting log {0}", log);
     }
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     try {

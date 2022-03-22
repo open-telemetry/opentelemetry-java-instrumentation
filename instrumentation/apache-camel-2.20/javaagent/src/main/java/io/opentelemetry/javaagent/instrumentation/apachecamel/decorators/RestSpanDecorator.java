@@ -23,9 +23,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static java.util.logging.Level.FINE;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -52,7 +53,7 @@ class RestSpanDecorator extends HttpSpanDecorator {
         try {
           path = URLDecoder.decode(path, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-          logger.log(Level.FINE, "Failed to decode URL path '" + path + "', ignoring exception", e);
+          logger.log(FINE, "Failed to decode URL path '" + path + "', ignoring exception", e);
         }
       }
     }

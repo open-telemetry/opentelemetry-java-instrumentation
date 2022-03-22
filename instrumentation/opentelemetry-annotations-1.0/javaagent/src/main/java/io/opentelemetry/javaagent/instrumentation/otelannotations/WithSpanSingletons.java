@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
+import static java.util.logging.Level.FINE;
+
 import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
@@ -67,7 +69,7 @@ public final class WithSpanSingletons {
     try {
       return SpanKind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
-      logger.fine("unexpected span kind: " + applicationSpanKind.name());
+      logger.log(FINE, "unexpected span kind: {0}", applicationSpanKind.name());
       return SpanKind.INTERNAL;
     }
   }

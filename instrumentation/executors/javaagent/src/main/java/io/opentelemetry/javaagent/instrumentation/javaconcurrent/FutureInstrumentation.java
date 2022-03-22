@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -19,7 +20,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -80,7 +80,7 @@ public class FutureInstrumentation implements TypeInstrumentation {
       public boolean matches(TypeDescription target) {
         boolean allowed = ALLOWED_FUTURES.contains(target.getName());
         if (!allowed && hasFutureInterfaceMatcher.matches(target)) {
-          logger.log(Level.FINE, "Skipping future instrumentation for {0}", target.getName());
+          logger.log(FINE, "Skipping future instrumentation for {0}", target.getName());
         }
         return allowed;
       }

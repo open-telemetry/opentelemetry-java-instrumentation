@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.emptyList;
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -18,7 +19,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -132,8 +132,7 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
                   }
 
                   if (!allowed && hasExecutorInterfaceMatcher.matches(target)) {
-                    logger.log(
-                        Level.FINE, "Skipping executor instrumentation for {0}", target.getName());
+                    logger.log(FINE, "Skipping executor instrumentation for {0}", target.getName());
                   }
                   return allowed;
                 }

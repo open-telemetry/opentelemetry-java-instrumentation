@@ -22,7 +22,8 @@
 
 package io.opentelemetry.instrumentation.ratpack;
 
-import java.util.logging.Level;
+import static java.util.logging.Level.WARNING;
+
 import java.util.logging.Logger;
 import ratpack.error.ClientErrorHandler;
 import ratpack.error.ServerErrorHandler;
@@ -42,7 +43,7 @@ final class OpenTelemetryFallbackErrorHandler implements ClientErrorHandler, Ser
 
   @Override
   public void error(Context context, int statusCode) {
-    if (logger.isLoggable(Level.WARNING)) {
+    if (logger.isLoggable(WARNING)) {
       WarnOnce.execute();
       logger.warning(getMsg(ClientErrorHandler.class, "client error", context));
     }
@@ -51,12 +52,10 @@ final class OpenTelemetryFallbackErrorHandler implements ClientErrorHandler, Ser
 
   @Override
   public void error(Context context, Throwable throwable) {
-    if (logger.isLoggable(Level.WARNING)) {
+    if (logger.isLoggable(WARNING)) {
       WarnOnce.execute();
       logger.log(
-          Level.WARNING,
-          getMsg(ServerErrorHandler.class, "server error", context) + "\n",
-          throwable);
+          WARNING, getMsg(ServerErrorHandler.class, "server error", context) + "\n", throwable);
     }
     context.getResponse().status(500).send();
   }

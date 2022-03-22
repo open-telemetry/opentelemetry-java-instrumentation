@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -76,7 +78,7 @@ public class HttpJspPageInstrumentationSingletons {
             "jsp.requestURL", new URI(request.getRequestURL().toString()).normalize().toString());
       } catch (URISyntaxException e) {
         Logger.getLogger(HttpJspPage.class.getName())
-            .warning("Failed to get and normalize request URL: " + e.getMessage());
+            .log(WARNING, "Failed to get and normalize request URL: {0}", e.getMessage());
       }
     }
 

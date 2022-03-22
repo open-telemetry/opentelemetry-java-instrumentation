@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.DbInfo.DEFAULT;
+import static java.util.logging.Level.FINE;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -295,7 +295,7 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, dbLoc)));
         } catch (NumberFormatException e) {
-          logger.log(Level.FINE, e.getMessage(), e);
+          logger.log(FINE, e.getMessage(), e);
         }
       } else {
         hostEndLoc = dbLoc;
@@ -336,7 +336,7 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, portEndLoc)));
         } catch (NumberFormatException e) {
-          logger.log(Level.FINE, e.getMessage(), e);
+          logger.log(FINE, e.getMessage(), e);
         }
       } else {
         hostEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
@@ -485,7 +485,7 @@ public enum JdbcConnectionUrlParser {
             try {
               parsedPort = Integer.parseInt(portOrInstance);
             } catch (NumberFormatException e) {
-              logger.log(Level.FINE, e.getMessage(), e);
+              logger.log(FINE, e.getMessage(), e);
             }
             if (parsedPort == null) {
               port = null;
@@ -847,7 +847,7 @@ public enum JdbcConnectionUrlParser {
       }
       return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps), type);
     } catch (RuntimeException e) {
-      logger.log(Level.FINE, "Error parsing URL", e);
+      logger.log(FINE, "Error parsing URL", e);
       return parsedProps.build();
     }
   }
@@ -925,8 +925,8 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(portNumber));
         } catch (NumberFormatException e) {
-          if (logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE, "Error parsing portnumber property: " + portNumber, e);
+          if (logger.isLoggable(FINE)) {
+            logger.log(FINE, "Error parsing portnumber property: " + portNumber, e);
           }
         }
       }
@@ -936,8 +936,8 @@ public enum JdbcConnectionUrlParser {
         try {
           builder.port(Integer.parseInt(portNumber));
         } catch (NumberFormatException e) {
-          if (logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE, "Error parsing portNumber property: " + portNumber, e);
+          if (logger.isLoggable(FINE)) {
+            logger.log(FINE, "Error parsing portNumber property: " + portNumber, e);
           }
         }
       }

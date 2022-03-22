@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.HeadersFactory.ofStream;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.IOException;
@@ -50,10 +51,12 @@ public abstract class ApiGatewayProxyRequest {
     // It is known that the Lambda runtime passes ByteArrayInputStream's to functions, so gracefully
     // handle this without propagating and revisit if getting user reports that expectations
     // changed.
-    logger.warning(
-        "HTTP propagation enabled but could not extract HTTP headers. "
-            + "This is a bug in the OpenTelemetry AWS Lambda instrumentation. Type of request stream "
-            + source.getClass());
+    logger.log(
+        WARNING,
+        "HTTP propagation enabled but could not extract HTTP headers."
+            + " This is a bug in the OpenTelemetry AWS Lambda instrumentation."
+            + " Type of request stream {0}",
+        source.getClass());
     return new NoopRequest(source);
   }
 
