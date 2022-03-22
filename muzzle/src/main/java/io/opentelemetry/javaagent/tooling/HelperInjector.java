@@ -180,11 +180,19 @@ public class HelperInjector implements Transformer {
               continue;
             }
 
-            logger.debug(
-                "Injecting resource onto classloader {} -> {}",
-                classLoader,
-                helperResource.getApplicationPath());
-            HelperResources.register(classLoader, helperResource.getApplicationPath(), resource);
+            if (helperResource.allClassLoaders()) {
+              logger.debug(
+                  "Injecting resource onto all classloaders: {}",
+                  helperResource.getApplicationPath());
+              HelperResources.registerForAllClassloaders(
+                  helperResource.getApplicationPath(), resource);
+            } else {
+              logger.debug(
+                  "Injecting resource onto classloader {} -> {}",
+                  classLoader,
+                  helperResource.getApplicationPath());
+              HelperResources.register(classLoader, helperResource.getApplicationPath(), resource);
+            }
           }
 
           return true;
