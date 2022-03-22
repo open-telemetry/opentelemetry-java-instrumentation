@@ -24,8 +24,6 @@ public class ShenYuDoDubboInvokerInstrumentation implements TypeInstrumentation 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("doDubboInvoker")),
-        ShenYuCommonPluginAdvice.class.getName());
+        isMethod().and(named("doDubboInvoker")), ShenYuCommonPluginAdvice.class.getName());
   }
-
 }

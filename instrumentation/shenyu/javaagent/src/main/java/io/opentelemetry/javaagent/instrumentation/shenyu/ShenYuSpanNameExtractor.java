@@ -13,5 +13,4 @@ public class ShenYuSpanNameExtractor implements SpanNameExtractor<Object> {
   public String extract(Object plugin) {
     return plugin.getClass().getSimpleName();
   }
-
 }

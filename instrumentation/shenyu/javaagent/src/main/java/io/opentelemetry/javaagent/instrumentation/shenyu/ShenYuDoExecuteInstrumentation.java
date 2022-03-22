@@ -24,8 +24,6 @@ public class ShenYuDoExecuteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("doExecute")),
-        ShenYuCommonPluginAdvice.class.getName());
+        isMethod().and(named("doExecute")), ShenYuCommonPluginAdvice.class.getName());
   }
-
 }

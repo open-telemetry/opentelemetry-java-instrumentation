@@ -19,13 +19,12 @@ public class ShenYuPluginUtils {
   public static final String ON_SPAN_END = ShenYuPluginUtils.class.getName() + ".Context";
 
   public static void registerSpan(ServerWebExchange exchange, Context context, Object plugin) {
-    ShenYuPlugin shenYuPlugin = (ShenYuPlugin) exchange.getAttributes()
-        .getOrDefault(ON_SPAN_END, new ShenYuPlugin());
+    ShenYuPlugin shenYuPlugin =
+        (ShenYuPlugin) exchange.getAttributes().getOrDefault(ON_SPAN_END, new ShenYuPlugin());
 
     shenYuPlugin.getOnSpanEndDeque().addLast(t -> instrumenter().end(context, plugin, null, t));
 
-    exchange.getAttributes()
-        .put(ON_SPAN_END, shenYuPlugin);
+    exchange.getAttributes().put(ON_SPAN_END, shenYuPlugin);
   }
 
   public static <T> Mono<T> end(Mono<T> mono, ServerWebExchange exchange) {
@@ -42,7 +41,6 @@ public class ShenYuPluginUtils {
     if (onSpanEnd != null) {
       onSpanEnd.end(throwable);
     }
-
   }
 
   @FunctionalInterface
@@ -50,9 +48,7 @@ public class ShenYuPluginUtils {
     void end(Throwable throwable);
   }
 
-  /**
-   * Many Plugins in ShenYu, so record these in Deque.
-   */
+  /** Many Plugins in ShenYu, so record these in Deque. */
   protected static class ShenYuPlugin {
     private final Deque<OnSpanEnd> onSpanEndDeque;
 
@@ -64,5 +60,4 @@ public class ShenYuPluginUtils {
       return onSpanEndDeque;
     }
   }
-
 }

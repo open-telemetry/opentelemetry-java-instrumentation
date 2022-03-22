@@ -21,7 +21,8 @@ import reactor.core.publisher.Mono;
 public class ShenYuCommonPluginAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void onEnter(@Advice.Argument(0) ServerWebExchange exchange,
+  public static void onEnter(
+      @Advice.Argument(0) ServerWebExchange exchange,
       @Advice.This Object self,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
@@ -41,7 +42,8 @@ public class ShenYuCommonPluginAdvice {
   }
 
   @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-  public static void onExit(@Advice.Argument(0) ServerWebExchange exchange,
+  public static void onExit(
+      @Advice.Argument(0) ServerWebExchange exchange,
       @Advice.Return(readOnly = false) Mono<Void> mono,
       @Advice.Thrown Throwable exception,
       @Advice.Local("otelContext") Context context,
@@ -55,5 +57,4 @@ public class ShenYuCommonPluginAdvice {
       mono = end(mono, exchange);
     }
   }
-
 }

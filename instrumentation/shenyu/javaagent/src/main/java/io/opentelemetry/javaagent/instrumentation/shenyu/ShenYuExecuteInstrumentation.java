@@ -18,15 +18,14 @@ public class ShenYuExecuteInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf("org.apache.shenyu.plugin.global.GlobalPlugin",
+    return namedOneOf(
+        "org.apache.shenyu.plugin.global.GlobalPlugin",
         "org.apache.shenyu.plugin.response.ResponsePlugin");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("execute")),
-        ShenYuCommonPluginAdvice.class.getName());
+        isMethod().and(named("execute")), ShenYuCommonPluginAdvice.class.getName());
   }
-
 }

@@ -40,5 +40,4 @@ public class ShenYuSingletons {
   }
 
   private ShenYuSingletons() {}
-
 }
