@@ -20,7 +20,7 @@ public final class GraphqlSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get().getBoolean("otel.instrumentation.graphql.experimental-span-attributes", false);
 
-  private static final GraphQLTelemetry TRACING =
+  private static final GraphQLTelemetry TELEMETRY =
       GraphQLTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES)
           .setSanitizeQuery(QUERY_SANITIZATION_ENABLED)
@@ -29,7 +29,7 @@ public final class GraphqlSingletons {
   private GraphqlSingletons() {}
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
-    Instrumentation ourInstrumentation = TRACING.newInstrumentation();
+    Instrumentation ourInstrumentation = TELEMETRY.newInstrumentation();
     if (instrumentation == null) {
       return ourInstrumentation;
     }

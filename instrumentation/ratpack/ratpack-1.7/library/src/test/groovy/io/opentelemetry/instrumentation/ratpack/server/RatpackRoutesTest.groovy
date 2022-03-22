@@ -13,9 +13,9 @@ import ratpack.server.RatpackServerSpec
 class RatpackRoutesTest extends AbstractRatpackRoutesTest implements LibraryTestTrait {
   @Override
   void configure(RatpackServerSpec serverSpec) {
-    RatpackTelemetry tracing = RatpackTelemetry.create(openTelemetry)
+    RatpackTelemetry telemetry = RatpackTelemetry.create(openTelemetry)
     serverSpec.registryOf {
-      tracing.configureServerRegistry(it)
+      telemetry.configureServerRegistry(it)
     }
   }
 

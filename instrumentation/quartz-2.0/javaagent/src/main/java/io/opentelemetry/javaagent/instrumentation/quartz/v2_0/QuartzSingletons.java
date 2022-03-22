@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.quartz.v2_0.QuartzTelemetry;
 
 public final class QuartzSingletons {
 
-  public static final QuartzTelemetry TRACING = QuartzTelemetry.create(GlobalOpenTelemetry.get());
+  public static final QuartzTelemetry TELEMETRY = QuartzTelemetry.create(GlobalOpenTelemetry.get());
 
   private QuartzSingletons() {}
 }

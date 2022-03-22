@@ -14,12 +14,12 @@ import ratpack.server.RatpackServerSpec
 class RatpackHttpServerTest extends AbstractRatpackHttpServerTest implements LibraryTestTrait {
   @Override
   void configure(RatpackServerSpec serverSpec) {
-    RatpackTelemetry tracing = RatpackTelemetry.builder(openTelemetry)
+    RatpackTelemetry telemetry = RatpackTelemetry.builder(openTelemetry)
       .setCapturedServerRequestHeaders([AbstractHttpServerTest.TEST_REQUEST_HEADER])
       .setCapturedServerResponseHeaders([AbstractHttpServerTest.TEST_RESPONSE_HEADER])
       .build()
     serverSpec.registryOf {
-      tracing.configureServerRegistry(it)
+      telemetry.configureServerRegistry(it)
     }
   }
 

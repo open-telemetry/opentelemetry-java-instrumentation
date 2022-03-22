@@ -52,7 +52,7 @@ public class QuartzInstrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      QuartzSingletons.TRACING.configure(scheduler);
+      QuartzSingletons.TELEMETRY.configure(scheduler);
     }
   }
 }

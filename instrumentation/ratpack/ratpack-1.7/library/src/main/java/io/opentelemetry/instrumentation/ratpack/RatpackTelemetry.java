@@ -22,11 +22,11 @@ import ratpack.registry.RegistrySpec;
  * {@link RegistrySpec} using {@link #configureServerRegistry(RegistrySpec)}.
  *
  * <pre>{@code
- * RatpackTelemetry tracing = RatpackTelemetry.create(OpenTelemetrySdk.builder()
+ * RatpackTelemetry telemetry = RatpackTelemetry.create(OpenTelemetrySdk.builder()
  *   ...
  *   .build());
  * RatpackServer.start(server -> {
- *   server.registryOf(tracing::configureServerRegistry);
+ *   server.registryOf(telemetry::configureServerRegistry);
  *   server.handlers(chain -> ...);
  * });
  * }</pre>

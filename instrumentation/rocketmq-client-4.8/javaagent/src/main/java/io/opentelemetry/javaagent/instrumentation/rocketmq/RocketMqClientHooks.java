@@ -12,7 +12,7 @@ import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
 public final class RocketMqClientHooks {
-  private static final RocketMqTelemetry TRACING =
+  private static final RocketMqTelemetry TELEMETRY =
       RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
           .setPropagationEnabled(
               Config.get().getBoolean("otel.instrumentation.rocketmq-client.propagation", true))
@@ -23,7 +23,7 @@ public final class RocketMqClientHooks {
           .build();
 
   public static final ConsumeMessageHook CONSUME_MESSAGE_HOOK =
-      TRACING.newTracingConsumeMessageHook();
+      TELEMETRY.newTracingConsumeMessageHook();
 
-  public static final SendMessageHook SEND_MESSAGE_HOOK = TRACING.newTracingSendMessageHook();
+  public static final SendMessageHook SEND_MESSAGE_HOOK = TELEMETRY.newTracingSendMessageHook();
 }

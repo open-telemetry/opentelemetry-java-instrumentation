@@ -18,11 +18,11 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
-  private static final KafkaTelemetry tracing = KafkaTelemetry.create(GlobalOpenTelemetry.get());
+  private static final KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
 
   @Override
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    tracing.buildAndInjectSpan(producerRecord);
+    telemetry.buildAndInjectSpan(producerRecord);
     return producerRecord;
   }
 

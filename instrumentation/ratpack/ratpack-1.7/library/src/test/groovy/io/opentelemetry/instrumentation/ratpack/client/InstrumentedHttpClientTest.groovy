@@ -42,7 +42,7 @@ class InstrumentedHttpClientTest extends Specification {
     .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
     .setTracerProvider(tracerProvider).build()
 
-  RatpackTelemetry ratpackTracing = RatpackTelemetry.create(openTelemetry)
+  RatpackTelemetry telemetry = RatpackTelemetry.create(openTelemetry)
 
   def cleanup() {
     spanExporter.reset()
@@ -53,7 +53,7 @@ class InstrumentedHttpClientTest extends Specification {
     def otherApp = EmbeddedApp.of { spec ->
       spec.registry(
         Guice.registry { bindings ->
-          ratpackTracing.configureServerRegistry(bindings)
+          telemetry.configureServerRegistry(bindings)
         }
       )
       spec.handlers {
@@ -64,8 +64,8 @@ class InstrumentedHttpClientTest extends Specification {
     def app = EmbeddedApp.of { spec ->
       spec.registry(
         Guice.registry { bindings ->
-          ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, ratpackTracing.instrumentHttpClient(HttpClient.of(Action.noop())))
+          telemetry.configureServerRegistry(bindings)
+          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
         }
       )
 
@@ -125,8 +125,8 @@ class InstrumentedHttpClientTest extends Specification {
     def app = EmbeddedApp.of { spec ->
       spec.registry(
         Guice.registry { bindings ->
-          ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, ratpackTracing.instrumentHttpClient(HttpClient.of(Action.noop())))
+          telemetry.configureServerRegistry(bindings)
+          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
         }
       )
 
@@ -190,8 +190,8 @@ class InstrumentedHttpClientTest extends Specification {
     def app = EmbeddedApp.of { spec ->
       spec.registry(
         Guice.registry { bindings ->
-          ratpackTracing.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, ratpackTracing.instrumentHttpClient(
+          telemetry.configureServerRegistry(bindings)
+          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(
             HttpClient.of { s -> s.readTimeout(Duration.ofMillis(10)) })
           )
         }

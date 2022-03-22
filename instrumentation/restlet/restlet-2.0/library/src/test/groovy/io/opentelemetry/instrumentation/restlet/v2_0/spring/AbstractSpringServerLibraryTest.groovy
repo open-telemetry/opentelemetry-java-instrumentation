@@ -24,13 +24,12 @@ import java.lang.reflect.Modifier
 abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest implements LibraryTestTrait {
   @Override
   Restlet wrapRestlet(Restlet restlet, String path) {
-
-    RestletTelemetry tracing = RestletTelemetry.builder(openTelemetry)
+    RestletTelemetry telemetry = RestletTelemetry.builder(openTelemetry)
       .setCapturedRequestHeaders([AbstractHttpServerTest.TEST_REQUEST_HEADER])
       .setCapturedResponseHeaders([AbstractHttpServerTest.TEST_RESPONSE_HEADER])
       .build()
 
-    def tracingFilter = tracing.newFilter(path)
+    def tracingFilter = telemetry.newFilter(path)
     def statusFilter = new StatusFilter(component.getContext(), new StatusService())
 
     tracingFilter.setNext(statusFilter)

@@ -22,11 +22,11 @@ import org.apache.kafka.common.TopicPartition;
 
 class TracingProducer<K, V> implements Producer<K, V> {
   private final Producer<K, V> producer;
-  private final KafkaTelemetry tracing;
+  private final KafkaTelemetry telemetry;
 
-  TracingProducer(Producer<K, V> producer, KafkaTelemetry tracing) {
+  TracingProducer(Producer<K, V> producer, KafkaTelemetry telemetry) {
     this.producer = producer;
-    this.tracing = tracing;
+    this.telemetry = telemetry;
   }
 
   @Override
@@ -68,7 +68,7 @@ class TracingProducer<K, V> implements Producer<K, V> {
 
   @Override
   public Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback) {
-    return tracing.buildAndInjectSpan(record, callback, producer::send);
+    return telemetry.buildAndInjectSpan(record, callback, producer::send);
   }
 
   @Override

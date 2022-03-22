@@ -26,13 +26,13 @@ public final class GrpcSingletons {
     boolean experimentalSpanAttributes =
         Config.get().getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
 
-    GrpcTelemetry tracing =
+    GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
             .build();
 
-    CLIENT_INTERCEPTOR = tracing.newClientInterceptor();
-    SERVER_INTERCEPTOR = tracing.newServerInterceptor();
+    CLIENT_INTERCEPTOR = telemetry.newClientInterceptor();
+    SERVER_INTERCEPTOR = telemetry.newServerInterceptor();
   }
 
   private GrpcSingletons() {}
