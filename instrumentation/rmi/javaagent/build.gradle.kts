@@ -32,9 +32,6 @@ tasks {
   withType<JavaCompile>().configureEach {
     options.release.set(null as Int?)
   }
-  withType<GroovyCompile>().configureEach {
-    options.release.set(null as Int?)
-  }
   withType<Test>().configureEach {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
 
