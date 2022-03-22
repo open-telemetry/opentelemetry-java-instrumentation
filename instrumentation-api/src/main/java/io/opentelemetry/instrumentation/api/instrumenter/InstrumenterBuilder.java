@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -188,9 +188,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    *   <li>SERVER nested spans are always suppressed. If a SERVER span is present in the parent
    *       context object, new SERVER span will not be started.
    *   <li>Messaging (PRODUCER and CONSUMER) nested spans are suppressed depending on their
-   *       {@linkplain MessagingAttributesExtractor#operation() operation}. If a span with the same
-   *       operation is present in the parent context object, new span with the same operation will
-   *       not be started.
+   *       {@linkplain MessageOperation operation}. If a span with the same operation is present in
+   *       the parent context object, new span with the same operation will not be started.
    *   <li>INTERNAL spans are never suppressed.
    * </ul>
    */

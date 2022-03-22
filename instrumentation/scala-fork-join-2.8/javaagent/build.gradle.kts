@@ -39,8 +39,4 @@ tasks {
   check {
     dependsOn(slickTest)
   }
-
-  named<GroovyCompile>("compileSlickTestGroovy") {
-    classpath = classpath.plus(files(sourceSets["slickTest"].scala.classesDirectory))
-  }
 }

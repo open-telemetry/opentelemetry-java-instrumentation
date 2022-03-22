@@ -15,11 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up JDK 11 for running Gradle
+      - name: Set up JDK for running Gradle
         uses: actions/setup-java@v2
         with:
           distribution: temurin
-          java-version: 11
+          java-version: 17
 
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v1.10.0
@@ -73,18 +73,5 @@ jobs:
   issue:
     name: Open issue on failure
     needs: [ publishLinux, publishWindows ]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      # run this action to get workflow conclusion
-      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
-      - uses: technote-space/workflow-conclusion-action@v2.2
-
-      - uses: actions/checkout@v3
-
-      - uses: JasonEtco/create-an-issue@v2.6
-        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          filename: .github/templates/workflow-failed.md
+    if: failure()
+    uses: ./.github/workflows/reusable-create-issue-for-failure.yml

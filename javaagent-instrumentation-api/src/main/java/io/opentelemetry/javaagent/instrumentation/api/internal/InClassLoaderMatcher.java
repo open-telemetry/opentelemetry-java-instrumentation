@@ -11,8 +11,9 @@ package io.opentelemetry.javaagent.instrumentation.api.internal;
  */
 public final class InClassLoaderMatcher {
 
-  private static final ThreadLocal<MutableBoolean> inClassLoaderMatcher =
-      ThreadLocal.withInitial(MutableBoolean::new);
+  // using boolean[] to avoid an extra thread local lookup for getAndSet() below
+  private static final ThreadLocal<boolean[]> inClassLoaderMatcher =
+      ThreadLocal.withInitial(() -> new boolean[1]);
 
   private InClassLoaderMatcher() {}
 
@@ -24,7 +25,7 @@ public final class InClassLoaderMatcher {
    * calls ClassLoader.getResource(). See {@code EclipseOsgiInstrumentationModule} for more details.
    */
   public static boolean get() {
-    return inClassLoaderMatcher.get().value;
+    return inClassLoaderMatcher.get()[0];
   }
 
   /**
@@ -36,7 +37,10 @@ public final class InClassLoaderMatcher {
    * agent class loader.
    */
   public static boolean getAndSet(boolean value) {
-    return inClassLoaderMatcher.get().getAndSet(value);
+    boolean[] arr = inClassLoaderMatcher.get();
+    boolean curr = arr[0];
+    arr[0] = value;
+    return curr;
   }
 
   /**
@@ -48,18 +52,6 @@ public final class InClassLoaderMatcher {
    * agent class loader.
    */
   public static void set(boolean value) {
-    inClassLoaderMatcher.get().value = value;
-  }
-
-  // using MutableBoolean to avoid an extra thread local lookup for getAndSet()
-  private static class MutableBoolean {
-
-    private boolean value;
-
-    private boolean getAndSet(boolean value) {
-      boolean oldValue = this.value;
-      this.value = value;
-      return oldValue;
-    }
+    inClassLoaderMatcher.get()[0] = value;
   }
 }

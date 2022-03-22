@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAt
 
 import io.micrometer.core.instrument.AbstractDistributionSummary;
 import io.micrometer.core.instrument.Clock;
-import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
@@ -27,7 +26,7 @@ import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
-    implements DistributionSummary, RemovableMeter {
+    implements RemovableMeter {
 
   private final Measurements measurements;
   private final TimeWindowMax max;
@@ -78,7 +77,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
 
   @Override
   protected void recordNonNegative(double amount) {
-    if (amount >= 0 && !removed) {
+    if (!removed) {
       otelHistogram.record(amount, attributes);
       measurements.record(amount);
       max.record(amount);

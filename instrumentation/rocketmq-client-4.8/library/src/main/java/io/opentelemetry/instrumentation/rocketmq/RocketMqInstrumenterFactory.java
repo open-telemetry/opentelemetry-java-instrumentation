@@ -14,6 +14,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.common.message.MessageExt;
 
@@ -21,29 +24,23 @@ class RocketMqInstrumenterFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rocketmq-client-4.8";
 
-  private static final RockerMqProducerAttributeExtractor producerAttributesExtractor =
-      new RockerMqProducerAttributeExtractor();
-  private static final RockerMqProducerExperimentalAttributeExtractor
-      experimentalProducerAttributesExtractor =
-          new RockerMqProducerExperimentalAttributeExtractor();
-
-  public static final RockerMqConsumerAttributeExtractor consumerAttributesExtractor =
-      new RockerMqConsumerAttributeExtractor();
-  public static final RockerMqConsumerExperimentalAttributeExtractor
-      experimentalConsumerAttributesExtractor =
-          new RockerMqConsumerExperimentalAttributeExtractor();
-
   static Instrumenter<SendMessageContext, Void> createProducerInstrumenter(
       OpenTelemetry openTelemetry,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled) {
 
+    RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
+    MessageOperation operation = MessageOperation.SEND;
+
     InstrumenterBuilder<SendMessageContext, Void> instrumenterBuilder =
         Instrumenter.<SendMessageContext, Void>builder(
-                openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnProduce)
-            .addAttributesExtractor(producerAttributesExtractor);
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation));
     if (captureExperimentalSpanAttributes) {
-      instrumenterBuilder.addAttributesExtractor(experimentalProducerAttributesExtractor);
+      instrumenterBuilder.addAttributesExtractor(
+          RocketMqProducerExperimentalAttributeExtractor.INSTANCE);
     }
 
     if (propagationEnabled) {
@@ -78,13 +75,18 @@ class RocketMqInstrumenterFactory {
       boolean propagationEnabled,
       boolean batch) {
 
+    RocketMqConsumerAttributeGetter getter = RocketMqConsumerAttributeGetter.INSTANCE;
+    MessageOperation operation = MessageOperation.PROCESS;
+
     InstrumenterBuilder<MessageExt, Void> builder =
         Instrumenter.builder(
-            openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnConsume);
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, operation));
 
-    builder.addAttributesExtractor(consumerAttributesExtractor);
+    builder.addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation));
     if (captureExperimentalSpanAttributes) {
-      builder.addAttributesExtractor(experimentalConsumerAttributesExtractor);
+      builder.addAttributesExtractor(RocketMqConsumerExperimentalAttributeExtractor.INSTANCE);
     }
 
     if (!propagationEnabled) {
@@ -106,13 +108,5 @@ class RocketMqInstrumenterFactory {
 
   private static String spanNameOnReceive(Void unused) {
     return "multiple_sources receive";
-  }
-
-  private static String spanNameOnProduce(SendMessageContext request) {
-    return request.getMessage().getTopic() + " send";
-  }
-
-  private static String spanNameOnConsume(MessageExt msg) {
-    return msg.getTopic() + " process";
   }
 }

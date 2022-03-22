@@ -1,4 +1,4 @@
-name: Nightly build
+name: Nightly
 
 on:
   schedule:
@@ -8,38 +8,38 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/reusable-build.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   test:
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/reusable-test.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   testLatestDeps:
-    uses: ./.github/workflows/test-latest-deps.yml
+    uses: ./.github/workflows/reusable-test-latest-deps.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   smoke-test:
-    uses: ./.github/workflows/smoke-test.yml
+    uses: ./.github/workflows/reusable-smoke-test.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   muzzle:
-    uses: ./.github/workflows/muzzle.yml
+    uses: ./.github/workflows/reusable-muzzle.yml
 
   examples:
-    uses: ./.github/workflows/examples.yml
+    uses: ./.github/workflows/reusable-examples.yml
 
   markdown-link-check:
     runs-on: ubuntu-latest
@@ -70,18 +70,5 @@ jobs:
   issue:
     name: Open issue on failure
     needs: [ build, test, testLatestDeps, smoke-test, examples, markdown-link-check, markdown-misspell-check ]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      # run this action to get workflow conclusion
-      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
-      - uses: technote-space/workflow-conclusion-action@v2.2
-
-      - uses: actions/checkout@v3
-
-      - uses: JasonEtco/create-an-issue@v2.6
-        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          filename: .github/templates/workflow-failed.md
+    if: failure()
+    uses: ./.github/workflows/reusable-create-issue-for-failure.yml

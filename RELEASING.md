@@ -20,26 +20,18 @@ Before making the release:
   * Specify the (estimated) release date (UTC)
 * Run the [Prepare Release Branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
 * Review and merge the two PRs that it creates (one is targeted to the release branch and one is targeted to the `main` branch)
-* Delete the branches from these two PRs since they are created in the main repo
 
 Open the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 
 Press the "Run workflow" button, then select the release branch from the dropdown list,
 e.g. `v1.9.x`, and click the "Run workflow" button below that.
 
-This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
-and pushes a git tag with the version number.
-
-Once the GitHub workflow completes, go to Github
-[release page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases),
-find the draft release created by the release workflow, and
-* Select the checkbox for "Create a discussion for this release"
-* Press the "Publish release" button
+This workflow will publish the artifacts to maven central and will publish a github release with the
+javaagent jar attached and release notes based on the change log.
 
 ## Patch Release
 
-All patch releases should include only bug-fixes, and must avoid
-adding/modifying the public APIs.
+All patch releases should include only bug-fixes, and must avoid adding/modifying the public APIs.
 
 In general, patch releases are only made for bug-fixes for the following types of issues:
 * Regressions
@@ -54,21 +46,14 @@ Before making the release:
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `v1.9.x`, and click the "Run workflow" button below that.
 * Review and merge the PR that it creates
-* Delete the branch from the PR since it is created in the main repo
 
 Open the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 
 Press the "Run workflow" button, then select the release branch from the dropdown list,
 e.g. `v1.9.x`, and click the "Run workflow" button below that.
 
-This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
-and pushes a git tag with the version number.
-
-Once the GitHub workflow completes, go to Github
-[release page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases),
-find the draft release created by the release workflow, and
-* Select the checkbox for "Create a discussion for this release"
-* Press the "Publish release" button
+This workflow will publish the artifacts to maven central and will publish a github release with the
+javaagent jar attached and release notes based on the change log.
 
 After making the release:
 
