@@ -125,7 +125,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */
+  /** Adds a {@link RequestListener} which will be called for request start and end. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addRequestListener(RequestListener listener) {
+    requestListeners.add(listener);
+    return this;
+  }
+
+  /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and end. */
   @UnstableApi
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
     requestMetricListeners.add(factory.create(meter));

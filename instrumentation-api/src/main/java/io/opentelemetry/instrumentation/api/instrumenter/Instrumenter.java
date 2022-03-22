@@ -232,10 +232,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     if (!requestListeners.isEmpty() || !requestMetricListeners.isEmpty()) {
       long endNanos = getNanos(endTime);
-      for (RequestListener requestListener : requestListeners) {
+      // TODO (trask) call end in the reverse order that start was called?
+      for (RequestListener requestListener : requestMetricListeners) {
         requestListener.end(context, attributes, endNanos);
       }
-      for (RequestListener requestListener : requestMetricListeners) {
+      for (RequestListener requestListener : requestListeners) {
         requestListener.end(context, attributes, endNanos);
       }
     }

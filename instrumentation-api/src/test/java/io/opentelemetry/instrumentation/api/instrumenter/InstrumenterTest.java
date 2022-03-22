@@ -432,6 +432,38 @@ class InstrumenterTest {
   }
 
   @Test
+  void requestListeners() {
+    AtomicReference<Boolean> startContext = new AtomicReference<>();
+    AtomicReference<Boolean> endContext = new AtomicReference<>();
+
+    RequestListener requestListener =
+        new RequestListener() {
+          @Override
+          public Context start(Context context, Attributes startAttributes, long startNanos) {
+            startContext.set(true);
+            return context;
+          }
+
+          @Override
+          public void end(Context context, Attributes endAttributes, long endNanos) {
+            endContext.set(true);
+          }
+        };
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addRequestListener(requestListener)
+            .newServerInstrumenter(new MapGetter());
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    instrumenter.end(context, REQUEST, RESPONSE, null);
+
+    assertThat(startContext.get()).isTrue();
+    assertThat(endContext.get()).isTrue();
+  }
+
+  @Test
   void requestMetrics() {
     AtomicReference<Context> startContext = new AtomicReference<>();
     AtomicReference<Context> endContext = new AtomicReference<>();
