@@ -45,7 +45,7 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("getResources"))
             .and(takesArguments(String.class))
-            .and(returns(URL.class)),
+            .and(returns(Enumeration.class)),
         ResourceInjectionInstrumentation.class.getName() + "$GetResourcesAdvice");
   }
 

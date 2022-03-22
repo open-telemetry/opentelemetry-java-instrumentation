@@ -39,10 +39,14 @@ public final class HelperResources {
    */
   public static URL load(ClassLoader classLoader, String path) {
     Map<String, URL> map = RESOURCES.get(classLoader);
+    URL resource = null;
     if (map != null) {
-      return map.get(path);
+      resource = map.get(path);
     }
-    return ALL_CLASSLOADERS_RESOURCES.get(path);
+    if (resource == null) {
+      resource = ALL_CLASSLOADERS_RESOURCES.get(path);
+    }
+    return resource;
   }
 
   private HelperResources() {}
