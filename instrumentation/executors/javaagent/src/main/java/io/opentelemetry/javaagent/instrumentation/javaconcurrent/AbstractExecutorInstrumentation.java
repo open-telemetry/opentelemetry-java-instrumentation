@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.emptyList;
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -18,14 +19,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.logging.Logger;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractExecutorInstrumentation implements TypeInstrumentation {
   private static final Logger logger =
-      LoggerFactory.getLogger(AbstractExecutorInstrumentation.class);
+      Logger.getLogger(AbstractExecutorInstrumentation.class.getName());
 
   private static final String EXECUTORS_INCLUDE_PROPERTY_NAME =
       "otel.instrumentation.executors.include";
@@ -131,10 +131,8 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
                     }
                   }
 
-                  if (!allowed
-                      && logger.isDebugEnabled()
-                      && hasExecutorInterfaceMatcher.matches(target)) {
-                    logger.debug("Skipping executor instrumentation for {}", target.getName());
+                  if (!allowed && hasExecutorInterfaceMatcher.matches(target)) {
+                    logger.log(FINE, "Skipping executor instrumentation for {0}", target.getName());
                   }
                   return allowed;
                 }

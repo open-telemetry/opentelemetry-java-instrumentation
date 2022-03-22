@@ -10,8 +10,6 @@ group = "io.opentelemetry.javaagent"
 dependencies {
   api(project(":instrumentation-api"))
 
-  implementation("org.slf4j:slf4j-api")
-
   compileOnly(project(":instrumentation-appender-api-internal"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")

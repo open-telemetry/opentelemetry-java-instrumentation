@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationSingletons.instrumenter;
+import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
@@ -29,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.NamedElement;
@@ -36,13 +38,11 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(ExternalAnnotationInstrumentationModule.class);
+      Logger.getLogger(ExternalAnnotationInstrumentationModule.class.getName());
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
 
@@ -117,8 +117,9 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     } else if (configString.isEmpty()) {
       return Collections.emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
-      logger.warn(
-          "Invalid trace annotations config '{}'. Must match 'package.Annotation$Name;*'.",
+      logger.log(
+          WARNING,
+          "Invalid trace annotations config '{0}'. Must match 'package.Annotation$Name;*'.",
           configString);
       return Collections.emptySet();
     } else {

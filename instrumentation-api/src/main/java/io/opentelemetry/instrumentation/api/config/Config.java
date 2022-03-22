@@ -6,14 +6,14 @@
 package io.opentelemetry.instrumentation.api.config;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents the global agent configuration consisting of system properties, environment variables,
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 @AutoValue
 public abstract class Config {
-  private static final Logger logger = LoggerFactory.getLogger(Config.class);
+  private static final Logger logger = Logger.getLogger(Config.class.getName());
 
   // lazy initialized, so that javaagent can set it, and library instrumentation can fall back and
   // read system properties
@@ -53,7 +53,7 @@ public abstract class Config {
    */
   public static void internalInitializeConfig(Config config) {
     if (instance != null) {
-      logger.warn("Config#INSTANCE was already set earlier");
+      logger.warning("Config#INSTANCE was already set earlier");
       return;
     }
     instance = requireNonNull(config);
@@ -166,7 +166,9 @@ public abstract class Config {
       T value = getTypedProperty(name, parser);
       return value == null ? defaultValue : value;
     } catch (RuntimeException t) {
-      logger.debug("Error occurred during parsing: {}", t.getMessage(), t);
+      if (logger.isLoggable(FINE)) {
+        logger.log(FINE, "Error occurred during parsing: " + t.getMessage(), t);
+      }
       return defaultValue;
     }
   }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.HeadersFactory.ofStream;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.IOException;
@@ -13,9 +14,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class ApiGatewayProxyRequest {
 
-  private static final Logger logger = LoggerFactory.getLogger(ApiGatewayProxyRequest.class);
+  private static final Logger logger = Logger.getLogger(ApiGatewayProxyRequest.class.getName());
 
   // TODO(anuraaga): We should create a RequestFactory type of class instead of evaluating this
   // for every request.
@@ -51,9 +51,11 @@ public abstract class ApiGatewayProxyRequest {
     // It is known that the Lambda runtime passes ByteArrayInputStream's to functions, so gracefully
     // handle this without propagating and revisit if getting user reports that expectations
     // changed.
-    logger.warn(
-        "HTTP propagation enabled but could not extract HTTP headers. "
-            + "This is a bug in the OpenTelemetry AWS Lambda instrumentation. Type of request stream {}",
+    logger.log(
+        WARNING,
+        "HTTP propagation enabled but could not extract HTTP headers."
+            + " This is a bug in the OpenTelemetry AWS Lambda instrumentation."
+            + " Type of request stream {0}",
         source.getClass());
     return new NoopRequest(source);
   }

@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.function.Predicate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -16,7 +15,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class InstrumentedTaskClasses {
 
-  private static final Logger logger = LoggerFactory.getLogger(Config.class);
+  private static final Logger logger = Logger.getLogger(Config.class.getName());
 
   private static final String AGENT_CLASSLOADER_NAME =
       "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
@@ -50,7 +49,7 @@ public final class InstrumentedTaskClasses {
    */
   public static void setIgnoredTaskClassesPredicate(Predicate<String> ignoredTasksTriePredicate) {
     if (InstrumentedTaskClasses.ignoredTaskClassesPredicate != null) {
-      logger.warn("Ignored task classes were already set earlier; returning.");
+      logger.warning("Ignored task classes were already set earlier; returning.");
       return;
     }
     InstrumentedTaskClasses.ignoredTaskClassesPredicate = ignoredTasksTriePredicate;

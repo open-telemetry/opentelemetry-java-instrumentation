@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
+import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,10 +15,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.slf4j.LoggerFactory;
 
 // Our convention for accessing agent package
 @SuppressWarnings("UnnecessarilyFullyQualified")
@@ -67,8 +68,9 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
-      LoggerFactory.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class)
-          .warn(
+      Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
+          .log(
+              WARNING,
               "You are currently using the OpenTelemetry Instrumentation Java Agent;"
                   + " all GlobalOpenTelemetry.set calls are ignored - the agent provides"
                   + " the global OpenTelemetry object used by your application.",

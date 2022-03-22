@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
+import static java.util.logging.Level.FINE;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -12,12 +14,11 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 final class HeadersFactory {
 
-  private static final Logger logger = LoggerFactory.getLogger(HeadersFactory.class);
+  private static final Logger logger = Logger.getLogger(HeadersFactory.class.getName());
 
   private static final JsonFactory JSON_FACTORY = new JsonFactory();
 
@@ -26,7 +27,7 @@ final class HeadersFactory {
       parser.nextToken();
 
       if (!parser.isExpectedStartObjectToken()) {
-        logger.debug("Not a JSON object");
+        logger.fine("Not a JSON object");
         return Collections.emptyMap();
       }
       while (parser.nextToken() != JsonToken.END_OBJECT) {
@@ -37,7 +38,7 @@ final class HeadersFactory {
         }
 
         if (!parser.isExpectedStartObjectToken()) {
-          logger.debug("Invalid JSON for HTTP headers");
+          logger.fine("Invalid JSON for HTTP headers");
           return Collections.emptyMap();
         }
 
@@ -51,7 +52,7 @@ final class HeadersFactory {
         return headers;
       }
     } catch (Exception e) {
-      logger.debug("Could not get headers from request, ", e);
+      logger.log(FINE, "Could not get headers from request", e);
     }
     return Collections.emptyMap();
   }
