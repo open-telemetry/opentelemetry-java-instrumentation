@@ -2,9 +2,19 @@
 
 (In addition to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
+## General
+
 * Automatically delete head branches: CHECKED
 
   So that bot PR branches will be deleted.
+
+## Actions > General
+
+* Fork pull request workflows from outside collaborators:
+  "Require approval for first-time contributors who are new to GitHub"
+
+  To reduce friction for new contributors
+  (the default is "Require approval for first-time contributors").
 
 ## Branch protections
 
