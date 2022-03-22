@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.slf4j.Logger
@@ -39,6 +38,9 @@ class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
   def setupSpec() {
     broker.start()
     ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616))
+    // to avoid InvalidDestinationException in "send and receive message generates spans"
+    // see https://issues.apache.org/jira/browse/AMQ-6155
+    connectionFactory.setWatchTopicAdvisories(false)
     Connection connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
@@ -88,16 +90,11 @@ class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
     }
-    def receivedMessage
-    def stopwatch = Stopwatch.createStarted()
-    while (receivedMessage == null && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
-      logger.info("calling sendAndReceive")
-      // sendAndReceive() returns null if template.receive() has not been called yet
-      receivedMessage = template.sendAndReceive(destination) {
-        session -> template.getMessageConverter().toMessage(messageText, session)
-      }
-      logger.info("received message " + receivedMessage)
+    logger.info("calling sendAndReceive")
+    def receivedMessage = template.sendAndReceive(destination) {
+      session -> template.getMessageConverter().toMessage(messageText, session)
     }
+    logger.info("received message " + receivedMessage)
 
     expect:
     receivedMessage != null
