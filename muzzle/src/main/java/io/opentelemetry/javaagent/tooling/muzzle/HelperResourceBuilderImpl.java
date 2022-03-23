@@ -14,13 +14,17 @@ public class HelperResourceBuilderImpl implements HelperResourceBuilder {
   private final List<HelperResource> resources = new ArrayList<>();
 
   @Override
-  public void register(String resourcePath) {
-    resources.add(HelperResource.create(resourcePath, resourcePath));
+  public void register(String applicationResourcePath, String agentResourcePath) {
+    resources.add(
+        HelperResource.create(
+            applicationResourcePath, agentResourcePath, /* allClassLoaders = */ false));
   }
 
   @Override
-  public void register(String applicationResourcePath, String agentResourcePath) {
-    resources.add(HelperResource.create(applicationResourcePath, agentResourcePath));
+  public void registerForAllClassLoaders(String applicationResourcePath, String agentResourcePath) {
+    resources.add(
+        HelperResource.create(
+            applicationResourcePath, agentResourcePath, /* allClassLoaders = */ true));
   }
 
   public List<HelperResource> getResources() {

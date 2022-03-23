@@ -18,10 +18,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class HelperResources {
 
   private static final Cache<ClassLoader, Map<String, URL>> RESOURCES = Cache.weak();
+  private static final Map<String, URL> ALL_CLASSLOADERS_RESOURCES = new ConcurrentHashMap<>();
 
-  /** Registers the {@code payload} to be available to instrumentation at {@code path}. */
+  /**
+   * Registers the {@code url} to be available to instrumentation at {@code path}, when given {@code
+   * classLoader} attempts to load that resource.
+   */
   public static void register(ClassLoader classLoader, String path, URL url) {
     RESOURCES.computeIfAbsent(classLoader, unused -> new ConcurrentHashMap<>()).put(path, url);
+  }
+
+  /** Registers the {@code url} to be available to instrumentation at {@code path}. */
+  public static void registerForAllClassLoaders(String path, URL url) {
+    ALL_CLASSLOADERS_RESOURCES.putIfAbsent(path, url);
   }
 
   /**
@@ -30,11 +39,14 @@ public final class HelperResources {
    */
   public static URL load(ClassLoader classLoader, String path) {
     Map<String, URL> map = RESOURCES.get(classLoader);
-    if (map == null) {
-      return null;
+    URL resource = null;
+    if (map != null) {
+      resource = map.get(path);
     }
-
-    return map.get(path);
+    if (resource == null) {
+      resource = ALL_CLASSLOADERS_RESOURCES.get(path);
+    }
+    return resource;
   }
 
   private HelperResources() {}

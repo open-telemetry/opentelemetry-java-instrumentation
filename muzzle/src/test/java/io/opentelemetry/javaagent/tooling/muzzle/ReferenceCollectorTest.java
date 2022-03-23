@@ -284,7 +284,7 @@ class ReferenceCollectorTest {
   public void shouldCollectHelperClassesFromResourceFile(
       @SuppressWarnings("unused") String desc, String resource) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
-    collector.collectReferencesFromResource(HelperResource.create(resource, resource));
+    collector.collectReferencesFromResource(HelperResource.create(resource, resource, false));
     collector.prune();
 
     List<String> helperClasses = collector.getSortedHelperClasses();
@@ -328,7 +328,7 @@ class ReferenceCollectorTest {
   public void shouldIgnoreArbitraryResourceFile() {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
     collector.collectReferencesFromResource(
-        HelperResource.create("application.properties", "application.properties"));
+        HelperResource.create("application.properties", "application.properties", false));
     collector.prune();
 
     assertThat(collector.getReferences()).isEmpty();
