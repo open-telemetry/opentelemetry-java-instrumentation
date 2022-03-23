@@ -44,6 +44,8 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
     try {
       def body = BODY_METHODS.contains(method) ? Entity.text("") : null
       def response = request.build(method, body).invoke()
+      // read response body to avoid broken pipe errors on the server side
+      response.readEntity(String)
       try {
         response.close()
       } catch (IOException ignore) {
@@ -61,6 +63,8 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
     request.async().method(method, (Entity) body, new InvocationCallback<Response>() {
       @Override
       void completed(Response response) {
+        // read response body
+        response.readEntity(String)
         requestResult.complete(response.status)
       }
 
