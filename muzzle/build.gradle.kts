@@ -19,7 +19,6 @@ dependencies {
   implementation(project(":instrumentation-api"))
   implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":javaagent-extension-api"))
-  implementation("org.slf4j:slf4j-api")
 
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")

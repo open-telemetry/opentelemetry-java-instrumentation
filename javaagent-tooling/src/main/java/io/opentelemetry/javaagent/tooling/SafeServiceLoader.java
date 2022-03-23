@@ -5,18 +5,19 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.javaagent.extension.Ordered;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 public final class SafeServiceLoader {
 
-  private static final Logger logger = LoggerFactory.getLogger(SafeServiceLoader.class);
+  private static final Logger logger = Logger.getLogger(SafeServiceLoader.class.getName());
 
   /**
    * Delegates to {@link ServiceLoader#load(Class, ClassLoader)} and then eagerly iterates over
@@ -36,7 +37,7 @@ public final class SafeServiceLoader {
       try {
         result.add(iter.next());
       } catch (UnsupportedClassVersionError e) {
-        logger.debug("Unable to load instrumentation class: {}", e.getMessage());
+        logger.log(FINE, "Unable to load instrumentation class: {0}", e.getMessage());
       }
     }
     return result;

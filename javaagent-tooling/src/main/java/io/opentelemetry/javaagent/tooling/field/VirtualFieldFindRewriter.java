@@ -95,8 +95,8 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
             if (Utils.getInternalName(FIND_VIRTUAL_FIELD_METHOD.getDeclaringClass()).equals(owner)
                 && FIND_VIRTUAL_FIELD_METHOD.getName().equals(name)
                 && Type.getMethodDescriptor(FIND_VIRTUAL_FIELD_METHOD).equals(descriptor)) {
-              logger.trace(
-                  "Found VirtualField#find() access in {}", instrumentationModuleClass.getName());
+              logger.finest(
+                  "Found VirtualField#find() access in {0}", instrumentationModuleClass.getName());
               /*
               The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
               variable. Once we get here we check if those last three instructions constitute call that looks like
@@ -111,12 +111,10 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
                 String typeName = ((Type) stack[1]).getClassName();
                 TypeDescription virtualFieldImplementationClass =
                     virtualFieldImplementations.find(typeName, fieldTypeName);
-                if (logger.isTraceEnabled()) {
-                  logger.trace(
-                      "Rewriting VirtualField#find() for instrumenter {}: {} -> {}",
-                      instrumentationModuleClass.getName(),
-                      typeName,
-                      fieldTypeName);
+                if (logger.isFinestLoggable()) {
+                  logger.finest(
+                      "Rewriting VirtualField#find() for instrumenter {0}: {1} -> {2}",
+                      instrumentationModuleClass.getName(), typeName, fieldTypeName);
                 }
                 if (virtualFieldImplementationClass == null) {
                   throw new IllegalStateException(

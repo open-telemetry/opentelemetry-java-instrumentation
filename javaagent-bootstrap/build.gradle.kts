@@ -8,6 +8,7 @@ group = "io.opentelemetry.javaagent"
 dependencies {
   implementation(project(":instrumentation-api"))
   implementation("org.slf4j:slf4j-api")
+  implementation("org.slf4j:slf4j-simple")
 
   testImplementation(project(":testing-common"))
 }

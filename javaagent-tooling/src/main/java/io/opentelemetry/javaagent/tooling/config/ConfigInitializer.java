@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
+import static java.util.logging.Level.SEVERE;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
@@ -16,11 +17,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 public final class ConfigInitializer {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigInitializer.class);
+  private static final Logger logger = Logger.getLogger(ConfigInitializer.class.getName());
 
   // visible for testing
   static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
@@ -75,7 +75,7 @@ public final class ConfigInitializer {
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
-      logger.error("Configuration file '{}' not found.", configurationFilePath);
+      logger.log(SEVERE, "Configuration file '{0}' not found.", configurationFilePath);
       return properties;
     }
 
@@ -83,10 +83,12 @@ public final class ConfigInitializer {
         new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
       properties.load(reader);
     } catch (FileNotFoundException fnf) {
-      logger.error("Configuration file '{}' not found.", configurationFilePath);
+      logger.log(SEVERE, "Configuration file '{0}' not found.", configurationFilePath);
     } catch (IOException ioe) {
-      logger.error(
-          "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
+      logger.log(
+          SEVERE,
+          "Configuration file '{0}' cannot be accessed or correctly parsed.",
+          configurationFilePath);
     }
 
     return properties;

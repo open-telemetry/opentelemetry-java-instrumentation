@@ -50,7 +50,6 @@ dependencies {
   bootstrapLibs(project(":instrumentation-appender-api-internal"))
   bootstrapLibs(project(":javaagent-bootstrap"))
   bootstrapLibs(project(":javaagent-instrumentation-api"))
-  bootstrapLibs("org.slf4j:slf4j-simple")
 
   baseJavaagentLibs(project(":javaagent-extension-api"))
   baseJavaagentLibs(project(":javaagent-tooling"))

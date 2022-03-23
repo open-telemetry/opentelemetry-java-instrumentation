@@ -5,17 +5,18 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import java.lang.instrument.Instrumentation;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 public class UnsafeInitializer {
-  private static final Logger logger = LoggerFactory.getLogger(UnsafeInitializer.class);
+  private static final Logger logger = Logger.getLogger(UnsafeInitializer.class.getName());
 
   static void initialize(Instrumentation instrumentation, ClassLoader classLoader) {
     initialize(instrumentation, classLoader, true);
@@ -56,7 +57,7 @@ public class UnsafeInitializer {
     try {
       SunMiscUnsafeGenerator.generateUnsafe(unsafeClass, (AgentClassLoader) classLoader);
     } catch (Throwable throwable) {
-      logger.warn("Unsafe generation failed", throwable);
+      logger.log(WARNING, "Unsafe generation failed", throwable);
     }
   }
 

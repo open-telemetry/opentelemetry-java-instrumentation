@@ -5,12 +5,17 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+
+import java.text.MessageFormat;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 /**
  * Debug logging that is performed under class file transform needs to use this class, because
@@ -42,131 +47,147 @@ public final class TransformSafeLogger {
   private final Logger logger;
 
   public static TransformSafeLogger getLogger(Class<?> clazz) {
-    return new TransformSafeLogger(LoggerFactory.getLogger(clazz));
+    return new TransformSafeLogger(Logger.getLogger(clazz.getName()));
   }
 
   private TransformSafeLogger(Logger logger) {
     this.logger = logger;
   }
 
-  public void debug(String format, Object arg) {
+  public void fine(String format, Object arg) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.DEBUG, logger, format, arg));
+      logMessageQueue.offer(new LogMessage(FINE, logger, format, null, arg));
     } else {
-      logger.debug(format, arg);
+      logger.log(FINE, format, arg);
     }
   }
 
-  public void debug(String format, Object arg1, Object arg2) {
+  public void fine(String format, Object arg1, Object arg2) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.DEBUG, logger, format, arg1, arg2));
+      logMessageQueue.offer(new LogMessage(FINE, logger, format, null, arg1, arg2));
     } else {
-      logger.debug(format, arg1, arg2);
+      logger.log(FINE, format, new Object[] {arg1, arg2});
     }
   }
 
-  public void debug(String format, Object... arguments) {
+  public void fine(String format, Object... arguments) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.DEBUG, logger, format, arguments));
+      logMessageQueue.offer(new LogMessage(FINE, logger, format, null, arguments));
     } else {
-      logger.debug(format, arguments);
+      logger.log(FINE, format, arguments);
     }
   }
 
-  public boolean isDebugEnabled() {
-    return logger.isDebugEnabled();
-  }
-
-  public void trace(String format, Object arg) {
+  public void fine(Throwable error, String format, Object... arguments) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.TRACE, logger, format, arg));
+      logMessageQueue.offer(new LogMessage(FINE, logger, format, error, arguments));
     } else {
-      logger.trace(format, arg);
+      logger.log(FINE, formatMessage(format, arguments), error);
     }
   }
 
-  public void trace(String format, Object arg1, Object arg2) {
+  public boolean isFineLoggable() {
+    return logger.isLoggable(FINE);
+  }
+
+  public void finest(String format, Object arg) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.TRACE, logger, format, arg1, arg2));
+      logMessageQueue.offer(new LogMessage(FINEST, logger, format, null, arg));
     } else {
-      logger.trace(format, arg1, arg2);
+      logger.log(FINEST, format, arg);
     }
   }
 
-  public void trace(String format, Object... arguments) {
+  public void finest(String format, Object arg1, Object arg2) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.TRACE, logger, format, arguments));
+      logMessageQueue.offer(new LogMessage(FINEST, logger, format, null, arg1, arg2));
     } else {
-      logger.trace(format, arguments);
+      logger.log(FINEST, format, new Object[] {arg1, arg2});
     }
   }
 
-  public void warn(String format) {
+  public void finest(String format, Object... arguments) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.WARN, logger, format));
+      logMessageQueue.offer(new LogMessage(FINEST, logger, format, null, arguments));
     } else {
-      logger.warn(format);
+      logger.log(FINEST, format, arguments);
     }
   }
 
-  public void warn(String format, Object arg) {
+  public boolean isFinestLoggable() {
+    return logger.isLoggable(FINEST);
+  }
+
+  public void warning(String format) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.WARN, logger, format, arg));
+      logMessageQueue.offer(new LogMessage(WARNING, logger, format, null));
     } else {
-      logger.warn(format, arg);
+      logger.warning(format);
     }
   }
 
-  public void warn(String format, Object arg1, Object arg2) {
+  public void warning(String format, Object arg) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.WARN, logger, format, arg1, arg2));
+      logMessageQueue.offer(new LogMessage(WARNING, logger, format, null, arg));
     } else {
-      logger.warn(format, arg1, arg2);
+      logger.log(WARNING, format, arg);
     }
   }
 
-  public void warn(String format, Object... arguments) {
+  public void warning(String format, Object arg1, Object arg2) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.WARN, logger, format, arguments));
+      logMessageQueue.offer(new LogMessage(WARNING, logger, format, null, arg1, arg2));
     } else {
-      logger.warn(format, arguments);
+      logger.log(WARNING, format, new Object[] {arg1, arg2});
     }
   }
 
-  public void error(String format) {
+  public void warning(String format, Object... arguments) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.ERROR, logger, format));
+      logMessageQueue.offer(new LogMessage(WARNING, logger, format, null, arguments));
     } else {
-      logger.error(format);
+      logger.log(WARNING, format, arguments);
     }
   }
 
-  public void error(String format, Object arg) {
+  public void severe(String format) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.ERROR, logger, format, arg));
+      logMessageQueue.offer(new LogMessage(SEVERE, logger, format, null));
     } else {
-      logger.error(format, arg);
+      logger.severe(format);
     }
   }
 
-  public void error(String format, Object arg1, Object arg2) {
+  public void severe(String format, Object arg) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.ERROR, logger, format, arg1, arg2));
+      logMessageQueue.offer(new LogMessage(SEVERE, logger, format, null, arg));
     } else {
-      logger.error(format, arg1, arg2);
+      logger.log(SEVERE, format, arg);
     }
   }
 
-  public void error(String format, Object... arguments) {
+  public void severe(String format, Object arg1, Object arg2) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(Level.ERROR, logger, format, arguments));
+      logMessageQueue.offer(new LogMessage(SEVERE, logger, format, null, arg1, arg2));
     } else {
-      logger.error(format, arguments);
+      logger.log(SEVERE, format, new Object[] {arg1, arg2});
     }
   }
 
-  public boolean isTraceEnabled() {
-    return logger.isTraceEnabled();
+  public void severe(String format, Object... arguments) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(SEVERE, logger, format, null, arguments));
+    } else {
+      logger.log(SEVERE, format, arguments);
+    }
+  }
+
+  public void severe(Throwable error, String format, Object... arguments) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(SEVERE, logger, format, error, arguments));
+    } else {
+      logger.log(SEVERE, formatMessage(format, arguments), error);
+    }
   }
 
   private static class LogMessageQueueReader implements Runnable {
@@ -175,14 +196,10 @@ public final class TransformSafeLogger {
       try {
         while (true) {
           LogMessage logMessage = logMessageQueue.take();
-          if (logMessage.level == Level.DEBUG) {
-            logMessage.logger.debug(logMessage.format, logMessage.arguments);
-          } else if (logMessage.level == Level.TRACE) {
-            logMessage.logger.trace(logMessage.format, logMessage.arguments);
-          } else {
-            logMessage.logger.warn(
-                "level {} not implemented yet in TransformSafeLogger", logMessage.level);
-          }
+          logMessage.logger.log(
+              logMessage.level,
+              formatMessage(logMessage.format, logMessage.arguments),
+              logMessage.error);
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
@@ -194,13 +211,24 @@ public final class TransformSafeLogger {
     private final Level level;
     private final Logger logger;
     private final String format;
+    private final Throwable error;
     private final Object[] arguments;
 
-    private LogMessage(Level level, Logger logger, String format, Object... arguments) {
+    private LogMessage(
+        Level level, Logger logger, String format, Throwable error, Object... arguments) {
       this.level = level;
       this.logger = logger;
       this.format = format;
+      this.error = error;
       this.arguments = arguments;
+    }
+  }
+
+  private static String formatMessage(String format, Object[] arguments) {
+    if (arguments == null || arguments.length == 0) {
+      return format;
+    } else {
+      return MessageFormat.format(format, arguments);
     }
   }
 }

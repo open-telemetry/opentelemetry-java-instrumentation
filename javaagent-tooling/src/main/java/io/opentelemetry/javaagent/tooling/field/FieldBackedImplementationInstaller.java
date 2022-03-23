@@ -174,11 +174,11 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
          */
         synchronized (INSTALLED_VIRTUAL_FIELD_MATCHERS) {
           if (INSTALLED_VIRTUAL_FIELD_MATCHERS.contains(entry)) {
-            logger.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
+            logger.finest("Skipping builder for {0} {1}", instrumenterClass.getName(), entry);
             continue;
           }
 
-          logger.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
+          logger.finest("Making builder for {0} {1}", instrumenterClass.getName(), entry);
           INSTALLED_VIRTUAL_FIELD_MATCHERS.add(entry);
 
           /*

@@ -50,7 +50,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
 
   api("net.bytebuddy:byte-buddy-dep")
-  implementation("org.slf4j:slf4j-api")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")

@@ -26,8 +26,8 @@ public final class VirtualFieldImplementationInstallerFactory {
     if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
       ((InstrumentationModuleMuzzle) instrumentationModule).registerMuzzleVirtualFields(builder);
     } else {
-      logger.debug(
-          "Found InstrumentationModule which does not implement InstrumentationModuleMuzzle: {}",
+      logger.fine(
+          "Found InstrumentationModule which does not implement InstrumentationModuleMuzzle: {0}",
           instrumentationModule);
     }
     VirtualFieldMappings mappings = builder.build();
