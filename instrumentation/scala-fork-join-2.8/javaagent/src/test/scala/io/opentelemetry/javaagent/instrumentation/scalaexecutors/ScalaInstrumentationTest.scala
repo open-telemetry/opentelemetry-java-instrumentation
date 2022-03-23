@@ -146,10 +146,6 @@ class ScalaInstrumentationTest {
     try {
       val keptPromise = Promise[Boolean]()
       val brokenPromise = Promise[Boolean]()
-      val afterPromise = keptPromise.future
-      val afterPromise2 = keptPromise.future
-
-      val failedAfterPromise = brokenPromise.future
 
       Future {
         tracedChild("future1")
@@ -157,16 +153,16 @@ class ScalaInstrumentationTest {
         brokenPromise.failure(new IllegalStateException())
       }
 
-      afterPromise.onSuccess { case _ =>
+      val afterPromise: Future[Unit] = keptPromise.future.map { _ =>
         tracedChild("keptPromise")
       }
       Await.result(afterPromise, 10.seconds)
-      afterPromise2.onSuccess { case _ =>
+      val afterPromise2: Future[Unit] = keptPromise.future.map { _ =>
         tracedChild("keptPromise2")
       }
       Await.result(afterPromise2, 10.seconds)
 
-      failedAfterPromise.onFailure { case _ =>
+      val failedAfterPromise = brokenPromise.future andThen { case _ =>
         tracedChild("brokenPromise")
       }
       assertThatThrownBy(new ThrowingCallable {
