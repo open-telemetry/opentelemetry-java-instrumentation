@@ -180,34 +180,39 @@ class ScalaInstrumentationTest {
     testing.waitAndAssertTraces(
       new Consumer[TraceAssert] {
         override def accept(trace: TraceAssert): Unit =
-          trace.hasSpansSatisfyingExactly(
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+          trace.satisfiesExactlyInAnyOrder(
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("parent")
                   .hasNoParent()
             },
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("future1")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("keptPromise")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("keptPromise2")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanDataAssert] {
-              override def accept(span: SpanDataAssert): Unit =
-                span
+            new Consumer[SpanData] {
+              override def accept(span: SpanData): Unit =
+                OpenTelemetryAssertions
+                  .assertThat(span)
                   .hasName("brokenPromise")
                   .hasParent(trace.getSpan(0))
             }
