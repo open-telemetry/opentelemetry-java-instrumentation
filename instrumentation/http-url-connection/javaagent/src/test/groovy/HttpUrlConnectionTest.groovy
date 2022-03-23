@@ -7,9 +7,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import spock.lang.Requires
 import spock.lang.Unroll
-import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
@@ -259,15 +257,5 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
         }
       }
     }
-  }
-
-  // This test makes no sense on IBM JVM because there is no HttpsURLConnectionImpl class there
-  @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
-  def "Make sure we can load HttpsURLConnectionImpl"() {
-    when:
-    def instance = new HttpsURLConnectionImpl(null, null, null)
-
-    then:
-    instance != null
   }
 }
