@@ -60,7 +60,7 @@ class SpringWebFluxSingleConnection implements SingleConnection {
       .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
 
     def response = request.exchange().block()
-    // read response body, this will close the request and release the connection so that it can be reused
+    // read response body, this seems to be needed to ensure that the connection can be reused
     response.bodyToMono(String).block()
 
     String responseId = response.headers().asHttpHeaders().getFirst(REQUEST_ID_HEADER)
