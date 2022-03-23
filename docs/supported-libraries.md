@@ -34,6 +34,7 @@ These are the supported libraries and frameworks:
 | [Apache Kafka Streams API](https://kafka.apache.org/documentation/streams/)                                                       | 0.11+                          |
 | [Apache MyFaces](https://myfaces.apache.org/)                                                                                     | 1.2+ (not including 3.x yet)   |
 | [Apache RocketMQ](https://rocketmq.apache.org/)                                                                                   | 4.8+                           |
+| [Apache ShenYu](https://github.com/apache/struts)                                                                                 | 2.4+                           |
 | [Apache Struts 2](https://github.com/apache/struts)                                                                               | 2.3+                           |
 | [Apache Tapestry](https://tapestry.apache.org/)                                                                                   | 5.4+                           |
 | [Apache Wicket](https://wicket.apache.org/)                                                                                       | 8.0+                           |
