@@ -74,7 +74,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   protected final int sendRequest(
       HttpRequest request, String method, URI uri, Map<String, String> headers) throws Exception {
     HttpResponse response = sendRequest(request);
-    // read request body
+    // read request body to avoid broken pipe errors on the server side
     response.parseAsString();
     return response.getStatusCode();
   }
