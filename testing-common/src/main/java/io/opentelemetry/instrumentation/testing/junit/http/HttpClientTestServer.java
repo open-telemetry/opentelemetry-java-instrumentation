@@ -28,15 +28,6 @@ import java.time.Duration;
 import javax.net.ssl.KeyManagerFactory;
 
 public final class HttpClientTestServer extends ServerExtension {
-  private static final String LONG_STRING;
-
-  static {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < 100_000; i++) {
-      sb.append("1234567890");
-    }
-    LONG_STRING = sb.toString();
-  }
 
   private final OpenTelemetry openTelemetry;
   private final Tracer tracer;
@@ -66,11 +57,7 @@ public final class HttpClientTestServer extends ServerExtension {
               if (testRequestId != null) {
                 headers.set("test-request-id", testRequestId);
               }
-              if (testRequestId != null) {
-                return HttpResponse.of(headers.build(), HttpData.ofAscii(LONG_STRING));
-              } else {
-                return HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."));
-              }
+              return HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."));
             })
         .service(
             "/client-error",
