@@ -137,6 +137,13 @@ testing {
       runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
       runtimeOnly("org.junit.vintage:junit-vintage-engine")
 
+
+      implementation("org.assertj:assertj-core")
+      implementation("org.awaitility:awaitility")
+      implementation("org.mockito:mockito-core")
+      implementation("org.mockito:mockito-inline")
+      implementation("org.mockito:mockito-junit-jupiter")
+
       implementation("org.objenesis:objenesis")
       implementation("org.spockframework:spock-core") {
         with (this as ExternalDependency) {

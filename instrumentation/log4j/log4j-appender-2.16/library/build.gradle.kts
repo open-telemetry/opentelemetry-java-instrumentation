@@ -11,8 +11,6 @@ dependencies {
   testImplementation(project(":instrumentation-appender-sdk-internal"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-logs")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-
-  testImplementation("org.mockito:mockito-core")
 }
 
 tasks.withType<Test>().configureEach {

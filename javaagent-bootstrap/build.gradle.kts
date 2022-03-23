@@ -10,6 +10,4 @@ dependencies {
   implementation("org.slf4j:slf4j-api")
 
   testImplementation(project(":testing-common"))
-  testImplementation("org.mockito:mockito-core")
-  testImplementation("org.assertj:assertj-core")
 }

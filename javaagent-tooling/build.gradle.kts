@@ -62,9 +62,6 @@ dependencies {
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
-  testImplementation("org.assertj:assertj-core")
-  testImplementation("org.mockito:mockito-core")
-  testImplementation("org.mockito:mockito-junit-jupiter")
 }
 
 // Here we only include autoconfigure but don"t include OTLP exporters to ensure they are only in
