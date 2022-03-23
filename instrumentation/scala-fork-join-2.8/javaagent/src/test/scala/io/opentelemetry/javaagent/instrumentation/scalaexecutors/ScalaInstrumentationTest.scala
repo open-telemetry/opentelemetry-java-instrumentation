@@ -146,10 +146,6 @@ class ScalaInstrumentationTest {
     try {
       val keptPromise = Promise[Boolean]()
       val brokenPromise = Promise[Boolean]()
-      val afterPromise = keptPromise.future
-      val afterPromise2 = keptPromise.future
-
-      val failedAfterPromise = brokenPromise.future
 
       Future {
         tracedChild("future1")
@@ -157,16 +153,16 @@ class ScalaInstrumentationTest {
         brokenPromise.failure(new IllegalStateException())
       }
 
-      afterPromise.onSuccess { case _ =>
+      val afterPromise: Future[Unit] = keptPromise.future.map { _ =>
         tracedChild("keptPromise")
       }
       Await.result(afterPromise, 10.seconds)
-      afterPromise2.onSuccess { case _ =>
+      val afterPromise2: Future[Unit] = keptPromise.future.map { _ =>
         tracedChild("keptPromise2")
       }
       Await.result(afterPromise2, 10.seconds)
 
-      failedAfterPromise.onFailure { case _ =>
+      val failedAfterPromise = brokenPromise.future andThen { case _ =>
         tracedChild("brokenPromise")
       }
       assertThatThrownBy(new ThrowingCallable {
@@ -180,39 +176,34 @@ class ScalaInstrumentationTest {
     testing.waitAndAssertTraces(
       new Consumer[TraceAssert] {
         override def accept(trace: TraceAssert): Unit =
-          trace.satisfiesExactlyInAnyOrder(
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+          trace.hasSpansSatisfyingExactly(
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("parent")
                   .hasNoParent()
             },
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("future1")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("keptPromise")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("keptPromise2")
                   .hasParent(trace.getSpan(0))
             },
-            new Consumer[SpanData] {
-              override def accept(span: SpanData): Unit =
-                OpenTelemetryAssertions
-                  .assertThat(span)
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit =
+                span
                   .hasName("brokenPromise")
                   .hasParent(trace.getSpan(0))
             }
