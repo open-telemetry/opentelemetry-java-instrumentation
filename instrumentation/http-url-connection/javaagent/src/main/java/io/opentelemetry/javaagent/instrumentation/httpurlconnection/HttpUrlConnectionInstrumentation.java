@@ -69,10 +69,6 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         // top-level HttpURLConnection calls
         return;
       }
-      // double increment on first entry is used to prevent infinite recursion in case end()
-      // captures response headers due to HttpUrlConnection.getHeaderField() calling
-      // HttpUrlConnection.getInputStream() which then enters this advice again
-      callDepth.getAndIncrement();
 
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, connection)) {
@@ -108,16 +104,16 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      // checking against 1 instead of against 0, because of the double increment which is used to
-      // prevent infinite recursion in case end() captures response headers
-      if (callDepth.decrementAndGet() > 1) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
       if (scope == null) {
-        // need to perform the second decrement here since bailing out early
-        callDepth.decrementAndGet();
         return;
       }
+      // prevent infinite recursion in case end() captures response headers due to
+      // HttpUrlConnection.getHeaderField() calling HttpUrlConnection.getInputStream() which then
+      // enters this advice again
+      callDepth.getAndIncrement();
       try {
         scope.close();
 
@@ -144,8 +140,6 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
           httpUrlState.finished = true;
         }
       } finally {
-        // double increment is used to prevent infinite recursion in case end() captures response
-        // headers
         callDepth.decrementAndGet();
       }
     }
