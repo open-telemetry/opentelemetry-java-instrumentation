@@ -184,7 +184,7 @@ public class HelperInjector implements Transformer {
               logger.debug(
                   "Injecting resource onto all classloaders: {}",
                   helperResource.getApplicationPath());
-              HelperResources.registerForAllClassloaders(
+              HelperResources.registerForAllClassLoaders(
                   helperResource.getApplicationPath(), resource);
             } else {
               logger.debug(

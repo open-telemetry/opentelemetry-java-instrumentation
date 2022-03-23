@@ -29,7 +29,7 @@ public final class HelperResources {
   }
 
   /** Registers the {@code url} to be available to instrumentation at {@code path}. */
-  public static void registerForAllClassloaders(String path, URL url) {
+  public static void registerForAllClassLoaders(String path, URL url) {
     ALL_CLASSLOADERS_RESOURCES.putIfAbsent(path, url);
   }
 

@@ -40,6 +40,7 @@ public class AutoConfigurationImportSelectorInstrumentation implements TypeInstr
         List<String> configs = new ArrayList<>(configurations.size() + 1);
         configs.addAll(configurations);
         // using class reference here so that muzzle will consider it a dependency of this advice
+        // and capture all references to spring & micrometer classes that it makes
         configs.add(OpenTelemetryMeterRegistryAutoConfiguration.class.getName());
         configurations = configs;
       }
