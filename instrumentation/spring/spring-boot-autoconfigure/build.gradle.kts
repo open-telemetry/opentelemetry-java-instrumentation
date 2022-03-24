@@ -37,7 +37,6 @@ dependencies {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
 
-  testImplementation("org.assertj:assertj-core")
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")

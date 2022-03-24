@@ -35,7 +35,5 @@ dependencies {
   testImplementation("com.google.guava:guava")
 
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing"))
-  testImplementation("org.mockito:mockito-core")
-  testImplementation("org.assertj:assertj-core")
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }

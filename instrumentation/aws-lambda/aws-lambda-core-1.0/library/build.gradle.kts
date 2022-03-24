@@ -27,7 +27,5 @@ dependencies {
   testImplementation("com.google.guava:guava")
 
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing"))
-  testImplementation("org.mockito:mockito-core")
-  testImplementation("org.assertj:assertj-core")
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }

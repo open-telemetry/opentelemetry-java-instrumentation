@@ -12,5 +12,4 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry:opentelemetry-extension-aws")
-  testImplementation("org.assertj:assertj-core")
 }
