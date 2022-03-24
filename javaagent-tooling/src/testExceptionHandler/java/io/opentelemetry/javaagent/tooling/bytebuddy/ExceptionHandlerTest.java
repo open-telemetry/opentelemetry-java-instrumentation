@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.test;
+package io.opentelemetry.javaagent.tooling.bytebuddy;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
-import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.logging.Level;

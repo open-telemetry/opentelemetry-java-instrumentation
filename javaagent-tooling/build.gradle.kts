@@ -63,6 +63,21 @@ dependencies {
   testImplementation("com.google.guava:guava")
 }
 
+testing {
+  suites {
+    val testExceptionHandler by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":javaagent-tooling"))
+        implementation("net.bytebuddy:byte-buddy-dep")
+
+        // Used by byte-buddy but not brought in as a transitive dependency.
+        compileOnly("com.google.code.findbugs:annotations")
+      }
+    }
+  }
+}
+
 // Here we only include autoconfigure but don"t include OTLP exporters to ensure they are only in
 // the full distribution. We need to override the default exporter setting of OTLP as a result.
 tasks {
@@ -76,6 +91,10 @@ tasks {
     options.errorprone {
       isEnabled.set(false)
     }
+  }
+
+  check {
+    dependsOn(testing.suites)
   }
 }
 
