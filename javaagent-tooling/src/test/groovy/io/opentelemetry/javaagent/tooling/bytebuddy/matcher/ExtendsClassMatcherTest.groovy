@@ -56,9 +56,7 @@ class ExtendsClassMatcherTest extends Specification {
     noExceptionThrown()
     1 * type.getModifiers() >> Opcodes.ACC_ABSTRACT
     1 * type.asGenericType() >> typeGeneric
-    1 * type.getTypeName() >> "type-name"
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
-    1 * typeGeneric.getTypeName() >> "typeGeneric-name"
     1 * type.getSuperClass() >> { throw new Exception("getSuperClass exception") }
     0 * _
   }

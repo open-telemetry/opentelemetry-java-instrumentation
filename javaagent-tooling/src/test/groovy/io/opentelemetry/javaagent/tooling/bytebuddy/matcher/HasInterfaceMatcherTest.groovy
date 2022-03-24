@@ -64,11 +64,9 @@ class HasInterfaceMatcherTest extends Specification {
     1 * type.isInterface() >> true
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
-    1 * typeGeneric.getTypeName() >> "typeGeneric-name"
     1 * type.getInterfaces() >> interfaces
     1 * interfaces.iterator() >> it
     1 * type.getSuperClass() >> { throw new Exception("getSuperClass exception") }
-    2 * type.getTypeName() >> "type-name"
     0 * _
   }
 }
