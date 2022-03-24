@@ -72,7 +72,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
 
   @Override
   void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-    // TODO: context propagation into callbacks is not implemented
+    // TODO: context is not automatically propagated into callbacks
     Context context = Context.current()
     // TODO(anuraaga): Do we also need to test ListenableFuture callback?
     client.executeRequest(request, new AsyncCompletionHandler<Void>() {
