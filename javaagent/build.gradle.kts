@@ -80,7 +80,6 @@ dependencies {
   testImplementation("com.google.guava:guava")
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
-  testImplementation("org.assertj:assertj-core")
 }
 
 val javaagentDependencies = dependencies

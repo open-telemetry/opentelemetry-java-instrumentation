@@ -62,9 +62,6 @@ dependencies {
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
-  testImplementation("org.assertj:assertj-core")
-  testImplementation("org.mockito:mockito-core")
-  testImplementation("org.mockito:mockito-junit-jupiter")
 }
 
 // Here we only include autoconfigure but don"t include OTLP exporters to ensure they are only in
@@ -79,6 +76,17 @@ tasks {
   named<JavaCompile>("jmhCompileGeneratedClasses") {
     options.errorprone {
       isEnabled.set(false)
+    }
+  }
+}
+
+// Mockito inline mocking uses byte-buddy but agent tooling currently uses byte-buddy-dep, which cannot be on the same
+// classpath. Disable inline mocking to prevent conflicts.
+// TODO(anuraaga): Find a better solution
+configurations {
+  testRuntimeClasspath {
+    dependencies {
+      exclude("org.mockito", "mockito-inline")
     }
   }
 }
