@@ -77,7 +77,7 @@ configured to send data to
 at `http://localhost:4317`.
 
 Configuration parameters are passed as Java system properties (`-D` flags) or
-as environment variables. See [the configuration documentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/agent-config.md)
+as environment variables. See [the configuration documentation][config]
 for the full list of configuration items. For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent.jar \
@@ -88,11 +88,11 @@ java -javaagent:path/to/opentelemetry-javaagent.jar \
 
 ## Configuring the Agent
 
-The agent is [highly configurable](docs/agent-config.md)!  Many aspects of the agent's behavior can be
+The agent is [highly configurable][config]!  Many aspects of the agent's behavior can be
 configured for your needs, such as exporter choice, exporter config (like where
 data is sent), trace context propagation headers, and much more.
 
-[Click here to see the detailed list of configuration environment variables and system properties](docs/agent-config.md).
+[Click here to see the detailed list of configuration environment variables and system properties][config].
 
 *Note: Config parameter names are very likely to change over time, so please check
 back here when trying out a new version! Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues) or unexpected
@@ -163,4 +163,5 @@ Thanks to all the people who already contributed!
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
 </a>
 
+[config]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/
 [manual]: https://opentelemetry.io/docs/instrumentation/java/manual/
