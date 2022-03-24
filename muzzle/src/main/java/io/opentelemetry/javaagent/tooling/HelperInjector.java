@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
+
 import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
@@ -175,21 +178,27 @@ public class HelperInjector implements Transformer {
           for (HelperResource helperResource : helperResources) {
             URL resource = helpersSource.getResource(helperResource.getAgentPath());
             if (resource == null) {
-              logger.fine(
-                  "Helper resource {0} requested but not found.", helperResource.getAgentPath());
+              logger.log(
+                  FINE,
+                  "Helper resource {0} requested but not found.",
+                  helperResource.getAgentPath());
               continue;
             }
 
             if (helperResource.allClassLoaders()) {
-              logger.fine(
+              logger.log(
+                  FINE,
                   "Injecting resource onto all classloaders: {0}",
                   helperResource.getApplicationPath());
               HelperResources.registerForAllClassLoaders(
                   helperResource.getApplicationPath(), resource);
             } else {
-              logger.fine(
-                  "Injecting resource onto classloader {0} -> {1}",
-                  classLoader, helperResource.getApplicationPath());
+              if (logger.isLoggable(FINE)) {
+                logger.log(
+                    FINE,
+                    "Injecting resource onto classloader {0} -> {1}",
+                    new Object[] {classLoader, helperResource.getApplicationPath()});
+              }
               HelperResources.register(classLoader, helperResource.getApplicationPath(), resource);
             }
           }
@@ -202,7 +211,8 @@ public class HelperInjector implements Transformer {
       TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
     classLoader = maskNullClassLoader(classLoader);
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
-      logger.severe(
+      logger.log(
+          SEVERE,
           "Cannot inject helpers into bootstrap classloader without an instance of Instrumentation. Programmer error!");
       return;
     }
@@ -211,7 +221,12 @@ public class HelperInjector implements Transformer {
         classLoader,
         cl -> {
           try {
-            logger.fine("Injecting classes onto classloader {0} -> {1}", cl, helperClassNames);
+            if (logger.isLoggable(FINE)) {
+              logger.log(
+                  FINE,
+                  "Injecting classes onto classloader {0} -> {1}",
+                  new Object[] {cl, helperClassNames});
+            }
 
             Map<String, byte[]> classnameToBytes = getHelperMap();
             Map<String, HelperClassInjector> map =
@@ -232,12 +247,13 @@ public class HelperInjector implements Transformer {
               injectBootstrapClassLoader(classnameToBytes);
             }
           } catch (Exception e) {
-            logger.severe(
-                e,
-                "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes into instance {2}",
-                typeDescription,
-                requestingName,
-                cl);
+            if (logger.isLoggable(SEVERE)) {
+              logger.log(
+                  SEVERE,
+                  "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes into instance {2}",
+                  new Object[] {typeDescription, requestingName, cl},
+                  e);
+            }
             throw new IllegalStateException(e);
           }
           return true;

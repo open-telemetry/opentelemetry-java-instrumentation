@@ -113,10 +113,12 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
     try {
       longFromField = httpField != null ? Long.getLong(httpField.getValue()) : null;
     } catch (NumberFormatException t) {
-      logger.log(
-          FINE,
-          "Value {0} is not valid number format for header field: {1}",
-          new String[] {httpField.getValue(), httpField.getName()});
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Value {0} is not valid number format for header field: {1}",
+            new Object[] {httpField.getValue(), httpField.getName()});
+      }
     }
     return longFromField;
   }

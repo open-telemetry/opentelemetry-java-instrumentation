@@ -155,10 +155,12 @@ public class AgentInstaller {
 
     int numberOfLoadedExtensions = 0;
     for (AgentExtension agentExtension : loadOrdered(AgentExtension.class)) {
-      logger.log(
-          FINE,
-          "Loading extension {0} [class {1}]",
-          new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Loading extension {0} [class {1}]",
+            new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
+      }
       try {
         agentBuilder = agentExtension.extend(agentBuilder);
         numberOfLoadedExtensions++;
@@ -323,12 +325,12 @@ public class AgentInstaller {
         boolean loaded,
         Throwable throwable) {
 
-      if (logger.isFineLoggable()) {
-        logger.fine(
-            throwable,
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
             "Failed to handle {0} for transformation on classloader {1}",
-            typeName,
-            classLoader);
+            new Object[] {typeName, classLoader},
+            throwable);
       }
     }
 
@@ -339,7 +341,10 @@ public class AgentInstaller {
         JavaModule module,
         boolean loaded,
         DynamicType dynamicType) {
-      logger.fine("Transformed {0} -- {1}", typeDescription.getName(), classLoader);
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE, "Transformed {0} -- {1}", new Object[] {typeDescription.getName(), classLoader});
+      }
     }
   }
 
@@ -474,10 +479,12 @@ public class AgentInstaller {
           customLogManager);
       boolean onSysClasspath =
           ClassLoader.getSystemResource(getResourceName(customLogManager)) != null;
-      logger.log(
-          FINE,
-          "Class {0} is on system classpath: {1}delaying AgentInstaller#afterAgent()",
-          new Object[] {customLogManager, onSysClasspath ? "not " : ""});
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Class {0} is on system classpath: {1}delaying AgentInstaller#afterAgent()",
+            new Object[] {customLogManager, onSysClasspath ? "not " : ""});
+      }
       // Some applications set java.util.logging.manager but never actually initialize the logger.
       // Check to see if the configured manager is on the system classpath.
       // If so, it should be safe to initialize AgentInstaller which will setup the log manager:
@@ -491,10 +498,12 @@ public class AgentInstaller {
 
   private static void logVersionInfo() {
     VersionLogger.logAllVersions();
-    logger.log(
-        FINE,
-        "{0} loaded on {1}",
-        new Object[] {AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader()});
+    if (logger.isLoggable(FINE)) {
+      logger.log(
+          FINE,
+          "{0} loaded on {1}",
+          new Object[] {AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader()});
+    }
   }
 
   private AgentInstaller() {}

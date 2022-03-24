@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.field;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
@@ -26,7 +28,8 @@ public final class VirtualFieldImplementationInstallerFactory {
     if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
       ((InstrumentationModuleMuzzle) instrumentationModule).registerMuzzleVirtualFields(builder);
     } else {
-      logger.fine(
+      logger.log(
+          FINE,
           "Found InstrumentationModule which does not implement InstrumentationModuleMuzzle: {0}",
           instrumentationModule);
     }

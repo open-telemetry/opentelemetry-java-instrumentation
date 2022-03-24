@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static java.util.logging.Level.FINEST;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -174,11 +175,21 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
          */
         synchronized (INSTALLED_VIRTUAL_FIELD_MATCHERS) {
           if (INSTALLED_VIRTUAL_FIELD_MATCHERS.contains(entry)) {
-            logger.finest("Skipping builder for {0} {1}", instrumenterClass.getName(), entry);
+            if (logger.isLoggable(FINEST)) {
+              logger.log(
+                  FINEST,
+                  "Skipping builder for {0} {1}",
+                  new Object[] {instrumenterClass.getName(), entry});
+            }
             continue;
           }
 
-          logger.finest("Making builder for {0} {1}", instrumenterClass.getName(), entry);
+          if (logger.isLoggable(FINEST)) {
+            logger.log(
+                FINEST,
+                "Making builder for {0} {1}",
+                new Object[] {instrumenterClass.getName(), entry});
+          }
           INSTALLED_VIRTUAL_FIELD_MATCHERS.add(entry);
 
           /*

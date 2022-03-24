@@ -45,10 +45,12 @@ final class TimeUnitHelper {
       case "days":
         return TimeUnit.DAYS;
       default:
-        logger.log(
-            WARNING,
-            "Invalid base time unit: '{0}'; using '{1}' as the base time unit instead",
-            new String[] {value, getUnitString(defaultUnit)});
+        if (logger.isLoggable(WARNING)) {
+          logger.log(
+              WARNING,
+              "Invalid base time unit: '{0}'; using '{1}' as the base time unit instead",
+              new Object[] {value, getUnitString(defaultUnit)});
+        }
         return defaultUnit;
     }
   }

@@ -29,7 +29,7 @@ public final class PropagatedContext {
     boolean result = contextUpdater.compareAndSet(this, null, context);
     if (!result) {
       Context currentPropagatedContext = contextUpdater.get(this);
-      if (currentPropagatedContext != context) {
+      if (currentPropagatedContext != context && logger.isLoggable(FINE)) {
         logger.log(
             FINE,
             "Failed to propagate context because previous propagated context is already set; new: {0}, old: {1}",

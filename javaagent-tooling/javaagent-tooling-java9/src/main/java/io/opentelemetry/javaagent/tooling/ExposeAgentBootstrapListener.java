@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import java.lang.instrument.Instrumentation;
 import java.util.Collections;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -55,10 +56,10 @@ public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter 
         && fromModule.isNamed()
         && !fromModule.canRead(targetModule)) {
 
-      logger.log(
-          Level.FINE,
-          "Adding module read from {0} to {1}",
-          new Object[] {fromModule, targetModule});
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE, "Adding module read from {0} to {1}", new Object[] {fromModule, targetModule});
+      }
 
       ClassInjector.UsingInstrumentation.redefineModule(
           instrumentation,

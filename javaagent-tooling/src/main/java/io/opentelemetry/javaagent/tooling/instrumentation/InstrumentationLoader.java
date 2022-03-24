@@ -27,12 +27,15 @@ public class InstrumentationLoader implements AgentExtension {
   public AgentBuilder extend(AgentBuilder agentBuilder) {
     int numberOfLoadedModules = 0;
     for (InstrumentationModule instrumentationModule : loadOrdered(InstrumentationModule.class)) {
-      logger.log(
-          FINE,
-          "Loading instrumentation {0} [class {1}]",
-          new Object[] {
-            instrumentationModule.instrumentationName(), instrumentationModule.getClass().getName()
-          });
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Loading instrumentation {0} [class {1}]",
+            new Object[] {
+              instrumentationModule.instrumentationName(),
+              instrumentationModule.getClass().getName()
+            });
+      }
       try {
         agentBuilder = instrumentationModuleInstaller.install(instrumentationModule, agentBuilder);
         numberOfLoadedModules++;

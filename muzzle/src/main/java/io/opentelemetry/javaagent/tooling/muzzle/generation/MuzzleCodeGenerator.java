@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.generation;
 
+import static java.util.logging.Level.INFO;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
@@ -22,7 +24,6 @@ import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -152,10 +153,12 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
     }
 
     private void logMethodAlreadyExistsMessage(String muzzleVirtualFieldsMethodName) {
-      logger.log(
-          Level.INFO,
-          "The '{0}' method was already found in class '{1}'. Muzzle will not generate it again",
-          new Object[] {muzzleVirtualFieldsMethodName, instrumentationClassName});
+      if (logger.isLoggable(INFO)) {
+        logger.log(
+            INFO,
+            "The '{0}' method was already found in class '{1}'. Muzzle will not generate it again",
+            new Object[] {muzzleVirtualFieldsMethodName, instrumentationClassName});
+      }
     }
 
     @Override

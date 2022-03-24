@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -56,7 +57,8 @@ public final class InstrumentationModuleInstaller {
   AgentBuilder install(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     if (!instrumentationModule.isEnabled()) {
-      logger.fine("Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
+      logger.log(
+          FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
     }
     List<String> helperClassNames =
@@ -66,7 +68,8 @@ public final class InstrumentationModuleInstaller {
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
       if (!helperClassNames.isEmpty() || !helperResourceBuilder.getResources().isEmpty()) {
-        logger.warning(
+        logger.log(
+            WARNING,
             "Helper classes and resources won't be injected if no types are instrumented: {0}",
             instrumentationModule.instrumentationName());
       }
@@ -166,12 +169,15 @@ public final class InstrumentationModuleInstaller {
           }
         }
       } else {
-        if (logger.isFineLoggable()) {
-          logger.fine(
+        if (logger.isLoggable(FINE)) {
+          logger.log(
+              FINE,
               "Applying instrumentation: {0} [class {1}] on {2}",
-              instrumentationModule.instrumentationName(),
-              instrumentationModule.getClass().getName(),
-              classLoader);
+              new Object[] {
+                instrumentationModule.instrumentationName(),
+                instrumentationModule.getClass().getName(),
+                classLoader
+              });
         }
       }
 

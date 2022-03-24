@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.field;
 
+import static java.util.logging.Level.FINEST;
+
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -95,8 +97,10 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
             if (Utils.getInternalName(FIND_VIRTUAL_FIELD_METHOD.getDeclaringClass()).equals(owner)
                 && FIND_VIRTUAL_FIELD_METHOD.getName().equals(name)
                 && Type.getMethodDescriptor(FIND_VIRTUAL_FIELD_METHOD).equals(descriptor)) {
-              logger.finest(
-                  "Found VirtualField#find() access in {0}", instrumentationModuleClass.getName());
+              logger.log(
+                  FINEST,
+                  "Found VirtualField#find() access in {0}",
+                  instrumentationModuleClass.getName());
               /*
               The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
               variable. Once we get here we check if those last three instructions constitute call that looks like
@@ -111,10 +115,11 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
                 String typeName = ((Type) stack[1]).getClassName();
                 TypeDescription virtualFieldImplementationClass =
                     virtualFieldImplementations.find(typeName, fieldTypeName);
-                if (logger.isFinestLoggable()) {
-                  logger.finest(
+                if (logger.isLoggable(FINEST)) {
+                  logger.log(
+                      FINEST,
                       "Rewriting VirtualField#find() for instrumenter {0}: {1} -> {2}",
-                      instrumentationModuleClass.getName(), typeName, fieldTypeName);
+                      new Object[] {instrumentationModuleClass.getName(), typeName, fieldTypeName});
                 }
                 if (virtualFieldImplementationClass == null) {
                   throw new IllegalStateException(
