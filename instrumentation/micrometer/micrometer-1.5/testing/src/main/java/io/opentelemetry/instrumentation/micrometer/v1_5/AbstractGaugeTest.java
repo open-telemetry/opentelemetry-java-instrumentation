@@ -61,7 +61,7 @@ public abstract class AbstractGaugeTest {
 
     // when
     Metrics.globalRegistry.remove(gauge);
-    Thread.sleep(10); // give time for any inflight metric export to be received
+    Thread.sleep(100); // give time for any inflight metric export to be received
     testing().clearData();
 
     // then

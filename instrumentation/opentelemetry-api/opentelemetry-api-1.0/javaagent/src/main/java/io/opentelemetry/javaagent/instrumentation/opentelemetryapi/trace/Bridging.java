@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
+import static java.util.logging.Level.FINE;
+
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.trace.Span;
@@ -13,8 +15,7 @@ import application.io.opentelemetry.api.trace.SpanKind;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.api.trace.TraceState;
 import application.io.opentelemetry.api.trace.TraceStateBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 /**
  * This class translates between the (unshaded) OpenTelemetry API that the application brings and
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("UnnecessarilyFullyQualified")
 public class Bridging {
 
-  private static final Logger logger = LoggerFactory.getLogger(Bridging.class);
+  private static final Logger logger = Logger.getLogger(Bridging.class.getName());
 
   public static Span toApplication(io.opentelemetry.api.trace.Span agentSpan) {
     if (!agentSpan.getSpanContext().isValid()) {
@@ -81,7 +82,7 @@ public class Bridging {
     try {
       return io.opentelemetry.api.trace.SpanKind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
-      logger.debug("unexpected span kind: {}", applicationSpanKind.name());
+      logger.log(FINE, "unexpected span kind: {0}", applicationSpanKind.name());
       return null;
     }
   }
@@ -138,7 +139,7 @@ public class Bridging {
       case DOUBLE_ARRAY:
         return io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
     }
-    logger.debug("unexpected attribute key type: {}", applicationKey.getType());
+    logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
     return null;
   }
 
@@ -147,7 +148,7 @@ public class Bridging {
     try {
       agentCanonicalCode = io.opentelemetry.api.trace.StatusCode.valueOf(applicationStatus.name());
     } catch (IllegalArgumentException e) {
-      logger.debug("unexpected status canonical code: {}", applicationStatus.name());
+      logger.log(FINE, "unexpected status canonical code: {0}", applicationStatus.name());
       return io.opentelemetry.api.trace.StatusCode.UNSET;
     }
     return agentCanonicalCode;

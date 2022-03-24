@@ -9,7 +9,7 @@ import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.graphql.GraphQLTracing;
+import io.opentelemetry.instrumentation.graphql.GraphQLTelemetry;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +20,8 @@ public final class GraphqlSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get().getBoolean("otel.instrumentation.graphql.experimental-span-attributes", false);
 
-  private static final GraphQLTracing TRACING =
-      GraphQLTracing.builder(GlobalOpenTelemetry.get())
+  private static final GraphQLTelemetry TELEMETRY =
+      GraphQLTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES)
           .setSanitizeQuery(QUERY_SANITIZATION_ENABLED)
           .build();
@@ -29,7 +29,7 @@ public final class GraphqlSingletons {
   private GraphqlSingletons() {}
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
-    Instrumentation ourInstrumentation = TRACING.newInstrumentation();
+    Instrumentation ourInstrumentation = TELEMETRY.newInstrumentation();
     if (instrumentation == null) {
       return ourInstrumentation;
     }

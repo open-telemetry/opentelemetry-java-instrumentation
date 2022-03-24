@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTracing
+import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTelemetry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.integration.config.GlobalChannelInterceptor
@@ -16,6 +16,6 @@ class GlobalInterceptorSpringConfig {
   @GlobalChannelInterceptor
   @Bean
   ChannelInterceptor otelInterceptor() {
-    SpringIntegrationTracing.create(GlobalOpenTelemetry.get()).newChannelInterceptor()
+    SpringIntegrationTelemetry.create(GlobalOpenTelemetry.get()).newChannelInterceptor()
   }
 }

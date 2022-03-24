@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
+import static java.util.logging.Level.SEVERE;
+
 import io.grpc.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -71,9 +72,7 @@ public final class ContextStorageBridge extends Context.Storage {
     Scope scope = OTEL_SCOPE.get(toRestore);
     if (scope == null) {
       logger.log(
-          Level.SEVERE,
-          "Detaching context which was not attached.",
-          new Throwable().fillInStackTrace());
+          SEVERE, "Detaching context which was not attached.", new Throwable().fillInStackTrace());
     } else {
       scope.close();
     }

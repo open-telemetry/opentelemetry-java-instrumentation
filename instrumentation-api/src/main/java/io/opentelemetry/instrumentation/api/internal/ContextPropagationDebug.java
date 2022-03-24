@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.logging.Level.SEVERE;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -12,16 +14,15 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class ContextPropagationDebug {
-  private static final Logger logger = LoggerFactory.getLogger(ContextPropagationDebug.class);
+  private static final Logger logger = Logger.getLogger(ContextPropagationDebug.class.getName());
 
   // locations where the context was propagated to another thread (tracking multiple steps is
   // helpful in akka where there is so much recursive async spawning of new work)
@@ -71,10 +72,10 @@ public final class ContextPropagationDebug {
 
     Context current = Context.current();
     if (current != Context.root()) {
-      logger.error("Unexpected non-root current context found when extracting remote context!");
+      logger.severe("Unexpected non-root current context found when extracting remote context!");
       Span currentSpan = Span.fromContextOrNull(current);
       if (currentSpan != null) {
-        logger.error("It contains this span: {}", currentSpan);
+        logger.log(SEVERE, "It contains this span: {0}", currentSpan);
       }
 
       debugContextPropagation(current);
@@ -121,7 +122,7 @@ public final class ContextPropagationDebug {
           sb.append("\nwhich was propagated from:");
         }
       }
-      logger.error("a context leak was detected. it was propagated from:{}", sb);
+      logger.log(SEVERE, "a context leak was detected. it was propagated from: {0}", sb);
     }
   }
 

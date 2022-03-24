@@ -150,7 +150,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
             // we do not really have a good way for attributing work to correct parent span
             // if we reuse Callable/Runnable.
             // Solution for now is to never reuse a Callable/Runnable.
-            U child = newTask(true, true);
+            U child = newTask(false, true);
             children.add(child);
             Future<?> f = task.apply(child);
             jobFutures.add(f);

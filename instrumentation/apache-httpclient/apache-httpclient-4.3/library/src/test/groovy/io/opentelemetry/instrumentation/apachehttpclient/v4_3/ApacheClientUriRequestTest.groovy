@@ -12,7 +12,7 @@ import org.apache.http.impl.client.CloseableHttpClient
 class ApacheClientUriRequestTest extends AbstractApacheClientUriRequestTest implements LibraryTestTrait {
   @Override
   protected CloseableHttpClient createClient(boolean readTimeout) {
-    def builder = ApacheHttpClientTracing.create(openTelemetry).newHttpClientBuilder()
+    def builder = ApacheHttpClientTelemetry.create(openTelemetry).newHttpClientBuilder()
     def requestConfigBuilder = RequestConfig.custom()
       .setMaxRedirects(maxRedirects())
       .setConnectTimeout(CONNECT_TIMEOUT_MS)

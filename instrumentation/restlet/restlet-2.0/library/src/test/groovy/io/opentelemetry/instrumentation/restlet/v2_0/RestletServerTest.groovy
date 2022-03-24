@@ -15,13 +15,12 @@ class RestletServerTest extends AbstractRestletServerTest implements LibraryTest
 
   @Override
   Restlet wrapRestlet(Restlet restlet, String path) {
-
-    RestletTracing tracing = RestletTracing.builder(openTelemetry)
+    RestletTelemetry telemetry = RestletTelemetry.builder(openTelemetry)
       .setCapturedRequestHeaders([AbstractHttpServerTest.TEST_REQUEST_HEADER])
       .setCapturedResponseHeaders([AbstractHttpServerTest.TEST_RESPONSE_HEADER])
       .build()
 
-    def tracingFilter = tracing.newFilter(path)
+    def tracingFilter = telemetry.newFilter(path)
     def statusFilter = new StatusFilter(component.getContext(), new StatusService())
 
     tracingFilter.setNext(statusFilter)

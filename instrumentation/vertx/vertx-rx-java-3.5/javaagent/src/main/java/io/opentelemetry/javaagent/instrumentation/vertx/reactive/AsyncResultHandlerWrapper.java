@@ -5,16 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>>> {
 
-  private static final Logger logger = LoggerFactory.getLogger(AsyncResultHandlerWrapper.class);
+  private static final Logger logger = Logger.getLogger(AsyncResultHandlerWrapper.class.getName());
 
   private final Handler<Handler<AsyncResult<?>>> delegate;
   private final Context executionContext;
@@ -39,7 +40,7 @@ public class AsyncResultHandlerWrapper implements Handler<Handler<AsyncResult<?>
   public static Handler<Handler<AsyncResult<?>>> wrapIfNeeded(
       Handler<Handler<AsyncResult<?>>> delegate, Context executionContext) {
     if (!(delegate instanceof AsyncResultHandlerWrapper)) {
-      logger.debug("Wrapping handler {}", delegate);
+      logger.log(FINE, "Wrapping handler {0}", delegate);
       return new AsyncResultHandlerWrapper(delegate, executionContext);
     }
     return delegate;

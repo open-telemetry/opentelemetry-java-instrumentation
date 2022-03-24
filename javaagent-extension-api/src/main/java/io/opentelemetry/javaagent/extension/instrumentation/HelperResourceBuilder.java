@@ -30,4 +30,29 @@ public interface HelperResourceBuilder {
    *     the resource
    */
   void register(String applicationResourcePath, String agentResourcePath);
+
+  /**
+   * Registers a resource to be injected into all class loaders in the instrumented application.
+   *
+   * <p>This is a convenience method for {@code registerForAllClassLoaders(resourcePath,
+   * resourcePath)}.
+   */
+  default void registerForAllClassLoaders(String resourcePath) {
+    registerForAllClassLoaders(resourcePath, resourcePath);
+  }
+
+  /**
+   * Registers a resource to be injected into all class loaders in the instrumented application.
+   *
+   * <p>{@code agentResourcePath} can be the same as {@code applicationResourcePath}, but it is
+   * often desirable to use a slightly different path for {@code agentResourcePath}, so that
+   * multiple versions of an instrumentation (each injecting their own version of the resource) can
+   * co-exist inside the agent jar file.
+   *
+   * @param applicationResourcePath the path in the user's class loader at which to inject the
+   *     resource
+   * @param agentResourcePath the path in the agent class loader from which to get the content for
+   *     the resource
+   */
+  void registerForAllClassLoaders(String applicationResourcePath, String agentResourcePath);
 }

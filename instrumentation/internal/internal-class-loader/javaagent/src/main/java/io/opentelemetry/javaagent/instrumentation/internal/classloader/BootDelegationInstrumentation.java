@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -25,10 +26,10 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
+import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.slf4j.LoggerFactory;
 
 /**
  * Some class loaders do not delegate to their parent, so classes in those class loaders will not be
@@ -89,8 +90,8 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
         //noinspection unchecked
         return (List<String>) methodHandle.invokeExact();
       } catch (Throwable e) {
-        LoggerFactory.getLogger(Holder.class)
-            .warn("Unable to load bootstrap package prefixes from the bootstrap CL", e);
+        Logger.getLogger(Holder.class.getName())
+            .log(WARNING, "Unable to load bootstrap package prefixes from the bootstrap CL", e);
         return Constants.BOOTSTRAP_PACKAGE_PREFIXES;
       }
     }

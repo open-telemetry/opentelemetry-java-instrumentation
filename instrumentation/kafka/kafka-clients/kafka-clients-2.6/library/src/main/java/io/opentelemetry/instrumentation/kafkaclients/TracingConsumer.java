@@ -26,11 +26,11 @@ import org.apache.kafka.common.TopicPartition;
 
 class TracingConsumer<K, V> implements Consumer<K, V> {
   private final Consumer<K, V> consumer;
-  private final KafkaTracing tracing;
+  private final KafkaTelemetry telemetry;
 
-  TracingConsumer(Consumer<K, V> consumer, KafkaTracing tracing) {
+  TracingConsumer(Consumer<K, V> consumer, KafkaTelemetry telemetry) {
     this.consumer = consumer;
-    this.tracing = tracing;
+    this.telemetry = telemetry;
   }
 
   @Override
@@ -82,7 +82,7 @@ class TracingConsumer<K, V> implements Consumer<K, V> {
   @Override
   public ConsumerRecords<K, V> poll(Duration duration) {
     ConsumerRecords<K, V> records = consumer.poll(duration);
-    tracing.buildAndFinishSpan(records);
+    telemetry.buildAndFinishSpan(records);
     return records;
   }
 

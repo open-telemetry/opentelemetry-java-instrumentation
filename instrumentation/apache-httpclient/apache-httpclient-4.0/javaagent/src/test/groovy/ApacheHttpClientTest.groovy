@@ -41,7 +41,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
       HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
     }
     httpParams.setParameter(ClientPNames.CONNECTION_MANAGER_FACTORY_CLASS_NAME, ThreadSafeClientConnManagerFactory.getName())
-    client = new DefaultHttpClient(httpParams)
+    return new DefaultHttpClient(httpParams)
   }
 
   DefaultHttpClient getClient(URI uri) {

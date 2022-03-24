@@ -76,10 +76,11 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      # run this action to get workflow conclusion
-      # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
-      - uses: technote-space/workflow-conclusion-action@v2.2
-
-      - name: Fail build
-        if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
+      - if: |
+          needs.build.result != 'success' ||
+          needs.test.result != 'success' ||
+          needs.smoke-test.result != 'success' ||
+          needs.muzzle.result != 'success' ||
+          needs.examples.result != 'success' ||
+          needs.markdown-misspell-check.result != 'success'
         run: exit 1

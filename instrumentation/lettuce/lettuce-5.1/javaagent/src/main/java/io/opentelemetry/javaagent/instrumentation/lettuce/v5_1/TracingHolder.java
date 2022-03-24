@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTracing;
+import io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry;
 
 public final class TracingHolder {
 
   public static final Tracing TRACING =
-      LettuceTracing.create(GlobalOpenTelemetry.get()).newTracing();
+      LettuceTelemetry.create(GlobalOpenTelemetry.get()).newTracing();
 
   private TracingHolder() {}
 }

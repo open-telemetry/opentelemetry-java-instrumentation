@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.javaconcurrent;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -19,14 +20,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FutureInstrumentation implements TypeInstrumentation {
-  private static final Logger logger = LoggerFactory.getLogger(FutureInstrumentation.class);
+  private static final Logger logger = Logger.getLogger(FutureInstrumentation.class.getName());
 
   /**
    * Only apply executor instrumentation to allowed executors. In the future, this restriction may
@@ -79,8 +79,8 @@ public class FutureInstrumentation implements TypeInstrumentation {
       @Override
       public boolean matches(TypeDescription target) {
         boolean allowed = ALLOWED_FUTURES.contains(target.getName());
-        if (!allowed && logger.isDebugEnabled() && hasFutureInterfaceMatcher.matches(target)) {
-          logger.debug("Skipping future instrumentation for {}", target.getName());
+        if (!allowed && hasFutureInterfaceMatcher.matches(target)) {
+          logger.log(FINE, "Skipping future instrumentation for {0}", target.getName());
         }
         return allowed;
       }

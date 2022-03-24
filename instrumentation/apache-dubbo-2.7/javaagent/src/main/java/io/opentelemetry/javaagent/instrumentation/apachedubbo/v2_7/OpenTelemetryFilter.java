@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTracing;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTelemetry;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
@@ -19,7 +19,7 @@ public class OpenTelemetryFilter implements Filter {
   private final Filter delegate;
 
   public OpenTelemetryFilter() {
-    delegate = DubboTracing.create(GlobalOpenTelemetry.get()).newFilter();
+    delegate = DubboTelemetry.create(GlobalOpenTelemetry.get()).newFilter();
   }
 
   @Override
