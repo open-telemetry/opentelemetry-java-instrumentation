@@ -184,8 +184,7 @@ class ListenableFutureTest {
     assertThat(Futures.getUnchecked(future)).isEqualTo(value);
 
     // TODO: There appears to be a context propagation bug. There is no logical reason for other to
-    // be the parent of
-    // callback in this test but not in callWithParent.
+    // be the parent of callback in this test but not in callWithParent.
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
