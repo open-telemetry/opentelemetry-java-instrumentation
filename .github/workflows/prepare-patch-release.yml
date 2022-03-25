@@ -42,8 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           msg="Prepare patch release ${{ steps.set-versions.outputs.release-version }}"
-          git add -u
-          git commit -m "$msg"
+          git commit -a -m "$msg"
           git push origin HEAD:opentelemetry-java-bot/prepare-patch-release-${{ steps.set-versions.outputs.release-version }}
           gh pr create --title "$msg" \
                        --body "$msg" \
