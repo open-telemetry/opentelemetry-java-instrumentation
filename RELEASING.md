@@ -18,7 +18,7 @@ Before making the release:
   * Use the script at `buildscripts/draft-change-log-entries.sh` to help create an initial draft.
     We typically only include end-user facing changes in the change log.
   * Specify the (estimated) release date (UTC)
-* Run the [Prepare Release Branch workflow](actions/workflows/prepare-release-branch.yml).
+* Run the [Prepare release branch workflow](actions/workflows/prepare-release-branch.yml).
 * Review and merge the two PRs that it creates (one is targeted to the release branch and one is targeted to the `main` branch)
 
 Open the [Release workflow](actions/workflows/release.yml).
