@@ -40,7 +40,12 @@ In general, patch releases are only made for bug-fixes for the following types o
 
 Before making the release:
 
-* Merge PR(s) containing the desired patches to the release branch
+* Backport PR(s) to the release branch
+  * Run the [Backport workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-patch-release.yml).
+  * Press the "Run workflow" button, then select the release branch from the dropdown list,
+    e.g. `v1.9.x`, then enter the PR number that you wan to backport,
+    then click the "Run workflow" button below that.
+  * Review and merge the backport PR that it generates
 * Merge a PR to the release branch updating the `CHANGELOG.md`
 * Run the [Prepare Patch Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-patch-release.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
