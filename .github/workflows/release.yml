@@ -156,7 +156,7 @@ jobs:
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
-        # this step should be last since it will fail if there are conflicting change log updates
+        # this step should be last since it will fail if conflicting change log updates on main
       - name: Create pull request to merge any change log updates to main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
