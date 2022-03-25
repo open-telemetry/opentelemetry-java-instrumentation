@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.generation;
 
+import static java.util.logging.Level.INFO;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
@@ -22,6 +24,7 @@ import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -36,8 +39,6 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class generates the actual implementation of the {@code
@@ -48,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * <p>This class is run at compile time by the {@link MuzzleCodeGenerationPlugin} ByteBuddy plugin.
  */
 final class MuzzleCodeGenerator implements AsmVisitorWrapper {
-  private static final Logger logger = LoggerFactory.getLogger(MuzzleCodeGenerator.class);
+  private static final Logger logger = Logger.getLogger(MuzzleCodeGenerator.class.getName());
 
   private static final String MUZZLE_REFERENCES_METHOD_NAME = "getMuzzleReferences";
   private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
@@ -138,26 +139,26 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
         int access, String name, String descriptor, String signature, String[] exceptions) {
       if (MUZZLE_REFERENCES_METHOD_NAME.equals(name)) {
         generateReferencesMethod = false;
-        logger.info(
-            "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
-            MUZZLE_REFERENCES_METHOD_NAME,
-            instrumentationClassName);
+        logMethodAlreadyExistsMessage(MUZZLE_REFERENCES_METHOD_NAME);
       }
       if (MUZZLE_HELPER_CLASSES_METHOD_NAME.equals(name)) {
         generateHelperClassNamesMethod = false;
-        logger.info(
-            "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
-            MUZZLE_HELPER_CLASSES_METHOD_NAME,
-            instrumentationClassName);
+        logMethodAlreadyExistsMessage(MUZZLE_HELPER_CLASSES_METHOD_NAME);
       }
       if (MUZZLE_VIRTUAL_FIELDS_METHOD_NAME.equals(name)) {
         generateVirtualFieldsMethod = false;
-        logger.info(
-            "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
-            MUZZLE_VIRTUAL_FIELDS_METHOD_NAME,
-            instrumentationClassName);
+        logMethodAlreadyExistsMessage(MUZZLE_VIRTUAL_FIELDS_METHOD_NAME);
       }
       return super.visitMethod(access, name, descriptor, signature, exceptions);
+    }
+
+    private void logMethodAlreadyExistsMessage(String muzzleVirtualFieldsMethodName) {
+      if (logger.isLoggable(INFO)) {
+        logger.log(
+            INFO,
+            "The '{0}' method was already found in class '{1}'. Muzzle will not generate it again",
+            new Object[] {muzzleVirtualFieldsMethodName, instrumentationClassName});
+      }
     }
 
     @Override

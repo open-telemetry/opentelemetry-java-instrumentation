@@ -110,7 +110,6 @@ dependencies {
   add("muzzleBootstrap", "io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
-  add("muzzleTooling", "org.slf4j:slf4j-simple:1.7.36")
 }
 
 //Produces a copy of upstream javaagent with this extension jar included inside it

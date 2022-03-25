@@ -50,7 +50,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
 
   api("net.bytebuddy:byte-buddy-dep")
-  implementation("org.slf4j:slf4j-api")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
@@ -62,6 +61,21 @@ dependencies {
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
+}
+
+testing {
+  suites {
+    val testExceptionHandler by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":javaagent-tooling"))
+        implementation("net.bytebuddy:byte-buddy-dep")
+
+        // Used by byte-buddy but not brought in as a transitive dependency.
+        compileOnly("com.google.code.findbugs:annotations")
+      }
+    }
+  }
 }
 
 // Here we only include autoconfigure but don"t include OTLP exporters to ensure they are only in
@@ -77,6 +91,10 @@ tasks {
     options.errorprone {
       isEnabled.set(false)
     }
+  }
+
+  check {
+    dependsOn(testing.suites)
   }
 }
 

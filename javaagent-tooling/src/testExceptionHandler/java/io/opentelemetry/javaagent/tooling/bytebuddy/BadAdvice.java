@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.test;
+package io.opentelemetry.javaagent.tooling.bytebuddy;
 
 import net.bytebuddy.asm.Advice;
 

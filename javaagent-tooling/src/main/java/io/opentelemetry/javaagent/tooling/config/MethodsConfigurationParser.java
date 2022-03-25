@@ -5,17 +5,18 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static java.util.logging.Level.WARNING;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 public final class MethodsConfigurationParser {
 
-  private static final Logger logger = LoggerFactory.getLogger(MethodsConfigurationParser.class);
+  private static final Logger logger = Logger.getLogger(MethodsConfigurationParser.class.getName());
 
   static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
   private static final String METHOD_LIST_REGEX = "\\s*(?:\\w+\\s*,)*\\s*(?:\\w+\\s*,?)\\s*";
@@ -41,8 +42,9 @@ public final class MethodsConfigurationParser {
     if (configString == null || configString.trim().isEmpty()) {
       return Collections.emptyMap();
     } else if (!validateConfigString(configString)) {
-      logger.warn(
-          "Invalid trace method config '{}'. Must match 'package.Class$Name[method1,method2];*'.",
+      logger.log(
+          WARNING,
+          "Invalid trace method config '{0}'. Must match 'package.Class$Name[method1,method2];*'.",
           configString);
       return Collections.emptyMap();
     } else {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.test;
+package io.opentelemetry.javaagent.tooling.bytebuddy;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,14 +12,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
-import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -31,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 class ExceptionHandlerTest {
 
-  private static final ListAppender<ILoggingEvent> testAppender = new ListAppender<>();
+  private static final TestHandler testHandler = new TestHandler();
   private static ResettableClassFileTransformer transformer;
 
   @BeforeAll
@@ -61,31 +58,32 @@ class ExceptionHandlerTest {
     ByteBuddyAgent.install();
     transformer = builder.installOn(ByteBuddyAgent.getInstrumentation());
 
-    Logger logger = (Logger) LoggerFactory.getLogger(ExceptionLogger.class);
-    testAppender.setContext(logger.getLoggerContext());
-    logger.addAppender(testAppender);
-    testAppender.start();
+    Logger logger = Logger.getLogger(ExceptionLogger.class.getName());
+    logger.setLevel(Level.FINE);
+    logger.addHandler(testHandler);
   }
 
   @AfterAll
   static void tearDown() {
-    testAppender.stop();
+    testHandler.close();
+    Logger.getLogger(ExceptionLogger.class.getName()).removeHandler(testHandler);
+
     transformer.reset(
         ByteBuddyAgent.getInstrumentation(), AgentBuilder.RedefinitionStrategy.RETRANSFORMATION);
   }
 
   @Test
   void exceptionHandlerInvoked() {
-    int initLogEvents = testAppender.list.size();
+    int initLogEvents = testHandler.getRecords().size();
 
     // Triggers classload and instrumentation
     assertThat(SomeClass.isInstrumented()).isTrue();
-    assertThat(testAppender.list)
+    assertThat(testHandler.getRecords())
         .hasSize(initLogEvents + 1)
         .last()
         .satisfies(
             event -> {
-              assertThat(event.getLevel()).isEqualTo(Level.DEBUG);
+              assertThat(event.getLevel()).isEqualTo(Level.FINE);
               assertThat(event.getMessage())
                   .startsWith("Failed to handle exception in instrumentation for");
             });
@@ -93,7 +91,7 @@ class ExceptionHandlerTest {
 
   @Test
   void exceptionOnNondelegatingClassloader() throws Exception {
-    int initLogEvents = testAppender.list.size();
+    int initLogEvents = testHandler.getRecords().size();
     URL[] classpath =
         new URL[] {SomeClass.class.getProtectionDomain().getCodeSource().getLocation()};
     URLClassLoader loader = new URLClassLoader(classpath, null);
@@ -104,7 +102,7 @@ class ExceptionHandlerTest {
     Class<?> someClazz = loader.loadClass(SomeClass.class.getName());
     assertThat(someClazz.getClassLoader()).isSameAs(loader);
     someClazz.getMethod("isInstrumented").invoke(null);
-    assertThat(testAppender.list).hasSize(initLogEvents);
+    assertThat(testHandler.getRecords()).hasSize(initLogEvents);
   }
 
   @Test

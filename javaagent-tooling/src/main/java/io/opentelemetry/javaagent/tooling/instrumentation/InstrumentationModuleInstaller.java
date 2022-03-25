@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,18 +29,17 @@ import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class InstrumentationModuleInstaller {
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
-  private static final Logger muzzleLogger = LoggerFactory.getLogger("muzzleMatcher");
+  private static final Logger muzzleLogger = Logger.getLogger("muzzleMatcher");
 
   // Added here instead of AgentInstaller's ignores because it's relatively
   // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
@@ -56,7 +57,8 @@ public final class InstrumentationModuleInstaller {
   AgentBuilder install(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     if (!instrumentationModule.isEnabled()) {
-      logger.debug("Instrumentation {} is disabled", instrumentationModule.instrumentationName());
+      logger.log(
+          FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
     }
     List<String> helperClassNames =
@@ -66,8 +68,9 @@ public final class InstrumentationModuleInstaller {
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
       if (!helperClassNames.isEmpty() || !helperResourceBuilder.getResources().isEmpty()) {
-        logger.warn(
-            "Helper classes and resources won't be injected if no types are instrumented: {}",
+        logger.log(
+            WARNING,
+            "Helper classes and resources won't be injected if no types are instrumented: {0}",
             instrumentationModule.instrumentationName());
       }
 
@@ -151,24 +154,30 @@ public final class InstrumentationModuleInstaller {
 
       if (!isMatch) {
         MuzzleFailureCounter.inc();
-        if (muzzleLogger.isWarnEnabled()) {
-          muzzleLogger.warn(
-              "Instrumentation skipped, mismatched references were found: {} [class {}] on {}",
-              instrumentationModule.instrumentationName(),
-              instrumentationModule.getClass().getName(),
-              classLoader);
+        if (muzzleLogger.isLoggable(WARNING)) {
+          muzzleLogger.log(
+              WARNING,
+              "Instrumentation skipped, mismatched references were found: {0} [class {1}] on {2}",
+              new Object[] {
+                instrumentationModule.instrumentationName(),
+                instrumentationModule.getClass().getName(),
+                classLoader
+              });
           List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
           for (Mismatch mismatch : mismatches) {
-            muzzleLogger.warn("-- {}", mismatch);
+            muzzleLogger.log(WARNING, "-- {0}", mismatch);
           }
         }
       } else {
-        if (logger.isDebugEnabled()) {
-          logger.debug(
-              "Applying instrumentation: {} [class {}] on {}",
-              instrumentationModule.instrumentationName(),
-              instrumentationModule.getClass().getName(),
-              classLoader);
+        if (logger.isLoggable(FINE)) {
+          logger.log(
+              FINE,
+              "Applying instrumentation: {0} [class {1}] on {2}",
+              new Object[] {
+                instrumentationModule.instrumentationName(),
+                instrumentationModule.getClass().getName(),
+                classLoader
+              });
         }
       }
 
