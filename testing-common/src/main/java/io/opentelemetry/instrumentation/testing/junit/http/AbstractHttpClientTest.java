@@ -680,17 +680,22 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               throw new AssertionError(e);
             }
             try {
-              testing.runWithSpan(
-                  "Parent span " + index,
-                  () -> {
-                    Span.current().setAttribute("test.request.id", index);
-                    doRequest(
-                        method,
-                        uri,
-                        Collections.singletonMap("test-request-id", String.valueOf(index)));
-                  });
-            } catch (Exception e) {
-              throw new AssertionError(e);
+              Integer result =
+                  testing.runWithSpan(
+                      "Parent span " + index,
+                      () -> {
+                        Span.current().setAttribute("test.request.id", index);
+                        return doRequest(
+                            method,
+                            uri,
+                            Collections.singletonMap("test-request-id", String.valueOf(index)));
+                      });
+              assertThat(result).isEqualTo(200);
+            } catch (Throwable throwable) {
+              if (throwable instanceof AssertionError) {
+                throw (AssertionError) throwable;
+              }
+              throw new AssertionError(throwable);
             }
           };
       pool.submit(job);
@@ -832,19 +837,23 @@ public abstract class AbstractHttpClientTest<REQUEST> {
             } catch (InterruptedException e) {
               throw new AssertionError(e);
             }
-            testing.runWithSpan(
-                "Parent span " + index,
-                () -> {
-                  Span.current().setAttribute("test.request.id", index);
-                  try {
-                    singleConnection.doRequest(
-                        path, Collections.singletonMap("test-request-id", String.valueOf(index)));
-                  } catch (InterruptedException e) {
-                    throw new AssertionError(e);
-                  } catch (Exception e) {
-                    throw new AssertionError(e);
-                  }
-                });
+            try {
+              Integer result =
+                  testing.runWithSpan(
+                      "Parent span " + index,
+                      () -> {
+                        Span.current().setAttribute("test.request.id", index);
+                        return singleConnection.doRequest(
+                            path,
+                            Collections.singletonMap("test-request-id", String.valueOf(index)));
+                      });
+              assertThat(result).isEqualTo(200);
+            } catch (Throwable throwable) {
+              if (throwable instanceof AssertionError) {
+                throw (AssertionError) throwable;
+              }
+              throw new AssertionError(throwable);
+            }
           };
       pool.submit(job);
     }
