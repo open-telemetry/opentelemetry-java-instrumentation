@@ -29,6 +29,9 @@ e.g. `v1.9.x`, and click the "Run workflow" button below that.
 This workflow will publish the artifacts to maven central and will publish a github release with the
 javaagent jar attached and release notes based on the change log.
 
+Lastly, the workflow will try to create a PR to merge back any change log updates back to the main
+branch (typically this only affects patch releases).
+
 ## Patch Release
 
 All patch releases should include only bug-fixes, and must avoid adding/modifying the public APIs.
@@ -60,6 +63,5 @@ e.g. `v1.9.x`, and click the "Run workflow" button below that.
 This workflow will publish the artifacts to maven central and will publish a github release with the
 javaagent jar attached and release notes based on the change log.
 
-After making the release:
-
-* Merge a PR to `main` with the change log updates from the patch release
+Lastly, the workflow will try to create a PR to merge back any change log updates back to the main
+branch.

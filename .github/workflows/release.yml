@@ -30,6 +30,7 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
           # tags are needed for the generate-release-contributors.sh script
+          # and need full tree in order to merge change log updates back to main
           fetch-depth: 0
 
       - name: Set up JDK for running Gradle
@@ -149,3 +150,27 @@ jobs:
                             --discussion-category announcements \
                             v${{ steps.set-versions.outputs.release-version }} \
                             opentelemetry-javaagent.jar
+
+      - name: Setup git name
+        run: |
+          git config user.name opentelemetry-java-bot
+          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
+
+        # this step is last since it will fail if there are conflicting change log updates on main
+      - name: Create pull request to merge any change log updates to main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          msg="Merge change log updates from $GITHUB_REF_NAME to main"
+          git checkout main
+          git format-patch --stdout main..$GITHUB_REF_NAME CHANGELOG.md > patch
+          if [ -s patch ]
+          then
+            git apply patch
+            git commit -a -m "$msg"
+            git push origin HEAD:opentelemetry-java-bot/merge-change-log-updates
+            gh pr create --title "$msg" \
+                         --body "$msg" \
+                         --head opentelemetry-java-bot/merge-change-log-updates \
+                         --base main
+          fi
