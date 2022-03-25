@@ -161,12 +161,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          msg="Merge change log updates from $GITHUB_REF_NAME to main"
           git checkout main
           git format-patch --stdout main..$GITHUB_REF_NAME CHANGELOG.md > patch
           if [ -s patch ]
           then
             git apply patch
+            msg="Merge change log updates from $GITHUB_REF_NAME to main"
             git commit -a -m "$msg"
             git push origin HEAD:opentelemetry-java-bot/merge-change-log-updates
             gh pr create --title "$msg" \
