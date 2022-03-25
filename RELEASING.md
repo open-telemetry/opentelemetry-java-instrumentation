@@ -44,13 +44,13 @@ In general, patch releases are only made for bug-fixes for the following types o
 Before making the release:
 
 * Backport pull request(s) to the release branch
-  * Run the [Backport workflow](actions/workflows/backport-pull-request.yml).
+  * Run the [Backport pull request workflow](actions/workflows/backport-pull-request.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `v1.9.x`, then enter the PR number that you wan to backport,
     then click the "Run workflow" button below that.
   * Review and merge the backport PR that it generates
 * Merge a PR to the release branch updating the `CHANGELOG.md`
-* Run the [Prepare Patch Release workflow](actions/workflows/prepare-patch-release.yml).
+* Run the [Prepare patch release workflow](actions/workflows/prepare-patch-release.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `v1.9.x`, and click the "Run workflow" button below that.
 * Review and merge the PR that it creates
