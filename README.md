@@ -104,7 +104,7 @@ We support an impressively huge number of [libraries and frameworks](docs/suppor
 a majority of the most popular [application servers](docs/supported-libraries.md#application-servers)...right out of the box!
 [Click here to see the full list](docs/supported-libraries.md) and to learn more about
 [disabled instrumentation](docs/supported-libraries.md#disabled-instrumentations)
-and how to [suppress unwanted instrumentation](docs/suppressing-instrumentation.md).
+and how to [suppress unwanted instrumentation][suppress].
 
 ## Creating agent extensions
 
@@ -165,3 +165,4 @@ Thanks to all the people who already contributed!
 
 [config]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/
 [manual]: https://opentelemetry.io/docs/instrumentation/java/manual/
+[suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation
