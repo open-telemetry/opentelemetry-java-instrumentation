@@ -49,12 +49,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           msg="Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}"
-          git add -u
-          git commit -m "$msg"
+          git commit -a -m "$msg"
           git push origin HEAD:opentelemetry-java-bot/prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }}
           gh pr create --title "$msg" \
                        --body "$msg" \
-                       --head prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }} \
+                       --head opentelemetry-java-bot/prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }} \
                        --base ${{ needs.prepare-release-branch.outputs.release-branch-name }}
 
   create-pull-request-against-main:
@@ -86,7 +85,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           msg="Bump snapshot version"
-          git add -u
-          git commit -m "$msg"
+          git commit -a -m "$msg"
           git push origin HEAD:opentelemetry-java-bot/bump-snapshot-version
-          gh pr create --title "$msg" --body "$msg" --head bump-snapshot-version --base main
+          gh pr create --title "$msg" \
+                       --body "$msg" \
+                       --head opentelemetry-java-bot/bump-snapshot-version \
+                       --base main
