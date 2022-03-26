@@ -70,8 +70,7 @@ jobs:
           arguments: dockerPush -PextraTag=${{ env.TAG }}
           build-root-directory: smoke-tests/images/fake-backend
 
-  issue:
-    name: Open issue on failure
+  open-issue-on-failure:
     needs: [ publishLinux, publishWindows ]
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

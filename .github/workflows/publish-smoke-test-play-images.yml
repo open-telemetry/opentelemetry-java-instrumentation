@@ -50,8 +50,7 @@ jobs:
         run: ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
         working-directory: smoke-tests/images/play
 
-  issue:
-    name: Open issue on failure
+  open-issue-on-failure:
     needs: [ publish, publish-java-15 ]
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

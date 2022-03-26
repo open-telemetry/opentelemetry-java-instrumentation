@@ -1,9 +1,9 @@
-name: Nightly CodeQL analysis
+name: CodeQL (daily)
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: '30 1 * * *'
+  workflow_dispatch:
 
 jobs:
   analyze:
@@ -34,8 +34,7 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1
 
-  issue:
-    name: Open issue on failure
+  open-issue-on-failure:
     needs: analyze
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

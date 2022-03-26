@@ -16,8 +16,7 @@ jobs:
       build-root-directory: smoke-tests/images/spring-boot
       publish: true
 
-  issue:
-    name: Open issue on failure
+  open-issue-on-failure:
     needs: publish
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

@@ -1,14 +1,15 @@
-name: PR
+name: Build pull request
 
-on: pull_request
+on:
+  pull_request:
 
 concurrency:
   group: ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  build:
-    uses: ./.github/workflows/reusable-build.yml
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
     with:
       cache-read-only: true
 
@@ -52,27 +53,32 @@ jobs:
     with:
       cache-read-only: true
 
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+    with:
+      no-build-cache: true
+
   examples:
     uses: ./.github/workflows/reusable-examples.yml
     with:
       cache-read-only: true
 
-  # markdown-link-check is not included in the PR build because links to external urls can break at
-  # any time, which can be confusing for contributors
+  # this is not a required check to avoid blocking pull requests if external links break
+  markdown-link-check:
+    uses: ./.github/workflows/reusable-markdown-link-check.yml
 
-  markdown-misspell-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  # this is not a required check to avoid blocking pull requests if new misspellings are added
+  # to the misspell dictionary
+  misspell-check:
+    uses: ./.github/workflows/reusable-misspell-check.yml
 
-      - name: Check markdown for common misspellings
-        run: |
-          curl -L -o ./install-misspell.sh https://git.io/misspell
-          sh ./install-misspell.sh
-          ./bin/misspell -error ./**/*
-
-  accept-pr:
-    needs: [ build, test, smoke-test, muzzle, examples, markdown-misspell-check ]
+  required-status-check:
+    needs:
+      - assemble
+      - test
+      - smoke-test
+      - muzzle
+      - examples
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -81,6 +87,25 @@ jobs:
           needs.test.result != 'success' ||
           needs.smoke-test.result != 'success' ||
           needs.muzzle.result != 'success' ||
-          needs.examples.result != 'success' ||
-          needs.markdown-misspell-check.result != 'success'
+          needs.examples.result != 'success'
+        run: exit 1
+
+  # TODO (trask) this is just to avoid disruption for existing PRs
+  # remove this and change required check to above once existing PRs are merged
+  accept-pr:
+    needs:
+      - assemble
+      - test
+      - smoke-test
+      - muzzle
+      - examples
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - if: |
+          needs.build.result != 'success' ||
+          needs.test.result != 'success' ||
+          needs.smoke-test.result != 'success' ||
+          needs.muzzle.result != 'success' ||
+          needs.examples.result != 'success'
         run: exit 1

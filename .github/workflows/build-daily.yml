@@ -1,4 +1,4 @@
-name: Nightly
+name: Build (daily)
 
 on:
   schedule:
@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    uses: ./.github/workflows/reusable-build.yml
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
@@ -38,37 +38,19 @@ jobs:
   muzzle:
     uses: ./.github/workflows/reusable-muzzle.yml
 
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+
   examples:
     uses: ./.github/workflows/reusable-examples.yml
 
   markdown-link-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+    uses: ./.github/workflows/reusable-markdown-link-check.yml
 
-      - name: Check markdown links
-        run: |
-          npm install -g markdown-link-check
-          find . -type f \
-                 -name '*.md' \
-                 -not -path './.github/*' \
-                 -not -path './node_modules/*' \
-                 -print0 \
-            | xargs -0 -n1 markdown-link-check --config .github/scripts/markdown_link_check_config.json
+  misspell-check:
+    uses: ./.github/workflows/reusable-misspell-check.yml
 
-  markdown-misspell-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Check markdown for common misspellings
-        run: |
-          curl -L -o ./install-misspell.sh https://git.io/misspell
-          sh ./install-misspell.sh
-          ./bin/misspell -error ./**/*
-
-  issue:
-    name: Open issue on failure
+  open-issue-on-failure:
     needs: [ build, test, testLatestDeps, smoke-test, examples, markdown-link-check, markdown-misspell-check ]
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

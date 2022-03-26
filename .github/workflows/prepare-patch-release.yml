@@ -1,4 +1,4 @@
-name: Prepare Patch Release
+name: Prepare patch release
 on:
   workflow_dispatch:
 
@@ -7,44 +7,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
 
       - name: Set versions
         id: set-versions
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
-          if [[ $v =~ ([0-9]+.[0-9]+).([0-9]+) ]]; then
+          prior_version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          if [[ $prior_version =~ ([0-9]+.[0-9]+).([0-9]+) ]]; then
             major_minor="${BASH_REMATCH[1]}"
             patch="${BASH_REMATCH[2]}"
           else
-            echo "unexpected version: $v"
+            echo "unexpected version: $prior_version"
             exit 1
           fi
           echo "::set-output name=release-version::$major_minor.$((patch + 1))"
-          echo "::set-output name=prior-version::$v"
+          echo "::set-output name=prior-version::$prior_version"
 
       - name: Bump version
+        env:
+          VERSION: ${{ needs.set-versions.outputs.release-version }}
+          PRIOR_VERSION: ${{ needs.set-versions.outputs.prior-release-version }}
         run: |
-          .github/scripts/update-versions.sh "${{ steps.set-versions.outputs.prior-version }}" "${{ steps.set-versions.outputs.prior-version }}-alpha" "${{ steps.set-versions.outputs.release-version }}" "${{ steps.set-versions.outputs.release-version }}-alpha"
+          .github/scripts/update-versions.sh "$PRIOR_VERSION" "$PRIOR_VERSION-alpha" "$VERSION" "$VERSION-alpha"
 
       - name: Bump download link version
+        env:
+          VERSION: ${{ needs.set-versions.outputs.release-version }}
+          PRIOR_VERSION: ${{ needs.set-versions.outputs.prior-release-version }}
         run: |
-          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${{ steps.set-versions.outputs.prior-version }}/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${{ steps.set-versions.outputs.release-version }}/," README.md
+          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$PRIOR_VERSION/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
 
-      - name: Setup git name
+      - name: Set up git name
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
       - name: Create pull request
         env:
+          VERSION: ${{ needs.set-versions.outputs.release-version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          msg="Prepare patch release ${{ steps.set-versions.outputs.release-version }}"
+          msg="Prepare patch release $VERSION"
           git commit -a -m "$msg"
-          git push origin HEAD:opentelemetry-java-bot/prepare-patch-release-${{ steps.set-versions.outputs.release-version }}
+          git push origin HEAD:prepare-patch-release-$VERSION
           gh pr create --title "$msg" \
                        --body "$msg" \
-                       --head opentelemetry-java-bot/prepare-patch-release-${{ steps.set-versions.outputs.release-version }} \
-                       --base ${{ github.ref_name }}
+                       --head prepare-patch-release-$VERSION \
+                       --base $GITHUB_REF_NAME

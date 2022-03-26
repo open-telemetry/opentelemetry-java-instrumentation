@@ -5,7 +5,6 @@ on:
 
 jobs:
   create-issue:
-    name: Create issue
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
