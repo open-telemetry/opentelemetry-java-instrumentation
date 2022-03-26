@@ -25,6 +25,7 @@ import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
 import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http2.HttpVersionPolicy;
 import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.util.Timeout;
 import org.junit.jupiter.api.AfterAll;
@@ -47,9 +48,15 @@ class ApacheHttpAsyncClientTest {
       RequestConfig.copy(requestConfig).setResponseTimeout(Timeout.ofMilliseconds(2)).build();
 
   private final CloseableHttpAsyncClient client =
-      HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build();
+      HttpAsyncClients.custom()
+          .setDefaultRequestConfig(requestConfig)
+          .setVersionPolicy(HttpVersionPolicy.FORCE_HTTP_1)
+          .build();
   private final CloseableHttpAsyncClient clientWithReadTimeout =
-      HttpAsyncClients.custom().setDefaultRequestConfig(requestWithReadTimeoutConfig).build();
+      HttpAsyncClients.custom()
+          .setDefaultRequestConfig(requestWithReadTimeoutConfig)
+          .setVersionPolicy(HttpVersionPolicy.FORCE_HTTP_1)
+          .build();
 
   @BeforeAll
   void setUp() {
@@ -206,7 +213,6 @@ class ApacheHttpAsyncClientTest {
           attributes.add(SemanticAttributes.NET_PEER_PORT);
           attributes.add(SemanticAttributes.HTTP_URL);
           attributes.add(SemanticAttributes.HTTP_METHOD);
-          //          attributes.add(SemanticAttributes.HTTP_FLAVOR);
           attributes.add(SemanticAttributes.HTTP_USER_AGENT);
           attributes.add(SemanticAttributes.HTTP_SCHEME);
           attributes.add(SemanticAttributes.HTTP_TARGET);
