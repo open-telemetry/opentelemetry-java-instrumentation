@@ -9,12 +9,13 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient
 import org.apache.hc.client5.http.impl.async.HttpAsyncClients
 import org.apache.hc.core5.concurrent.FutureCallback
 import org.apache.hc.core5.http.HttpHost
-import org.apache.hc.core5.http.HttpResponse
 import org.apache.hc.core5.http.message.BasicHeader
 import org.apache.hc.core5.util.Timeout
 import spock.lang.AutoCleanup
@@ -22,7 +23,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.CancellationException
 
-abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implements AgentTestTrait {
+abstract class ApacheHttpAsyncClientTest extends HttpClientTest<SimpleHttpRequest> implements AgentTestTrait {
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()
@@ -70,7 +71,7 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
   }
 
   @Override
-  HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+  SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = createRequest(method, uri)
     request.addHeader("user-agent", userAgent())
     headers.entrySet().each {
@@ -89,18 +90,18 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
   }
 
   // compilation fails with @Override annotation on this method (groovy quirk?)
-  int sendRequest(HttpUriRequest request, String method, URI uri, Map<String, String> headers) {
+  int sendRequest(SimpleHttpRequest request, String method, URI uri, Map<String, String> headers) {
     def response = executeRequest(request, uri)
     response.entity?.content?.close() // Make sure the connection is closed.
     return response.statusLine.statusCode
   }
 
   // compilation fails with @Override annotation on this method (groovy quirk?)
-  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+  void sendRequestWithCallback(SimpleHttpRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
     try {
-      executeRequestWithCallback(request, uri, new FutureCallback<HttpResponse>() {
+      executeRequestWithCallback(request, uri, new FutureCallback<SimpleHttpResponse>() {
         @Override
-        void completed(HttpResponse httpResponse) {
+        void completed(SimpleHttpResponse httpResponse) {
           httpResponse.entity?.content?.close() // Make sure the connection is closed.
           requestResult.complete(httpResponse.statusLine.statusCode)
         }
@@ -120,11 +121,11 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
     }
   }
 
-  abstract HttpUriRequest createRequest(String method, URI uri)
+  abstract SimpleHttpRequest createRequest(String method, URI uri)
 
-  abstract HttpResponse executeRequest(HttpUriRequest request, URI uri)
+  abstract SimpleHttpResponse executeRequest(SimpleHttpRequest request, URI uri)
 
-  abstract void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback)
+  abstract void executeRequestWithCallback(SimpleHttpRequest request, URI uri, FutureCallback<SimpleHttpResponse> callback)
 
   static String fullPathFromURI(URI uri) {
     StringBuilder builder = new StringBuilder()
@@ -147,35 +148,35 @@ abstract class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> 
 
 class ApacheClientUriRequest extends ApacheHttpAsyncClientTest {
   @Override
-  HttpUriRequest createRequest(String method, URI uri) {
-    return new HttpUriRequest(method, uri)
+  SimpleHttpRequest createRequest(String method, URI uri) {
+    return new SimpleHttpRequest(method, uri)
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
+  SimpleHttpResponse executeRequest(SimpleHttpRequest request, URI uri) {
     return getClient(uri).execute(request, null).get()
   }
 
   @Override
-  void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
+  void executeRequestWithCallback(SimpleHttpRequest request, URI uri, FutureCallback<SimpleHttpResponse> callback) {
     getClient(uri).execute(request, callback)
   }
 }
 
 class ApacheClientHostRequest extends ApacheHttpAsyncClientTest {
   @Override
-  HttpUriRequest createRequest(String method, URI uri) {
+  SimpleHttpRequest createRequest(String method, URI uri) {
     // also testing with absolute path below
-    return new HttpUriRequest(method, new URI(fullPathFromURI(uri)))
+    return new SimpleHttpRequest(method, new URI(fullPathFromURI(uri)))
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
+  SimpleHttpResponse executeRequest(SimpleHttpRequest request, URI uri) {
     return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null).get()
   }
 
   @Override
-  void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
+  void executeRequestWithCallback(SimpleHttpRequest request, URI uri, FutureCallback<SimpleHttpResponse> callback) {
     getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, callback)
   }
 }
@@ -183,17 +184,17 @@ class ApacheClientHostRequest extends ApacheHttpAsyncClientTest {
 class ApacheClientHostAbsoluteUriRequest extends ApacheHttpAsyncClientTest {
 
   @Override
-  HttpUriRequest createRequest(String method, URI uri) {
-    return new HttpUriRequest(method, new URI(uri.toString()))
+  SimpleHttpRequest createRequest(String method, URI uri) {
+    return new SimpleHttpRequest(method, new URI(uri.toString()))
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
+  SimpleHttpResponse executeRequest(SimpleHttpRequest request, URI uri) {
     return getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, null).get()
   }
 
   @Override
-  void executeRequestWithCallback(HttpUriRequest request, URI uri, FutureCallback<HttpResponse> callback) {
+  void executeRequestWithCallback(SimpleHttpRequest request, URI uri, FutureCallback<SimpleHttpResponse> callback) {
     getClient(uri).execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, callback)
   }
 }

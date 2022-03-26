@@ -6,12 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
 
 enum HttpHeaderSetter implements TextMapSetter<ApacheHttpClientRequest> {
   INSTANCE;
 
   @Override
-  public void set(ApacheHttpClientRequest carrier, String key, String value) {
+  public void set(@Nullable ApacheHttpClientRequest carrier, String key, String value) {
+    if (carrier == null) {
+      return;
+    }
     carrier.setHeader(key, value);
   }
 }

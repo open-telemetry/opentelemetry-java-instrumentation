@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.ProtocolVersion;
 import org.slf4j.Logger;
@@ -26,15 +26,12 @@ public final class ApacheHttpClientRequest {
   @Nullable private final URI uri;
 
   private final HttpRequest delegate;
+  private final EntityDetails entityDetails;
 
-  public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
-    URI calculatedUri = getUri(httpRequest);
-    if (calculatedUri != null && httpHost != null) {
-      uri = getCalculatedUri(httpHost, calculatedUri);
-    } else {
-      uri = calculatedUri;
-    }
-    delegate = httpRequest;
+  public ApacheHttpClientRequest(HttpRequest httpRequest, EntityDetails entityDetails) {
+    uri = getUri(httpRequest);
+    this.entityDetails = entityDetails;
+    this.delegate = httpRequest;
   }
 
   public List<String> getHeader(String name) {
@@ -51,6 +48,10 @@ public final class ApacheHttpClientRequest {
       headersList.add(headers[i].getValue());
     }
     return headersList;
+  }
+
+  public long requestContentLength() {
+    return entityDetails.getContentLength();
   }
 
   public void setHeader(String name, String value) {
@@ -114,29 +115,6 @@ public final class ApacheHttpClientRequest {
     try {
       // this can be relative or absolute
       return httpRequest.getUri();
-    } catch (URISyntaxException e) {
-      logger.debug(e.getMessage(), e);
-      return null;
-    }
-  }
-
-  @Nullable
-  private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
-    try {
-      String path = uri.getPath();
-      if (!path.startsWith("/")) {
-        // elasticsearch RestClient sends relative urls
-        // TODO(trask) add test for this and extend to Apache 4, 4.3 and 5
-        path = "/" + path;
-      }
-      return new URI(
-          httpHost.getSchemeName(),
-          null,
-          httpHost.getHostName(),
-          httpHost.getPort(),
-          path,
-          uri.getQuery(),
-          uri.getFragment());
     } catch (URISyntaxException e) {
       logger.debug(e.getMessage(), e);
       return null;

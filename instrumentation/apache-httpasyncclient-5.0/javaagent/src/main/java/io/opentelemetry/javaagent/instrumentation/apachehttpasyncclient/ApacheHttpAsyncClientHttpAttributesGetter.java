@@ -31,10 +31,9 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public Long requestContentLength(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
+    return request.requestContentLength();
   }
 
   @Override

@@ -23,12 +23,13 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.core5.concurrent.FutureCallback;
+import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpException;
-import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.nio.AsyncRequestProducer;
-import org.apache.hc.core5.http.nio.ContentEncoder;
+import org.apache.hc.core5.http.nio.DataStreamChannel;
+import org.apache.hc.core5.http.nio.RequestChannel;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.slf4j.Logger;
@@ -94,38 +95,16 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     }
 
     @Override
-    public HttpHost getTarget() {
-      return delegate.getTarget();
-    }
-
-    @Override
-    public HttpRequest generateRequest() throws IOException, HttpException {
-      HttpHost target = delegate.getTarget();
-      HttpRequest request = delegate.generateRequest();
-
-      ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(target, request);
-
-      if (instrumenter().shouldStart(parentContext, otelRequest)) {
-        wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
-        wrappedFutureCallback.otelRequest = otelRequest;
-      }
-
-      return request;
-    }
-
-    @Override
-    public void produceContent(ContentEncoder encoder, IOControl ioctrl) throws IOException {
-      delegate.produceContent(encoder, ioctrl);
-    }
-
-    @Override
-    public void requestCompleted(HttpContext context) {
-      delegate.requestCompleted(context);
-    }
-
-    @Override
     public void failed(Exception ex) {
       delegate.failed(ex);
+    }
+
+    @Override
+    public void sendRequest(RequestChannel channel, HttpContext context)
+        throws HttpException, IOException {
+      DelegatingRequestChannel requestChannel =
+          new DelegatingRequestChannel(channel, parentContext, wrappedFutureCallback);
+      delegate.sendRequest(requestChannel, context);
     }
 
     @Override
@@ -134,13 +113,46 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     }
 
     @Override
-    public void resetRequest() throws IOException {
-      delegate.resetRequest();
+    public int available() {
+      return delegate.available();
     }
 
     @Override
-    public void close() throws IOException {
-      delegate.close();
+    public void produce(DataStreamChannel channel) throws IOException {
+      delegate.produce(channel);
+    }
+
+    @Override
+    public void releaseResources() {
+      delegate.releaseResources();
+    }
+  }
+
+  public static class DelegatingRequestChannel implements RequestChannel {
+    private final RequestChannel delegate;
+    private final Context parentContext;
+    private final WrappedFutureCallback<?> wrappedFutureCallback;
+
+    public DelegatingRequestChannel(
+        RequestChannel requestChannel,
+        Context parentContext,
+        WrappedFutureCallback<?> wrappedFutureCallback) {
+      this.delegate = requestChannel;
+      this.parentContext = parentContext;
+      this.wrappedFutureCallback = wrappedFutureCallback;
+    }
+
+    @Override
+    public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
+        throws HttpException, IOException {
+      ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(request, entityDetails);
+
+      if (instrumenter().shouldStart(parentContext, otelRequest)) {
+        wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
+        wrappedFutureCallback.otelRequest = otelRequest;
+      }
+
+      delegate.sendRequest(request, entityDetails, context);
     }
   }
 
