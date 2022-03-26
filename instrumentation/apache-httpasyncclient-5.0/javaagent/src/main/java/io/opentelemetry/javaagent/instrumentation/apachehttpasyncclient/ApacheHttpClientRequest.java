@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.ProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,8 +51,8 @@ public final class ApacheHttpClientRequest {
     return headersList;
   }
 
-  public long requestContentLength() {
-    return entityDetails.getContentLength();
+  public Long requestContentLength() {
+    return entityDetails != null ? entityDetails.getContentLength() : null;
   }
 
   public void setHeader(String name, String value) {
@@ -66,8 +67,11 @@ public final class ApacheHttpClientRequest {
     return uri != null ? uri.toString() : null;
   }
 
-  public String getFlavor() {
-    ProtocolVersion protocolVersion = delegate.getVersion();
+  public String getFlavor(HttpResponse response) {
+    if (response == null) {
+      return null;
+    }
+    ProtocolVersion protocolVersion = response.getVersion();
     String protocol = protocolVersion.getProtocol();
     if (!protocol.equals("HTTP")) {
       return null;

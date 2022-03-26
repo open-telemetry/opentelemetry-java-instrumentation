@@ -23,7 +23,9 @@ import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
 import org.apache.hc.core5.concurrent.FutureCallback;
+import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.util.Timeout;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -56,9 +58,9 @@ class ApacheHttpAsyncClientTest {
   }
 
   @AfterAll
-  void tearDown() throws Exception {
-    client.close();
-    clientWithReadTimeout.close();
+  void tearDown() {
+    client.close(CloseMode.GRACEFUL);
+    clientWithReadTimeout.close(CloseMode.GRACEFUL);
   }
 
   CloseableHttpAsyncClient getClient(URI uri) {
@@ -104,8 +106,9 @@ class ApacheHttpAsyncClientTest {
 
     @Override
     protected SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+      HttpHost httpHost = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
       return configureRequest(
-          new SimpleHttpRequest(method, URI.create(fullPathFromUri(uri))), headers);
+          new SimpleHttpRequest(method, httpHost, fullPathFromUri(uri)), headers);
     }
 
     @Override
@@ -198,8 +201,13 @@ class ApacheHttpAsyncClientTest {
     options.enableTestReadTimeout();
     options.setHttpAttributes(
         endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          Set<AttributeKey<?>> attributes = new HashSet<>();
+          attributes.add(SemanticAttributes.NET_PEER_NAME);
+          attributes.add(SemanticAttributes.NET_PEER_PORT);
+          attributes.add(SemanticAttributes.HTTP_URL);
+          attributes.add(SemanticAttributes.HTTP_METHOD);
+          //          attributes.add(SemanticAttributes.HTTP_FLAVOR);
+          attributes.add(SemanticAttributes.HTTP_USER_AGENT);
           attributes.add(SemanticAttributes.HTTP_SCHEME);
           attributes.add(SemanticAttributes.HTTP_TARGET);
           return attributes;

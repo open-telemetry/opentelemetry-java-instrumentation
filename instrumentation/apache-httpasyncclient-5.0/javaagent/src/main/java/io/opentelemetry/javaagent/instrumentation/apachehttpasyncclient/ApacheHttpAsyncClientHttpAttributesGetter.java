@@ -52,7 +52,7 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   @Override
   @Nullable
   public String flavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.getFlavor();
+    return request.getFlavor(response);
   }
 
   @Override
