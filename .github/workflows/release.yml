@@ -53,8 +53,6 @@ jobs:
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
-          GRGIT_USER: ${{ github.actor }}
-          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
 
@@ -106,6 +104,8 @@ jobs:
         run: |
           if [[ $version == *.0 ]]; then
             cat > release-notes.txt << EOF
+            This release targets the OpenTelemetry SDK $VERSION.
+
             Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
           
             EOF
@@ -133,7 +133,7 @@ jobs:
           
             EOF
           
-            .github/scripts/generate-release-contributors.sh v${{ steps.set-versions.outputs.prior-version }} v$VERSION >> release-notes.txt
+            .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION v$VERSION >> release-notes.txt
           fi
 
       - name: Create GitHub release
