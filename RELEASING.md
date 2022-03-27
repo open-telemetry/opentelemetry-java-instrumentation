@@ -5,6 +5,7 @@ OpenTelemetry Auto-Instrumentation for Java uses [SemVer standard](https://semve
 The version is specified in [version.gradle.kts](version.gradle.kts).
 
 ## Snapshot builds
+
 Every successful CI build of the main branch automatically executes `./gradlew publishToSonatype`
 as the last step, which publishes a snapshot build to
 [Sonatype OSS snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/).

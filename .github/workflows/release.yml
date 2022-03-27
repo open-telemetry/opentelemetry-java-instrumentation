@@ -1,4 +1,3 @@
-# Releases a new major / minor / patch version from a release branch
 name: Release
 on:
   workflow_dispatch:

@@ -83,7 +83,7 @@ jobs:
     if: always()
     steps:
       - if: |
-          needs.build.result != 'success' ||
+          needs.assemble.result != 'success' ||
           needs.test.result != 'success' ||
           needs.smoke-test.result != 'success' ||
           needs.muzzle.result != 'success' ||
@@ -103,7 +103,7 @@ jobs:
     if: always()
     steps:
       - if: |
-          needs.build.result != 'success' ||
+          needs.assemble.result != 'success' ||
           needs.test.result != 'success' ||
           needs.smoke-test.result != 'success' ||
           needs.muzzle.result != 'success' ||
