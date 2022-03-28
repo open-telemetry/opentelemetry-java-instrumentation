@@ -214,8 +214,6 @@ class ApacheHttpAsyncClientTest {
           attributes.add(SemanticAttributes.HTTP_URL);
           attributes.add(SemanticAttributes.HTTP_METHOD);
           attributes.add(SemanticAttributes.HTTP_USER_AGENT);
-          attributes.add(SemanticAttributes.HTTP_SCHEME);
-          attributes.add(SemanticAttributes.HTTP_TARGET);
           return attributes;
         });
   }
