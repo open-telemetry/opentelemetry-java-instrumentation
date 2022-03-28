@@ -115,7 +115,7 @@ public class OverheadTests {
       "jcmd",
       "1",
       "JFR.start",
-      "settings=profile",
+      "settings=/app/overhead.jfc",
       "dumponexit=true",
       "name=petclinic",
       "filename=" + outFile
