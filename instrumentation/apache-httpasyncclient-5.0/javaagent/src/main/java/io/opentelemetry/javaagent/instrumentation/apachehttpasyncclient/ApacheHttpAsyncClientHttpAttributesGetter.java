@@ -44,9 +44,8 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public Integer statusCode(ApacheHttpClientRequest request, HttpResponse response) {
-    return response != null ? response.getCode() : null;
+    return response.getCode();
   }
 
   @Override
