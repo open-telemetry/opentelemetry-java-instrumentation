@@ -372,6 +372,13 @@ WHITESPACE        = [ \t\r\n]+
           if (dialect == SqlDialect.COUCHBASE) {
             builder.append('?');
           } else {
+            if (!insideComment && !extractionDone) {
+              extractionDone = operation.handleIdentifier();
+              // table names extracted here will be surrounded with double quotes
+              if (operation.mainTable != null && operation.mainTable.startsWith("\"") && operation.mainTable.endsWith("\"")) {
+                operation.mainTable = operation.mainTable.substring(1, operation.mainTable.length() - 1);
+              }
+            }
             appendCurrentFragment();
           }
           if (isOverLimit()) return YYEOF;
