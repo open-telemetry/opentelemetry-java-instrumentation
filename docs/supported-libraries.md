@@ -28,8 +28,7 @@ These are the supported libraries and frameworks:
 | [Apache CXF JAX-RS Client](https://cxf.apache.org/)                                                                               | 3.0+                           |
 | [Apache CXF JAX-WS](https://cxf.apache.org/)                                                                                      | 3.0+                           |
 | [Apache Dubbo](https://github.com/apache/dubbo/)                                                                                  | 2.7+ (not including 3.x yet)   |
-| [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                        | 4.1+                           |
-| [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                        | 5.0+                           |
+| [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                        | 4.1+ and 5.0+                  |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                             | 2.0+                           |
 | [Apache Kafka Producer/Consumer API](https://kafka.apache.org/documentation/#producerapi)                                         | 0.11+                          |
 | [Apache Kafka Streams API](https://kafka.apache.org/documentation/streams/)                                                       | 0.11+                          |
