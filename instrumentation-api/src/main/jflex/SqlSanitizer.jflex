@@ -62,6 +62,16 @@ WHITESPACE          = [ \t\r\n]+
     return builder.length() > LIMIT;
   }
 
+  /** @return text matched by current token without enclosing double quotes or backticks */
+  private String readTableName() {
+    String tableName = yytext();
+    if (tableName != null && ((tableName.startsWith("\"") && tableName.endsWith("\""))
+        || (tableName.startsWith("`") && tableName.endsWith("`")))) {
+      tableName = tableName.substring(1, tableName.length() - 1);
+    }
+    return tableName;
+  }
+
   // you can reference a table in the FROM clause in one of the following ways:
   //   table
   //   table t
@@ -173,7 +183,7 @@ WHITESPACE          = [ \t\r\n]+
         return true;
       }
 
-      mainTable = yytext();
+      mainTable = readTableName();
       mainTableSetAlready = true;
       expectingTableName = false;
       // start counting identifiers after encountering main from clause
@@ -209,7 +219,7 @@ WHITESPACE          = [ \t\r\n]+
         return false;
       }
 
-      mainTable = yytext();
+      mainTable = readTableName();
       return true;
     }
   }
@@ -227,21 +237,21 @@ WHITESPACE          = [ \t\r\n]+
         return false;
       }
 
-      mainTable = yytext();
+      mainTable = readTableName();
       return true;
     }
   }
 
   private class Update extends Operation {
     boolean handleIdentifier() {
-      mainTable = yytext();
+      mainTable = readTableName();
       return true;
     }
   }
 
   private class Merge extends Operation {
     boolean handleIdentifier() {
-      mainTable = yytext();
+      mainTable = readTableName();
       return true;
     }
   }
@@ -374,13 +384,7 @@ WHITESPACE          = [ \t\r\n]+
             builder.append('?');
           } else {
             if (!insideComment && !extractionDone) {
-              String previousMainTable = operation.mainTable;
               extractionDone = operation.handleIdentifier();
-              // table names extracted here will be surrounded with double quotes
-              if (operation.mainTable != previousMainTable && operation.mainTable != null
-                  && operation.mainTable.startsWith("\"") && operation.mainTable.endsWith("\"")) {
-                operation.mainTable = operation.mainTable.substring(1, operation.mainTable.length() - 1);
-              }
             }
             appendCurrentFragment();
           }
@@ -389,13 +393,7 @@ WHITESPACE          = [ \t\r\n]+
 
   {BACKTICK_QUOTED_STR} {
         if (!insideComment && !extractionDone) {
-          String previousMainTable = operation.mainTable;
           extractionDone = operation.handleIdentifier();
-          // table names extracted here will be surrounded with backticks
-          if (operation.mainTable != previousMainTable && operation.mainTable != null
-              && operation.mainTable.startsWith("`") && operation.mainTable.endsWith("`")) {
-            operation.mainTable = operation.mainTable.substring(1, operation.mainTable.length() - 1);
-          }
         }
         appendCurrentFragment();
         if (isOverLimit()) return YYEOF;
