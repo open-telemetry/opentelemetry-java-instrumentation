@@ -9,7 +9,7 @@ jobs:
   test:
     uses: ./.github/workflows/reusable-test.yml
 
-  # testLatestDeps is intentionally not included in the release workflows
+  # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
   # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry
@@ -29,9 +29,10 @@ jobs:
 
   release:
     needs:
-      - build
+      - assemble
       - test
       - smoke-test
+      - gradle-plugins
       - examples
     runs-on: ubuntu-latest
     steps:
@@ -111,7 +112,7 @@ jobs:
             EOF
           else
             cat > release-notes.txt << EOF
-            This is a patch release on the previous ${{ steps.set-versions.outputs.prior-version }} release, fixing the issue(s) below.
+            This is a patch release on the previous ${{ steps.set-versions.outputs.prior-release-version }} release, fixing the issue(s) below.
           
             EOF
           fi

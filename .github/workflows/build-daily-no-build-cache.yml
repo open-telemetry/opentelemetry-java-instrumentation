@@ -21,7 +21,7 @@ jobs:
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
-  testLatestDeps:
+  test-latest-deps:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
       no-build-cache: true
@@ -52,6 +52,12 @@ jobs:
   # anyway and so are already covered by the normal daily build
 
   open-issue-on-failure:
-    needs: [ build, test, testLatestDeps, smoke-test, examples ]
+    needs:
+      - assemble
+      - test
+      - test-latest-deps
+      - smoke-test
+      - gradle-plugins
+      - examples
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

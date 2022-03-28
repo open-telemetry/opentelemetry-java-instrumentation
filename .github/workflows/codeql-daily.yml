@@ -31,7 +31,7 @@ jobs:
           # skipping build cache is needed so that all modules will be analyzed
           arguments: assemble --no-build-cache
 
-      - name: Perform CodeQL Analysis
+      - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v1
 
   open-issue-on-failure:

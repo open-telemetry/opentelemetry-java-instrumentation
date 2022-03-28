@@ -18,8 +18,8 @@ jobs:
     with:
       cache-read-only: true
 
-  testLatestDeps:
-    # testLatestDeps is not included in the PR workflow by default
+  test-latest-deps:
+    # test-latest-deps is not included in the PR workflow by default
     # because any time a new library version is released to maven central
     # it can fail due to test code incompatibility with the new library version,
     # or due to slight changes in emitted telemetry, which can be confusing for contributors
@@ -78,6 +78,7 @@ jobs:
       - test
       - smoke-test
       - muzzle
+      - gradle-plugins
       - examples
     runs-on: ubuntu-latest
     if: always()
@@ -87,6 +88,7 @@ jobs:
           needs.test.result != 'success' ||
           needs.smoke-test.result != 'success' ||
           needs.muzzle.result != 'success' ||
+          needs.gradle-plugins.result != 'success' ||
           needs.examples.result != 'success'
         run: exit 1
 
@@ -98,6 +100,7 @@ jobs:
       - test
       - smoke-test
       - muzzle
+      - gradle-plugins
       - examples
     runs-on: ubuntu-latest
     if: always()
@@ -107,5 +110,6 @@ jobs:
           needs.test.result != 'success' ||
           needs.smoke-test.result != 'success' ||
           needs.muzzle.result != 'success' ||
+          needs.gradle-plugins.result != 'success' ||
           needs.examples.result != 'success'
         run: exit 1

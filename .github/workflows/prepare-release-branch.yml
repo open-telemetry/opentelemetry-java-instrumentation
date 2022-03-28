@@ -34,8 +34,8 @@ jobs:
 
       - name: Bump version on release branch
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
-          .github/scripts/update-versions.sh "$v-SNAPSHOT" "$v-alpha-SNAPSHOT" "$v" "$v-alpha"
+          version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          .github/scripts/update-versions.sh "$version-SNAPSHOT" "$version-alpha-SNAPSHOT" "$version" "$version-alpha"
 
       - name: Bump download link version
         run: |
@@ -68,7 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Bump SNAPSHOT version
+      - name: Bump snapshot version
         run: |
           version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
           if [[ $version =~ ([0-9]+).([0-9]+).0 ]]; then

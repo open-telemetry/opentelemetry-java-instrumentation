@@ -22,7 +22,7 @@ jobs:
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
-  testLatestDeps:
+  test-latest-deps:
     # release branches are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
@@ -68,11 +68,12 @@ jobs:
 
   publish-snapshots:
     needs:
-      # intentionally not blocking snapshot publishing on testLatestDeps, muzzle,
+      # intentionally not blocking snapshot publishing on test-latest-deps, muzzle,
       # markdown-link-check, or misspell-check
-      - build
+      - assemble
       - test
       - smoke-test
+      - gradle-plugins
       - examples
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}

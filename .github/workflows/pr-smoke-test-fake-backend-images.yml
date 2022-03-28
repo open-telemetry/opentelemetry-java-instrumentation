@@ -18,7 +18,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Build Docker Image
+      - name: Build Docker image
         uses: gradle/gradle-build-action@v2
         with:
           arguments: jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
@@ -31,7 +31,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Support longpaths
+      - name: Support long paths
         run: git config --system core.longpaths true
 
       - uses: actions/checkout@v3
@@ -42,7 +42,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Build Docker Image
+      - name: Build Docker image
         uses: gradle/gradle-build-action@v2
         with:
           arguments: windowsBackendImageBuild

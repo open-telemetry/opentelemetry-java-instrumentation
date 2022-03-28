@@ -33,7 +33,7 @@ jobs:
             smoke-test-server: websphere
       fail-fast: false
     steps:
-      - name: Support longpaths
+      - name: Support long paths
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-2019'
 
@@ -45,17 +45,17 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Login to GitHub Package Registry
+      - name: Login to GitHub package registry
         uses: docker/login-action@v1.10.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set Tag
+      - name: Set tag
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
-      - name: Set up gradle cache
+      - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2
         with:
           # only push cache for one matrix option per OS since github action cache space is limited

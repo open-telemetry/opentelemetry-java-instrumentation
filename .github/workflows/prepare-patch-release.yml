@@ -20,7 +20,7 @@ jobs:
             exit 1
           fi
           echo "::set-output name=release-version::$major_minor.$((patch + 1))"
-          echo "::set-output name=prior-version::$prior_version"
+          echo "::set-output name=prior-release-version::$prior_version"
 
       - name: Bump version
         env:
