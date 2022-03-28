@@ -105,8 +105,8 @@ class SqlStatementSanitizerTest extends Specification {
     sql                                                               | expected
     // Select
     'SELECT x, y, z FROM schema.table'                                | SqlStatementInfo.create(sql, 'SELECT', 'schema.table')
-    'SELECT x, y, z FROM `schema.table`'                              | SqlStatementInfo.create(sql, 'SELECT', 'schema.table')
-    'SELECT x, y, z FROM "schema.table"'                              | SqlStatementInfo.create(sql, 'SELECT', 'schema.table')
+    'SELECT x, y, z FROM `schema table`'                              | SqlStatementInfo.create(sql, 'SELECT', 'schema table')
+    'SELECT x, y, z FROM "schema table"'                              | SqlStatementInfo.create(sql, 'SELECT', 'schema table')
     'WITH subquery as (select a from b) SELECT x, y, z FROM table'    | SqlStatementInfo.create(sql, 'SELECT', null)
     'SELECT x, y, (select a from b) as z FROM table'                  | SqlStatementInfo.create(sql, 'SELECT', null)
     'select delete, insert into, merge, update from table'            | SqlStatementInfo.create(sql, 'SELECT', 'table')
@@ -133,24 +133,24 @@ class SqlStatementSanitizerTest extends Specification {
     ' insert into table where lalala'                                 | SqlStatementInfo.create(sql, 'INSERT', 'table')
     'insert insert into table where lalala'                           | SqlStatementInfo.create(sql, 'INSERT', 'table')
     'insert into db.table where lalala'                               | SqlStatementInfo.create(sql, 'INSERT', 'db.table')
-    'insert into `db.table` where lalala'                             | SqlStatementInfo.create(sql, 'INSERT', 'db.table')
-    'insert into "db.table" where lalala'                             | SqlStatementInfo.create(sql, 'INSERT', 'db.table')
+    'insert into `db table` where lalala'                             | SqlStatementInfo.create(sql, 'INSERT', 'db table')
+    'insert into "db table" where lalala'                             | SqlStatementInfo.create(sql, 'INSERT', 'db table')
     'insert without i-n-t-o'                                          | SqlStatementInfo.create(sql, 'INSERT', null)
     // Delete
     'delete from table where something something'                     | SqlStatementInfo.create(sql, 'DELETE', 'table')
-    'delete from `table` where something something'                   | SqlStatementInfo.create(sql, 'DELETE', 'table')
-    'delete from "table" where something something'                   | SqlStatementInfo.create(sql, 'DELETE', 'table')
+    'delete from `my table` where something something'                | SqlStatementInfo.create(sql, 'DELETE', 'my table')
+    'delete from "my table" where something something'                | SqlStatementInfo.create(sql, 'DELETE', 'my table')
     'delete from 12345678'                                            | SqlStatementInfo.create('delete from ?', 'DELETE', null)
     'delete   ((('                                                    | SqlStatementInfo.create('delete (((', 'DELETE', null)
     // Update
     'update table set answer=42'                                      | SqlStatementInfo.create('update table set answer=?', 'UPDATE', 'table')
-    'update `table` set answer=42'                                    | SqlStatementInfo.create('update `table` set answer=?', 'UPDATE', 'table')
-    'update "table" set answer=42'                                    | SqlStatementInfo.create('update "table" set answer=?', 'UPDATE', 'table')
+    'update `my table` set answer=42'                                 | SqlStatementInfo.create('update `my table` set answer=?', 'UPDATE', 'my table')
+    'update "my table" set answer=42'                                 | SqlStatementInfo.create('update "my table" set answer=?', 'UPDATE', 'my table')
     'update /*table'                                                  | SqlStatementInfo.create(sql, 'UPDATE', null)
     // Merge
     'merge into table'                                                | SqlStatementInfo.create(sql, 'MERGE', 'table')
-    'merge into `table`'                                              | SqlStatementInfo.create(sql, 'MERGE', 'table')
-    'merge into "table"'                                              | SqlStatementInfo.create(sql, 'MERGE', 'table')
+    'merge into `my table`'                                           | SqlStatementInfo.create(sql, 'MERGE', 'my table')
+    'merge into "my table"'                                           | SqlStatementInfo.create(sql, 'MERGE', 'my table')
     'merge table (into is optional in some dbs)'                      | SqlStatementInfo.create(sql, 'MERGE', 'table')
     'merge (into )))'                                                 | SqlStatementInfo.create(sql, 'MERGE', null)
     // Unknown operation

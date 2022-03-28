@@ -16,18 +16,19 @@ package io.opentelemetry.instrumentation.api.db;
 %unicode
 %ignorecase
 
-COMMA             = ","
-OPEN_PAREN        = "("
-CLOSE_PAREN       = ")"
-OPEN_COMMENT      = "/*"
-CLOSE_COMMENT     = "*/"
-IDENTIFIER        = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
-BASIC_NUM         = [.+-]* [0-9] ([0-9] | [eE.+-])*
-HEX_NUM           = "0x" ([a-f] | [A-F] | [0-9])+
-QUOTED_STR        = "'" ("''" | [^'])* "'"
-DOUBLE_QUOTED_STR = "\"" ("\"\"" | [^\"])* "\""
-DOLLAR_QUOTED_STR = "$$" [^$]* "$$"
-WHITESPACE        = [ \t\r\n]+
+COMMA               = ","
+OPEN_PAREN          = "("
+CLOSE_PAREN         = ")"
+OPEN_COMMENT        = "/*"
+CLOSE_COMMENT       = "*/"
+IDENTIFIER          = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
+BASIC_NUM           = [.+-]* [0-9] ([0-9] | [eE.+-])*
+HEX_NUM             = "0x" ([a-f] | [A-F] | [0-9])+
+QUOTED_STR          = "'" ("''" | [^'])* "'"
+DOUBLE_QUOTED_STR   = "\"" ("\"\"" | [^\"])* "\""
+DOLLAR_QUOTED_STR   = "$$" [^$]* "$$"
+BACKTICK_QUOTED_STR = "`" [^`]* "`"
+WHITESPACE          = [ \t\r\n]+
 
 %{
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
@@ -373,9 +374,11 @@ WHITESPACE        = [ \t\r\n]+
             builder.append('?');
           } else {
             if (!insideComment && !extractionDone) {
+              String previousMainTable = operation.mainTable;
               extractionDone = operation.handleIdentifier();
               // table names extracted here will be surrounded with double quotes
-              if (operation.mainTable != null && operation.mainTable.startsWith("\"") && operation.mainTable.endsWith("\"")) {
+              if (operation.mainTable != previousMainTable && operation.mainTable != null
+                  && operation.mainTable.startsWith("\"") && operation.mainTable.endsWith("\"")) {
                 operation.mainTable = operation.mainTable.substring(1, operation.mainTable.length() - 1);
               }
             }
@@ -383,6 +386,20 @@ WHITESPACE        = [ \t\r\n]+
           }
           if (isOverLimit()) return YYEOF;
       }
+
+  {BACKTICK_QUOTED_STR} {
+        if (!insideComment && !extractionDone) {
+          String previousMainTable = operation.mainTable;
+          extractionDone = operation.handleIdentifier();
+          // table names extracted here will be surrounded with backticks
+          if (operation.mainTable != previousMainTable && operation.mainTable != null
+              && operation.mainTable.startsWith("`") && operation.mainTable.endsWith("`")) {
+            operation.mainTable = operation.mainTable.substring(1, operation.mainTable.length() - 1);
+          }
+        }
+        appendCurrentFragment();
+        if (isOverLimit()) return YYEOF;
+    }
 
   {WHITESPACE} {
           builder.append(' ');
