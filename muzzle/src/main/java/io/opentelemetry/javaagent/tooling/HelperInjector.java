@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.security.SecureClassLoader;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -176,11 +177,21 @@ public class HelperInjector implements Transformer {
         classLoader,
         cl -> {
           for (HelperResource helperResource : helperResources) {
-            URL resource = helpersSource.getResource(helperResource.getAgentPath());
-            if (resource == null) {
+            Enumeration<URL> resources;
+            try {
+              resources = helpersSource.getResources(helperResource.getAgentPath());
+            } catch (IOException e) {
+              logger.log(
+                  SEVERE,
+                  "Unexpected exception occurred when loading resources {}; skipping",
+                  new Object[] {helperResource.getAgentPath()},
+                  e);
+              continue;
+            }
+            if (!resources.hasMoreElements()) {
               logger.log(
                   FINE,
-                  "Helper resource {0} requested but not found.",
+                  "Helper resources {0} requested but not found.",
                   helperResource.getAgentPath());
               continue;
             }
@@ -188,18 +199,18 @@ public class HelperInjector implements Transformer {
             if (helperResource.allClassLoaders()) {
               logger.log(
                   FINE,
-                  "Injecting resource onto all classloaders: {0}",
+                  "Injecting resources onto all classloaders: {0}",
                   helperResource.getApplicationPath());
               HelperResources.registerForAllClassLoaders(
-                  helperResource.getApplicationPath(), resource);
+                  helperResource.getApplicationPath(), resources);
             } else {
               if (logger.isLoggable(FINE)) {
                 logger.log(
                     FINE,
-                    "Injecting resource onto classloader {0} -> {1}",
+                    "Injecting resources onto classloader {0} -> {1}",
                     new Object[] {classLoader, helperResource.getApplicationPath()});
               }
-              HelperResources.register(classLoader, helperResource.getApplicationPath(), resource);
+              HelperResources.register(classLoader, helperResource.getApplicationPath(), resources);
             }
           }
 

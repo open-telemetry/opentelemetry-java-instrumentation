@@ -128,10 +128,10 @@ public class ExtensionClassLoader extends URLClassLoader {
     }
 
     File location = new File(locationName);
-    if (location.isFile()) {
+    if (isJar(location)) {
       addFileUrl(result, location);
     } else if (location.isDirectory()) {
-      File[] files = location.listFiles(f -> f.isFile() && f.getName().endsWith(".jar"));
+      File[] files = location.listFiles(ExtensionClassLoader::isJar);
       if (files != null) {
         for (File file : files) {
           if (!file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())) {
@@ -141,6 +141,10 @@ public class ExtensionClassLoader extends URLClassLoader {
       }
     }
     return result;
+  }
+
+  private static boolean isJar(File f) {
+    return f.isFile() && f.getName().endsWith(".jar");
   }
 
   private static void addFileUrl(List<URL> result, File file) {

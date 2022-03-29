@@ -32,6 +32,8 @@ public class TestInstrumentationModule extends InstrumentationModule {
   @Override
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
     helperResourceBuilder.register("test-resources/test-resource.txt");
+    helperResourceBuilder.register(
+        "test-resources/test-resource.txt", "test-resources/test-resource-2.txt");
   }
 
   public static class TestTypeInstrumentation implements TypeInstrumentation {
