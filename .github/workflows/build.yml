@@ -1,4 +1,4 @@
-name: CI build
+name: Build
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    uses: ./.github/workflows/reusable-build.yml
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
@@ -22,7 +22,7 @@ jobs:
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
-  testLatestDeps:
+  test-latest-deps:
     # release branches are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
@@ -47,59 +47,36 @@ jobs:
     if: ${{ !startsWith(github.ref_name, 'v') }}
     uses: ./.github/workflows/reusable-muzzle.yml
 
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+
   examples:
     uses: ./.github/workflows/reusable-examples.yml
 
   markdown-link-check:
-    # release branches are excluded
-    # because links to external urls can break at any time which requires unnecessary release branch
-    # maintenance, especially for patches (and also because the README.md javaagent download link
-    # has to be updated on release branches before the release download has been published)
+    # release branches are excluded to avoid unnecessary maintenance if external links break
+    # (and also because the README.md javaagent download link has to be updated on release branches
+    #  before the release download has been published)
     if: ${{ !startsWith(github.ref_name, 'v') }}
+    uses: ./.github/workflows/reusable-markdown-link-check.yml
+
+  misspell-check:
+    # release branches are excluded to avoid unnecessary maintenance if new misspellings are added
+    # to the misspell dictionary
+    if: ${{ !startsWith(github.ref_name, 'v') }}
+    uses: ./.github/workflows/reusable-misspell-check.yml
+
+  publish-snapshots:
+    needs:
+      # intentionally not blocking snapshot publishing on test-latest-deps, muzzle,
+      # markdown-link-check, or misspell-check
+      - assemble
+      - test
+      - smoke-test
+      - gradle-plugins
+      - examples
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Check markdown links
-        # using retry because of sporadic external site failures
-        uses: nick-invision/retry@v2.6.0
-        with:
-          # timing out has not been a problem
-          timeout_minutes: 15
-          # give external site some time to hopefully recover
-          retry_wait_seconds: 120
-          max_attempts: 5
-          command: |
-            npm install -g markdown-link-check
-            find . -type f \
-                   -name '*.md' \
-                   -not -path './.github/*' \
-                   -not -path './node_modules/*' \
-                   -print0 \
-              | xargs -0 -n1 markdown-link-check --config .github/scripts/markdown_link_check_config.json
-
-  markdown-misspell-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Check markdown for common misspellings
-        run: |
-          curl -L -o ./install-misspell.sh https://git.io/misspell
-          sh ./install-misspell.sh
-          ./bin/misspell -error ./**/*
-
-  snapshot:
-    runs-on: ubuntu-latest
-    # intentionally not blocking snapshot publishing on testLatestDeps
-    # because any time a new library version is released to maven central
-    # it can fail due to test code incompatibility with the new library version,
-    # or due to slight changes in emitted telemetry
-    #
-    # also not blocking snapshot publishing on markdown-link-check because links to external urls
-    # can break at any time
-    needs: [ build, test, smoke-test, examples, muzzle, markdown-misspell-check ]
-    if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
+    if: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
     steps:
       - uses: actions/checkout@v3
 

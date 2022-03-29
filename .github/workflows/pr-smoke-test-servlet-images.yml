@@ -27,7 +27,7 @@ jobs:
             smoke-test-server: websphere
       fail-fast: false
     steps:
-      - name: Support longpaths
+      - name: Support long paths
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-2019'
 
@@ -39,7 +39,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up gradle cache
+      - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2
         with:
           cache-read-only: true

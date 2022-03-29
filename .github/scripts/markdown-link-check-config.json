@@ -1,9 +1,6 @@
 {
   "ignorePatterns": [
     {
-      "pattern": "^https://github\\.com/open-telemetry/opentelemetry-java-instrumentation/pull/"
-    },
-    {
       "pattern": "^https://mvnrepository\\.com/artifact/io\\.opentelemetry$"
     },
     {

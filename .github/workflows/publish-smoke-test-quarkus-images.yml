@@ -18,8 +18,7 @@ jobs:
       # Quarkus 2.0+ does not support Java 8
       skip-java-8: true
 
-  issue:
-    name: Open issue on failure
+  open-issue-on-failure:
     needs: publish
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

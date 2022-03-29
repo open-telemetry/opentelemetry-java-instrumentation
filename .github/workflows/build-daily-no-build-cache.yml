@@ -1,4 +1,4 @@
-name: Nightly (--no-build-cache)
+name: Build (daily, --no-build-cache)
 
 on:
   schedule:
@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    uses: ./.github/workflows/reusable-build.yml
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
     with:
       no-build-cache: true
     secrets:
@@ -21,7 +21,7 @@ jobs:
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
-  testLatestDeps:
+  test-latest-deps:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
       no-build-cache: true
@@ -35,19 +35,29 @@ jobs:
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
-  # muzzle is intentionally not included in the nightly-no-cache build because
-  # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
+  # muzzle is not included here because it doesn't use gradle cache anyway and so is already covered
+  # by the normal daily build
+
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+    with:
+      no-build-cache: true
 
   examples:
     uses: ./.github/workflows/reusable-examples.yml
     with:
       no-build-cache: true
 
-  # markdown-link-check is intentionally not included in the nightly-no-cache build because
-  # it doesn't use gradle cache anyways and so is already covered by the normal nightly build
+  # markdown-link-check and misspell-check are not included here because they don't use gradle cache
+  # anyway and so are already covered by the normal daily build
 
-  issue:
-    name: Open issue on failure
-    needs: [ build, test, testLatestDeps, smoke-test, examples ]
+  open-issue-on-failure:
+    needs:
+      - assemble
+      - test
+      - test-latest-deps
+      - smoke-test
+      - gradle-plugins
+      - examples
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

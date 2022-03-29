@@ -1,13 +1,15 @@
-# Releases a new major / minor / patch version from a release branch
-name: Release Build
+name: Release
 on:
   workflow_dispatch:
 
 jobs:
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
+
   test:
     uses: ./.github/workflows/reusable-test.yml
 
-  # testLatestDeps is intentionally not included in the release workflows
+  # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
   # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry
@@ -19,16 +21,23 @@ jobs:
   # because any time a new library version is released to maven central it can fail,
   # and this is not a reason to hold up the release
 
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+
   examples:
     uses: ./.github/workflows/reusable-examples.yml
 
   release:
-    needs: [ test, smoke-test, examples ]
+    needs:
+      - assemble
+      - test
+      - smoke-test
+      - gradle-plugins
+      - examples
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.ref_name }}
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
 
@@ -45,8 +54,6 @@ jobs:
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
-          GRGIT_USER: ${{ github.actor }}
-          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
 
@@ -67,85 +74,106 @@ jobs:
       - name: Set versions
         id: set-versions
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
-          if [[ $v =~ ([0-9]+).([0-9]+).([0-9]+) ]]; then
+          version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          if [[ $version =~ ([0-9]+).([0-9]+).([0-9]+) ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
             patch="${BASH_REMATCH[3]}"
           else
-            echo "unexpected version: $v"
+            echo "unexpected version: $version"
             exit 1
           fi
           if [[ $patch == 0 ]]; then
             if [[ $minor == 0 ]]; then
               prior_major=$((major - 1))
               prior_minor=$(grep -Po "^## Version $prior_major.\K([0-9]+)" CHANGELOG.md  | head -1)
-              prior="$prior_major.$prior_minor"
+              prior_version="$prior_major.$prior_minor"
             else
-              prior="$major.$((minor - 1)).0"
+              prior_version="$major.$((minor - 1)).0"
             fi
           else
-              prior="$major.$minor.$((patch - 1))"
+              prior_version="$major.$minor.$((patch - 1))"
           fi
-          echo "::set-output name=release-version::$v"
-          echo "::set-output name=prior-version::$prior"
-          echo "::set-output name=patch-version::$patch"
+          echo "::set-output name=release-version::$version"
+          echo "::set-output name=prior-release-version::$prior_version"
 
       - name: Generate release notes
-        if: ${{ steps.set-versions.outputs.patch-version == 0 }}
         env:
+          VERSION: ${{ steps.set-versions.outputs.release-version }}
+          PRIOR_VERSION: ${{ steps.set-versions.outputs.prior-release-version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat > release-notes.txt << EOF
-          Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
+          if [[ $version == *.0 ]]; then
+            cat > release-notes.txt << EOF
+            This release targets the OpenTelemetry SDK $VERSION.
 
-          EOF
+            Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
+          
+            EOF
+          else
+            cat > release-notes.txt << EOF
+            This is a patch release on the previous $PRIOR_VERSION release, fixing the issue(s) below.
+          
+            EOF
+          fi
 
-          sed -n '/^## Version ${{ steps.set-versions.outputs.release-version }}/,/^## Version /p' CHANGELOG.md \
+          sed -n '/^## Version $VERSION/,/^## Version /p' CHANGELOG.md \
             | tail -n +2 \
             | head -n -1 \
             | perl -0pe 's/^\n+//g' \
             | perl -0pe 's/\n+$/\n/g' \
-            | sed -r 's,\[#([0-9]+)]\(https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/[0-9]+\),#\1,' \
+            | sed -r 's,\[#([0-9]+)]\(https://github.com/$GITHUB_REPOSITORY/(pull|issues)/[0-9]+\),#\1,' \
             | perl -0pe 's/\n +/ /g' \
             >> release-notes.txt
 
-          cat >> release-notes.txt << EOF
-
-          ### 🙇 Thank you
-          This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
-
-          EOF
-
-          .github/scripts/generate-release-contributors.sh v${{ steps.set-versions.outputs.prior-version }} v${{ steps.set-versions.outputs.release-version }} >> release-notes.txt
-
-      - name: Generate patch release notes
-        if: ${{ steps.set-versions.outputs.patch-version != 0 }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cat > release-notes.txt << EOF
-          This is a patch release on the previous ${{ steps.set-versions.outputs.prior-version }} release, fixing the issue(s) below.
-
-          EOF
-
-          sed -n '/^## Version ${{ steps.set-versions.outputs.release-version }}/,/^## Version /p' CHANGELOG.md \
-            | tail -n +2 \
-            | head -n -1 \
-            | perl -0pe 's/^\n+//g' \
-            | perl -0pe 's/\n+$/\n/g' \
-            | sed -r 's,\[#([0-9]+)]\(https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/[0-9]+\),#\1,' \
-            | perl -0pe 's/\n +/ /g' \
-            >> release-notes.txt
+          if [[ $version == *.0 ]]; then
+            cat >> release-notes.txt << EOF
+          
+            ### 🙇 Thank you
+            This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
+          
+            EOF
+          
+            .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION v$VERSION >> release-notes.txt
+          fi
 
       - name: Create GitHub release
         env:
+          VERSION: ${{ steps.set-versions.outputs.release-version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp javaagent/build/libs/opentelemetry-javaagent-${{ steps.set-versions.outputs.release-version }}.jar opentelemetry-javaagent.jar
-          gh release create --target ${{ github.ref_name }} \
-                            --title "Version ${{ steps.set-versions.outputs.release-version }}" \
+          cp javaagent/build/libs/opentelemetry-javaagent-$VERSION.jar opentelemetry-javaagent.jar
+          gh release create --target $GITHUB_REF_NAME \
+                            --title "Version $VERSION" \
                             --notes-file release-notes.txt \
                             --discussion-category announcements \
-                            v${{ steps.set-versions.outputs.release-version }} \
+                            v$VERSION \
                             opentelemetry-javaagent.jar
+
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+          # history is needed in order to generate the patch
+          fetch-depth: 0
+
+      - name: Set up git name
+        run: |
+          git config user.name opentelemetry-java-bot
+          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
+
+        # this step should be last since it will fail if conflicting change log updates on main
+      - name: Create pull request to merge any change log updates to main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git format-patch --stdout main..$GITHUB_REF_NAME CHANGELOG.md > patch
+          if [ -s patch ]; then
+            git apply patch
+            msg="Merge change log updates from $GITHUB_REF_NAME to main"
+            git commit -a -m "$msg"
+            git push origin HEAD:opentelemetry-java-bot/merge-change-log-updates
+            gh pr create --title "$msg" \
+                         --body "$msg" \
+                         --head opentelemetry-java-bot/merge-change-log-updates \
+                         --base main
+          fi

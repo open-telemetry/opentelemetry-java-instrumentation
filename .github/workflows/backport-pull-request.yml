@@ -2,7 +2,7 @@ name: Backport a pull request
 on:
   workflow_dispatch:
     inputs:
-      pr:
+      number:
         description: "The pull request # to backport"
         required: true
 
@@ -12,27 +12,27 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          # need full tree in order to do cherry-pick
+          # history is needed in order to do cherry-pick
           fetch-depth: 0
 
-      - name: Setup git name
+      - name: Set up git name
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
       - name: Create pull request
         env:
+          NUMBER: ${{ github.event.inputs.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR: ${{ github.event.inputs.pr }}
         run: |
-          commit=$(gh pr view $PR --json mergeCommit --jq .mergeCommit.oid)
-          title=$(gh pr view $PR --json title --jq .title)
-          url=$(gh pr view $PR --json url --jq .url)
+          commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
+          title=$(gh pr view $NUMBER --json title --jq .title)
+          url=$(gh pr view $NUMBER --json url --jq .url)
 
           git cherry-pick $commit
-          git push origin HEAD:backport-$PR-to-$GITHUB_REF_NAME
+          git push origin HEAD:backport-$NUMBER-to-$GITHUB_REF_NAME
 
           gh pr create --title "[$GITHUB_REF_NAME] $title" \
-                       --body "Clean cherry-pick of #$PR to the $GITHUB_REF_NAME branch." \
-                       --head backport-$PR-to-$GITHUB_REF_NAME \
+                       --body "Clean cherry-pick of #$NUMBER to the $GITHUB_REF_NAME branch." \
+                       --head backport-$NUMBER-to-$GITHUB_REF_NAME \
                        --base $GITHUB_REF_NAME

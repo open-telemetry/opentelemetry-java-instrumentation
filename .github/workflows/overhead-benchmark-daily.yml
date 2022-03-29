@@ -1,4 +1,4 @@
-name: Nightly overhead benchmark
+name: Overhead benchmark (daily)
 on:
   schedule:
     # 5am GMT
@@ -10,24 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/checkout@v3
         with:
           ref: gh-pages
           path: gh-pages
-      - name: copy results from gh-pages branch
+
+      - name: Copy results from gh-pages branch
         run: |
           rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
-      - name: run tests
+
+      - name: Run tests
         uses: gradle/gradle-build-action@v2
         with:
           arguments: test
           build-root-directory: benchmark-overhead
-      - name: inspect the results dir
+
+      - name: Inspect the results dir
         working-directory: benchmark-overhead
         run: ls -lR results
-      - name: copy results back to gh-pages branch
+
+      - name: Copy results back to gh-pages branch
         run: rsync -avv benchmark-overhead/results/ gh-pages/benchmark-overhead/results/ && rm -rf benchmark-overhead/results
-      - name: commit updated results
+
+      - name: Commit updated results
         uses: EndBug/add-and-commit@v9
         with:
           add: 'benchmark-overhead/results'
@@ -39,8 +45,7 @@ jobs:
           committer_name: opentelemetry-java-bot
           committer_email: 97938252+opentelemetry-java-bot@users.noreply.github.com
 
-  issue:
-    name: Open issue on failure
+  open-issue-on-failure:
     needs: run-overhead-tests
     if: failure()
     uses: ./.github/workflows/reusable-create-issue-for-failure.yml

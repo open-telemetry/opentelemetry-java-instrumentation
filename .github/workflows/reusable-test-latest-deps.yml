@@ -21,7 +21,7 @@ on:
         required: false
 
 jobs:
-  testLatestDeps:
+  test-latest-deps:
     # the condition is on the steps below instead of here on the job, because skipping the job
     # causes the job to show up as canceled in the GitHub UI which prevents the build section from
     # collapsing when everything (else) is green

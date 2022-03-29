@@ -31,7 +31,4 @@ nexusPublishing {
   }
 }
 
-// Enable after verifying Maven Central publishing once through manual closing
-// tasks.release.finalizedBy tasks.closeAndReleaseRepository
-
 description = "OpenTelemetry instrumentations for Java"

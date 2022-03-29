@@ -22,7 +22,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up gradle cache
+      - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}

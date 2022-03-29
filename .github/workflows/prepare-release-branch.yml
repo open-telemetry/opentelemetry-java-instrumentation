@@ -1,4 +1,4 @@
-name: Prepare Release Branch
+name: Prepare release branch
 on:
   workflow_dispatch:
 
@@ -13,13 +13,16 @@ jobs:
       - name: Set release branch name
         id: set-release-branch-name
         run: |
-          release_branch_name=$(grep -Eo "[0-9.]+-SNAPSHOT" version.gradle.kts | sed -E 's/([0-9]+)\.([0-9]+)\.0-SNAPSHOT/v\1.\2.x/')
+          version=$(grep -Eo "[0-9.]+-SNAPSHOT" version.gradle.kts)
+          release_branch_name=$(echo $version | sed -E 's/([0-9]+)\.([0-9]+)\.0/v\1.\2.x/')
           echo "::set-output name=release-branch-name::$release_branch_name"
 
       - name: Create release branch
+        env:
+          RELEASE_BRANCH_NAME: ${{ steps.set-release-branch-name.outputs.release-branch-name }}
         run: |
-          git checkout -b ${{ steps.set-release-branch-name.outputs.release-branch-name }}
-          git push origin ${{ steps.set-release-branch-name.outputs.release-branch-name }}
+          git checkout -b $RELEASE_BRANCH_NAME
+          git push origin $RELEASE_BRANCH_NAME
 
   create-pull-request-against-release-branch:
     needs: prepare-release-branch
@@ -29,65 +32,68 @@ jobs:
         with:
           ref: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
 
-      - name: Remove SNAPSHOT from version
+      - name: Bump version on release branch
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
-          .github/scripts/update-versions.sh "$v-SNAPSHOT" "$v-alpha-SNAPSHOT" "$v" "$v-alpha"
+          version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          .github/scripts/update-versions.sh "$version-SNAPSHOT" "$version-alpha-SNAPSHOT" "$version" "$version-alpha"
 
       - name: Bump download link version
         run: |
           new_version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
           sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$new_version/," README.md
 
-      - name: Setup git name
+      - name: Set up git name
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
-      - name: Create pull request
+      - name: Create pull request against release branch
         env:
+          RELEASE_BRANCH_NAME: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          msg="Prepare release branch ${{ needs.prepare-release-branch.outputs.release-branch-name }}"
+          msg="Prepare release branch $RELEASE_BRANCH_NAME"
           git commit -a -m "$msg"
-          git push origin HEAD:opentelemetry-java-bot/prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }}
+          git push origin HEAD:prepare-release-branch-$RELEASE_BRANCH_NAME
           gh pr create --title "$msg" \
                        --body "$msg" \
-                       --head opentelemetry-java-bot/prepare-release-branch-${{ needs.prepare-release-branch.outputs.release-branch-name }} \
-                       --base ${{ needs.prepare-release-branch.outputs.release-branch-name }}
+                       --head prepare-release-branch-$RELEASE_BRANCH_NAME \
+                       --base $RELEASE_BRANCH_NAME
 
   create-pull-request-against-main:
-    needs: prepare-release-branch
+    needs:
+      - prepare-release-branch
+      - create-pull-request-against-release-branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - name: Bump SNAPSHOT version
+      - name: Bump snapshot version
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
-          if [[ $v =~ ([0-9]+).([0-9]+).0 ]]; then
+          version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          if [[ $version =~ ([0-9]+).([0-9]+).0 ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
           else
-            echo "unexpected version: $v"
+            echo "unexpected version: $version"
             exit 1
           fi
-          bump="$major.$((minor + 1)).0"
-          .github/scripts/update-versions.sh "$v-SNAPSHOT" "$v-alpha-SNAPSHOT" "$bump-SNAPSHOT" "$bump-alpha-SNAPSHOT"
+          next_version="$major.$((minor + 1)).0"
+          .github/scripts/update-versions.sh "$version-SNAPSHOT" "$version-alpha-SNAPSHOT" "$next_version-SNAPSHOT" "$next_version-alpha-SNAPSHOT"
 
-      - name: Setup git name
+      - name: Set up git name
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
-      - name: Create pull request
+      - name: Create pull request against main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          msg="Bump snapshot version"
+          msg="Bump version"
           git commit -a -m "$msg"
-          git push origin HEAD:opentelemetry-java-bot/bump-snapshot-version
+          git push origin HEAD:bump-snapshot-version
           gh pr create --title "$msg" \
                        --body "$msg" \
-                       --head opentelemetry-java-bot/bump-snapshot-version \
+                       --head bump-snapshot-version \
                        --base main

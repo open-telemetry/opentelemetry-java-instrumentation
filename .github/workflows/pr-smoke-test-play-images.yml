@@ -28,13 +28,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up gradle cache
+      - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2
         with:
           cache-read-only: true
 
         # Play doesn't support Java 16 (or 17) yet
         # https://github.com/playframework/playframework/pull/10819
-      - name: Build Java 15 Docker Image
+      - name: Build Java 15 Docker image
         run: ./gradlew jibDockerBuild -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain
         working-directory: smoke-tests/images/play
