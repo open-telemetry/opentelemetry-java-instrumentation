@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure;
+package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.extension.resources.ContainerResource;
+import io.opentelemetry.sdk.extension.resources.ContainerResourceProvider;
 import io.opentelemetry.sdk.extension.resources.HostResource;
+import io.opentelemetry.sdk.extension.resources.HostResourceProvider;
 import io.opentelemetry.sdk.extension.resources.OsResource;
+import io.opentelemetry.sdk.extension.resources.OsResourceProvider;
 import io.opentelemetry.sdk.extension.resources.ProcessResource;
+import io.opentelemetry.sdk.extension.resources.ProcessResourceProvider;
 import io.opentelemetry.sdk.extension.resources.ProcessRuntimeResource;
-import io.opentelemetry.sdk.resources.Resource;
-import java.util.Map;
-import java.util.function.Supplier;
+import io.opentelemetry.sdk.extension.resources.ProcessRuntimeResourceProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,44 +31,37 @@ import org.springframework.context.annotation.Configuration;
 public class OtelResourceAutoConfiguration {
 
   @Bean
-  public Supplier<Resource> otelResourceProvider(OtelResourceProperties otelResourceProperties) {
-    return () -> {
-      AttributesBuilder attributesBuilder = Attributes.builder();
-      for (Map.Entry<String, String> entry : otelResourceProperties.getAttributes().entrySet()) {
-        attributesBuilder.put(entry.getKey(), entry.getValue());
-      }
-      Attributes attributes = attributesBuilder.build();
-      return Resource.create(attributes);
-    };
+  public ResourceProvider otelResourceProvider(OtelResourceProperties otelResourceProperties) {
+    return new SpringResourceProvider(otelResourceProperties);
   }
 
   @Bean
   @ConditionalOnClass(OsResource.class)
-  public Supplier<Resource> otelOsResourceProvider() {
-    return OsResource::get;
+  public ResourceProvider otelOsResourceProvider() {
+    return new OsResourceProvider();
   }
 
   @Bean
   @ConditionalOnClass(ProcessResource.class)
-  public Supplier<Resource> otelProcessResourceProvider() {
-    return ProcessResource::get;
+  public ResourceProvider otelProcessResourceProvider() {
+    return new ProcessResourceProvider();
   }
 
   @Bean
   @ConditionalOnClass(ProcessRuntimeResource.class)
-  public Supplier<Resource> otelProcessRuntimeResourceProvider() {
-    return ProcessRuntimeResource::get;
+  public ResourceProvider otelProcessRuntimeResourceProvider() {
+    return new ProcessRuntimeResourceProvider();
   }
 
   @Bean
   @ConditionalOnClass(HostResource.class)
-  public Supplier<Resource> otelHostResourceProvider() {
-    return HostResource::get;
+  public ResourceProvider otelHostResourceProvider() {
+    return new HostResourceProvider();
   }
 
   @Bean
   @ConditionalOnClass(ContainerResource.class)
-  public Supplier<Resource> otelContainerResource() {
-    return ContainerResource::get;
+  public ResourceProvider otelContainerResourceProvider() {
+    return new ContainerResourceProvider();
   }
 }

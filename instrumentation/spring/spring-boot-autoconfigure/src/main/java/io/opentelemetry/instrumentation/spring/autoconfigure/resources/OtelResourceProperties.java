@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure;
+package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
 import java.util.Collections;
 import java.util.Map;
