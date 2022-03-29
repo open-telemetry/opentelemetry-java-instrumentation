@@ -6,14 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpClientRequest.headersToList;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.ProtocolVersion;
 
 final class ApacheHttpAsyncClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
+  private static final Logger logger =
+      Logger.getLogger(ApacheHttpAsyncClientHttpAttributesGetter.class.getName());
 
   @Override
   public String method(ApacheHttpClientRequest request) {
@@ -51,7 +57,27 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   @Override
   @Nullable
   public String flavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.getFlavor(response);
+    if (response == null) {
+      return null;
+    }
+    ProtocolVersion protocolVersion = response.getVersion();
+    String protocol = protocolVersion.getProtocol();
+    if (!protocol.equals("HTTP")) {
+      return null;
+    }
+    int major = protocolVersion.getMajor();
+    int minor = protocolVersion.getMinor();
+    if (major == 1 && minor == 0) {
+      return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
+    }
+    if (major == 1 && minor == 1) {
+      return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
+    }
+    if (major == 2 && minor == 0) {
+      return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
+    }
+    logger.log(FINE, "unexpected http protocol version: " + protocolVersion);
+    return null;
   }
 
   @Override
