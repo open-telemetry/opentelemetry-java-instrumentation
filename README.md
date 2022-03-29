@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions?query=workflow%3A%22Nightly+build%22">
-    <img alt="Build Status" src="https://img.shields.io/github/workflow/status/open-telemetry/opentelemetry-java-instrumentation/Nightly%20build?style=for-the-badge">
+  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml">
+    <img alt="Build Status" src="https://img.shields.io/github/workflow/status/open-telemetry/opentelemetry-java-instrumentation/Build?style=for-the-badge">
   </a>
   <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases">
     <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=for-the-badge">
