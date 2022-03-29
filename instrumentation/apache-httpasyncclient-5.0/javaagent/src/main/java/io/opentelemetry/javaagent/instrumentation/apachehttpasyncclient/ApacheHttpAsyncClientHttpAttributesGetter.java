@@ -76,7 +76,7 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
     if (major == 2 && minor == 0) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
-    logger.log(FINE, "unexpected http protocol version: " + protocolVersion);
+    logger.log(FINE, "unexpected http protocol version: {0}", protocolVersion);
     return null;
   }
 

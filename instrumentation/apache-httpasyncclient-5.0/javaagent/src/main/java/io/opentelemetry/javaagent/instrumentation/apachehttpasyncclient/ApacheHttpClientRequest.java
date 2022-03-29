@@ -83,7 +83,7 @@ public final class ApacheHttpClientRequest {
       case "https":
         return 443;
       default:
-        logger.log(FINE, "no default port mapping for scheme: {}", uri.getScheme());
+        logger.log(FINE, "no default port mapping for scheme: {0}", uri.getScheme());
         return null;
     }
   }
