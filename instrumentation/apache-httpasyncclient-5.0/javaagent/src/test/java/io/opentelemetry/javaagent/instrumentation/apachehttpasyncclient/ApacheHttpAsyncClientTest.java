@@ -213,6 +213,9 @@ class ApacheHttpAsyncClientTest {
           attributes.add(SemanticAttributes.NET_PEER_PORT);
           attributes.add(SemanticAttributes.HTTP_URL);
           attributes.add(SemanticAttributes.HTTP_METHOD);
+          if (endpoint.toString().contains("/success")) {
+            attributes.add(SemanticAttributes.HTTP_FLAVOR);
+          }
           attributes.add(SemanticAttributes.HTTP_USER_AGENT);
           return attributes;
         });
