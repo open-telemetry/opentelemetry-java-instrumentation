@@ -81,7 +81,7 @@ class JavaagentTestArgumentsProvider(
   override fun asArguments(): Iterable<String> = listOf(
     "-Dotel.javaagent.debug=true",
     "-javaagent:${agentShadowJar.absolutePath}",
-    "-Dotel.javaagent.extensions=${shadowJar.absolutePath}",
+    "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
     "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
     "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",
     // prevent sporadic gradle deadlocks, see SafeLogger for more details
