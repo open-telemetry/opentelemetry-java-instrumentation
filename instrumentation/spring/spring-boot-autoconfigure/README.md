@@ -392,6 +392,26 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 <!-- Slf4j Log Correlation  otel.springboot.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
 
+##### Resource Properties
+
+| Feature  | Property                                         | Default Value          |
+|----------|--------------------------------------------------|------------------------|
+| Resource | otel.springboot.resource.enabled                 | `true`                 |
+|          | otel.springboot.resource.attributes.service.name | `unknown_service:java` |
+|          | otel.springboot.resource.attributes              | `empty map`            |
+
+`unknown_service:java` will be used as the service-name if no value has been specified to the
+property `spring.application.name` or `otel.springboot.resource.attributes.service.name` (which has
+the highest priority)
+
+`otel.springboot.resource.attributes` supports a pattern-based resource configuration in the
+application.properties like this:
+
+```
+otel.springboot.resource.attributes.environment=dev
+otel.springboot.resource.attributes.xyz=foo
+```
+
 ##### Exporter Properties
 
 | Feature         | Property                      | Default Value                        |
