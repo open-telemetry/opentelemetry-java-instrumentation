@@ -54,10 +54,6 @@ public final class EmbeddedInstrumentationProperties {
 
   private static final class EmbeddedPropertiesLoader extends ClassLoader {
 
-    static {
-      ClassLoader.registerAsParallelCapable();
-    }
-
     EmbeddedPropertiesLoader() {
       super(EmbeddedPropertiesLoader.class.getClassLoader());
     }
