@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 
 /** Entrypoint for instrumenting Lettuce or clients. */
@@ -23,10 +24,12 @@ public final class LettuceTelemetry {
   private final Tracer tracer;
 
   private LettuceTelemetry(OpenTelemetry openTelemetry) {
-    tracer =
-        openTelemetry.getTracer(
-            INSTRUMENTATION_NAME,
-            EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME));
+    TracerBuilder tracerBuilder = openTelemetry.tracerBuilder(INSTRUMENTATION_NAME);
+    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
+    if (version != null) {
+      tracerBuilder.setInstrumentationVersion(version);
+    }
+    tracer = tracerBuilder.build();
   }
 
   /**
