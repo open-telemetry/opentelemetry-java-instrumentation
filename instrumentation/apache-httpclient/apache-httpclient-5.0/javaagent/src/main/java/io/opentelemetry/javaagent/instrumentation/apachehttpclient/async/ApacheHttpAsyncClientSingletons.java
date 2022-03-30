@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.async;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -13,22 +13,21 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
-public final class ApacheHttpClientSingletons {
+public final class ApacheHttpAsyncClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.0";
 
-  private static final Instrumenter<ClassicHttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
-        new ApacheHttpClientHttpAttributesGetter();
-    ApacheHttpClientNetAttributesGetter netAttributesGetter =
-        new ApacheHttpClientNetAttributesGetter();
+    ApacheHttpAsyncClientHttpAttributesGetter httpAttributesGetter =
+        new ApacheHttpAsyncClientHttpAttributesGetter();
+    ApacheHttpAsyncClientNetAttributesGetter netAttributesGetter =
+        new ApacheHttpAsyncClientNetAttributesGetter();
 
     INSTRUMENTER =
-        Instrumenter.<ClassicHttpRequest, HttpResponse>builder(
+        Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
@@ -40,9 +39,9 @@ public final class ApacheHttpClientSingletons {
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
-  public static Instrumenter<ClassicHttpRequest, HttpResponse> instrumenter() {
+  public static Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 
-  private ApacheHttpClientSingletons() {}
+  private ApacheHttpAsyncClientSingletons() {}
 }

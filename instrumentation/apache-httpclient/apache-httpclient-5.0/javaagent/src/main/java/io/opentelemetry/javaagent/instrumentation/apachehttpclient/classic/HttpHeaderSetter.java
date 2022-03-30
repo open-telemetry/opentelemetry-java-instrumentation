@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.classic;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import org.apache.hc.core5.http.ClassicHttpRequest;

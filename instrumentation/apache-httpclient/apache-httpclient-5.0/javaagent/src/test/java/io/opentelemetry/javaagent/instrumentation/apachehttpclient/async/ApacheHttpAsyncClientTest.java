@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.async;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -184,7 +184,7 @@ class ApacheHttpAsyncClientTest {
 
   static FutureCallback<SimpleHttpResponse> responseCallback(
       AbstractHttpClientTest.RequestResult requestResult) {
-    return new FutureCallback<SimpleHttpResponse>() {
+    return new FutureCallback<>() {
       @Override
       public void completed(SimpleHttpResponse response) {
         requestResult.complete(response.getCode());

@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.async.ApacheHttpAsyncClientInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.classic.ApacheHttpClientInstrumentation;
 import java.util.Arrays;
 import java.util.List;
 
