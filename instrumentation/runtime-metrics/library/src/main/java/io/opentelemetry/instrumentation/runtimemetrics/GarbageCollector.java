@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
@@ -35,10 +36,13 @@ public final class GarbageCollector {
 
   /** Register all observers provided by this module. */
   public static void registerObservers() {
-    // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
+    registerObservers(GlobalOpenTelemetry.get());
+  }
+
+  public static void registerObservers(OpenTelemetry openTelemetry) {
     List<GarbageCollectorMXBean> garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
     Meter meter =
-        GlobalOpenTelemetry.get().getMeterProvider().get(GarbageCollector.class.getName());
+        openTelemetry.getMeterProvider().get(GarbageCollector.class.getName());
     List<Attributes> labelSets = new ArrayList<>(garbageCollectors.size());
     for (GarbageCollectorMXBean gc : garbageCollectors) {
       labelSets.add(Attributes.of(GC_KEY, gc.getName()));
