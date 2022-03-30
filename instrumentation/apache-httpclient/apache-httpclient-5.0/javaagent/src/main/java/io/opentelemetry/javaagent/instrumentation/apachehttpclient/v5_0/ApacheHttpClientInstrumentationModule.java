@@ -20,7 +20,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return List.of(
+    return Arrays.asList(
         new ApacheHttpClientInstrumentation(), new ApacheHttpAsyncClientInstrumentation());
   }
 }
