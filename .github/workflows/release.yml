@@ -150,6 +150,15 @@ jobs:
                             v$VERSION \
                             opentelemetry-javaagent.jar
 
+      - name: Notify opentelemetry-operator repo
+        env:
+          VERSION: ${{ steps.set-versions.outputs.release-version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --repo open-telemetry/opentelemetry-operator \
+                          --title "Update Java auto instrumentation to $VERSION" \
+                          --body "A new Javaagent was released, please update the auto instrumentation image to $VERSION."
+
       - uses: actions/checkout@v3
         with:
           ref: main
