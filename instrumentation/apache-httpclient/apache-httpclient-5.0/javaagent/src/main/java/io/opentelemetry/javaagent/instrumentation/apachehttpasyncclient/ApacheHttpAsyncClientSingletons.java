@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import org.apache.hc.core5.http.HttpResponse;
 
 public final class ApacheHttpAsyncClientSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpasyncclient-5.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.0";
 
   private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
 
