@@ -29,7 +29,7 @@ import ratpack.http.client.RequestSpec;
 /** A builder for {@link RatpackTelemetry}. */
 public final class RatpackTelemetryBuilder {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.4";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
 
   private final OpenTelemetry openTelemetry;
 

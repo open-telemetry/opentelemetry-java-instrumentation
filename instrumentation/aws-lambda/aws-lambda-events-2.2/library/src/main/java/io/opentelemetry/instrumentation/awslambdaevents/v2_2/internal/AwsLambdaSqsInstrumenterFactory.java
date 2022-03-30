@@ -20,7 +20,7 @@ public class AwsLambdaSqsInstrumenterFactory {
   public static Instrumenter<SQSEvent, Void> forEvent(OpenTelemetry openTelemetry) {
     return Instrumenter.<SQSEvent, Void>builder(
             openTelemetry,
-            "io.opentelemetry.aws-lambda-1.0",
+            "io.opentelemetry.aws-lambda-events-2.2",
             AwsLambdaSqsInstrumenterFactory::spanName)
         .addAttributesExtractors(new SqsEventAttributesExtractor())
         .addSpanLinksExtractor(new SqsEventSpanLinksExtractor())
@@ -30,7 +30,7 @@ public class AwsLambdaSqsInstrumenterFactory {
   public static Instrumenter<SQSMessage, Void> forMessage(OpenTelemetry openTelemetry) {
     return Instrumenter.<SQSMessage, Void>builder(
             openTelemetry,
-            "io.opentelemetry.aws-lambda-1.0",
+            "io.opentelemetry.aws-lambda-events-2.2",
             message -> message.getEventSource() + " process")
         .addAttributesExtractors(new SqsMessageAttributesExtractor())
         .addSpanLinksExtractor(new SqsMessageSpanLinksExtractor())

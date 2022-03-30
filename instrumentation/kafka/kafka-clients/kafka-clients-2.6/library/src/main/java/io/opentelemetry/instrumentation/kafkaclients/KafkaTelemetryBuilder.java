@@ -16,7 +16,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 public final class KafkaTelemetryBuilder {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-2.6";
 
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<ProducerRecord<?, ?>, Void>> producerAttributesExtractors =

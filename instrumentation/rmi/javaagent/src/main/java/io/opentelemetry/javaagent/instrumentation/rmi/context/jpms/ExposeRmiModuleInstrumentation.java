@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.rmi.context.jpms;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -57,9 +57,9 @@ public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
     transformer.applyTransformer(
         (builder, typeDescription, classLoader, module) -> {
           if (module != null && module.isNamed()) {
-            // using InstrumentationVersion because it's in the unnamed module in the bootstrap
+            // using Java8BytecodeBridge because it's in the unnamed module in the bootstrap
             // loader, and that's where the rmi instrumentation helper classes will end up
-            JavaModule helperModule = JavaModule.ofType(InstrumentationVersion.class);
+            JavaModule helperModule = JavaModule.ofType(Java8BytecodeBridge.class);
             // expose sun.rmi.server package to unnamed module
             ClassInjector.UsingInstrumentation.redefineModule(
                 InstrumentationHolder.getInstrumentation(),

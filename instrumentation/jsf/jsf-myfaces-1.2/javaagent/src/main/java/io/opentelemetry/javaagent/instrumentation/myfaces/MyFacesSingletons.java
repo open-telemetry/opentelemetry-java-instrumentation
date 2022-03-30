@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.jsf.JsfRequest;
 
 public class MyFacesSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.myfaces-1.2";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jsf-myfaces-1.2";
 
   private static final Instrumenter<JsfRequest, Void> INSTRUMENTER;
 

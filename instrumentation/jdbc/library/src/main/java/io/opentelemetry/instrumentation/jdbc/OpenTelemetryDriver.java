@@ -20,7 +20,9 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.INSTRUMENTATION_NAME;
+
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
@@ -122,7 +124,12 @@ public final class OpenTelemetryDriver implements Driver {
   }
 
   private static int[] parseInstrumentationVersion() {
-    String[] parts = InstrumentationVersion.VERSION.split("\\.");
+    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
+    if (version == null) {
+      // return 0.0 as a fallback
+      return new int[] {0, 0};
+    }
+    String[] parts = version.split("\\.");
     if (parts.length >= 2) {
       try {
         int majorVersion = Integer.parseInt(parts[0]);

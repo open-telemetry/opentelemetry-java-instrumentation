@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.OtelInstrumentationExtension
+
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
 plugins {
@@ -117,5 +119,37 @@ if (testLatestDeps) {
         dependsOn(latestDepTest)
       }
     }
+  }
+}
+
+val otelInstrumentation = extensions.create<OtelInstrumentationExtension>("otelInstrumentation")
+
+tasks {
+  val generateInstrumentationVersionFile by registering {
+    val propertiesDir = File(project.buildDir, "generated/instrumentationVersion")
+    outputs.dir(propertiesDir)
+
+    doLast {
+      val name = otelInstrumentation.name.getOrElse(project.computeInstrumentationName())
+      val version = otelInstrumentation.version.getOrElse(project.version as String)
+      val metaInfDir = File(propertiesDir, "META-INF/io/opentelemetry/instrumentation/")
+      metaInfDir.mkdirs()
+      File(metaInfDir, "$name.properties")
+        .writeText("version=$version")
+    }
+  }
+}
+
+fun Project.computeInstrumentationName(): String {
+  val name = when (projectDir.name) {
+    "javaagent", "library", "library-autoconfigure" -> projectDir.parentFile.name
+    else -> project.name
+  }
+  return "io.opentelemetry.$name"
+}
+
+sourceSets {
+  main {
+    output.dir("build/generated/instrumentationVersion", "builtBy" to "generateInstrumentationVersionFile")
   }
 }

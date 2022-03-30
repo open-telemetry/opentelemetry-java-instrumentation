@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc
 
-import io.opentelemetry.instrumentation.api.InstrumentationVersion
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
 import spock.lang.Specification
 
@@ -37,7 +37,7 @@ class OpenTelemetryDriverTest extends Specification {
     expect:
     !OpenTelemetryDriver.INSTANCE.jdbcCompliant()
 
-    String[] parts = InstrumentationVersion.getPackage().getImplementationVersion().split("\\.")
+    String[] parts = Instrumenter.getPackage().getImplementationVersion().split("\\.")
 
     OpenTelemetryDriver.INSTANCE.majorVersion == Integer.parseInt(parts[0])
     OpenTelemetryDriver.INSTANCE.minorVersion == Integer.parseInt(parts[1])
