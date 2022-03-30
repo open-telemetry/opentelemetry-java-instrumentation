@@ -11,7 +11,6 @@ import static java.util.Collections.unmodifiableList;
 import io.opentelemetry.instrumentation.api.cache.Cache;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,23 +31,25 @@ public final class HelperResources {
    * Registers the {@code urls} to be available to instrumentation at {@code path}, when given
    * {@code classLoader} attempts to load that resource.
    */
-  public static void register(ClassLoader classLoader, String path, Enumeration<URL> urls) {
+  public static void register(ClassLoader classLoader, String path, List<URL> urls) {
     RESOURCES
         .computeIfAbsent(classLoader, unused -> new ConcurrentHashMap<>())
         .compute(path, (k, v) -> append(v, urls));
   }
 
   /** Registers the {@code urls} to be available to instrumentation at {@code path}. */
-  public static void registerForAllClassLoaders(String path, Enumeration<URL> urls) {
+  public static void registerForAllClassLoaders(String path, List<URL> urls) {
     ALL_CLASSLOADERS_RESOURCES.compute(path, (k, v) -> append(v, urls));
   }
 
-  private static List<URL> append(@Nullable List<URL> resources, Enumeration<URL> toAdd) {
+  private static List<URL> append(@Nullable List<URL> resources, List<URL> toAdd) {
     List<URL> newResources = resources == null ? new ArrayList<>() : new ArrayList<>(resources);
-    while (toAdd.hasMoreElements()) {
-      URL newResource = toAdd.nextElement();
-      // make sure to de-dupe resources - each extension classloader will also return resources from
-      // the parent agent classloader
+    for (URL newResource : toAdd) {
+      // make sure to de-dupe resources - each extension classloader has the agent classloader as
+      // its parent, and the MultipleParentClassLoader (that every individual extension CL gets put
+      // into) concatenates all found resources on getResources(); this means that if you ask for a
+      // built-in agent resource, each extension CL will also return URL pointing to it, thus the
+      // final collection will have (no of extension CLs) + 1 duplicates of the same URL
       if (!containsSameFile(newResources, newResource)) {
         newResources.add(newResource);
       }

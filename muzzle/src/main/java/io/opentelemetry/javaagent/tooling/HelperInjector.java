@@ -20,7 +20,6 @@ import java.nio.file.Files;
 import java.security.SecureClassLoader;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -177,9 +176,10 @@ public class HelperInjector implements Transformer {
         classLoader,
         cl -> {
           for (HelperResource helperResource : helperResources) {
-            Enumeration<URL> resources;
+            List<URL> resources;
             try {
-              resources = helpersSource.getResources(helperResource.getAgentPath());
+              resources =
+                  Collections.list(helpersSource.getResources(helperResource.getAgentPath()));
             } catch (IOException e) {
               logger.log(
                   SEVERE,
@@ -188,7 +188,7 @@ public class HelperInjector implements Transformer {
                   e);
               continue;
             }
-            if (!resources.hasMoreElements()) {
+            if (resources.isEmpty()) {
               logger.log(
                   FINE,
                   "Helper resources {0} requested but not found.",
