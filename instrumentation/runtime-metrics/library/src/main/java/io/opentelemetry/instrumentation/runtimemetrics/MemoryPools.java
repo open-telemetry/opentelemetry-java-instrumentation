@@ -24,7 +24,7 @@ import java.util.List;
  * <p>Example usage:
  *
  * <pre>{@code
- * MemoryPools.registerObservers();
+ * MemoryPools.registerObservers(GlobalOpenTelemetry.get());
  * }</pre>
  *
  * <p>Example metrics being exported: Component
@@ -59,6 +59,7 @@ public final class MemoryPools {
   private static final Attributes MAX_NON_HEAP = Attributes.of(TYPE_KEY, MAX, AREA_KEY, NON_HEAP);
 
   /** Register only the "area" measurements. */
+  @Deprecated
   public static void registerMemoryAreaObservers() {
     registerMemoryPoolObservers(GlobalOpenTelemetry.get());
   }
@@ -78,6 +79,7 @@ public final class MemoryPools {
   }
 
   /** Register only the "pool" measurements. */
+  @Deprecated
   public static void registerMemoryPoolObservers() {
     registerMemoryPoolObservers(GlobalOpenTelemetry.get());
   }
@@ -113,7 +115,12 @@ public final class MemoryPools {
             });
   }
 
-  /** Register all measurements provided by this module. */
+  /**
+   * Register all measurements provided by this module.
+   *
+   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
+   */
+  @Deprecated
   public static void registerObservers() {
     registerMemoryAreaObservers();
     registerMemoryPoolObservers();

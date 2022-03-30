@@ -20,10 +20,16 @@ public class ProcessMetrics {
 
   private ProcessMetrics() {}
 
-  /** Register observers for java runtime metrics. */
+  /**
+   * Register observers for java runtime metrics.
+   *
+   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
+   */
+  @Deprecated
   public static void registerObservers() {
     registerObservers(GlobalOpenTelemetry.get());
   }
+
   public static void registerObservers(OpenTelemetry openTelemetry) {
     Meter meter = openTelemetry.getMeterProvider().get("io.opentelemetry.oshi");
     SystemInfo systemInfo = new SystemInfo();

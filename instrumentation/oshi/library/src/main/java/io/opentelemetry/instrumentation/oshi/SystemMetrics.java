@@ -28,10 +28,16 @@ public class SystemMetrics {
 
   private SystemMetrics() {}
 
-  /** Register observers for system metrics. */
+  /**
+   * Register observers for system metrics.
+   *
+   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
+   */
+  @Deprecated
   public static void registerObservers() {
     registerObservers(GlobalOpenTelemetry.get());
   }
+
   public static void registerObservers(OpenTelemetry openTelemetry) {
     Meter meter = openTelemetry.getMeterProvider().get("io.opentelemetry.oshi");
     SystemInfo systemInfo = new SystemInfo();

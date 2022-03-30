@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -16,7 +17,7 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
 
   @Override
   protected void registerMetrics() {
-    ProcessMetrics.registerObservers();
+    ProcessMetrics.registerObservers(GlobalOpenTelemetry.get());
   }
 
   @Override

@@ -21,7 +21,7 @@ import java.util.List;
  * <p>Example usage:
  *
  * <pre>{@code
- * GarbageCollector.registerObservers();
+ * GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
  * }</pre>
  *
  * <p>Example metrics being exported:
@@ -34,15 +34,19 @@ import java.util.List;
 public final class GarbageCollector {
   private static final AttributeKey<String> GC_KEY = AttributeKey.stringKey("gc");
 
-  /** Register all observers provided by this module. */
+  /**
+   * Register all observers provided by this module.
+   *
+   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
+   */
+  @Deprecated
   public static void registerObservers() {
     registerObservers(GlobalOpenTelemetry.get());
   }
 
   public static void registerObservers(OpenTelemetry openTelemetry) {
     List<GarbageCollectorMXBean> garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
-    Meter meter =
-        openTelemetry.getMeterProvider().get(GarbageCollector.class.getName());
+    Meter meter = openTelemetry.getMeterProvider().get(GarbageCollector.class.getName());
     List<Attributes> labelSets = new ArrayList<>(garbageCollectors.size());
     for (GarbageCollectorMXBean gc : garbageCollectors) {
       labelSets.add(Attributes.of(GC_KEY, gc.getName()));
