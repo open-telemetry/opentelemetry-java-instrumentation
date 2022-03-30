@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static java.util.Collections.singletonList;
-
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -21,6 +20,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ApacheHttpClientInstrumentation());
+    return List.of(
+        new ApacheHttpClientInstrumentation(), new ApacheHttpAsyncClientInstrumentation());
   }
 }
