@@ -18,8 +18,10 @@ class RuntimeMetricsTest extends AgentInstrumentationSpecification {
     conditions.eventually {
       assert getMetrics().any { it.name == "runtime.jvm.gc.time" }
       assert getMetrics().any { it.name == "runtime.jvm.gc.count" }
-      assert getMetrics().any { it.name == "runtime.jvm.memory.area" }
-      assert getMetrics().any { it.name == "runtime.jvm.memory.pool" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.memory.init" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.memory.usage" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.memory.committed" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.memory.max" }
     }
   }
 }
