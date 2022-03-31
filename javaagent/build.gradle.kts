@@ -46,6 +46,7 @@ val licenseReportDependencies by configurations.creating {
 
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
+  bootstrapLibs(project(":instrumentation-api-semconv"))
   bootstrapLibs(project(":instrumentation-api-annotation-support"))
   bootstrapLibs(project(":instrumentation-appender-api-internal"))
   bootstrapLibs(project(":javaagent-bootstrap"))
@@ -258,6 +259,7 @@ fun CopySpec.isolateClasses(jars: Iterable<File>) {
 fun ShadowJar.excludeBootstrapJars() {
   dependencies {
     exclude(project(":instrumentation-api"))
+    exclude(project(":instrumentation-api-semconv"))
     exclude(project(":instrumentation-api-annotation-support"))
     exclude(project(":instrumentation-appender-api-internal"))
     exclude(project(":javaagent-bootstrap"))
