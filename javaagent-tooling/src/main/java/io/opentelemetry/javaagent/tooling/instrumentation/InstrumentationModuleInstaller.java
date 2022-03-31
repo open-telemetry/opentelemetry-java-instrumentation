@@ -95,18 +95,29 @@ public final class InstrumentationModuleInstaller {
 
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : typeInstrumentations) {
+      ElementMatcher<TypeDescription> typeMatcher =
+          new NamedMatcher<>(
+              instrumentationModule.getClass().getSimpleName()
+                  + "#"
+                  + typeInstrumentation.getClass().getSimpleName(),
+              new IgnoreFailedTypeMatcher(typeInstrumentation.typeMatcher()));
+      ElementMatcher<ClassLoader> classLoaderMatcher =
+          new NamedMatcher<>(
+              instrumentationModule.getClass().getSimpleName()
+                  + "#"
+                  + typeInstrumentation.getClass().getSimpleName(),
+              moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()));
+
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           agentBuilder
               .type(
                   new LoggingFailSafeMatcher<>(
-                      typeInstrumentation.typeMatcher(),
-                      "Instrumentation type matcher unexpected exception: "
-                          + typeInstrumentation.typeMatcher()),
+                      typeMatcher,
+                      "Instrumentation type matcher unexpected exception: " + typeMatcher),
                   new LoggingFailSafeMatcher<>(
-                      moduleClassLoaderMatcher.and(typeInstrumentation.classLoaderOptimization()),
+                      classLoaderMatcher,
                       "Instrumentation class loader matcher unexpected exception: "
-                          + moduleClassLoaderMatcher.and(
-                              typeInstrumentation.classLoaderOptimization())))
+                          + classLoaderMatcher))
               .and(NOT_DECORATOR_MATCHER)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())

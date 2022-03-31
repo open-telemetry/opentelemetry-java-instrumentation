@@ -37,4 +37,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.dom=ALL-UNNAMED")
   jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.jaxp=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+  jvmArgs("-Dotel.instrumentation.jaxws.enabled=true")
 }

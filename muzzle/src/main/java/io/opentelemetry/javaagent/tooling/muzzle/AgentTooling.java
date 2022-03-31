@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import net.bytebuddy.agent.builder.AgentBuilder;
+
 /**
  * This class contains class references for objects shared by the agent installer as well as muzzle
  * (both compile and runtime). Extracted out from AgentInstaller to begin separating some of the
@@ -12,7 +14,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
  */
 public final class AgentTooling {
 
-  private static final AgentCachingPoolStrategy POOL_STRATEGY = new AgentCachingPoolStrategy();
+  private static volatile ClassLoader bootstrapProxy;
 
   public static AgentLocationStrategy locationStrategy() {
     return locationStrategy(null);
@@ -22,9 +24,18 @@ public final class AgentTooling {
     return new AgentLocationStrategy(bootstrapProxy);
   }
 
-  public static AgentCachingPoolStrategy poolStrategy() {
-    return POOL_STRATEGY;
+  public static AgentBuilder.PoolStrategy poolStrategy() {
+    return PoolStrategyHolder.POOL_STRATEGY;
+  }
+
+  public static void init(ClassLoader classLoader) {
+    bootstrapProxy = classLoader;
   }
 
   private AgentTooling() {}
+
+  private static class PoolStrategyHolder {
+    private static final AgentBuilder.PoolStrategy POOL_STRATEGY =
+        new AgentCachingPoolStrategy(locationStrategy(bootstrapProxy));
+  }
 }

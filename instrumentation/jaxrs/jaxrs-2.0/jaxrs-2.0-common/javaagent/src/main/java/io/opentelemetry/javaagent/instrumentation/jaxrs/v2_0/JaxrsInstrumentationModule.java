@@ -34,4 +34,9 @@ public class JaxrsInstrumentationModule extends InstrumentationModule {
         new JaxrsAnnotationsInstrumentation(),
         new JaxrsAsyncResponseInstrumentation());
   }
+
+  @Override
+  protected boolean defaultEnabled() {
+    return false;
+  }
 }

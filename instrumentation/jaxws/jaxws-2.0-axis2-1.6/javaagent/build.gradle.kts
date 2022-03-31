@@ -47,3 +47,7 @@ dependencies {
   testImplementation("com.sun.xml.ws:jaxws-rt:2.2.8")
   testImplementation("com.sun.xml.ws:jaxws-tools:2.2.8")
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.jaxws.enabled=true")
+}

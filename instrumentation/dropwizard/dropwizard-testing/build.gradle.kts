@@ -14,3 +14,7 @@ dependencies {
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
 configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:19.0")
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.jaxrs.enabled=true")
+}

@@ -31,4 +31,9 @@ public class JaxrsInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new JaxrsAnnotationsInstrumentation());
   }
+
+  @Override
+  protected boolean defaultEnabled() {
+    return false;
+  }
 }

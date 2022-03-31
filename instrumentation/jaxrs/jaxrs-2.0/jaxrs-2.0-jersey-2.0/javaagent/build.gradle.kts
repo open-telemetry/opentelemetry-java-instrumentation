@@ -54,5 +54,6 @@ tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.jaxrs.enabled=true")
   }
 }
