@@ -124,7 +124,8 @@ tasks {
   val generateInstrumentationVersionFile by registering {
     val name = computeInstrumentationName()
     val version = project.version as String
-    inputs.property("project.version", version)
+    inputs.property("instrumentation.name", name)
+    inputs.property("instrumentation.version", version)
 
     val propertiesDir = File(project.buildDir, "generated/instrumentationVersion/META-INF/io/opentelemetry/instrumentation/")
     outputs.dir(propertiesDir)
