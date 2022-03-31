@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -25,7 +26,7 @@ import java.util.function.Function;
  * <p>Example usage:
  *
  * <pre>{@code
- * MemoryPools.registerObservers(openTelemetry);
+ * MemoryPools.registerObservers(GlobalOpenTelemetry.get());
  * }</pre>
  *
  * <p>Example metrics being exported: Component
@@ -48,7 +49,17 @@ public final class MemoryPools {
   private static final String HEAP = "heap";
   private static final String NON_HEAP = "non_heap";
 
-  /** Register memory observers. */
+  /**
+   * Register observers for java runtime memory metrics.
+   *
+   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
+   */
+  @Deprecated
+  public static void registerObservers() {
+    registerObservers(GlobalOpenTelemetry.get());
+  }
+
+  /** Register observers for java runtime memory metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
     List<MemoryPoolMXBean> poolBeans = ManagementFactory.getMemoryPoolMXBeans();
     Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");

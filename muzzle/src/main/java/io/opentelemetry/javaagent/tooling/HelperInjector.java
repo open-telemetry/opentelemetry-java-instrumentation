@@ -176,11 +176,22 @@ public class HelperInjector implements Transformer {
         classLoader,
         cl -> {
           for (HelperResource helperResource : helperResources) {
-            URL resource = helpersSource.getResource(helperResource.getAgentPath());
-            if (resource == null) {
+            List<URL> resources;
+            try {
+              resources =
+                  Collections.list(helpersSource.getResources(helperResource.getAgentPath()));
+            } catch (IOException e) {
+              logger.log(
+                  SEVERE,
+                  "Unexpected exception occurred when loading resources {}; skipping",
+                  new Object[] {helperResource.getAgentPath()},
+                  e);
+              continue;
+            }
+            if (resources.isEmpty()) {
               logger.log(
                   FINE,
-                  "Helper resource {0} requested but not found.",
+                  "Helper resources {0} requested but not found.",
                   helperResource.getAgentPath());
               continue;
             }
@@ -188,18 +199,18 @@ public class HelperInjector implements Transformer {
             if (helperResource.allClassLoaders()) {
               logger.log(
                   FINE,
-                  "Injecting resource onto all classloaders: {0}",
+                  "Injecting resources onto all classloaders: {0}",
                   helperResource.getApplicationPath());
               HelperResources.registerForAllClassLoaders(
-                  helperResource.getApplicationPath(), resource);
+                  helperResource.getApplicationPath(), resources);
             } else {
               if (logger.isLoggable(FINE)) {
                 logger.log(
                     FINE,
-                    "Injecting resource onto classloader {0} -> {1}",
+                    "Injecting resources onto classloader {0} -> {1}",
                     new Object[] {classLoader, helperResource.getApplicationPath()});
               }
-              HelperResources.register(classLoader, helperResource.getApplicationPath(), resource);
+              HelperResources.register(classLoader, helperResource.getApplicationPath(), resources);
             }
           }
 

@@ -30,11 +30,12 @@ class ResourceInjectionTest extends AgentInstrumentationSpecification {
     // this triggers resource injection
     emptyLoader.get().loadClass(SystemUtils.getName())
 
-    resourceUrls = emptyLoader.get().getResources(resourceName)
+    resourceUrls = Collections.list(emptyLoader.get().getResources(resourceName))
 
     then:
-    resourceUrls.hasMoreElements()
-    resourceUrls.nextElement().openStream().text.trim() == 'Hello world!'
+    resourceUrls.size() == 2
+    resourceUrls.get(0).openStream().text.trim() == 'Hello world!'
+    resourceUrls.get(1).openStream().text.trim() == 'Hello there'
 
     !notInjectedLoader.getResources(resourceName).hasMoreElements()
 

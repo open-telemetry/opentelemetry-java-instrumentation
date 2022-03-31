@@ -21,7 +21,7 @@ public class RuntimeMetricsInstaller implements AgentListener {
   public void afterAgent(Config config, AutoConfiguredOpenTelemetrySdk unused) {
     if (config.isInstrumentationEnabled(
         Collections.singleton("runtime-metrics"), /* defaultEnabled= */ true)) {
-      GarbageCollector.registerObservers();
+      GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
       MemoryPools.registerObservers(GlobalOpenTelemetry.get());
     }
   }
