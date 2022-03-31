@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
@@ -23,7 +24,7 @@ import java.util.List;
  * <p>Example usage:
  *
  * <pre>{@code
- * MemoryPools.registerObservers();
+ * MemoryPools.registerObservers(GlobalOpenTelemetry.get());
  * }</pre>
  *
  * <p>Example metrics being exported: Component
@@ -58,10 +59,14 @@ public final class MemoryPools {
   private static final Attributes MAX_NON_HEAP = Attributes.of(TYPE_KEY, MAX, AREA_KEY, NON_HEAP);
 
   /** Register only the "area" measurements. */
+  @Deprecated
   public static void registerMemoryAreaObservers() {
-    // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
+    registerMemoryPoolObservers(GlobalOpenTelemetry.get());
+  }
+
+  public static void registerMemoryAreaObservers(OpenTelemetry openTelemetry) {
     MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
-    Meter meter = GlobalOpenTelemetry.get().getMeterProvider().get(MemoryPools.class.getName());
+    Meter meter = openTelemetry.getMeterProvider().get(MemoryPools.class.getName());
     meter
         .upDownCounterBuilder("runtime.jvm.memory.area")
         .setDescription("Bytes of a given JVM memory area.")
@@ -74,10 +79,14 @@ public final class MemoryPools {
   }
 
   /** Register only the "pool" measurements. */
+  @Deprecated
   public static void registerMemoryPoolObservers() {
-    // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
+    registerMemoryPoolObservers(GlobalOpenTelemetry.get());
+  }
+
+  public static void registerMemoryPoolObservers(OpenTelemetry openTelemetry) {
     List<MemoryPoolMXBean> poolBeans = ManagementFactory.getMemoryPoolMXBeans();
-    Meter meter = GlobalOpenTelemetry.get().getMeterProvider().get(MemoryPools.class.getName());
+    Meter meter = openTelemetry.getMeterProvider().get(MemoryPools.class.getName());
     List<Attributes> usedLabelSets = new ArrayList<>(poolBeans.size());
     List<Attributes> committedLabelSets = new ArrayList<>(poolBeans.size());
     List<Attributes> maxLabelSets = new ArrayList<>(poolBeans.size());
@@ -106,10 +115,21 @@ public final class MemoryPools {
             });
   }
 
-  /** Register all measurements provided by this module. */
+  /**
+   * Register all measurements provided by this module.
+   *
+   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
+   */
+  @Deprecated
   public static void registerObservers() {
     registerMemoryAreaObservers();
     registerMemoryPoolObservers();
+  }
+
+  /** Register all measurements provided by this module. */
+  public static void registerObservers(OpenTelemetry openTelemetry) {
+    registerMemoryAreaObservers(openTelemetry);
+    registerMemoryPoolObservers(openTelemetry);
   }
 
   static void recordHeap(ObservableLongMeasurement measurement, MemoryUsage usage) {
