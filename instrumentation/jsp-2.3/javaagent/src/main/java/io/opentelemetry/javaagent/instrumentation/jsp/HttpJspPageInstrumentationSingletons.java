@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -14,11 +16,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.HttpJspPage;
-import org.slf4j.LoggerFactory;
 
 public class HttpJspPageInstrumentationSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
@@ -75,8 +77,8 @@ public class HttpJspPageInstrumentationSingletons {
         attributes.put(
             "jsp.requestURL", new URI(request.getRequestURL().toString()).normalize().toString());
       } catch (URISyntaxException e) {
-        LoggerFactory.getLogger(HttpJspPage.class)
-            .warn("Failed to get and normalize request URL: " + e.getMessage());
+        Logger.getLogger(HttpJspPage.class.getName())
+            .log(WARNING, "Failed to get and normalize request URL: {0}", e.getMessage());
       }
     }
 

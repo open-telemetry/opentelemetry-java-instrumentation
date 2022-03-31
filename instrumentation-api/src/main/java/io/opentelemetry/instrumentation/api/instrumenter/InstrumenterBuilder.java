@@ -16,15 +16,18 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -50,7 +53,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
-  final List<RequestListener> requestMetricListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
@@ -122,10 +124,16 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */
+  /** Adds a {@link RequestListener} which will be called for request start and end. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addRequestListener(RequestListener listener) {
+    requestListeners.add(listener);
+    return this;
+  }
+
+  /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and end. */
   @UnstableApi
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
-    requestMetricListeners.add(factory.create(meter));
+    requestListeners.add(factory.create(meter));
     return this;
   }
 
@@ -168,9 +176,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    *
    * <ul>
    *   <li>CLIENT nested spans are suppressed depending on their type: {@linkplain
-   *       HttpClientAttributesExtractor HTTP}, {@linkplain RpcAttributesExtractor RPC} or
-   *       {@linkplain DbAttributesExtractor database} clients. If a span with the same type is
-   *       present in the parent context object, new span of the same type will not be started.
+   *       HttpClientAttributesExtractor HTTP}, {@linkplain RpcClientAttributesExtractor RPC} or
+   *       {@linkplain DbClientAttributesExtractor database} clients. If a span with the same type
+   *       is present in the parent context object, new span of the same type will not be started.
    * </ul>
    *
    * <p><strong>When disabled:</strong>
@@ -185,9 +193,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    *   <li>SERVER nested spans are always suppressed. If a SERVER span is present in the parent
    *       context object, new SERVER span will not be started.
    *   <li>Messaging (PRODUCER and CONSUMER) nested spans are suppressed depending on their
-   *       {@linkplain MessagingAttributesExtractor#operation() operation}. If a span with the same
-   *       operation is present in the parent context object, new span with the same operation will
-   *       not be started.
+   *       {@linkplain MessageOperation operation}. If a span with the same operation is present in
+   *       the parent context object, new span with the same operation will not be started.
    *   <li>INTERNAL spans are never suppressed.
    * </ul>
    */
@@ -260,12 +267,24 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressionStrategy getSpanSuppressionStrategy() {
-    Set<SpanKey> spanKeys = SpanKeyExtractor.determineSpanKeys(attributesExtractors);
+    Set<SpanKey> spanKeys = getSpanKeysFromAttributesExtractors();
     if (enableSpanSuppressionByType) {
       return SpanSuppressionStrategy.from(spanKeys);
     }
     // if not enabled, preserve current behavior, not distinguishing CLIENT instrumentation types
     return SpanSuppressionStrategy.suppressNestedClients(spanKeys);
+  }
+
+  private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
+    return attributesExtractors.stream()
+        .filter(SpanKeyProvider.class::isInstance)
+        .map(SpanKeyProvider.class::cast)
+        .flatMap(
+            provider -> {
+              SpanKey spanKey = provider.internalGetSpanKey();
+              return spanKey == null ? Stream.of() : Stream.of(spanKey);
+            })
+        .collect(Collectors.toSet());
   }
 
   private interface InstrumenterConstructor<RQ, RS> {

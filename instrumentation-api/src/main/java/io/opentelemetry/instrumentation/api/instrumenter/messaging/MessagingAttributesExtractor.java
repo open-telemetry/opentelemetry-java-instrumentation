@@ -5,95 +5,102 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation.PROCESS;
+import static io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation.RECEIVE;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md">messaging
- * attributes</a>. Instrumentation of messaging frameworks/libraries should extend this class,
- * defining {@link REQUEST} and {@link RESPONSE} with the actual request / response types of the
- * instrumented library. If an attribute is not available in this library, it is appropriate to
- * return {@code null} from the protected attribute methods, but implement as many as possible for
- * best compliance with the OpenTelemetry specification.
+ * attributes</a>.
+ *
+ * <p>This class delegates to a type-specific {@link MessagingAttributesGetter} for individual
+ * attribute extraction from request/response objects.
  */
-public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE> {
-  public static final String TEMP_DESTINATION_NAME = "(temporary)";
+public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
+  static final String TEMP_DESTINATION_NAME = "(temporary)";
+
+  /**
+   * Creates the messaging attributes extractor for the given {@link MessageOperation operation}.
+   */
+  public static <REQUEST, RESPONSE> MessagingAttributesExtractor<REQUEST, RESPONSE> create(
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+    return new MessagingAttributesExtractor<>(getter, operation);
+  }
+
+  private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
+  private final MessageOperation operation;
+
+  private MessagingAttributesExtractor(
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+    this.getter = getter;
+    this.operation = operation;
+  }
+
+  @SuppressWarnings("deprecation") // operationName
   @Override
-  public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    set(attributes, SemanticAttributes.MESSAGING_SYSTEM, system(request));
-    set(attributes, SemanticAttributes.MESSAGING_DESTINATION_KIND, destinationKind(request));
-    boolean isTemporaryDestination = temporaryDestination(request);
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    set(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.system(request));
+    set(attributes, SemanticAttributes.MESSAGING_DESTINATION_KIND, getter.destinationKind(request));
+    boolean isTemporaryDestination = getter.temporaryDestination(request);
     if (isTemporaryDestination) {
       set(attributes, SemanticAttributes.MESSAGING_TEMP_DESTINATION, true);
       set(attributes, SemanticAttributes.MESSAGING_DESTINATION, TEMP_DESTINATION_NAME);
     } else {
-      set(attributes, SemanticAttributes.MESSAGING_DESTINATION, destination(request));
+      set(attributes, SemanticAttributes.MESSAGING_DESTINATION, getter.destination(request));
     }
-    set(attributes, SemanticAttributes.MESSAGING_PROTOCOL, protocol(request));
-    set(attributes, SemanticAttributes.MESSAGING_PROTOCOL_VERSION, protocolVersion(request));
-    set(attributes, SemanticAttributes.MESSAGING_URL, url(request));
-    set(attributes, SemanticAttributes.MESSAGING_CONVERSATION_ID, conversationId(request));
+    set(attributes, SemanticAttributes.MESSAGING_PROTOCOL, getter.protocol(request));
+    set(attributes, SemanticAttributes.MESSAGING_PROTOCOL_VERSION, getter.protocolVersion(request));
+    set(attributes, SemanticAttributes.MESSAGING_URL, getter.url(request));
+    set(attributes, SemanticAttributes.MESSAGING_CONVERSATION_ID, getter.conversationId(request));
     set(
         attributes,
         SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-        messagePayloadSize(request));
+        getter.messagePayloadSize(request));
     set(
         attributes,
         SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
-        messagePayloadCompressedSize(request));
-    MessageOperation operation = operation();
-    if (operation == MessageOperation.RECEIVE || operation == MessageOperation.PROCESS) {
+        getter.messagePayloadCompressedSize(request));
+    if (operation == RECEIVE || operation == PROCESS) {
       set(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
     }
   }
 
   @Override
-  public final void onEnd(
+  public void onEnd(
       AttributesBuilder attributes,
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    set(attributes, SemanticAttributes.MESSAGING_MESSAGE_ID, messageId(request, response));
+    set(attributes, SemanticAttributes.MESSAGING_MESSAGE_ID, getter.messageId(request, response));
   }
 
-  public abstract MessageOperation operation();
-
-  @Nullable
-  protected abstract String system(REQUEST request);
-
-  @Nullable
-  protected abstract String destinationKind(REQUEST request);
-
-  @Nullable
-  protected abstract String destination(REQUEST request);
-
-  protected abstract boolean temporaryDestination(REQUEST request);
-
-  @Nullable
-  protected abstract String protocol(REQUEST request);
-
-  @Nullable
-  protected abstract String protocolVersion(REQUEST request);
-
-  @Nullable
-  protected abstract String url(REQUEST request);
-
-  @Nullable
-  protected abstract String conversationId(REQUEST request);
-
-  @Nullable
-  protected abstract Long messagePayloadSize(REQUEST request);
-
-  @Nullable
-  protected abstract Long messagePayloadCompressedSize(REQUEST request);
-
-  @Nullable
-  protected abstract String messageId(REQUEST request, @Nullable RESPONSE response);
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @UnstableApi
+  @Override
+  public SpanKey internalGetSpanKey() {
+    switch (operation) {
+      case SEND:
+        return SpanKey.PRODUCER;
+      case RECEIVE:
+        return SpanKey.CONSUMER_RECEIVE;
+      case PROCESS:
+        return SpanKey.CONSUMER_PROCESS;
+    }
+    throw new IllegalStateException("Can't possibly happen");
+  }
 }

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -31,16 +30,10 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public List<String> getAdditionalHelperClassNames() {
-    return singletonList(
-        "io.opentelemetry.javaagent.instrumentation.internal.classloader.DefineClassUtil");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new ClassLoaderInstrumentation(),
-        new ResourceInjectionInstrumentation(),
-        new DefineClassInstrumentation());
+        new BootDelegationInstrumentation(),
+        new LoadInjectedClassInstrumentation(),
+        new ResourceInjectionInstrumentation());
   }
 }

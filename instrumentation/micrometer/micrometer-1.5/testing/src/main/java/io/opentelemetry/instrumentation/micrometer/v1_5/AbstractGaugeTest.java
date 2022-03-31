@@ -61,7 +61,7 @@ public abstract class AbstractGaugeTest {
 
     // when
     Metrics.globalRegistry.remove(gauge);
-    Thread.sleep(10); // give time for any inflight metric export to be received
+    Thread.sleep(100); // give time for any inflight metric export to be received
     testing().clearData();
 
     // then
@@ -80,7 +80,7 @@ public abstract class AbstractGaugeTest {
         .register(Metrics.globalRegistry);
     Gauge.builder("testGaugeWithTags", () -> 42)
         .description("ignored")
-        .baseUnit("ignored")
+        .baseUnit("items")
         .tags("tag", "2")
         .register(Metrics.globalRegistry);
 

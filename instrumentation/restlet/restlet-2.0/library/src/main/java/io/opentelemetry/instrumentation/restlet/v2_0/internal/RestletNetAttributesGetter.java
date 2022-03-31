@@ -17,12 +17,6 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
   }
 
   @Override
-  @Nullable
-  public String peerName(Request request) {
-    return null;
-  }
-
-  @Override
   public Integer peerPort(Request request) {
     return request.getClientInfo().getPort();
   }

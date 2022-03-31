@@ -8,6 +8,4 @@ dependencies {
 
   testImplementation("com.amazonaws:aws-java-sdk-core:1.11.0")
   testImplementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
-
-  testImplementation("org.assertj:assertj-core")
 }

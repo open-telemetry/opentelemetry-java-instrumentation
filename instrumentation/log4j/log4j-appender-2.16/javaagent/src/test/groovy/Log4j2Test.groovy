@@ -27,16 +27,16 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     if (parent) {
       runWithSpan("parent") {
         if (exception) {
-          logger."$testMethod"("xyz", new IllegalStateException("hello"))
+          logger."$testMethod"("xyz: {}", 123, new IllegalStateException("hello"))
         } else {
-          logger."$testMethod"("xyz")
+          logger."$testMethod"("xyz: {}", 123)
         }
       }
     } else {
       if (exception) {
-        logger."$testMethod"("xyz", new IllegalStateException("hello"))
+        logger."$testMethod"("xyz: {}", 123, new IllegalStateException("hello"))
       } else {
-        logger."$testMethod"("xyz")
+        logger."$testMethod"("xyz: {}", 123)
       }
     }
 
@@ -52,19 +52,23 @@ class Log4j2Test extends AgentInstrumentationSpecification {
             assertThat(logs).hasSize(1)
           })
       def log = logs.get(0)
-      assertThat(log.getBody().asString()).isEqualTo("xyz")
+      assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
       assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
+        assertThat(log.getAttributes().size()).isEqualTo(5)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(Log4j2Test.name)
       } else {
+        assertThat(log.getAttributes().size()).isEqualTo(2)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).isNull()
       }
+      assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
+      assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
       if (parent) {
         assertThat(log.getSpanContext()).isEqualTo(traces.get(0).get(0).getSpanContext())
       } else {
@@ -97,7 +101,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     ThreadContext.put("key1", "val1")
     ThreadContext.put("key2", "val2")
     try {
-      logger.info("xyz")
+      logger.info("xyz: {}", 123)
     } finally {
       ThreadContext.clearMap()
     }
@@ -110,13 +114,15 @@ class Log4j2Test extends AgentInstrumentationSpecification {
           assertThat(logs).hasSize(1)
         })
     def log = logs.get(0)
-    assertThat(log.getBody().asString()).isEqualTo("xyz")
+    assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
     assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
-    assertThat(log.getAttributes().size()).isEqualTo(2)
+    assertThat(log.getAttributes().size()).isEqualTo(4)
     assertThat(log.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key1"))).isEqualTo("val1")
     assertThat(log.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key2"))).isEqualTo("val2")
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
   }
 
   def "test string map message"() {
@@ -138,9 +144,11 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
-    assertThat(log.getAttributes().size()).isEqualTo(2)
+    assertThat(log.getAttributes().size()).isEqualTo(4)
     assertThat(log.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1")
     assertThat(log.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2")
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
   }
 
   def "test string map message with special attribute"() {
@@ -162,8 +170,10 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
-    assertThat(log.getAttributes().size()).isEqualTo(1)
+    assertThat(log.getAttributes().size()).isEqualTo(3)
     assertThat(log.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1")
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
   }
 
   def "test structured data map message"() {
@@ -185,8 +195,10 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
-    assertThat(log.getAttributes().size()).isEqualTo(2)
+    assertThat(log.getAttributes().size()).isEqualTo(4)
     assertThat(log.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1")
     assertThat(log.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2")
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
   }
 }

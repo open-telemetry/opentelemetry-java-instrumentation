@@ -15,6 +15,7 @@ import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.description.type.TypeList
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType
 import static net.bytebuddy.matcher.ElementMatchers.named
@@ -25,6 +26,7 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     AgentTooling.poolStrategy()
       .typePool(AgentTooling.locationStrategy().classFileLocator(this.class.classLoader, null), this.class.classLoader)
 
+  @Unroll
   def "test matcher #matcherClass.simpleName -> #type.simpleName"() {
     expect:
     hasSuperType(matcher).matches(argument) == result
@@ -59,10 +61,8 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     noExceptionThrown()
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
-    1 * typeGeneric.getTypeName() >> "typeGeneric-name"
     1 * type.getInterfaces() >> { throw new Exception("getInterfaces exception") }
     1 * type.getSuperClass() >> { throw new Exception("getSuperClass exception") }
-    2 * type.getTypeName() >> "type-name"
     0 * _
   }
 
@@ -84,6 +84,5 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     1 * interfaces.iterator() >> it
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
-    1 * typeGeneric.getTypeName() >> "typeGeneric-name"
   }
 }

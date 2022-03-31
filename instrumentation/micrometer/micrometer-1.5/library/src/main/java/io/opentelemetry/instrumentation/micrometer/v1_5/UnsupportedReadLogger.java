@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 final class UnsupportedReadLogger {
 
   static {
-    Logger logger = LoggerFactory.getLogger(OpenTelemetryMeterRegistry.class);
-    logger.warn("OpenTelemetry metrics bridge does not support reading measurements");
+    Logger logger = Logger.getLogger(OpenTelemetryMeterRegistry.class.getName());
+    logger.warning("OpenTelemetry metrics bridge does not support reading measurements");
   }
 
   static void logWarning() {

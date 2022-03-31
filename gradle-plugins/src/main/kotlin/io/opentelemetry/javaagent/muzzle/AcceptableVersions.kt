@@ -32,11 +32,14 @@ class AcceptableVersions(private val skipVersions: Collection<String>) :
       || versionString.contains("-atlassian-")
       || versionString.contains("public_draft")
       || versionString.contains("snapshot")
+      || versionString.contains("test")
       || GIT_SHA_PATTERN.matches(versionString)
+      || DATETIME_PATTERN.matches(versionString)
     return !draftVersion
   }
 
   companion object {
     private val GIT_SHA_PATTERN = Regex("^.*-[0-9a-f]{7,}$")
+    private val DATETIME_PATTERN = Regex("^\\d{4}-\\d{2}-\\d{2}t\\d{2}-\\d{2}-\\d{2}.*$")
   }
 }

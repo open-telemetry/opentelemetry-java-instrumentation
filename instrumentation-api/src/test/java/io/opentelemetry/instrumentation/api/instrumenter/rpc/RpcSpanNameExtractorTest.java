@@ -17,16 +17,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RpcSpanNameExtractorTest {
 
-  @Mock RpcAttributesExtractor<RpcRequest, Void> attributesExtractor;
+  @Mock RpcAttributesGetter<RpcRequest> getter;
 
   @Test
   void normal() {
     RpcRequest request = new RpcRequest();
 
-    when(attributesExtractor.service(request)).thenReturn("my.Service");
-    when(attributesExtractor.method(request)).thenReturn("Method");
+    when(getter.service(request)).thenReturn("my.Service");
+    when(getter.method(request)).thenReturn("Method");
 
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(attributesExtractor);
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
   }
 
@@ -34,9 +34,9 @@ class RpcSpanNameExtractorTest {
   void serviceNull() {
     RpcRequest request = new RpcRequest();
 
-    when(attributesExtractor.method(request)).thenReturn("Method");
+    when(getter.method(request)).thenReturn("Method");
 
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(attributesExtractor);
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
   }
 
@@ -44,9 +44,9 @@ class RpcSpanNameExtractorTest {
   void methodNull() {
     RpcRequest request = new RpcRequest();
 
-    when(attributesExtractor.service(request)).thenReturn("my.Service");
+    when(getter.service(request)).thenReturn("my.Service");
 
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(attributesExtractor);
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
   }
 

@@ -19,7 +19,7 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
   @Override
   protected WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder.decorator(
-        ArmeriaTracing.create(testing.getOpenTelemetry()).newClientDecorator());
+        ArmeriaTelemetry.create(testing.getOpenTelemetry()).newClientDecorator());
   }
 
   @Override

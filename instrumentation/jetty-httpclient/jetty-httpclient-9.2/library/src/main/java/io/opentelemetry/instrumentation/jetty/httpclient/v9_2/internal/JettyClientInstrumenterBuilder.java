@@ -6,11 +6,10 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
@@ -32,7 +31,9 @@ public final class JettyClientInstrumenterBuilder {
 
   private final List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors =
       new ArrayList<>();
-  private CapturedHttpHeaders capturedHttpHeaders = CapturedHttpHeaders.client(Config.get());
+  private final HttpClientAttributesExtractorBuilder<Request, Response>
+      httpAttributesExtractorBuilder =
+          HttpClientAttributesExtractor.builder(JettyClientHttpAttributesGetter.INSTANCE);
 
   public JettyClientInstrumenterBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -44,14 +45,18 @@ public final class JettyClientInstrumenterBuilder {
     return this;
   }
 
-  public JettyClientInstrumenterBuilder captureHttpHeaders(
-      CapturedHttpHeaders capturedHttpHeaders) {
-    this.capturedHttpHeaders = capturedHttpHeaders;
+  public JettyClientInstrumenterBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+    httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  public JettyClientInstrumenterBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+    httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
   public Instrumenter<Request, Response> build() {
-    JettyClientHttpAttributesGetter httpAttributesGetter = new JettyClientHttpAttributesGetter();
+    JettyClientHttpAttributesGetter httpAttributesGetter = JettyClientHttpAttributesGetter.INSTANCE;
     JettyHttpClientNetAttributesGetter netAttributesGetter =
         new JettyHttpClientNetAttributesGetter();
 
@@ -60,8 +65,7 @@ public final class JettyClientInstrumenterBuilder {
             INSTRUMENTATION_NAME,
             HttpSpanNameExtractor.create(httpAttributesGetter))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-        .addAttributesExtractor(
-            HttpClientAttributesExtractor.create(httpAttributesGetter, capturedHttpHeaders))
+        .addAttributesExtractor(httpAttributesExtractorBuilder.build())
         .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
         .addRequestMetrics(HttpClientMetrics.get())

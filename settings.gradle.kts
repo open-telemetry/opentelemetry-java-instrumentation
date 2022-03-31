@@ -1,12 +1,12 @@
 pluginManagement {
   plugins {
-    id("com.github.ben-manes.versions") version "0.41.0"
-    id("com.github.jk1.dependency-license-report") version "2.0"
-    id("com.gradle.plugin-publish") version "0.18.0"
+    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.github.jk1.dependency-license-report") version "2.1"
+    id("com.gradle.plugin-publish") version "0.20.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("org.jetbrains.kotlin.jvm") version "1.6.10"
     id("org.unbroken-dome.test-sets") version "4.0.0"
-    id("org.xbib.gradle.plugin.jflex") version "1.5.0"
+    id("org.xbib.gradle.plugin.jflex") version "1.6.0"
   }
 }
 
@@ -149,9 +149,16 @@ include(":instrumentation:aws-sdk:aws-sdk-2.2:javaagent")
 include(":instrumentation:aws-sdk:aws-sdk-2.2:library")
 include(":instrumentation:aws-sdk:aws-sdk-2.2:library-autoconfigure")
 include(":instrumentation:aws-sdk:aws-sdk-2.2:testing")
+include(":instrumentation:azure-core:azure-core-1.14:javaagent")
+include(":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded")
+include(":instrumentation:azure-core:azure-core-1.19:javaagent")
+include(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
 include(":instrumentation:cassandra:cassandra-3.0:javaagent")
 include(":instrumentation:cassandra:cassandra-4.0:javaagent")
 include(":instrumentation:cdi-testing")
+include(":instrumentation:graphql-java-12.0:javaagent")
+include(":instrumentation:graphql-java-12.0:library")
+include(":instrumentation:graphql-java-12.0:testing")
 include(":instrumentation:internal:internal-class-loader:javaagent")
 include(":instrumentation:internal:internal-class-loader:javaagent-integration-tests")
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
@@ -162,8 +169,9 @@ include(":instrumentation:internal:internal-reflection:javaagent-integration-tes
 include(":instrumentation:internal:internal-url-class-loader:javaagent")
 include(":instrumentation:internal:internal-url-class-loader:javaagent-integration-tests")
 include(":instrumentation:couchbase:couchbase-2.0:javaagent")
-include(":instrumentation:couchbase:couchbase-2.0:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-2.6:javaagent")
+include(":instrumentation:couchbase:couchbase-2-common:javaagent")
+include(":instrumentation:couchbase:couchbase-2-common:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-3.1:javaagent")
 include(":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-3.1.6:javaagent")
@@ -183,6 +191,7 @@ include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
 include(":instrumentation:executors:javaagent")
+include(":instrumentation:executors:testing")
 include(":instrumentation:external-annotations:javaagent")
 include(":instrumentation:external-annotations:javaagent-unit-tests")
 include(":instrumentation:finatra-2.9:javaagent")
@@ -204,6 +213,7 @@ include(":instrumentation:http-url-connection:javaagent")
 include(":instrumentation:hystrix-1.4:javaagent")
 include(":instrumentation:java-http-client:javaagent")
 include(":instrumentation:java-util-logging:javaagent")
+include(":instrumentation:java-util-logging:jboss-testing")
 include(":instrumentation:java-util-logging:shaded-stub-for-instrumenting")
 include(":instrumentation:jaxrs:jaxrs-common:bootstrap")
 include(":instrumentation:jaxrs:jaxrs-1.0:javaagent")
@@ -219,10 +229,7 @@ include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-tomee-testing")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-wildfly-testing")
 include(":instrumentation:jaxrs-client:jaxrs-client-1.1:javaagent")
-include(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:javaagent")
-include(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-cxf-3.0:javaagent")
-include(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-jersey-2.0:javaagent")
-include(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-resteasy-3.0:javaagent")
+include(":instrumentation:jaxrs-client:jaxrs-client-2.0-testing")
 include(":instrumentation:jaxws:jaxws-2.0:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-arquillian-testing")
 include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent")
@@ -368,6 +375,7 @@ include(":instrumentation:servlet:servlet-3.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:spark-2.3:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
+include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")
 include(":instrumentation:spring:spring-core-2.0:javaagent")
 include(":instrumentation:spring:spring-data-1.8:javaagent")
 include(":instrumentation:spring:spring-integration-4.1:javaagent")

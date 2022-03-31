@@ -19,11 +19,11 @@ import org.apache.kafka.common.TopicPartition;
  */
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  private static final KafkaTracing tracing = KafkaTracing.create(GlobalOpenTelemetry.get());
+  private static final KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
 
   @Override
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
-    tracing.buildAndFinishSpan(records);
+    telemetry.buildAndFinishSpan(records);
     return records;
   }
 

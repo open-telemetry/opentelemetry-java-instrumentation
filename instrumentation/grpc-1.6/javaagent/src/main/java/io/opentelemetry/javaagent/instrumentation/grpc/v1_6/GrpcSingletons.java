@@ -10,7 +10,7 @@ import io.grpc.Context;
 import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTracing;
+import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 
 // Holds singleton references.
@@ -20,19 +20,19 @@ public final class GrpcSingletons {
 
   public static final ServerInterceptor SERVER_INTERCEPTOR;
 
-  public static final Context.Storage STORAGE = new ContextStorageBridge();
+  public static final Context.Storage STORAGE = new ContextStorageBridge(false);
 
   static {
     boolean experimentalSpanAttributes =
         Config.get().getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
 
-    GrpcTracing tracing =
-        GrpcTracing.builder(GlobalOpenTelemetry.get())
+    GrpcTelemetry telemetry =
+        GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
             .build();
 
-    CLIENT_INTERCEPTOR = tracing.newClientInterceptor();
-    SERVER_INTERCEPTOR = tracing.newServerInterceptor();
+    CLIENT_INTERCEPTOR = telemetry.newClientInterceptor();
+    SERVER_INTERCEPTOR = telemetry.newServerInterceptor();
   }
 
   private GrpcSingletons() {}

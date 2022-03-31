@@ -11,7 +11,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import org.elasticsearch.action.ActionResponse;
 
 public final class ElasticsearchTransportInstrumenterFactory {
@@ -24,15 +25,15 @@ public final class ElasticsearchTransportInstrumenterFactory {
       AttributesExtractor<ElasticTransportRequest, ActionResponse> experimentalAttributesExtractor,
       AttributesExtractor<ElasticTransportRequest, ActionResponse> netAttributesExtractor) {
 
-    ElasticsearchTransportAttributesExtractor attributesExtractor =
-        new ElasticsearchTransportAttributesExtractor();
+    ElasticsearchTransportAttributesGetter dbClientAttributesGetter =
+        new ElasticsearchTransportAttributesGetter();
 
     InstrumenterBuilder<ElasticTransportRequest, ActionResponse> instrumenterBuilder =
         Instrumenter.<ElasticTransportRequest, ActionResponse>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                DbSpanNameExtractor.create(attributesExtractor))
-            .addAttributesExtractor(attributesExtractor)
+                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(netAttributesExtractor);
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

@@ -10,8 +10,6 @@ import io.opentelemetry.api.trace.SpanContext;
 /**
  * This class contains several constants used in logging libraries' Mapped Diagnostic Context
  * instrumentations.
- *
- * @see org.slf4j.MDC
  */
 public final class LoggingContextConstants {
   /**

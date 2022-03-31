@@ -16,18 +16,19 @@ package io.opentelemetry.instrumentation.api.db;
 %unicode
 %ignorecase
 
-COMMA             = ","
-OPEN_PAREN        = "("
-CLOSE_PAREN       = ")"
-OPEN_COMMENT      = "/*"
-CLOSE_COMMENT     = "*/"
-IDENTIFIER        = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
-BASIC_NUM         = [.+-]* [0-9] ([0-9] | [eE.+-])*
-HEX_NUM           = "0x" ([a-f] | [A-F] | [0-9])+
-QUOTED_STR        = "'" ("''" | [^'])* "'"
-DOUBLE_QUOTED_STR = "\"" ("\"\"" | [^\"])* "\""
-DOLLAR_QUOTED_STR = "$$" [^$]* "$$"
-WHITESPACE        = [ \t\r\n]+
+COMMA               = ","
+OPEN_PAREN          = "("
+CLOSE_PAREN         = ")"
+OPEN_COMMENT        = "/*"
+CLOSE_COMMENT       = "*/"
+IDENTIFIER          = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
+BASIC_NUM           = [.+-]* [0-9] ([0-9] | [eE.+-])*
+HEX_NUM             = "0x" ([a-f] | [A-F] | [0-9])+
+QUOTED_STR          = "'" ("''" | [^'])* "'"
+DOUBLE_QUOTED_STR   = "\"" ("\"\"" | [^\"])* "\""
+DOLLAR_QUOTED_STR   = "$$" [^$]* "$$"
+BACKTICK_QUOTED_STR = "`" [^`]* "`"
+WHITESPACE          = [ \t\r\n]+
 
 %{
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
@@ -59,6 +60,16 @@ WHITESPACE        = [ \t\r\n]+
 
   private boolean isOverLimit() {
     return builder.length() > LIMIT;
+  }
+
+  /** @return text matched by current token without enclosing double quotes or backticks */
+  private String readTableName() {
+    String tableName = yytext();
+    if (tableName != null && ((tableName.startsWith("\"") && tableName.endsWith("\""))
+        || (tableName.startsWith("`") && tableName.endsWith("`")))) {
+      tableName = tableName.substring(1, tableName.length() - 1);
+    }
+    return tableName;
   }
 
   // you can reference a table in the FROM clause in one of the following ways:
@@ -172,7 +183,7 @@ WHITESPACE        = [ \t\r\n]+
         return true;
       }
 
-      mainTable = yytext();
+      mainTable = readTableName();
       mainTableSetAlready = true;
       expectingTableName = false;
       // start counting identifiers after encountering main from clause
@@ -208,7 +219,7 @@ WHITESPACE        = [ \t\r\n]+
         return false;
       }
 
-      mainTable = yytext();
+      mainTable = readTableName();
       return true;
     }
   }
@@ -226,21 +237,21 @@ WHITESPACE        = [ \t\r\n]+
         return false;
       }
 
-      mainTable = yytext();
+      mainTable = readTableName();
       return true;
     }
   }
 
   private class Update extends Operation {
     boolean handleIdentifier() {
-      mainTable = yytext();
+      mainTable = readTableName();
       return true;
     }
   }
 
   private class Merge extends Operation {
     boolean handleIdentifier() {
-      mainTable = yytext();
+      mainTable = readTableName();
       return true;
     }
   }
@@ -372,10 +383,21 @@ WHITESPACE        = [ \t\r\n]+
           if (dialect == SqlDialect.COUCHBASE) {
             builder.append('?');
           } else {
+            if (!insideComment && !extractionDone) {
+              extractionDone = operation.handleIdentifier();
+            }
             appendCurrentFragment();
           }
           if (isOverLimit()) return YYEOF;
       }
+
+  {BACKTICK_QUOTED_STR} {
+        if (!insideComment && !extractionDone) {
+          extractionDone = operation.handleIdentifier();
+        }
+        appendCurrentFragment();
+        if (isOverLimit()) return YYEOF;
+    }
 
   {WHITESPACE} {
           builder.append(' ');

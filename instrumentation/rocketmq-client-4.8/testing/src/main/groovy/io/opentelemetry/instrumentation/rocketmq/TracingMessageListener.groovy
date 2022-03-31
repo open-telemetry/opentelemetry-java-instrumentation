@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmq
 
+import java.util.concurrent.TimeUnit
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus
 import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly
@@ -33,7 +34,7 @@ class TracingMessageListener implements MessageListenerOrderly {
   }
 
   void waitForMessages() {
-    messageReceived.await()
+    messageReceived.await(30, TimeUnit.SECONDS)
   }
 
   int getLastBatchSize() {

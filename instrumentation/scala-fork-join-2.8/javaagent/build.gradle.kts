@@ -24,6 +24,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 
+  testImplementation(project(":instrumentation:executors:testing"))
+
   add("slickTestImplementation", project(":testing-common"))
   add("slickTestImplementation", "org.scala-lang:scala-library")
   add("slickTestImplementation", "com.typesafe.slick:slick_2.11:3.2.0")
@@ -32,19 +34,9 @@ dependencies {
 
 // Run Slick library tests along with the rest of tests
 tasks {
-  val slickTest by existing(Test::class) {
-    filter {
-      // this is needed because "test.dependsOn slickTest", and so without this,
-      // running a single test in the default test set will fail
-      setFailOnNoMatchingTests(false)
-    }
-  }
+  val slickTest by existing
 
-  named<GroovyCompile>("compileSlickTestGroovy") {
-    classpath = classpath.plus(files(sourceSets["slickTest"].scala.classesDirectory))
-  }
-
-  test {
+  check {
     dependsOn(slickTest)
   }
 }

@@ -6,18 +6,19 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.AgentExtension;
+import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @AutoService(AgentExtension.class)
 public class InstrumentationLoader implements AgentExtension {
-  private static final Logger logger = LoggerFactory.getLogger(InstrumentationLoader.class);
+  private static final Logger logger = Logger.getLogger(InstrumentationLoader.class.getName());
 
   private final InstrumentationModuleInstaller instrumentationModuleInstaller =
       new InstrumentationModuleInstaller(InstrumentationHolder.getInstrumentation());
@@ -26,22 +27,30 @@ public class InstrumentationLoader implements AgentExtension {
   public AgentBuilder extend(AgentBuilder agentBuilder) {
     int numberOfLoadedModules = 0;
     for (InstrumentationModule instrumentationModule : loadOrdered(InstrumentationModule.class)) {
-      logger.debug(
-          "Loading instrumentation {} [class {}]",
-          instrumentationModule.instrumentationName(),
-          instrumentationModule.getClass().getName());
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Loading instrumentation {0} [class {1}]",
+            new Object[] {
+              instrumentationModule.instrumentationName(),
+              instrumentationModule.getClass().getName()
+            });
+      }
       try {
         agentBuilder = instrumentationModuleInstaller.install(instrumentationModule, agentBuilder);
         numberOfLoadedModules++;
       } catch (Exception | LinkageError e) {
-        logger.error(
-            "Unable to load instrumentation {} [class {}]",
-            instrumentationModule.instrumentationName(),
-            instrumentationModule.getClass().getName(),
+        logger.log(
+            SEVERE,
+            "Unable to load instrumentation "
+                + instrumentationModule.instrumentationName()
+                + " [class "
+                + instrumentationModule.getClass().getName()
+                + "]",
             e);
       }
     }
-    logger.debug("Installed {} instrumenter(s)", numberOfLoadedModules);
+    logger.log(FINE, "Installed {0} instrumenter(s)", numberOfLoadedModules);
 
     return agentBuilder;
   }

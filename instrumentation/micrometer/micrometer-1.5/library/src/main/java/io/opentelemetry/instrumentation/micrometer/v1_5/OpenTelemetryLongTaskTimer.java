@@ -16,16 +16,17 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.internal.DefaultLongTaskTimer;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter;
+import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements RemovableMeter {
 
   private final DistributionStatisticConfig distributionStatisticConfig;
-  private final AsyncMeasurementHandle activeTasksHandle;
-  private final AsyncMeasurementHandle durationHandle;
+  private final ObservableLongUpDownCounter observableActiveTasks;
+  private final ObservableDoubleUpDownCounter observableDuration;
 
   OpenTelemetryLongTaskTimer(
       Id id,
@@ -33,29 +34,30 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
       Clock clock,
       TimeUnit baseTimeUnit,
       DistributionStatisticConfig distributionStatisticConfig,
-      AsyncInstrumentRegistry asyncInstrumentRegistry) {
+      Meter otelMeter) {
     super(id, clock, baseTimeUnit, distributionStatisticConfig, false);
 
     this.distributionStatisticConfig = distributionStatisticConfig;
 
-    String conventionName = name(id, namingConvention);
+    String name = name(id, namingConvention);
     Attributes attributes = tagsAsAttributes(id, namingConvention);
-    this.activeTasksHandle =
-        asyncInstrumentRegistry.buildUpDownLongCounter(
-            conventionName + ".active",
-            description(id),
-            "tasks",
-            attributes,
-            this,
-            DefaultLongTaskTimer::activeTasks);
-    this.durationHandle =
-        asyncInstrumentRegistry.buildUpDownDoubleCounter(
-            conventionName + ".duration",
-            description(id),
-            getUnitString(baseTimeUnit),
-            attributes,
-            this,
-            t -> t.duration(baseTimeUnit));
+
+    this.observableActiveTasks =
+        otelMeter
+            .upDownCounterBuilder(name + ".active")
+            .setDescription(description(name, id))
+            .setUnit("tasks")
+            .buildWithCallback(
+                new LongMeasurementRecorder<>(this, DefaultLongTaskTimer::activeTasks, attributes));
+    this.observableDuration =
+        otelMeter
+            .upDownCounterBuilder(name + ".duration")
+            .ofDoubles()
+            .setDescription(description(name, id))
+            .setUnit(getUnitString(baseTimeUnit))
+            .buildWithCallback(
+                new DoubleMeasurementRecorder<>(
+                    this, t -> t.duration(t.baseTimeUnit()), attributes));
   }
 
   @Override
@@ -66,8 +68,8 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements R
 
   @Override
   public void onRemove() {
-    activeTasksHandle.remove();
-    durationHandle.remove();
+    observableActiveTasks.close();
+    observableDuration.close();
   }
 
   boolean isUsingMicrometerHistograms() {

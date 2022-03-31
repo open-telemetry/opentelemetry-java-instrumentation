@@ -7,8 +7,11 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -22,31 +25,29 @@ import javax.annotation.Nullable;
  */
 public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
-        REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>> {
+        REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>>
+    implements SpanKeyProvider {
 
   /** Creates the HTTP client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return create(getter, CapturedHttpHeaders.client(Config.get()));
+    return builder(getter).build();
   }
 
-  // TODO: there should be a builder for all optional attributes
   /**
-   * Creates the HTTP client attributes extractor.
-   *
-   * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
-   *     headers should be captured as span attributes.
+   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
    */
-  public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
-      CapturedHttpHeaders capturedHttpHeaders) {
-    return new HttpClientAttributesExtractor<>(getter, capturedHttpHeaders);
+  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
+    return new HttpClientAttributesExtractorBuilder<>(getter);
   }
 
-  private HttpClientAttributesExtractor(
+  HttpClientAttributesExtractor(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
-      CapturedHttpHeaders capturedHttpHeaders) {
-    super(getter, capturedHttpHeaders);
+      List<String> capturedRequestHeaders,
+      List<String> responseHeaders) {
+    super(getter, capturedRequestHeaders, responseHeaders);
   }
 
   @Override
@@ -64,5 +65,15 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     super.onEnd(attributes, context, request, response, error);
     set(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request, response));
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @UnstableApi
+  @Override
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.HTTP_CLIENT;
   }
 }

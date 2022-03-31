@@ -17,7 +17,7 @@ dependencies {
   implementation("org.restlet:org.restlet.ext.spring:1.1.5")
   implementation("org.springframework:spring:2.5.6")
 
-  implementation("org.codehaus.groovy:groovy-all")
+  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.spockframework:spock-core")
 

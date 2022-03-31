@@ -48,18 +48,19 @@ import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.logs.data.LogDataBuilder;
 import io.opentelemetry.sdk.logs.data.Severity;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
-import io.opentelemetry.sdk.metrics.data.DoubleGaugeData;
-import io.opentelemetry.sdk.metrics.data.DoubleHistogramData;
-import io.opentelemetry.sdk.metrics.data.DoubleHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
-import io.opentelemetry.sdk.metrics.data.DoubleSumData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
-import io.opentelemetry.sdk.metrics.data.LongGaugeData;
+import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
-import io.opentelemetry.sdk.metrics.data.LongSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.SummaryPointData;
 import io.opentelemetry.sdk.metrics.data.ValueAtPercentile;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableGaugeData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableHistogramData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableHistogramPointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSumData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtPercentile;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -324,7 +325,9 @@ public final class AgentTestingExporterAccess {
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              DoubleGaugeData.create(getDoublePointDatas(metric.getGauge().getDataPointsList())));
+              // TODO(anuraaga): Remove usages of internal types.
+              ImmutableGaugeData.create(
+                  getDoublePointDatas(metric.getGauge().getDataPointsList())));
         } else {
           return MetricData.createLongGauge(
               resource,
@@ -332,7 +335,7 @@ public final class AgentTestingExporterAccess {
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              LongGaugeData.create(getLongPointDatas(metric.getGauge().getDataPointsList())));
+              ImmutableGaugeData.create(getLongPointDatas(metric.getGauge().getDataPointsList())));
         }
       case SUM:
         if (isDouble(metric.getSum().getDataPointsList())) {
@@ -343,7 +346,7 @@ public final class AgentTestingExporterAccess {
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              DoubleSumData.create(
+              ImmutableSumData.create(
                   doubleSum.getIsMonotonic(),
                   getTemporality(doubleSum.getAggregationTemporality()),
                   getDoublePointDatas(metric.getSum().getDataPointsList())));
@@ -355,7 +358,7 @@ public final class AgentTestingExporterAccess {
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              LongSumData.create(
+              ImmutableSumData.create(
                   longSum.getIsMonotonic(),
                   getTemporality(longSum.getAggregationTemporality()),
                   getLongPointDatas(metric.getSum().getDataPointsList())));
@@ -367,7 +370,7 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            DoubleHistogramData.create(
+            ImmutableHistogramData.create(
                 getTemporality(metric.getHistogram().getAggregationTemporality()),
                 getDoubleHistogramDataPoints(metric.getHistogram().getDataPointsList())));
       case SUMMARY:
@@ -377,7 +380,7 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            DoubleSummaryData.create(
+            ImmutableSummaryData.create(
                 getDoubleSummaryDataPoints(metric.getSummary().getDataPointsList())));
       default:
         throw new AssertionError("Unexpected metric data: " + metric.getDataCase());
@@ -398,7 +401,6 @@ public final class AgentTestingExporterAccess {
                 TraceState.getDefault()))
         .setSeverity(fromProto(logRecord.getSeverityNumber()))
         .setSeverityText(logRecord.getSeverityText())
-        .setName(logRecord.getName())
         .setBody(logRecord.getBody().getStringValue())
         .setAttributes(fromProto(logRecord.getAttributesList()))
         .build();
@@ -457,12 +459,12 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static Collection<DoubleHistogramPointData> getDoubleHistogramDataPoints(
+  private static Collection<HistogramPointData> getDoubleHistogramDataPoints(
       List<HistogramDataPoint> dataPointsList) {
     return dataPointsList.stream()
         .map(
             point ->
-                DoubleHistogramPointData.create(
+                ImmutableHistogramPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     fromProto(point.getAttributesList()),
@@ -472,12 +474,12 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static Collection<DoubleSummaryPointData> getDoubleSummaryDataPoints(
+  private static Collection<SummaryPointData> getDoubleSummaryDataPoints(
       List<SummaryDataPoint> dataPointsList) {
     return dataPointsList.stream()
         .map(
             point ->
-                DoubleSummaryPointData.create(
+                ImmutableSummaryPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     fromProto(point.getAttributesList()),
@@ -489,7 +491,7 @@ public final class AgentTestingExporterAccess {
 
   private static List<ValueAtPercentile> getValues(SummaryDataPoint point) {
     return point.getQuantileValuesList().stream()
-        .map(v -> ValueAtPercentile.create(v.getQuantile(), v.getValue()))
+        .map(v -> ImmutableValueAtPercentile.create(v.getQuantile(), v.getValue()))
         .collect(Collectors.toList());
   }
 

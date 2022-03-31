@@ -14,7 +14,8 @@ sourceSets {
 }
 
 dependencies {
-  api("org.codehaus.groovy:groovy-all")
+  api("org.apache.groovy:groovy")
+  api("org.apache.groovy:groovy-json")
   api("org.spockframework:spock-core") {
     // exclude optional dependencies
     exclude(group = "cglib", module = "cglib-nodep")

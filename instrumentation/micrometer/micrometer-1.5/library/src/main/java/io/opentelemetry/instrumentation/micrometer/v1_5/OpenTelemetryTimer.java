@@ -22,8 +22,7 @@ import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
+import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
@@ -36,7 +35,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
   private final Attributes attributes;
-  private final AsyncMeasurementHandle maxHandle;
+  private final ObservableDoubleGauge observableMax;
 
   private volatile boolean removed = false;
 
@@ -47,8 +46,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
       DistributionStatisticConfig distributionStatisticConfig,
       PauseDetector pauseDetector,
       TimeUnit baseTimeUnit,
-      Meter otelMeter,
-      AsyncInstrumentRegistry asyncInstrumentRegistry) {
+      Meter otelMeter) {
     super(id, clock, distributionStatisticConfig, pauseDetector, TimeUnit.MILLISECONDS, false);
 
     if (isUsingMicrometerHistograms()) {
@@ -61,21 +59,20 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
     this.baseTimeUnit = baseTimeUnit;
     this.attributes = tagsAsAttributes(id, namingConvention);
 
-    String conventionName = name(id, namingConvention);
+    String name = name(id, namingConvention);
     this.otelHistogram =
         otelMeter
-            .histogramBuilder(conventionName)
-            .setDescription(description(id))
+            .histogramBuilder(name)
+            .setDescription(description(name, id))
             .setUnit(getUnitString(baseTimeUnit))
             .build();
-    this.maxHandle =
-        asyncInstrumentRegistry.buildGauge(
-            conventionName + ".max",
-            description(id),
-            getUnitString(baseTimeUnit),
-            attributes,
-            max,
-            m -> m.poll(baseTimeUnit));
+    this.observableMax =
+        otelMeter
+            .gaugeBuilder(name + ".max")
+            .setDescription(description(name, id))
+            .setUnit(getUnitString(baseTimeUnit))
+            .buildWithCallback(
+                new DoubleMeasurementRecorder<>(max, m -> m.poll(baseTimeUnit), attributes));
   }
 
   boolean isUsingMicrometerHistograms() {
@@ -84,7 +81,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
   @Override
   protected void recordNonNegative(long amount, TimeUnit unit) {
-    if (amount >= 0 && !removed) {
+    if (!removed) {
       long nanos = unit.toNanos(amount);
       double time = TimeUtils.nanosToUnit(nanos, baseTimeUnit);
       otelHistogram.record(time, attributes);
@@ -117,7 +114,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
   @Override
   public void onRemove() {
     removed = true;
-    maxHandle.remove();
+    observableMax.close();
   }
 
   private interface Measurements {

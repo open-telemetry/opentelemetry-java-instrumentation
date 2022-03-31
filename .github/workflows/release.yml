@@ -1,148 +1,51 @@
-# Releases a new major / minor / patch version from a release branch
-name: Release Build
+name: Release
 on:
   workflow_dispatch:
 
 jobs:
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
+
   test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        test-java-version:
-          - 8
-          - 11
-          - 15
-    steps:
-      - uses: actions/checkout@v2.3.4
-        with:
-          ref: ${{ github.ref_name }}
+    uses: ./.github/workflows/reusable-test.yml
 
-      - id: setup-test-java
-        name: Set up JDK ${{ matrix.test-java-version }} for running tests
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: ${{ matrix.test-java-version }}
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Test
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test -PtestJavaVersion=${{ matrix.test-java-version }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
-
-  # testLatestDeps is intentionally not included in the release workflows
+  # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
   # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry
 
   smoke-test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - windows-2019
-          - ubuntu-latest
-        smoke-test-suite:
-          - jetty
-          - liberty
-          - payara
-          - tomcat
-          - tomee
-          - websphere
-          - wildfly
-          - other
-        exclude:
-          - os: windows-2019
-            smoke-test-suite: websphere
-    steps:
-      - name: Support longpaths
-        run: git config --system core.longpaths true
-        if: matrix.os == 'windows-2019'
-
-      - uses: actions/checkout@v2.3.4
-        with:
-          ref: ${{ github.ref_name }}
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Test
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}"
+    uses: ./.github/workflows/reusable-smoke-test.yml
 
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,
   # and this is not a reason to hold up the release
 
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+
   examples:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.4
-        with:
-          ref: ${{ github.ref_name }}
-
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Local publish of artifacts
-        uses: gradle/gradle-build-action@v2
-        with:
-          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: publishToMavenLocal -x javadoc
-
-      - name: Local publish of gradle plugins
-        uses: gradle/gradle-build-action@v2
-        with:
-          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: publishToMavenLocal -x javadoc
-          build-root-directory: gradle-plugins
-
-      - name: Build distro
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts
-          build-root-directory: examples/distro
-
-      - name: Build extension
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: build --init-script ../../.github/scripts/local.init.gradle.kts
-          build-root-directory: examples/extension
-
-      - name: Run muzzle check against extension
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: muzzle --init-script ../../.github/scripts/local.init.gradle.kts
-          build-root-directory: examples/extension
-          cache-read-only: true
+    uses: ./.github/workflows/reusable-examples.yml
 
   release:
-    needs: [ test, smoke-test, examples ]
+    needs:
+      - assemble
+      - test
+      - smoke-test
+      - gradle-plugins
+      - examples
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
         with:
-          ref: ${{ github.ref_name }}
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
 
-      - name: Set up JDK 11 for running Gradle
+      - name: Set up JDK for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
-          java-version: 11
+          distribution: temurin
+          java-version: 17
 
       - name: Build and publish artifacts
         uses: gradle/gradle-build-action@v2
@@ -151,8 +54,6 @@ jobs:
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
-          GRGIT_USER: ${{ github.actor }}
-          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
 
@@ -173,70 +74,106 @@ jobs:
       - name: Set versions
         id: set-versions
         run: |
-          v=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
-          if [[ $v =~ ([0-9]+).([0-9]+).0 ]]; then
+          version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          if [[ $version =~ ([0-9]+).([0-9]+).([0-9]+) ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
           else
-            echo "unexpected version: $v"
+            echo "unexpected version: $version"
             exit 1
           fi
-          if [[ $minor == 0 ]]; then
-            prior_major=$((major - 1))
-            prior_minor=$(grep -Po "^## Version $prior_major.\K([0-9]+)" CHANGELOG.md  | head -1)
-            prior="$prior_major.$prior_minor"
+          if [[ $patch == 0 ]]; then
+            if [[ $minor == 0 ]]; then
+              prior_major=$((major - 1))
+              prior_minor=$(grep -Po "^## Version $prior_major.\K([0-9]+)" CHANGELOG.md  | head -1)
+              prior_version="$prior_major.$prior_minor"
+            else
+              prior_version="$major.$((minor - 1)).0"
+            fi
           else
-            prior="$major.$((minor - 1)).0"
+              prior_version="$major.$minor.$((patch - 1))"
           fi
-          echo "::set-output name=release-version::$v"
-          echo "::set-output name=prior-version::$prior"
+          echo "::set-output name=release-version::$version"
+          echo "::set-output name=prior-release-version::$prior_version"
 
-      - name: Generate Release Notes
+      - name: Generate release notes
         env:
+          VERSION: ${{ steps.set-versions.outputs.release-version }}
+          PRIOR_VERSION: ${{ steps.set-versions.outputs.prior-release-version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat > release-notes.txt << EOF
-          Note that all artifacts other than `io.opentelemetry.javaagent:opentelemetry-javaagent` have the `-alpha` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
+          if [[ $version == *.0 ]]; then
+            cat > release-notes.txt << EOF
+            This release targets the OpenTelemetry SDK $VERSION.
 
-          EOF
+            Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
+          
+            EOF
+          else
+            cat > release-notes.txt << EOF
+            This is a patch release on the previous $PRIOR_VERSION release, fixing the issue(s) below.
+          
+            EOF
+          fi
 
-          sed -n '4,/^## Version /p' CHANGELOG.md \
+          sed -n '/^## Version $VERSION/,/^## Version /p' CHANGELOG.md \
+            | tail -n +2 \
             | head -n -1 \
             | perl -0pe 's/^\n+//g' \
             | perl -0pe 's/\n+$/\n/g' \
-            | sed -r 's,\[#([0-9]+)]\(https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/[0-9]+\),#\1,' \
+            | sed -r 's,\[#([0-9]+)]\(https://github.com/$GITHUB_REPOSITORY/(pull|issues)/[0-9]+\),#\1,' \
             | perl -0pe 's/\n +/ /g' \
             >> release-notes.txt
 
-          cat >> release-notes.txt << EOF
+          if [[ $version == *.0 ]]; then
+            cat >> release-notes.txt << EOF
+          
+            ### 🙇 Thank you
+            This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
+          
+            EOF
+          
+            .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION v$VERSION >> release-notes.txt
+          fi
 
-          ### 🙇 Thank you
-          This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
+      - name: Create GitHub release
+        env:
+          VERSION: ${{ steps.set-versions.outputs.release-version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp javaagent/build/libs/opentelemetry-javaagent-$VERSION.jar opentelemetry-javaagent.jar
+          gh release create --target $GITHUB_REF_NAME \
+                            --title "Version $VERSION" \
+                            --notes-file release-notes.txt \
+                            --discussion-category announcements \
+                            v$VERSION \
+                            opentelemetry-javaagent.jar
 
-          EOF
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+          # history is needed in order to generate the patch
+          fetch-depth: 0
 
-          .github/scripts/generate-release-contributors.sh v${{ steps.set-versions.outputs.prior-version }} v${{ steps.set-versions.outputs.release-version }} >> release-notes.txt
+      - name: Set up git name
+        run: |
+          git config user.name opentelemetry-java-bot
+          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.4
+        # this step should be last since it will fail if conflicting change log updates on main
+      - name: Create pull request to merge any change log updates to main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.set-versions.outputs.release-version }}
-          commitish: ${{ github.ref_name }}
-          release_name: Version ${{ steps.set-versions.outputs.release-version }}
-          draft: true
-          prerelease: false
-          body_path: release-notes.txt
-
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: javaagent/build/libs/opentelemetry-javaagent-${{ steps.set-versions.outputs.release-version }}.jar
-          asset_name: opentelemetry-javaagent.jar
-          asset_content_type: application/java-archive
+        run: |
+          git format-patch --stdout main..$GITHUB_REF_NAME CHANGELOG.md > patch
+          if [ -s patch ]; then
+            git apply patch
+            msg="Merge change log updates from $GITHUB_REF_NAME to main"
+            git commit -a -m "$msg"
+            git push origin HEAD:opentelemetry-java-bot/merge-change-log-updates
+            gh pr create --title "$msg" \
+                         --body "$msg" \
+                         --head opentelemetry-java-bot/merge-change-log-updates \
+                         --base main
+          fi

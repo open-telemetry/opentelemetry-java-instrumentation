@@ -29,7 +29,7 @@ class MyLibraryInstrumentationModule extends InstrumentationModule {
 ```
 
 An `InstrumentationModule` needs to have at least one name. The user of the javaagent can
-[suppress a chosen instrumentation](../suppressing-instrumentation.md) by referring to it by one of
+[suppress a chosen instrumentation][suppress] by referring to it by one of
 its names. The instrumentation module names use `kebab-case`. The main instrumentation name, which
 is the first one, must be the same as the gradle module name, excluding the version suffix if present.
 
@@ -355,3 +355,5 @@ we prefer to use
 because the former inserts a call to `Class.getMethod(...)` in transformed method. In contrast,
 getting the declaring class and method name is just loading constants from constant pool, which is
 a much simpler operation.
+
+[suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation

@@ -26,16 +26,16 @@ class LogbackTest extends AgentInstrumentationSpecification {
     if (parent) {
       runWithSpan("parent") {
         if (exception) {
-          logger."$testMethod"("xyz", new IllegalStateException("hello"))
+          logger."$testMethod"("xyz: {}", 123, new IllegalStateException("hello"))
         } else {
-          logger."$testMethod"("xyz")
+          logger."$testMethod"("xyz: {}", 123)
         }
       }
     } else {
       if (exception) {
-        logger."$testMethod"("xyz", new IllegalStateException("hello"))
+        logger."$testMethod"("xyz: {}", 123, new IllegalStateException("hello"))
       } else {
-        logger."$testMethod"("xyz")
+        logger."$testMethod"("xyz: {}", 123)
       }
     }
 
@@ -51,19 +51,23 @@ class LogbackTest extends AgentInstrumentationSpecification {
             assertThat(logs).hasSize(1)
           })
       def log = logs.get(0)
-      assertThat(log.getBody().asString()).isEqualTo("xyz")
+      assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
       assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo(loggerName)
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
+        assertThat(log.getAttributes().size()).isEqualTo(5)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(LogbackTest.name)
       } else {
+        assertThat(log.getAttributes().size()).isEqualTo(2)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).isNull()
       }
+      assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
+      assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
       if (parent) {
         assertThat(log.getSpanContext()).isEqualTo(traces.get(0).get(0).getSpanContext())
       } else {
@@ -102,7 +106,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     MDC.put("key1", "val1")
     MDC.put("key2", "val2")
     try {
-      abcLogger.info("xyz")
+      abcLogger.info("xyz: {}", 123)
     } finally {
       MDC.clear()
     }
@@ -115,12 +119,14 @@ class LogbackTest extends AgentInstrumentationSpecification {
           assertThat(logs).hasSize(1)
         })
     def log = logs.get(0)
-    assertThat(log.getBody().asString()).isEqualTo("xyz")
+    assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
     assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
-    assertThat(log.getAttributes().size()).isEqualTo(2)
+    assertThat(log.getAttributes().size()).isEqualTo(4)
     assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1"))).isEqualTo("val1")
     assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2"))).isEqualTo("val2")
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
+    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
   }
 }

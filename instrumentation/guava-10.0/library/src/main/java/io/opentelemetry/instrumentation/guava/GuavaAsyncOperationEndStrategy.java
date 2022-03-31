@@ -16,7 +16,8 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
-  private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
+  // Visible for testing
+  static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("guava.canceled");
 
   public static GuavaAsyncOperationEndStrategy create() {

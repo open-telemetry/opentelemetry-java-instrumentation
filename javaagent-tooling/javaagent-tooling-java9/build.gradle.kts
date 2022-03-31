@@ -9,7 +9,6 @@ dependencies {
   implementation(project(":javaagent-bootstrap"))
 
   implementation("net.bytebuddy:byte-buddy-dep")
-  implementation("org.slf4j:slf4j-api")
 
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")

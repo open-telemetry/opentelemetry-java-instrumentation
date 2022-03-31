@@ -65,12 +65,13 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "GET _cluster/health"
+          name "GET"
           kind CLIENT
           hasNoParent()
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GET _cluster/health"
+            "$SemanticAttributes.DB_OPERATION" "GET"
+            "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port
@@ -123,12 +124,13 @@ class ElasticsearchRest7Test extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         span(1) {
-          name "GET _cluster/health"
+          name "GET"
           kind CLIENT
           childOf(span(0))
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GET _cluster/health"
+            "$SemanticAttributes.DB_OPERATION" "GET"
+            "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port

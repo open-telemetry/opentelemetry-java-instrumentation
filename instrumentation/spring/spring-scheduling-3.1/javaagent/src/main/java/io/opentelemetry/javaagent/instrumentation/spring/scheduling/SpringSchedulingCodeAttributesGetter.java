@@ -14,7 +14,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
   public Class<?> codeClass(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
-      return scheduledMethodRunnable.getTarget().getClass();
+      return scheduledMethodRunnable.getMethod().getDeclaringClass();
     } else {
       return runnable.getClass();
     }

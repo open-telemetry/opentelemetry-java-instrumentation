@@ -115,6 +115,10 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertTraces(assertions);
   }
 
+  public final void waitAndAssertTraces(Iterable<? extends Consumer<TraceAssert>> assertions) {
+    testRunner.waitAndAssertTraces(assertions);
+  }
+
   /**
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
    * spanName}.

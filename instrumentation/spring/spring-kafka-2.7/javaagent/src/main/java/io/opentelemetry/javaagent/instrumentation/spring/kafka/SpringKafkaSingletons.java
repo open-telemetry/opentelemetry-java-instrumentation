@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -21,14 +22,14 @@ public final class SpringKafkaSingletons {
       buildProcessInstrumenter();
 
   private static Instrumenter<ConsumerRecords<?, ?>, Void> buildProcessInstrumenter() {
-    KafkaBatchProcessAttributesExtractor attributesExtractor =
-        new KafkaBatchProcessAttributesExtractor();
-    SpanNameExtractor<ConsumerRecords<?, ?>> spanNameExtractor =
-        MessagingSpanNameExtractor.create(attributesExtractor);
+    KafkaBatchProcessAttributesGetter getter = KafkaBatchProcessAttributesGetter.INSTANCE;
+    MessageOperation operation = MessageOperation.PROCESS;
 
     return Instrumenter.<ConsumerRecords<?, ?>, Void>builder(
-            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-        .addAttributesExtractor(attributesExtractor)
+            GlobalOpenTelemetry.get(),
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, operation))
+        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .addSpanLinksExtractor(
             new KafkaBatchProcessSpanLinksExtractor(GlobalOpenTelemetry.getPropagators()))
         .setErrorCauseExtractor(new KafkaBatchErrorCauseExtractor())

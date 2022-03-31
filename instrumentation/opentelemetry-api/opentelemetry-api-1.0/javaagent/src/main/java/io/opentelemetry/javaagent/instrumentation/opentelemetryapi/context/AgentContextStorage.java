@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
 
+import static java.util.logging.Level.FINE;
+
 import application.io.opentelemetry.api.baggage.Baggage;
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.context.Context;
@@ -18,9 +20,8 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link ContextStorage} which stores the {@link Context} in the user's application inside the
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("FieldMissingNullable")
 public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
-  private static final Logger logger = LoggerFactory.getLogger(AgentContextStorage.class);
+  private static final Logger logger = Logger.getLogger(AgentContextStorage.class.getName());
 
   // MethodHandle for ContextStorage.root() that was added in 1.5
   private static final MethodHandle CONTEXT_STORAGE_ROOT_HANDLE = getContextStorageRootHandle();
@@ -121,9 +122,9 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
     if (applicationContext instanceof AgentContextWrapper) {
       return ((AgentContextWrapper) applicationContext).toAgentContext();
     }
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "unexpected context: {}", applicationContext, new Exception("unexpected context"));
+    if (logger.isLoggable(FINE)) {
+      logger.log(
+          FINE, "unexpected context: " + applicationContext, new Exception("unexpected context"));
     }
     return io.opentelemetry.context.Context.root();
   }

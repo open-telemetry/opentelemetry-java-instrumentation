@@ -12,7 +12,8 @@ import javax.annotation.Nullable;
 import okhttp3.Request;
 import okhttp3.Response;
 
-final class OkHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
+enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
+  INSTANCE;
 
   @Override
   public String method(Request request) {

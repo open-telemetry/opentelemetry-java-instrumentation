@@ -14,12 +14,12 @@ class JettyHttpClient9LibraryTest extends AbstractJettyClient9Test implements Li
 
   @Override
   HttpClient createStandardClient() {
-    return JettyClientTracing.create(getOpenTelemetry()).getHttpClient()
+    return JettyClientTelemetry.create(getOpenTelemetry()).getHttpClient()
   }
 
   @Override
   HttpClient createHttpsClient(SslContextFactory sslContextFactory) {
-    return JettyClientTracing.builder(getOpenTelemetry())
+    return JettyClientTelemetry.builder(getOpenTelemetry())
       .setSslContextFactory(sslContextFactory)
       .build()
       .getHttpClient()

@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions?query=workflow%3A%22Nightly+build%22">
-    <img alt="Build Status" src="https://img.shields.io/github/workflow/status/open-telemetry/opentelemetry-java-instrumentation/Nightly%20build?style=for-the-badge">
+  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml">
+    <img alt="Build Status" src="https://img.shields.io/github/workflow/status/open-telemetry/opentelemetry-java-instrumentation/Build?style=for-the-badge">
   </a>
   <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases">
     <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=for-the-badge">
@@ -59,7 +59,7 @@ if you are looking for documentation on using those.
 
 ## Getting Started
 
-Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.11.1/opentelemetry-javaagent.jar).
+Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar).
 
 This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
@@ -77,7 +77,7 @@ configured to send data to
 at `http://localhost:4317`.
 
 Configuration parameters are passed as Java system properties (`-D` flags) or
-as environment variables. See [the configuration documentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/agent-config.md)
+as environment variables. See [the configuration documentation][config]
 for the full list of configuration items. For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent.jar \
@@ -88,11 +88,11 @@ java -javaagent:path/to/opentelemetry-javaagent.jar \
 
 ## Configuring the Agent
 
-The agent is [highly configurable](docs/agent-config.md)!  Many aspects of the agent's behavior can be
+The agent is [highly configurable][config]!  Many aspects of the agent's behavior can be
 configured for your needs, such as exporter choice, exporter config (like where
 data is sent), trace context propagation headers, and much more.
 
-[Click here to see the detailed list of configuration environment variables and system properties](docs/agent-config.md).
+[Click here to see the detailed list of configuration environment variables and system properties][config].
 
 *Note: Config parameter names are very likely to change over time, so please check
 back here when trying out a new version! Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues) or unexpected
@@ -104,7 +104,7 @@ We support an impressively huge number of [libraries and frameworks](docs/suppor
 a majority of the most popular [application servers](docs/supported-libraries.md#application-servers)...right out of the box!
 [Click here to see the full list](docs/supported-libraries.md) and to learn more about
 [disabled instrumentation](docs/supported-libraries.md#disabled-instrumentations)
-and how to [suppress unwanted instrumentation](docs/suppressing-instrumentation.md).
+and how to [suppress unwanted instrumentation][suppress].
 
 ## Creating agent extensions
 
@@ -116,14 +116,13 @@ For most users, the out-of-the-box instrumentation is completely sufficient and 
 be done.  Sometimes, however, users wish to add attributes to the otherwise automatic spans,
 or they might want to manually create spans for their own custom code.
 
-[See here for detailed instructions](docs/manual-instrumentation.md).
-
+For detailed instructions, see [Manual instrumentation][manual].
 
 ## Logger MDC (Mapped Diagnostic Context) auto-instrumentation
 
-It is possible to inject trace information like trace id and span id into your custom application logs.
-
-See [Logger MDC auto-instrumentation](docs/logger-mdc-instrumentation.md)
+It is possible to inject trace information like trace IDs and span IDs into your
+custom application logs. For details, see [Logger MDC
+auto-instrumentation](docs/logger-mdc-instrumentation.md).
 
 ## Troubleshooting
 
@@ -146,12 +145,12 @@ Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/org
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
 - [John Watson](https://github.com/jkwatson), Splunk
-- [Lauri Tulmin](https://github.com/laurit), Splunk
 - [Pavol Loffay](https://github.com/pavolloffay), Traceable.ai
 
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 
 - [Anuraag Agrawal](https://github.com/anuraaga), AWS
+- [Lauri Tulmin](https://github.com/laurit), Splunk
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
@@ -163,3 +162,7 @@ Thanks to all the people who already contributed!
 <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
 </a>
+
+[config]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/
+[manual]: https://opentelemetry.io/docs/instrumentation/java/manual/
+[suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation

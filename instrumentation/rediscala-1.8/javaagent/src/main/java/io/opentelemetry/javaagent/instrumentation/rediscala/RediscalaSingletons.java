@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.rediscala;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import redis.RedisCommand;
 
 public final class RediscalaSingletons {
@@ -19,14 +19,14 @@ public final class RediscalaSingletons {
   private static final Instrumenter<RedisCommand<?, ?>, Void> INSTRUMENTER;
 
   static {
-    RediscalaAttributesExtractor attributesExtractor = new RediscalaAttributesExtractor();
-    SpanNameExtractor<RedisCommand<?, ?>> spanNameExtractor =
-        DbSpanNameExtractor.create(attributesExtractor);
+    RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<RedisCommand<?, ?>, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(attributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

@@ -14,5 +14,5 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.methods.include=package.ClassName[method1,method2];MethodTest\$ConfigTracedCallable[call]")
+  jvmArgs("-Dotel.instrumentation.methods.include=io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCallable[call]")
 }

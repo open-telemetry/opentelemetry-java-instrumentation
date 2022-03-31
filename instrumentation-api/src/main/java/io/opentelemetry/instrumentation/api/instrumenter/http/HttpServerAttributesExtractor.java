@@ -12,8 +12,8 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHe
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -33,31 +33,34 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   /** Creates the HTTP server attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
-    return create(getter, CapturedHttpHeaders.server(Config.get()));
+    return builder(getter).build();
   }
 
-  // TODO: there should be a builder for all optional attributes
   /**
-   * Creates the HTTP server attributes extractor.
-   *
-   * @param capturedHttpHeaders A configuration object specifying which HTTP request and response
-   *     headers should be captured as span attributes.
+   * Returns a new {@link HttpServerAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
    */
-  public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
-      CapturedHttpHeaders capturedHttpHeaders) {
-    return new HttpServerAttributesExtractor<>(
-        getter, capturedHttpHeaders, HttpRouteHolder::getRoute);
+  public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
+    return new HttpServerAttributesExtractorBuilder<>(getter);
   }
 
   private final Function<Context, String> httpRouteHolderGetter;
 
+  HttpServerAttributesExtractor(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
+      List<String> capturedRequestHeaders,
+      List<String> capturedResponseHeaders) {
+    this(getter, capturedRequestHeaders, capturedResponseHeaders, HttpRouteHolder::getRoute);
+  }
+
   // visible for tests
   HttpServerAttributesExtractor(
       HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
-      CapturedHttpHeaders capturedHttpHeaders,
+      List<String> capturedRequestHeaders,
+      List<String> responseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
-    super(getter, capturedHttpHeaders);
+    super(getter, capturedRequestHeaders, responseHeaders);
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 

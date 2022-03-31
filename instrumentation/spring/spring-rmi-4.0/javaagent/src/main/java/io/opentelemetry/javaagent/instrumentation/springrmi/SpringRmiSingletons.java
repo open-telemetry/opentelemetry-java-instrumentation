@@ -8,10 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.springrmi;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
-import io.opentelemetry.javaagent.instrumentation.springrmi.client.ClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.springrmi.server.ServerAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.springrmi.client.ClientAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.springrmi.server.ServerAttributesGetter;
 import java.lang.reflect.Method;
 
 public final class SpringRmiSingletons {
@@ -22,24 +24,24 @@ public final class SpringRmiSingletons {
       buildServerInstrumenter();
 
   private static Instrumenter<Method, Void> buildClientInstrumenter() {
-    ClientAttributesExtractor attributesExtractor = new ClientAttributesExtractor();
+    ClientAttributesGetter rpcAttributesGetter = ClientAttributesGetter.INSTANCE;
 
     return Instrumenter.<Method, Void>builder(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
-            RpcSpanNameExtractor.create(attributesExtractor))
-        .addAttributesExtractor(attributesExtractor)
+            RpcSpanNameExtractor.create(rpcAttributesGetter))
+        .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
         .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private static Instrumenter<ClassAndMethod, Void> buildServerInstrumenter() {
-    ServerAttributesExtractor attributesExtractor = new ServerAttributesExtractor();
+    ServerAttributesGetter rpcAttributesGetter = ServerAttributesGetter.INSTANCE;
 
     return Instrumenter.<ClassAndMethod, Void>builder(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
-            RpcSpanNameExtractor.create(attributesExtractor))
-        .addAttributesExtractor(attributesExtractor)
+            RpcSpanNameExtractor.create(rpcAttributesGetter))
+        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .newInstrumenter(SpanKindExtractor.alwaysServer());
   }
 

@@ -7,9 +7,8 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,7 +16,8 @@ import org.slf4j.LoggerFactory;
  */
 public final class RuntimeVirtualFieldSupplier {
 
-  private static final Logger logger = LoggerFactory.getLogger(RuntimeVirtualFieldSupplier.class);
+  private static final Logger logger =
+      Logger.getLogger(RuntimeVirtualFieldSupplier.class.getName());
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -34,7 +34,7 @@ public final class RuntimeVirtualFieldSupplier {
   public static void set(VirtualFieldSupplier virtualFieldSupplier) {
     // only overwrite the default, cache-based supplier
     if (instance != DEFAULT) {
-      logger.warn(
+      logger.warning(
           "Runtime VirtualField supplier has already been set up, further set() calls are ignored");
       return;
     }

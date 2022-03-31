@@ -152,10 +152,15 @@ interface HelperReferenceWrapper {
   class Factory {
     private final TypePool classpathPool;
     private final Map<String, ClassRef> helperReferences;
+    private final HelperClassPredicate helperClassPredicate;
 
-    public Factory(TypePool classpathPool, Map<String, ClassRef> helperReferences) {
+    public Factory(
+        TypePool classpathPool,
+        Map<String, ClassRef> helperReferences,
+        HelperClassPredicate helperClassPredicate) {
       this.classpathPool = classpathPool;
       this.helperReferences = helperReferences;
+      this.helperClassPredicate = helperClassPredicate;
     }
 
     public HelperReferenceWrapper create(ClassRef reference) {
@@ -163,9 +168,15 @@ interface HelperReferenceWrapper {
     }
 
     private HelperReferenceWrapper create(String className) {
-      Resolution resolution = classpathPool.describe(className);
-      if (resolution.isResolved()) {
-        return new ClasspathType(resolution.resolve());
+      // Looking up an injected helper is recorded in AgentCachingPoolStrategy as a failed resolve
+      // because injected helper can't be found by the TypePool that is used here. If that helper is
+      // defined before it gets evicted there will be a stack trace about resource not found which
+      // is flagged as a transformation failure that makes tests fail.
+      if (!helperClassPredicate.isHelperClass(className)) {
+        Resolution resolution = classpathPool.describe(className);
+        if (resolution.isResolved()) {
+          return new ClasspathType(resolution.resolve());
+        }
       }
       // checking helper references is needed when one helper class A extends another helper class B
       // and the subclass A also implements a library interface C

@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAt
 
 import io.micrometer.core.instrument.AbstractDistributionSummary;
 import io.micrometer.core.instrument.Clock;
-import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
@@ -21,21 +20,20 @@ import io.micrometer.core.instrument.distribution.TimeWindowMax;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
+import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import java.util.Collections;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
-    implements DistributionSummary, RemovableMeter {
+    implements RemovableMeter {
 
   private final Measurements measurements;
   private final TimeWindowMax max;
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
   private final Attributes attributes;
-  private final AsyncMeasurementHandle maxHandle;
+  private final ObservableDoubleGauge observableMax;
 
   private volatile boolean removed = false;
 
@@ -45,8 +43,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
       Clock clock,
       DistributionStatisticConfig distributionStatisticConfig,
       double scale,
-      Meter otelMeter,
-      AsyncInstrumentRegistry asyncInstrumentRegistry) {
+      Meter otelMeter) {
     super(id, clock, distributionStatisticConfig, scale, false);
 
     if (isUsingMicrometerHistograms()) {
@@ -58,21 +55,20 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
 
     this.attributes = tagsAsAttributes(id, namingConvention);
 
-    String conventionName = name(id, namingConvention);
+    String name = name(id, namingConvention);
     this.otelHistogram =
         otelMeter
-            .histogramBuilder(conventionName)
-            .setDescription(description(id))
+            .histogramBuilder(name)
+            .setDescription(description(name, id))
             .setUnit(baseUnit(id))
             .build();
-    this.maxHandle =
-        asyncInstrumentRegistry.buildGauge(
-            conventionName + ".max",
-            description(id),
-            baseUnit(id),
-            attributes,
-            max,
-            TimeWindowMax::poll);
+    this.observableMax =
+        otelMeter
+            .gaugeBuilder(name + ".max")
+            .setDescription(description(name, id))
+            .setUnit(baseUnit(id))
+            .buildWithCallback(
+                new DoubleMeasurementRecorder<>(max, TimeWindowMax::poll, attributes));
   }
 
   boolean isUsingMicrometerHistograms() {
@@ -81,7 +77,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
 
   @Override
   protected void recordNonNegative(double amount) {
-    if (amount >= 0 && !removed) {
+    if (!removed) {
       otelHistogram.record(amount, attributes);
       measurements.record(amount);
       max.record(amount);
@@ -112,7 +108,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
   @Override
   public void onRemove() {
     removed = true;
-    maxHandle.remove();
+    observableMax.close();
   }
 
   private interface Measurements {

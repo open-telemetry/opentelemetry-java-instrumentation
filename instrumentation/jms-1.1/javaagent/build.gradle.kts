@@ -27,36 +27,28 @@ tasks {
   val testReceiveSpansDisabled by registering(Test::class) {
     filter {
       includeTestsMatching("SpringListenerJms1SuppressReceiveSpansTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/SpringListenerJms1SuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
   }
 
   val jms2Test by existing(Test::class) {
-    filter {
-      // this is needed because "test.dependsOn jms2Test", and so without this,
-      // running a single test in the default test set will fail
-      isFailOnNoMatchingTests = false
-    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
-  val jms2TestReceiveSpansDisabled by existing(Test::class) {
-    filter {
-      isFailOnNoMatchingTests = false
-    }
-    jvmArgs("-Dotel.instrumentation.common.experimental.suppress-messaging-receive-spans=true")
-  }
+  val jms2TestReceiveSpansDisabled by existing
 
   test {
-    dependsOn(testReceiveSpansDisabled)
-    dependsOn(jms2Test)
-    dependsOn(jms2TestReceiveSpansDisabled)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
     filter {
       excludeTestsMatching("SpringListenerJms1SuppressReceiveSpansTest")
-      isFailOnNoMatchingTests = false
     }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testReceiveSpansDisabled)
+    dependsOn(jms2Test)
+    dependsOn(jms2TestReceiveSpansDisabled)
   }
 }
 

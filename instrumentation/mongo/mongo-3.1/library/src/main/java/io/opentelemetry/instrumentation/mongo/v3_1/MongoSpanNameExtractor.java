@@ -11,20 +11,19 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 class MongoSpanNameExtractor implements SpanNameExtractor<CommandStartedEvent> {
   private static final String DEFAULT_SPAN_NAME = "DB Query";
 
-  private final MongoDbAttributesExtractor dbAttributesExtractor;
+  private final MongoDbAttributesGetter dbAttributesGetter;
   private final MongoAttributesExtractor attributesExtractor;
 
   MongoSpanNameExtractor(
-      MongoDbAttributesExtractor dbAttributesExtractor,
-      MongoAttributesExtractor attributesExtractor) {
-    this.dbAttributesExtractor = dbAttributesExtractor;
+      MongoDbAttributesGetter dbAttributesGetter, MongoAttributesExtractor attributesExtractor) {
+    this.dbAttributesGetter = dbAttributesGetter;
     this.attributesExtractor = attributesExtractor;
   }
 
   @Override
   public String extract(CommandStartedEvent event) {
-    String operation = dbAttributesExtractor.operation(event);
-    String dbName = dbAttributesExtractor.name(event);
+    String operation = dbAttributesGetter.operation(event);
+    String dbName = dbAttributesGetter.name(event);
     if (operation == null) {
       return dbName == null ? DEFAULT_SPAN_NAME : dbName;
     }

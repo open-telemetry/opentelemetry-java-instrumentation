@@ -57,8 +57,6 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   Integer getRequestRemotePort(REQUEST request);
 
-  String getRequestRemoteHost(REQUEST request);
-
   int getRequestContentLength(REQUEST request);
 
   void addRequestAsyncListener(

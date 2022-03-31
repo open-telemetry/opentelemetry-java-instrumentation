@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.extension.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.Utils.safeTypeDefinitionName;
+import static java.util.logging.Level.FINE;
 
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An element matcher that matches its argument's {@link TypeDescription.Generic} raw type against
@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Junction.AbstractBase<T> {
 
-  private static final Logger logger = LoggerFactory.getLogger(SafeErasureMatcher.class);
+  private static final Logger logger = Logger.getLogger(SafeErasureMatcher.class.getName());
 
   /** The matcher to apply to the raw type of the matched element. */
   private final ElementMatcher<TypeDescription> matcher;
@@ -55,12 +55,13 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
     try {
       return typeDefinition.asErasure();
     } catch (Throwable e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(
-            "{} trying to get erasure for target {}: {}",
-            e.getClass().getSimpleName(),
-            safeTypeDefinitionName(typeDefinition),
-            e.getMessage());
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "{0} trying to get erasure for target {1}: {2}",
+            new Object[] {
+              e.getClass().getSimpleName(), safeTypeDefinitionName(typeDefinition), e.getMessage()
+            });
       }
       return null;
     }

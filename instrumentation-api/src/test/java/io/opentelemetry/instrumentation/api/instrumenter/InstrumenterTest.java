@@ -24,14 +24,13 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
@@ -171,12 +170,12 @@ class InstrumenterTest {
   @Mock
   HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpServerAttributes;
 
-  @Mock DbAttributesExtractor<Map<String, String>, Map<String, String>> mockDbAttributes;
+  @Mock DbClientAttributesExtractor<Map<String, String>, Map<String, String>> mockDbAttributes;
 
   @Mock
   MessagingAttributesExtractor<Map<String, String>, Map<String, String>> mockMessagingAttributes;
 
-  @Mock RpcAttributesExtractor<Map<String, String>, Map<String, String>> mockRpcAttributes;
+  @Mock RpcClientAttributesExtractor<Map<String, String>, Map<String, String>> mockRpcAttributes;
   @Mock NetServerAttributesExtractor<Map<String, String>, Map<String, String>> mockNetAttributes;
 
   @Test
@@ -433,6 +432,38 @@ class InstrumenterTest {
   }
 
   @Test
+  void requestListeners() {
+    AtomicReference<Boolean> startContext = new AtomicReference<>();
+    AtomicReference<Boolean> endContext = new AtomicReference<>();
+
+    RequestListener requestListener =
+        new RequestListener() {
+          @Override
+          public Context start(Context context, Attributes startAttributes, long startNanos) {
+            startContext.set(true);
+            return context;
+          }
+
+          @Override
+          public void end(Context context, Attributes endAttributes, long endNanos) {
+            endContext.set(true);
+          }
+        };
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addRequestListener(requestListener)
+            .newServerInstrumenter(new MapGetter());
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    instrumenter.end(context, REQUEST, RESPONSE, null);
+
+    assertThat(startContext.get()).isTrue();
+    assertThat(endContext.get()).isTrue();
+  }
+
+  @Test
   void requestMetrics() {
     AtomicReference<Context> startContext = new AtomicReference<>();
     AtomicReference<Context> endContext = new AtomicReference<>();
@@ -560,6 +591,8 @@ class InstrumenterTest {
 
   @Test
   void clientNestedSuppressed_whenSameInstrumentationType() {
+    when(mockDbAttributes.internalGetSpanKey()).thenCallRealMethod();
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
         getInstrumenterWithType(true, mockDbAttributes);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
@@ -616,6 +649,8 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_http() {
+    when(mockHttpClientAttributes.internalGetSpanKey()).thenCallRealMethod();
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockHttpClientAttributes, new AttributesExtractor1());
 
@@ -627,6 +662,8 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_db() {
+    when(mockDbAttributes.internalGetSpanKey()).thenCallRealMethod();
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockDbAttributes, new AttributesExtractor2());
 
@@ -638,6 +675,8 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_rpc() {
+    when(mockRpcAttributes.internalGetSpanKey()).thenCallRealMethod();
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockRpcAttributes);
 
@@ -649,7 +688,7 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_producer() {
-    when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
+    when(mockMessagingAttributes.internalGetSpanKey()).thenReturn(SpanKey.PRODUCER);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockMessagingAttributes);
@@ -662,7 +701,7 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_mix() {
-    when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
+    when(mockMessagingAttributes.internalGetSpanKey()).thenReturn(SpanKey.PRODUCER);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(
@@ -781,11 +820,6 @@ class InstrumenterTest {
 
     @Override
     public String transport(REQUEST request) {
-      return null;
-    }
-
-    @Override
-    public String peerName(REQUEST request) {
       return null;
     }
 

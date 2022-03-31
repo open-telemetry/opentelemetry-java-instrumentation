@@ -8,4 +8,5 @@ io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfigura
 io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate.RestTemplateAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient.WebClientAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.webmvc.WebMvcFilterAutoConfiguration,\
-io.opentelemetry.instrumentation.spring.autoconfigure.aspects.TraceAspectAutoConfiguration
+io.opentelemetry.instrumentation.spring.autoconfigure.aspects.TraceAspectAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration

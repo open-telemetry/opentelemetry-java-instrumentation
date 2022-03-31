@@ -12,6 +12,7 @@ import org.elasticsearch.http.BindHttpException
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.node.Node
 import org.elasticsearch.node.internal.InternalSettingsPreparer
+import org.elasticsearch.transport.BindTransportException
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -56,9 +57,14 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
     // retry when starting elasticsearch fails with
     // org.elasticsearch.http.BindHttpException: Failed to resolve host [[]]
     // Caused by: java.net.SocketException: No such device (getFlags() failed)
+    // or
+    // org.elasticsearch.transport.BindTransportException: Failed to resolve host null
+    // Caused by: java.net.SocketException: No such device (getFlags() failed)
     await()
       .atMost(10, TimeUnit.SECONDS)
-      .ignoreException(BindHttpException)
+      .ignoreExceptionsMatching({
+        BindHttpException.isInstance(it) || BindTransportException.isInstance(it)
+      })
       .until({
         testNode.start()
         true

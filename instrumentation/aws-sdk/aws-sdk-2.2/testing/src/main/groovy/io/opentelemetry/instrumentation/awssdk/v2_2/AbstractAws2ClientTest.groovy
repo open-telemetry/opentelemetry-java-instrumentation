@@ -16,7 +16,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.core.async.AsyncResponseTransformer
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder
-import software.amazon.awssdk.core.client.config.SdkClientOption
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.core.exception.SdkClientException
 import software.amazon.awssdk.core.retry.RetryPolicy
 import software.amazon.awssdk.http.apache.ApacheHttpClient
@@ -81,7 +81,11 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     server.beforeTestExecution(null)
   }
 
-  abstract void configureSdkClient(SdkClientBuilder builder)
+  void configureSdkClient(SdkClientBuilder builder) {
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build())
+  }
+
+  abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
   def "send DynamoDB #operation request with builder #builder.class.getName() mocked response"() {
     setup:
@@ -504,12 +508,10 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     // One retry so two requests.
     server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
     server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
-    def builder = S3Client.builder()
-    configureSdkClient(builder)
-    // Because the client builder does not merge overrides, the simplest way to set retry policy
-    // is to access the private field for now.
-    builder.clientConfiguration.option(SdkClientOption.RETRY_POLICY, RetryPolicy.builder().numRetries(1).build())
-    def client = builder
+    def client = S3Client.builder()
+      .overrideConfiguration(createOverrideConfigurationBuilder()
+        .retryPolicy(RetryPolicy.builder().numRetries(1).build())
+        .build())
       .endpointOverride(server.httpUri())
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)

@@ -28,9 +28,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
+  implementation(project(":instrumentation:couchbase:couchbase-2-common:javaagent"))
   implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
   library("com.couchbase.client:java-client:2.0.0")
@@ -39,4 +37,10 @@ dependencies {
 
   latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.+")
   latestDepTestLibrary("com.couchbase.client:java-client:2.+")
+}
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

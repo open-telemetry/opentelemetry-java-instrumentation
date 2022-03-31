@@ -10,11 +10,11 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id "com.github.johnrengelman.shadow" version "6.1.0"
-  id "com.diffplug.spotless" version "6.1.2"
+  id "com.github.johnrengelman.shadow" version "7.1.2"
+  id "com.diffplug.spotless" version "6.3.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.12.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "1.12.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.13.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "1.13.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -22,10 +22,10 @@ version '1.0'
 
 ext {
   versions = [
-    opentelemetry              : "1.9.1",
-    opentelemetryAlpha         : "1.9.1-alpha",
-    opentelemetryJavaagent     : "1.12.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "1.12.0-alpha-SNAPSHOT",
+    opentelemetry              : "1.12.0",
+    opentelemetryAlpha         : "1.12.0-alpha",
+    opentelemetryJavaagent     : "1.13.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "1.13.0-alpha-SNAPSHOT",
   ]
 
   deps = [
@@ -63,7 +63,7 @@ dependencies {
   Interfaces and SPIs that we implement. We use `compileOnly` dependency because during
   runtime all necessary classes are provided by javaagent itself.
    */
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:${versions.opentelemetryAlpha}")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:${versions.opentelemetry}")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
 
@@ -110,7 +110,6 @@ dependencies {
   add("muzzleBootstrap", "io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
-  add("muzzleTooling", "org.slf4j:slf4j-simple:1.7.30")
 }
 
 //Produces a copy of upstream javaagent with this extension jar included inside it

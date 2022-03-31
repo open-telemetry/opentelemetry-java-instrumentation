@@ -9,14 +9,13 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.Spymemcach
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SyncCompletionListener extends CompletionListener<Void> {
 
-  private static final Logger logger = LoggerFactory.getLogger(SyncCompletionListener.class);
+  private static final Logger logger = Logger.getLogger(SyncCompletionListener.class.getName());
 
   private SyncCompletionListener(Context parentContext, SpymemcachedRequest request) {
     super(parentContext, request);
@@ -34,7 +33,7 @@ public class SyncCompletionListener extends CompletionListener<Void> {
 
   @Override
   protected void processResult(Span span, Void future) {
-    logger.error("processResult was called on SyncCompletionListener. This should never happen. ");
+    logger.severe("processResult was called on SyncCompletionListener. This should never happen.");
   }
 
   public void done(Throwable thrown) {

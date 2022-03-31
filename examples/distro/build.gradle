@@ -8,7 +8,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.1.2"
+    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.3.0"
   }
 }
 
@@ -20,10 +20,10 @@ subprojects {
 
   ext {
     versions = [
-      opentelemetry              : "1.9.1",
-      opentelemetryAlpha         : "1.9.1-alpha",
-      opentelemetryJavaagent     : "1.12.0-SNAPSHOT",
-      opentelemetryJavaagentAlpha: "1.12.0-alpha-SNAPSHOT",
+      opentelemetry              : "1.12.0",
+      opentelemetryAlpha         : "1.12.0-alpha",
+      opentelemetryJavaagent     : "1.13.0-SNAPSHOT",
+      opentelemetryJavaagentAlpha: "1.13.0-alpha-SNAPSHOT",
       bytebuddy                  : "1.10.18",
       guava                      : "30.1-jre"
     ]

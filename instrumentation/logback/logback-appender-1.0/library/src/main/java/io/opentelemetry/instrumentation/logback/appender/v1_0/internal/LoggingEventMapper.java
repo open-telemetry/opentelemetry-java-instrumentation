@@ -34,6 +34,10 @@ public final class LoggingEventMapper {
 
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
+  private static final boolean captureExperimentalAttributes =
+      Config.get()
+          .getBoolean("otel.instrumentation.logback-appender.experimental-log-attributes", false);
+
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
   private final List<String> captureMdcAttributes;
@@ -78,7 +82,7 @@ public final class LoggingEventMapper {
    */
   private void mapLoggingEvent(LogBuilder builder, ILoggingEvent loggingEvent) {
     // message
-    String message = loggingEvent.getMessage();
+    String message = loggingEvent.getFormattedMessage();
     if (message != null) {
       builder.setBody(message);
     }
@@ -109,6 +113,12 @@ public final class LoggingEventMapper {
     }
 
     captureMdcAttributes(attributes, loggingEvent.getMDCPropertyMap());
+
+    if (captureExperimentalAttributes) {
+      Thread currentThread = Thread.currentThread();
+      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
+      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+    }
 
     builder.setAttributes(attributes.build());
 

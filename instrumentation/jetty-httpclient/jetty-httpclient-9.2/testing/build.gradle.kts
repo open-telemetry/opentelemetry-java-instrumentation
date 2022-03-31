@@ -12,7 +12,7 @@ dependencies {
 
   implementation("org.junit.jupiter:junit-jupiter-api")
 
-  implementation("org.codehaus.groovy:groovy-all")
+  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.spockframework:spock-core")
 }

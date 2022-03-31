@@ -14,8 +14,8 @@ import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.MeterEquivalence;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry;
-import io.opentelemetry.instrumentation.api.internal.AsyncInstrumentRegistry.AsyncMeasurementHandle;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 import java.util.Collections;
 import java.util.function.ToDoubleFunction;
 import javax.annotation.Nullable;
@@ -24,24 +24,26 @@ import javax.annotation.Nullable;
 final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, RemovableMeter {
 
   private final Id id;
-  private final AsyncMeasurementHandle countMeasurementHandle;
+  private final ObservableDoubleCounter observableCount;
 
   OpenTelemetryFunctionCounter(
       Id id,
       NamingConvention namingConvention,
       T obj,
       ToDoubleFunction<T> countFunction,
-      AsyncInstrumentRegistry asyncInstrumentRegistry) {
+      Meter otelMeter) {
     this.id = id;
 
-    countMeasurementHandle =
-        asyncInstrumentRegistry.buildDoubleCounter(
-            name(id, namingConvention),
-            description(id),
-            baseUnit(id),
-            tagsAsAttributes(id, namingConvention),
-            obj,
-            countFunction);
+    String name = name(id, namingConvention);
+    observableCount =
+        otelMeter
+            .counterBuilder(name)
+            .ofDoubles()
+            .setDescription(description(name, id))
+            .setUnit(baseUnit(id))
+            .buildWithCallback(
+                new DoubleMeasurementRecorder<>(
+                    obj, countFunction, tagsAsAttributes(id, namingConvention)));
   }
 
   @Override
@@ -63,7 +65,7 @@ final class OpenTelemetryFunctionCounter<T> implements FunctionCounter, Removabl
 
   @Override
   public void onRemove() {
-    countMeasurementHandle.remove();
+    observableCount.close();
   }
 
   @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")

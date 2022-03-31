@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 
 /**
  * An interface for getting server-based network attributes. It adapts a vendor-specific request
- * type into the 4 common attributes (transport, peerName, peerPort, peerIp).
+ * type into the 3 common attributes (transport, peerPort, peerIp).
  *
  * <p>Instrumentation authors will create implementations of this interface for their specific
  * server library/framework. It will be used by the {@link NetServerAttributesExtractor} to obtain
@@ -19,9 +19,6 @@ public interface NetServerAttributesGetter<REQUEST> {
 
   @Nullable
   String transport(REQUEST request);
-
-  @Nullable
-  String peerName(REQUEST request);
 
   @Nullable
   Integer peerPort(REQUEST request);

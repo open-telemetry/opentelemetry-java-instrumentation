@@ -104,10 +104,10 @@ class HttpClientAttributesExtractorTest {
     response.put("header.custom-response-header", "654,321");
 
     HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(
-            new TestHttpClientAttributesGetter(),
-            CapturedHttpHeaders.create(
-                singletonList("Custom-Request-Header"), singletonList("Custom-Response-Header")));
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
+            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -148,8 +148,10 @@ class HttpClientAttributesExtractorTest {
     response.put("statusCode", "0");
 
     HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(
-            new TestHttpClientAttributesGetter(), CapturedHttpHeaders.empty());
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
+            .setCapturedRequestHeaders(emptyList())
+            .setCapturedResponseHeaders(emptyList())
+            .build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);

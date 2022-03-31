@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.rpc.MetricsView.applyClientView;
+import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
@@ -17,8 +18,7 @@ import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 /**
  * {@link RequestListener} which keeps track of <a
@@ -33,7 +33,7 @@ public final class RpcClientMetrics implements RequestListener {
   private static final ContextKey<RpcClientMetrics.State> RPC_CLIENT_REQUEST_METRICS_STATE =
       ContextKey.named("rpc-client-request-metrics-state");
 
-  private static final Logger logger = LoggerFactory.getLogger(RpcClientMetrics.class);
+  private static final Logger logger = Logger.getLogger(RpcClientMetrics.class.getName());
 
   private final DoubleHistogram clientDurationHistogram;
 
@@ -67,8 +67,10 @@ public final class RpcClientMetrics implements RequestListener {
   public void end(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(RPC_CLIENT_REQUEST_METRICS_STATE);
     if (state == null) {
-      logger.debug(
-          "No state present when ending context {}. Cannot record RPC request metrics.", context);
+      logger.log(
+          FINE,
+          "No state present when ending context {0}. Cannot record RPC request metrics.",
+          context);
       return;
     }
     clientDurationHistogram.record(

@@ -27,30 +27,29 @@ jobs:
             smoke-test-server: websphere
       fail-fast: false
     steps:
-      - name: Support longpaths
+      - name: Support long paths
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-2019'
 
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
 
-      - name: Set up JDK 11 for running Gradle
+      - name: Set up JDK for running Gradle
         uses: actions/setup-java@v2
         with:
-          distribution: adopt
-          java-version: 11
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle cache
+        uses: gradle/gradle-build-action@v2
+        with:
+          cache-read-only: true
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-2019'
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
-          build-root-directory: smoke-tests/images/servlet
-          cache-read-only: true
+        run: ./gradlew buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        working-directory: smoke-tests/images/servlet
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-2019'
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
-          build-root-directory: smoke-tests/images/servlet
-          cache-read-only: true
+        run: ./gradlew buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        working-directory: smoke-tests/images/servlet

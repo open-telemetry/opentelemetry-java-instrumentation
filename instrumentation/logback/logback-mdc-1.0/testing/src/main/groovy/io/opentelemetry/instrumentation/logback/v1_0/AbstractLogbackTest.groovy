@@ -60,14 +60,14 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
   def "ids when span"() {
     when:
     Span span1 = runWithSpan("test") {
-      logger.info("log message 1")
+      AbstractLogbackTest.logger.info("log message 1")
       Span.current()
     }
 
     logger.info("log message 2")
 
     Span span2 = runWithSpan("test 2") {
-      logger.info("log message 3")
+      AbstractLogbackTest.logger.info("log message 3")
       Span.current()
     }
 

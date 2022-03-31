@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import java.util.Arrays;
 import java.util.List;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -23,8 +24,8 @@ final class AwsSdkInstrumenterFactory {
   static final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
   static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> httpAttributesExtractor =
       HttpClientAttributesExtractor.create(httpAttributesGetter);
-  static final AwsSdkRpcAttributesExtractor rpcAttributesExtractor =
-      new AwsSdkRpcAttributesExtractor();
+  static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> rpcAttributesExtractor =
+      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
   private static final AwsSdkNetAttributesGetter netAttributesGetter =
       new AwsSdkNetAttributesGetter();
   private static final NetClientAttributesExtractor<ExecutionAttributes, SdkHttpResponse>
