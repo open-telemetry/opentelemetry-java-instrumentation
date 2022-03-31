@@ -79,8 +79,10 @@ class SpringBootSmokeTest extends SmokeTest {
     def metrics = new MetricsInspector(waitForMetrics())
     metrics.hasMetricsNamed("runtime.jvm.gc.time")
     metrics.hasMetricsNamed("runtime.jvm.gc.count")
-    metrics.hasMetricsNamed("runtime.jvm.memory.area")
-    metrics.hasMetricsNamed("runtime.jvm.memory.pool")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.init")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.usage")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.max")
 
     cleanup:
     stopTarget()
