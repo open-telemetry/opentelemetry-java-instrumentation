@@ -25,8 +25,19 @@ public final class EmbeddedInstrumentationProperties {
   private static final Logger logger =
       Logger.getLogger(EmbeddedInstrumentationProperties.class.getName());
 
-  private static final EmbeddedPropertiesLoader loader = new EmbeddedPropertiesLoader();
+  private static final ClassLoader DEFAULT_LOADER = new EmbeddedPropertiesLoader();
+
+  private static volatile ClassLoader loader = DEFAULT_LOADER;
   private static final Map<String, String> versions = new ConcurrentHashMap<>();
+
+  public static void setPropertiesLoader(ClassLoader propertiesLoader) {
+    if (loader != DEFAULT_LOADER) {
+      logger.warning(
+          "Embedded properties loader has already been set up, further setPropertiesLoader() calls are ignored");
+      return;
+    }
+    loader = propertiesLoader;
+  }
 
   @Nullable
   public static String findVersion(String instrumentationName) {
