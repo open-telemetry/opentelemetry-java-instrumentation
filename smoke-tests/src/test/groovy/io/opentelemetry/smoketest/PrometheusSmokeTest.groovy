@@ -44,7 +44,7 @@ class PrometheusSmokeTest extends SmokeTest {
     def prometheusClient = WebClient.of("h1c://localhost:${containerManager.getTargetMappedPort(9090)}")
     def prometheusData = prometheusClient.get("/").aggregate().join().contentUtf8()
 
-    prometheusData.contains("runtime_jvm_memory_pool")
+    prometheusData.contains("process_runtime_jvm_memory_usage")
 
     cleanup:
     stopTarget()
