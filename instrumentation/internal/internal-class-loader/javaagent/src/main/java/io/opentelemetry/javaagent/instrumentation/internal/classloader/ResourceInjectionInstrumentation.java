@@ -58,7 +58,7 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String name,
         @Advice.Return(readOnly = false) URL resource) {
 
-      URL helper = HelperResources.load(classLoader, name);
+      URL helper = HelperResources.loadOne(classLoader, name);
       if (helper != null) {
         resource = helper;
       }
@@ -73,26 +73,29 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
         @Advice.Return(readOnly = false) Enumeration<URL> resources) {
-      URL helper = HelperResources.load(classLoader, name);
-      if (helper == null) {
+      List<URL> helpers = HelperResources.loadAll(classLoader, name);
+      if (helpers.isEmpty()) {
         return;
       }
 
       if (!resources.hasMoreElements()) {
-        resources = Collections.enumeration(Collections.singleton(helper));
+        resources = Collections.enumeration(helpers);
         return;
       }
 
       List<URL> result = Collections.list(resources);
-      boolean duplicate = false;
-      for (URL loadedUrl : result) {
-        if (helper.sameFile(loadedUrl)) {
-          duplicate = true;
-          break;
+
+      for (URL helperUrl : helpers) {
+        boolean duplicate = false;
+        for (URL loadedUrl : result) {
+          if (helperUrl.sameFile(loadedUrl)) {
+            duplicate = true;
+            break;
+          }
         }
-      }
-      if (!duplicate) {
-        result.add(helper);
+        if (!duplicate) {
+          result.add(helperUrl);
+        }
       }
 
       resources = Collections.enumeration(result);
