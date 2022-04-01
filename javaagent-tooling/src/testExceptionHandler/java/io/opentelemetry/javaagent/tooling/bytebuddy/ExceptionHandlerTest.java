@@ -30,6 +30,7 @@ class ExceptionHandlerTest {
 
   private static final TestHandler testHandler = new TestHandler();
   private static ResettableClassFileTransformer transformer;
+  private static Logger exceptionLogger;
 
   @BeforeAll
   static void setUp() {
@@ -58,9 +59,11 @@ class ExceptionHandlerTest {
     ByteBuddyAgent.install();
     transformer = builder.installOn(ByteBuddyAgent.getInstrumentation());
 
-    Logger logger = Logger.getLogger(ExceptionLogger.class.getName());
-    logger.setLevel(Level.FINE);
-    logger.addHandler(testHandler);
+    // keep logger in static field to ensure that it won't get gcd before ExceptionLogger
+    // class is initialized which would reset logger back to default configuration
+    exceptionLogger = Logger.getLogger(ExceptionLogger.class.getName());
+    exceptionLogger.setLevel(Level.FINE);
+    exceptionLogger.addHandler(testHandler);
   }
 
   @AfterAll
