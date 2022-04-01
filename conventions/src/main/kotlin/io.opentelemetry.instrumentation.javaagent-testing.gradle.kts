@@ -21,6 +21,7 @@ dependencies {
   // Integration tests may need to define custom instrumentation modules so we include the standard
   // instrumentation infrastructure for testing too.
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")
   // Apply common dependencies for instrumentation.

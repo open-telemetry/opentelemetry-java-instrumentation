@@ -24,19 +24,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -164,19 +157,19 @@ class InstrumenterTest {
   @RegisterExtension
   static final OpenTelemetryExtension otelTesting = OpenTelemetryExtension.create();
 
-  @Mock
-  HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpClientAttributes;
+  @Mock(extraInterfaces = SpanKeyProvider.class)
+  AttributesExtractor<Map<String, String>, Map<String, String>> mockHttpClientAttributes;
 
-  @Mock
-  HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpServerAttributes;
+  @Mock(extraInterfaces = SpanKeyProvider.class)
+  AttributesExtractor<Map<String, String>, Map<String, String>> mockDbClientAttributes;
 
-  @Mock DbClientAttributesExtractor<Map<String, String>, Map<String, String>> mockDbAttributes;
+  @Mock(extraInterfaces = SpanKeyProvider.class)
+  AttributesExtractor<Map<String, String>, Map<String, String>> mockRpcClientAttributes;
 
-  @Mock
-  MessagingAttributesExtractor<Map<String, String>, Map<String, String>> mockMessagingAttributes;
+  @Mock(extraInterfaces = SpanKeyProvider.class)
+  AttributesExtractor<Map<String, String>, Map<String, String>> mockMessagingProducerAttributes;
 
-  @Mock RpcClientAttributesExtractor<Map<String, String>, Map<String, String>> mockRpcAttributes;
-  @Mock NetServerAttributesExtractor<Map<String, String>, Map<String, String>> mockNetAttributes;
+  @Mock AttributesExtractor<Map<String, String>, Map<String, String>> mockNetClientAttributes;
 
   @Test
   void server() {
@@ -285,41 +278,6 @@ class InstrumenterTest {
                             .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId("090a0b0c0d0e0f00")));
-  }
-
-  @Test
-  void server_http() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>builder(
-                otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .addAttributesExtractors(
-                mockHttpServerAttributes,
-                NetServerAttributesExtractor.create(new ConstantNetPeerIpGetter<>("2.2.2.2")),
-                new AttributesExtractor1(),
-                new AttributesExtractor2())
-            .addSpanLinksExtractor(new LinksExtractor())
-            .newServerInstrumenter(new MapGetter());
-
-    Context context = instrumenter.start(Context.root(), REQUEST);
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-
-    assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
-
-    instrumenter.end(context, REQUEST, RESPONSE, null);
-
-    otelTesting
-        .assertTraces()
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span")
-                            .hasAttributesSatisfying(
-                                attributes ->
-                                    assertThat(attributes)
-                                        .containsEntry(
-                                            SemanticAttributes.NET_PEER_IP, "2.2.2.2"))));
   }
 
   @Test
@@ -578,8 +536,13 @@ class InstrumenterTest {
 
   @Test
   void clientNestedSpansSuppressed_whenInstrumentationTypeDisabled2() {
+    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.HTTP_CLIENT);
+    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.DB_CLIENT);
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(false, mockDbAttributes);
+        getInstrumenterWithType(false, mockDbClientAttributes);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
         getInstrumenterWithType(false, mockHttpClientAttributes);
 
@@ -591,12 +554,13 @@ class InstrumenterTest {
 
   @Test
   void clientNestedSuppressed_whenSameInstrumentationType() {
-    when(mockDbAttributes.internalGetSpanKey()).thenCallRealMethod();
+    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.DB_CLIENT);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true, mockDbAttributes);
+        getInstrumenterWithType(true, mockDbClientAttributes);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, mockDbAttributes);
+        getInstrumenterWithType(true, mockDbClientAttributes);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -609,8 +573,13 @@ class InstrumenterTest {
 
   @Test
   void clientNestedNotSuppressed_wehnDifferentInstrumentationCategories() {
+    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.HTTP_CLIENT);
+    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.DB_CLIENT);
+
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true, mockDbAttributes);
+        getInstrumenterWithType(true, mockDbClientAttributes);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
         getInstrumenterWithType(true, mockHttpClientAttributes);
 
@@ -649,7 +618,8 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_http() {
-    when(mockHttpClientAttributes.internalGetSpanKey()).thenCallRealMethod();
+    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.HTTP_CLIENT);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(true, mockHttpClientAttributes, new AttributesExtractor1());
@@ -662,10 +632,11 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_db() {
-    when(mockDbAttributes.internalGetSpanKey()).thenCallRealMethod();
+    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.DB_CLIENT);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockDbAttributes, new AttributesExtractor2());
+        getInstrumenterWithType(true, mockDbClientAttributes, new AttributesExtractor2());
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -675,10 +646,11 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_rpc() {
-    when(mockRpcAttributes.internalGetSpanKey()).thenCallRealMethod();
+    when(((SpanKeyProvider) mockRpcClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.RPC_CLIENT);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockRpcAttributes);
+        getInstrumenterWithType(true, mockRpcClientAttributes);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -688,10 +660,11 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_producer() {
-    when(mockMessagingAttributes.internalGetSpanKey()).thenReturn(SpanKey.PRODUCER);
+    when(((SpanKeyProvider) mockMessagingProducerAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.PRODUCER);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockMessagingAttributes);
+        getInstrumenterWithType(true, mockMessagingProducerAttributes);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -701,15 +674,18 @@ class InstrumenterTest {
 
   @Test
   void instrumentationTypeDetected_mix() {
-    when(mockMessagingAttributes.internalGetSpanKey()).thenReturn(SpanKey.PRODUCER);
+    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.DB_CLIENT);
+    when(((SpanKeyProvider) mockMessagingProducerAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.PRODUCER);
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         getInstrumenterWithType(
             true,
             new AttributesExtractor2(),
-            mockMessagingAttributes,
-            mockNetAttributes,
-            mockDbAttributes);
+            mockMessagingProducerAttributes,
+            mockNetClientAttributes,
+            mockDbClientAttributes);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -720,7 +696,7 @@ class InstrumenterTest {
   @Test
   void instrumentationTypeDetected_generic() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, new AttributesExtractor2(), mockNetAttributes);
+        getInstrumenterWithType(true, new AttributesExtractor2(), mockNetClientAttributes);
 
     Map<String, String> request = new HashMap<>(REQUEST);
 
@@ -807,30 +783,5 @@ class InstrumenterTest {
     return LinkData.create(
         SpanContext.create(
             LINK_TRACE_ID, LINK_SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
-  }
-
-  private static final class ConstantNetPeerIpGetter<REQUEST>
-      implements NetServerAttributesGetter<REQUEST> {
-
-    private final String peerIp;
-
-    private ConstantNetPeerIpGetter(String peerIp) {
-      this.peerIp = peerIp;
-    }
-
-    @Override
-    public String transport(REQUEST request) {
-      return null;
-    }
-
-    @Override
-    public Integer peerPort(REQUEST request) {
-      return null;
-    }
-
-    @Override
-    public String peerIp(REQUEST request) {
-      return peerIp;
-    }
   }
 }

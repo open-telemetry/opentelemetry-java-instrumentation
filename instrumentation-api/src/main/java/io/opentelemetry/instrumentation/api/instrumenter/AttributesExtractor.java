@@ -8,9 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -20,10 +17,6 @@ import javax.annotation.Nullable;
  * Throwable) on end} with both {@link REQUEST} and {@link RESPONSE} to allow populating attributes
  * at each stage of a request's lifecycle. It is best to populate as much as possible in {@link
  * #onStart(AttributesBuilder, Context, Object)} to have it available during sampling.
- *
- * @see DbClientAttributesExtractor
- * @see HttpClientAttributesExtractor
- * @see NetServerAttributesExtractor
  */
 public interface AttributesExtractor<REQUEST, RESPONSE> {
 
