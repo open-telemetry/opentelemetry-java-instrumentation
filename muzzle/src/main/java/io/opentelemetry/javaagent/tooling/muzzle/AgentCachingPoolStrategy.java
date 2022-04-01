@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
+import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -81,12 +82,17 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   }
 
   private static Method getFindLoadedClassMethod() {
+    // instrumentation is null when this code is called from muzzle
+    Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
+    if (instrumentation == null) {
+      return null;
+    }
     if (JavaModule.isSupported()) {
       JavaModule currentModule = JavaModule.ofType(AgentCachingPoolStrategy.class);
       JavaModule javaBase = JavaModule.ofType(ClassLoader.class);
       if (javaBase != null && javaBase.isNamed() && currentModule != null) {
         ClassInjector.UsingInstrumentation.redefineModule(
-            InstrumentationHolder.getInstrumentation(),
+            instrumentation,
             javaBase,
             Collections.emptySet(),
             Collections.emptyMap(),
@@ -102,6 +108,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     } catch (NoSuchMethodException exception) {
       throw new IllegalStateException(exception);
     }
+  }
+
+  private static boolean canUseFindLoadedClass() {
+    return findLoadedClassMethod != null;
   }
 
   private static Class<?> findLoadedClass(ClassLoader classLoader, String className) {
@@ -403,7 +413,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         if (cachedSuperClass == null) {
           Generic superClassDescription = delegate().getSuperClass();
           ClassLoader classLoader = classLoaderRef.get();
-          if (classLoader != null && superClassDescription != null) {
+          if (canUseFindLoadedClass() && classLoader != null && superClassDescription != null) {
             String superName = superClassDescription.getTypeName();
             Class<?> superClass = findLoadedClass(classLoader, superName);
             if (superClass != null) {
@@ -423,7 +433,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         if (cachedInterfaces == null) {
           TypeList.Generic interfaces = delegate().getInterfaces();
           ClassLoader classLoader = classLoaderRef.get();
-          if (classLoader != null && !interfaces.isEmpty()) {
+          if (canUseFindLoadedClass() && classLoader != null && !interfaces.isEmpty()) {
             List<TypeDescription> result = new ArrayList<>();
             for (Generic interfaceDescription : interfaces) {
               String interfaceName = interfaceDescription.getTypeName();
