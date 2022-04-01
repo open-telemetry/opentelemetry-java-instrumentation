@@ -12,7 +12,7 @@ enum DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest> {
 
   @Override
   public String system(DubboRequest request) {
-    return "dubbo";
+    return "apache_dubbo";
   }
 
   @Override
