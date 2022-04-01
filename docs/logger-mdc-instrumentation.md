@@ -19,11 +19,11 @@ event's MDC copy:
   (same as `Span.current().getSpanContext().getTraceFlags().asHex()`).
 
 Those three pieces of information can be included in log statements produced by the logging library
-by specifying them in the pattern/format. Example for Spring Boot configuration (which uses
-logback):
+by specifying them in the pattern/format. 
 
+Tip: for Spring Boot configuration which uses logback, you can add MDC to log lines by overriding only the logging.pattern.level:
 ```properties
-logging.pattern.console = %d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id=%X{trace_id} span_id=%X{span_id} trace_flags=%X{trace_flags} %n
+logging.pattern.level = trace_id=%mdc{trace_id} span_id=%mdc{span_id} trace_flags=%mdc{trace_flags} %5p
 ```
 
 This way any services or tools that parse the application logs can correlate traces/spans with log
