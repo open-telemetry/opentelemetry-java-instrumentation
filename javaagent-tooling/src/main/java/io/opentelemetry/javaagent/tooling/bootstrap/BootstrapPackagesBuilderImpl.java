@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.bootstrap;
 
-import io.opentelemetry.javaagent.extension.bootstrap.BootstrapPackagesBuilder;
 import io.opentelemetry.javaagent.tooling.Constants;
 import java.util.ArrayList;
 import java.util.Collection;
