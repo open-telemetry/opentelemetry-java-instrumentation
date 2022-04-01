@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -21,7 +22,9 @@ import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.pool.TypePool;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  *
@@ -78,6 +81,20 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   }
 
   private static Method getFindLoadedClassMethod() {
+    if (JavaModule.isSupported()) {
+      JavaModule currentModule = JavaModule.ofType(AgentCachingPoolStrategy.class);
+      JavaModule javaBase = JavaModule.ofType(ClassLoader.class);
+      if (javaBase != null && javaBase.isNamed() && currentModule != null) {
+        ClassInjector.UsingInstrumentation.redefineModule(
+            InstrumentationHolder.getInstrumentation(),
+            javaBase,
+            Collections.emptySet(),
+            Collections.emptyMap(),
+            Collections.singletonMap("java.lang", Collections.singleton(currentModule)),
+            Collections.emptySet(),
+            Collections.emptyMap());
+      }
+    }
     try {
       Method method = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
       method.setAccessible(true);
