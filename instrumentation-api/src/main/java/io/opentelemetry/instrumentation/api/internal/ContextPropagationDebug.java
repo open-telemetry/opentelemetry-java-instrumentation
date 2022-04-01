@@ -29,14 +29,18 @@ public final class ContextPropagationDebug {
   private static final ContextKey<ContextPropagationDebug> THREAD_PROPAGATION_LOCATIONS =
       ContextKey.named("thread-propagation-locations");
 
-  private static final boolean THREAD_PROPAGATION_DEBUGGER =
-      Config.get()
-          .getBoolean(
-              "otel.javaagent.experimental.thread-propagation-debugger.enabled",
-              Config.get().isAgentDebugEnabled());
+  private static final boolean THREAD_PROPAGATION_DEBUGGER;
+  private static final boolean FAIL_ON_CONTEXT_LEAK;
 
-  private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Config.get().getBoolean("otel.javaagent.testing.fail-on-context-leak", false);
+  static {
+    Config config = Config.get();
+    boolean agentDebugEnabled = config.getBoolean("otel.javaagent.debug", false);
+
+    THREAD_PROPAGATION_DEBUGGER =
+        config.getBoolean(
+            "otel.javaagent.experimental.thread-propagation-debugger.enabled", agentDebugEnabled);
+    FAIL_ON_CONTEXT_LEAK = config.getBoolean("otel.javaagent.testing.fail-on-context-leak", false);
+  }
 
   // context to which debug locations were added
   private final Context sourceContext;

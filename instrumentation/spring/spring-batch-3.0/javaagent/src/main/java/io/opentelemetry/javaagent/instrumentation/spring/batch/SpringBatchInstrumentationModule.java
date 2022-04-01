@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.instrumentationNames;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -27,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SpringBatchInstrumentationModule extends InstrumentationModule {
   public SpringBatchInstrumentationModule() {
-    super(instrumentationNames());
+    super("spring-batch", "spring-batch-3.0");
   }
 
   @Override
@@ -55,7 +54,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  protected boolean defaultEnabled() {
+  public boolean defaultEnabled() {
     // TODO: replace this with an experimental flag
     return false;
   }

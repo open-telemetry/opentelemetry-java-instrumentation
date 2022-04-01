@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLE
 import com.google.auto.service.AutoService;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -43,7 +44,7 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
   }
 
   private static void maybeEnableLoggingExporter(SdkTracerProviderBuilder builder) {
-    if (Config.get().isAgentDebugEnabled()) {
+    if (AgentConfig.get().isDebugModeEnabled()) {
       // don't install another instance if the user has already explicitly requested it.
       if (loggingExporterIsNotAlreadyConfigured()) {
         builder.addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()));

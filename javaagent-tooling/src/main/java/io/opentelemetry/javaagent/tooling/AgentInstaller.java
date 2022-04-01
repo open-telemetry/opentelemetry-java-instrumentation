@@ -29,6 +29,7 @@ import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskC
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
+import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
@@ -144,7 +145,7 @@ public class AgentInstaller {
 
     agentBuilder = configureIgnoredTypes(config, agentBuilder);
 
-    if (config.isAgentDebugEnabled()) {
+    if (AgentConfig.get().isDebugModeEnabled()) {
       agentBuilder =
           agentBuilder
               .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)

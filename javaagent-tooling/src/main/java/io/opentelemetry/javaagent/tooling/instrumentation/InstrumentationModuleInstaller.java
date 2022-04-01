@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
+import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
@@ -56,7 +57,9 @@ public final class InstrumentationModuleInstaller {
 
   AgentBuilder install(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
-    if (!instrumentationModule.isEnabled()) {
+    if (!AgentConfig.get()
+        .isInstrumentationEnabled(
+            instrumentationModule.instrumentationNames(), instrumentationModule.defaultEnabled())) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;

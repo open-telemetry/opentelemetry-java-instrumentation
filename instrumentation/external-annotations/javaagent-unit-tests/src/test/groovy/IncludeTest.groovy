@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationInstrumentation
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -18,11 +18,11 @@ class IncludeTest extends Specification {
     setup:
     Config config
     if (value) {
-      config = new ConfigBuilder().readProperties([
+      config = Config.builder().addProperties([
         "otel.instrumentation.external-annotations.include": value
       ]).build()
     } else {
-      config = Config.create([:])
+      config = Config.builder().build()
     }
 
     expect:
