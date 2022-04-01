@@ -22,6 +22,11 @@ class QuarkusSmokeTest extends SmokeTest {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$jdk-20211213.1574595137"
   }
 
+  @Override
+  protected Map<String, String> getExtraEnv() {
+    return ["OTEL_INSTRUMENTATION_JAXRS_ENABLED": "true"]
+  }
+
   @Unroll
   def "quarkus smoke test on JDK #jdk"(int jdk) {
     setup:
