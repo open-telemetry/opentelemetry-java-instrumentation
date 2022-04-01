@@ -224,25 +224,25 @@ class KotlinCoroutinesInstrumentationTest {
 
     testing.waitAndAssertTraces(
       { trace ->
-        trace.hasSpansSatisfyingExactly(
-          {
-            it.hasName("parent")
+        trace.satisfiesExactlyInAnyOrder(
+          Consumer {
+            assertThat(it).hasName("parent")
               .hasNoParent()
           },
-          {
-            it.hasName("future1")
+          Consumer {
+            assertThat(it).hasName("future1")
               .hasParent(trace.getSpan(0))
           },
-          {
-            it.hasName("keptPromise")
+          Consumer {
+            assertThat(it).hasName("keptPromise")
               .hasParent(trace.getSpan(0))
           },
-          {
-            it.hasName("keptPromise2")
+          Consumer {
+            assertThat(it).hasName("keptPromise2")
               .hasParent(trace.getSpan(0))
           },
-          {
-            it.hasName("brokenPromise")
+          Consumer {
+            assertThat(it).hasName("brokenPromise")
               .hasParent(trace.getSpan(0))
           },
         )
