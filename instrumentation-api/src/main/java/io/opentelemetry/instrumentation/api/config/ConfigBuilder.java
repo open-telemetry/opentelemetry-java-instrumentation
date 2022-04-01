@@ -40,14 +40,6 @@ public final class ConfigBuilder {
     return addProperties(properties);
   }
 
-  /** Adds all properties from the passed {@code properties} to the config. */
-  public ConfigBuilder addProperties(Properties properties) {
-    for (String name : properties.stringPropertyNames()) {
-      allProperties.put(NamingConvention.DOT.normalize(name), properties.getProperty(name));
-    }
-    return this;
-  }
-
   /**
    * Adds all properties from the passed {@code properties} to the config.
    *
@@ -56,6 +48,14 @@ public final class ConfigBuilder {
   @Deprecated
   public ConfigBuilder readProperties(Map<String, String> properties) {
     return addProperties(properties);
+  }
+
+  /** Adds all properties from the passed {@code properties} to the config. */
+  public ConfigBuilder addProperties(Properties properties) {
+    for (String name : properties.stringPropertyNames()) {
+      allProperties.put(NamingConvention.DOT.normalize(name), properties.getProperty(name));
+    }
+    return this;
   }
 
   /** Adds all properties from the passed {@code properties} to the config. */
