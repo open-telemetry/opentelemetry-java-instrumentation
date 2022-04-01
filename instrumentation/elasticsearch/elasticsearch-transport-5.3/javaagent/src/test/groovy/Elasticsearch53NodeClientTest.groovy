@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static org.awaitility.Awaitility.await
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
-import static org.testcontainers.shaded.org.awaitility.Awaitility.await
 
 class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest {
   public static final long TIMEOUT = 10000 // 10 seconds
