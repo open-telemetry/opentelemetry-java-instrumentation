@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler;
+import java.nio.charset.StandardCharsets;
 import org.objectweb.asm.ClassReader;
 
 public class DefineClassHandler implements Handler {
@@ -18,6 +19,14 @@ public class DefineClassHandler implements Handler {
   @Override
   public DefineClassContext beforeDefineClass(
       ClassLoader classLoader, String className, byte[] classBytes, int offset, int length) {
+    // with OpenJ9 class data sharing we don't get real class bytes
+    if (classBytes == null
+        || (classBytes.length == 40
+            && new String(classBytes, StandardCharsets.ISO_8859_1)
+                .startsWith("J9ROMCLASSCOOKIE"))) {
+      return null;
+    }
+
     DefineClassContextImpl context = null;
     // attempt to load super types of currently loaded class
     // for a class to be loaded all of its super types must be loaded, here we just change the order
