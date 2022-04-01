@@ -77,8 +77,6 @@ class SupportabilityMetricsTest {
   }
 
   private static Config configWithJavaagentDebug(boolean enabled) {
-    return Config.builder()
-        .addProperty("otel.javaagent.debug", Boolean.toString(enabled))
-        .build();
+    return Config.builder().addProperty("otel.javaagent.debug", Boolean.toString(enabled)).build();
   }
 }
