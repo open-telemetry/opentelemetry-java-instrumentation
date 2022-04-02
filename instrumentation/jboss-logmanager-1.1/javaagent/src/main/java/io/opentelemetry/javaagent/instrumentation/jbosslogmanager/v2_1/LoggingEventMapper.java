@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.v2_1;
 
 import static java.util.Collections.emptyList;
@@ -21,10 +26,6 @@ import org.jboss.logmanager.Level;
 import org.jboss.logmanager.Logger;
 import org.jboss.logmanager.MDC;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 public final class LoggingEventMapper {
 
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
