@@ -12,7 +12,7 @@ from=$(git log --reverse --pretty=format:"%cI" $from_version..HEAD | head -1)
 # get the last commit on main that was in the to_version
 to=$(git merge-base HEAD $to_version | xargs git log -1 --pretty=format:"%cI")
 
-contributors1=$(gh api graphql --paginate -F q="repo:open-telemetry/opentelemetry-java-instrumentation is:pr base:main is:merged merged:$from..$to" -f query='
+contributors1=$(gh api graphql --paginate -F q="repo:$GITHUB_REPOSITORY is:pr base:main is:merged merged:$from..$to" -f query='
 query($q: String!, $endCursor: String) {
   search(query: $q, type: ISSUE, first: 100, after: $endCursor) {
     edges {
@@ -49,7 +49,7 @@ query($q: String!, $endCursor: String) {
 
 # this query captures authors of issues which have had PRs in the current range reference the issue
 # but not necessarily through closingIssuesReferences (e.g. addressing just a part of an issue)
-contributors2=$(gh api graphql --paginate -F q="repo:open-telemetry/opentelemetry-java-instrumentation is:pr base:main is:merged merged:$from..$to" -f query='
+contributors2=$(gh api graphql --paginate -F q="repo:$GITHUB_REPOSITORY is:pr base:main is:merged merged:$from..$to" -f query='
 query($q: String!, $endCursor: String) {
   search(query: $q, type: ISSUE, first: 100, after: $endCursor) {
     edges {
