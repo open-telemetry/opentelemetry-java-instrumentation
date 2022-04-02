@@ -1,21 +1,20 @@
-package io.opentelemetry.javaagent.instrumentation.jboss_logmanager.v2_1;
-
-import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
-
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
-import org.jboss.logmanager.ExtLogRecord;
-import org.jboss.logmanager.Logger;
+package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.v2_1;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import org.jboss.logmanager.ExtLogRecord;
+import org.jboss.logmanager.Logger;
 
 public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   @Override

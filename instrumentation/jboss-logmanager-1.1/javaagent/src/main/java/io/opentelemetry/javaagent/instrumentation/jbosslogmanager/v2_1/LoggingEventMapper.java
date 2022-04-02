@@ -1,4 +1,4 @@
-package io.opentelemetry.javaagent.instrumentation.jboss_logmanager.v2_1;
+package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.v2_1;
 
 import static java.util.Collections.emptyList;
 
