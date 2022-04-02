@@ -12,7 +12,12 @@ muzzle {
 
 dependencies {
   library("org.jboss.logmanager:jboss-logmanager:2.1.17.Final")
+
   compileOnly(project(":instrumentation-appender-api-internal"))
+
+  // ensure no cross interference
+  testInstrumentation(project(":instrumentation:java-util-logging:javaagent"))
+
   testImplementation("org.awaitility:awaitility")
 }
 
