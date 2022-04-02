@@ -108,12 +108,12 @@ jobs:
             This release targets the OpenTelemetry SDK $VERSION.
 
             Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
-          
+
             EOF
           else
             cat > release-notes.txt << EOF
             This is a patch release on the previous $PRIOR_VERSION release, fixing the issue(s) below.
-          
+
             EOF
           fi
 
@@ -128,12 +128,12 @@ jobs:
 
           if [[ $version == *.0 ]]; then
             cat >> release-notes.txt << EOF
-          
+
             ### 🙇 Thank you
             This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
-          
+
             EOF
-          
+
             .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION v$VERSION >> release-notes.txt
           fi
 
