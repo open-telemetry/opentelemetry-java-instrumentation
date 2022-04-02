@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.classic;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.classic.ApacheHttpClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.ApacheHttpClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -15,7 +15,7 @@ import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
-public class WrappingStatusSettingResponseHandler<T> implements HttpClientResponseHandler<T> {
+class WrappingStatusSettingResponseHandler<T> implements HttpClientResponseHandler<T> {
   final Context context;
   final Context parentContext;
   final ClassicHttpRequest request;

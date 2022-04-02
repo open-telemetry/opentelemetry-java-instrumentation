@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.async;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -13,21 +13,22 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
-public final class ApacheHttpAsyncClientSingletons {
+final class ApacheHttpAsyncClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.0";
 
-  private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    ApacheHttpAsyncClientHttpAttributesGetter httpAttributesGetter =
-        new ApacheHttpAsyncClientHttpAttributesGetter();
-    ApacheHttpAsyncClientNetAttributesGetter netAttributesGetter =
-        new ApacheHttpAsyncClientNetAttributesGetter();
+    ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
+        new ApacheHttpClientHttpAttributesGetter();
+    ApacheHttpClientNetAttributesGetter netAttributesGetter =
+        new ApacheHttpClientNetAttributesGetter();
 
     INSTRUMENTER =
-        Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
+        Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
@@ -39,7 +40,7 @@ public final class ApacheHttpAsyncClientSingletons {
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
-  public static Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter() {
+  public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 

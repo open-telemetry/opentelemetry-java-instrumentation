@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.async;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.async.ApacheHttpAsyncClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.ApacheHttpAsyncClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -35,7 +35,7 @@ import org.apache.hc.core5.http.nio.RequestChannel;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 
-public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
+class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -145,11 +145,9 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
-      ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(request, entityDetails);
-
-      if (instrumenter().shouldStart(parentContext, otelRequest)) {
-        wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
-        wrappedFutureCallback.otelRequest = otelRequest;
+      if (instrumenter().shouldStart(parentContext, request)) {
+        wrappedFutureCallback.context = instrumenter().start(parentContext, request);
+        wrappedFutureCallback.httpRequest = request;
       }
 
       delegate.sendRequest(request, entityDetails, context);
@@ -165,7 +163,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
-    private volatile ApacheHttpClientRequest otelRequest;
+    private volatile HttpRequest httpRequest;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
@@ -184,7 +182,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         return;
       }
 
-      instrumenter().end(context, otelRequest, getResponse(httpContext), null);
+      instrumenter().end(context, httpRequest, getResponse(httpContext), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -206,7 +204,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
 
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponse(httpContext), ex);
+      instrumenter().end(context, httpRequest, getResponse(httpContext), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -229,7 +227,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponse(httpContext), null);
+      instrumenter().end(context, httpRequest, getResponse(httpContext), null);
 
       if (parentContext == null) {
         cancelDelegate();

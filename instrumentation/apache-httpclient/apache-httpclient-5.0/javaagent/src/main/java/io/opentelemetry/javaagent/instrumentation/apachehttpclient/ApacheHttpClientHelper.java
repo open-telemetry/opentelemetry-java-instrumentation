@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.classic;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.classic.ApacheHttpClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.ApacheHttpClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
-public class ApacheHttpClientHelper {
+class ApacheHttpClientHelper {
 
   public static void doMethodExit(
       Context context, ClassicHttpRequest request, Object result, Throwable throwable) {

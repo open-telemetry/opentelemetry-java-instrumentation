@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.apachehttpclient.async.ApacheHttpAsyncClientInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.apachehttpclient.classic.ApacheHttpClientInstrumentation;
 import java.util.Arrays;
 import java.util.List;
 
