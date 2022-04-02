@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.CONNECTION_TIMEOUT;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -16,10 +19,10 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.io.CloseMode;
-import org.apache.hc.core5.util.Timeout;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.TestInstance;
@@ -30,16 +33,28 @@ public class ApacheHttpClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  // TODO(anuraaga): AbstractHttpClientTest should provide timeout values statically
-  private final RequestConfig requestConfig =
-      RequestConfig.custom().setConnectTimeout(Timeout.ofSeconds(5)).build();
-  private final RequestConfig requestWithReadTimeoutConfig =
-      RequestConfig.copy(requestConfig).setResponseTimeout(Timeout.ofSeconds(2)).build();
+  private final CloseableHttpClient client = createClient();
+  private final CloseableHttpClient clientWithReadTimeout = createClientWithReadTimeout();
 
-  private final CloseableHttpClient client =
-      HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
-  private final CloseableHttpClient clientWithReadTimeout =
-      HttpClients.custom().setDefaultRequestConfig(requestWithReadTimeoutConfig).build();
+  private static RequestConfig requestConfig() {
+    return RequestConfig.custom()
+        .setConnectTimeout(AbstractApacheHttpClientTest.getTimeout(CONNECTION_TIMEOUT))
+        .build();
+  }
+
+  private static RequestConfig requestConfigWithReadTimeout() {
+    return RequestConfig.copy(requestConfig())
+        .setResponseTimeout(AbstractApacheHttpClientTest.getTimeout(READ_TIMEOUT))
+        .build();
+  }
+
+  private static CloseableHttpClient createClient() {
+    return HttpClients.custom().setDefaultRequestConfig(requestConfig()).build();
+  }
+
+  private static CloseableHttpClient createClientWithReadTimeout() {
+    return HttpClients.custom().setDefaultRequestConfig(requestConfigWithReadTimeout()).build();
+  }
 
   @AfterAll
   void tearDown() {
@@ -63,7 +78,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
+    ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri) throws Exception {
       return getClient(uri).execute(getHost(uri), request);
     }
 
@@ -82,7 +97,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
+    ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri) throws Exception {
       return getClient(uri).execute(getHost(uri), request);
     }
 
@@ -102,7 +117,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
+    ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri) throws Exception {
       return getClient(uri).execute(getHost(uri), request, getContext());
     }
 
@@ -121,7 +136,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
+    ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri) throws Exception {
       return getClient(uri).execute(getHost(uri), request, getContext());
     }
 
@@ -140,7 +155,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
+    ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri) throws Exception {
       return getClient(uri).execute(request);
     }
 
@@ -159,7 +174,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
+    ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri) throws Exception {
       return getClient(uri).execute(request, getContext());
     }
 
@@ -170,7 +185,17 @@ public class ApacheHttpClientTest {
     }
   }
 
-  abstract static class AbstractTest extends AbstractApacheHttpClientTest<ClassicHttpRequest> {}
+  abstract static class AbstractTest extends AbstractApacheHttpClientTest<ClassicHttpRequest> {
+    @Override
+    final HttpResponse executeRequest(ClassicHttpRequest request, URI uri) throws Exception {
+      ClassicHttpResponse httpResponse = doExecuteRequest(request, uri);
+      httpResponse.close();
+      return httpResponse;
+    }
+
+    abstract ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri)
+        throws Exception;
+  }
 
   private static class ResponseHandler implements HttpClientResponseHandler<Void> {
     private final AbstractHttpClientTest.RequestResult requestResult;

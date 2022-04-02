@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
@@ -20,7 +21,6 @@ import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http2.HttpVersionPolicy;
 import org.apache.hc.core5.io.CloseMode;
-import org.apache.hc.core5.util.Timeout;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
@@ -32,43 +32,20 @@ class ApacheHttpAsyncClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  private final CloseableHttpAsyncClient client;
-  private final CloseableHttpAsyncClient clientWithReadTimeout;
-
-  public ApacheHttpAsyncClientTest() {
-    // TODO(anuraaga): AbstractHttpClientTest should provide timeout values statically
-    RequestConfig requestConfig =
-        RequestConfig.custom().setConnectTimeout(Timeout.ofSeconds(5)).build();
-    client = createClient(requestConfig);
-    RequestConfig requestWithReadTimeoutConfig =
-        RequestConfig.copy(requestConfig).setResponseTimeout(Timeout.ofSeconds(2)).build();
-    clientWithReadTimeout = createClient(requestWithReadTimeoutConfig);
-  }
+  private final CloseableHttpAsyncClient client = createClient();
 
   @BeforeAll
   void setUp() {
     client.start();
-    clientWithReadTimeout.start();
   }
 
   @AfterAll
   void tearDown() {
     client.close(CloseMode.GRACEFUL);
-    clientWithReadTimeout.close(CloseMode.GRACEFUL);
   }
 
-  private static CloseableHttpAsyncClient createClient(RequestConfig requestConfig) {
-    return HttpAsyncClients.custom()
-        .setDefaultRequestConfig(requestConfig)
-        .setVersionPolicy(HttpVersionPolicy.FORCE_HTTP_1)
-        .build();
-  }
-
-  private CloseableHttpAsyncClient getClient(URI uri) {
-    if (uri.toString().contains("/read-timeout")) {
-      return clientWithReadTimeout;
-    }
-    return client;
+  private static CloseableHttpAsyncClient createClient() {
+    return HttpAsyncClients.custom().setVersionPolicy(HttpVersionPolicy.FORCE_HTTP_1).build();
   }
 
   @Nested
@@ -97,13 +74,26 @@ class ApacheHttpAsyncClientTest {
 
   abstract class AbstractTest extends AbstractApacheHttpClientTest<SimpleHttpRequest> {
     @Override
+    protected SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+      SimpleHttpRequest httpRequest = super.buildRequest(method, uri, headers);
+      RequestConfig.Builder configBuilder = RequestConfig.custom();
+      configBuilder.setConnectTimeout(getTimeout(connectTimeout()));
+      if (uri.toString().contains("/read-timeout")) {
+        configBuilder.setResponseTimeout(getTimeout(readTimeout()));
+      }
+      RequestConfig requestConfig = configBuilder.build();
+      httpRequest.setConfig(requestConfig);
+      return httpRequest;
+    }
+
+    @Override
     HttpResponse executeRequest(SimpleHttpRequest request, URI uri) throws Exception {
-      return getClient(uri).execute(request, null).get();
+      return client.execute(request, null).get();
     }
 
     @Override
     void executeRequestWithCallback(SimpleHttpRequest request, URI uri, RequestResult result) {
-      getClient(uri).execute(request, new ResponseCallback(result));
+      client.execute(request, new ResponseCallback(result));
     }
 
     @Override

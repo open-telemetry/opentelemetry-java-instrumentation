@@ -5,15 +5,18 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.util.Timeout;
 
 abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     extends AbstractHttpClientTest<T> {
@@ -102,5 +105,9 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
 
   private static int getResponseCode(HttpResponse response) {
     return response.getCode();
+  }
+
+  static Timeout getTimeout(Duration duration) {
+    return Timeout.of(duration.toMillis(), TimeUnit.MILLISECONDS);
   }
 }
