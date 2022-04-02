@@ -8,7 +8,7 @@ dependencies {
   compileOnly(project(":instrumentation-appender-api-internal"))
 
   // ensure no cross interference
-  testInstrumentation(project(":instrumentation:jboss-logmanager-2.1:javaagent"))
+  testInstrumentation(project(":instrumentation:jboss-logmanager-1.1:javaagent"))
 
   testImplementation("org.awaitility:awaitility")
 }
