@@ -18,7 +18,7 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
   }
 
   @Unroll
-  def "test "(Level testMethod, boolean exception, boolean parent) {
+  def "test testMethod=#testMethod, exception=#exception, parent=#parent"(Level testMethod, boolean exception, boolean parent) {
     when:
     if (parent) {
       runWithSpan("parent") {
