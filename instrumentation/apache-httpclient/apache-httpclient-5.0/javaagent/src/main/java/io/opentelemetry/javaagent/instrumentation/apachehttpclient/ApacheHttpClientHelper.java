@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
-class ApacheHttpClientHelper {
+public class ApacheHttpClientHelper {
 
   public static void doMethodExit(
       Context context, ClassicHttpRequest request, Object result, Throwable throwable) {

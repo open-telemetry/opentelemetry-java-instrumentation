@@ -12,7 +12,7 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.message.HttpRequestWrapper;
 import org.apache.hc.core5.net.URIAuthority;
 
-class RequestWithHost extends HttpRequestWrapper implements ClassicHttpRequest {
+public class RequestWithHost extends HttpRequestWrapper implements ClassicHttpRequest {
 
   private final String scheme;
   private final URIAuthority authority;

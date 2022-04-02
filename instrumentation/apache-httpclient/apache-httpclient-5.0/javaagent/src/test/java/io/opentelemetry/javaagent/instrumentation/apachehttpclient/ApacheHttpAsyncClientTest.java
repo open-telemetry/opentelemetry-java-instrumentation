@@ -99,7 +99,7 @@ class ApacheHttpAsyncClientTest {
         URI uri,
         Map<String, String> headers,
         RequestResult requestResult) {
-      getClient(uri).execute(request, responseCallback(requestResult));
+      getClient(uri).execute(request, new ResponseCallback(requestResult));
     }
 
     @Override
@@ -132,7 +132,7 @@ class ApacheHttpAsyncClientTest {
         URI uri,
         Map<String, String> headers,
         RequestResult requestResult) {
-      getClient(uri).execute(request, responseCallback(requestResult));
+      getClient(uri).execute(request, new ResponseCallback(requestResult));
     }
 
     @Override
@@ -163,7 +163,7 @@ class ApacheHttpAsyncClientTest {
         URI uri,
         Map<String, String> headers,
         RequestResult requestResult) {
-      getClient(uri).execute(request, responseCallback(requestResult));
+      getClient(uri).execute(request, new ResponseCallback(requestResult));
     }
 
     @Override
@@ -182,24 +182,27 @@ class ApacheHttpAsyncClientTest {
     return response.getCode();
   }
 
-  static FutureCallback<SimpleHttpResponse> responseCallback(
-      AbstractHttpClientTest.RequestResult requestResult) {
-    return new FutureCallback<>() {
-      @Override
-      public void completed(SimpleHttpResponse response) {
-        requestResult.complete(response.getCode());
-      }
+  private static class ResponseCallback implements FutureCallback<SimpleHttpResponse> {
+    private final AbstractHttpClientTest.RequestResult requestResult;
 
-      @Override
-      public void failed(Exception e) {
-        requestResult.complete(e);
-      }
+    public ResponseCallback(AbstractHttpClientTest.RequestResult requestResult) {
+      this.requestResult = requestResult;
+    }
 
-      @Override
-      public void cancelled() {
-        requestResult.complete(new CancellationException());
-      }
-    };
+    @Override
+    public void completed(SimpleHttpResponse response) {
+      requestResult.complete(response.getCode());
+    }
+
+    @Override
+    public void failed(Exception ex) {
+      requestResult.complete(ex);
+    }
+
+    @Override
+    public void cancelled() {
+      requestResult.complete(new CancellationException());
+    }
   }
 
   void configureTest(HttpClientTestOptions options) {

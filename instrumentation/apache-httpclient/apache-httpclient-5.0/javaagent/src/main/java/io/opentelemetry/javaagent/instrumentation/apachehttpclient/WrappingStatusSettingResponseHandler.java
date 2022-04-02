@@ -15,7 +15,7 @@ import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
-class WrappingStatusSettingResponseHandler<T> implements HttpClientResponseHandler<T> {
+public class WrappingStatusSettingResponseHandler<T> implements HttpClientResponseHandler<T> {
   final Context context;
   final Context parentContext;
   final ClassicHttpRequest request;
