@@ -1,4 +1,4 @@
-name: Backport a pull request
+name: Backport
 on:
   workflow_dispatch:
     inputs:
