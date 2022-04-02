@@ -15,9 +15,9 @@ dependencies {
   compileOnly(project(":instrumentation-appender-api-internal"))
   testImplementation("org.awaitility:awaitility")
 }
-//
+
 tasks.withType<Test>().configureEach {
-//  // TODO run tests both with and without experimental log attributes
+  // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
 }

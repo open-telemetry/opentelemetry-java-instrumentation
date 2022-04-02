@@ -59,13 +59,11 @@ public final class LoggingEventMapper {
     LogBuilder builder =
         AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
 
-    // message
     String message = record.getFormattedMessage();
     if (message != null) {
       builder.setBody(message);
     }
 
-    // level
     java.util.logging.Level level = record.getLevel();
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
@@ -74,7 +72,6 @@ public final class LoggingEventMapper {
 
     AttributesBuilder attributes = Attributes.builder();
 
-    // throwable
     Throwable throwable = record.getThrown();
     if (throwable != null) {
       // TODO (trask) extract method for recording exception into
@@ -95,7 +92,6 @@ public final class LoggingEventMapper {
 
     builder.setAttributes(attributes.build());
 
-    // span context
     builder.setContext(Context.current());
 
     builder.emit();
