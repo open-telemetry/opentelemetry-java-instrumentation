@@ -15,7 +15,7 @@ jobs:
           # history is needed in order to do cherry-pick
           fetch-depth: 0
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com

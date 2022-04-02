@@ -21,8 +21,7 @@ jobs:
         env:
           RELEASE_BRANCH_NAME: ${{ steps.set-release-branch-name.outputs.release-branch-name }}
         run: |
-          git checkout -b $RELEASE_BRANCH_NAME
-          git push origin $RELEASE_BRANCH_NAME
+          git push origin HEAD:$RELEASE_BRANCH_NAME
 
   create-pull-request-against-release-branch:
     needs: prepare-release-branch
@@ -42,7 +41,7 @@ jobs:
           new_version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
           sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$new_version/," README.md
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
@@ -81,7 +80,7 @@ jobs:
           next_version="$major.$((minor + 1)).0"
           .github/scripts/update-versions.sh "$version-SNAPSHOT" "$version-alpha-SNAPSHOT" "$next_version-SNAPSHOT" "$next_version-alpha-SNAPSHOT"
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com

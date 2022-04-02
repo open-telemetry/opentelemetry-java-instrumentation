@@ -170,7 +170,7 @@ jobs:
         run: |
           echo $VERSION > autoinstrumentation/java/version.txt
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
@@ -200,12 +200,13 @@ jobs:
           # history is needed in order to run git format-patch below
           fetch-depth: 0
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
-        # this step should be last since it will fail if conflicting change log updates on main
+        # this step should be last since it will fail if there have been conflicting
+        # change log updates introduced on the main branch
       - name: Create pull request to merge any change log updates to main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -215,9 +216,9 @@ jobs:
             git apply patch
             msg="Merge change log updates from $GITHUB_REF_NAME to main"
             git commit -a -m "$msg"
-            git push origin HEAD:opentelemetry-java-bot/merge-change-log-updates
+            git push origin HEAD:merge-change-log-updates-to-main
             gh pr create --title "$msg" \
                          --body "$msg" \
-                         --head opentelemetry-java-bot/merge-change-log-updates \
+                         --head merge-change-log-updates-to-main \
                          --base main
           fi
