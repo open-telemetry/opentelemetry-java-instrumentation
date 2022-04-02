@@ -14,7 +14,7 @@ import spock.lang.Unroll
 import org.jboss.logmanager.Logger
 
 import static org.assertj.core.api.Assertions.assertThat
-import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await
 
 class JbossLogmanagerTest extends AgentInstrumentationSpecification {
   private static final Logger logger = LogContext.getLogContext().getLogger("abc")
