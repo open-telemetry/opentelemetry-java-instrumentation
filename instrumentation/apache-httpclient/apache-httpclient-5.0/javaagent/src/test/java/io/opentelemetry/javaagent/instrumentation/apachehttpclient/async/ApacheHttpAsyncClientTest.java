@@ -42,10 +42,10 @@ class ApacheHttpAsyncClientTest {
 
   // TODO(anuraaga): AbstractHttpClientTest should provide timeout values statically
   private final RequestConfig requestConfig =
-      RequestConfig.custom().setConnectTimeout(Timeout.ofMilliseconds(5)).build();
+      RequestConfig.custom().setConnectTimeout(Timeout.ofSeconds(5)).build();
 
   private final RequestConfig requestWithReadTimeoutConfig =
-      RequestConfig.copy(requestConfig).setResponseTimeout(Timeout.ofMilliseconds(2)).build();
+      RequestConfig.copy(requestConfig).setResponseTimeout(Timeout.ofSeconds(2)).build();
 
   private final CloseableHttpAsyncClient client =
       HttpAsyncClients.custom()
@@ -184,7 +184,7 @@ class ApacheHttpAsyncClientTest {
 
   static FutureCallback<SimpleHttpResponse> responseCallback(
       AbstractHttpClientTest.RequestResult requestResult) {
-    return new FutureCallback<SimpleHttpResponse>() {
+    return new FutureCallback<>() {
       @Override
       public void completed(SimpleHttpResponse response) {
         requestResult.complete(response.getCode());
