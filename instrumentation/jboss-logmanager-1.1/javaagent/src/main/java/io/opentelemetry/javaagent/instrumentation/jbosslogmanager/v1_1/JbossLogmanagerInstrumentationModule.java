@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.v2_1;
+package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.v1_1;
 
 import static java.util.Collections.singletonList;
 
@@ -16,7 +16,7 @@ import java.util.List;
 public class JbossLogmanagerInstrumentationModule extends InstrumentationModule {
 
   public JbossLogmanagerInstrumentationModule() {
-    super("jboss-logmanager", "jboss-logmanager-2.1");
+    super("jboss-logmanager", "jboss-logmanager-1.1");
   }
 
   @Override
