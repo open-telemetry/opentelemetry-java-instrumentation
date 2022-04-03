@@ -65,3 +65,16 @@ jobs:
           arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}"
           # only push cache for one matrix option per OS since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+
+      - name: Upload jvm crash dump files if any
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
+          path: |
+            "**/hs_err_pid*.log"
+            "**/javacore.*.txt"
+            "**/Snap.*.trc"
+            "**/core.*.dmp"
+            "**/jitdump.*.dmp"
+          if-no-files-found: ignore
