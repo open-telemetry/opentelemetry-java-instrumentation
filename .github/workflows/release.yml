@@ -193,6 +193,7 @@ jobs:
           gh pr create --title "$msg" \
                        --body "$msg" \
                        --repo open-telemetry/opentelemetry-operator
+                       --base main
 
       - uses: actions/checkout@v3
         with:
