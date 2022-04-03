@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.ApacheHttpAsyncClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.ApacheHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
