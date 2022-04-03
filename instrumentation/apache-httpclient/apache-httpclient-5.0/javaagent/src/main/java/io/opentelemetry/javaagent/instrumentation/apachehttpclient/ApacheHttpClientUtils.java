@@ -16,8 +16,8 @@ import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 import org.apache.hc.core5.net.URIAuthority;
 
-class HttpUtils {
-  private static final Logger logger = Logger.getLogger(HttpUtils.class.getName());
+class ApacheHttpClientUtils {
+  private static final Logger logger = Logger.getLogger(ApacheHttpClientUtils.class.getName());
 
   public static void setHeader(@Nullable HttpRequest request, String key, String value) {
     if (request == null) {
@@ -68,7 +68,7 @@ class HttpUtils {
   }
 
   public static List<String> getHeader(MessageHeaders messageHeaders, String name) {
-    return HttpUtils.headersToList(messageHeaders.getHeaders(name));
+    return ApacheHttpClientUtils.headersToList(messageHeaders.getHeaders(name));
   }
 
   public static int getStatusCode(HttpResponse response) {

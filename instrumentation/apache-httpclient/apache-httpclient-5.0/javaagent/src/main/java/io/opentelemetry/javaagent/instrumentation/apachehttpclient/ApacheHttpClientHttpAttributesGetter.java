@@ -16,17 +16,17 @@ final class ApacheHttpClientHttpAttributesGetter
 
   @Override
   public String method(HttpRequest request) {
-    return HttpUtils.getMethod(request);
+    return ApacheHttpClientUtils.getMethod(request);
   }
 
   @Override
   public String url(HttpRequest request) {
-    return HttpUtils.getUrl(request);
+    return ApacheHttpClientUtils.getUrl(request);
   }
 
   @Override
   public List<String> requestHeader(HttpRequest request, String name) {
-    return HttpUtils.getHeader(request, name);
+    return ApacheHttpClientUtils.getHeader(request, name);
   }
 
   @Override
@@ -44,13 +44,13 @@ final class ApacheHttpClientHttpAttributesGetter
 
   @Override
   public Integer statusCode(HttpRequest request, HttpResponse response) {
-    return HttpUtils.getStatusCode(response);
+    return ApacheHttpClientUtils.getStatusCode(response);
   }
 
   @Override
   @Nullable
   public String flavor(HttpRequest request, @Nullable HttpResponse response) {
-    return HttpUtils.getFlavor(request, response);
+    return ApacheHttpClientUtils.getFlavor(request, response);
   }
 
   @Override
@@ -67,6 +67,6 @@ final class ApacheHttpClientHttpAttributesGetter
 
   @Override
   public List<String> responseHeader(HttpRequest request, HttpResponse response, String name) {
-    return HttpUtils.getHeader(response, name);
+    return ApacheHttpClientUtils.getHeader(response, name);
   }
 }
