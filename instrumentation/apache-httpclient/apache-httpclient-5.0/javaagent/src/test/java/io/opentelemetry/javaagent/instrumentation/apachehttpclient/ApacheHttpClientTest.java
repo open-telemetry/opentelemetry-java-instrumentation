@@ -74,7 +74,7 @@ public class ApacheHttpClientTest {
     @Override
     ClassicHttpRequest createRequest(String method, URI uri) {
       // also testing with an absolute path below
-      return new BasicClassicHttpRequest(method, fullPathFromURI(uri));
+      return new BasicClassicHttpRequest(method, fullPathFromUri(uri));
     }
 
     @Override
@@ -113,7 +113,7 @@ public class ApacheHttpClientTest {
     @Override
     ClassicHttpRequest createRequest(String method, URI uri) {
       // also testing with an absolute path below
-      return new BasicClassicHttpRequest(method, fullPathFromURI(uri));
+      return new BasicClassicHttpRequest(method, fullPathFromUri(uri));
     }
 
     @Override

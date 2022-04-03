@@ -60,7 +60,7 @@ class ApacheHttpAsyncClientTest {
   class ApacheClientHostRequestTest extends AbstractTest {
     @Override
     SimpleHttpRequest createRequest(String method, URI uri) {
-      return new SimpleHttpRequest(method, getHost(uri), fullPathFromURI(uri));
+      return new SimpleHttpRequest(method, getHost(uri), fullPathFromUri(uri));
     }
   }
 

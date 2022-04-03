@@ -78,7 +78,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     return new BasicHttpContext();
   }
 
-  protected static String fullPathFromURI(URI uri) {
+  protected static String fullPathFromUri(URI uri) {
     StringBuilder builder = new StringBuilder();
     if (uri.getPath() != null) {
       builder.append(uri.getPath());
