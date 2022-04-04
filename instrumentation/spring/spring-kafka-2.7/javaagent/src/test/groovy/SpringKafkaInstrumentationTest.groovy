@@ -76,7 +76,6 @@ class SpringKafkaInstrumentationTest extends AgentInstrumentationSpecification {
       Listener.reset()
 
       runWithSpan("producer") {
-        // wrapping in a transaction is needed to remove the possibility of messages being picked up separately by the consumer
         kafkaTemplate.executeInTransaction({ ops ->
           ops.send("testTopic", "10", "testSpan1")
           ops.send("testTopic", "20", "testSpan2")
