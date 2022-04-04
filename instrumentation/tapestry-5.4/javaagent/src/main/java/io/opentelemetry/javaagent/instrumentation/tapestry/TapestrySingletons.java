@@ -27,7 +27,7 @@ public class TapestrySingletons {
                   }
                   return ErrorCauseExtractor.jdk().extractCause(error);
                 })
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .newInstrumenter();
   }
 

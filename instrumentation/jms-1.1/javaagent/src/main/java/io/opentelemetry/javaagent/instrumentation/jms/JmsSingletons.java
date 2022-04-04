@@ -46,7 +46,7 @@ public final class JmsSingletons {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .setTimeExtractor(new JmsMessageTimeExtractor())
-        .setDisabled(!ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 

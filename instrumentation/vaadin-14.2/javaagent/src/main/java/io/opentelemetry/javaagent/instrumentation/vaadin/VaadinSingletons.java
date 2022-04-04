@@ -36,14 +36,14 @@ public class VaadinSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(clientCallableAttributesGetter))
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .addAttributesExtractor(CodeAttributesExtractor.create(clientCallableAttributesGetter))
             .newInstrumenter();
 
     REQUEST_HANDLER_INSTRUMENTER =
         Instrumenter.<VaadinHandlerRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinHandlerRequest::getSpanName)
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             // add context for tracking nested request handler calls
             .addContextCustomizer(
                 (context, vaadinHandlerRequest, startAttributes) ->
@@ -53,13 +53,13 @@ public class VaadinSingletons {
     RPC_INSTRUMENTER =
         Instrumenter.<VaadinRpcRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinSingletons::rpcSpanName)
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .newInstrumenter();
 
     SERVICE_INSTRUMENTER =
         Instrumenter.<VaadinServiceRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinServiceRequest::getSpanName)
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             // add context for tracking whether any request handler handled the request
             .addContextCustomizer(
                 (context, vaadinServiceRequest, startAttributes) ->

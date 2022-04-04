@@ -55,7 +55,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   @Nullable TimeExtractor<REQUEST, RESPONSE> timeExtractor = null;
-  boolean disabled = false;
+  boolean enabled = true;
 
   private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
 
@@ -159,9 +159,32 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
-    this.disabled = disabled;
+  /**
+   * Disables the {@link Instrumenter} - it will not generate any telemetry.
+   *
+   * <p>Equivalent to calling {@code .setEnabled(false)}.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> disable() {
+    return setEnabled(false);
+  }
+
+  /**
+   * Allows enabling/disabling the {@link Instrumenter} based on the {@code enabled} value passed as
+   * parameter. All instrumenters are enabled by default.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> setEnabled(boolean enabled) {
+    this.enabled = enabled;
     return this;
+  }
+
+  /**
+   * Allows to disable the {@link Instrumenter}.
+   *
+   * @deprecated Use {@link #setEnabled(boolean)} instead.
+   */
+  @Deprecated
+  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
+    return setEnabled(!disabled);
   }
 
   // visible for tests
