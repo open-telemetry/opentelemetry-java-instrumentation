@@ -3,17 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.util;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
 
+/** A utility class used to compute readable simple class names. */
 public final class ClassNames {
 
   private static final Cache<Class<?>, String> simpleNames = Cache.weak();
 
   /**
-   * This method is used to generate a simple name based on a given class reference, e.g. for use in
-   * span names and span attributes. Anonymous classes are named based on their parent.
+   * Returns a simple name based on a given class reference, e.g. for use in span names and span
+   * attributes. Anonymous classes are named based on their parent.
    */
   public static String simpleName(Class<?> type) {
     return simpleNames.computeIfAbsent(type, ClassNames::computeSimpleName);

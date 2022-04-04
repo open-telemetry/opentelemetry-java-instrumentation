@@ -10,9 +10,9 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNames;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.util.SpanNames;
 
 public class VaadinSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vaadin-14.2";
