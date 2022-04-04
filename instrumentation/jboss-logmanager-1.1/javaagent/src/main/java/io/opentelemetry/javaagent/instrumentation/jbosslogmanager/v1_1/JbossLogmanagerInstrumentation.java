@@ -3,30 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jul;
+package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.v1_1;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import application.java.util.logging.Logger;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import java.util.logging.LogRecord;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.jboss.logmanager.ExtLogRecord;
+import org.jboss.logmanager.Logger;
 
-class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
-
+public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("application.java.util.logging.Logger"));
+    return named("org.jboss.logmanager.Logger");
   }
 
   @Override
@@ -34,25 +32,24 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
-            .and(named("log"))
+            .and(named("logRaw"))
             .and(takesArguments(1))
-            .and(takesArgument(0, named("java.util.logging.LogRecord"))),
-        JavaUtilLoggingInstrumentation.class.getName() + "$LogAdvice");
+            .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
+        JbossLogmanagerInstrumentation.class.getName() + "$CallLogRawAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class LogAdvice {
-
+  public static class CallLogRawAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.This Logger logger,
-        @Advice.Argument(0) LogRecord logRecord,
+        @Advice.This() Logger logger,
+        @Advice.Argument(0) ExtLogRecord record,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
       callDepth = CallDepth.forClass(LogEmitterProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        JavaUtilLoggingHelper.capture(logger, logRecord);
+        LoggingEventMapper.INSTANCE.capture(logger, record);
       }
     }
 
