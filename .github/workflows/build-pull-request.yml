@@ -91,25 +91,3 @@ jobs:
           needs.gradle-plugins.result != 'success' ||
           needs.examples.result != 'success'
         run: exit 1
-
-  # TODO (trask) this is just to avoid disruption for existing PRs
-  # remove this and change required check to above once existing PRs are merged
-  accept-pr:
-    needs:
-      - assemble
-      - test
-      - smoke-test
-      - muzzle
-      - gradle-plugins
-      - examples
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - if: |
-          needs.assemble.result != 'success' ||
-          needs.test.result != 'success' ||
-          needs.smoke-test.result != 'success' ||
-          needs.muzzle.result != 'success' ||
-          needs.gradle-plugins.result != 'success' ||
-          needs.examples.result != 'success'
-        run: exit 1
