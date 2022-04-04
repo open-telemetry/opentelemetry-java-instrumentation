@@ -5,12 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.guava;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import io.opentelemetry.extension.annotations.WithSpan;
 
 final class TracedWithSpan {
+  static final IllegalArgumentException FAILURE = new IllegalArgumentException("Boom");
+
   @WithSpan
-  ListenableFuture<String> listenableFuture(ListenableFuture<String> future) {
-    return future;
+  SettableFuture<String> completable() {
+    return SettableFuture.create();
+  }
+
+  @WithSpan
+  ListenableFuture<String> alreadySucceeded() {
+    return Futures.immediateFuture("Value");
+  }
+
+  @WithSpan
+  ListenableFuture<String> alreadyFailed() {
+    return Futures.immediateFailedFuture(FAILURE);
   }
 }

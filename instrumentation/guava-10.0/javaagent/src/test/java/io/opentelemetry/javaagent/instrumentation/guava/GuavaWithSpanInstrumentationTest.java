@@ -6,9 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.guava;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -24,15 +27,14 @@ class GuavaWithSpanInstrumentationTest {
 
   @Test
   void success() {
-    SettableFuture<String> future = SettableFuture.create();
-    new TracedWithSpan().listenableFuture(future);
+    SettableFuture<String> future = new TracedWithSpan().completable();
     future.set("Value");
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("TracedWithSpan.listenableFuture")
+                    span.hasName("TracedWithSpan.completable")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributes(Attributes.empty())));
@@ -41,15 +43,14 @@ class GuavaWithSpanInstrumentationTest {
   @Test
   void failure() {
     IllegalArgumentException error = new IllegalArgumentException("Boom");
-    SettableFuture<String> future = SettableFuture.create();
-    new TracedWithSpan().listenableFuture(future);
+    SettableFuture<String> future = new TracedWithSpan().completable();
     future.setException(error);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("TracedWithSpan.listenableFuture")
+                    span.hasName("TracedWithSpan.completable")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
@@ -59,15 +60,14 @@ class GuavaWithSpanInstrumentationTest {
 
   @Test
   void canceled() {
-    SettableFuture<String> future = SettableFuture.create();
-    new TracedWithSpan().listenableFuture(future);
+    SettableFuture<String> future = new TracedWithSpan().completable();
     future.cancel(true);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("TracedWithSpan.listenableFuture")
+                    span.hasName("TracedWithSpan.completable")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributes(attributeEntry("guava.canceled", true))));
@@ -75,13 +75,13 @@ class GuavaWithSpanInstrumentationTest {
 
   @Test
   void immediateSuccess() {
-    new TracedWithSpan().listenableFuture(Futures.immediateFuture("Value"));
+    assertThat(Futures.getUnchecked(new TracedWithSpan().alreadySucceeded())).isEqualTo("Value");
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("TracedWithSpan.listenableFuture")
+                    span.hasName("TracedWithSpan.alreadySucceeded")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributes(Attributes.empty())));
@@ -89,18 +89,19 @@ class GuavaWithSpanInstrumentationTest {
 
   @Test
   void immediateFailure() {
-    IllegalArgumentException error = new IllegalArgumentException("Boom");
-    new TracedWithSpan().listenableFuture(Futures.immediateFailedFuture(error));
+    assertThatThrownBy(() -> Futures.getUnchecked(new TracedWithSpan().alreadyFailed()))
+        .isInstanceOf(UncheckedExecutionException.class)
+        .hasCause(TracedWithSpan.FAILURE);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("TracedWithSpan.listenableFuture")
+                    span.hasName("TracedWithSpan.alreadyFailed")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(error)
+                        .hasException(TracedWithSpan.FAILURE)
                         .hasAttributes(Attributes.empty())));
   }
 }
