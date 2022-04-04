@@ -6,22 +6,19 @@ jobs:
   prepare-release-branch:
     runs-on: ubuntu-latest
     outputs:
-      release-branch-name: ${{ steps.set-release-branch-name.outputs.release-branch-name }}
+      release-branch-name: ${{ steps.create-release-branch.outputs.release-branch-name }}
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set release branch name
-        id: set-release-branch-name
+      - name: Create release branch
+        id: create-release-branch
         run: |
           version=$(grep -Eo "[0-9.]+-SNAPSHOT" version.gradle.kts)
           release_branch_name=$(echo $version | sed -E 's/([0-9]+)\.([0-9]+)\.0/v\1.\2.x/')
-          echo "::set-output name=release-branch-name::$release_branch_name"
 
-      - name: Create release branch
-        env:
-          RELEASE_BRANCH_NAME: ${{ steps.set-release-branch-name.outputs.release-branch-name }}
-        run: |
-          git push origin HEAD:$RELEASE_BRANCH_NAME
+          git push origin HEAD:$release_branch_name
+
+          echo "::set-output name=release-branch-name::$release_branch_name"
 
   create-pull-request-against-release-branch:
     needs: prepare-release-branch

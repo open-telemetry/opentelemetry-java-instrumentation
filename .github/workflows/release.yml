@@ -71,8 +71,7 @@ jobs:
           arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
           build-root-directory: gradle-plugins
 
-      - name: Set versions
-        id: set-versions
+      - name: Set environment variables
         run: |
           version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
           if [[ $version =~ ([0-9]+).([0-9]+).([0-9]+) ]]; then
@@ -94,13 +93,11 @@ jobs:
           else
               prior_version="$major.$minor.$((patch - 1))"
           fi
-          echo "::set-output name=release-version::$version"
-          echo "::set-output name=prior-release-version::$prior_version"
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
 
       - name: Generate release notes
         env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
-          PRIOR_VERSION: ${{ steps.set-versions.outputs.prior-release-version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ $version == *.0 ]]; then
@@ -139,7 +136,6 @@ jobs:
 
       - name: Create GitHub release
         env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-$VERSION.jar opentelemetry-javaagent.jar
@@ -157,16 +153,12 @@ jobs:
           token: ${{ secrets.OPENTELEMETRY_JAVA_BOT_TOKEN }}
 
       - name: Initialize pull request branch
-        env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
         run: |
           git remote add upstream https://github.com/open-telemetry/opentelemetry-operator.git
           git fetch upstream
           git checkout -b update-opentelemetry-javaagent-to-$VERSION upstream/main
 
       - name: Bump version
-        env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
         run: |
           echo $VERSION > autoinstrumentation/java/version.txt
 
@@ -177,7 +169,6 @@ jobs:
 
       - name: Create pull request against opentelemetry-operator
         env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
           # this is the PAT used for "gh pr create" below
           GITHUB_TOKEN: ${{ secrets.OPENTELEMETRY_JAVA_BOT_TOKEN }}
         run: |
