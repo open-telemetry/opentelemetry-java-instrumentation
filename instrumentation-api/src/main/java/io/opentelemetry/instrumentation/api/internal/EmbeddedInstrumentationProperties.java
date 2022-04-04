@@ -9,7 +9,6 @@ import static java.util.logging.Level.FINE;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,7 +24,15 @@ public final class EmbeddedInstrumentationProperties {
   private static final Logger logger =
       Logger.getLogger(EmbeddedInstrumentationProperties.class.getName());
 
-  private static final ClassLoader DEFAULT_LOADER = new EmbeddedPropertiesLoader();
+  private static final ClassLoader DEFAULT_LOADER;
+
+  static {
+    ClassLoader defaultLoader = EmbeddedInstrumentationProperties.class.getClassLoader();
+    if (defaultLoader == null) {
+      defaultLoader = new BootstrapProxy();
+    }
+    DEFAULT_LOADER = defaultLoader;
+  }
 
   private static volatile ClassLoader loader = DEFAULT_LOADER;
   private static final Map<String, String> versions = new ConcurrentHashMap<>();
@@ -63,19 +70,9 @@ public final class EmbeddedInstrumentationProperties {
     }
   }
 
-  private static final class EmbeddedPropertiesLoader extends ClassLoader {
-
-    EmbeddedPropertiesLoader() {
-      super(EmbeddedPropertiesLoader.class.getClassLoader());
-    }
-
-    // Do not remove this method -- it is instrumented by the javaagent so that the
-    // instrumentation-api (which resides in the bootstrap CL) is able to load instrumentation
-    // properties from the agent class space
-    @SuppressWarnings("RedundantOverride")
-    @Override
-    public URL getResource(String name) {
-      return super.getResource(name);
+  private static final class BootstrapProxy extends ClassLoader {
+    BootstrapProxy() {
+      super(null);
     }
   }
 
