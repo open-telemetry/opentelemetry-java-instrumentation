@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
@@ -21,8 +20,8 @@ public class AutoVersionResourceProvider implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    return InstrumentationVersion.VERSION == null
+    return AgentVersion.VERSION == null
         ? Resource.empty()
-        : Resource.create(Attributes.of(TELEMETRY_AUTO_VERSION, InstrumentationVersion.VERSION));
+        : Resource.create(Attributes.of(TELEMETRY_AUTO_VERSION, AgentVersion.VERSION));
   }
 }

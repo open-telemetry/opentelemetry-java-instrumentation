@@ -119,3 +119,33 @@ if (testLatestDeps) {
     }
   }
 }
+
+tasks {
+  val generateInstrumentationVersionFile by registering {
+    val name = computeInstrumentationName()
+    val version = project.version as String
+    inputs.property("instrumentation.name", name)
+    inputs.property("instrumentation.version", version)
+
+    val propertiesDir = File(project.buildDir, "generated/instrumentationVersion/META-INF/io/opentelemetry/instrumentation/")
+    outputs.dir(propertiesDir)
+
+    doLast {
+      File(propertiesDir, "$name.properties").writeText("version=$version")
+    }
+  }
+}
+
+fun computeInstrumentationName(): String {
+  val name = when (projectDir.name) {
+    "javaagent", "library", "library-autoconfigure" -> projectDir.parentFile.name
+    else -> project.name
+  }
+  return "io.opentelemetry.$name"
+}
+
+sourceSets {
+  main {
+    output.dir("build/generated/instrumentationVersion", "builtBy" to "generateInstrumentationVersionFile")
+  }
+}

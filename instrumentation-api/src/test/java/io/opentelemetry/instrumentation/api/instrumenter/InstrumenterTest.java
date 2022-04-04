@@ -23,7 +23,6 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
@@ -714,7 +713,8 @@ class InstrumenterTest {
   @Test
   void instrumentationVersion_default() {
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
-        Instrumenter.builder(otelTesting.getOpenTelemetry(), "test", name -> "span");
+        Instrumenter.builder(
+            otelTesting.getOpenTelemetry(), "test-instrumentation", name -> "span");
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.newInstrumenter();
 
@@ -723,16 +723,17 @@ class InstrumenterTest {
 
     instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
 
+    // see the test-instrumentation.properties file
+    InstrumentationLibraryInfo expectedLibraryInfo =
+        InstrumentationLibraryInfo.create("test-instrumentation", "1.2.3");
+
     otelTesting
         .assertTraces()
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("span")
-                            .hasInstrumentationLibraryInfo(
-                                InstrumentationLibraryInfo.create(
-                                    "test", InstrumentationVersion.VERSION))));
+                        span.hasName("span").hasInstrumentationLibraryInfo(expectedLibraryInfo)));
   }
 
   @Test

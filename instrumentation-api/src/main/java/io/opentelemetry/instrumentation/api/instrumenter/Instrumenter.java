@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -60,7 +60,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       String instrumentationName,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
     return new InstrumenterBuilder<>(
-        openTelemetry, instrumentationName, InstrumentationVersion.VERSION, spanNameExtractor);
+        openTelemetry,
+        instrumentationName,
+        EmbeddedInstrumentationProperties.findVersion(instrumentationName),
+        spanNameExtractor);
   }
 
   /**
@@ -80,6 +83,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * different library versions it's easy to find out which instrumentations produced the telemetry
    * data.
    */
+  // TODO: add a setInstrumentationVersion method to the builder instead
   public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> builder(
       OpenTelemetry openTelemetry,
       String instrumentationName,

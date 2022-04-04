@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import java.util.logging.Logger;
 
 public final class VersionLogger {
@@ -16,7 +15,7 @@ public final class VersionLogger {
   private static final Logger logger = Logger.getLogger(VersionLogger.class.getName());
 
   public static void logAllVersions() {
-    logger.log(INFO, "opentelemetry-javaagent - version: {0}", InstrumentationVersion.VERSION);
+    logger.log(INFO, "opentelemetry-javaagent - version: {0}", AgentVersion.VERSION);
     if (logger.isLoggable(FINE)) {
       logger.log(
           FINE,

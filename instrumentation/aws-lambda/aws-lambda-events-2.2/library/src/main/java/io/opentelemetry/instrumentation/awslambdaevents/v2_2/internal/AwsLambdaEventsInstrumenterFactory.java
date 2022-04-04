@@ -24,7 +24,7 @@ public class AwsLambdaEventsInstrumenterFactory {
         openTelemetry,
         Instrumenter.builder(
                 openTelemetry,
-                "io.opentelemetry.aws-lambda-1.0",
+                "io.opentelemetry.aws-lambda-events-2.2",
                 AwsLambdaEventsInstrumenterFactory::spanName)
             .addAttributesExtractors(
                 new AwsLambdaFunctionAttributesExtractor(),

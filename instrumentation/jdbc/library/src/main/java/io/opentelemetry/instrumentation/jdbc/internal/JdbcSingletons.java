@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
  * any time.
  */
 public final class JdbcSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
+  public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
 
