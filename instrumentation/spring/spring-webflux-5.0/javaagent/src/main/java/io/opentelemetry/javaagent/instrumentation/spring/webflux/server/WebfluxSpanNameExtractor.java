@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNames;
+import io.opentelemetry.instrumentation.api.util.SpanNames;
 import org.springframework.web.method.HandlerMethod;
 
 public class WebfluxSpanNameExtractor implements SpanNameExtractor<Object> {

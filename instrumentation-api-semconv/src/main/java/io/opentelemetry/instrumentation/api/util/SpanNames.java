@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.util;
 
 import io.opentelemetry.instrumentation.api.cache.Cache;
-import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
