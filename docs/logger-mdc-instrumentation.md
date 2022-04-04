@@ -21,7 +21,7 @@ event's MDC copy:
 Those three pieces of information can be included in log statements produced by the logging library
 by specifying them in the pattern/format. 
 
-Tip: for Spring Boot configuration which uses logback, you can add MDC to log lines by overriding only the logging.pattern.level:
+Tip: for Spring Boot configuration which uses logback, you can add MDC to log lines by overriding only the `logging.pattern.level`:
 ```properties
 logging.pattern.level = trace_id=%mdc{trace_id} span_id=%mdc{span_id} trace_flags=%mdc{trace_flags} %5p
 ```
