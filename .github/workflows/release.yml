@@ -71,8 +71,7 @@ jobs:
           arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
           build-root-directory: gradle-plugins
 
-      - name: Set versions
-        id: set-versions
+      - name: Set environment variables
         run: |
           version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
           if [[ $version =~ ([0-9]+).([0-9]+).([0-9]+) ]]; then
@@ -94,13 +93,11 @@ jobs:
           else
               prior_version="$major.$minor.$((patch - 1))"
           fi
-          echo "::set-output name=release-version::$version"
-          echo "::set-output name=prior-release-version::$prior_version"
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
 
       - name: Generate release notes
         env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
-          PRIOR_VERSION: ${{ steps.set-versions.outputs.prior-release-version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ $version == *.0 ]]; then
@@ -108,38 +105,37 @@ jobs:
             This release targets the OpenTelemetry SDK $VERSION.
 
             Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
-          
+
             EOF
           else
             cat > release-notes.txt << EOF
             This is a patch release on the previous $PRIOR_VERSION release, fixing the issue(s) below.
-          
+
             EOF
           fi
 
-          sed -n '/^## Version $VERSION/,/^## Version /p' CHANGELOG.md \
+          sed -n "/^## Version $VERSION/,/^## Version /p" CHANGELOG.md \
             | tail -n +2 \
             | head -n -1 \
             | perl -0pe 's/^\n+//g' \
             | perl -0pe 's/\n+$/\n/g' \
-            | sed -r 's,\[#([0-9]+)]\(https://github.com/$GITHUB_REPOSITORY/(pull|issues)/[0-9]+\),#\1,' \
+            | sed -r "s,\[#([0-9]+)]\(https://github.com/$GITHUB_REPOSITORY/(pull|issues)/[0-9]+\),#\1," \
             | perl -0pe 's/\n +/ /g' \
             >> release-notes.txt
 
           if [[ $version == *.0 ]]; then
             cat >> release-notes.txt << EOF
-          
+
             ### 🙇 Thank you
             This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
-          
+
             EOF
-          
+
             .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION v$VERSION >> release-notes.txt
           fi
 
       - name: Create GitHub release
         env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-$VERSION.jar opentelemetry-javaagent.jar
@@ -157,27 +153,22 @@ jobs:
           token: ${{ secrets.OPENTELEMETRY_JAVA_BOT_TOKEN }}
 
       - name: Initialize pull request branch
-        env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
         run: |
           git remote add upstream https://github.com/open-telemetry/opentelemetry-operator.git
           git fetch upstream
           git checkout -b update-opentelemetry-javaagent-to-$VERSION upstream/main
 
       - name: Bump version
-        env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
         run: |
           echo $VERSION > autoinstrumentation/java/version.txt
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
       - name: Create pull request against opentelemetry-operator
         env:
-          VERSION: ${{ steps.set-versions.outputs.release-version }}
           # this is the PAT used for "gh pr create" below
           GITHUB_TOKEN: ${{ secrets.OPENTELEMETRY_JAVA_BOT_TOKEN }}
         run: |
@@ -193,6 +184,7 @@ jobs:
           gh pr create --title "$msg" \
                        --body "$msg" \
                        --repo open-telemetry/opentelemetry-operator
+                       --base main
 
       - uses: actions/checkout@v3
         with:
@@ -200,12 +192,13 @@ jobs:
           # history is needed in order to run git format-patch below
           fetch-depth: 0
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
-        # this step should be last since it will fail if conflicting change log updates on main
+        # this step should be last since it will fail if there have been conflicting
+        # change log updates introduced on the main branch
       - name: Create pull request to merge any change log updates to main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -215,9 +208,9 @@ jobs:
             git apply patch
             msg="Merge change log updates from $GITHUB_REF_NAME to main"
             git commit -a -m "$msg"
-            git push origin HEAD:opentelemetry-java-bot/merge-change-log-updates
+            git push origin HEAD:merge-change-log-updates-to-main
             gh pr create --title "$msg" \
                          --body "$msg" \
-                         --head opentelemetry-java-bot/merge-change-log-updates \
+                         --head merge-change-log-updates-to-main \
                          --base main
           fi

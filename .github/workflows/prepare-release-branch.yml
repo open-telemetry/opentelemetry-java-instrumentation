@@ -3,67 +3,48 @@ on:
   workflow_dispatch:
 
 jobs:
-  prepare-release-branch:
+  create-pull-request-against-release-branch:
     runs-on: ubuntu-latest
-    outputs:
-      release-branch-name: ${{ steps.set-release-branch-name.outputs.release-branch-name }}
     steps:
       - uses: actions/checkout@v3
-
-      - name: Set release branch name
-        id: set-release-branch-name
-        run: |
-          version=$(grep -Eo "[0-9.]+-SNAPSHOT" version.gradle.kts)
-          release_branch_name=$(echo $version | sed -E 's/([0-9]+)\.([0-9]+)\.0/v\1.\2.x/')
-          echo "::set-output name=release-branch-name::$release_branch_name"
 
       - name: Create release branch
-        env:
-          RELEASE_BRANCH_NAME: ${{ steps.set-release-branch-name.outputs.release-branch-name }}
-        run: |
-          git checkout -b $RELEASE_BRANCH_NAME
-          git push origin $RELEASE_BRANCH_NAME
-
-  create-pull-request-against-release-branch:
-    needs: prepare-release-branch
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
-
-      - name: Bump version on release branch
+        id: create-release-branch
         run: |
           version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
-          .github/scripts/update-versions.sh "$version-SNAPSHOT" "$version-alpha-SNAPSHOT" "$version" "$version-alpha"
+          release_branch_name=$(echo $version | sed -E 's,([0-9]+)\.([0-9]+)\.0,release/v\1.\2.x,')
+
+          git push origin HEAD:$release_branch_name
+
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
+
+      - name: Bump version
+        run: |
+          .github/scripts/update-versions.sh "$VERSION-SNAPSHOT" "$VERSION-alpha-SNAPSHOT" "$VERSION" "$VERSION-alpha"
 
       - name: Bump download link version
         run: |
-          new_version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
-          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$new_version/," README.md
+          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
       - name: Create pull request against release branch
         env:
-          RELEASE_BRANCH_NAME: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          msg="Prepare release branch $RELEASE_BRANCH_NAME"
+          msg="Prepare release $VERSION"
           git commit -a -m "$msg"
-          git push origin HEAD:prepare-release-branch-$RELEASE_BRANCH_NAME
-          gh pr create --title "$msg" \
+          git push origin HEAD:prepare-release-$VERSION
+          gh pr create --title "[$RELEASE_BRANCH_NAME] $msg" \
                        --body "$msg" \
-                       --head prepare-release-branch-$RELEASE_BRANCH_NAME \
+                       --head prepare-release-$VERSION \
                        --base $RELEASE_BRANCH_NAME
 
   create-pull-request-against-main:
-    needs:
-      - prepare-release-branch
-      - create-pull-request-against-release-branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -81,7 +62,7 @@ jobs:
           next_version="$major.$((minor + 1)).0"
           .github/scripts/update-versions.sh "$version-SNAPSHOT" "$version-alpha-SNAPSHOT" "$next_version-SNAPSHOT" "$next_version-alpha-SNAPSHOT"
 
-      - name: Set up git name
+      - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
