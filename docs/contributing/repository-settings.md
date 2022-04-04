@@ -20,11 +20,20 @@
 
 (In addition to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
-### `main` and `v*`
+### `main` and `release/*`
 
 * Require branches to be up to date before merging: UNCHECKED
 
   PR jobs take too long, and leaving this unchecked has not been a significant problem.
+
+* Status checks that are required:
+
+  * EasyCLA
+  * required-status-check
+
+### `v*` (old release branches)
+
+Same settings as above for new release branches (`release/**`), except:
 
 * Status checks that are required:
 
