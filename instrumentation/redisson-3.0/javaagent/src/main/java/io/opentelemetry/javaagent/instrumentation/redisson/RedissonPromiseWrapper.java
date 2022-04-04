@@ -13,19 +13,17 @@ import org.redisson.misc.RedissonPromise;
 public class RedissonPromiseWrapper<T> extends RedissonPromise<T> implements PromiseWrapper<T> {
   private volatile EndOperationListener<T> endOperationListener;
 
-  private RedissonPromiseWrapper(RPromise<T> delegate, Context context) {
+  private RedissonPromiseWrapper(RPromise<T> delegate) {
     this.whenComplete(
         (result, error) -> {
           EndOperationListener<T> endOperationListener = this.endOperationListener;
           if (endOperationListener != null) {
             endOperationListener.accept(result, error);
           }
-          try (Scope ignored = context.makeCurrent()) {
-            if (error != null) {
-              delegate.tryFailure(error);
-            } else {
-              delegate.trySuccess(result);
-            }
+          if (error != null) {
+            delegate.tryFailure(error);
+          } else {
+            delegate.trySuccess(result);
           }
         });
   }
@@ -35,7 +33,26 @@ public class RedissonPromiseWrapper<T> extends RedissonPromise<T> implements Pro
       return delegate;
     }
 
-    return new RedissonPromiseWrapper<>(delegate, Context.current());
+    return new RedissonPromiseWrapper<>(delegate);
+  }
+
+  public static <T> RPromise<T> wrapContext(RPromise<T> promise) {
+    Context context = Context.current();
+    // when returned promise is completed, complete input promise with context that was current
+    // at the time when the promise was wrapped
+    RPromise<T> result = new RedissonPromise<T>();
+    result.whenComplete(
+        (value, error) -> {
+          try (Scope ignored = context.makeCurrent()) {
+            if (error != null) {
+              promise.tryFailure(error);
+            } else {
+              promise.trySuccess(value);
+            }
+          }
+        });
+
+    return result;
   }
 
   @Override

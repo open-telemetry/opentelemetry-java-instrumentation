@@ -13,19 +13,17 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
     implements PromiseWrapper<T> {
   private volatile EndOperationListener<T> endOperationListener;
 
-  private CompletableFutureWrapper(CompletableFuture<T> delegate, Context context) {
+  private CompletableFutureWrapper(CompletableFuture<T> delegate) {
     this.whenComplete(
         (result, error) -> {
           EndOperationListener<T> endOperationListener = this.endOperationListener;
           if (endOperationListener != null) {
             endOperationListener.accept(result, error);
           }
-          try (Scope ignored = context.makeCurrent()) {
-            if (error != null) {
-              delegate.completeExceptionally(error);
-            } else {
-              delegate.complete(result);
-            }
+          if (error != null) {
+            delegate.completeExceptionally(error);
+          } else {
+            delegate.complete(result);
           }
         });
   }
@@ -35,7 +33,26 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
       return delegate;
     }
 
-    return new CompletableFutureWrapper<>(delegate, Context.current());
+    return new CompletableFutureWrapper<>(delegate);
+  }
+
+  public static <T> CompletableFuture<T> wrapContext(CompletableFuture<T> future) {
+    Context context = Context.current();
+    // when input future is completed, complete result future with context that was current
+    // at the time when the future was wrapped
+    CompletableFuture<T> result = new CompletableFuture<>();
+    future.whenComplete(
+        (T value, Throwable throwable) -> {
+          try (Scope ignored = context.makeCurrent()) {
+            if (throwable != null) {
+              result.completeExceptionally(throwable);
+            } else {
+              result.complete(value);
+            }
+          }
+        });
+
+    return result;
   }
 
   @Override
