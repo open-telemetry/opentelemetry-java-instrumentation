@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.setAttr;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -22,9 +24,9 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    set(attributes, SemanticAttributes.RPC_SYSTEM, getter.system(request));
-    set(attributes, SemanticAttributes.RPC_SERVICE, getter.service(request));
-    set(attributes, SemanticAttributes.RPC_METHOD, getter.method(request));
+    setAttr(attributes, SemanticAttributes.RPC_SYSTEM, getter.system(request));
+    setAttr(attributes, SemanticAttributes.RPC_SERVICE, getter.service(request));
+    setAttr(attributes, SemanticAttributes.RPC_METHOD, getter.method(request));
   }
 
   @Override

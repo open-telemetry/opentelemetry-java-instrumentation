@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.db;
 
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.setAttr;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
@@ -26,10 +28,10 @@ abstract class DbClientCommonAttributesExtractor<
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    set(attributes, SemanticAttributes.DB_SYSTEM, getter.system(request));
-    set(attributes, SemanticAttributes.DB_USER, getter.user(request));
-    set(attributes, SemanticAttributes.DB_NAME, getter.name(request));
-    set(attributes, SemanticAttributes.DB_CONNECTION_STRING, getter.connectionString(request));
+    setAttr(attributes, SemanticAttributes.DB_SYSTEM, getter.system(request));
+    setAttr(attributes, SemanticAttributes.DB_USER, getter.user(request));
+    setAttr(attributes, SemanticAttributes.DB_NAME, getter.name(request));
+    setAttr(attributes, SemanticAttributes.DB_CONNECTION_STRING, getter.connectionString(request));
   }
 
   @Override

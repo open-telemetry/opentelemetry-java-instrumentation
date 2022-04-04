@@ -37,52 +37,41 @@ final class CassandraAttributesExtractor
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
       if (coordinator.getDatacenter() != null) {
-        set(
-            attributes,
-            SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC,
-            coordinator.getDatacenter());
+        attributes.put(SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
       }
       if (coordinator.getHostId() != null) {
-        set(
-            attributes,
-            SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID,
-            coordinator.getHostId().toString());
+        attributes.put(
+            SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID, coordinator.getHostId().toString());
       }
     }
-    set(
-        attributes,
+    attributes.put(
         SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT,
-        (long) executionInfo.getSpeculativeExecutionCount());
+        executionInfo.getSpeculativeExecutionCount());
 
     Statement<?> statement = executionInfo.getStatement();
+    String consistencyLevel;
     DriverExecutionProfile config =
         request.getSession().getContext().getConfig().getDefaultProfile();
     if (statement.getConsistencyLevel() != null) {
-      set(
-          attributes,
-          SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL,
-          statement.getConsistencyLevel().name());
+      consistencyLevel = statement.getConsistencyLevel().name();
     } else {
-      set(
-          attributes,
-          SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL,
-          config.getString(DefaultDriverOption.REQUEST_CONSISTENCY));
+      consistencyLevel = config.getString(DefaultDriverOption.REQUEST_CONSISTENCY);
     }
+    attributes.put(SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL, consistencyLevel);
+
     if (statement.getPageSize() > 0) {
-      set(attributes, SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, (long) statement.getPageSize());
+      attributes.put(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, statement.getPageSize());
     } else {
       int pageSize = config.getInt(DefaultDriverOption.REQUEST_PAGE_SIZE);
       if (pageSize > 0) {
-        set(attributes, SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, (long) pageSize);
+        attributes.put(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, pageSize);
       }
     }
-    if (statement.isIdempotent() != null) {
-      set(attributes, SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, statement.isIdempotent());
-    } else {
-      set(
-          attributes,
-          SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE,
-          config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE));
+
+    Boolean idempotent = statement.isIdempotent();
+    if (idempotent == null) {
+      idempotent = config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE);
     }
+    attributes.put(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, idempotent);
   }
 }

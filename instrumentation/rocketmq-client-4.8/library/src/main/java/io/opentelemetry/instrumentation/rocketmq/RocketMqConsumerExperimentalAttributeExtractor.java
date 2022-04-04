@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
@@ -27,19 +28,20 @@ enum RocketMqConsumerExperimentalAttributeExtractor
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, MessageExt msg) {
-    set(attributes, MESSAGING_ROCKETMQ_TAGS, msg.getTags());
-    set(attributes, MESSAGING_ROCKETMQ_QUEUE_ID, (long) msg.getQueueId());
-    set(attributes, MESSAGING_ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());
-    set(attributes, MESSAGING_ROCKETMQ_BROKER_ADDRESS, getBrokerHost(msg));
+    String tags = msg.getTags();
+    if (tags != null) {
+      attributes.put(MESSAGING_ROCKETMQ_TAGS, tags);
+    }
+    attributes.put(MESSAGING_ROCKETMQ_QUEUE_ID, msg.getQueueId());
+    attributes.put(MESSAGING_ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());
+    SocketAddress storeHost = msg.getStoreHost();
+    if (storeHost != null) {
+      attributes.put(MESSAGING_ROCKETMQ_BROKER_ADDRESS, getBrokerHost(storeHost));
+    }
   }
 
-  @Nullable
-  private static String getBrokerHost(MessageExt msg) {
-    if (msg.getStoreHost() != null) {
-      return msg.getStoreHost().toString().replace("/", "");
-    } else {
-      return null;
-    }
+  private static String getBrokerHost(SocketAddress storeHost) {
+    return storeHost.toString().replace("/", "");
   }
 
   @Override

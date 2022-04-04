@@ -27,9 +27,9 @@ final class ExperimentalAttributesExtractor implements AttributesExtractor<Hystr
     String groupName = hystrixRequest.command().getCommandGroup().name();
     boolean circuitOpen = hystrixRequest.command().isCircuitBreakerOpen();
 
-    set(attributes, HYSTRIX_COMMAND, commandName);
-    set(attributes, HYSTRIX_GROUP, groupName);
-    set(attributes, HYSTRIX_CIRCUIT_OPEN, circuitOpen);
+    attributes.put(HYSTRIX_COMMAND, commandName);
+    attributes.put(HYSTRIX_GROUP, groupName);
+    attributes.put(HYSTRIX_CIRCUIT_OPEN, circuitOpen);
   }
 
   @Override

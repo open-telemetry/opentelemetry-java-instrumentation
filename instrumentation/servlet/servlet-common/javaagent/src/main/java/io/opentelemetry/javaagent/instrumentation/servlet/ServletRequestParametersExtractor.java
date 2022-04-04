@@ -66,7 +66,7 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     // request parameters are extracted at the end of the request to make sure that we don't access
     // them before request encoding has been set
     REQUEST request = requestContext.request();
-    setAttributes(request, (key, value) -> set(attributes, key, value));
+    setAttributes(request, attributes::put);
   }
 
   private static AttributeKey<List<String>> parameterAttributeKey(String headerName) {

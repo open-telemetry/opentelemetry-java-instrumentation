@@ -37,17 +37,15 @@ public final class KafkaConsumerExperimentalAttributesExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ConsumerRecord<?, ?> consumerRecord) {
-    set(attributes, KAFKA_OFFSET, consumerRecord.offset());
+    attributes.put(KAFKA_OFFSET, consumerRecord.offset());
 
     // don't record a duration if the message was sent from an old Kafka client
     if (consumerRecord.timestampType() != TimestampType.NO_TIMESTAMP_TYPE) {
       long produceTime = consumerRecord.timestamp();
       // this attribute shows how much time elapsed between the producer and the consumer of this
       // message, which can be helpful for identifying queue bottlenecks
-      set(
-          attributes,
-          KAFKA_RECORD_QUEUE_TIME_MS,
-          Math.max(0L, System.currentTimeMillis() - produceTime));
+      attributes.put(
+          KAFKA_RECORD_QUEUE_TIME_MS, Math.max(0L, System.currentTimeMillis() - produceTime));
     }
   }
 

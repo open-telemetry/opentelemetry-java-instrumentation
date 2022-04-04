@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
 import javax.annotation.Nullable;
 
 /**
@@ -40,11 +41,13 @@ public interface AttributesExtractor<REQUEST, RESPONSE> {
   /**
    * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code
    * value} is not {@code null}.
+   *
+   * @deprecated This method will be removed.
    */
+  // TODO: remove after 1.13 release
+  @Deprecated
   default <T> void set(AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
-    if (value != null) {
-      attributes.put(key, value);
-    }
+    AttributesExtractorUtil.setAttr(attributes, key, value);
   }
 
   /**

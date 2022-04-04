@@ -40,7 +40,10 @@ public class TomcatAdditionalAttributesExtractor<REQUEST, RESPONSE>
     REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
     Principal principal = accessor.getRequestUserPrincipal(servletRequest);
     if (principal != null) {
-      set(attributes, SemanticAttributes.ENDUSER_ID, principal.getName());
+      String name = principal.getName();
+      if (name != null) {
+        attributes.put(SemanticAttributes.ENDUSER_ID, name);
+      }
     }
   }
 }

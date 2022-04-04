@@ -17,9 +17,11 @@ import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttri
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 class AwsSdkExperimentalAttributesExtractor
@@ -28,15 +30,26 @@ class AwsSdkExperimentalAttributesExtractor
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
-    set(attributes, AWS_AGENT, COMPONENT_NAME);
-    set(attributes, AWS_ENDPOINT, request.getEndpoint().toString());
+    attributes.put(AWS_AGENT, COMPONENT_NAME);
+    attributes.put(AWS_ENDPOINT, request.getEndpoint().toString());
 
     Object originalRequest = request.getOriginalRequest();
-    set(attributes, AWS_BUCKET_NAME, RequestAccess.getBucketName(originalRequest));
-    set(attributes, AWS_QUEUE_URL, RequestAccess.getQueueUrl(originalRequest));
-    set(attributes, AWS_QUEUE_NAME, RequestAccess.getQueueName(originalRequest));
-    set(attributes, AWS_STREAM_NAME, RequestAccess.getStreamName(originalRequest));
-    set(attributes, AWS_TABLE_NAME, RequestAccess.getTableName(originalRequest));
+    setRequestAttribute(attributes, AWS_BUCKET_NAME, originalRequest, RequestAccess::getBucketName);
+    setRequestAttribute(attributes, AWS_QUEUE_URL, originalRequest, RequestAccess::getQueueUrl);
+    setRequestAttribute(attributes, AWS_QUEUE_NAME, originalRequest, RequestAccess::getQueueName);
+    setRequestAttribute(attributes, AWS_STREAM_NAME, originalRequest, RequestAccess::getStreamName);
+    setRequestAttribute(attributes, AWS_TABLE_NAME, originalRequest, RequestAccess::getTableName);
+  }
+
+  private static void setRequestAttribute(
+      AttributesBuilder attributes,
+      AttributeKey<String> key,
+      Object request,
+      Function<Object, String> getter) {
+    String value = getter.apply(request);
+    if (value != null) {
+      attributes.put(key, value);
+    }
   }
 
   @Override
@@ -48,7 +61,10 @@ class AwsSdkExperimentalAttributesExtractor
       @Nullable Throwable error) {
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse<?> awsResp = (AmazonWebServiceResponse<?>) response.getAwsResponse();
-      set(attributes, AWS_REQUEST_ID, awsResp.getRequestId());
+      String requestId = awsResp.getRequestId();
+      if (requestId != null) {
+        attributes.put(AWS_REQUEST_ID, requestId);
+      }
     }
   }
 }

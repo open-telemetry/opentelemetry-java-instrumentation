@@ -49,9 +49,12 @@ public final class AwsLambdaFunctionAttributesExtractor
       io.opentelemetry.context.Context parentContext,
       AwsLambdaRequest request) {
     Context awsContext = request.getAwsContext();
-    set(attributes, FAAS_EXECUTION, awsContext.getAwsRequestId());
-    set(attributes, FAAS_ID, getFunctionArn(awsContext));
-    set(attributes, CLOUD_ACCOUNT_ID, getAccountId(getFunctionArn(awsContext)));
+    attributes.put(FAAS_EXECUTION, awsContext.getAwsRequestId());
+    String arn = getFunctionArn(awsContext);
+    if (arn != null) {
+      attributes.put(FAAS_ID, arn);
+      attributes.put(CLOUD_ACCOUNT_ID, getAccountId(arn));
+    }
   }
 
   @Override
@@ -74,11 +77,7 @@ public final class AwsLambdaFunctionAttributesExtractor
     }
   }
 
-  @Nullable
-  private String getAccountId(@Nullable String arn) {
-    if (arn == null) {
-      return null;
-    }
+  private String getAccountId(String arn) {
     if (accountId == null) {
       synchronized (this) {
         if (accountId == null) {

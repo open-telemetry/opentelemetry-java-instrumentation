@@ -27,9 +27,15 @@ enum RocketMqProducerExperimentalAttributeExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
     if (request.getMessage() != null) {
-      set(attributes, MESSAGING_ROCKETMQ_TAGS, request.getMessage().getTags());
+      String tags = request.getMessage().getTags();
+      if (tags != null) {
+        attributes.put(MESSAGING_ROCKETMQ_TAGS, tags);
+      }
     }
-    set(attributes, MESSAGING_ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
+    String brokerAddr = request.getBrokerAddr();
+    if (brokerAddr != null) {
+      attributes.put(MESSAGING_ROCKETMQ_BROKER_ADDRESS, brokerAddr);
+    }
   }
 
   @Override
@@ -40,10 +46,8 @@ enum RocketMqProducerExperimentalAttributeExtractor
       @Nullable Void unused,
       @Nullable Throwable error) {
     if (request.getSendResult() != null) {
-      set(
-          attributes,
-          MESSAGING_ROCKETMQ_SEND_RESULT,
-          request.getSendResult().getSendStatus().name());
+      attributes.put(
+          MESSAGING_ROCKETMQ_SEND_RESULT, request.getSendResult().getSendStatus().name());
     }
   }
 }

@@ -27,13 +27,11 @@ class RabbitDeliveryExperimentalAttributesExtractor
       // this will be set if the sender sets the timestamp,
       // or if a plugin is installed on the rabbitmq broker
       long produceTimeMillis = timestamp.getTime();
-      set(
-          attributes,
-          RABBITMQ_QUEUE_TIME,
-          Math.max(0L, System.currentTimeMillis() - produceTimeMillis));
+      attributes.put(
+          RABBITMQ_QUEUE_TIME, Math.max(0L, System.currentTimeMillis() - produceTimeMillis));
     }
 
-    set(attributes, RABBITMQ_COMMAND, "basic.deliver");
+    attributes.put(RABBITMQ_COMMAND, "basic.deliver");
   }
 
   @Override

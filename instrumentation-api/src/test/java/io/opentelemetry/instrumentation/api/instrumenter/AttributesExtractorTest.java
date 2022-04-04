@@ -25,8 +25,8 @@ class AttributesExtractorTest {
     @Override
     public void onStart(
         AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
-      set(attributes, AttributeKey.stringKey("animal"), request.get("animal"));
-      set(attributes, AttributeKey.stringKey("country"), request.get("country"));
+      attributes.put(AttributeKey.stringKey("animal"), request.get("animal"));
+      attributes.put(AttributeKey.stringKey("country"), request.get("country"));
     }
 
     @Override
@@ -37,11 +37,11 @@ class AttributesExtractorTest {
         @Nullable Map<String, String> response,
         @Nullable Throwable error) {
       if (response != null) {
-        set(attributes, AttributeKey.stringKey("food"), response.get("food"));
-        set(attributes, AttributeKey.stringKey("number"), request.get("number"));
+        attributes.put(AttributeKey.stringKey("food"), response.get("food"));
+        attributes.put(AttributeKey.stringKey("number"), request.get("number"));
       }
       if (error != null) {
-        set(attributes, AttributeKey.stringKey("full_error_class"), error.getClass().getName());
+        attributes.put(AttributeKey.stringKey("full_error_class"), error.getClass().getName());
       }
     }
   }
