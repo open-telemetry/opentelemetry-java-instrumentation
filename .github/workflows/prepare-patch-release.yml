@@ -38,10 +38,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          msg="Prepare patch release $VERSION"
+          msg="Prepare release $VERSION"
           git commit -a -m "$msg"
-          git push origin HEAD:prepare-patch-release-$VERSION
-          gh pr create --title "$msg" \
+          git push origin HEAD:prepare-release-$VERSION
+          gh pr create --title "[$GITHUB_REF_NAME] $msg" \
                        --body "$msg" \
-                       --head prepare-patch-release-$VERSION \
+                       --head prepare-release-$VERSION \
                        --base $GITHUB_REF_NAME
