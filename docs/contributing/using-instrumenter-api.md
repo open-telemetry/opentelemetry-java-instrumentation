@@ -116,6 +116,17 @@ The `builder()` method accepts three arguments:
 An `Instrumenter` can be built from several smaller components. The following subsections describe
 all interfaces that can be used to customize an `Instrumenter`.
 
+### Set the instrumentation version and OpenTelemetry schema URL
+
+It is recommended to always set the instrumentation library version on the `Instrumenter`. This can
+be done by calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`. With the
+version present, users of your instrumentation library will be able to recognize which version
+produced the telemetry.
+
+If the `Instrumenter` adheres to a certain OpenTelemetry schema, you can set the schema URL using
+the `setSchemaUrl()` method on the `InstrumenterBuilder`. You can learn more about the OpenTelemetry
+schemas [here](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md).
+
 ### Name the spans using the `SpanNameExtractor`
 
 A `SpanNameExtractor` is a simple functional interface that accepts the `REQUEST` type and returns
