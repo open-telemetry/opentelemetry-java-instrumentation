@@ -28,6 +28,10 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
         });
   }
 
+  /**
+   * Wrap {@link CompletableFuture} so that {@link EndOperationListener}, that is used to end the
+   * span, could be attached to it.
+   */
   public static <T> CompletableFuture<T> wrap(CompletableFuture<T> delegate) {
     if (delegate instanceof CompletableFutureWrapper) {
       return delegate;
@@ -36,6 +40,14 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T>
     return new CompletableFutureWrapper<>(delegate);
   }
 
+  /**
+   * Wrap {@link CompletableFuture} to run callbacks with the context that was current at the time
+   * this method was called.
+   *
+   * <p>This method should be called on, or as close as possible to, the {@link CompletableFuture}
+   * that is returned to the user to ensure that the callbacks added by user are run in appropriate
+   * context.
+   */
   public static <T> CompletableFuture<T> wrapContext(CompletableFuture<T> future) {
     Context context = Context.current();
     // when input future is completed, complete result future with context that was current
