@@ -52,7 +52,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private final List<RequestListener> requestListeners = new ArrayList<>();
   private final List<RequestMetrics> requestMetrics = new ArrayList<>();
 
-  private String instrumentationVersion;
+  @Nullable private String instrumentationVersion;
   @Nullable private String schemaUrl = null;
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
@@ -69,9 +69,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
     this.openTelemetry = openTelemetry;
     this.instrumentationName = instrumentationName;
+    this.spanNameExtractor = spanNameExtractor;
     this.instrumentationVersion =
         EmbeddedInstrumentationProperties.findVersion(instrumentationName);
-    this.spanNameExtractor = spanNameExtractor;
   }
 
   /**
@@ -302,10 +302,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   Tracer buildTracer() {
     TracerBuilder tracerBuilder =
-        openTelemetry
-            .getTracerProvider()
-            .tracerBuilder(instrumentationName)
-            .setInstrumentationVersion(instrumentationVersion);
+        openTelemetry.getTracerProvider().tracerBuilder(instrumentationName);
+    if (instrumentationVersion != null) {
+      tracerBuilder.setInstrumentationVersion(instrumentationVersion);
+    }
     if (schemaUrl != null) {
       tracerBuilder.setSchemaUrl(schemaUrl);
     }
@@ -317,11 +317,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         new ArrayList<>(requestListeners.size() + requestMetrics.size());
     listeners.addAll(requestListeners);
 
-    MeterBuilder meterBuilder =
-        openTelemetry
-            .getMeterProvider()
-            .meterBuilder(instrumentationName)
-            .setInstrumentationVersion(instrumentationVersion);
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationName);
+    if (instrumentationVersion != null) {
+      meterBuilder.setInstrumentationVersion(instrumentationVersion);
+    }
     if (schemaUrl != null) {
       meterBuilder.setSchemaUrl(schemaUrl);
     }
