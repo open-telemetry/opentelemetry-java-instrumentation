@@ -25,7 +25,3 @@ dependencies {
   testImplementation("io.dropwizard:dropwizard-testing:0.7.1")
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.jaxrs.enabled=true")
-}

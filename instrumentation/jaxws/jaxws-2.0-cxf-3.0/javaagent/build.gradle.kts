@@ -36,7 +36,3 @@ dependencies {
   testImplementation("javax.annotation:javax.annotation-api:1.2")
   testImplementation("com.sun.xml.messaging.saaj:saaj-impl:1.5.2")
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.jaxws.enabled=true")
-}

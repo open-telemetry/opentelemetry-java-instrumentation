@@ -22,9 +22,4 @@ public class JwsInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new JwsAnnotationsInstrumentation());
   }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
 }
