@@ -21,7 +21,7 @@ public final class SpringWebMvcSingletons {
     HANDLER_INSTRUMENTER =
         Instrumenter.<Object, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, new HandlerSpanNameExtractor())
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .newInstrumenter();
 
     MODEL_AND_VIEW_INSTRUMENTER =
@@ -30,7 +30,7 @@ public final class SpringWebMvcSingletons {
                 INSTRUMENTATION_NAME,
                 new ModelAndViewSpanNameExtractor())
             .addAttributesExtractor(new ModelAndViewAttributesExtractor())
-            .setDisabled(ExperimentalConfig.get().suppressViewSpans())
+            .setEnabled(ExperimentalConfig.get().viewTelemetryEnabled())
             .newInstrumenter();
   }
 

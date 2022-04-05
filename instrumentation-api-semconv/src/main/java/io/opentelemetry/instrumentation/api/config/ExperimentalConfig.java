@@ -23,13 +23,22 @@ public final class ExperimentalConfig {
     this.config = config;
   }
 
-  public boolean suppressControllerSpans() {
+  public boolean controllerTelemetryEnabled() {
+    // TODO: remove that `suppress...` flag after 1.13 release
+    boolean suppressControllerSpans =
+        config.getBoolean(
+            "otel.instrumentation.common.experimental.suppress-controller-spans", false);
     return config.getBoolean(
-        "otel.instrumentation.common.experimental.suppress-controller-spans", false);
+        "otel.instrumentation.common.experimental.controller-telemetry.enabled",
+        !suppressControllerSpans);
   }
 
-  public boolean suppressViewSpans() {
-    return config.getBoolean("otel.instrumentation.common.experimental.suppress-view-spans", false);
+  public boolean viewTelemetryEnabled() {
+    // TODO: remove that `suppress...` flag after 1.13 release
+    boolean suppressViewSpans =
+        config.getBoolean("otel.instrumentation.common.experimental.suppress-view-spans", false);
+    return config.getBoolean(
+        "otel.instrumentation.common.experimental.view-telemetry.enabled", !suppressViewSpans);
   }
 
   public boolean messagingReceiveInstrumentationEnabled() {

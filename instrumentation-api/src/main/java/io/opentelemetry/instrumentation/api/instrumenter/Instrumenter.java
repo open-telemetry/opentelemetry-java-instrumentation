@@ -107,7 +107,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends RequestListener> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final TimeExtractor<REQUEST, RESPONSE> timeExtractor;
-  private final boolean disabled;
+  private final boolean enabled;
   private final SpanSuppressionStrategy spanSuppressionStrategy;
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
@@ -123,7 +123,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.requestListeners = new ArrayList<>(builder.requestListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.timeExtractor = builder.timeExtractor;
-    this.disabled = builder.disabled;
+    this.enabled = builder.enabled;
     this.spanSuppressionStrategy = builder.getSpanSuppressionStrategy();
   }
 
@@ -134,7 +134,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * without calling those methods.
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
-    if (disabled) {
+    if (!enabled) {
       return false;
     }
     SpanKind spanKind = spanKindExtractor.extract(request);
