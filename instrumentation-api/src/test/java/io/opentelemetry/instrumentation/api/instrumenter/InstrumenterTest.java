@@ -524,7 +524,7 @@ class InstrumenterTest {
     Instrumenter<String, String> instrumenter =
         Instrumenter.<String, String>builder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .disable()
+            .setEnabled(false)
             .newInstrumenter();
 
     assertThat(instrumenter.shouldStart(Context.root(), "request")).isFalse();

@@ -420,9 +420,8 @@ method.
 ### Disable the instrumentation
 
 In some rare cases it may be useful to completely disable the constructed `Instrumenter`, for
-example, based on a configuration property. The `InstrumenterBuilder` exposes a `disable()`
-method for that: calling it will turn the newly created `Instrumenter` into a no-op instance.
-Alternatively, you can use the `setEnabled()` method and pass `false` as the argument.
+example, based on a configuration property. The `InstrumenterBuilder` exposes a `setEnabled()`
+method for that: passing `false` will turn the newly created `Instrumenter` into a no-op instance.
 
 ### Finally, set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`!
 

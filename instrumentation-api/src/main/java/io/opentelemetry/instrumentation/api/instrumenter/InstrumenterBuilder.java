@@ -160,15 +160,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Disables the {@link Instrumenter} - it will not generate any telemetry.
-   *
-   * <p>Equivalent to calling {@code .setEnabled(false)}.
-   */
-  public InstrumenterBuilder<REQUEST, RESPONSE> disable() {
-    return setEnabled(false);
-  }
-
-  /**
    * Allows enabling/disabling the {@link Instrumenter} based on the {@code enabled} value passed as
    * parameter. All instrumenters are enabled by default.
    */
