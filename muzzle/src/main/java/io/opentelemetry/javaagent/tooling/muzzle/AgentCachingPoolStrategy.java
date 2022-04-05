@@ -388,8 +388,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     /**
-     * Based on TypePool.Default.WithLazyResolution.LazyTypeDescription Class description that
-     * attempts to use already loaded super classes for navigating class hierarchy.
+     * Based on TypePool.Default.WithLazyResolution.LazyTypeDescription
+     *
+     * <p>Class description that attempts to use already loaded super classes for navigating class
+     * hierarchy.
      */
     private class LazyTypeDescription extends AgentTypePool.CachingTypeDescription {
       // using WeakReference to ensure that caching this descriptor won't keep class loader alive
@@ -460,10 +462,12 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     /**
-     * Based on TypePool.Default.WithLazyResolution.LazyTypeDescription Class description that uses
-     * an existing class instance for navigating super class hierarchy This should be much more
-     * efficient than finding super types through resource lookups and parsing bytecode. We are not
-     * using TypeDescription.ForLoadedType as it can cause additional classes to be loaded.
+     * Based on TypePool.Default.WithLazyResolution.LazyTypeDescription
+     *
+     * <p>Class description that uses an existing class instance for navigating super class
+     * hierarchy. This should be much more efficient than finding super types through resource
+     * lookups and parsing bytecode. We are not using TypeDescription.ForLoadedType as it can cause
+     * additional classes to be loaded.
      */
     private class LazyTypeDescriptionWithClass extends AgentTypePool.CachingTypeDescription {
       // using WeakReference to ensure that caching this descriptor won't keep class loader alive
