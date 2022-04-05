@@ -118,14 +118,14 @@ all interfaces that can be used to customize an `Instrumenter`.
 
 ### Set the instrumentation version and OpenTelemetry schema URL
 
-It is recommended to always set the instrumentation library version on the `Instrumenter`. This can
-be done by calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`. With the
-version present, users of your instrumentation library will be able to recognize which version
-produced the telemetry.
+Always set the instrumentation library version on the `Instrumenter`. You can do this by
+calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`. By setting
+the version, you let users to identify which version of your instrumentation produced the 
+telemetry.
 
-If the `Instrumenter` adheres to a certain OpenTelemetry schema, you can set the schema URL using
-the `setSchemaUrl()` method on the `InstrumenterBuilder`. You can learn more about the OpenTelemetry
-schemas [here](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md).
+If the `Instrumenter` adheres to a specific OpenTelemetry schema, you can set the schema URL using
+the `setSchemaUrl()` method on the `InstrumenterBuilder`. To learn more about the OpenTelemetry
+schemas [see the Overview](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md).
 
 ### Name the spans using the `SpanNameExtractor`
 
