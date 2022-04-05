@@ -118,10 +118,9 @@ all interfaces that can be used to customize an `Instrumenter`.
 
 ### Set the instrumentation version and OpenTelemetry schema URL
 
-Always set the instrumentation library version on the `Instrumenter`. You can do this by
-calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`. By setting
-the version, you let users to identify which version of your instrumentation produced the 
-telemetry.
+Always set the instrumentation library version on the `Instrumenter`. You can do this by calling
+the `setInstrumentationVersion()` method on the `InstrumenterBuilder`. By setting the version, you
+let users identify which version of your instrumentation produced the telemetry.
 
 If the `Instrumenter` adheres to a specific OpenTelemetry schema, you can set the schema URL using
 the `setSchemaUrl()` method on the `InstrumenterBuilder`. To learn more about the OpenTelemetry
