@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.lowercase;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.setAttr;
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -39,13 +39,13 @@ abstract class HttpCommonAttributesExtractor<
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    setAttr(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
-    setAttr(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
+    internalSet(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
+    internalSet(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
 
     for (String name : capturedRequestHeaders) {
       List<String> values = getter.requestHeader(request, name);
       if (!values.isEmpty()) {
-        setAttr(attributes, requestAttributeKey(name), values);
+        internalSet(attributes, requestAttributeKey(name), values);
       }
     }
   }
@@ -58,11 +58,11 @@ abstract class HttpCommonAttributesExtractor<
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    setAttr(
+    internalSet(
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
         getter.requestContentLength(request, response));
-    setAttr(
+    internalSet(
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED,
         getter.requestContentLengthUncompressed(request, response));
@@ -70,13 +70,13 @@ abstract class HttpCommonAttributesExtractor<
     if (response != null) {
       Integer statusCode = getter.statusCode(request, response);
       if (statusCode != null && statusCode > 0) {
-        setAttr(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
+        internalSet(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
       }
-      setAttr(
+      internalSet(
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
           getter.responseContentLength(request, response));
-      setAttr(
+      internalSet(
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
           getter.responseContentLengthUncompressed(request, response));
@@ -84,7 +84,7 @@ abstract class HttpCommonAttributesExtractor<
       for (String name : capturedResponseHeaders) {
         List<String> values = getter.responseHeader(request, response, name);
         if (!values.isEmpty()) {
-          setAttr(attributes, responseAttributeKey(name), values);
+          internalSet(attributes, responseAttributeKey(name), values);
         }
       }
     }

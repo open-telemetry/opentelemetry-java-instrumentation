@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.db;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.setAttr;
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -57,8 +57,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
     SqlStatementInfo sanitizedStatement =
         SqlStatementSanitizer.sanitize(getter.rawStatement(request));
-    setAttr(attributes, SemanticAttributes.DB_STATEMENT, sanitizedStatement.getFullStatement());
-    setAttr(attributes, SemanticAttributes.DB_OPERATION, sanitizedStatement.getOperation());
-    setAttr(attributes, dbTableAttribute, sanitizedStatement.getTable());
+    internalSet(attributes, SemanticAttributes.DB_STATEMENT, sanitizedStatement.getFullStatement());
+    internalSet(attributes, SemanticAttributes.DB_OPERATION, sanitizedStatement.getOperation());
+    internalSet(attributes, dbTableAttribute, sanitizedStatement.getTable());
   }
 }

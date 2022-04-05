@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.code;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.setAttr;
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -37,9 +37,9 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     Class<?> cls = getter.codeClass(request);
     if (cls != null) {
-      setAttr(attributes, SemanticAttributes.CODE_NAMESPACE, cls.getName());
+      internalSet(attributes, SemanticAttributes.CODE_NAMESPACE, cls.getName());
     }
-    setAttr(attributes, SemanticAttributes.CODE_FUNCTION, getter.methodName(request));
+    internalSet(attributes, SemanticAttributes.CODE_FUNCTION, getter.methodName(request));
   }
 
   @Override

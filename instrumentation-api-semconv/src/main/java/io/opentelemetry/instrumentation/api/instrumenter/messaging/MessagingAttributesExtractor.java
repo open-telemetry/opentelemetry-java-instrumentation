@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation.PROCESS;
 import static io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation.RECEIVE;
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.setAttr;
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -51,32 +51,33 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // operationName
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    setAttr(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.system(request));
-    setAttr(
+    internalSet(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.system(request));
+    internalSet(
         attributes, SemanticAttributes.MESSAGING_DESTINATION_KIND, getter.destinationKind(request));
     boolean isTemporaryDestination = getter.temporaryDestination(request);
     if (isTemporaryDestination) {
-      setAttr(attributes, SemanticAttributes.MESSAGING_TEMP_DESTINATION, true);
-      setAttr(attributes, SemanticAttributes.MESSAGING_DESTINATION, TEMP_DESTINATION_NAME);
+      internalSet(attributes, SemanticAttributes.MESSAGING_TEMP_DESTINATION, true);
+      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION, TEMP_DESTINATION_NAME);
     } else {
-      setAttr(attributes, SemanticAttributes.MESSAGING_DESTINATION, getter.destination(request));
+      internalSet(
+          attributes, SemanticAttributes.MESSAGING_DESTINATION, getter.destination(request));
     }
-    setAttr(attributes, SemanticAttributes.MESSAGING_PROTOCOL, getter.protocol(request));
-    setAttr(
+    internalSet(attributes, SemanticAttributes.MESSAGING_PROTOCOL, getter.protocol(request));
+    internalSet(
         attributes, SemanticAttributes.MESSAGING_PROTOCOL_VERSION, getter.protocolVersion(request));
-    setAttr(attributes, SemanticAttributes.MESSAGING_URL, getter.url(request));
-    setAttr(
+    internalSet(attributes, SemanticAttributes.MESSAGING_URL, getter.url(request));
+    internalSet(
         attributes, SemanticAttributes.MESSAGING_CONVERSATION_ID, getter.conversationId(request));
-    setAttr(
+    internalSet(
         attributes,
         SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
         getter.messagePayloadSize(request));
-    setAttr(
+    internalSet(
         attributes,
         SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
         getter.messagePayloadCompressedSize(request));
     if (operation == RECEIVE || operation == PROCESS) {
-      setAttr(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
+      internalSet(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
     }
   }
 
@@ -87,7 +88,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    setAttr(
+    internalSet(
         attributes, SemanticAttributes.MESSAGING_MESSAGE_ID, getter.messageId(request, response));
   }
 

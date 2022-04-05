@@ -19,8 +19,7 @@ public final class AttributesExtractorUtil {
    * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code
    * value} is not {@code null}.
    */
-  // TODO: rename back to set() once AttributesExtractor#set() is removed
-  public static <T> void setAttr(
+  public static <T> void internalSet(
       AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
     if (value != null) {
       attributes.put(key, value);

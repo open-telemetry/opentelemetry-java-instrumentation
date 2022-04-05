@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
 import javax.annotation.Nullable;
 
 /**
@@ -47,7 +46,9 @@ public interface AttributesExtractor<REQUEST, RESPONSE> {
   // TODO: remove after 1.13 release
   @Deprecated
   default <T> void set(AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
-    AttributesExtractorUtil.setAttr(attributes, key, value);
+    if (value != null) {
+      attributes.put(key, value);
+    }
   }
 
   /**

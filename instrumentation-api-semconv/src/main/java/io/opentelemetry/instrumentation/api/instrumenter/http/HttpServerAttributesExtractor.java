@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHe
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractClientIpFromForwardedHeader;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedHeader;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.ForwardedHeaderParser.extractProtoFromForwardedProtoHeader;
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.setAttr;
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -69,15 +69,15 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    setAttr(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request));
+    internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request));
     String forwardedProto = forwardedProto(request);
     String value = forwardedProto != null ? forwardedProto : getter.scheme(request);
-    setAttr(attributes, SemanticAttributes.HTTP_SCHEME, value);
-    setAttr(attributes, SemanticAttributes.HTTP_HOST, host(request));
-    setAttr(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
-    setAttr(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
-    setAttr(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request));
-    setAttr(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
+    internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
+    internalSet(attributes, SemanticAttributes.HTTP_HOST, host(request));
+    internalSet(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
+    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
+    internalSet(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request));
+    internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
   @Override
@@ -89,7 +89,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     super.onEnd(attributes, context, request, response, error);
-    setAttr(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
+    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
   }
 
   @Nullable
