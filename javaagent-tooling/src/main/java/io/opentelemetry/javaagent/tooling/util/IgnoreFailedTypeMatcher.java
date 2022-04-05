@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.instrumentation;
+package io.opentelemetry.javaagent.tooling.util;
 
 import io.opentelemetry.javaagent.tooling.DefineClassHandler;
 import net.bytebuddy.description.type.TypeDescription;
@@ -14,10 +14,10 @@ import net.bytebuddy.matcher.ElementMatcher;
  * matched type will fail. If we know that the class that is currently loading can't be loaded
  * successfully we can skip transforming it.
  */
-class IgnoreFailedTypeMatcher implements ElementMatcher<TypeDescription> {
+public class IgnoreFailedTypeMatcher implements ElementMatcher<TypeDescription> {
   private final ElementMatcher<TypeDescription> delegate;
 
-  IgnoreFailedTypeMatcher(ElementMatcher<TypeDescription> delegate) {
+  public IgnoreFailedTypeMatcher(ElementMatcher<TypeDescription> delegate) {
     this.delegate = delegate;
   }
 

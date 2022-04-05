@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.instrumentation;
+package io.opentelemetry.javaagent.tooling.util;
 
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -11,11 +11,11 @@ import net.bytebuddy.matcher.ElementMatcher;
  * A matcher wrapper that adds specified name to the output of {@code toString} to allow easy
  * identification of where the given matcher originates from.
  */
-class NamedMatcher<T> implements ElementMatcher<T> {
+public class NamedMatcher<T> implements ElementMatcher<T> {
   private final String name;
   private final ElementMatcher<T> delegate;
 
-  NamedMatcher(String name, ElementMatcher<T> delegate) {
+  public NamedMatcher(String name, ElementMatcher<T> delegate) {
     this.name = name;
     this.delegate = delegate;
   }

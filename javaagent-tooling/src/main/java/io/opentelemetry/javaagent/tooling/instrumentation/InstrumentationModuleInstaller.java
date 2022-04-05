@@ -26,6 +26,8 @@ import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
+import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
+import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.List;
