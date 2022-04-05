@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
-
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.ApacheHttpClientSingletons.instrumenter;
+package io.opentelemetry.javaagent.instrumentation.v5_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -34,7 +32,7 @@ public class WrappingStatusSettingResponseHandler<T> implements HttpClientRespon
 
   @Override
   public T handleResponse(ClassicHttpResponse response) throws IOException, HttpException {
-    instrumenter().end(context, request, response, null);
+    ApacheHttpClientSingletons.instrumenter().end(context, request, response, null);
     // ending the span before executing the callback handler (and scoping the callback handler to
     // the parent context), even though we are inside of a synchronous http client callback
     // underneath HttpClient.execute(..), in order to not attribute other CLIENT span timings that

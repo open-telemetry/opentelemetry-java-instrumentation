@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient;
+package io.opentelemetry.javaagent.instrumentation.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.ApacheHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -130,11 +129,11 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      if (!ApacheHttpClientSingletons.instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, request);
+      context = ApacheHttpClientSingletons.instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -164,11 +163,11 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      if (!ApacheHttpClientSingletons.instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, request);
+      context = ApacheHttpClientSingletons.instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -204,11 +203,11 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      if (!ApacheHttpClientSingletons.instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, request);
+      context = ApacheHttpClientSingletons.instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -246,11 +245,11 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       fullRequest = new RequestWithHost(host, request);
-      if (!instrumenter().shouldStart(parentContext, fullRequest)) {
+      if (!ApacheHttpClientSingletons.instrumenter().shouldStart(parentContext, fullRequest)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, fullRequest);
+      context = ApacheHttpClientSingletons.instrumenter().start(parentContext, fullRequest);
       scope = context.makeCurrent();
     }
 
@@ -284,11 +283,11 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       fullRequest = new RequestWithHost(host, request);
-      if (!instrumenter().shouldStart(parentContext, fullRequest)) {
+      if (!ApacheHttpClientSingletons.instrumenter().shouldStart(parentContext, fullRequest)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, fullRequest);
+      context = ApacheHttpClientSingletons.instrumenter().start(parentContext, fullRequest);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -329,11 +328,11 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       fullRequest = new RequestWithHost(host, request);
-      if (!instrumenter().shouldStart(parentContext, fullRequest)) {
+      if (!ApacheHttpClientSingletons.instrumenter().shouldStart(parentContext, fullRequest)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, fullRequest);
+      context = ApacheHttpClientSingletons.instrumenter().start(parentContext, fullRequest);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
