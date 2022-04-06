@@ -10,7 +10,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * A matcher wrapper that skips matching and returns {@code false} when it is know that loading the
+ * A matcher wrapper that skips matching and returns {@code false} when it is known that loading the
  * matched type will fail. If we know that the class that is currently loading can't be loaded
  * successfully we can skip transforming it.
  */

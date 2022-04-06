@@ -64,7 +64,7 @@ public class DefineClassHandler implements Handler {
    * Detect whether loading the specified class is known to fail.
    *
    * @param className class being loaded
-   * @return true if it is know that loading class with given name will fail
+   * @return true if it is known that loading class with given name will fail
    */
   public static boolean isFailedClass(String className) {
     DefineClassContextImpl context = defineClassContext.get();
@@ -74,8 +74,8 @@ public class DefineClassHandler implements Handler {
   private static class DefineClassContextImpl implements DefineClassContext {
     private static final DefineClassContextImpl NOP = new DefineClassContextImpl();
 
-    private DefineClassContextImpl previous;
-    private String failedClassName;
+    private final DefineClassContextImpl previous;
+    private final String failedClassName;
 
     private DefineClassContextImpl() {}
 
