@@ -1,37 +1,49 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.reactor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.context.ContextKey;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import io.opentelemetry.extension.annotations.WithSpan;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.UnicastProcessor;
 
-//
+// Isolated test to use clean classloader because reactor instrumentation is applied on static
+// initialization.
 class InitializationTest {
-
-  private static final ContextKey<String> ANIMAL = ContextKey.named("animal");
 
   @Test
   void contextPropagated() {
-    AtomicReference<String> capturedAnimal = new AtomicReference<>();
+    Mono<String> mono = new Traced().traceMe();
 
-    UnicastProcessor<String> source1 = UnicastProcessor.create();
-    Mono<String> mono1 = source1.singleOrEmpty();
-    source1.onNext("foo");
-    source1.onComplete();
-    mono1.block();
+    // If reactor augmentation of WithSpan is working correctly, we will end up with these
+    // implementation details.
+    // TODO(anuraaga): This should just check actual context propagation instead of implementation
+    // but couldn't figure out how.
+    assertThat(((Scannable) mono).parents().collect(Collectors.toList()))
+        .anySatisfy(
+            op -> {
+              assertThat(op.getClass().getSimpleName()).isEqualTo("MonoFlatMap");
+              assertThat(op)
+                  .extracting("source")
+                  .satisfies(
+                      source ->
+                          assertThat(source.getClass().getSimpleName())
+                              .isEqualTo("ScalarPropagatingMono"));
+            });
 
-    List<Scannable> parents1 = ((Scannable) mono1).parents().collect(Collectors.toList());
+    assertThat(mono.block()).isEqualTo("foo");
+  }
 
-    UnicastProcessor<String> source2 = UnicastProcessor.create();
-    Mono<String> mono2 = source2.singleOrEmpty();
-
-    List<Scannable> parents2 = ((Scannable) mono1).parents().collect(Collectors.toList());
-    assertThat(parents1).isNotEmpty();
+  static class Traced {
+    @WithSpan
+    Mono<String> traceMe() {
+      return Mono.just("foo");
+    }
   }
 }

@@ -40,6 +40,7 @@ testing {
     val testInitialization by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+        implementation("io.opentelemetry:opentelemetry-extension-annotations")
         implementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
       }
     }
