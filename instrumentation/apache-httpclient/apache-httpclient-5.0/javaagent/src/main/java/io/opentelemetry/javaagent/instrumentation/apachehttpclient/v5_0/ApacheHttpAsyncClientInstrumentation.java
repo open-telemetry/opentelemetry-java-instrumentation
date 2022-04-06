@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -144,9 +145,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
-      if (ApacheHttpClientSingletons.instrumenter().shouldStart(parentContext, request)) {
-        wrappedFutureCallback.context =
-            ApacheHttpClientSingletons.instrumenter().start(parentContext, request);
+      if (instrumenter().shouldStart(parentContext, request)) {
+        wrappedFutureCallback.context = instrumenter().start(parentContext, request);
         wrappedFutureCallback.httpRequest = request;
       }
 
@@ -182,8 +182,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ApacheHttpClientSingletons.instrumenter()
-          .end(context, httpRequest, getResponse(httpContext), null);
+      instrumenter().end(context, httpRequest, getResponse(httpContext), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -205,8 +204,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      ApacheHttpClientSingletons.instrumenter()
-          .end(context, httpRequest, getResponse(httpContext), ex);
+      instrumenter().end(context, httpRequest, getResponse(httpContext), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -229,8 +227,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      ApacheHttpClientSingletons.instrumenter()
-          .end(context, httpRequest, getResponse(httpContext), null);
+      instrumenter().end(context, httpRequest, getResponse(httpContext), null);
 
       if (parentContext == null) {
         cancelDelegate();
