@@ -25,7 +25,6 @@ package io.opentelemetry.instrumentation.reactor;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -61,7 +60,7 @@ public final class ContextPropagationOperator {
         }
       };
 
-  private static final AtomicBoolean enabled = new AtomicBoolean();
+  private static volatile boolean enabled = false;
 
   /**
    * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
@@ -102,20 +101,22 @@ public final class ContextPropagationOperator {
    * reactive stream. This should generally be called in a static initializer block in your
    * application.
    */
-  public void registerOnEachOperator() {
-    if (enabled.compareAndSet(false, true)) {
-      Hooks.onEachOperator(
-          TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
-      AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
+  public synchronized void registerOnEachOperator() {
+    if (enabled) {
+      return;
     }
+    Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
+    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
+    enabled = true;
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
-  public void resetOnEachOperator() {
-    if (enabled.compareAndSet(true, false)) {
-      Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-      AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
+  public synchronized void resetOnEachOperator() {
+    if (!enabled) {
+      return;
     }
+    Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
+    AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
@@ -125,7 +126,7 @@ public final class ContextPropagationOperator {
 
   /** Forces Mono to run in traceContext scope. */
   public static <T> Mono<T> runWithContext(Mono<T> publisher, Context tracingContext) {
-    if (!enabled.get()) {
+    if (!enabled) {
       return publisher;
     }
 
@@ -138,7 +139,7 @@ public final class ContextPropagationOperator {
 
   /** Forces Flux to run in traceContext scope. */
   public static <T> Flux<T> runWithContext(Flux<T> publisher, Context tracingContext) {
-    if (!enabled.get()) {
+    if (!enabled) {
       return publisher;
     }
 
