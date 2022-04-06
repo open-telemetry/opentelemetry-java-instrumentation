@@ -77,7 +77,10 @@ public class DefineClassHandler implements Handler {
     private final DefineClassContextImpl previous;
     private final String failedClassName;
 
-    private DefineClassContextImpl() {}
+    private DefineClassContextImpl() {
+      previous = null;
+      failedClassName = null;
+    }
 
     private DefineClassContextImpl(DefineClassContextImpl previous, String failedClassName) {
       this.previous = previous;
