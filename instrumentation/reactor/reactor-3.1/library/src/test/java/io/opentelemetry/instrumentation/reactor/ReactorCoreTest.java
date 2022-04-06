@@ -218,14 +218,14 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
   @Test
   void fluxParentsAccessible() {
     UnicastProcessor<String> source = UnicastProcessor.create();
-    Flux<String> mono = ContextPropagationOperator.runWithContext(source, Context.root());
+    Flux<String> flux = ContextPropagationOperator.runWithContext(source, Context.root());
 
     source.onNext("foo");
     source.onComplete();
 
-    assertThat(mono.collectList().block()).containsExactly("foo");
+    assertThat(flux.collectList().block()).containsExactly("foo");
 
-    assertThat(((Scannable) mono).parents().filter(UnicastProcessor.class::isInstance).findFirst())
+    assertThat(((Scannable) flux).parents().filter(UnicastProcessor.class::isInstance).findFirst())
         .isPresent();
   }
 
