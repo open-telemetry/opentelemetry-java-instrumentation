@@ -313,6 +313,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   List<RequestListener> buildRequestListeners() {
+    // just copy the listeners list if there are no metrics registered
+    if (requestMetrics.isEmpty()) {
+      return new ArrayList<>(requestListeners);
+    }
+
     List<RequestListener> listeners =
         new ArrayList<>(requestListeners.size() + requestMetrics.size());
     listeners.addAll(requestListeners);
