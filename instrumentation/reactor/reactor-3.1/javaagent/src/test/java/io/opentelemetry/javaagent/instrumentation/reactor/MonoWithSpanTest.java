@@ -52,11 +52,11 @@ class MonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, Mono<String>> 
   // use this hacky approach to access the processor from the mono ancestor.
   @SuppressWarnings("unchecked")
   private static UnicastProcessor<String> processor(Mono<String> mono) {
-    Scannable processor = (Scannable) mono;
-    while (!(processor instanceof UnicastProcessor)) {
-      processor = processor.scan(Scannable.Attr.PARENT);
-    }
-    return (UnicastProcessor<String>) processor;
+    return ((Scannable) mono).parents()
+        .filter(UnicastProcessor.class::isInstance)
+        .map(UnicastProcessor.class::cast)
+        .findFirst()
+        .get();
   }
 
   static class Traced extends AbstractTraced<Mono<String>, Mono<String>> {
