@@ -88,6 +88,9 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       return null;
     }
     if (JavaModule.isSupported()) {
+      // ensure that we have access to ClassLoader.findLoadedClass
+      // if modular runtime is used export java.lang package from java.base module to the
+      // module of this class
       JavaModule currentModule = JavaModule.ofType(AgentCachingPoolStrategy.class);
       JavaModule javaBase = JavaModule.ofType(ClassLoader.class);
       if (javaBase != null && javaBase.isNamed() && currentModule != null) {
