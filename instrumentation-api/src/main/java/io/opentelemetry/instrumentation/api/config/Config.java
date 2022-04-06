@@ -9,7 +9,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,6 @@ public abstract class Config {
    * <p>This method is internal and is hence not for public use. Its API is unstable and can change
    * at any time.
    */
-  @UnstableApi
   public static void internalInitializeConfig(Config config) {
     if (instance != null) {
       logger.warning("Config#INSTANCE was already set earlier");

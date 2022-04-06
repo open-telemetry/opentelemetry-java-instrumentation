@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -73,7 +72,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
    * This method is internal and is hence not for public use. Its API is unstable and can change at
    * any time.
    */
-  @UnstableApi
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_CLIENT;
