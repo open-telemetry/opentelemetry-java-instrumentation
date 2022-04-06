@@ -137,7 +137,6 @@ public class AgentInstaller {
       runBeforeAgentListeners(agentListeners, config, autoConfiguredSdk);
     }
 
-    AgentTooling.init(Utils.getBootstrapProxy());
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()

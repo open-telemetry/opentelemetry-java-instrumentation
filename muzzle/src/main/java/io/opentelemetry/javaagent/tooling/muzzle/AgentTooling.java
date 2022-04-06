@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 /**
@@ -14,7 +16,8 @@ import net.bytebuddy.agent.builder.AgentBuilder;
  */
 public final class AgentTooling {
 
-  private static volatile ClassLoader bootstrapProxy;
+  private static final AgentBuilder.PoolStrategy POOL_STRATEGY =
+      new AgentCachingPoolStrategy(locationStrategy(getBootstrapProxy()));
 
   public static AgentLocationStrategy locationStrategy() {
     return locationStrategy(null);
@@ -25,17 +28,19 @@ public final class AgentTooling {
   }
 
   public static AgentBuilder.PoolStrategy poolStrategy() {
-    return PoolStrategyHolder.POOL_STRATEGY;
+    return POOL_STRATEGY;
   }
 
-  public static void init(ClassLoader classLoader) {
-    bootstrapProxy = classLoader;
+  private static ClassLoader getBootstrapProxy() {
+    Iterator<BootstrapProxyProvider> iterator =
+        ServiceLoader.load(BootstrapProxyProvider.class).iterator();
+    if (iterator.hasNext()) {
+      BootstrapProxyProvider bootstrapProxyProvider = iterator.next();
+      return bootstrapProxyProvider.getBootstrapProxy();
+    }
+
+    return null;
   }
 
   private AgentTooling() {}
-
-  private static class PoolStrategyHolder {
-    private static final AgentBuilder.PoolStrategy POOL_STRATEGY =
-        new AgentCachingPoolStrategy(locationStrategy(bootstrapProxy));
-  }
 }
