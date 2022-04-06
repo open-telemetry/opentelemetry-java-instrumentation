@@ -1,20 +1,15 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
-package io.opentelemetry.javaagent.instrumentation.guava;
+package io.opentelemetry.javaagent.instrumentation.methods;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import io.opentelemetry.extension.annotations.WithSpan;
 
-final class TracedWithSpan {
-  static final IllegalArgumentException FAILURE = new IllegalArgumentException("Boom");
+public abstract class AbstractWithTraceSpanTest<T, U> {
 
-  @WithSpan
-  SettableFuture<String> completable() {
+  protected static final IllegalArgumentException FAILURE = new IllegalArgumentException("Boom");
+
+  @WithSpa
+  protected abstract T completable() {
     return SettableFuture.create();
   }
 
