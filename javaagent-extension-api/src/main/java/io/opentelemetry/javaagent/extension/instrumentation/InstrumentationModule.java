@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.extension.instrumentation;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.Ordered;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -57,25 +57,31 @@ public abstract class InstrumentationModule implements Ordered {
    */
   protected InstrumentationModule(
       String mainInstrumentationName, String... additionalInstrumentationNames) {
-    this(toList(mainInstrumentationName, additionalInstrumentationNames));
+    LinkedHashSet<String> names = new LinkedHashSet<>(additionalInstrumentationNames.length + 1);
+    names.add(mainInstrumentationName);
+    names.addAll(asList(additionalInstrumentationNames));
+    this.instrumentationNames = unmodifiableSet(names);
   }
 
   /**
    * Creates an instrumentation module.
    *
    * @see #InstrumentationModule(String, String...)
+   * @deprecated Use {@link #InstrumentationModule(String, String...)} instead.
    */
+  @Deprecated
   protected InstrumentationModule(List<String> instrumentationNames) {
     if (instrumentationNames.isEmpty()) {
       throw new IllegalArgumentException("InstrumentationModules must be named");
     }
-    this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
+    this.instrumentationNames = unmodifiableSet(new LinkedHashSet<>(instrumentationNames));
   }
 
-  private static List<String> toList(String first, String[] rest) {
-    List<String> instrumentationNames = new ArrayList<>(rest.length + 1);
-    instrumentationNames.add(first);
-    instrumentationNames.addAll(asList(rest));
+  /**
+   * Returns all instrumentation names assigned to this module. See {@link
+   * #InstrumentationModule(String, String...)} for more details about instrumentation names.
+   */
+  public final Set<String> instrumentationNames() {
     return instrumentationNames;
   }
 
@@ -87,7 +93,12 @@ public abstract class InstrumentationModule implements Ordered {
     return instrumentationNames.iterator().next();
   }
 
-  /** Returns true if this instrumentation module should be installed. */
+  /**
+   * Returns true if this instrumentation module should be installed.
+   *
+   * @deprecated This method will be removed.
+   */
+  @Deprecated
   public final boolean isEnabled() {
     return Config.get().isInstrumentationEnabled(instrumentationNames, defaultEnabled());
   }
@@ -96,7 +107,7 @@ public abstract class InstrumentationModule implements Ordered {
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
    */
-  protected boolean defaultEnabled() {
+  public boolean defaultEnabled() {
     return DEFAULT_ENABLED;
   }
 

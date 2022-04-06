@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -78,8 +77,6 @@ class SupportabilityMetricsTest {
   }
 
   private static Config configWithJavaagentDebug(boolean enabled) {
-    return Config.builder()
-        .readProperties(Collections.singletonMap("otel.javaagent.debug", Boolean.toString(enabled)))
-        .build();
+    return Config.builder().addProperty("otel.javaagent.debug", Boolean.toString(enabled)).build();
   }
 }

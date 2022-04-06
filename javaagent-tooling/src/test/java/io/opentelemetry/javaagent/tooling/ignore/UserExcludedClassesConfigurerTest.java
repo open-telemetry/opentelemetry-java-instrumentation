@@ -38,7 +38,7 @@ class UserExcludedClassesConfigurerTest {
     // given
     Config config =
         Config.builder()
-            .readProperties(
+            .addProperties(
                 singletonMap(
                     EXCLUDED_CLASSES_CONFIG,
                     "com.example.IgnoredClass,com.example.ignored.*,com.another_ignore"))
