@@ -19,7 +19,7 @@ event's MDC copy:
   (same as `Span.current().getSpanContext().getTraceFlags().asHex()`).
 
 Those three pieces of information can be included in log statements produced by the logging library
-by specifying them in the pattern/format. 
+by specifying them in the pattern/format.
 
 Tip: for Spring Boot configuration which uses logback, you can add MDC to log lines by overriding only the `logging.pattern.level`:
 ```properties

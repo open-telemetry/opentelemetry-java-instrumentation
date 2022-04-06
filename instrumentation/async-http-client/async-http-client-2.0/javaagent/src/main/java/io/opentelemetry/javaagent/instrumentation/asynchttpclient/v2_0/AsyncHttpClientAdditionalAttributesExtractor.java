@@ -27,12 +27,13 @@ public class AsyncHttpClientAdditionalAttributesExtractor
       RequestContext requestContext,
       @Nullable Response response,
       @Nullable Throwable error) {
+
     NettyRequest nettyRequest = requestContext.getNettyRequest();
     if (nettyRequest != null) {
-      set(
-          attributes,
-          SemanticAttributes.HTTP_USER_AGENT,
-          nettyRequest.getHttpRequest().headers().get("User-Agent"));
+      String userAgent = nettyRequest.getHttpRequest().headers().get("User-Agent");
+      if (userAgent != null) {
+        attributes.put(SemanticAttributes.HTTP_USER_AGENT, userAgent);
+      }
     }
   }
 }

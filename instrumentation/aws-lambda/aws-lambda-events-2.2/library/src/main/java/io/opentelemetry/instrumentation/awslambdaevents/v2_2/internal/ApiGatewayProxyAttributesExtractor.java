@@ -32,17 +32,23 @@ final class ApiGatewayProxyAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, AwsLambdaRequest request) {
     if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
-      set(attributes, FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
+      attributes.put(FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
       onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
     }
   }
 
   void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
-    set(attributes, HTTP_METHOD, request.getHttpMethod());
+    attributes.put(HTTP_METHOD, request.getHttpMethod());
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
-    set(attributes, HTTP_USER_AGENT, headers.get("user-agent"));
-    set(attributes, HTTP_URL, getHttpUrl(request, headers));
+    String userAgent = headers.get("user-agent");
+    if (userAgent != null) {
+      attributes.put(HTTP_USER_AGENT, userAgent);
+    }
+    String httpUrl = getHttpUrl(request, headers);
+    if (httpUrl != null) {
+      attributes.put(HTTP_URL, httpUrl);
+    }
   }
 
   private static String getHttpUrl(

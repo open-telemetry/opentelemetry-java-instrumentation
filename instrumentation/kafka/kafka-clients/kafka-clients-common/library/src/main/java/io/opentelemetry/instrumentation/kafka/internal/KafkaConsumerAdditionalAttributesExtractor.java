@@ -21,12 +21,9 @@ public final class KafkaConsumerAdditionalAttributesExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ConsumerRecord<?, ?> consumerRecord) {
-    set(
-        attributes,
-        SemanticAttributes.MESSAGING_KAFKA_PARTITION,
-        (long) consumerRecord.partition());
+    attributes.put(SemanticAttributes.MESSAGING_KAFKA_PARTITION, (long) consumerRecord.partition());
     if (consumerRecord.value() == null) {
-      set(attributes, SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
     }
   }
 

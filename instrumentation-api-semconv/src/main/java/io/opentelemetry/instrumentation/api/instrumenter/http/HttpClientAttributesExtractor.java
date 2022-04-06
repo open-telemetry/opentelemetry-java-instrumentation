@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
@@ -53,7 +55,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
-    set(attributes, SemanticAttributes.HTTP_URL, getter.url(request));
+    internalSet(attributes, SemanticAttributes.HTTP_URL, getter.url(request));
   }
 
   @Override
@@ -64,7 +66,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     super.onEnd(attributes, context, request, response, error);
-    set(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request, response));
+    internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request, response));
   }
 
   /**

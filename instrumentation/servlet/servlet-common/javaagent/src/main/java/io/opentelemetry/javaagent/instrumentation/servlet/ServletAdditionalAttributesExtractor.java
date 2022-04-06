@@ -44,13 +44,16 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
     if (principal != null) {
-      set(attributes, SemanticAttributes.ENDUSER_ID, principal.getName());
+      String name = principal.getName();
+      if (name != null) {
+        attributes.put(SemanticAttributes.ENDUSER_ID, name);
+      }
     }
     if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       return;
     }
     if (responseContext != null && responseContext.hasTimeout()) {
-      set(attributes, SERVLET_TIMEOUT, responseContext.getTimeout());
+      attributes.put(SERVLET_TIMEOUT, responseContext.getTimeout());
     }
   }
 }
