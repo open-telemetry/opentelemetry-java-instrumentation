@@ -321,6 +321,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     protected TypePool.Resolution doResolve(String name) {
       TypePool.Resolution resolution = cacheProvider.find(name);
       if (resolution == null) {
+        // calling super.doDescribe that will locate the class bytes and parse them unlike
+        // doDescribe in this class that returns a lazy resolution without parsing the class bytes
         resolution = cacheProvider.register(name, super.doDescribe(name));
       }
       return resolution;
@@ -419,10 +421,11 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
             String superName = superClassDescription.getTypeName();
             Class<?> superClass = findLoadedClass(classLoader, superName);
             if (superClass != null) {
+              // here we use raw type and loose generic info
+              // we don't expect to have matchers that would use the generic info
               superClassDescription = newTypeDescription(superClass).asGenericType();
             }
           }
-          // using raw type
           cachedSuperClass = superClassDescription;
         }
         return cachedSuperClass;
@@ -436,12 +439,13 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
           TypeList.Generic interfaces = delegate().getInterfaces();
           ClassLoader classLoader = classLoaderRef.get();
           if (canUseFindLoadedClass() && classLoader != null && !interfaces.isEmpty()) {
+            // here we use raw types and loose generic info
+            // we don't expect to have matchers that would use the generic info
             List<TypeDescription> result = new ArrayList<>();
             for (Generic interfaceDescription : interfaces) {
               String interfaceName = interfaceDescription.getTypeName();
               Class<?> interfaceClass = findLoadedClass(classLoader, interfaceName);
               if (interfaceClass != null) {
-                // using raw type
                 result.add(newTypeDescription(interfaceClass));
               } else {
                 result.add(interfaceDescription.asErasure());
