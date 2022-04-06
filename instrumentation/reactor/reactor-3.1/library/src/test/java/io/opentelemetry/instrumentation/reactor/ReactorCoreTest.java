@@ -18,8 +18,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import reactor.core.Scannable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.UnicastProcessor;
 
 class ReactorCoreTest extends AbstractReactorCoreTest {
 
@@ -69,17 +71,16 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
 
   @Test
   void fluxInNonBlockingPublisherAssembly() {
+    Flux<Integer> source =
+        Flux.defer(
+            () -> {
+              Span.current().setAttribute("inner", "foo");
+              return Flux.just(5, 6);
+            });
     testing.runWithSpan(
         "parent",
         () ->
-            ContextPropagationOperator.ScalarPropagatingFlux.INSTANCE
-                .flatMap(
-                    unused ->
-                        Flux.defer(
-                            () -> {
-                              Span.current().setAttribute("inner", "foo");
-                              return Flux.just(5, 6);
-                            }))
+            ContextPropagationOperator.ScalarPropagatingFlux.create(source)
                 .doOnEach(
                     signal -> {
                       if (signal.isOnError()) {
@@ -199,9 +200,37 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("after").hasNoParent()));
   }
 
+  @Test
+  void monoParentsAccessible() {
+    UnicastProcessor<String> source = UnicastProcessor.create();
+    Mono<String> mono =
+        ContextPropagationOperator.runWithContext(source.singleOrEmpty(), Context.root());
+
+    source.onNext("foo");
+    source.onComplete();
+
+    assertThat(mono.block()).isEqualTo("foo");
+
+    assertThat(((Scannable) mono).parents().filter(UnicastProcessor.class::isInstance).findFirst())
+        .isPresent();
+  }
+
+  @Test
+  void fluxParentsAccessible() {
+    UnicastProcessor<String> source = UnicastProcessor.create();
+    Flux<String> mono = ContextPropagationOperator.runWithContext(source, Context.root());
+
+    source.onNext("foo");
+    source.onComplete();
+
+    assertThat(mono.collectList().block()).containsExactly("foo");
+
+    assertThat(((Scannable) mono).parents().filter(UnicastProcessor.class::isInstance).findFirst())
+        .isPresent();
+  }
+
   private <T> Mono<T> monoSpan(Mono<T> mono, String spanName) {
-    return ContextPropagationOperator.ScalarPropagatingMono.INSTANCE
-        .flatMap(unused -> mono)
+    return ContextPropagationOperator.ScalarPropagatingMono.create(mono)
         .doOnEach(
             signal -> {
               if (signal.isOnError()) {

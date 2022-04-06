@@ -25,8 +25,10 @@ package io.opentelemetry.instrumentation.reactor;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
@@ -38,6 +40,8 @@ import reactor.core.publisher.Operators;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
 public final class ContextPropagationOperator {
+
+  private static final Object VALUE = new Object();
 
   public static ContextPropagationOperator create() {
     return builder().build();
@@ -57,7 +61,7 @@ public final class ContextPropagationOperator {
         }
       };
 
-  private static volatile boolean enabled = false;
+  private static final AtomicBoolean enabled = new AtomicBoolean();
 
   /**
    * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
@@ -99,16 +103,19 @@ public final class ContextPropagationOperator {
    * application.
    */
   public void registerOnEachOperator() {
-    Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
-    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
-    enabled = true;
+    if (enabled.compareAndSet(false, true)) {
+      Hooks.onEachOperator(
+          TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
+      AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
+    }
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public void resetOnEachOperator() {
-    Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-    AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
-    enabled = false;
+    if (enabled.compareAndSet(true, false)) {
+      Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
+      AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
+    }
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
@@ -118,29 +125,27 @@ public final class ContextPropagationOperator {
 
   /** Forces Mono to run in traceContext scope. */
   public static <T> Mono<T> runWithContext(Mono<T> publisher, Context tracingContext) {
-    if (!enabled) {
+    if (!enabled.get()) {
       return publisher;
     }
 
     // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
     // (created for this publisher) and with current() span that refers to span created here
     // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
-    return ScalarPropagatingMono.INSTANCE
-        .flatMap(i -> publisher)
+    return ScalarPropagatingMono.create(publisher)
         .subscriberContext(ctx -> storeOpenTelemetryContext(ctx, tracingContext));
   }
 
   /** Forces Flux to run in traceContext scope. */
   public static <T> Flux<T> runWithContext(Flux<T> publisher, Context tracingContext) {
-    if (!enabled) {
+    if (!enabled.get()) {
       return publisher;
     }
 
     // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
     // (created for this publisher) and with current() span that refers to span created here
     // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
-    return ScalarPropagatingFlux.INSTANCE
-        .flatMap(i -> publisher)
+    return ScalarPropagatingFlux.create(publisher)
         .subscriberContext(ctx -> storeOpenTelemetryContext(ctx, tracingContext));
   }
 
@@ -177,29 +182,61 @@ public final class ContextPropagationOperator {
     }
   }
 
-  static class ScalarPropagatingMono extends Mono<Object> {
-    public static final Mono<Object> INSTANCE = new ScalarPropagatingMono();
+  static class ScalarPropagatingMono extends Mono<Object> implements Scannable {
 
-    private final Object value = new Object();
+    static <T> Mono<T> create(Mono<T> source) {
+      return new ScalarPropagatingMono(source).flatMap(unused -> source);
+    }
 
-    private ScalarPropagatingMono() {}
+    private final Mono<?> source;
+
+    private ScalarPropagatingMono(Mono<?> source) {
+      this.source = source;
+    }
 
     @Override
     public void subscribe(CoreSubscriber<? super Object> actual) {
-      subscribeInActiveSpan(actual, value);
+      subscribeInActiveSpan(actual, VALUE);
+    }
+
+    @Override
+    @Nullable
+    // Interface method doesn't have type parameter so we can't add it either.
+    @SuppressWarnings("rawtypes")
+    public Object scanUnsafe(Attr attr) {
+      if (attr == Attr.PARENT) {
+        return source;
+      }
+      return null;
     }
   }
 
-  static class ScalarPropagatingFlux extends Flux<Object> {
-    public static final Flux<Object> INSTANCE = new ScalarPropagatingFlux();
+  static class ScalarPropagatingFlux extends Flux<Object> implements Scannable {
 
-    private final Object value = new Object();
+    static <T> Flux<T> create(Flux<T> source) {
+      return new ScalarPropagatingFlux(source).flatMap(unused -> source);
+    }
 
-    private ScalarPropagatingFlux() {}
+    private final Flux<?> source;
+
+    private ScalarPropagatingFlux(Flux<?> source) {
+      this.source = source;
+    }
 
     @Override
     public void subscribe(CoreSubscriber<? super Object> actual) {
-      subscribeInActiveSpan(actual, value);
+      subscribeInActiveSpan(actual, VALUE);
+    }
+
+    @Override
+    @Nullable
+    // Interface method doesn't have type parameter so we can't add it either.
+    @SuppressWarnings("rawtypes")
+    public Object scanUnsafe(Scannable.Attr attr) {
+      if (attr == Scannable.Attr.PARENT) {
+        return source;
+      }
+      return null;
     }
   }
 }
