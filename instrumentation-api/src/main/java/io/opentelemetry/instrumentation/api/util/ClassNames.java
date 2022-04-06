@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.util;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 
 /** A utility class used to compute readable simple class names. */
 public final class ClassNames {

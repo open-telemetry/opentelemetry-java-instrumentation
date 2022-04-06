@@ -3,17 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.cache;
+package io.opentelemetry.instrumentation.api.internal.cache;
 
-import io.opentelemetry.instrumentation.api.cache.internal.weaklockfree.WeakConcurrentMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
-final class WeakLockFreeCache<K, V> implements Cache<K, V> {
+final class MapBackedCache<K, V> implements Cache<K, V> {
 
-  private final WeakConcurrentMap<K, V> delegate;
+  private final ConcurrentMap<K, V> delegate;
 
-  WeakLockFreeCache() {
-    this.delegate = new WeakConcurrentMap.WithInlinedExpunction<>();
+  MapBackedCache(ConcurrentMap<K, V> delegate) {
+    this.delegate = delegate;
   }
 
   @Override
@@ -21,9 +22,10 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
     return delegate.computeIfAbsent(key, mappingFunction);
   }
 
+  @Nullable
   @Override
   public V get(K key) {
-    return delegate.getIfPresent(key);
+    return delegate.get(key);
   }
 
   @Override
@@ -36,8 +38,8 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
     delegate.remove(key);
   }
 
-  // Visible for testing
+  // Visible for tests
   int size() {
-    return delegate.approximateSize();
+    return delegate.size();
   }
 }

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.annotation.support
 
 import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.cache.Cache
+import io.opentelemetry.instrumentation.api.internal.cache.Cache
 import spock.lang.Specification
 
 import java.lang.reflect.Method

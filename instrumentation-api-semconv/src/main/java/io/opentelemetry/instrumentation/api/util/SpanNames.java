@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.util;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
