@@ -49,7 +49,6 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
       REQUEST request,
       Object asyncValue,
       Class<RESPONSE> responseType) {
-    Thread.dumpStack();
 
     EndOnFirstNotificationConsumer notificationConsumer =
         new EndOnFirstNotificationConsumer(context) {
