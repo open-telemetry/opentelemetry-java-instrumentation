@@ -31,7 +31,7 @@ public final class JaxrsSingletons {
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .newInstrumenter();
   }
 

@@ -22,8 +22,8 @@ class RabbitReceiveExperimentalAttributesExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ReceiveRequest receiveRequest) {
-    set(attributes, RABBITMQ_COMMAND, "basic.get");
-    set(attributes, RABBITMQ_QUEUE, receiveRequest.getQueue());
+    attributes.put(RABBITMQ_COMMAND, "basic.get");
+    attributes.put(RABBITMQ_QUEUE, receiveRequest.getQueue());
   }
 
   @Override

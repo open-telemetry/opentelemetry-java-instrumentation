@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -29,7 +28,7 @@ public interface AgentListener extends Ordered {
    * <p>Execute only minimal code because any classes loaded before the agent installation will have
    * to be retransformed, which takes extra time, and more importantly means that fields can't be
    * added to those classes - which causes {@link VirtualField} to fall back to the less performant
-   * {@link Cache} implementation for those classes.
+   * cache-based implementation for those classes.
    */
   default void beforeAgent(
       Config config, AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {}

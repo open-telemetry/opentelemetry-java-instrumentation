@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
+import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -45,19 +47,19 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    set(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
+    internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
 
     String peerIp = getter.peerIp(request, response);
     String peerName = getter.peerName(request, response);
 
     if (peerName != null && !peerName.equals(peerIp)) {
-      set(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
+      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
     }
-    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
+    internalSet(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
 
     Integer peerPort = getter.peerPort(request, response);
     if (peerPort != null && peerPort > 0) {
-      set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+      internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
     }
   }
 }

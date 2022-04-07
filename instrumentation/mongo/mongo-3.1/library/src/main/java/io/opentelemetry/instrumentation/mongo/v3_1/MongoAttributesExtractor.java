@@ -21,7 +21,10 @@ class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEven
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, CommandStartedEvent event) {
-    set(attributes, DB_MONGODB_COLLECTION, collectionName(event));
+    String collectionName = collectionName(event);
+    if (collectionName != null) {
+      attributes.put(DB_MONGODB_COLLECTION, collectionName);
+    }
   }
 
   @Override

@@ -40,7 +40,7 @@ final class StatusCodeExtractor
         statusCode = response.getStatus();
       }
 
-      set(attributes, SemanticAttributes.HTTP_STATUS_CODE, statusCode);
+      attributes.put(SemanticAttributes.HTTP_STATUS_CODE, statusCode);
     }
   }
 }

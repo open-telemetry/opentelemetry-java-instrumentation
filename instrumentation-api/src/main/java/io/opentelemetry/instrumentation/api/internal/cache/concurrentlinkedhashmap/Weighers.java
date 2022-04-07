@@ -20,9 +20,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap;
-
-import static io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.ConcurrentLinkedHashMap.checkNotNull;
+package io.opentelemetry.instrumentation.api.internal.cache.concurrentlinkedhashmap;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -188,7 +186,7 @@ public final class Weighers {
     final Weigher<? super V> weigher;
 
     EntryWeigherView(Weigher<? super V> weigher) {
-      checkNotNull(weigher);
+      ConcurrentLinkedHashMap.checkNotNull(weigher);
       this.weigher = weigher;
     }
 

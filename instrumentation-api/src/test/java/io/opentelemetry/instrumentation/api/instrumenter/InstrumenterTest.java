@@ -519,6 +519,17 @@ class InstrumenterTest {
   }
 
   @Test
+  void shouldDisableInstrumenter() {
+    Instrumenter<String, String> instrumenter =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(), "test", request -> "test span")
+            .setEnabled(false)
+            .newInstrumenter();
+
+    assertThat(instrumenter.shouldStart(Context.root(), "request")).isFalse();
+  }
+
+  @Test
   void clientNestedSpansSuppressed_whenInstrumentationTypeDisabled() {
     // this test depends on default config option for InstrumentationType
 

@@ -35,6 +35,7 @@ public abstract class Config {
   @Nullable private static volatile Config instance = null;
 
   /** Start building a new {@link Config} instance. */
+  @SuppressWarnings("deprecation")
   public static ConfigBuilder builder() {
     return new ConfigBuilder();
   }
@@ -50,6 +51,9 @@ public abstract class Config {
    * Sets the agent configuration singleton. This method is only supposed to be called once, from
    * the agent classloader just before the first instrumentation is loaded (and before {@link
    * Config#get()} is used for the first time).
+   *
+   * <p>This method is internal and is hence not for public use. Its API is unstable and can change
+   * at any time.
    */
   public static void internalInitializeConfig(Config config) {
     if (instance != null) {
@@ -65,7 +69,7 @@ public abstract class Config {
       // this should only happen in library instrumentation
       //
       // no need to synchronize because worst case is creating instance more than once
-      instance = builder().readEnvironmentVariables().readSystemProperties().build();
+      instance = builder().addEnvironmentVariables().addSystemProperties().build();
     }
     return instance;
   }
@@ -186,11 +190,23 @@ public abstract class Config {
     return getAllProperties().getOrDefault(NamingConvention.DOT.normalize(name), defaultValue);
   }
 
+  /**
+   * Returns {@code true} when instrumentation is enabled.
+   *
+   * @deprecated This method will be removed.
+   */
+  @Deprecated
   public boolean isInstrumentationEnabled(
       Iterable<String> instrumentationNames, boolean defaultEnabled) {
     return isInstrumentationPropertyEnabled(instrumentationNames, "enabled", defaultEnabled);
   }
 
+  /**
+   * Returns {@code true} when instrumentation is enabled.
+   *
+   * @deprecated This method will be removed.
+   */
+  @Deprecated
   public boolean isInstrumentationPropertyEnabled(
       Iterable<String> instrumentationNames, String suffix, boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
@@ -209,6 +225,12 @@ public abstract class Config {
     return anyEnabled;
   }
 
+  /**
+   * Returns {@code true} when agent runs in debug mode.
+   *
+   * @deprecated This method will be removed.
+   */
+  @Deprecated
   public boolean isAgentDebugEnabled() {
     return getBoolean("otel.javaagent.debug", false);
   }

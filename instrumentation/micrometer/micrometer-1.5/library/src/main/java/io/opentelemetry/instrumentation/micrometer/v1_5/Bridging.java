@@ -12,7 +12,7 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 
 final class Bridging {
 

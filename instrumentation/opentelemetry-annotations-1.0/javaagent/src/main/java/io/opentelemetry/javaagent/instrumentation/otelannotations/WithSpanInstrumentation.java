@@ -117,8 +117,6 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Origin Method originMethod,
         @Advice.Local("otelMethod") Method method,
-        @Advice.Local("otelOperationEndSupport")
-            AsyncOperationEndSupport<Method, Object> operationEndSupport,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -132,16 +130,12 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       if (instrumenter.shouldStart(current, method)) {
         context = instrumenter.start(current, method);
         scope = context.makeCurrent();
-        operationEndSupport =
-            AsyncOperationEndSupport.create(instrumenter, Object.class, method.getReturnType());
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Local("otelMethod") Method method,
-        @Advice.Local("otelOperationEndSupport")
-            AsyncOperationEndSupport<Method, Object> operationEndSupport,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
@@ -150,6 +144,9 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
+
+      AsyncOperationEndSupport<Method, Object> operationEndSupport =
+          AsyncOperationEndSupport.create(instrumenter(), Object.class, method.getReturnType());
       returnValue = operationEndSupport.asyncEnd(context, method, returnValue, throwable);
     }
   }

@@ -14,7 +14,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -55,7 +54,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   @Nullable TimeExtractor<REQUEST, RESPONSE> timeExtractor = null;
-  boolean disabled = false;
+  boolean enabled = true;
 
   private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
 
@@ -127,7 +126,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and end. */
-  @UnstableApi
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
     requestListeners.add(factory.create(meter));
     return this;
@@ -159,9 +157,23 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
-    this.disabled = disabled;
+  /**
+   * Allows enabling/disabling the {@link Instrumenter} based on the {@code enabled} value passed as
+   * parameter. All instrumenters are enabled by default.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> setEnabled(boolean enabled) {
+    this.enabled = enabled;
     return this;
+  }
+
+  /**
+   * Allows to disable the {@link Instrumenter}.
+   *
+   * @deprecated Use {@link #setEnabled(boolean)} instead.
+   */
+  @Deprecated
+  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
+    return setEnabled(!disabled);
   }
 
   // visible for tests

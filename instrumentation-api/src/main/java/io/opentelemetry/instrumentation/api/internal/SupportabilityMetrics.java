@@ -36,7 +36,7 @@ public final class SupportabilityMetrics {
 
   // visible for testing
   SupportabilityMetrics(Config config, Consumer<String> reporter) {
-    agentDebugEnabled = config.isAgentDebugEnabled();
+    agentDebugEnabled = config.getBoolean("otel.javaagent.debug", false);
     this.reporter = reporter;
   }
 

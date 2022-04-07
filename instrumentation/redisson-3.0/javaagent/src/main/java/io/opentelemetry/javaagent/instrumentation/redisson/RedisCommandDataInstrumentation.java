@@ -34,7 +34,7 @@ public class RedisCommandDataInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$WrapPromiseAdvice");
     // since 3.16.8
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, named("java.util.concurrent.CompletableFuture"))),
+        isConstructor().and(takesArgument(0, CompletableFuture.class)),
         this.getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 

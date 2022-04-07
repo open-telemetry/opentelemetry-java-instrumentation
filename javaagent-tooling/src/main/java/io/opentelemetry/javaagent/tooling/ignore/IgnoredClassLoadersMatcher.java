@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling.ignore;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.PatchLogger;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import java.util.logging.Logger;

@@ -42,8 +42,8 @@ final class SpringWebfluxExperimentalAttributesExtractor
 
     // no response and no error means that the request has been cancelled
     if (response == null && error == null) {
-      set(attributes, SPRING_WEBFLUX_EVENT, "cancelled");
-      set(attributes, SPRING_WEBFLUX_MESSAGE, "The subscription was cancelled");
+      attributes.put(SPRING_WEBFLUX_EVENT, "cancelled");
+      attributes.put(SPRING_WEBFLUX_MESSAGE, "The subscription was cancelled");
     }
   }
 }

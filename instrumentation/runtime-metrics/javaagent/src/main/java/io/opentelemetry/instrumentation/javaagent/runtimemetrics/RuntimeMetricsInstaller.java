@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.runtimemetrics.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimemetrics.MemoryPools;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.util.Collections;
 
@@ -19,8 +20,9 @@ import java.util.Collections;
 public class RuntimeMetricsInstaller implements AgentListener {
   @Override
   public void afterAgent(Config config, AutoConfiguredOpenTelemetrySdk unused) {
-    if (config.isInstrumentationEnabled(
-        Collections.singleton("runtime-metrics"), /* defaultEnabled= */ true)) {
+    if (new AgentConfig(config)
+        .isInstrumentationEnabled(
+            Collections.singleton("runtime-metrics"), /* defaultEnabled= */ true)) {
       GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
       MemoryPools.registerObservers(GlobalOpenTelemetry.get());
     }

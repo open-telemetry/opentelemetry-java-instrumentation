@@ -29,7 +29,7 @@ public class GrizzlyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  protected boolean defaultEnabled() {
+  public boolean defaultEnabled() {
     return false;
   }
 }

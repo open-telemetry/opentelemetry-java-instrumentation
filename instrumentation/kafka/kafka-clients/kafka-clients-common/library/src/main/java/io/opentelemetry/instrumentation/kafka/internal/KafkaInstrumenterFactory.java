@@ -71,7 +71,7 @@ public final class KafkaInstrumenterFactory {
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .addAttributesExtractors(extractors)
         .setTimeExtractor(new KafkaConsumerTimeExtractor())
-        .setDisabled(!ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 

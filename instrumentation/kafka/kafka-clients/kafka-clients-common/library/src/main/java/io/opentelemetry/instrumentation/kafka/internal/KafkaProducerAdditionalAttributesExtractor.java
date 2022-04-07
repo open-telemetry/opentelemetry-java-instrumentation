@@ -23,10 +23,10 @@ public final class KafkaProducerAdditionalAttributesExtractor
       AttributesBuilder attributes, Context parentContext, ProducerRecord<?, ?> producerRecord) {
     Integer partition = producerRecord.partition();
     if (partition != null) {
-      set(attributes, SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition.longValue());
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition.longValue());
     }
     if (producerRecord.value() == null) {
-      set(attributes, SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
     }
   }
 

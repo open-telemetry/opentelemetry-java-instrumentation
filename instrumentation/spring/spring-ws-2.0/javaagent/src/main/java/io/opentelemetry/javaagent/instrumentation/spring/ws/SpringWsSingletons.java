@@ -25,7 +25,7 @@ public class SpringWsSingletons {
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .newInstrumenter();
   }
 
