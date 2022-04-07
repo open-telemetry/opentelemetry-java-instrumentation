@@ -5,6 +5,7 @@
 
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import javax.jms.Connection
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -36,6 +37,8 @@ class SpringTemplateJms2Test extends AgentInstrumentationSpecification {
   JmsTemplate template
   @Shared
   Session session
+  @Shared
+  Connection connection
 
   def setupSpec() {
     def tempDir = Files.createTempDir()
@@ -65,7 +68,7 @@ class SpringTemplateJms2Test extends AgentInstrumentationSpecification {
     def connectionFactory = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
       new TransportConfiguration(InVMConnectorFactory.name))
 
-    def connection = connectionFactory.createConnection()
+    connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
     session.run()
@@ -75,6 +78,8 @@ class SpringTemplateJms2Test extends AgentInstrumentationSpecification {
   }
 
   def cleanupSpec() {
+    session.close()
+    connection.close()
     server.stop()
   }
 
