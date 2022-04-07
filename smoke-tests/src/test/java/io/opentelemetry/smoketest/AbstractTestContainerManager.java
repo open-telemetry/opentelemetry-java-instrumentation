@@ -22,7 +22,7 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     // while modern JVMs understand linux container memory limits, they do not understand windows
     // container memory limits yet, so we need to explicitly set max heap in order to prevent the
     // JVM from taking too much memory and hitting the windows container memory limit
-    environment.put(jvmArgsEnvVarName, "-Xms2g -Xmx2g -javaagent:/" + TARGET_AGENT_FILENAME);
+    environment.put(jvmArgsEnvVarName, "-Xms1g -Xmx1g -javaagent:/" + TARGET_AGENT_FILENAME);
     environment.put("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1");
     environment.put("OTEL_BSP_SCHEDULE_DELAY", "10ms");
     environment.put("OTEL_METRIC_EXPORT_INTERVAL", "1000");
