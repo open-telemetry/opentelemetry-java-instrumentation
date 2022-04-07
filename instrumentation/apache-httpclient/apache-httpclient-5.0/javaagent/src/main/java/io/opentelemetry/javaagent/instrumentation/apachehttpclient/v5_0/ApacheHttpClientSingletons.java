@@ -13,13 +13,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
 public final class ApacheHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.0";
 
-  private static final Instrumenter<ClassicHttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
   static {
     ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
@@ -28,7 +28,7 @@ public final class ApacheHttpClientSingletons {
         new ApacheHttpClientNetAttributesGetter();
 
     INSTRUMENTER =
-        Instrumenter.<ClassicHttpRequest, HttpResponse>builder(
+        Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
@@ -40,7 +40,7 @@ public final class ApacheHttpClientSingletons {
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
-  public static Instrumenter<ClassicHttpRequest, HttpResponse> instrumenter() {
+  public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 

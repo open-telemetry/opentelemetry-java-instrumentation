@@ -11,28 +11,27 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
 final class ApacheHttpClientNetAttributesGetter
-    implements NetClientAttributesGetter<ClassicHttpRequest, HttpResponse> {
-
+    implements NetClientAttributesGetter<HttpRequest, HttpResponse> {
   private static final Logger logger =
       Logger.getLogger(ApacheHttpClientNetAttributesGetter.class.getName());
 
   @Override
-  public String transport(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public String transport(HttpRequest request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public String peerName(HttpRequest request, @Nullable HttpResponse response) {
     return request.getAuthority().getHostName();
   }
 
   @Override
-  public Integer peerPort(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(HttpRequest request, @Nullable HttpResponse response) {
     int port = request.getAuthority().getPort();
     if (port != -1) {
       return port;
@@ -54,7 +53,7 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerIp(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public String peerIp(HttpRequest request, @Nullable HttpResponse response) {
     return null;
   }
 }

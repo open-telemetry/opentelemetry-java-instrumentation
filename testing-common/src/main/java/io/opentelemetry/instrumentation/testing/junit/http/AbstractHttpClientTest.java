@@ -48,6 +48,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHttpClientTest<REQUEST> {
+  public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
+  public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
 
@@ -126,11 +128,11 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   /** Returns the connection timeout that should be used when setting up tested clients. */
   protected final Duration connectTimeout() {
-    return Duration.ofSeconds(5);
+    return CONNECTION_TIMEOUT;
   }
 
   protected final Duration readTimeout() {
-    return Duration.ofSeconds(2);
+    return READ_TIMEOUT;
   }
 
   private InstrumentationTestRunner testing;

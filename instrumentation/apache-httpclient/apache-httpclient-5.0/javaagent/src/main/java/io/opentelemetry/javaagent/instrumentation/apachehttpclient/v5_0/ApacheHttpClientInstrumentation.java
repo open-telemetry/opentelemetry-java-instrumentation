@@ -27,7 +27,7 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
-public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
+class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.hc.client5.http.classic.HttpClient");

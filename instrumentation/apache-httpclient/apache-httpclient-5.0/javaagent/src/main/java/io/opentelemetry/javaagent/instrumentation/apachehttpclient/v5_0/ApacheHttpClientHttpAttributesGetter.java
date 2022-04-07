@@ -13,25 +13,25 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 import org.apache.hc.core5.net.URIAuthority;
 
 final class ApacheHttpClientHttpAttributesGetter
-    implements HttpClientAttributesGetter<ClassicHttpRequest, HttpResponse> {
-
+    implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
   private static final Logger logger =
       Logger.getLogger(ApacheHttpClientHttpAttributesGetter.class.getName());
 
   @Override
-  public String method(ClassicHttpRequest request) {
+  public String method(HttpRequest request) {
     return request.getMethod();
   }
 
   @Override
-  public String url(ClassicHttpRequest request) {
+  public String url(HttpRequest request) {
     // similar to org.apache.hc.core5.http.message.BasicHttpRequest.getUri()
     // not calling getUri() to avoid unnecessary conversion
     StringBuilder url = new StringBuilder();
@@ -64,34 +64,34 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> requestHeader(ClassicHttpRequest request, String name) {
-    return headersToList(request.getHeaders(name));
+  public List<String> requestHeader(HttpRequest request, String name) {
+    return getHeader(request, name);
   }
 
   @Override
   @Nullable
-  public Long requestContentLength(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public Long requestContentLength(HttpRequest request, @Nullable HttpResponse response) {
     return null;
   }
 
   @Override
   @Nullable
   public Long requestContentLengthUncompressed(
-      ClassicHttpRequest request, @Nullable HttpResponse response) {
+      HttpRequest request, @Nullable HttpResponse response) {
     return null;
   }
 
   @Override
-  public Integer statusCode(ClassicHttpRequest request, HttpResponse response) {
+  public Integer statusCode(HttpRequest request, HttpResponse response) {
     return response.getCode();
   }
 
   @Override
   @Nullable
-  public String flavor(ClassicHttpRequest request, @Nullable HttpResponse response) {
-    ProtocolVersion protocolVersion = request.getVersion();
+  public String flavor(HttpRequest request, @Nullable HttpResponse response) {
+    ProtocolVersion protocolVersion = getVersion(request, response);
     if (protocolVersion == null) {
-      return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
+      return null;
     }
     String protocol = protocolVersion.getProtocol();
     if (!protocol.equals("HTTP")) {
@@ -114,20 +114,31 @@ final class ApacheHttpClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public Long responseContentLength(ClassicHttpRequest request, HttpResponse response) {
+  public Long responseContentLength(HttpRequest request, HttpResponse response) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long responseContentLengthUncompressed(ClassicHttpRequest request, HttpResponse response) {
+  public Long responseContentLengthUncompressed(HttpRequest request, HttpResponse response) {
     return null;
   }
 
   @Override
-  public List<String> responseHeader(
-      ClassicHttpRequest request, HttpResponse response, String name) {
-    return headersToList(response.getHeaders(name));
+  public List<String> responseHeader(HttpRequest request, HttpResponse response, String name) {
+    return getHeader(response, name);
+  }
+
+  private static ProtocolVersion getVersion(HttpRequest request, @Nullable HttpResponse response) {
+    ProtocolVersion protocolVersion = request.getVersion();
+    if (protocolVersion == null && response != null) {
+      protocolVersion = response.getVersion();
+    }
+    return protocolVersion;
+  }
+
+  private static List<String> getHeader(MessageHeaders messageHeaders, String name) {
+    return headersToList(messageHeaders.getHeaders(name));
   }
 
   // minimize memory overhead by not using streams
@@ -136,8 +147,8 @@ final class ApacheHttpClientHttpAttributesGetter
       return Collections.emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
-    for (int i = 0; i < headers.length; ++i) {
-      headersList.add(headers[i].getValue());
+    for (Header header : headers) {
+      headersList.add(header.getValue());
     }
     return headersList;
   }
