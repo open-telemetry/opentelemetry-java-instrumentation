@@ -1,8 +1,11 @@
 package io.opentelemetry.javaagent.instrumentation.reactor;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractTraced;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
+import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
@@ -46,6 +49,76 @@ class MonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, Mono<String>> 
   @Override
   protected String canceledKey() {
     return "reactor.canceled";
+  }
+
+  @Test
+  void nested() {
+    Mono<String> mono =
+        Mono.defer(
+            () -> {
+              testing().runWithSpan("inner-manual", () -> {});
+              return Mono.just("Value");
+            });
+
+    Mono<String> result = new TracedWithSpan().outer(mono);
+
+    StepVerifier.create(result).expectNext("Value").verifyComplete();
+
+    testing().waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.outer")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("TracedWithSpan.mono")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("inner-manual")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributes(Attributes.empty())));
+  }
+
+  @Test
+  void nestedFromCurrent() {
+    testing().runWithSpan(
+        "parent",
+        () -> {
+          Mono<String> result =
+              new TracedWithSpan()
+                  .mono(
+                      Mono.defer(
+                          () -> {
+                            testing().runWithSpan("inner-manual", () -> {});
+                            return Mono.just("Value");
+                          }));
+
+          StepVerifier.create(result).expectNext("Value").verifyComplete();
+        });
+
+    testing().waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("TracedWithSpan.mono")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("inner-manual")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributes(Attributes.empty())));
   }
 
   // Because we test on the Mono API but need to be able to complete the processor, we
