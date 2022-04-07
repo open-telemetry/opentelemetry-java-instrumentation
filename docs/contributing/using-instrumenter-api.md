@@ -131,10 +131,10 @@ the `Instrumenter`. You can do this in two ways:
 
     ```properties
     # META-INF/io/opentelemetry/instrumentation/my-instrumentation.properties
-    version = 1.2.3
+    version=1.2.3
     ```
 
-  The `Instrumenter` automatically detects the properties file and determine the instrumentation
+  The `Instrumenter` automatically detects the properties file and determines the instrumentation
   version based on its name.
 
 If the `Instrumenter` adheres to a specific OpenTelemetry schema, you can set the schema URL using
