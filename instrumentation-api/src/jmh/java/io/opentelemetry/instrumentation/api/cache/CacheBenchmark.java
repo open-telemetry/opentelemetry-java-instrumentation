@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.cache;
 
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;

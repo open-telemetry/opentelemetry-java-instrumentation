@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 

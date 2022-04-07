@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
-import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 
@@ -34,7 +33,6 @@ public final class RpcClientAttributesExtractor<REQUEST, RESPONSE>
    * This method is internal and is hence not for public use. Its API is unstable and can change at
    * any time.
    */
-  @UnstableApi
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.RPC_CLIENT;

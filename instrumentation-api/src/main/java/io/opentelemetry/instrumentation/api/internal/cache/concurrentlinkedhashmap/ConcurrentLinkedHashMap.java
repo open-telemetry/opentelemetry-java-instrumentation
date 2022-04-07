@@ -20,11 +20,11 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap;
+package io.opentelemetry.instrumentation.api.internal.cache.concurrentlinkedhashmap;
 
-import static io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.ConcurrentLinkedHashMap.DrainStatus.IDLE;
-import static io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.ConcurrentLinkedHashMap.DrainStatus.PROCESSING;
-import static io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.ConcurrentLinkedHashMap.DrainStatus.REQUIRED;
+import static io.opentelemetry.instrumentation.api.internal.cache.concurrentlinkedhashmap.ConcurrentLinkedHashMap.DrainStatus.IDLE;
+import static io.opentelemetry.instrumentation.api.internal.cache.concurrentlinkedhashmap.ConcurrentLinkedHashMap.DrainStatus.PROCESSING;
+import static io.opentelemetry.instrumentation.api.internal.cache.concurrentlinkedhashmap.ConcurrentLinkedHashMap.DrainStatus.REQUIRED;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;

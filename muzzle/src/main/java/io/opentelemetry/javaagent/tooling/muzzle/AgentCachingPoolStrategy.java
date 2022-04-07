@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;

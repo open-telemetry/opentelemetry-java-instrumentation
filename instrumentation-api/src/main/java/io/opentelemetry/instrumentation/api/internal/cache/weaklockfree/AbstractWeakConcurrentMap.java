@@ -23,7 +23,7 @@
 // Suppress warnings since this is vendored as-is.
 // CHECKSTYLE:OFF
 
-package io.opentelemetry.instrumentation.api.cache.internal.weaklockfree;
+package io.opentelemetry.instrumentation.api.internal.cache.weaklockfree;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
