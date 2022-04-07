@@ -5,7 +5,9 @@
 
 package io.opentelemetry.smoketest
 
+import com.sun.management.OperatingSystemMXBean
 import io.opentelemetry.proto.trace.v1.Span
+import java.lang.management.ManagementFactory
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -86,6 +88,8 @@ abstract class AppServerTest extends SmokeTest {
 
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
+    dumpMemoryStats()
+
     when:
     def response = client().get("/app/greeting").aggregate().join()
     TraceInspector traces = new TraceInspector(waitForTraces())
@@ -123,6 +127,8 @@ abstract class AppServerTest extends SmokeTest {
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 3
 
+    dumpMemoryStats()
+
     where:
     [appServer, jdk, isWindows] << getTestParams()
   }
@@ -130,6 +136,8 @@ abstract class AppServerTest extends SmokeTest {
   @Unroll
   def "#appServer test static file found on JDK #jdk"(String appServer, String jdk, boolean isWindows) {
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+
+    dumpMemoryStats()
 
     when:
     def response = client().get("/app/hello.txt").aggregate().join()
@@ -158,6 +166,8 @@ abstract class AppServerTest extends SmokeTest {
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 1
 
+    dumpMemoryStats()
+
     where:
     [appServer, jdk, isWindows] << getTestParams()
   }
@@ -165,6 +175,8 @@ abstract class AppServerTest extends SmokeTest {
   @Unroll
   def "#appServer test static file not found on JDK #jdk"(String appServer, String jdk, boolean isWindows) {
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+
+    dumpMemoryStats()
 
     when:
     def response = client().get("/app/file-that-does-not-exist").aggregate().join()
@@ -192,6 +204,8 @@ abstract class AppServerTest extends SmokeTest {
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
 
+    dumpMemoryStats()
+
     where:
     [appServer, jdk, isWindows] << getTestParams()
   }
@@ -201,6 +215,8 @@ abstract class AppServerTest extends SmokeTest {
     assumeTrue(testRequestWebInfWebXml())
 
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+
+    dumpMemoryStats()
 
     when:
     def response = client().get("/app/WEB-INF/web.xml").aggregate().join()
@@ -231,6 +247,8 @@ abstract class AppServerTest extends SmokeTest {
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
 
+    dumpMemoryStats()
+
     where:
     [appServer, jdk, isWindows] << getTestParams()
   }
@@ -240,6 +258,8 @@ abstract class AppServerTest extends SmokeTest {
     assumeTrue(testException())
 
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+
+    dumpMemoryStats()
 
     when:
     def response = client().get("/app/exception").aggregate().join()
@@ -270,6 +290,8 @@ abstract class AppServerTest extends SmokeTest {
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 1
 
+    dumpMemoryStats()
+
     where:
     [appServer, jdk, isWindows] << getTestParams()
   }
@@ -278,6 +300,8 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer test request outside deployed application JDK #jdk"(String appServer, String jdk, boolean isWindows) {
     assumeTrue(testRequestOutsideDeployedApp())
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+
+    dumpMemoryStats()
 
     when:
     def response = client().get("/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless").aggregate().join()
@@ -308,6 +332,8 @@ abstract class AppServerTest extends SmokeTest {
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
 
+    dumpMemoryStats()
+
     where:
     [appServer, jdk, isWindows] << getTestParams()
   }
@@ -317,6 +343,8 @@ abstract class AppServerTest extends SmokeTest {
     assumeTrue(testAsyncSmoke())
 
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+
+    dumpMemoryStats()
 
     when:
     def response = client().get("/app/asyncgreeting").aggregate().join()
@@ -355,8 +383,19 @@ abstract class AppServerTest extends SmokeTest {
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 3
 
+    dumpMemoryStats()
     where:
     [appServer, jdk, isWindows] << getTestParams()
+  }
+
+  void dumpMemoryStats() {
+    OperatingSystemMXBean os = ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean())
+    System.err.println("---------------------")
+    System.err.println("totalPhysicalMemorySize " + os.totalPhysicalMemorySize)
+    System.err.println("freePhysicalMemorySize " + os.freePhysicalMemorySize)
+    System.err.println("totalSwapSpaceSize " + os.totalSwapSpaceSize)
+    System.err.println("freeSwapSpaceSize " + os.freeSwapSpaceSize)
+    System.err.println("committedVirtualMemorySize " + os.committedVirtualMemorySize)
   }
 
   protected String getSpanName(String path) {
