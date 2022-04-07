@@ -14,7 +14,6 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +24,6 @@ import java.util.logging.Logger;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-server">RPC
  * server metrics</a>.
  */
-@UnstableApi
 public final class RpcServerMetrics implements RequestListener {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
@@ -51,7 +49,6 @@ public final class RpcServerMetrics implements RequestListener {
    * RpcServerMetrics} on an {@link
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
-  @UnstableApi
   public static RequestMetrics get() {
     return RpcServerMetrics::new;
   }

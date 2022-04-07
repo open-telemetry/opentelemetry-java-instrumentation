@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -96,7 +95,6 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * This method is internal and is hence not for public use. Its API is unstable and can change at
    * any time.
    */
-  @UnstableApi
   @Override
   public SpanKey internalGetSpanKey() {
     switch (operation) {

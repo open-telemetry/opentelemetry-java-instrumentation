@@ -14,7 +14,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -127,7 +126,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and end. */
-  @UnstableApi
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
     requestListeners.add(factory.create(meter));
     return this;
