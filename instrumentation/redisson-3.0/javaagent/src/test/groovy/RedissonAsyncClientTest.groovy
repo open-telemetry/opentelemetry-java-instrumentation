@@ -89,7 +89,9 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     RFuture<Boolean> result = runWithSpan("parent") {
       RFuture<Boolean> result = rSet.addAsync("s1")
       result.whenComplete({ res, throwable ->
-        assert Span.current().getSpanContext().isValid(): "Callback should have a parent span."
+        if (!Span.current().getSpanContext().isValid()) {
+          new Exception("Callback should have a parent span.").printStackTrace()
+        }
         runWithSpan("callback") {
         }
       })
