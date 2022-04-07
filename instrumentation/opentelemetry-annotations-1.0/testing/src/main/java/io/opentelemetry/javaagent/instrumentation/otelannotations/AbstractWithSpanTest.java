@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
@@ -89,7 +94,8 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
 
   @Test
   void immediateSuccess() {
-    assertThat(getCompleted(newTraced().alreadySucceeded())).isEqualTo(AbstractTraced.SUCCESS_VALUE);
+    assertThat(getCompleted(newTraced().alreadySucceeded()))
+        .isEqualTo(AbstractTraced.SUCCESS_VALUE);
 
     testing.waitAndAssertTraces(
         trace ->

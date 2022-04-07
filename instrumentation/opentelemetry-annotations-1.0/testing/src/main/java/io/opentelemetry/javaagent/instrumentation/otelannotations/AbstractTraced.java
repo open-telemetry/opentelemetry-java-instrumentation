@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 public abstract class AbstractTraced<T extends U, U> {
@@ -8,8 +13,7 @@ public abstract class AbstractTraced<T extends U, U> {
 
   protected AbstractTraced() {
     if (!getClass().getSimpleName().equals("Traced")) {
-      throw new IllegalStateException(
-          "Subclasses of AbstractTraced must be named Traced");
+      throw new IllegalStateException("Subclasses of AbstractTraced must be named Traced");
     }
   }
 

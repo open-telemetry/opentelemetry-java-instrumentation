@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.reactor;
 
 import io.opentelemetry.api.common.Attributes;
@@ -64,68 +69,72 @@ class MonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, Mono<String>> 
 
     StepVerifier.create(result).expectNext("Value").verifyComplete();
 
-    testing().waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("TracedWithSpan.outer")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
-                span ->
-                    span.hasName("TracedWithSpan.mono")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributes(Attributes.empty()),
-                span ->
-                    span.hasName("inner-manual")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributes(Attributes.empty())));
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("TracedWithSpan.outer")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasNoParent()
+                            .hasAttributes(Attributes.empty()),
+                    span ->
+                        span.hasName("TracedWithSpan.mono")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributes(Attributes.empty()),
+                    span ->
+                        span.hasName("inner-manual")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttributes(Attributes.empty())));
   }
 
   @Test
   void nestedFromCurrent() {
-    testing().runWithSpan(
-        "parent",
-        () -> {
-          Mono<String> result =
-              new TracedWithSpan()
-                  .mono(
-                      Mono.defer(
-                          () -> {
-                            testing().runWithSpan("inner-manual", () -> {});
-                            return Mono.just("Value");
-                          }));
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> {
+              Mono<String> result =
+                  new TracedWithSpan()
+                      .mono(
+                          Mono.defer(
+                              () -> {
+                                testing().runWithSpan("inner-manual", () -> {});
+                                return Mono.just("Value");
+                              }));
 
-          StepVerifier.create(result).expectNext("Value").verifyComplete();
-        });
+              StepVerifier.create(result).expectNext("Value").verifyComplete();
+            });
 
-    testing().waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
-                span ->
-                    span.hasName("TracedWithSpan.mono")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributes(Attributes.empty()),
-                span ->
-                    span.hasName("inner-manual")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributes(Attributes.empty())));
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("parent")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasNoParent()
+                            .hasAttributes(Attributes.empty()),
+                    span ->
+                        span.hasName("TracedWithSpan.mono")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributes(Attributes.empty()),
+                    span ->
+                        span.hasName("inner-manual")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttributes(Attributes.empty())));
   }
 
   // Because we test on the Mono API but need to be able to complete the processor, we
   // use this hacky approach to access the processor from the mono ancestor.
   @SuppressWarnings("unchecked")
   private static UnicastProcessor<String> processor(Mono<String> mono) {
-    return ((Scannable) mono).parents()
+    return ((Scannable) mono)
+        .parents()
         .filter(UnicastProcessor.class::isInstance)
         .map(UnicastProcessor.class::cast)
         .findFirst()

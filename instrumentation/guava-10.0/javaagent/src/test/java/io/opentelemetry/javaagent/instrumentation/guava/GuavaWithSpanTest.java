@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.guava;
 
 import com.google.common.util.concurrent.Futures;
@@ -8,7 +13,8 @@ import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractTraced
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
 import org.testcontainers.shaded.com.google.common.base.Throwables;
 
-class GuavaWithSpanTest extends AbstractWithSpanTest<SettableFuture<String>, ListenableFuture<String>> {
+class GuavaWithSpanTest
+    extends AbstractWithSpanTest<SettableFuture<String>, ListenableFuture<String>> {
 
   @Override
   protected AbstractTraced<SettableFuture<String>, ListenableFuture<String>> newTraced() {
@@ -45,7 +51,8 @@ class GuavaWithSpanTest extends AbstractWithSpanTest<SettableFuture<String>, Lis
     return "guava.canceled";
   }
 
-  static final class Traced extends AbstractTraced<SettableFuture<String>, ListenableFuture<String>> {
+  static final class Traced
+      extends AbstractTraced<SettableFuture<String>, ListenableFuture<String>> {
 
     @Override
     @WithSpan

@@ -19,7 +19,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HooksInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("reactor.core.publisher.Hooks");
+    return named("reactor.core.publisher.Hooks")
+        // Hooks may not be loaded early enough so also match our main targets
+        .or(named("reactor.core.publisher.Flux").or(named("reactor.core.publisher.Mono")));
   }
 
   @Override
