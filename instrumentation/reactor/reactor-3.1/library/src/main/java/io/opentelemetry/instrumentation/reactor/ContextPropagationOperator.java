@@ -117,6 +117,7 @@ public final class ContextPropagationOperator {
     }
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
     AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
+    enabled = false;
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
