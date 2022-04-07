@@ -103,7 +103,7 @@ public final class ContextPropagationOperator {
    * reactive stream. This should generally be called in a static initializer block in your
    * application.
    */
-  void registerOnEachOperator() {
+  public void registerOnEachOperator() {
     synchronized (lock) {
       if (enabled) {
         return;
