@@ -122,18 +122,18 @@ Make sure you always provide the instrumentation library version to the `Instrum
 this in two ways:
 
 * By calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`.
-* By making sure the JAR with your instrumentation library contains a properties file with the
-  version. The file must be located in the `META-INF/io/opentelemetry/instrumentation/` directory,
-  and it must be named `${instrumentationName}.properties`, where `${instrumentationName}` is the
-  name of the instrumentation library that is passed to the `Instrumenter#builder()` method. The
-  file must contain a single property `version`, e.g.:
+* By making sure that the JAR file with your instrumentation library contains a properties file in
+   the `META-INF/io/opentelemetry/instrumentation/` directory. You must name the file 
+   `${instrumentationName}.properties`, where `${instrumentationName}` is the
+   name of the instrumentation library passed to the `Instrumenter#builder()` method. The
+   file must contain a single property, `version`. For example:
 
     ```properties
     # META-INF/io/opentelemetry/instrumentation/my-instrumentation.properties
     version = 1.2.3
     ```
 
-  The `Instrumenter` will automatically detect these properties files and determine the
+  The `Instrumenter` automatically detects the properties file and determine the
   instrumentation version based on its name.
 
 By setting the version, you let users identify which version of your instrumentation produced the
