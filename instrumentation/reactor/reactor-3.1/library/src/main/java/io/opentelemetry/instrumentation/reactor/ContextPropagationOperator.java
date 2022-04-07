@@ -60,6 +60,8 @@ public final class ContextPropagationOperator {
         }
       };
 
+  private static final Object lock = new Object();
+
   private static volatile boolean enabled = false;
 
   /**
@@ -101,23 +103,28 @@ public final class ContextPropagationOperator {
    * reactive stream. This should generally be called in a static initializer block in your
    * application.
    */
-  public synchronized void registerOnEachOperator() {
-    if (enabled) {
-      return;
+  public void registerOnEachOperator() {
+    synchronized (lock) {
+      if (enabled) {
+        return;
+      }
+      Hooks.onEachOperator(
+          TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
+      AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
+      enabled = true;
     }
-    Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
-    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
-    enabled = true;
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
-  public synchronized void resetOnEachOperator() {
-    if (!enabled) {
-      return;
+  public void resetOnEachOperator() {
+    synchronized (lock) {
+      if (!enabled) {
+        return;
+      }
+      Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
+      AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
+      enabled = false;
     }
-    Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-    AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
-    enabled = false;
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
