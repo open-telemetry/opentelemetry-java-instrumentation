@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.bootstrap;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.Arrays;
 
 /** Helper class for detecting whether given class has virtual fields. */

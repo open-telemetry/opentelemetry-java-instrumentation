@@ -3,13 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.cache;
+package io.opentelemetry.instrumentation.api.internal.cache;
 
-import io.opentelemetry.instrumentation.api.cache.internal.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import io.opentelemetry.instrumentation.api.internal.cache.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-/** A cache from keys to values. */
+/**
+ * A cache from keys to values.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public interface Cache<K, V> {
 
   /**

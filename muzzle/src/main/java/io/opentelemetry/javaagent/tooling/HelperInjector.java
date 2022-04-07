@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;

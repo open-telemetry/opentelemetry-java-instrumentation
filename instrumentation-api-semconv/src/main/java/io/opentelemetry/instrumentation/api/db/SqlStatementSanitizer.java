@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.api.db.StatementSanitizationConfi
 import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_STATEMENT_SANITIZER_CACHE_MISS;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.cache.Cache;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import javax.annotation.Nullable;
 
 /**
