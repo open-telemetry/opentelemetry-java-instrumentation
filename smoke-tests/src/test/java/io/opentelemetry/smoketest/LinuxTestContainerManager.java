@@ -88,6 +88,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
         new GenericContainer<>(DockerImageName.parse(targetImageName))
             .withStartupTimeout(Duration.ofMinutes(5))
             .withExposedPorts(ports.toArray(new Integer[0]))
+            .withEnv("JAVA_TOOL_OPTIONS", "-Xmx128m")
             .withNetwork(network)
             .withLogConsumer(output)
             .withLogConsumer(new Slf4jLogConsumer(appLogger))
