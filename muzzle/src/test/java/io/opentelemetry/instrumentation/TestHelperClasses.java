@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class TestHelperClasses {
   public static class Helper extends HelperSuperClass implements HelperInterface {

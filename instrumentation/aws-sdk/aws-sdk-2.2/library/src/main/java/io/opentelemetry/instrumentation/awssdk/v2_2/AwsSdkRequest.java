@@ -23,7 +23,8 @@ import software.amazon.awssdk.core.SdkRequest;
  * SDK automatically
  * (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2291).
  */
-// We match the actual name in the AWS SDK for better consistency with it and possible future autogeneration.
+// We match the actual name in the AWS SDK for better consistency with it and possible future
+// autogeneration.
 @SuppressWarnings("MemberName")
 enum AwsSdkRequest {
   // generic requests
