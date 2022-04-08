@@ -43,7 +43,7 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("ms")
-                            .hasDoubleGauge()
+                            .hasLongGauge()
                             .points()
                             .anySatisfy(point -> assertThat(point.getValue()).isPositive())));
   }
