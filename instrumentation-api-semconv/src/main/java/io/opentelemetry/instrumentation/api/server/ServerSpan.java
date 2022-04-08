@@ -23,7 +23,13 @@ public final class ServerSpan {
    */
   @Nullable
   public static Span fromContextOrNull(Context context) {
-    return SpanKey.SERVER.fromContextOrNull(context);
+    // try the HTTP semconv span first
+    Span span = SpanKey.HTTP_SERVER.fromContextOrNull(context);
+    // if it's absent then try the SERVER one - perhaps suppression by span kind is enabled
+    if (span == null) {
+      span = SpanKey.KIND_SERVER.fromContextOrNull(context);
+    }
+    return span;
   }
 
   private ServerSpan() {}

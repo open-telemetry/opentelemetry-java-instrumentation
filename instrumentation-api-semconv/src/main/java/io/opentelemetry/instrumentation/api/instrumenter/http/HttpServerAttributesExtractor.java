@@ -13,6 +13,8 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.function.Function;
@@ -29,7 +31,8 @@ import javax.annotation.Nullable;
  */
 public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
-        REQUEST, RESPONSE, HttpServerAttributesGetter<REQUEST, RESPONSE>> {
+        REQUEST, RESPONSE, HttpServerAttributesGetter<REQUEST, RESPONSE>>
+    implements SpanKeyProvider {
 
   /** Creates the HTTP server attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
@@ -135,5 +138,14 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     return null;
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @Override
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.HTTP_SERVER;
   }
 }

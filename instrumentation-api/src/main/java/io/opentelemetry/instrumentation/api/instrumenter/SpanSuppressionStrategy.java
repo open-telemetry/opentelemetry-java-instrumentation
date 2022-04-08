@@ -7,53 +7,89 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static java.util.Collections.singleton;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.BySpanKey;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.DelegateBySpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.JustStoreServer;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.Noop;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import java.util.EnumMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
-abstract class SpanSuppressionStrategy {
-  private static final SpanSuppressionStrategy SERVER_STRATEGY =
-      new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.SERVER));
-  private static final SpanSuppressionStrategy ALL_CLIENTS_STRATEGY =
-      new SuppressIfSameSpanKeyStrategy(singleton(SpanKey.ALL_CLIENTS));
+enum SpanSuppressionStrategy {
+  /**
+   * Do not suppress spans at all.
+   *
+   * <p>This strategy will mark spans of {@link SpanKind#SERVER SERVER} kind in the context, so that
+   * they can be accessed using {@code ServerSpan}, but will not suppress server spans.
+   */
+  NONE {
+    @Override
+    SpanSuppressor create(Set<SpanKey> spanKeys) {
+      return JustStoreServer.INSTANCE;
+    }
+  },
+  /**
+   * Suppress spans by {@link SpanKind}. This is equivalent to the "legacy" suppression strategy
+   * used in the agent.
+   *
+   * <p>Child spans of the same kind will be suppressed; e.g. if there already is a {@link
+   * SpanKind#CLIENT CLIENT} span in the context, a second {@code CLIENT} span won't be started.
+   */
+  SPAN_KIND {
+    @SuppressWarnings("ImmutableEnumChecker") // this field actually is immutable
+    private final SpanSuppressor strategy;
 
-  private static final SpanSuppressionStrategy SUPPRESS_GENERIC_CLIENTS_AND_SERVERS =
-      new CompositeSuppressionStrategy(
-          ALL_CLIENTS_STRATEGY,
-          NoopSuppressionStrategy.INSTANCE,
-          SERVER_STRATEGY,
-          NoopSuppressionStrategy.INSTANCE);
-
-  private static final SpanSuppressionStrategy SUPPRESS_ONLY_SERVERS =
-      new CompositeSuppressionStrategy(
-          NoopSuppressionStrategy.INSTANCE,
-          NoopSuppressionStrategy.INSTANCE,
-          SERVER_STRATEGY,
-          NoopSuppressionStrategy.INSTANCE);
-
-  static SpanSuppressionStrategy suppressNestedClients(Set<SpanKey> spanKeys) {
-    if (spanKeys.isEmpty()) {
-      return SUPPRESS_GENERIC_CLIENTS_AND_SERVERS;
+    {
+      Map<SpanKind, SpanSuppressor> delegates = new EnumMap<>(SpanKind.class);
+      delegates.put(SpanKind.SERVER, new BySpanKey(singleton(SpanKey.KIND_SERVER)));
+      delegates.put(SpanKind.CLIENT, new BySpanKey(singleton(SpanKey.KIND_CLIENT)));
+      delegates.put(SpanKind.CONSUMER, new BySpanKey(singleton(SpanKey.KIND_CONSUMER)));
+      delegates.put(SpanKind.PRODUCER, new BySpanKey(singleton(SpanKey.KIND_PRODUCER)));
+      strategy = new DelegateBySpanKind(delegates);
     }
 
-    SpanSuppressionStrategy spanKeyStrategy = new SuppressIfSameSpanKeyStrategy(spanKeys);
-    return new CompositeSuppressionStrategy(
-        ALL_CLIENTS_STRATEGY, spanKeyStrategy, SERVER_STRATEGY, spanKeyStrategy);
-  }
-
-  static SpanSuppressionStrategy from(Set<SpanKey> spanKeys) {
-    if (spanKeys.isEmpty()) {
-      return SUPPRESS_ONLY_SERVERS;
+    @Override
+    SpanSuppressor create(Set<SpanKey> spanKeys) {
+      return strategy;
     }
+  },
+  /**
+   * Suppress spans by the semantic convention they're supposed to represent. This strategy uses
+   * {@linkplain SpanKey span keys} returned by the {@link SpanKeyProvider#internalGetSpanKey()}
+   * method to determine if the span can be created or not. An {@link AttributesExtractor} can
+   * implement that method to associate itself (and the {@link Instrumenter} it is a part of) with a
+   * particular convention.
+   *
+   * <p>For example, nested HTTP client spans will be suppressed; but an RPC client span will not
+   * suppress an HTTP client span, if the instrumented RPC client uses HTTP as transport.
+   */
+  SEMCONV {
+    @Override
+    SpanSuppressor create(Set<SpanKey> spanKeys) {
+      if (spanKeys.isEmpty()) {
+        return Noop.INSTANCE;
+      }
+      return new BySpanKey(spanKeys);
+    }
+  };
 
-    SpanSuppressionStrategy spanKeyStrategy = new SuppressIfSameSpanKeyStrategy(spanKeys);
-    return new CompositeSuppressionStrategy(
-        spanKeyStrategy, spanKeyStrategy, SERVER_STRATEGY, spanKeyStrategy);
+  abstract SpanSuppressor create(Set<SpanKey> spanKeys);
+
+  static SpanSuppressionStrategy fromConfig(Config config) {
+    String value =
+        config.getString("otel.instrumentation.experimental.span-suppression-strategy", "semconv");
+    switch (value.toLowerCase(Locale.ROOT)) {
+      case "none":
+        return NONE;
+      case "span-kind":
+        return SPAN_KIND;
+      default:
+        return SEMCONV;
+    }
   }
-
-  abstract Context storeInContext(Context context, SpanKind spanKind, Span span);
-
-  abstract boolean shouldSuppress(Context parentContext, SpanKind spanKind);
 }

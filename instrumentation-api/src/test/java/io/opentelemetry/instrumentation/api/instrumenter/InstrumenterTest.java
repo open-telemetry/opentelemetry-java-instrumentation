@@ -162,12 +162,6 @@ class InstrumenterTest {
   @Mock(extraInterfaces = SpanKeyProvider.class)
   AttributesExtractor<Map<String, String>, Map<String, String>> mockDbClientAttributes;
 
-  @Mock(extraInterfaces = SpanKeyProvider.class)
-  AttributesExtractor<Map<String, String>, Map<String, String>> mockRpcClientAttributes;
-
-  @Mock(extraInterfaces = SpanKeyProvider.class)
-  AttributesExtractor<Map<String, String>, Map<String, String>> mockMessagingProducerAttributes;
-
   @Mock AttributesExtractor<Map<String, String>, Map<String, String>> mockNetClientAttributes;
 
   @Test
@@ -180,10 +174,7 @@ class InstrumenterTest {
             .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-
-    assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
+    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
 
     instrumenter.end(context, REQUEST, RESPONSE, null);
 
@@ -196,8 +187,8 @@ class InstrumenterTest {
                         span.hasName("span")
                             .hasKind(SpanKind.SERVER)
                             .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                            .hasTraceId(spanContext.getTraceId())
-                            .hasSpanId(spanContext.getSpanId())
+                            .hasTraceId(Span.fromContext(context).getSpanContext().getTraceId())
+                            .hasSpanId(Span.fromContext(context).getSpanContext().getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasLinks(expectedSpanLink())
@@ -222,10 +213,7 @@ class InstrumenterTest {
             .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-
-    assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
+    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
 
     instrumenter.end(context, REQUEST, RESPONSE, new IllegalStateException("test"));
 
@@ -258,11 +246,9 @@ class InstrumenterTest {
                             TraceState.getDefault()))),
             request,
             Map::put);
-    Context context = instrumenter.start(Context.root(), request);
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
 
-    assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
+    Context context = instrumenter.start(Context.root(), request);
+    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
 
     instrumenter.end(context, request, RESPONSE, null);
 
@@ -274,7 +260,7 @@ class InstrumenterTest {
                     span ->
                         span.hasName("span")
                             .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                            .hasSpanId(spanContext.getSpanId())
+                            .hasSpanId(Span.fromContext(context).getSpanContext().getSpanId())
                             .hasParentSpanId("090a0b0c0d0e0f00")));
   }
 
@@ -528,198 +514,6 @@ class InstrumenterTest {
   }
 
   @Test
-  void clientNestedSpansSuppressed_whenInstrumentationTypeDisabled() {
-    // this test depends on default config option for InstrumentationType
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(false);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(false);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isFalse();
-  }
-
-  @Test
-  void clientNestedSpansSuppressed_whenInstrumentationTypeDisabled2() {
-    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.HTTP_CLIENT);
-    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.DB_CLIENT);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(false, mockDbClientAttributes);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(false, mockHttpClientAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isFalse();
-  }
-
-  @Test
-  void clientNestedSuppressed_whenSameInstrumentationType() {
-    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.DB_CLIENT);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true, mockDbClientAttributes);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, mockDbClientAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    assertThat(instrumenterOuter.shouldStart(Context.root(), request)).isTrue();
-    assertThat(instrumenterInner.shouldStart(Context.root(), request)).isTrue();
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isFalse();
-  }
-
-  @Test
-  void clientNestedNotSuppressed_wehnDifferentInstrumentationCategories() {
-    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.HTTP_CLIENT);
-    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.DB_CLIENT);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true, mockDbClientAttributes);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, mockHttpClientAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isTrue();
-  }
-
-  @Test
-  void clientNestedGenericNotSuppressed() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true, new AttributesExtractor1());
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, new AttributesExtractor1());
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isTrue();
-  }
-
-  @Test
-  void clientNestedGenericSpansNotSuppressed_whenNoExtractors() {
-    // this test depends on default config option for InstrumentationType
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, null, null);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isTrue();
-  }
-
-  @Test
-  void instrumentationTypeDetected_http() {
-    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.HTTP_CLIENT);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockHttpClientAttributes, new AttributesExtractor1());
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.HTTP_CLIENT, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_db() {
-    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.DB_CLIENT);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockDbClientAttributes, new AttributesExtractor2());
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.DB_CLIENT, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_rpc() {
-    when(((SpanKeyProvider) mockRpcClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.RPC_CLIENT);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockRpcClientAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.RPC_CLIENT, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_producer() {
-    when(((SpanKeyProvider) mockMessagingProducerAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.PRODUCER);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockMessagingProducerAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.PRODUCER, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_mix() {
-    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.DB_CLIENT);
-    when(((SpanKeyProvider) mockMessagingProducerAttributes).internalGetSpanKey())
-        .thenReturn(SpanKey.PRODUCER);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(
-            true,
-            new AttributesExtractor2(),
-            mockMessagingProducerAttributes,
-            mockNetClientAttributes,
-            mockDbClientAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.PRODUCER, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_generic() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, new AttributesExtractor2(), mockNetClientAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    Span span = Span.fromContext(context);
-
-    assertThat(span).isNotNull();
-
-    assertThat(SpanKey.HTTP_CLIENT.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.RPC_CLIENT.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.PRODUCER.fromContextOrNull(context)).isNull();
-  }
-
-  @Test
   void instrumentationVersion_default() {
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.builder(
@@ -792,25 +586,33 @@ class InstrumenterTest {
                     span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
   }
 
-  private static void validateInstrumentationTypeSpanPresent(SpanKey spanKey, Context context) {
-    Span span = Span.fromContext(context);
+  @Test
+  void shouldRetrieveSpanKeysFromAttributesExtractors() {
+    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.DB_CLIENT);
+    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.HTTP_CLIENT);
 
-    assertThat(span).isNotNull();
-    assertThat(spanKey.fromContextOrNull(context)).isSameAs(span);
-  }
-
-  @SafeVarargs
-  @SuppressWarnings("varargs")
-  private static Instrumenter<Map<String, String>, Map<String, String>> getInstrumenterWithType(
-      boolean enableInstrumentation,
-      AttributesExtractor<Map<String, String>, Map<String, String>>... attributeExtractors) {
-    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .addAttributesExtractors(attributeExtractors)
-            .enableInstrumentationTypeSuppression(enableInstrumentation);
+            .addAttributesExtractors(
+                new AttributesExtractor2(),
+                mockHttpClientAttributes,
+                mockNetClientAttributes,
+                mockDbClientAttributes)
+            .newInstrumenter();
 
-    return builder.newClientInstrumenter(Map::put);
+    Context context = instrumenter.start(Context.root(), REQUEST);
+
+    assertThatSpanKeyWasStored(SpanKey.DB_CLIENT, context);
+    assertThatSpanKeyWasStored(SpanKey.HTTP_CLIENT, context);
+  }
+
+  private static void assertThatSpanKeyWasStored(SpanKey spanKey, Context context) {
+    Span span = Span.fromContext(context);
+    assertThat(span).isNotNull();
+    assertThat(spanKey.fromContextOrNull(context)).isSameAs(span);
   }
 
   private static LinkData expectedSpanLink() {
