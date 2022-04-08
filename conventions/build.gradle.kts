@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "6.1.2"
+  id("com.diffplug.spotless") version "6.4.2"
 }
 
 spotless {
@@ -39,12 +39,12 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.3.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.4.2")
   implementation("com.google.guava:guava:31.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
-  implementation("org.ow2.asm:asm:9.2")
-  implementation("org.ow2.asm:asm-tree:9.2")
+  implementation("org.ow2.asm:asm:9.3")
+  implementation("org.ow2.asm:asm-tree:9.3")
   implementation("org.apache.httpcomponents:httpclient:4.5.13")
   implementation("org.gradle:test-retry-gradle-plugin:1.3.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.5.4")
