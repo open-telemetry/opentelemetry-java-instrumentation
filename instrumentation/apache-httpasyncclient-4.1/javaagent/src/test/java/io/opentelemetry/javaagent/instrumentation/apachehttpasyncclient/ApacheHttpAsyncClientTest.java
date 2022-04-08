@@ -14,7 +14,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -39,13 +38,14 @@ class ApacheHttpAsyncClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  // TODO(anuraaga): AbstractHttpClientTest should provide timeout values statically
   private final RequestConfig requestConfig =
-      RequestConfig.custom().setConnectTimeout((int) Duration.ofSeconds(5).toMillis()).build();
+      RequestConfig.custom()
+          .setConnectTimeout((int) AbstractHttpClientTest.CONNECTION_TIMEOUT.toMillis())
+          .build();
 
   private final RequestConfig requestWithReadTimeoutConfig =
       RequestConfig.copy(requestConfig)
-          .setSocketTimeout((int) Duration.ofSeconds(2).toMillis())
+          .setSocketTimeout((int) AbstractHttpClientTest.READ_TIMEOUT.toMillis())
           .build();
 
   private final CloseableHttpAsyncClient client =

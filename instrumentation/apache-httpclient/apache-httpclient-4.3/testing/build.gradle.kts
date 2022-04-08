@@ -7,7 +7,5 @@ dependencies {
 
   api("org.apache.httpcomponents:httpclient:4.3")
 
-  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
 }
