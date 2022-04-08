@@ -36,7 +36,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
       return makeRequest(resource)
     }
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    return runWithServerSpan("test.span") {
+    return runWithHttpServerSpan("test.span") {
       makeRequest(resource)
     }
   }

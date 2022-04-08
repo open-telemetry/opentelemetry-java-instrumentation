@@ -262,7 +262,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     URI uri = resolveAddress("/success");
     int responseCode =
-        testing.runWithClientSpan("parent-client-span", () -> doRequest(method, uri));
+        testing.runWithHttpClientSpan("parent-client-span", () -> doRequest(method, uri));
 
     assertThat(responseCode).isEqualTo(200);
 

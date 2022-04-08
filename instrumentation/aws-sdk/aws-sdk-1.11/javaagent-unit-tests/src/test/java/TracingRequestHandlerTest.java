@@ -45,7 +45,7 @@ class TracingRequestHandlerTest {
     TracingRequestHandler underTest = new TracingRequestHandler();
     Request<SendMessageRequest> request = request();
 
-    testing.runWithClientSpan(
+    testing.runWithHttpClientSpan(
         "test",
         () -> {
           // when

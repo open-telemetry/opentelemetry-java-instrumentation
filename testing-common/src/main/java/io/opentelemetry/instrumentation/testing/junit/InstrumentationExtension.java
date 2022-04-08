@@ -138,39 +138,39 @@ public abstract class InstrumentationExtension
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  public <E extends Throwable> void runWithClientSpan(String spanName, ThrowingRunnable<E> callback)
-      throws E {
-    testRunner.runWithClientSpan(spanName, callback);
+  public <E extends Throwable> void runWithHttpClientSpan(
+      String spanName, ThrowingRunnable<E> callback) throws E {
+    testRunner.runWithHttpClientSpan(spanName, callback);
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  public <T, E extends Throwable> T runWithClientSpan(
+  public <T, E extends Throwable> T runWithHttpClientSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testRunner.runWithClientSpan(spanName, callback);
+    return testRunner.runWithHttpClientSpan(spanName, callback);
   }
 
   /**
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  public <E extends Throwable> void runWithServerSpan(String spanName, ThrowingRunnable<E> callback)
-      throws E {
-    testRunner.runWithServerSpan(spanName, callback);
+  public <E extends Throwable> void runWithHttpServerSpan(
+      String spanName, ThrowingRunnable<E> callback) throws E {
+    testRunner.runWithHttpServerSpan(spanName, callback);
   }
 
   /**
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  public <T, E extends Throwable> T runWithServerSpan(
+  public <T, E extends Throwable> T runWithHttpServerSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testRunner.runWithServerSpan(spanName, callback);
+    return testRunner.runWithHttpServerSpan(spanName, callback);
   }
 
   /** Returns whether forceFlush was called. */

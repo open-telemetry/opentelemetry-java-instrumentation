@@ -120,12 +120,12 @@ public abstract class InstrumentationTestRunner {
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  public final <E extends Throwable> void runWithClientSpan(
+  public final <E extends Throwable> void runWithHttpClientSpan(
       String spanName, ThrowingRunnable<E> callback) throws E {
-    runWithClientSpan(
+    runWithHttpClientSpan(
         spanName,
         () -> {
           callback.run();
@@ -134,21 +134,21 @@ public abstract class InstrumentationTestRunner {
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  public final <T, E extends Throwable> T runWithClientSpan(
+  public final <T, E extends Throwable> T runWithHttpClientSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithClientSpan(spanName, callback);
+    return testInstrumenters.runWithHttpClientSpan(spanName, callback);
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  public final <E extends Throwable> void runWithServerSpan(
+  public final <E extends Throwable> void runWithHttpServerSpan(
       String spanName, ThrowingRunnable<E> callback) throws E {
-    runWithServerSpan(
+    runWithHttpServerSpan(
         spanName,
         () -> {
           callback.run();
@@ -157,12 +157,12 @@ public abstract class InstrumentationTestRunner {
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  public final <T, E extends Throwable> T runWithServerSpan(
+  public final <T, E extends Throwable> T runWithHttpServerSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithServerSpan(spanName, callback);
+    return testInstrumenters.runWithHttpServerSpan(spanName, callback);
   }
 
   /** Runs the provided {@code callback} inside the scope of a non-recording span. */

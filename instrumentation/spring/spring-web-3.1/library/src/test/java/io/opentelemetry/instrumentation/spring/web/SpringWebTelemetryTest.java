@@ -35,7 +35,7 @@ class SpringWebTelemetryTest {
         SpringWebTelemetry.create(testing.getOpenTelemetry()).newInterceptor();
 
     // when
-    testing.runWithClientSpan(
+    testing.runWithHttpClientSpan(
         "parent",
         () -> {
           interceptor.intercept(httpRequestMock, requestBody, requestExecutionMock);

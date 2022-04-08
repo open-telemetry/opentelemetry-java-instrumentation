@@ -193,7 +193,7 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan(kind=CLIENT) and context already contains a CLIENT span should suppress span")
   void suppressClientSpan() throws Throwable {
     // when
-    testing.runWithClientSpan("parent", withSpanTester::testWithClientSpan);
+    testing.runWithHttpClientSpan("parent", withSpanTester::testWithClientSpan);
 
     // then
     List<List<SpanData>> traces = testing.waitForTraces(1);
@@ -209,7 +209,7 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan(kind=SERVER) and context already contains a SERVER span should suppress span")
   void suppressServerSpan() throws Throwable {
     // when
-    testing.runWithServerSpan("parent", withSpanTester::testWithServerSpan);
+    testing.runWithHttpServerSpan("parent", withSpanTester::testWithServerSpan);
 
     // then
     List<List<SpanData>> traces = testing.waitForTraces(1);
