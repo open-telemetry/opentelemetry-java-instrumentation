@@ -43,8 +43,6 @@ dependencies {
 
 tasks {
   test {
-    inputs.files(project(":javaagent").tasks.getByName("shadowJar").outputs.files)
-
     testLogging.showStandardStreams = true
 
     // TODO investigate why smoke tests occasionally hang forever
@@ -81,6 +79,8 @@ tasks {
 
     val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
+          .withPropertyName("javaAgent")
+          .withPathSensitivity(PathSensitivity.RELATIVE)
 
     doFirst {
       jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")
