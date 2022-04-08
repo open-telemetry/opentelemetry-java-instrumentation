@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.reactor;
 
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator;
@@ -19,9 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HooksInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("reactor.core.publisher.Hooks")
+    return namedOneOf(
+        "reactor.core.publisher.Hooks",
         // Hooks may not be loaded early enough so also match our main targets
-        .or(named("reactor.core.publisher.Flux").or(named("reactor.core.publisher.Mono")));
+        "reactor.core.publisher.Flux",
+        "reactor.core.publisher.Mono");
   }
 
   @Override
