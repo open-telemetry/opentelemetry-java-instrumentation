@@ -188,7 +188,8 @@ public abstract class AbstractApacheHttpClientTest {
   }
 
   @Nested
-  class ApacheClientHostAbsoluteUriRequestContextTest extends AbstractHttpClientTest<BasicHttpRequest> {
+  class ApacheClientHostAbsoluteUriRequestContextTest
+      extends AbstractHttpClientTest<BasicHttpRequest> {
 
     @Override
     protected BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -201,7 +202,10 @@ public abstract class AbstractApacheHttpClientTest {
         throws Exception {
       return getResponseCode(
           getClient(uri)
-              .execute(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()), request, new BasicHttpContext()));
+              .execute(
+                  new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
+                  request,
+                  new BasicHttpContext()));
     }
 
     @Override
@@ -216,7 +220,8 @@ public abstract class AbstractApacheHttpClientTest {
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult), new BasicHttpContext());
+                responseCallback(requestResult),
+                new BasicHttpContext());
       } catch (Throwable t) {
         requestResult.complete(t);
       }
