@@ -50,6 +50,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED")
   jvmArgs("--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED")
   jvmArgs("--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
+  jvmArgs("--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED")
   jvmArgs("--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED")
   jvmArgs("--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
