@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.customchecks;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
-class InternalJavadocTest {
+class OtelInternalJavadocTest {
 
   @Test
   void test() {
@@ -17,7 +17,7 @@ class InternalJavadocTest {
   }
 
   private static void doTest(String path) {
-    CompilationTestHelper.newInstance(InternalJavadoc.class, InternalJavadocTest.class)
+    CompilationTestHelper.newInstance(OtelInternalJavadoc.class, OtelInternalJavadocTest.class)
         .addSourceFile(path)
         .doTest();
   }

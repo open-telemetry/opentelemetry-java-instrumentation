@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
+// Will be deleted
+@SuppressWarnings("LongDoubleConversion")
 final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
 
   private final Measurements measurements;

@@ -51,6 +51,7 @@ public class ProcessMetrics {
         .gaugeBuilder("runtime.java.cpu_time")
         .setDescription("Runtime Java CPU time")
         .setUnit("ms")
+        .ofLongs()
         .buildWithCallback(
             r -> {
               processInfo.updateAttributes();

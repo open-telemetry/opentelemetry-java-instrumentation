@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DynamoDB;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.Kinesis;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYNAMODB;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.KINESIS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.S3;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SQS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
@@ -23,26 +23,28 @@ import software.amazon.awssdk.core.SdkRequest;
  * SDK automatically
  * (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2291).
  */
+// We match the actual name in the AWS SDK for better consistency with it and possible future autogeneration.
+@SuppressWarnings("MemberName")
 enum AwsSdkRequest {
   // generic requests
-  DynamoDbRequest(DynamoDB, "DynamoDbRequest"),
+  DynamoDbRequest(DYNAMODB, "DynamoDbRequest"),
   S3Request(S3, "S3Request"),
   SqsRequest(SQS, "SqsRequest"),
-  KinesisRequest(Kinesis, "KinesisRequest"),
+  KinesisRequest(KINESIS, "KinesisRequest"),
   // specific requests
   BatchGetItem(
-      DynamoDB,
+      DYNAMODB,
       "BatchGetItemRequest",
       request("aws.dynamodb.table_names", "RequestItems"),
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity")),
   BatchWriteItem(
-      DynamoDB,
+      DYNAMODB,
       "BatchWriteItemRequest",
       request("aws.dynamodb.table_names", "RequestItems"),
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       response("aws.dynamodb.item_collection_metrics", "ItemCollectionMetrics")),
   CreateTable(
-      DynamoDB,
+      DYNAMODB,
       "CreateTableRequest",
       request("aws.dynamodb.global_secondary_indexes", "GlobalSecondaryIndexes"),
       request("aws.dynamodb.local_secondary_indexes", "LocalSecondaryIndexes"),
@@ -53,29 +55,29 @@ enum AwsSdkRequest {
           "aws.dynamodb.provisioned_throughput.write_capacity_units",
           "ProvisionedThroughput.WriteCapacityUnits")),
   DeleteItem(
-      DynamoDB,
+      DYNAMODB,
       "DeleteItemRequest",
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       response("aws.dynamodb.item_collection_metrics", "ItemCollectionMetrics")),
   GetItem(
-      DynamoDB,
+      DYNAMODB,
       "GetItemRequest",
       request("aws.dynamodb.projection_expression", "ProjectionExpression"),
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       request("aws.dynamodb.consistent_read", "ConsistentRead")),
   ListTables(
-      DynamoDB,
+      DYNAMODB,
       "ListTablesRequest",
       request("aws.dynamodb.exclusive_start_table_name", "ExclusiveStartTableName"),
       response("aws.dynamodb.table_count", "TableNames"),
       request("aws.dynamodb.limit", "Limit")),
   PutItem(
-      DynamoDB,
+      DYNAMODB,
       "PutItemRequest",
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       response("aws.dynamodb.item_collection_metrics", "ItemCollectionMetrics")),
   Query(
-      DynamoDB,
+      DYNAMODB,
       "QueryRequest",
       request("aws.dynamodb.attributes_to_get", "AttributesToGet"),
       request("aws.dynamodb.consistent_read", "ConsistentRead"),
@@ -86,7 +88,7 @@ enum AwsSdkRequest {
       request("aws.dynamodb.select", "Select"),
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity")),
   Scan(
-      DynamoDB,
+      DYNAMODB,
       "ScanRequest",
       request("aws.dynamodb.attributes_to_get", "AttributesToGet"),
       request("aws.dynamodb.consistent_read", "ConsistentRead"),
@@ -100,12 +102,12 @@ enum AwsSdkRequest {
       response("aws.dynamodb.count", "Count"),
       response("aws.dynamodb.scanned_count", "ScannedCount")),
   UpdateItem(
-      DynamoDB,
+      DYNAMODB,
       "UpdateItemRequest",
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       response("aws.dynamodb.item_collection_metrics", "ItemCollectionMetrics")),
   UpdateTable(
-      DynamoDB,
+      DYNAMODB,
       "UpdateTableRequest",
       request("aws.dynamodb.attribute_definitions", "AttributeDefinitions"),
       request("aws.dynamodb.global_secondary_index_updates", "GlobalSecondaryIndexUpdates"),

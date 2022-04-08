@@ -213,6 +213,11 @@ tasks {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
   }
+
+  // Convenient when updating errorprone
+  register("compileAllJava") {
+    dependsOn(withType<JavaCompile>())
+  }
 }
 
 normalization {

@@ -22,13 +22,12 @@ import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-    name = "OtelInternalJavadoc",
     summary =
         "This public internal class doesn't end with the javadoc disclaimer: \""
-            + InternalJavadoc.EXPECTED_INTERNAL_COMMENT
+            + OtelInternalJavadoc.EXPECTED_INTERNAL_COMMENT
             + "\"",
     severity = WARNING)
-public class InternalJavadoc extends BugChecker implements BugChecker.ClassTreeMatcher {
+public class OtelInternalJavadoc extends BugChecker implements BugChecker.ClassTreeMatcher {
 
   private static final long serialVersionUID = 1L;
 

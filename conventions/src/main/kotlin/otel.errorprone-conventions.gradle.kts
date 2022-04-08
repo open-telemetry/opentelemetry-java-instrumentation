@@ -25,6 +25,13 @@ tasks {
 
         excludedPaths.set(".*/build/generated/.*|.*/concurrentlinkedhashmap/.*")
 
+        // Still Java 8
+        disable("Varifier")
+
+        // We often override a method returning Iterable which this makes tedious
+        // for questionable value.
+        disable("PreferredInterfaceType")
+
         // it's very convenient to debug stuff in the javaagent using System.out.println
         // and we don't want to conditionally only check this in CI
         // because then the remote gradle cache won't work for local builds
@@ -78,9 +85,6 @@ tasks {
         // We end up using obsolete types if a library we're instrumenting uses them.
         disable("JdkObsolete")
         disable("JavaUtilDate")
-
-        // Limits API possibilities
-        disable("NoFunctionalReturnType")
 
         // Storing into a variable in onEnter triggers this unfortunately.
         // TODO(anuraaga): Only disable for auto instrumentation project.
