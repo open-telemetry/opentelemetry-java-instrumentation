@@ -18,4 +18,5 @@ jobs:
           find . -type f \
                  -name '*.md' \
                  -not -path './CHANGELOG.md' \
+                 -not -path './licenses' \
                  | xargs markdown-link-check --quiet --config .github/scripts/markdown-link-check-config.json
