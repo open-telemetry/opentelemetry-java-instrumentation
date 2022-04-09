@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JaxrsInstrumentationModule extends InstrumentationModule {
   public JaxrsInstrumentationModule() {
-    super("jaxrs", "jaxrs-2.0");
+    super("jaxrs-common", "jaxrs-common-2.0");
   }
 
   // require jax-rs 2
@@ -33,5 +33,10 @@ public class JaxrsInstrumentationModule extends InstrumentationModule {
         new DefaultRequestContextInstrumentation(),
         new JaxrsAnnotationsInstrumentation(),
         new JaxrsAsyncResponseInstrumentation());
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return false;
   }
 }

@@ -16,7 +16,6 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.UNSET
 
@@ -71,7 +70,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
     }
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, abortNormal ? 2 : 1) {
         span(0) {
           name parentSpanName != null ? parentSpanName : "test.span"
           kind SERVER
@@ -79,15 +78,10 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
             status UNSET
           }
         }
-        span(1) {
-          childOf span(0)
-          name controllerName
-          if (abortPrematch) {
-            attributes {
-              "$SemanticAttributes.CODE_NAMESPACE" "JaxRsFilterTest\$PrematchRequestFilter"
-              "$SemanticAttributes.CODE_FUNCTION" "filter"
-            }
-          } else {
+        if (abortNormal) {
+          span(1) {
+            childOf span(0)
+            name controllerName
             attributes {
               "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
               "$SemanticAttributes.CODE_FUNCTION" "hello"
@@ -128,7 +122,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
     responseText == expectedResponse
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           name parentResourceName
           kind SERVER
@@ -136,15 +130,6 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
             attributes {
               "$SemanticAttributes.HTTP_ROUTE" parentResourceName
             }
-          }
-        }
-        span(1) {
-          childOf span(0)
-          name controller1Name
-          kind INTERNAL
-          attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-            "$SemanticAttributes.CODE_FUNCTION" "nested"
           }
         }
       }

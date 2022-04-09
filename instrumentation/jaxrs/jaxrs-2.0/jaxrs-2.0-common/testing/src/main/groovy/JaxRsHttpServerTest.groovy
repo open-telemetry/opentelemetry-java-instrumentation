@@ -7,7 +7,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Unroll
 import test.JaxRsTestResource
@@ -15,7 +14,6 @@ import test.JaxRsTestResource
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
@@ -83,31 +81,21 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     response.contentUtf8() == SUCCESS.body
 
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 3) {
         span(0) {
           hasNoParent()
           kind SERVER
           name getContextPath() + "/test-sub-resource-locator/call/sub"
         }
         span(1) {
-          name "JaxRsSubResourceLocatorTestResource.call"
+          name "controller"
           kind INTERNAL
           childOf span(0)
         }
         span(2) {
           name "controller"
           kind INTERNAL
-          childOf span(1)
-        }
-        span(3) {
-          name "SubResource.call"
-          kind INTERNAL
           childOf span(0)
-        }
-        span(4) {
-          name "controller"
-          kind INTERNAL
-          childOf span(3)
         }
       }
     }
@@ -133,7 +121,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     response.status().code() == statusCode
     bodyPredicate(response.contentUtf8())
 
-    def spanCount = 2
+    def spanCount = 1
     def hasSendError = asyncCancelHasSendError() && action == "cancel"
     if (hasSendError) {
       spanCount++
@@ -141,9 +129,8 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     assertTraces(1) {
       trace(0, spanCount) {
         asyncServerSpan(it, 0, url, statusCode)
-        handlerSpan(it, 1, span(0), "asyncOp", isCancelled, isError, errorMessage)
         if (hasSendError) {
-          sendErrorSpan(it, 2, span(1))
+          sendErrorSpan(it, 1, span(0))
         }
       }
     }
@@ -179,7 +166,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     assertTraces(1) {
       trace(0, 2) {
         asyncServerSpan(it, 0, url, statusCode)
-        handlerSpan(it, 1, span(0), "jaxRs21Async", false, isError, errorMessage)
       }
     }
 
@@ -187,11 +173,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     desc         | action    | statusCode | bodyPredicate       | isError | errorMessage
     "successful" | "succeed" | 200        | { it == "success" } | false   | null
     "failing"    | "throw"   | 500        | { it == "failure" } | true    | "failure"
-  }
-
-  @Override
-  boolean hasHandlerSpan(ServerEndpoint endpoint) {
-    true
   }
 
   @Override
@@ -282,44 +263,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
         if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {
           "http.request.header.x_test_request" { it == ["test"] }
           "http.response.header.x_test_response" { it == ["test"] }
-        }
-      }
-    }
-  }
-
-  @Override
-  void handlerSpan(TraceAssert trace,
-                   int index,
-                   Object parent,
-                   String method = "GET",
-                   ServerEndpoint endpoint = SUCCESS) {
-    handlerSpan(trace, index, parent,
-      endpoint.name().toLowerCase(),
-      false,
-      endpoint == EXCEPTION,
-      EXCEPTION.body)
-  }
-
-  void handlerSpan(TraceAssert trace,
-                   int index,
-                   Object parent,
-                   String methodName,
-                   boolean isCancelled,
-                   boolean isError,
-                   String exceptionMessage = null) {
-    trace.span(index) {
-      name "JaxRsTestResource.${methodName}"
-      kind INTERNAL
-      if (isError) {
-        status ERROR
-        errorEvent(Exception, exceptionMessage)
-      }
-      childOf((SpanData) parent)
-      attributes {
-        "$SemanticAttributes.CODE_NAMESPACE" "test.JaxRsTestResource"
-        "$SemanticAttributes.CODE_FUNCTION" methodName
-        if (isCancelled) {
-          "jaxrs.canceled" true
         }
       }
     }
