@@ -9,13 +9,11 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
-import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -24,7 +22,6 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
@@ -68,8 +65,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   }
 
   @Override
-  boolean hasHandlerSpan(ServerEndpoint endpoint) {
-    endpoint != NOT_FOUND
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
+    false
   }
 
   @Override
@@ -91,19 +88,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
         return getContextPath() + "/path/{id}/param"
       default:
         return super.expectedHttpRoute(endpoint)
-    }
-  }
-
-  @Override
-  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    trace.span(index) {
-      name "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
-      kind INTERNAL
-      if (endpoint == EXCEPTION) {
-        status StatusCode.ERROR
-        errorEvent(Exception, EXCEPTION.body)
-      }
-      childOf((SpanData) parent)
     }
   }
 
