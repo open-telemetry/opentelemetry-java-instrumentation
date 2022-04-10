@@ -32,7 +32,7 @@ jobs:
           git config user.name opentelemetry-java-bot
           git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
 
-      - name: Create pull request against release branch
+      - name: Create pull request against the release branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

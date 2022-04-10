@@ -146,6 +146,28 @@ jobs:
                             v$VERSION \
                             opentelemetry-javaagent.jar
 
+      - name: Update the change log with the release date
+        run: |
+          date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
+          sed -ri "s/## Version $VERSION .*/## Version $VERSION ($date)/" CHANGELOG.md
+
+      - name: Set git user
+        run: |
+          git config user.name opentelemetry-java-bot
+          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
+
+      - name: Create pull request against the release branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          msg="Add $VERSION release date to the change log"
+          git commit -a -m "$msg"
+          git push origin HEAD:add-$VERSION-release-date
+          gh pr create --title "[$GITHUB_REF_NAME] $msg" \
+                       --body "$msg" \
+                       --head add-$VERSION-release-date \
+                       --base $GITHUB_REF_NAME
+
       - uses: actions/checkout@v3
         with:
           repository: opentelemetry-java-bot/opentelemetry-operator
@@ -185,32 +207,3 @@ jobs:
                        --body "$msg" \
                        --repo open-telemetry/opentelemetry-operator
                        --base main
-
-      - uses: actions/checkout@v3
-        with:
-          ref: main
-          # history is needed in order to run git format-patch below
-          fetch-depth: 0
-
-      - name: Set git user
-        run: |
-          git config user.name opentelemetry-java-bot
-          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
-
-        # this step should be last since it will fail if there have been conflicting
-        # change log updates introduced on the main branch
-      - name: Create pull request to merge any change log updates to main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git format-patch --stdout main..$GITHUB_REF_NAME CHANGELOG.md > patch
-          if [ -s patch ]; then
-            git apply patch
-            msg="Merge change log updates from $GITHUB_REF_NAME to main"
-            git commit -a -m "$msg"
-            git push origin HEAD:merge-change-log-updates-to-main
-            gh pr create --title "$msg" \
-                         --body "$msg" \
-                         --head merge-change-log-updates-to-main \
-                         --base main
-          fi
