@@ -100,18 +100,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ $version == *.0 ]]; then
-            cat > release-notes.txt << EOF
-            This release targets the OpenTelemetry SDK $VERSION.
+          # conditional blocks not indented because of the heredoc
+          if [[ $VERSION == *.0 ]]; then
+          cat > release-notes.txt << EOF
+          This release targets the OpenTelemetry SDK $VERSION.
 
-            Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
+          Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
 
-            EOF
+          EOF
           else
-            cat > release-notes.txt << EOF
-            This is a patch release on the previous $PRIOR_VERSION release, fixing the issue(s) below.
+          cat > release-notes.txt << EOF
+          This is a patch release on the previous $PRIOR_VERSION release, fixing the issue(s) below.
 
-            EOF
+          EOF
           fi
 
           sed -n "/^## Version $VERSION/,/^## Version /p" CHANGELOG.md \
@@ -123,15 +124,16 @@ jobs:
             | perl -0pe 's/\n +/ /g' \
             >> release-notes.txt
 
-          if [[ $version == *.0 ]]; then
-            cat >> release-notes.txt << EOF
+          # conditional block not indented because of the heredoc
+          if [[ $VERSION == *.0 ]]; then
+          cat >> release-notes.txt << EOF
 
-            ### 🙇 Thank you
-            This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
+          ### 🙇 Thank you
+          This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
 
-            EOF
+          EOF
 
-            .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION v$VERSION >> release-notes.txt
+          .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION $GITHUB_REF_NAME >> release-notes.txt
           fi
 
       - name: Create GitHub release
