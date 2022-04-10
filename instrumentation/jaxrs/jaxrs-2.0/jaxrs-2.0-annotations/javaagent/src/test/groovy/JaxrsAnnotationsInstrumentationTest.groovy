@@ -18,7 +18,7 @@ import javax.ws.rs.Path
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
 
-abstract class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecification {
+class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecification {
 
   @Unroll
   def "span named '#paramName' from annotations on class '#className' when is not root span"() {
