@@ -19,13 +19,9 @@ jobs:
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
 
-      - name: Bump version
+      - name: Drop snapshot from version
         run: |
-          .github/scripts/update-versions.sh "$VERSION-SNAPSHOT" "$VERSION-alpha-SNAPSHOT" "$VERSION" "$VERSION-alpha"
-
-      - name: Bump download link version
-        run: |
-          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
+          sed -ri "s/val snapshot = true/val snapshot = false/" version.gradle.kts
 
       - name: Set git user
         run: |
@@ -60,7 +56,7 @@ jobs:
             exit 1
           fi
           next_version="$major.$((minor + 1)).0"
-          .github/scripts/update-versions.sh "$version-SNAPSHOT" "$version-alpha-SNAPSHOT" "$next_version-SNAPSHOT" "$next_version-alpha-SNAPSHOT"
+          sed -ri "s/$version-SNAPSHOT/$next_version-SNAPSHOT/" version.gradle.kts
 
       - name: Set git user
         run: |
