@@ -34,7 +34,9 @@ class AgentLocationStrategyTest {
 
   @Test
   void findsResourcesFromParentClassloader() throws Exception {
-    ClassFileLocator locator = new AgentLocationStrategy(null).classFileLocator(childLoader, null);
+    ClassFileLocator locator =
+        new AgentLocationStrategy(ClassLoader.getSystemClassLoader())
+            .classFileLocator(childLoader, null);
     assertThat(locator.locate("java/lang/Object").isResolved()).isTrue();
     assertThat(lastLookup).hasValue("java/lang/Object.class");
 

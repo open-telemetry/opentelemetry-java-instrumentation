@@ -50,6 +50,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 public abstract class AbstractHttpClientTest<REQUEST> {
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
+
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
 

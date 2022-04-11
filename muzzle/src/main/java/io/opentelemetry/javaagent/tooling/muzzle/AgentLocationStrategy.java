@@ -31,12 +31,13 @@ public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
   @Override
   public ClassFileLocator classFileLocator(ClassLoader classLoader, JavaModule javaModule) {
     List<ClassFileLocator> locators = new ArrayList<>();
+
+    if (classLoader != null) {
+      locators.add(ClassFileLocator.ForClassLoader.WeaklyReferenced.of(classLoader));
+    }
+    // can be null in unit tests
     if (bootstrapProxy != null) {
       locators.add(ClassFileLocator.ForClassLoader.of(bootstrapProxy));
-    }
-    while (classLoader != null) {
-      locators.add(ClassFileLocator.ForClassLoader.WeaklyReferenced.of(classLoader));
-      classLoader = classLoader.getParent();
     }
 
     return new ClassFileLocator.Compound(locators);
