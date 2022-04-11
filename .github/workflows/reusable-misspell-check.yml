@@ -15,4 +15,8 @@ jobs:
           sh ./install-misspell.sh
 
       - name: Run misspell
-        run: bin/misspell -error .
+        run: |
+          find . -type f \
+                 -not -path './licenses/*' \
+                 -not -path '*/build/*' \
+                 | xargs bin/misspell -error
