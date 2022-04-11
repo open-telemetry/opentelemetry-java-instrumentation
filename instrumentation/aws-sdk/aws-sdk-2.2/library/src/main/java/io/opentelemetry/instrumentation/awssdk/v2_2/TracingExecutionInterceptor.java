@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DynamoDB;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYNAMODB;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
@@ -113,7 +113,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     fieldMapper.mapToAttributes(sdkRequest, awsSdkRequest, span);
 
-    if (awsSdkRequest.type() == DynamoDB) {
+    if (awsSdkRequest.type() == DYNAMODB) {
       span.setAttribute(SemanticAttributes.DB_SYSTEM, "dynamodb");
       String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
       if (operation != null) {

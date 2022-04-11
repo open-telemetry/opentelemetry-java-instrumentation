@@ -5,6 +5,8 @@
 
 package io.opentelemetry.test;
 
+import javax.annotation.Nullable;
+
 public interface AnotherTestInterface extends TestInterface {
   void bar();
 
@@ -12,7 +14,7 @@ public interface AnotherTestInterface extends TestInterface {
   int hashCode();
 
   @Override
-  boolean equals(Object other);
+  boolean equals(@Nullable Object other);
 
   Object clone();
 

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class TestHelperClasses {
   public static class Helper extends HelperSuperClass implements HelperInterface {
@@ -39,7 +40,7 @@ public class TestHelperClasses {
     int hashCode();
 
     @Override
-    boolean equals(Object other);
+    boolean equals(@Nullable Object other);
 
     Object clone();
 
