@@ -749,10 +749,11 @@ class InstrumenterTest {
 
   @Test
   void instrumentationVersion_custom() {
-    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
-        Instrumenter.builder(otelTesting.getOpenTelemetry(), "test", "1.0", name -> "span");
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.newInstrumenter();
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", name -> "span")
+            .setInstrumentationVersion("1.0")
+            .newInstrumenter();
 
     Context context = instrumenter.start(Context.root(), Collections.emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();
@@ -768,6 +769,30 @@ class InstrumenterTest {
                         span.hasName("span")
                             .hasInstrumentationLibraryInfo(
                                 InstrumentationLibraryInfo.create("test", "1.0"))));
+  }
+
+  @Test
+  void schemaUrl() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", name -> "span")
+            .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
+            .newInstrumenter();
+
+    Context context = instrumenter.start(Context.root(), Collections.emptyMap());
+    assertThat(Span.fromContext(context)).isNotNull();
+
+    instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
+
+    InstrumentationLibraryInfo expectedLibraryInfo =
+        InstrumentationLibraryInfo.create("test", null, "https://opentelemetry.io/schemas/1.0.0");
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span").hasInstrumentationLibraryInfo(expectedLibraryInfo)));
   }
 
   private static void validateInstrumentationTypeSpanPresent(SpanKey spanKey, Context context) {

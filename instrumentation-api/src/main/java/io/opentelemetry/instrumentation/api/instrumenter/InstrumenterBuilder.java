@@ -9,12 +9,16 @@ import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -38,17 +42,18 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
           .getBoolean("otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
 
   final OpenTelemetry openTelemetry;
-  final Meter meter;
   final String instrumentationName;
-  final String instrumentationVersion;
   final SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
-  final List<RequestListener> requestListeners = new ArrayList<>();
+  private final List<RequestListener> requestListeners = new ArrayList<>();
+  private final List<RequestMetrics> requestMetrics = new ArrayList<>();
 
+  @Nullable private String instrumentationVersion;
+  @Nullable private String schemaUrl = null;
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
@@ -61,13 +66,34 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
       String instrumentationName,
-      String instrumentationVersion,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
     this.openTelemetry = openTelemetry;
-    this.meter = openTelemetry.getMeterProvider().get(instrumentationName);
     this.instrumentationName = instrumentationName;
-    this.instrumentationVersion = instrumentationVersion;
     this.spanNameExtractor = spanNameExtractor;
+    this.instrumentationVersion =
+        EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+  }
+
+  /**
+   * Sets the instrumentation version that'll be associated with all telemetry produced by this
+   * {@link Instrumenter}.
+   *
+   * @param instrumentationVersion is the version of the instrumentation library, not the version of
+   *     the instrument*ed* library.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> setInstrumentationVersion(
+      String instrumentationVersion) {
+    this.instrumentationVersion = instrumentationVersion;
+    return this;
+  }
+
+  /**
+   * Sets the OpenTelemetry schema URL that'll be associated with all telemetry produced by this
+   * {@link Instrumenter}.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> setSchemaUrl(String schemaUrl) {
+    this.schemaUrl = schemaUrl;
+    return this;
   }
 
   /**
@@ -127,7 +153,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and end. */
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
-    requestListeners.add(factory.create(meter));
+    requestMetrics.add(factory);
     return this;
   }
 
@@ -274,7 +300,44 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return constructor.create(this);
   }
 
-  SpanSuppressionStrategy getSpanSuppressionStrategy() {
+  Tracer buildTracer() {
+    TracerBuilder tracerBuilder =
+        openTelemetry.getTracerProvider().tracerBuilder(instrumentationName);
+    if (instrumentationVersion != null) {
+      tracerBuilder.setInstrumentationVersion(instrumentationVersion);
+    }
+    if (schemaUrl != null) {
+      tracerBuilder.setSchemaUrl(schemaUrl);
+    }
+    return tracerBuilder.build();
+  }
+
+  List<RequestListener> buildRequestListeners() {
+    // just copy the listeners list if there are no metrics registered
+    if (requestMetrics.isEmpty()) {
+      return new ArrayList<>(requestListeners);
+    }
+
+    List<RequestListener> listeners =
+        new ArrayList<>(requestListeners.size() + requestMetrics.size());
+    listeners.addAll(requestListeners);
+
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationName);
+    if (instrumentationVersion != null) {
+      meterBuilder.setInstrumentationVersion(instrumentationVersion);
+    }
+    if (schemaUrl != null) {
+      meterBuilder.setSchemaUrl(schemaUrl);
+    }
+    Meter meter = meterBuilder.build();
+    for (RequestMetrics factory : requestMetrics) {
+      listeners.add(factory.create(meter));
+    }
+
+    return listeners;
+  }
+
+  SpanSuppressionStrategy buildSpanSuppressionStrategy() {
     Set<SpanKey> spanKeys = getSpanKeysFromAttributesExtractors();
     if (enableSpanSuppressionByType) {
       return SpanSuppressionStrategy.from(spanKeys);
