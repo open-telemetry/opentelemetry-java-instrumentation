@@ -7,13 +7,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.extension.annotations.SpanAttribute;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -56,11 +54,6 @@ public class WithSpanAspectTest {
     @WithSpan(kind = CLIENT)
     public String testWithClientSpan() {
       return "Span with name testWithClientSpan and SpanKind.CLIENT was created";
-    }
-
-    @WithSpan(kind = SpanKind.SERVER)
-    public String testWithServerSpan() {
-      return "Span with name testWithServerSpan and SpanKind.SERVER was created";
     }
 
     @WithSpan
@@ -186,38 +179,6 @@ public class WithSpanAspectTest {
                         span.hasName("WithSpanTester.testWithClientSpan")
                             .hasKind(CLIENT)
                             .hasParentSpanId(traces.get(0).get(0).getSpanId())));
-  }
-
-  @Test
-  @DisplayName(
-      "when method is annotated with @WithSpan(kind=CLIENT) and context already contains a CLIENT span should suppress span")
-  void suppressClientSpan() throws Throwable {
-    // when
-    testing.runWithHttpClientSpan("parent", withSpanTester::testWithClientSpan);
-
-    // then
-    List<List<SpanData>> traces = testing.waitForTraces(1);
-    assertThat(traces)
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    parentSpan -> parentSpan.hasName("parent").hasKind(CLIENT)));
-  }
-
-  @Test
-  @DisplayName(
-      "when method is annotated with @WithSpan(kind=SERVER) and context already contains a SERVER span should suppress span")
-  void suppressServerSpan() throws Throwable {
-    // when
-    testing.runWithHttpServerSpan("parent", withSpanTester::testWithServerSpan);
-
-    // then
-    List<List<SpanData>> traces = testing.waitForTraces(1);
-    assertThat(traces)
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    parentSpan -> parentSpan.hasName("parent").hasKind(SERVER)));
   }
 
   @Test
