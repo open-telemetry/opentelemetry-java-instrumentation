@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -59,11 +58,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       OpenTelemetry openTelemetry,
       String instrumentationName,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
-    return new InstrumenterBuilder<>(
-        openTelemetry,
-        instrumentationName,
-        EmbeddedInstrumentationProperties.findVersion(instrumentationName),
-        spanNameExtractor);
+    return new InstrumenterBuilder<>(openTelemetry, instrumentationName, spanNameExtractor);
   }
 
   /**
@@ -82,15 +77,19 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * io.opentelemetry.apache-httpclient-4.0}. This way, if there are different instrumentations for
    * different library versions it's easy to find out which instrumentations produced the telemetry
    * data.
+   *
+   * @deprecated Use the {@link InstrumenterBuilder#setInstrumentationVersion(String)} method
+   *     instead.
    */
-  // TODO: add a setInstrumentationVersion method to the builder instead
+  @Deprecated
   public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> builder(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       String instrumentationVersion,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
-    return new InstrumenterBuilder<>(
-        openTelemetry, instrumentationName, instrumentationVersion, spanNameExtractor);
+    return Instrumenter.<REQUEST, RESPONSE>builder(
+            openTelemetry, instrumentationName, spanNameExtractor)
+        .setInstrumentationVersion(instrumentationVersion);
   }
 
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
@@ -112,19 +111,18 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
-    this.tracer =
-        builder.openTelemetry.getTracer(instrumentationName, builder.instrumentationVersion);
+    this.tracer = builder.buildTracer();
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
     this.spanLinksExtractors = new ArrayList<>(builder.spanLinksExtractors);
     this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
     this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
-    this.requestListeners = new ArrayList<>(builder.requestListeners);
+    this.requestListeners = builder.buildRequestListeners();
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.timeExtractor = builder.timeExtractor;
     this.enabled = builder.enabled;
-    this.spanSuppressionStrategy = builder.getSpanSuppressionStrategy();
+    this.spanSuppressionStrategy = builder.buildSpanSuppressionStrategy();
   }
 
   /**
