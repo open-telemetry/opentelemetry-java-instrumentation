@@ -17,17 +17,13 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 public final class AgentTooling {
 
   private static final AgentLocationStrategy LOCATION_STRATEGY =
-      locationStrategy(getBootstrapProxy());
+      new AgentLocationStrategy(getBootstrapProxy());
 
   private static final AgentBuilder.PoolStrategy POOL_STRATEGY =
       new AgentCachingPoolStrategy(LOCATION_STRATEGY);
 
   public static AgentLocationStrategy locationStrategy() {
     return LOCATION_STRATEGY;
-  }
-
-  public static AgentLocationStrategy locationStrategy(ClassLoader bootstrapProxy) {
-    return new AgentLocationStrategy(bootstrapProxy);
   }
 
   public static AgentBuilder.PoolStrategy poolStrategy() {
