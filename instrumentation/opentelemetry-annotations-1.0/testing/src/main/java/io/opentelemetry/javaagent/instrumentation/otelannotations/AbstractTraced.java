@@ -9,6 +9,8 @@ public abstract class AbstractTraced<T extends U, U> {
 
   protected static final String SUCCESS_VALUE = "Value";
 
+  // Not important for sake of testing
+  @SuppressWarnings("StaticAssignmentOfThrowable")
   protected static final IllegalArgumentException FAILURE = new IllegalArgumentException("Boom");
 
   protected AbstractTraced() {
