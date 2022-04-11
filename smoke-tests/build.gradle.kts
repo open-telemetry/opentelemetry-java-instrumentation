@@ -79,8 +79,8 @@ tasks {
 
     val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
-          .withPropertyName("javaAgent")
-          .withNormalizer(ClasspathNormalizer::class)
+      .withPropertyName("javaAgent")
+      .withNormalizer(ClasspathNormalizer::class)
 
     doFirst {
       jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")
