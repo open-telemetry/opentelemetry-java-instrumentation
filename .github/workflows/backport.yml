@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          # history is needed in order to do cherry-pick
+          # history is needed to run git cherry-pick below
           fetch-depth: 0
 
       - name: Set git user

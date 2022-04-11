@@ -1,6 +1,8 @@
 # Changelog
 
-## Version 1.12.1 - 2022-03-17
+## Version 1.13.0 (unreleased)
+
+## Version 1.12.1 (2022-03-17)
 
 ### 🛠️ Bug fixes
 
@@ -9,7 +11,7 @@
 - Fix possible deadlock
   ([#5585](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5585))
 
-## Version 1.12.0 - 2022-03-12
+## Version 1.12.0 (2022-03-12)
 
 ### 🌟 New javaagent instrumentation
 
@@ -83,14 +85,14 @@
 - Update to Groovy 4
   ([#5532](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5532))
 
-## Version 1.11.1 - 2022-02-21
+## Version 1.11.1 (2022-02-21)
 
 ### 🛠️ Bug fixes
 
 - Regression in loading the prometheus exporter
   ([#5408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5408))
 
-## Version 1.11.0 - 2022-02-11
+## Version 1.11.0 (2022-02-11)
 
 ### Migration notes
 
@@ -213,7 +215,7 @@
 - Publish gradle-plugins to Maven Central
   ([#5333](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5333))
 
-## Version 1.10.1 - 2022-01-27
+## Version 1.10.1 (2022-01-27)
 
 ### 🛠️ Bug fixes
 
@@ -226,7 +228,7 @@
 - Update to OTel SDK 1.10.1
   ([#5218](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5218))
 
-## Version 1.10.0 - 2022-01-15
+## Version 1.10.0 (2022-01-15)
 
 ### Migration notes
 
@@ -357,21 +359,21 @@
 - Move SpanKey to internal package
   ([#4869](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4869))
 
-## Version 1.9.2 - 2022-01-07
+## Version 1.9.2 (2022-01-07)
 
 ### 🛠️ Bug fixes
 
 - Fix reactor-netty memory/connection leak
   ([#4867](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4867))
 
-## Version 1.9.1 - 2021-12-01
+## Version 1.9.1 (2021-12-01)
 
 ### 🛠️ Bug fixes
 
 - Shade class references within AWS SDK service files
   ([#4752](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4752))
 
-## Version 1.9.0 - 2021-11-25
+## Version 1.9.0 (2021-11-25)
 
 ### 📈 Enhancements
 
@@ -487,7 +489,7 @@
 
 Due to an issue in the publishing infrastructure, a bad release was published as 1.8.0. Do not use it.
 
-## Version 1.7.0 - 2021-10-19
+## Version 1.7.0 (2021-10-19)
 
 ### 📈 Enhancements
 
@@ -567,21 +569,21 @@ Due to an issue in the publishing infrastructure, a bad release was published as
 - rename `newBuilder()` to `builder()`
   ([#4407](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4407))
 
-## Version 1.6.2 - 2021-09-30
+## Version 1.6.2 (2021-09-30)
 
 ### 🛠️ Bug fixes
 
 - The 1.6.1 patch release was not backwards compatible with javaagent extensions built against 1.6.0
   ([#4245](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4245))
 
-## Version 1.6.1 - 2021-09-29
+## Version 1.6.1 (2021-09-29)
 
 ### 🛠️ Bug fixes
 
 - Fix possible JDBC instrumentation deadlock
   ([#4191](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4191))
 
-## Version 1.6.0 - 2021-09-18
+## Version 1.6.0 (2021-09-18)
 
 ### 🌟 New javaagent instrumentation
 
@@ -658,14 +660,14 @@ Due to an issue in the publishing infrastructure, a bad release was published as
   [#4084](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4084),
   [#4110](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4110))
 
-## Version 1.5.3 - 2021-08-31
+## Version 1.5.3 (2021-08-31)
 
 ### 🛠️ Bug fixes
 
 - Fix parsing of unclean map values in Config
   ([#4032](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4032))
 
-## Version 1.5.2 - 2021-08-27
+## Version 1.5.2 (2021-08-27)
 
 ### 🛠️ Bug fixes
 
@@ -673,7 +675,7 @@ Due to an issue in the publishing infrastructure, a bad release was published as
   metrics exporter
   ([#3972](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3972))
 
-## Version 1.5.1 - 2021-08-25
+## Version 1.5.1 (2021-08-25)
 
 ### 🛠️ Bug fixes
 
@@ -684,7 +686,7 @@ Due to an issue in the publishing infrastructure, a bad release was published as
 - Fix maven central pom file for the opentelemetry-agent-for-testing artifact
   ([#3935](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3935))
 
-## Version 1.5.0 - 2021-08-22
+## Version 1.5.0 (2021-08-22)
 
 ### 🌟 New library instrumentation
 
@@ -789,7 +791,7 @@ Due to an issue in the publishing infrastructure, a bad release was published as
 - Rename Config get\*Property() methods to get\*()
   ([#3881](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3881))
 
-## Version 1.4.0 - 2021-07-20
+## Version 1.4.0 (2021-07-20)
 
 ### ☢️ Behavioral changes
 
@@ -846,7 +848,7 @@ Due to an issue in the publishing infrastructure, a bad release was published as
 - Rename `opentelemetry-javaagent-api` artifact to `opentelemetry-javaagent-instrumentation-api`
   ([#3513](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3513))
 
-## Version 1.3.1 - 2021-06-23
+## Version 1.3.1 (2021-06-23)
 
 ### 🛠️ Bug fixes
 
@@ -857,7 +859,7 @@ Due to an issue in the publishing infrastructure, a bad release was published as
 - Fix Spring JMS not being instrumented
   ([#3359](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3359))
 
-## Version 1.3.0 - 2021-06-17
+## Version 1.3.0 (2021-06-17)
 
 ### ☢️ Behavioral changes
 
@@ -959,7 +961,7 @@ Due to an issue in the publishing infrastructure, a bad release was published as
 - Move http client/server testing dependencies to internal package
   ([#3305](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/3305))
 
-## Version 1.2.0 - 2021-05-14
+## Version 1.2.0 (2021-05-14)
 
 ### ☢️ Behavioral changes
 
@@ -1056,7 +1058,7 @@ Due to an issue in the publishing infrastructure, a bad release was published as
   - `InstrumentationModule#getAllHelperClassNames()` has been removed; you can
     call `getMuzzleHelperClassNames()` to retrieve all helper class names instead.
 
-## Version 1.1.0 - 2021-04-14
+## Version 1.1.0 (2021-04-14)
 
 ### ☢️ Behavioral changes
 

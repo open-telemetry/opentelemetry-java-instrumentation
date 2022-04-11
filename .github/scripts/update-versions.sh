@@ -13,7 +13,6 @@ new_alpha_version=$4
 echo "updating from $current_version to $new_version and from $current_alpha_version to $new_alpha_version"
 
 sed -ri "s/$current_version/$new_version/" version.gradle.kts
-sed -ri "s/$current_alpha_version/$new_alpha_version/" version.gradle.kts
 
 sed -ri "s/(opentelemetryJavaagent *: \")$current_version/\1$new_version/" examples/distro/build.gradle
 sed -ri "s/(opentelemetryJavaagentAlpha *: \")$current_alpha_version/\1$new_alpha_version/" examples/distro/build.gradle
