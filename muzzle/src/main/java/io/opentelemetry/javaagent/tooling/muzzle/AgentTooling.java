@@ -16,11 +16,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
  */
 public final class AgentTooling {
 
+  private static final AgentLocationStrategy LOCATION_STRATEGY =
+      locationStrategy(getBootstrapProxy());
+
   private static final AgentBuilder.PoolStrategy POOL_STRATEGY =
-      new AgentCachingPoolStrategy(locationStrategy(getBootstrapProxy()));
+      new AgentCachingPoolStrategy(LOCATION_STRATEGY);
 
   public static AgentLocationStrategy locationStrategy() {
-    return locationStrategy(null);
+    return LOCATION_STRATEGY;
   }
 
   public static AgentLocationStrategy locationStrategy(ClassLoader bootstrapProxy) {
