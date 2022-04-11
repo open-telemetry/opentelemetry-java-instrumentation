@@ -38,26 +38,6 @@ public class TracedWithSpan {
     return otel();
   }
 
-  @WithSpan(kind = SpanKind.SERVER)
-  public String nestedServers() {
-    return innerServer();
-  }
-
-  @WithSpan(kind = SpanKind.SERVER)
-  public String innerServer() {
-    return "hello!";
-  }
-
-  @WithSpan(kind = SpanKind.CLIENT)
-  public String nestedClients() {
-    return innerClient();
-  }
-
-  @WithSpan(kind = SpanKind.CLIENT)
-  public String innerClient() {
-    return "hello!";
-  }
-
   @WithSpan
   public String withSpanAttributes(
       @SpanAttribute String implicitName,

@@ -106,42 +106,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def "should not capture multiple server spans"() {
-    setup:
-    new TracedWithSpan().nestedServers()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "TracedWithSpan.nestedServers"
-          kind SERVER
-          hasNoParent()
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
-  def "should not capture multiple client spans"() {
-    setup:
-    new TracedWithSpan().nestedClients()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "TracedWithSpan.nestedClients"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
   def "should ignore method excluded by trace.annotated.methods.exclude configuration"() {
     setup:
     new TracedWithSpan().ignored()
