@@ -59,7 +59,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
                     .registerMetricReader(
                         PeriodicMetricReader.builder(testMetricExporter)
                             .setInterval(Duration.ofMillis(100))
-                            .newMetricReaderFactory())
+                            .build())
                     .build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .buildAndRegisterGlobal();

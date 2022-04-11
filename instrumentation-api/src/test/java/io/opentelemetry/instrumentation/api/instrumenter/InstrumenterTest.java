@@ -25,7 +25,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -195,8 +195,7 @@ class InstrumenterTest {
                     span ->
                         span.hasName("span")
                             .hasKind(SpanKind.SERVER)
-                            .hasInstrumentationLibraryInfo(
-                                InstrumentationLibraryInfo.create("test", null))
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
                             .hasTraceId(spanContext.getTraceId())
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
@@ -305,8 +304,7 @@ class InstrumenterTest {
                     span ->
                         span.hasName("span")
                             .hasKind(SpanKind.CLIENT)
-                            .hasInstrumentationLibraryInfo(
-                                InstrumentationLibraryInfo.create("test", null))
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
                             .hasTraceId(spanContext.getTraceId())
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
@@ -735,16 +733,15 @@ class InstrumenterTest {
     instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
 
     // see the test-instrumentation.properties file
-    InstrumentationLibraryInfo expectedLibraryInfo =
-        InstrumentationLibraryInfo.create("test-instrumentation", "1.2.3");
+    InstrumentationScopeInfo expectedLibraryInfo =
+        InstrumentationScopeInfo.create("test-instrumentation", "1.2.3", /* schemaUrl= */ null);
 
     otelTesting
         .assertTraces()
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span").hasInstrumentationLibraryInfo(expectedLibraryInfo)));
+                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
   }
 
   @Test
@@ -766,8 +763,9 @@ class InstrumenterTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("span")
-                            .hasInstrumentationLibraryInfo(
-                                InstrumentationLibraryInfo.create("test", "1.0"))));
+                            .hasInstrumentationScopeInfo(
+                                InstrumentationScopeInfo.create(
+                                    "test", "1.0", /* schemaUrl= */ null))));
   }
 
   private static void validateInstrumentationTypeSpanPresent(SpanKey spanKey, Context context) {

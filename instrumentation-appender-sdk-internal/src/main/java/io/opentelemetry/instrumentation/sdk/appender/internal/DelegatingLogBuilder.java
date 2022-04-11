@@ -51,12 +51,6 @@ final class DelegatingLogBuilder implements LogBuilder {
   }
 
   @Override
-  public LogBuilder setName(String name) {
-    delegate.setName(name);
-    return this;
-  }
-
-  @Override
   public LogBuilder setBody(String body) {
     delegate.setBody(body);
     return this;
