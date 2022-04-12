@@ -6,12 +6,7 @@
 package io.opentelemetry.smoketest
 
 // jetty test with java module system
-abstract class JettyJpmsSmokeTest extends AppServerTest {
-
-  @Override
-  protected String getTargetImagePrefix() {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-jetty"
-  }
+abstract class JettyJpmsSmokeTest extends JettySmokeTest {
 
   @Override
   protected String[] getCommand() {
