@@ -782,15 +782,14 @@ class InstrumenterTest {
 
     instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
 
-    InstrumentationLibraryInfo expectedLibraryInfo =
-        InstrumentationLibraryInfo.create("test", null, "https://opentelemetry.io/schemas/1.0.0");
+    InstrumentationScopeInfo expectedLibraryInfo =
+        InstrumentationScopeInfo.create("test", null, "https://opentelemetry.io/schemas/1.0.0");
     otelTesting
         .assertTraces()
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span").hasInstrumentationLibraryInfo(expectedLibraryInfo)));
+                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
   }
 
   private static void validateInstrumentationTypeSpanPresent(SpanKey spanKey, Context context) {
