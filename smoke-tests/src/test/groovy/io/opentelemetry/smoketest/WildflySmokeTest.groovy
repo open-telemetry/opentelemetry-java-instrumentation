@@ -8,10 +8,17 @@ package io.opentelemetry.smoketest
 import io.opentelemetry.proto.trace.v1.Span
 import spock.lang.Unroll
 
+import java.time.Duration
+
 abstract class WildflySmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-wildfly"
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*started in.*")
   }
 
   @Unroll
