@@ -79,7 +79,7 @@ tasks {
 
     val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
-      .withPropertyName("javaAgent")
+      .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
 
     doFirst {
