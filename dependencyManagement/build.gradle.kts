@@ -30,8 +30,8 @@ val groovyVersion = "4.0.1"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.13.1",
-  "com.google.guava:guava-bom:31.0.1-jre",
+  "com.fasterxml.jackson:jackson-bom:2.13.2.20220328",
+  "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
@@ -51,28 +51,23 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "com.google.errorprone",
-    "2.10.0",
+    "2.12.1",
     listOf("error_prone_annotations", "error_prone_core", "error_prone_test_helpers")
-  ),
-  DependencySet(
-    "io.prometheus",
-    "0.14.1",
-    listOf("simpleclient", "simpleclient_common", "simpleclient_httpserver")
   ),
   DependencySet(
     "net.bytebuddy",
     // When updating, also update conventions/build.gradle.kts
-    "1.12.6",
+    "1.12.9",
     listOf("byte-buddy", "byte-buddy-dep", "byte-buddy-agent", "byte-buddy-gradle-plugin")
   ),
   DependencySet(
     "org.openjdk.jmh",
-    "1.34",
+    "1.35",
     listOf("jmh-core", "jmh-generator-bytecode")
   ),
   DependencySet(
     "org.mockito",
-    "4.2.0",
+    "4.4.0",
     listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
   ),
   DependencySet(
@@ -92,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.9.5",
+  "com.uber.nullaway:nullaway:0.9.6",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
@@ -106,12 +101,12 @@ val DEPENDENCIES = listOf(
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.proto:opentelemetry-proto:0.16.0-alpha",
   "org.assertj:assertj-core:3.22.0",
-  "org.awaitility:awaitility:4.1.1",
+  "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.junit-pioneer:junit-pioneer:1.5.0",
+  "org.junit-pioneer:junit-pioneer:1.6.2",
   "org.objenesis:objenesis:3.2",
   "org.spockframework:spock-core:2.2-M1-groovy-4.0",
   "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",

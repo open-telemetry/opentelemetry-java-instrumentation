@@ -24,6 +24,7 @@ import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
+import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -120,6 +121,7 @@ public class AgentInstaller {
     Config config = Config.get();
 
     setBootstrapPackages(config);
+    setDefineClassHandler();
 
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
@@ -143,7 +145,7 @@ public class AgentInstaller {
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
-            .with(AgentTooling.locationStrategy(Utils.getBootstrapProxy()));
+            .with(AgentTooling.locationStrategy());
     if (JavaModule.isSupported()) {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }
@@ -207,6 +209,10 @@ public class AgentInstaller {
       configurer.configure(config, builder);
     }
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(builder.build());
+  }
+
+  private static void setDefineClassHandler() {
+    DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
   private static void runBeforeAgentListeners(

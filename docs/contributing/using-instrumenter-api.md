@@ -116,6 +116,31 @@ The `builder()` method accepts three arguments:
 An `Instrumenter` can be built from several smaller components. The following subsections describe
 all interfaces that can be used to customize an `Instrumenter`.
 
+### Set the instrumentation version and OpenTelemetry schema URL
+
+By setting the instrumentation library version, you let users identify which version of your
+instrumentation produced the telemetry. Make sure you always provide the version to
+the `Instrumenter`. You can do this in two ways:
+
+* By calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`.
+* By making sure that the JAR file with your instrumentation library contains a properties file in
+  the `META-INF/io/opentelemetry/instrumentation/` directory. You must name the file
+  `${instrumentationName}.properties`, where `${instrumentationName}` is the name of the
+  instrumentation library passed to the `Instrumenter#builder()` method. The file must contain a
+  single property, `version`. For example:
+
+    ```properties
+    # META-INF/io/opentelemetry/instrumentation/my-instrumentation.properties
+    version=1.2.3
+    ```
+
+  The `Instrumenter` automatically detects the properties file and determines the instrumentation
+  version based on its name.
+
+If the `Instrumenter` adheres to a specific OpenTelemetry schema, you can set the schema URL using
+the `setSchemaUrl()` method on the `InstrumenterBuilder`. To learn more about the OpenTelemetry
+schemas [see the Overview](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md).
+
 ### Name the spans using the `SpanNameExtractor`
 
 A `SpanNameExtractor` is a simple functional interface that accepts the `REQUEST` type and returns

@@ -1,7 +1,12 @@
+val snapshot = true
+
 allprojects {
+  var v = "1.13.0"
   if (findProperty("otel.stable") != "true") {
-    version = "1.13.0-alpha-SNAPSHOT"
-  } else {
-    version = "1.13.0-SNAPSHOT"
+    v += "-alpha"
   }
+  if (snapshot) {
+    v += "-SNAPSHOT"
+  }
+  version = v
 }

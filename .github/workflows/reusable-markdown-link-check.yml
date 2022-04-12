@@ -14,8 +14,8 @@ jobs:
 
       - name: Run markdown-link-check
         run: |
-          # --quiet displays errors only, making them easier to find in the log
           find . -type f \
                  -name '*.md' \
                  -not -path './CHANGELOG.md' \
-                 | xargs markdown-link-check --quiet --config .github/scripts/markdown-link-check-config.json
+                 -not -path './licenses/*' \
+               | xargs .github/scripts/markdown-link-check-with-retry.sh

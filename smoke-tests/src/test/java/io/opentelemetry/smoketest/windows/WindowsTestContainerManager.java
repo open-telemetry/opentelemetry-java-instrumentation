@@ -342,6 +342,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     }
   }
 
+  // https://github.com/google/error-prone/issues/3090
+  @SuppressWarnings("MethodCanBeStatic")
   private interface Waiter {
     default void configureLogger(ContainerLogHandler logHandler) {}
 

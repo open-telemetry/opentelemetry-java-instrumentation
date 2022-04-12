@@ -2,18 +2,18 @@ pluginManagement {
   plugins {
     id("com.github.ben-manes.versions") version "0.42.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
-    id("com.gradle.plugin-publish") version "0.20.0"
+    id("com.gradle.plugin-publish") version "1.0.0-rc-1"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.6.10"
+    id("org.jetbrains.kotlin.jvm") version "1.6.20"
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.6.0"
   }
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.8.1"
-  id("com.github.burrunan.s3-build-cache") version "1.2"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.6.2"
+  id("com.gradle.enterprise") version "3.9"
+  id("com.github.burrunan.s3-build-cache") version "1.3"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.6.5"
 }
 
 dependencyResolutionManagement {
@@ -217,6 +217,7 @@ include(":instrumentation:java-util-logging:javaagent")
 include(":instrumentation:java-util-logging:shaded-stub-for-instrumenting")
 include(":instrumentation:jaxrs:jaxrs-common:bootstrap")
 include(":instrumentation:jaxrs:jaxrs-1.0:javaagent")
+include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent")
@@ -269,7 +270,9 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common:library")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:javaagent")
-include(":instrumentation:ktor-1.0:library")
+include(":instrumentation:ktor:ktor-1.0:library")
+include(":instrumentation:ktor:ktor-2.0:library")
+include(":instrumentation:ktor:ktor-common:library")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-common:library")
@@ -316,6 +319,7 @@ include(":instrumentation:okhttp:okhttp-3.0:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:library")
 include(":instrumentation:okhttp:okhttp-3.0:testing")
 include(":instrumentation:opentelemetry-annotations-1.0:javaagent")
+include(":instrumentation:opentelemetry-annotations-1.0:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")

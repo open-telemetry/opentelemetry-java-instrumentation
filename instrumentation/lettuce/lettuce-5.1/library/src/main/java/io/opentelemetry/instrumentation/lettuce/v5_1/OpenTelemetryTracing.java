@@ -211,6 +211,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     // Added and called in 6.0+
     // @Override
+    @SuppressWarnings("UnusedMethod")
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       start();
 

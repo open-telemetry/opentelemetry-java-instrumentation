@@ -76,7 +76,8 @@ jobs:
       - gradle-plugins
       - examples
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
+    # skipping release branches because the versions in those branches are not snapshots
+    if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
     steps:
       - uses: actions/checkout@v3
 
