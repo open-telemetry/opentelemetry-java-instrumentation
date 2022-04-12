@@ -50,6 +50,12 @@ class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implemen
       restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
         req.getHeaders().putAll(request.getHeaders())
       }, { response ->
+        // read request body to avoid broken pipe errors on the server side
+        byte[] buffer = new byte[1024]
+        try (InputStream inputStream = response.body) {
+          while (inputStream.read(buffer) >= 0) {
+          }
+        }
         requestResult.complete(response.statusCode.value())
       })
     } catch (ResourceAccessException exception) {
