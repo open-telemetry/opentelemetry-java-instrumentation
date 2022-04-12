@@ -18,6 +18,9 @@ dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   library("com.sun.xml.ws:jaxws-rt:2.2.0.1")
+  // early versions of streambuffer depend on latest release of org.jvnet.staxex:stax-ex
+  // which doesn't work with java 8
+  library("com.sun.xml.stream.buffer:streambuffer:1.4")
 
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 
@@ -30,6 +33,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
   latestDepTestLibrary("com.sun.xml.ws:jaxws-rt:2.+")
+  latestDepTestLibrary("com.sun.xml.stream.buffer:streambuffer:1.+")
 }
 
 tasks.withType<Test>().configureEach {
