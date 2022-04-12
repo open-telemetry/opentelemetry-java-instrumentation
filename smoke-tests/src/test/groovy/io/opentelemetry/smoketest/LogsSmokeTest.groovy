@@ -44,7 +44,7 @@ class LogsSmokeTest extends SmokeTest {
     def logRecords = logs.stream()
       .flatMap(log -> log.getResourceLogsList().stream())
       .flatMap(log -> log.getScopeLogsList().stream())
-      .flatMap(log -> log.getLogsList().stream())
+      .flatMap(log -> log.getLogRecordsList().stream())
       .collect(toList())
     logRecords.size() >= logs.size()
 
