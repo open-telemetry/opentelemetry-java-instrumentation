@@ -9,6 +9,7 @@ import io.opentelemetry.proto.trace.v1.Span
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import java.time.Duration
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
@@ -51,6 +52,11 @@ abstract class AppServerTest extends SmokeTest {
     String extraTag = "20211216.1584506476"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server startup in.*")
   }
 
   protected abstract String getTargetImagePrefix()
