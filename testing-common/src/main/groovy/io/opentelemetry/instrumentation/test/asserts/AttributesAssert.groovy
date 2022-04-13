@@ -48,7 +48,7 @@ class AttributesAssert {
 
   def methodMissing(String name, args) {
     if (args.length == 0) {
-      throw new IllegalArgumentException(args.toString())
+      throw new IllegalArgumentException("Attribute $name needs to be provided expected value; zero args were passed: $args")
     }
     attribute(name, args[0])
   }

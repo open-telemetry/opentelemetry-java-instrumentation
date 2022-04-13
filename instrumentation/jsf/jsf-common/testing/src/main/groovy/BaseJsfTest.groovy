@@ -8,6 +8,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpData
@@ -82,7 +83,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
   @Unroll
   def "test #path"() {
     setup:
-    AggregatedHttpResponse response = client.get(address.resolve("hello.jsf").toString()).aggregate().join()
+    AggregatedHttpResponse response = client.get(address.resolve(path).toString()).aggregate().join()
 
     expect:
     response.status().code() == 200
@@ -95,12 +96,28 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
           name getContextPath() + "/hello.xhtml"
           kind SpanKind.SERVER
           hasNoParent()
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:$port" }
+            "$SemanticAttributes.HTTP_TARGET" "/jetty-context/" + path
+            "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
+            "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_ROUTE" "/jetty-context/" + route
+            "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
+          }
         }
       }
     }
 
     where:
-    path << ['hello.jsf', 'faces/hello.xhtml']
+    path                | route
+    "hello.jsf"         | "*.jsf"
+    "faces/hello.xhtml" | "faces/*"
   }
 
   def "test greeting"() {

@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.mojarra;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jsf.JsfServerSpanNaming;
@@ -38,8 +36,7 @@ public class RestoreViewPhaseInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Argument(0) FacesContext facesContext) {
-      HttpRouteHolder.updateHttpRoute(
-          currentContext(), CONTROLLER, JsfServerSpanNaming.SERVER_SPAN_NAME, facesContext);
+      JsfServerSpanNaming.updateViewName(currentContext(), facesContext);
     }
   }
 }
