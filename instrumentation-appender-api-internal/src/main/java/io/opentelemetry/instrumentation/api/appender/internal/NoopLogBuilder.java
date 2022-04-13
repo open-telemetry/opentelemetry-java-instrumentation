@@ -40,11 +40,6 @@ final class NoopLogBuilder implements LogBuilder {
   }
 
   @Override
-  public LogBuilder setName(String name) {
-    return this;
-  }
-
-  @Override
   public LogBuilder setBody(String body) {
     return this;
   }

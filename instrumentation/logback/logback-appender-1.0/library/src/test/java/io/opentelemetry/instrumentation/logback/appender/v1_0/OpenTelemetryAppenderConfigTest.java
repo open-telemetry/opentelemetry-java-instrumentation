@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.logs.data.Severity;
@@ -38,13 +38,13 @@ class OpenTelemetryAppenderConfigTest {
 
   private static InMemoryLogExporter logExporter;
   private static Resource resource;
-  private static InstrumentationLibraryInfo instrumentationLibraryInfo;
+  private static InstrumentationScopeInfo instrumentationScopeInfo;
 
   @BeforeAll
   static void setupAll() {
     logExporter = InMemoryLogExporter.create();
     resource = Resource.getDefault();
-    instrumentationLibraryInfo = InstrumentationLibraryInfo.create("TestLogger", null);
+    instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
 
     SdkLogEmitterProvider logEmitterProvider =
         SdkLogEmitterProvider.builder()
@@ -69,7 +69,7 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logDataList).hasSize(1);
     LogData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
+    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getAttributes()).isEqualTo(Attributes.empty());
   }
@@ -108,7 +108,7 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logDataList).hasSize(1);
     LogData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
+    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getEpochNanos())
         .isGreaterThan(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
@@ -138,7 +138,7 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logDataList).hasSize(1);
     LogData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationLibraryInfo()).isEqualTo(instrumentationLibraryInfo);
+    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getAttributes().size()).isEqualTo(2);
     AssertionsForClassTypes.assertThat(

@@ -33,6 +33,6 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
             meterProvider.registerMetricReader(
                 PeriodicMetricReader.builder(AgentTestingExporterFactory.metricExporter)
                     .setInterval(Duration.ofMillis(100))
-                    .newMetricReaderFactory()));
+                    .build()));
   }
 }

@@ -17,7 +17,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -27,10 +26,7 @@ class HttpServerMetricsTest {
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder()
-            .registerMetricReader(metricReader)
-            .setMinimumCollectionInterval(Duration.ZERO)
-            .build();
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
     RequestListener listener = HttpServerMetrics.get().create(meterProvider.get("test"));
 
@@ -161,10 +157,7 @@ class HttpServerMetricsTest {
     // given
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder()
-            .registerMetricReader(metricReader)
-            .setMinimumCollectionInterval(Duration.ZERO)
-            .build();
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
     RequestListener listener = HttpServerMetrics.get().create(meterProvider.get("test"));
 

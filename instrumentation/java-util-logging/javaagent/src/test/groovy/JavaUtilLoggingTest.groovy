@@ -58,7 +58,7 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
       } else {
         assertThat(log.getBody().asString()).isEqualTo("xyz")
       }
-      assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+      assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (testArgs == "exception") {

@@ -5,10 +5,17 @@
 
 package io.opentelemetry.smoketest
 
+import java.time.Duration
+
 abstract class TomcatSmokeTest extends AppServerTest {
 
   protected String getTargetImagePrefix() {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-tomcat"
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server startup in.*")
   }
 }
 

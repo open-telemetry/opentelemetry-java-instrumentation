@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -28,10 +27,7 @@ class RpcServerMetricsTest {
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder()
-            .registerMetricReader(metricReader)
-            .setMinimumCollectionInterval(Duration.ZERO)
-            .build();
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
     RequestListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
 

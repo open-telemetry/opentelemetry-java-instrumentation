@@ -118,7 +118,7 @@ abstract class SmokeTest extends Specification {
   protected static Stream<Span> getSpanStream(Collection<ExportTraceServiceRequest> traces) {
     return traces.stream()
       .flatMap { it.getResourceSpansList().stream() }
-      .flatMap { it.getInstrumentationLibrarySpansList().stream() }
+      .flatMap { it.getScopeSpansList().stream() }
       .flatMap { it.getSpansList().stream() }
   }
 

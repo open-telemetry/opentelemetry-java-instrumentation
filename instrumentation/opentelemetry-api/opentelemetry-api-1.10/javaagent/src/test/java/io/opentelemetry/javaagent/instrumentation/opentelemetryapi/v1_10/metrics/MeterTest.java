@@ -18,7 +18,7 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,8 +62,9 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
-                        .hasInstrumentationLibrary(
-                            InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
                         .hasLongSum()
                         .isMonotonic()
                         .points()
@@ -92,8 +93,9 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
-                        .hasInstrumentationLibrary(
-                            InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
                         .hasLongSum()
                         .isNotMonotonic()
                         .points()
@@ -122,8 +124,9 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
-                        .hasInstrumentationLibrary(
-                            InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
                         .hasDoubleSum()
                         .isMonotonic()
                         .points()
@@ -152,8 +155,9 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
-                        .hasInstrumentationLibrary(
-                            InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
                         .hasDoubleSum()
                         .isNotMonotonic()
                         .points()
@@ -182,8 +186,9 @@ class MeterTest {
                   assertThat(metric)
                       .hasDescription("d")
                       .hasUnit("u")
-                      .hasInstrumentationLibrary(
-                          InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
+                      .hasInstrumentationScope(
+                          InstrumentationScopeInfo.create(
+                              instrumentationName, "1.2.3", /* schemaUrl= */ null))
                       .hasDoubleHistogram()
                       .points()
                       .allSatisfy(
@@ -212,8 +217,9 @@ class MeterTest {
                   assertThat(metric)
                       .hasDescription("d")
                       .hasUnit("u")
-                      .hasInstrumentationLibrary(
-                          InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
+                      .hasInstrumentationScope(
+                          InstrumentationScopeInfo.create(
+                              instrumentationName, "1.2.3", /* schemaUrl= */ null))
                       .hasDoubleHistogram()
                       .points()
                       .allSatisfy(
@@ -244,8 +250,9 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
-                        .hasInstrumentationLibrary(
-                            InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
                         .hasLongGauge()
                         .points()
                         .satisfiesExactly(
@@ -274,8 +281,9 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
-                        .hasInstrumentationLibrary(
-                            InstrumentationLibraryInfo.create(instrumentationName, "1.2.3"))
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
                         .hasDoubleGauge()
                         .points()
                         .satisfiesExactly(

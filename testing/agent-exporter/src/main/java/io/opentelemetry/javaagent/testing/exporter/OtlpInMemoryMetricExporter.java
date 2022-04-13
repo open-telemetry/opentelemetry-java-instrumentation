@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.testing.exporter;
 
 import io.opentelemetry.exporter.internal.otlp.metrics.MetricsRequestMarshaler;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.metrics.InstrumentType;
+import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.io.ByteArrayOutputStream;
@@ -28,6 +30,11 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   void reset() {
     collectedRequests.clear();
+  }
+
+  @Override
+  public AggregationTemporality getAggregationTemporality(InstrumentType instrumentType) {
+    return AggregationTemporality.CUMULATIVE;
   }
 
   @Override

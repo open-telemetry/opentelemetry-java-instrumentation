@@ -86,7 +86,7 @@ public abstract class InstrumentationExtension
                     assertThat(metrics())
                         .filteredOn(
                             data ->
-                                data.getInstrumentationLibraryInfo()
+                                data.getInstrumentationScopeInfo()
                                         .getName()
                                         .equals(instrumentationName)
                                     && data.getName().equals(metricName))));

@@ -62,7 +62,7 @@ abstract class IntegrationTest {
   static void setupSpec() {
     backend =
         new GenericContainer<>(
-                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20210918.1248928123")
+                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20220411.2147767274")
             .withExposedPorts(8080)
             .waitingFor(Wait.forHttp("/health").forPort(8080))
             .withNetwork(network)
@@ -164,7 +164,7 @@ abstract class IntegrationTest {
   protected static Stream<Span> getSpanStream(Collection<ExportTraceServiceRequest> traces) {
     return traces.stream()
         .flatMap(it -> it.getResourceSpansList().stream())
-        .flatMap(it -> it.getInstrumentationLibrarySpansList().stream())
+        .flatMap(it -> it.getScopeSpansList().stream())
         .flatMap(it -> it.getSpansList().stream());
   }
 

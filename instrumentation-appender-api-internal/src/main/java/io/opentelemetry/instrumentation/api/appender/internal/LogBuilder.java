@@ -36,9 +36,6 @@ public interface LogBuilder {
   /** Set the severity text. */
   LogBuilder setSeverityText(String severityText);
 
-  /** Set the name. */
-  LogBuilder setName(String name);
-
   /** Set the body string. */
   LogBuilder setBody(String body);
 

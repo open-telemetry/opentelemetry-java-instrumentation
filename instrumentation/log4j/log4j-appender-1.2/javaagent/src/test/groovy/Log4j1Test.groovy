@@ -50,7 +50,7 @@ class Log4j1Test extends AgentInstrumentationSpecification {
           })
       def log = logs.get(0)
       assertThat(log.getBody().asString()).isEqualTo("xyz")
-      assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+      assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
@@ -113,7 +113,7 @@ class Log4j1Test extends AgentInstrumentationSpecification {
         })
     def log = logs.get(0)
     assertThat(log.getBody().asString()).isEqualTo("xyz")
-    assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+    assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(4)

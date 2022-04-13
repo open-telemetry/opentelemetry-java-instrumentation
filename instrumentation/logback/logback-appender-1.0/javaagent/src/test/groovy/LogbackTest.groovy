@@ -52,7 +52,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
           })
       def log = logs.get(0)
       assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
-      assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo(loggerName)
+      assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo(loggerName)
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
@@ -120,7 +120,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
         })
     def log = logs.get(0)
     assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
-    assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+    assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(4)

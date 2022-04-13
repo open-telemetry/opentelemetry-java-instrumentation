@@ -9,6 +9,7 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
+import java.time.Duration
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
@@ -20,6 +21,11 @@ class QuarkusSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$jdk-20211213.1574595137"
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*")
   }
 
   @Unroll
