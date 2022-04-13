@@ -17,7 +17,7 @@ class MetricsInspector {
   boolean hasMetricsNamed(String metricName) {
     requests.stream()
       .flatMap({ it.resourceMetricsList.stream() })
-      .flatMap({ it.instrumentationLibraryMetricsList.stream() })
+      .flatMap({ it.scopeMetricsList.stream() })
       .flatMap({ it.metricsList.stream() })
       .anyMatch({ it.name == metricName })
   }
