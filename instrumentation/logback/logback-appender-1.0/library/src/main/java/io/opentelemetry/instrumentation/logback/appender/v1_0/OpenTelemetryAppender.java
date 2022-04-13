@@ -6,14 +6,14 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 
-public class OpenTelemetryAppender extends AppenderBase<ILoggingEvent> {
+public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
   private static final LogEmitterProviderHolder logEmitterProviderHolder =
       new LogEmitterProviderHolder();
