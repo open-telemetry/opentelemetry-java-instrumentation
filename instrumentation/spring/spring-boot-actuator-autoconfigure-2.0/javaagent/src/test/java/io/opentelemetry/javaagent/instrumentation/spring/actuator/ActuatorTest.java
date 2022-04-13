@@ -36,7 +36,7 @@ class ActuatorTest {
     testBean.inc();
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.micrometer-1.5",
+        "io.opentelemetry.micrometershim",
         "test-counter",
         metrics ->
             metrics.anySatisfy(
