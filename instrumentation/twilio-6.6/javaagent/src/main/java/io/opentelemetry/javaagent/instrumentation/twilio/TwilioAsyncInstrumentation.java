@@ -86,6 +86,7 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
       }
 
       context = instrumenter().start(parentContext, spanName);
+      context = TwilioAsyncMarker.markAsync(context);
       scope = context.makeCurrent();
     }
 

@@ -16,8 +16,8 @@ import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.http.HttpEntity
-import org.apache.http.HttpStatus
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.impl.client.CloseableHttpClient
@@ -196,27 +196,13 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
     }
   }
 
-
   def "http client"() {
     setup:
-    HttpClientBuilder clientBuilder = Mock()
     CloseableHttpClient httpClient = Mock()
-    CloseableHttpResponse httpResponse = Mock()
-    HttpEntity httpEntity = Mock()
-    StatusLine statusLine = Mock()
+    httpClient.execute(_) >> mockResponse(MESSAGE_RESPONSE_BODY, 200)
 
+    HttpClientBuilder clientBuilder = Mock()
     clientBuilder.build() >> httpClient
-
-    httpClient.execute(_) >> httpResponse
-
-    httpResponse.getEntity() >> httpEntity
-    httpResponse.getStatusLine() >> statusLine
-
-    httpEntity.getContent() >> { new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes()) }
-    httpEntity.isRepeatable() >> true
-    httpEntity.getContentLength() >> MESSAGE_RESPONSE_BODY.length()
-
-    statusLine.getStatusCode() >> HttpStatus.SC_OK
 
     NetworkHttpClient networkHttpClient = new NetworkHttpClient(clientBuilder)
 
@@ -239,7 +225,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 3) {
         span(0) {
           name "test"
           hasNoParent()
@@ -255,6 +241,20 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
+          }
+        }
+        span(2) {
+          name "HTTP POST"
+          kind CLIENT
+          childOf span(1)
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
+            "$SemanticAttributes.NET_PEER_PORT.key" 443
+            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
           }
         }
       }
@@ -263,41 +263,14 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
 
   def "http client retry"() {
     setup:
-    HttpClientBuilder clientBuilder = Mock()
     CloseableHttpClient httpClient = Mock()
-    CloseableHttpResponse httpResponse1 = Mock()
-    CloseableHttpResponse httpResponse2 = Mock()
-    HttpEntity httpEntity1 = Mock()
-    HttpEntity httpEntity2 = Mock()
-    StatusLine statusLine1 = Mock()
-    StatusLine statusLine2 = Mock()
+    httpClient.execute(_) >>> [
+      mockResponse(ERROR_RESPONSE_BODY, 500),
+      mockResponse(MESSAGE_RESPONSE_BODY, 200)
+    ]
 
+    HttpClientBuilder clientBuilder = Mock()
     clientBuilder.build() >> httpClient
-
-    httpClient.execute(_) >>> [httpResponse1, httpResponse2]
-
-    // First response is an HTTP/500 error, which should drive a retry
-    httpResponse1.getEntity() >> httpEntity1
-    httpResponse1.getStatusLine() >> statusLine1
-
-    httpEntity1.getContent() >> { new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()) }
-
-    httpEntity1.isRepeatable() >> true
-    httpEntity1.getContentLength() >> ERROR_RESPONSE_BODY.length()
-
-    statusLine1.getStatusCode() >> HttpStatus.SC_INTERNAL_SERVER_ERROR
-
-    // Second response is HTTP/200 success
-    httpResponse2.getEntity() >> httpEntity2
-    httpResponse2.getStatusLine() >> statusLine2
-
-    httpEntity2.getContent() >> {
-      new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes())
-    }
-    httpEntity2.isRepeatable() >> true
-    httpEntity2.getContentLength() >> MESSAGE_RESPONSE_BODY.length()
-
-    statusLine2.getStatusCode() >> HttpStatus.SC_OK
 
     NetworkHttpClient networkHttpClient = new NetworkHttpClient(clientBuilder)
 
@@ -319,7 +292,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 4) {
         span(0) {
           name "test"
           hasNoParent()
@@ -337,47 +310,49 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "twilio.status" "sent"
           }
         }
+        span(2) {
+          name "HTTP POST"
+          kind CLIENT
+          childOf span(1)
+          status ERROR
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
+            "$SemanticAttributes.NET_PEER_PORT.key" 443
+            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 500
+          }
+        }
+        span(3) {
+          name "HTTP POST"
+          kind CLIENT
+          childOf span(1)
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
+            "$SemanticAttributes.NET_PEER_PORT.key" 443
+            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
+          }
+        }
       }
     }
   }
 
   def "http client retry async"() {
     setup:
-    HttpClientBuilder clientBuilder = Mock()
     CloseableHttpClient httpClient = Mock()
-    CloseableHttpResponse httpResponse1 = Mock()
-    CloseableHttpResponse httpResponse2 = Mock()
-    HttpEntity httpEntity1 = Mock()
-    HttpEntity httpEntity2 = Mock()
-    StatusLine statusLine1 = Mock()
-    StatusLine statusLine2 = Mock()
+    httpClient.execute(_) >>> [
+      mockResponse(ERROR_RESPONSE_BODY, 500),
+      mockResponse(MESSAGE_RESPONSE_BODY, 200)
+    ]
 
+    HttpClientBuilder clientBuilder = Mock()
     clientBuilder.build() >> httpClient
-
-    httpClient.execute(_) >>> [httpResponse1, httpResponse2]
-
-    // First response is an HTTP/500 error, which should drive a retry
-    httpResponse1.getEntity() >> httpEntity1
-    httpResponse1.getStatusLine() >> statusLine1
-
-    httpEntity1.getContent() >> { new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes()) }
-
-    httpEntity1.isRepeatable() >> true
-    httpEntity1.getContentLength() >> ERROR_RESPONSE_BODY.length()
-
-    statusLine1.getStatusCode() >> HttpStatus.SC_INTERNAL_SERVER_ERROR
-
-    // Second response is HTTP/200 success
-    httpResponse2.getEntity() >> httpEntity2
-    httpResponse2.getStatusLine() >> statusLine2
-
-    httpEntity2.getContent() >> {
-      new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes())
-    }
-    httpEntity2.isRepeatable() >> true
-    httpEntity2.getContentLength() >> MESSAGE_RESPONSE_BODY.length()
-
-    statusLine2.getStatusCode() >> HttpStatus.SC_OK
 
     NetworkHttpClient networkHttpClient = new NetworkHttpClient(clientBuilder)
 
@@ -406,7 +381,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
     message.body == "Hello, World!"
 
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 4) {
         span(0) {
           name "test"
           hasNoParent()
@@ -422,6 +397,35 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.status" "sent"
+          }
+        }
+        span(2) {
+          name "HTTP POST"
+          kind CLIENT
+          childOf span(1)
+          status ERROR
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
+            "$SemanticAttributes.NET_PEER_PORT.key" 443
+            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 500
+          }
+        }
+        span(3) {
+          name "HTTP POST"
+          kind CLIENT
+          childOf span(1)
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
+            "$SemanticAttributes.NET_PEER_PORT.key" 443
+            "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "$SemanticAttributes.HTTP_METHOD.key" "POST"
+            "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
+            "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
           }
         }
       }
@@ -607,5 +611,21 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
         }
       }
     }
+  }
+
+  private CloseableHttpResponse mockResponse(String body, int statusCode) {
+    HttpEntity httpEntity = Mock()
+    httpEntity.getContent() >> { new ByteArrayInputStream(body.getBytes()) }
+    httpEntity.isRepeatable() >> true
+    httpEntity.getContentLength() >> body.length()
+
+    StatusLine statusLine = Mock()
+    statusLine.getStatusCode() >> statusCode
+
+    CloseableHttpResponse httpResponse = Mock()
+    httpResponse.getEntity() >> httpEntity
+    httpResponse.getStatusLine() >> statusLine
+
+    return httpResponse
   }
 }
