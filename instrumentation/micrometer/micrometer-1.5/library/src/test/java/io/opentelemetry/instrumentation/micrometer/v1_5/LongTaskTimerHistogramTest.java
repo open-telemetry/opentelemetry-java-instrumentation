@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Deprecated
 class LongTaskTimerHistogramTest {
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";

@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 final class UnsupportedReadLogger {
 
   static {
+    @SuppressWarnings("deprecation") // will be removed
     Logger logger = Logger.getLogger(OpenTelemetryMeterRegistry.class.getName());
     logger.warning("OpenTelemetry metrics bridge does not support reading measurements");
   }

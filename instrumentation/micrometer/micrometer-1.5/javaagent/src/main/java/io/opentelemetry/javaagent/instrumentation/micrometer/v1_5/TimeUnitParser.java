@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.micrometer.v1_5;
+package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import static java.util.logging.Level.WARNING;
 
+import io.opentelemetry.micrometer1shim.OpenTelemetryMeterRegistry;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-final class TimeUnitHelper {
+final class TimeUnitParser {
 
-  @SuppressWarnings("deprecation") // will be removed
   private static final Logger logger = Logger.getLogger(OpenTelemetryMeterRegistry.class.getName());
 
-  static TimeUnit parseConfigValue(@Nullable String value, TimeUnit defaultUnit) {
+  static TimeUnit parseConfigValue(@Nullable String value) {
     if (value == null) {
-      return defaultUnit;
+      return TimeUnit.MILLISECONDS;
     }
     // short names are UCUM names
     // long names are just TimeUnit values lowercased
@@ -49,32 +49,12 @@ final class TimeUnitHelper {
         if (logger.isLoggable(WARNING)) {
           logger.log(
               WARNING,
-              "Invalid base time unit: '{0}'; using '{1}' as the base time unit instead",
-              new Object[] {value, getUnitString(defaultUnit)});
+              "Invalid base time unit: '{0}'; using 'ms' as the base time unit instead",
+              value);
         }
-        return defaultUnit;
+        return TimeUnit.MILLISECONDS;
     }
   }
 
-  static String getUnitString(TimeUnit unit) {
-    switch (unit) {
-      case NANOSECONDS:
-        return "ns";
-      case MICROSECONDS:
-        return "us";
-      case MILLISECONDS:
-        return "ms";
-      case SECONDS:
-        return "s";
-      case MINUTES:
-        return "min";
-      case HOURS:
-        return "h";
-      case DAYS:
-        return "d";
-    }
-    throw new IllegalStateException("Should not ever happen");
-  }
-
-  private TimeUnitHelper() {}
+  private TimeUnitParser() {}
 }
