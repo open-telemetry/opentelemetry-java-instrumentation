@@ -40,6 +40,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
                 DockerImageName.parse(
                     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20220411.2147767274"))
             .withExposedPorts(BACKEND_PORT)
+            .withEnv("JAVA_TOOL_OPTIONS", "-Xmx128m")
             .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT))
             .withNetwork(network)
             .withNetworkAliases(BACKEND_ALIAS)
@@ -88,7 +89,6 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
         new GenericContainer<>(DockerImageName.parse(targetImageName))
             .withStartupTimeout(Duration.ofMinutes(5))
             .withExposedPorts(ports.toArray(new Integer[0]))
-            .withEnv("JAVA_TOOL_OPTIONS", "-Xmx128m")
             .withNetwork(network)
             .withLogConsumer(output)
             .withLogConsumer(new Slf4jLogConsumer(appLogger))
