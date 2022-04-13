@@ -64,7 +64,7 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
     result.status == "green"
 
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           name "GET"
           kind CLIENT
@@ -76,6 +76,20 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
             "$SemanticAttributes.NET_PEER_PORT" httpHost.port
+          }
+        }
+        span(1) {
+          name "HTTP GET"
+          kind CLIENT
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
+            "$SemanticAttributes.NET_PEER_PORT" httpHost.port
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
           }
         }
       }
@@ -118,7 +132,7 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
     result.status == "green"
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           name "parent"
           kind INTERNAL
@@ -138,6 +152,20 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
+          name "HTTP GET"
+          kind CLIENT
+          childOf span(1)
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
+            "$SemanticAttributes.NET_PEER_PORT" httpHost.port
+            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
+            "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
+            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+          }
+        }
+        span(3) {
           name "callback"
           kind INTERNAL
           childOf(span(0))
