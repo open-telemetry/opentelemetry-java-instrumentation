@@ -117,6 +117,7 @@ include(":testing-common:library-for-integration-tests")
 
 // smoke tests
 include(":smoke-tests")
+include(":smoke-tests:images:fake-backend")
 include(":smoke-tests:images:grpc")
 include(":smoke-tests:images:play")
 include(":smoke-tests:images:quarkus")
