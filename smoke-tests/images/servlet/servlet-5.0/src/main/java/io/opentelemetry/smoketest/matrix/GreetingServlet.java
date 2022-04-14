@@ -18,6 +18,7 @@ import java.net.URLConnection;
 import java.util.Objects;
 
 public class GreetingServlet extends HttpServlet {
+  private static final long serialVersionUID = 1L;
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -36,7 +37,7 @@ public class GreetingServlet extends HttpServlet {
   }
 
   // We have to run on Java 8, so no Java 9 stream transfer goodies for us.
-  private long transfer(InputStream from, OutputStream to) throws IOException {
+  private static long transfer(InputStream from, OutputStream to) throws IOException {
     Objects.requireNonNull(to, "out");
     long transferred = 0;
     byte[] buffer = new byte[65535];
