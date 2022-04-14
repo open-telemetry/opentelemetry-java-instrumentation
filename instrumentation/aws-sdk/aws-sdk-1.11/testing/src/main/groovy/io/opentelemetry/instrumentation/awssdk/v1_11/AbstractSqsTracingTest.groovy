@@ -50,10 +50,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
     }
   }
 
-  boolean hasHttpClientSpan() {
-    false
-  }
-
   def "simple sqs producer-consumer services"() {
     setup:
     client.createQueue("testSdkSqs")
@@ -88,7 +84,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           }
         }
       }
-      trace(1, hasHttpClientSpan() ? 3 : 2) {
+      trace(1, 2) {
         span(0) {
           name "SQS.SendMessage"
           kind PRODUCER
@@ -109,16 +105,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.transport" IP_TCP
           }
         }
-        def offset = 0
-        if (hasHttpClientSpan()) {
-          offset = 1
-          span(1) {
-            name "HTTP POST"
-            kind CLIENT
-            childOf span(0)
-          }
-        }
-        span(1 + offset) {
+        span(1) {
           name "SQS.ReceiveMessage"
           kind CONSUMER
           childOf span(0)
