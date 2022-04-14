@@ -2,9 +2,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
-  id("otel.java-conventions")
-  id("com.google.cloud.tools.jib")
+  // Don't apply java-conventions since no Java in this project and it interferes with play plugin.
+  id("otel.spotless-conventions")
 
+  id("com.google.cloud.tools.jib")
   id("org.gradle.playframework") version "0.12"
 }
 
