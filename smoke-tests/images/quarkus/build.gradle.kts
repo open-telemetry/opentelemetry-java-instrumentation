@@ -15,12 +15,15 @@ plugins {
   id("io.quarkus") version "2.8.0.Final"
 }
 
-group = "io.opentelemetry"
-version = "0.0.1-SNAPSHOT"
-
 dependencies {
   implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:2.8.0.Final"))
   implementation("io.quarkus:quarkus-resteasy")
+}
+
+quarkus {
+  // Expected by jib extension.
+  // TODO(anuraaga): Switch to quarkus plugin native jib support.
+  setFinalName("opentelemetry-quarkus-$version")
 }
 
 val targetJDK = project.findProperty("targetJDK") ?: "11"
