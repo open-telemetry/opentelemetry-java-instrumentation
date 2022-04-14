@@ -22,11 +22,10 @@ import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import test.EjbHelloServiceImpl;
 import test.HelloService;
 import test.HelloServiceImpl;
@@ -64,9 +63,19 @@ public abstract class AbstractArquillianJaxWsTest {
     return url.resolve(getServicePath(service)).toString();
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"HelloService", "EjbHelloService"})
-  public void testHelloRequest(String service) {
+  @Test
+  public void testHelloService() {
+    testHelloRequest("HelloService");
+  }
+
+  @Test
+  public void testEjbHelloService() {
+    testHelloRequest("EjbHelloService");
+  }
+
+  // @ParameterizedTest doesn't work correctly with arquillian, all exceptions (assertion errors)
+  // thrown from the test method are ignored
+  private void testHelloRequest(String service) {
     String soapMessage =
         "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://opentelemetry.io/test/hello-web-service\">"
             + "   <soapenv:Header/>"
