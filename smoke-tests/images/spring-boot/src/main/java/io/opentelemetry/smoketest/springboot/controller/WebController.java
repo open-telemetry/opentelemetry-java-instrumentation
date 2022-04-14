@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class WebController {
-  private static final Logger LOGGER = LoggerFactory.getLogger(WebController.class);
+  private static final Logger logger = LoggerFactory.getLogger(WebController.class);
 
   @RequestMapping("/greeting")
   public String greeting() {
-    LOGGER.info("HTTP request received");
+    logger.info("HTTP request received");
     return withSpan();
   }
 
