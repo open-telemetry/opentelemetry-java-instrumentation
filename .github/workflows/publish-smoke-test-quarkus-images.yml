@@ -13,7 +13,7 @@ jobs:
   publish:
     uses: ./.github/workflows/reusable-smoke-test-images.yml
     with:
-      build-root-directory: smoke-tests/images/quarkus
+      project: :smoke-tests:images:quarkus
       publish: true
       # Quarkus 2.0+ does not support Java 8
       skip-java-8: true

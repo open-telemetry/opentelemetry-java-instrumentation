@@ -2,9 +2,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
+  id("otel.java-conventions")
+  id("com.google.cloud.tools.jib")
+
   id("org.gradle.playframework") version "0.12"
-  id("com.google.cloud.tools.jib") version "3.2.1"
-  id("com.diffplug.spotless") version "6.4.2"
 }
 
 val playVer = "2.6.20"
@@ -24,20 +25,6 @@ repositories {
   maven {
     setName("lightbend-maven-releases")
     setUrl("https://repo.lightbend.com/lightbend/maven-release")
-  }
-}
-
-description = "Play Integration Tests."
-
-spotless {
-  scala {
-    scalafmt()
-    licenseHeaderFile(rootProject.file("../../../buildscripts/spotless.license.java"), "(package|import|public)")
-    target("src/**/*.scala")
-  }
-  kotlinGradle {
-    ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
-    target("**/*.gradle.kts")
   }
 }
 
