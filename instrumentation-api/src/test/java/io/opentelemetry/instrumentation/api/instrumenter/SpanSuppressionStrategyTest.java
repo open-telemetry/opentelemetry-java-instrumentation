@@ -127,7 +127,6 @@ class SpanSuppressionStrategyTest {
     }
   }
 
-  // TODO: test SEMCONV
   @Test
   void semconv_shouldNotSuppressAnythingWhenThereAreNoSpanKeys() {
     SpanSuppressor suppressor = SpanSuppressionStrategy.SEMCONV.create(emptySet());
