@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedConfigPropertyWarning;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectionInstrumenter;
@@ -20,6 +21,10 @@ public final class NettyClientSingletons {
 
   static {
     Config config = Config.get();
+    DeprecatedConfigPropertyWarning.warnIfUsed(
+        config,
+        "otel.instrumentation.netty.always-create-connect-span",
+        "otel.instrumentation.netty.connection-telemetry.enabled");
     boolean alwaysCreateConnectSpan =
         config.getBoolean("otel.instrumentation.netty.always-create-connect-span", false);
     connectionTelemetryEnabled =
