@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -264,14 +265,18 @@ public class AgentInstaller {
     // to touch it due to classloader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
         Config.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
-    if (!shouldForceSynchronousAgentListenersCalls
-        && isJavaBefore9()
-        && isAppUsingCustomLogManager()) {
+    boolean javaBefore9 = isJavaBefore9();
+    if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
       registerClassLoadCallback(
           "java.util.logging.LogManager",
           new DelayedAfterAgentCallback(config, agentListeners, autoConfiguredSdk));
     } else {
+      if (javaBefore9) {
+        // force LogManager to be initialized while we are single-threaded, because if we wait,
+        // LogManager initialization can cause a deadlock in Java 8 if done by two different threads
+        LogManager.getLogManager();
+      }
       for (AgentListener agentListener : agentListeners) {
         agentListener.afterAgent(config, autoConfiguredSdk);
       }
