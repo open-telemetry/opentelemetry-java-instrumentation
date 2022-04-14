@@ -11,7 +11,7 @@ dependencies {
   testRuntimeOnly("org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0:javaagent"))
 
   // wildfly version used to run tests
