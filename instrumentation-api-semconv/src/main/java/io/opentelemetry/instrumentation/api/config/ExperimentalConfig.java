@@ -38,11 +38,6 @@ public final class ExperimentalConfig {
         "otel.instrumentation.common.experimental.view-telemetry.enabled", !suppressViewSpans);
   }
 
-  public boolean useViewNameAsHttpRoute() {
-    return config.getBoolean(
-        "otel.instrumentation.common.experimental.view-name-as-http-route.enabled", false);
-  }
-
   public boolean messagingReceiveInstrumentationEnabled() {
     // TODO: remove that `suppress...` flag after 1.13 release
     boolean receiveSpansSuppressed =
