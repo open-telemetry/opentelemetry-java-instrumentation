@@ -24,9 +24,17 @@ public final class ReactorNettySingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.reactor-netty-1.0";
 
-  private static final boolean alwaysCreateConnectSpan =
-      Config.get()
-          .getBoolean("otel.instrumentation.reactor-netty.always-create-connect-span", false);
+  private static final boolean connectionTelemetryEnabled;
+
+  static {
+    Config config = Config.get();
+    boolean alwaysCreateConnectSpan =
+        config.getBoolean("otel.instrumentation.reactor-netty.always-create-connect-span", false);
+    connectionTelemetryEnabled =
+        config.getBoolean(
+            "otel.instrumentation.reactor-netty.connection-telemetry.enabled",
+            alwaysCreateConnectSpan);
+  }
 
   private static final Instrumenter<HttpClientConfig, HttpClientResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
@@ -51,7 +59,7 @@ public final class ReactorNettySingletons {
             .newInstrumenter(SpanKindExtractor.alwaysClient());
 
     NettyClientInstrumenterFactory instrumenterFactory =
-        new NettyClientInstrumenterFactory(INSTRUMENTATION_NAME, alwaysCreateConnectSpan, false);
+        new NettyClientInstrumenterFactory(INSTRUMENTATION_NAME, connectionTelemetryEnabled, false);
     CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
   }
 

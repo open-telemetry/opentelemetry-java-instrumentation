@@ -21,10 +21,19 @@ public final class NettyClientSingletons {
   static final AttributeKey<HttpResponse> HTTP_RESPONSE =
       AttributeKey.valueOf(NettyClientSingletons.class, "http-client-response");
 
-  private static final boolean alwaysCreateConnectSpan =
-      Config.get().getBoolean("otel.instrumentation.netty.always-create-connect-span", false);
-  private static final boolean sslTelemetryEnabled =
-      Config.get().getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
+  private static final boolean connectionTelemetryEnabled;
+  private static final boolean sslTelemetryEnabled;
+
+  static {
+    Config config = Config.get();
+    boolean alwaysCreateConnectSpan =
+        config.getBoolean("otel.instrumentation.netty.always-create-connect-span", false);
+    connectionTelemetryEnabled =
+        config.getBoolean(
+            "otel.instrumentation.netty.connection-telemetry.enabled", alwaysCreateConnectSpan);
+    sslTelemetryEnabled =
+        config.getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
+  }
 
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
@@ -33,7 +42,7 @@ public final class NettyClientSingletons {
   static {
     NettyClientInstrumenterFactory factory =
         new NettyClientInstrumenterFactory(
-            "io.opentelemetry.netty-4.1", alwaysCreateConnectSpan, sslTelemetryEnabled);
+            "io.opentelemetry.netty-4.1", connectionTelemetryEnabled, sslTelemetryEnabled);
     INSTRUMENTER = factory.createHttpInstrumenter();
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
