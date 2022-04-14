@@ -3,8 +3,9 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import org.gradle.configurationcache.extensions.capitalized
 
 plugins {
+  id("otel.spotless-conventions")
+
   id("com.bmuschko.docker-remote-api")
-  id("com.diffplug.spotless")
 }
 
 data class ImageTarget(val version: List<String>, val vm: List<String>, val jdk: List<String>, val args: Map<String, String> = emptyMap(), val war: String = "servlet-3.0", val windows: Boolean = true)
@@ -118,7 +119,7 @@ fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfil
   val platformSuffix = if (isWindows) "-windows" else ""
 
   val prepareTask = tasks.register<Copy>("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix") {
-    val warTask = project(":$warProject").tasks.named<War>("war")
+    val warTask = project(":smoke-tests:images:servlet:$warProject").tasks.named<War>("war")
     dependsOn(warTask)
     into(dockerWorkingDir)
     from("src/$dockerFileName")
@@ -205,12 +206,5 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
         }
       }
     }
-  }
-}
-
-spotless {
-  kotlinGradle {
-    ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
-    target("**/*.gradle.kts")
   }
 }

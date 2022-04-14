@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class AsyncGreetingServlet extends GreetingServlet {
+  private static final long serialVersionUID = 1L;
+
   private static final BlockingQueue<AsyncContext> jobQueue = new LinkedBlockingQueue<>();
   private static final ExecutorService executor = Executors.newFixedThreadPool(2);
 
@@ -47,7 +49,7 @@ public class AsyncGreetingServlet extends GreetingServlet {
     jobQueue.add(ac);
   }
 
-  private void handleRequest(AsyncContext ac) {
+  private static void handleRequest(AsyncContext ac) {
     ac.dispatch("/greeting");
   }
 }

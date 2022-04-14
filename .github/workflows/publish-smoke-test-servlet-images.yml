@@ -63,13 +63,11 @@ jobs:
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-2019'
-        run: ./gradlew buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
-        working-directory: smoke-tests/images/servlet
+        run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-2019'
-        run: ./gradlew buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
-        working-directory: smoke-tests/images/servlet
+        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
   open-issue-on-failure:
     needs: publish
