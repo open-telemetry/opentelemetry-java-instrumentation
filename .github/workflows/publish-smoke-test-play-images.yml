@@ -13,7 +13,7 @@ jobs:
   publish:
     uses: ./.github/workflows/reusable-smoke-test-images.yml
     with:
-      build-root-directory: smoke-tests/images/play
+      project: :smoke-tests:images:play
       publish: true
       # Play doesn't support Java 16+ yet
       # https://github.com/playframework/playframework/pull/10819
@@ -47,8 +47,7 @@ jobs:
         # Play doesn't support Java 16 (or 17) yet
         # https://github.com/playframework/playframework/pull/10819
       - name: Build Java 15 Docker image
-        run: ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
-        working-directory: smoke-tests/images/play
+        run: ./gradlew :smoke-tests:images:play:jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=${{ env.TAG }}
 
   open-issue-on-failure:
     needs:

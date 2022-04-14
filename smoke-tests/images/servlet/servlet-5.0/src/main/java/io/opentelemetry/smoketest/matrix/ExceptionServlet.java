@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class ExceptionServlet extends HttpServlet {
+  private static final long serialVersionUID = 1L;
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

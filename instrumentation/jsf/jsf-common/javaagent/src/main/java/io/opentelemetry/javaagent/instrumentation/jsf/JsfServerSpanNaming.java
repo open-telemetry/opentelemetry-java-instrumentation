@@ -5,26 +5,34 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 
-public class JsfServerSpanNaming {
+public final class JsfServerSpanNaming {
 
-  public static final HttpRouteGetter<FacesContext> SERVER_SPAN_NAME =
-      (context, facesContext) -> {
-        UIViewRoot uiViewRoot = facesContext.getViewRoot();
-        if (uiViewRoot == null) {
-          return null;
-        }
+  public static void updateViewName(Context context, FacesContext facesContext) {
+    // just update the server span name, without touching the http.route
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    if (serverSpan == null) {
+      return;
+    }
 
-        // JSF spec 7.6.2
-        // view id is a context relative path to the web application resource that produces the
-        // view, such as a JSP page or a Facelets page.
-        String viewId = uiViewRoot.getViewId();
-        return ServletContextPath.prepend(context, viewId);
-      };
+    UIViewRoot uiViewRoot = facesContext.getViewRoot();
+    if (uiViewRoot == null) {
+      return;
+    }
+
+    // JSF spec 7.6.2
+    // view id is a context relative path to the web application resource that produces the
+    // view, such as a JSP page or a Facelets page.
+    String viewId = uiViewRoot.getViewId();
+    String name = ServletContextPath.prepend(context, viewId);
+    serverSpan.updateName(name);
+  }
 
   private JsfServerSpanNaming() {}
 }

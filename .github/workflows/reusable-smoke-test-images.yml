@@ -3,7 +3,7 @@ name: PR build fake backend images for smoke tests
 on:
   workflow_call:
     inputs:
-      build-root-directory:
+      project:
         type: string
         required: true
       publish:
@@ -52,19 +52,15 @@ jobs:
 
       - name: Build Java 8 Docker image
         if: ${{ !inputs.skip-java-8 }}
-        run: ./gradlew ${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: ${{ inputs.build-root-directory }}
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 11 Docker image
-        run: ./gradlew ${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: ${{ inputs.build-root-directory }}
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 17 Docker image
         if: ${{ !inputs.skip-java-17 }}
-        run: ./gradlew ${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: ${{ inputs.build-root-directory }}
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 18 Docker image
         if: ${{ !inputs.skip-java-18 }}
-        run: ./gradlew ${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
-        working-directory: ${{ inputs.build-root-directory }}
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
