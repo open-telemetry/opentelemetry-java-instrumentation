@@ -1,5 +1,6 @@
 pluginManagement {
   plugins {
+    id("com.bmuschko.docker-remote-api") version "7.3.0"
     id("com.github.ben-manes.versions") version "0.42.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
     id("com.google.cloud.tools.jib") version "3.2.1"
@@ -116,6 +117,7 @@ include(":testing-common:library-for-integration-tests")
 
 // smoke tests
 include(":smoke-tests")
+include(":smoke-tests:images:fake-backend")
 include(":smoke-tests:images:grpc")
 include(":smoke-tests:images:play")
 include(":smoke-tests:images:quarkus")
