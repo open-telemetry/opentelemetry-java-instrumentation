@@ -2,6 +2,11 @@ plugins {
   id("otel.javaagent-testing")
 }
 
+otelJava {
+  // Test fails to start on java 17
+  maxJavaVersionForTests.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing"))
   testRuntimeOnly("fish.payara.arquillian:arquillian-payara-server-embedded:2.4.1")
