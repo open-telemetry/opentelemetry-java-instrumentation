@@ -2,6 +2,7 @@ pluginManagement {
   plugins {
     id("com.github.ben-manes.versions") version "0.42.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
+    id("com.google.cloud.tools.jib") version "3.2.1"
     id("com.gradle.plugin-publish") version "1.0.0-rc-1"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
@@ -115,6 +116,10 @@ include(":testing-common:library-for-integration-tests")
 
 // smoke tests
 include(":smoke-tests")
+include(":smoke-tests:images:grpc")
+include(":smoke-tests:images:play")
+include(":smoke-tests:images:quarkus")
+include(":smoke-tests:images:spring-boot")
 
 include(":instrumentation:akka:akka-actor-2.5:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
