@@ -32,7 +32,6 @@ public class SuppressingKafkaClientsInstrumentation implements TypeInstrumentati
   public static class RunLoopAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
-      System.out.println("DISABLE WRAPPER AT THE START");
       KafkaClientsConsumerProcessTracing.disableWrapping();
     }
 
