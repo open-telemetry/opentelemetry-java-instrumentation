@@ -13,10 +13,10 @@ jobs:
     strategy:
       matrix:
         task:
-          - :instrumentation:muzzle1
-          - :instrumentation:muzzle2
-          - :instrumentation:muzzle3
-          - :instrumentation:muzzle4
+          - ":instrumentation:muzzle1"
+          - ":instrumentation:muzzle2"
+          - ":instrumentation:muzzle3"
+          - ":instrumentation:muzzle4"
     steps:
       - uses: actions/checkout@v3
 

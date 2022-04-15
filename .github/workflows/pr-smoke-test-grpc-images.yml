@@ -10,5 +10,5 @@ jobs:
   build:
     uses: ./.github/workflows/reusable-smoke-test-images.yml
     with:
-      project: :smoke-tests:images:grpc
+      project: ":smoke-tests:images:grpc"
       cache-read-only: true

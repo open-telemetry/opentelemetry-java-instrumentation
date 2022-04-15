@@ -10,7 +10,7 @@ jobs:
   build:
     uses: ./.github/workflows/reusable-smoke-test-images.yml
     with:
-      project: :smoke-tests:images:play
+      project: ":smoke-tests:images:play"
       cache-read-only: true
       # Play doesn't support Java 16+ yet
       # https://github.com/playframework/playframework/pull/10819
