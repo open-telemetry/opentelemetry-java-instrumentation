@@ -12,8 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.concurrent.PropagatedContext;
-import io.opentelemetry.javaagent.bootstrap.concurrent.TaskAdviceHelper;
+import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
+import io.opentelemetry.javaagent.bootstrap.executors.TaskAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Callable;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap.concurrent;
+package io.opentelemetry.javaagent.bootstrap.executors;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
