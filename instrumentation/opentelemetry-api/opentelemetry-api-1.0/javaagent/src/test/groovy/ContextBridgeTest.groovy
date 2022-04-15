@@ -6,12 +6,16 @@
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource
 import io.opentelemetry.instrumentation.api.internal.SpanKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -150,7 +154,7 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
 
   def "test local root span bridge"() {
     expect:
-    AgentSpanTesting.runWithServerSpan("server") {
+    AgentSpanTesting.runWithHttpServerSpan("server") {
       assert Span.current() != null
       assert LocalRootSpan.fromContextOrNull(Context.current()) != null
       runWithSpan("internal") {
@@ -185,6 +189,27 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
       runWithSpan("internal") {
         spanKeys.each { spanKey ->
           assert spanKey.fromContextOrNull(Context.current()) != null
+        }
+      }
+    }
+  }
+
+  def "test HttpRouteHolder bridge"() {
+    when:
+    AgentSpanTesting.runWithHttpServerSpan("server") {
+      HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.CONTROLLER, "/test/:id")
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "/test/:id"
+          kind SpanKind.SERVER
+          hasNoParent()
+          attributes {
+            "$SemanticAttributes.HTTP_ROUTE" "/test/:id"
+          }
         }
       }
     }

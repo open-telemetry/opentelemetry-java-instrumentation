@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.testing;
+
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -13,12 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AgentSpanTestingInstrumentationModule extends InstrumentationModule {
   public AgentSpanTestingInstrumentationModule() {
-    super(AgentSpanTestingInstrumentationModule.class.getName());
-  }
-
-  @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("AgentSpanTestingInstrumenter");
+    super("agent-span-testing");
   }
 
   @Override

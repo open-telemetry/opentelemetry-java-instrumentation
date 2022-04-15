@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
  */
 public final class HttpRouteHolder {
 
-  private static final ContextKey<HttpRouteHolder> CONTEXT_KEY =
+  private static final ContextKey<HttpRouteHolder> KEY =
       ContextKey.named("opentelemetry-http-server-route-key");
 
   /**
@@ -34,10 +34,10 @@ public final class HttpRouteHolder {
    */
   public static <REQUEST> ContextCustomizer<REQUEST> get() {
     return (context, request, startAttributes) -> {
-      if (context.get(CONTEXT_KEY) != null) {
+      if (context.get(KEY) != null) {
         return context;
       }
-      return context.with(CONTEXT_KEY, new HttpRouteHolder());
+      return context.with(KEY, new HttpRouteHolder());
     };
   }
 
@@ -45,6 +45,11 @@ public final class HttpRouteHolder {
   @Nullable private volatile String route;
 
   private HttpRouteHolder() {}
+
+  private HttpRouteHolder(int updatedBySourceOrder, @Nullable String route) {
+    this.updatedBySourceOrder = updatedBySourceOrder;
+    this.route = route;
+  }
 
   /**
    * Updates the {@code http.route} attribute in the received {@code context}.
@@ -107,7 +112,7 @@ public final class HttpRouteHolder {
     if (serverSpan == null) {
       return;
     }
-    HttpRouteHolder httpRouteHolder = context.get(CONTEXT_KEY);
+    HttpRouteHolder httpRouteHolder = context.get(KEY);
     if (httpRouteHolder == null) {
       String httpRoute = httpRouteGetter.get(context, arg1, arg2);
       if (httpRoute != null && !httpRoute.isEmpty()) {
@@ -151,8 +156,36 @@ public final class HttpRouteHolder {
    */
   @Nullable
   static String getRoute(Context context) {
-    HttpRouteHolder httpRouteHolder = context.get(CONTEXT_KEY);
+    HttpRouteHolder httpRouteHolder = context.get(KEY);
     return httpRouteHolder == null ? null : httpRouteHolder.route;
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @SuppressWarnings("unused") // used by the opentelemetry-api bridge instrumentation
+  static HttpRouteHolder internalCreate(int updatedBySourceOrder, @Nullable String route) {
+    return new HttpRouteHolder(updatedBySourceOrder, route);
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @SuppressWarnings("unused") // used by the opentelemetry-api bridge instrumentation
+  int internalGetUpdatedBySourceOrder() {
+    return updatedBySourceOrder;
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @SuppressWarnings("unused") // used by the opentelemetry-api bridge instrumentation
+  @Nullable
+  String internalGetRoute() {
+    return route;
   }
 
   private static final class OneArgAdapter<T> implements HttpRouteBiGetter<T, HttpRouteGetter<T>> {
