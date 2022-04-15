@@ -30,7 +30,12 @@ import javax.annotation.Nullable;
  * A {@link MeterRegistry} implementation that forwards all the captured metrics to the {@linkplain
  * io.opentelemetry.api.metrics.Meter OpenTelemetry Meter} obtained from the passed {@link
  * OpenTelemetry} instance.
+ *
+ * @deprecated Use the {@code io.opentelemetry.micrometer1shim.OpenTelemetryMeterRegistry} from the
+ *     {@code io.opentelemetry:opentelemetry-micrometer1-shim} library instead. The micrometer1-shim
+ *     library will replace this one.
  */
+@Deprecated
 public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   /**

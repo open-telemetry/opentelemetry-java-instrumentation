@@ -31,6 +31,11 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.opentelemetry.micrometer1shim.");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AutoConfigurationImportSelectorInstrumentation());
   }

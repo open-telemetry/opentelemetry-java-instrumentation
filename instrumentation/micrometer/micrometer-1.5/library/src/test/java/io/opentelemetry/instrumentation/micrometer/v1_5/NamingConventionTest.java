@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("PreferJavaTimeOverload")
+@Deprecated
 class NamingConventionTest {
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";

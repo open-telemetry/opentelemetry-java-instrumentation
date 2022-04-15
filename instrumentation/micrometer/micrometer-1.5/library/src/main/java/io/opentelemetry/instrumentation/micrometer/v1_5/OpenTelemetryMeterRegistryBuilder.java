@@ -12,7 +12,14 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
-/** A builder of {@link OpenTelemetryMeterRegistry}. */
+/**
+ * A builder of {@link OpenTelemetryMeterRegistry}.
+ *
+ * @deprecated Use the {@code io.opentelemetry.micrometer1shim.OpenTelemetryMeterRegistry} from the
+ *     {@code io.opentelemetry:opentelemetry-micrometer1-shim} library instead. The micrometer1-shim
+ *     library will replace this one.
+ */
+@Deprecated
 public final class OpenTelemetryMeterRegistryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
