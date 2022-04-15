@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
           path: |
