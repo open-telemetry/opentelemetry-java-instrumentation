@@ -34,7 +34,7 @@ jobs:
       - name: Build Docker image
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: :smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}
+          arguments: ":smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}"
 
   publishWindows:
     runs-on: windows-2019
@@ -66,7 +66,7 @@ jobs:
       - name: Build Docker image
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: :smoke-tests:images:fake-backend:dockerPush -PextraTag=${{ env.TAG }}
+          arguments: ":smoke-tests:images:fake-backend:dockerPush -PextraTag=${{ env.TAG }}"
 
   open-issue-on-failure:
     needs:
