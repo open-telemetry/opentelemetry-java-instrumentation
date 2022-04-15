@@ -22,13 +22,13 @@ import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRe
 public final class NettyClientInstrumenterFactory {
 
   private final String instrumentationName;
-  private final boolean alwaysCreateConnectSpan;
+  private final boolean connectionTelemetryEnabled;
   private final boolean sslTelemetryEnabled;
 
   public NettyClientInstrumenterFactory(
-      String instrumentationName, boolean alwaysCreateConnectSpan, boolean sslTelemetryEnabled) {
+      String instrumentationName, boolean connectionTelemetryEnabled, boolean sslTelemetryEnabled) {
     this.instrumentationName = instrumentationName;
-    this.alwaysCreateConnectSpan = alwaysCreateConnectSpan;
+    this.connectionTelemetryEnabled = connectionTelemetryEnabled;
     this.sslTelemetryEnabled = sslTelemetryEnabled;
   }
 
@@ -58,11 +58,11 @@ public final class NettyClientInstrumenterFactory {
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .setTimeExtractor(new NettyConnectionTimeExtractor())
             .newInstrumenter(
-                alwaysCreateConnectSpan
+                connectionTelemetryEnabled
                     ? SpanKindExtractor.alwaysInternal()
                     : SpanKindExtractor.alwaysClient());
 
-    return alwaysCreateConnectSpan
+    return connectionTelemetryEnabled
         ? new NettyConnectionInstrumenterImpl(instrumenter)
         : new NettyErrorOnlyConnectionInstrumenter(instrumenter);
   }
