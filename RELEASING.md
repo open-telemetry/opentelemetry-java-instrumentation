@@ -24,7 +24,8 @@ as the last step, which publishes a snapshot build to
 
 All patch releases should include only bug-fixes, and must avoid adding/modifying the public APIs.
 
-In general, patch releases are only made for regressions, memory leaks and deadlocks.
+In general, patch releases are only made for regressions, security vulnerabilities, memory leaks
+and deadlocks.
 
 * Backport pull request(s) to the release branch.
   * Run the [Backport workflow](.github/workflows/backport.yml).
