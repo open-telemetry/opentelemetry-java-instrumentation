@@ -23,6 +23,8 @@ jobs:
         with:
           arguments: :smoke-tests:images:fake-backend:jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
           cache-read-only: true
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
 
   buildWindows:
     runs-on: windows-2019

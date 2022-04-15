@@ -67,8 +67,7 @@ jobs:
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
           # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: |
-            caches/build-cache-1
+          gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Upload deadlock detector artifacts if any
         if: always()
