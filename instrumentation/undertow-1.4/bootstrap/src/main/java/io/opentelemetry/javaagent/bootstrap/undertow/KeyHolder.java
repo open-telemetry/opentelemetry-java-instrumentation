@@ -29,7 +29,6 @@ import java.util.concurrent.ConcurrentMap;
  * that, <i>all</i> Tracers, loaded by all classloaders, will be able to use exactly the same sole
  * instance of the key.
  */
-// TODO allow instrumentation to have their own classes that should go to bootstrap classloader
 public final class KeyHolder {
   public static final ConcurrentMap<Class<?>, Object> contextKeys = new ConcurrentHashMap<>();
 

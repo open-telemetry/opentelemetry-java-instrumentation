@@ -11,10 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.concurrent.ExecutorAdviceHelper;
+import io.opentelemetry.javaagent.bootstrap.concurrent.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
