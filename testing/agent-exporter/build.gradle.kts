@@ -11,8 +11,9 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
 
+  compileOnly(project(":instrumentation-api"))
   compileOnly(project(":javaagent-extension-api"))
-  compileOnly(project(":javaagent-instrumentation-api"))
+  compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
 
   compileOnly(project(":instrumentation-appender-api-internal"))

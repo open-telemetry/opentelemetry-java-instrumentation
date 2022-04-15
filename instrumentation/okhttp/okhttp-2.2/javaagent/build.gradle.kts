@@ -16,6 +16,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   library("com.squareup.okhttp:okhttp:2.2.0")
 
   latestDepTestLibrary("com.squareup.okhttp:okhttp:2.+") // see okhttp-3.0 module

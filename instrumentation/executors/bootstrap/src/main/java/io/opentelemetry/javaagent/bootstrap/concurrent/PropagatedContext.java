@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.concurrent;
+package io.opentelemetry.javaagent.bootstrap.concurrent;
 
 import static java.util.logging.Level.FINE;
 

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.concurrent;
+package io.opentelemetry.javaagent.bootstrap.concurrent;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
-import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
 import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
 

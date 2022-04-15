@@ -9,6 +9,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   testImplementation(project(":instrumentation:executors:testing"))
 }
 
