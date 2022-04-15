@@ -17,6 +17,7 @@ jobs:
           - ":instrumentation:muzzle2"
           - ":instrumentation:muzzle3"
           - ":instrumentation:muzzle4"
+      fail-fast: false
     steps:
       - uses: actions/checkout@v3
 
