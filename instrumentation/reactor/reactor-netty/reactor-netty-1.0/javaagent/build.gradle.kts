@@ -42,7 +42,7 @@ tasks {
     }
     include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.reactor-netty.always-create-connect-span=true")
+    jvmArgs("-Dotel.instrumentation.reactor-netty.connection-telemetry.enabled=true")
   }
 
   test {

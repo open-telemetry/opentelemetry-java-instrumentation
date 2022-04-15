@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
+import io.opentelemetry.instrumentation.api.internal.DeprecatedConfigPropertyWarning;
+
 public final class ExperimentalConfig {
 
   private static final ExperimentalConfig instance = new ExperimentalConfig(Config.get());
@@ -22,6 +24,10 @@ public final class ExperimentalConfig {
 
   public boolean controllerTelemetryEnabled() {
     // TODO: remove that `suppress...` flag after 1.13 release
+    DeprecatedConfigPropertyWarning.warnIfUsed(
+        config,
+        "otel.instrumentation.common.experimental.suppress-controller-spans",
+        "otel.instrumentation.common.experimental.controller-telemetry.enabled");
     boolean suppressControllerSpans =
         config.getBoolean(
             "otel.instrumentation.common.experimental.suppress-controller-spans", false);
@@ -32,6 +38,10 @@ public final class ExperimentalConfig {
 
   public boolean viewTelemetryEnabled() {
     // TODO: remove that `suppress...` flag after 1.13 release
+    DeprecatedConfigPropertyWarning.warnIfUsed(
+        config,
+        "otel.instrumentation.common.experimental.suppress-view-spans",
+        "otel.instrumentation.common.experimental.view-telemetry.enabled");
     boolean suppressViewSpans =
         config.getBoolean("otel.instrumentation.common.experimental.suppress-view-spans", false);
     return config.getBoolean(
@@ -40,6 +50,10 @@ public final class ExperimentalConfig {
 
   public boolean messagingReceiveInstrumentationEnabled() {
     // TODO: remove that `suppress...` flag after 1.13 release
+    DeprecatedConfigPropertyWarning.warnIfUsed(
+        config,
+        "otel.instrumentation.common.experimental.suppress-messaging-receive-spans",
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
     boolean receiveSpansSuppressed =
         config.getBoolean(
             "otel.instrumentation.common.experimental.suppress-messaging-receive-spans", true);

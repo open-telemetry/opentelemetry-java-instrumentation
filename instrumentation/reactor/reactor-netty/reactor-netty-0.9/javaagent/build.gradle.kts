@@ -32,7 +32,7 @@ tasks {
       includeTestsMatching("ReactorNettyConnectionSpanTest")
     }
     include("**/ReactorNettyConnectionSpanTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
   }
 
   test {

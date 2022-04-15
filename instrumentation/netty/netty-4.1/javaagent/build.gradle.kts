@@ -45,7 +45,7 @@ tasks {
       includeTestsMatching("Netty41ClientSslTest")
     }
     include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
