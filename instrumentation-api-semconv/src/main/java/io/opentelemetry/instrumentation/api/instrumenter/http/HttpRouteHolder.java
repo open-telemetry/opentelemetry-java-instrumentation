@@ -102,9 +102,9 @@ public final class HttpRouteHolder {
       T arg1,
       U arg2) {
     Span serverSpan = ServerSpan.fromContextOrNull(context);
-    // checking isRecording() is a helpful optimization for more expensive suppliers
-    // (e.g. Spring MVC instrumentation's HandlerAdapterInstrumentation)
-    if (serverSpan == null || !serverSpan.isRecording()) {
+    // even if the server span is not sampled, we have to continue - we need to compute the
+    // http.route properly so that it can be captured by the server metrics
+    if (serverSpan == null) {
       return;
     }
     HttpRouteHolder httpRouteHolder = context.get(CONTEXT_KEY);
