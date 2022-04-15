@@ -21,7 +21,7 @@ jobs:
       - name: Build Docker image
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: :smoke-tests:images:fake-backend:jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
+          arguments: ":smoke-tests:images:fake-backend:jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain"
           cache-read-only: true
 
   buildWindows:
@@ -44,5 +44,5 @@ jobs:
       - name: Build Docker image
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: :smoke-tests:images:fake-backend:windowsBackendImageBuild
+          arguments: ":smoke-tests:images:fake-backend:windowsBackendImageBuild"
           cache-read-only: true
