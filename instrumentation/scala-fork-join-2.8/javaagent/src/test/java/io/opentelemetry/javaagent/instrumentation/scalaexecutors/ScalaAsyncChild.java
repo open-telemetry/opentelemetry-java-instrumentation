@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.scalaexecutors;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.javaagent.instrumentation.javaconcurrent.TestTask;
+import io.opentelemetry.javaagent.instrumentation.executors.TestTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import scala.concurrent.forkjoin.ForkJoinTask;

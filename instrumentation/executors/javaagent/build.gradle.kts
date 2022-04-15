@@ -41,7 +41,7 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.executors.include=io.opentelemetry.javaagent.instrumentation.javaconcurrent.ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+    jvmArgs("-Dotel.instrumentation.executors.include=io.opentelemetry.javaagent.instrumentation.executors.ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
     jvmArgs("-Djava.awt.headless=true")
   }
 

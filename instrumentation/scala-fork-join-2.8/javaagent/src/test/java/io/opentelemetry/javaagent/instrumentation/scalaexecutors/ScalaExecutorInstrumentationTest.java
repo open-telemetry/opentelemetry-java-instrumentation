@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.scalaexecutors;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.javaconcurrent.AbstractExecutorServiceTest;
+import io.opentelemetry.javaagent.instrumentation.executors.AbstractExecutorServiceTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import scala.concurrent.forkjoin.ForkJoinPool;
