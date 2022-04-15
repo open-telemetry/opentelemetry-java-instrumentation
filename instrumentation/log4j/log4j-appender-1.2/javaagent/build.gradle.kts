@@ -17,6 +17,7 @@ dependencies {
   library("log4j:log4j:1.2.4")
 
   compileOnly(project(":instrumentation-appender-api-internal"))
+  compileOnly(project(":javaagent-bootstrap"))
 
   testImplementation("org.awaitility:awaitility")
 }

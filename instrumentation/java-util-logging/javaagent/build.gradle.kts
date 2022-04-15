@@ -6,6 +6,7 @@ dependencies {
   compileOnly(project(":instrumentation:java-util-logging:shaded-stub-for-instrumenting"))
 
   compileOnly(project(":instrumentation-appender-api-internal"))
+  compileOnly(project(":javaagent-bootstrap"))
 
   // ensure no cross interference
   testInstrumentation(project(":instrumentation:jboss-logmanager-1.1:javaagent"))

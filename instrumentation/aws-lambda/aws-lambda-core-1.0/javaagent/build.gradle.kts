@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  compileOnly(project(":javaagent-bootstrap"))
+
   implementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:library"))
 
   library("com.amazonaws:aws-lambda-java-core:1.0.0")
