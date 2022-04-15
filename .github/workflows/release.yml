@@ -91,7 +91,7 @@ jobs:
               prior_version="$major.$((minor - 1)).0"
             fi
           else
-              prior_version="$major.$minor.$((patch - 1))"
+            prior_version="$major.$minor.$((patch - 1))"
           fi
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
