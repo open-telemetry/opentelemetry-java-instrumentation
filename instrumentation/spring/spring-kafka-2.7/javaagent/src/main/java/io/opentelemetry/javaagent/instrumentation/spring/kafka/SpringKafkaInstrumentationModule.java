@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -20,6 +20,8 @@ public class SpringKafkaInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AbstractMessageListenerContainerInstrumentation());
+    return asList(
+        new AbstractMessageListenerContainerInstrumentation(),
+        new SuppressingKafkaClientsInstrumentation());
   }
 }

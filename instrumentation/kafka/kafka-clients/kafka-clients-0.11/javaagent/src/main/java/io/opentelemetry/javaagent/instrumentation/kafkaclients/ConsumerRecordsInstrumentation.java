@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
@@ -65,14 +63,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) Iterable<ConsumerRecord<K, V>> iterable) {
-      // typically, span key suppression should happen inside the Instrumenter, but receiveContext
-      // is being used as the parent context for the span instead of the current context
-      if (iterable != null
-          && SpanKey.CONSUMER_PROCESS.fromContextOrNull(currentContext()) == null) {
-        Context receiveContext =
-            VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-        iterable = TracingIterable.wrap(iterable, receiveContext);
-      }
+
+      // it's important not to suppress consumer span creation here because this instrumentation can
+      // leak the context and so there may be a leaked consumer span in the context, in which
+      // case it's important to overwrite the leaked span instead of suppressing the correct span
+      // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
+      Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
+      iterable = TracingIterable.wrap(iterable, receiveContext);
     }
   }
 
@@ -83,11 +80,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) List<ConsumerRecord<K, V>> list) {
-      if (list != null) {
-        Context receiveContext =
-            VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-        list = TracingList.wrap(list, receiveContext);
-      }
+
+      // it's important not to suppress consumer span creation here because this instrumentation can
+      // leak the context and so there may be a leaked consumer span in the context, in which
+      // case it's important to overwrite the leaked span instead of suppressing the correct span
+      // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
+      Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
+      list = TracingList.wrap(list, receiveContext);
     }
   }
 
@@ -98,14 +97,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     public static <K, V> void wrap(
         @Advice.This ConsumerRecords<?, ?> records,
         @Advice.Return(readOnly = false) Iterator<ConsumerRecord<K, V>> iterator) {
-      // typically, span key suppression should happen inside the Instrumenter, but receiveContext
-      // is being used as the parent context for the span instead of the current context
-      if (iterator != null
-          && SpanKey.CONSUMER_PROCESS.fromContextOrNull(currentContext()) == null) {
-        Context receiveContext =
-            VirtualField.find(ConsumerRecords.class, Context.class).get(records);
-        iterator = TracingIterator.wrap(iterator, receiveContext);
-      }
+
+      // it's important not to suppress consumer span creation here because this instrumentation can
+      // leak the context and so there may be a leaked consumer span in the context, in which
+      // case it's important to overwrite the leaked span instead of suppressing the correct span
+      // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
+      Context receiveContext = VirtualField.find(ConsumerRecords.class, Context.class).get(records);
+      iterator = TracingIterator.wrap(iterator, receiveContext);
     }
   }
 }
