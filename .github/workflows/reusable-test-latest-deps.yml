@@ -56,7 +56,6 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           arguments: test -PtestLatestDeps=true ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          # testLatestDeps dependencies bundle is over 2gb, which causes restoring it to fail with:
-          #     RangeError [ERR_OUT_OF_RANGE]: The value of "length" is out of range.
-          #     It must be >= 0 && <= 2147483647. Received 2299528741
-          cache-read-only: true
+          cache-read-only: ${{ inputs.cache-read-only }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1

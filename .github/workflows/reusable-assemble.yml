@@ -42,6 +42,8 @@ jobs:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
           arguments: assemble -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Upload deadlock detector artifacts if any
         if: always()
