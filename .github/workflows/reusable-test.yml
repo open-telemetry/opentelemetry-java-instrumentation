@@ -35,13 +35,13 @@ jobs:
 
       - id: setup-test-java
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: ${{ matrix.vm == 'hotspot' && 'temurin' || 'adopt-openj9'}}
           java-version: ${{ matrix.test-java-version }}
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
