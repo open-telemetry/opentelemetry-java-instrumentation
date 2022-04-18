@@ -182,7 +182,7 @@ jobs:
           git fetch upstream
           git checkout -b update-opentelemetry-javaagent-to-$VERSION upstream/main
 
-      - name: Bump version
+      - name: Update version
         run: |
           echo $VERSION > autoinstrumentation/java/version.txt
 
