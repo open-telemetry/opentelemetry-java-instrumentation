@@ -64,7 +64,8 @@ jobs:
         with:
           arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}"
           # only push cache for one matrix option per OS since github action cache space is limited
-          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+          # cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+          cache-disabled: true
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
 
