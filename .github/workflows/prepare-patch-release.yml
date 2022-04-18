@@ -10,7 +10,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          prior_version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts | head -1)
+          prior_version=$(grep -Eo "[0-9]+.[0-9]+.[0-9]+" version.gradle.kts)
           if [[ $prior_version =~ ([0-9]+.[0-9]+).([0-9]+) ]]; then
             major_minor="${BASH_REMATCH[1]}"
             patch="${BASH_REMATCH[2]}"
@@ -19,15 +19,14 @@ jobs:
             exit 1
           fi
           echo "VERSION=$major_minor.$((patch + 1))" >> $GITHUB_ENV
-          echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
 
       - name: Bump version
         run: |
-          .github/scripts/update-versions.sh "$PRIOR_VERSION" "$PRIOR_VERSION-alpha" "$VERSION" "$VERSION-alpha"
+          .github/scripts/update-version.sh "$VERSION" "$VERSION-alpha"
 
       - name: Bump download link version
         run: |
-          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$PRIOR_VERSION/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
+          sed -Ei "s,https://github\.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v[0-9]+\.[0-9]+\.[0-9]+/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
 
       - name: Set git user
         run: |

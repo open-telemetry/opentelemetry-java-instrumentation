@@ -21,7 +21,13 @@ jobs:
 
       - name: Drop snapshot from version
         run: |
-          sed -ri "s/val snapshot = true/val snapshot = false/" version.gradle.kts
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
+          .github/scripts/update-version.sh "$version" "$version-alpha"
+
+      - name: Bump download link version
+        run: |
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
+          sed -Ei "s,https://github\.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$version/," README.md
 
       - name: Set git user
         run: |
@@ -47,7 +53,7 @@ jobs:
 
       - name: Bump snapshot version
         run: |
-          version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
           if [[ $version =~ ([0-9]+).([0-9]+).0 ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
@@ -56,7 +62,7 @@ jobs:
             exit 1
           fi
           next_version="$major.$((minor + 1)).0"
-          sed -ri "s/$version-SNAPSHOT/$next_version-SNAPSHOT/" version.gradle.kts
+          .github/scripts/update-version.sh "$next_version-SNAPSHOT" "$next_version-alpha-SNAPSHOT"
 
       - name: Set git user
         run: |
