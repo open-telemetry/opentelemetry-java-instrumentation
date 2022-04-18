@@ -40,10 +40,13 @@ jobs:
   smoke-test:
     uses: ./.github/workflows/reusable-smoke-test.yml
     with:
-      # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
       no-build-cache: true
-      skip-windows: false
-      # cache-read-only: true
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+    #with:
+      # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
+    #  skip-windows: false
+    #  cache-read-only: true
 
   muzzle:
     # release branch PRs are excluded
