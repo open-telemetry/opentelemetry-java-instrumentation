@@ -47,7 +47,7 @@ jobs:
 
       - name: Bump snapshot version
         run: |
-          version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
           if [[ $version =~ ([0-9]+).([0-9]+).0 ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
