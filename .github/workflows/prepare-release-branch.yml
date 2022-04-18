@@ -21,7 +21,6 @@ jobs:
 
       - name: Drop snapshot from version
         run: |
-          sed -ri "s/val snapshot = true/val snapshot = false/" version.gradle.kts
           version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
           .github/scripts/update-version.sh "$version" "$version-alpha"
 

@@ -8,6 +8,12 @@
 new_version=$1
 new_alpha_version=$2
 
+if [[ $new_version == *-SNAPSHOT ]]; then
+  sed -ri "s/val snapshot = .*/val snapshot = true/" version.gradle.kts
+else
+  sed -ri "s/val snapshot = .*/val snapshot = false/" version.gradle.kts
+fi
+
 sed -ri "s/[0-9]*\.[0-9]*\.[0-9]*/$new_version/" version.gradle.kts
 
 sed -ri "s/(opentelemetryJavaagent *: )\"[^\"]*\"/\1\"$new_version\"/" examples/distro/build.gradle
