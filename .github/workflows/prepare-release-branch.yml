@@ -11,7 +11,7 @@ jobs:
       - name: Create release branch
         id: create-release-branch
         run: |
-          version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
           release_branch_name=$(echo $version | sed -E 's,([0-9]+)\.([0-9]+)\.0,release/v\1.\2.x,')
 
           git push origin HEAD:$release_branch_name
