@@ -74,9 +74,9 @@ jobs:
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
           path: |
-            "**/hs_err_pid*.log"
-            "**/javacore.*.txt"
-            "**/Snap.*.trc"
-            "**/core.*.dmp"
-            "**/jitdump.*.dmp"
+            **/hs_err_pid*.log
+            **/javacore.*.txt
+            **/Snap.*.trc
+            **/core.*.dmp
+            **/jitdump.*.dmp
           if-no-files-found: ignore
