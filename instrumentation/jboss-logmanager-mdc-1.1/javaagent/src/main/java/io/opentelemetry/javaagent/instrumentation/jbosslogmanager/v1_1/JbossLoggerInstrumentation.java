@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.logmanager.ExtLogRecord;
 
-public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
+public class JbossLoggerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.logmanager.Logger");
@@ -35,7 +35,7 @@ public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
             .and(named("logRaw"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
-        JbossLogmanagerInstrumentation.class.getName() + "$CallAppendersAdvice");
+        JbossLoggerInstrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,8 +43,8 @@ public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ExtLogRecord record) {
-      VirtualField.find(ExtLogRecord.class, Span.class)
-          .set(record, Java8BytecodeBridge.currentSpan());
+      VirtualField.find(ExtLogRecord.class, Context.class)
+          .set(record, Java8BytecodeBridge.currentContext());
     }
   }
 }

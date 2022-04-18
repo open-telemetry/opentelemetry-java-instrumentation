@@ -21,6 +21,6 @@ public class JbossLogmanagerInstrumentationModule extends InstrumentationModule 
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new JbossLogmanagerInstrumentation(), new JbossLoggingEventInstrumentation());
+    return asList(new JbossLoggerInstrumentation(), new JbossExtLogRecordInstrumentation());
   }
 }

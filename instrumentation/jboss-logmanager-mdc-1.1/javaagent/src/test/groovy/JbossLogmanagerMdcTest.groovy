@@ -14,7 +14,7 @@ import java.util.logging.LogRecord
 
 class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
   class LogHandler extends Handler {
-    public LinkedList<ExtLogRecord> logRecords
+    public List<ExtLogRecord> logRecords
     
     LogHandler(LinkedList<ExtLogRecord> logRecords) {
       this.logRecords = logRecords
@@ -46,9 +46,12 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     then:
     logRecords.size() == 1
     logRecords.get(0).message == "log message 1"
-    logRecords.get(0).getMdc("trace_id") == null
-    logRecords.get(0).getMdc("span_id") == null
-    logRecords.get(0).getMdc("trace_flags") == null
+    logRecords.get(0).getMdc("trace_id") == "00000000000000000000000000000000"
+    logRecords.get(0).getMdc("span_id") == "0000000000000000"
+    logRecords.get(0).getMdc("trace_flags") == "00"
+
+    cleanup:
+    logRecords.clear()
   }
 
   def "ids when span"() {
@@ -79,9 +82,9 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     logRecords.get(2).getMdc("trace_flags") == "01"
 
     logRecords.get(1).message == "log message 2"
-    logRecords.get(1).getMdc("trace_id") == null
-    logRecords.get(1).getMdc("span_id") == null
-    logRecords.get(1).getMdc("trace_flags") == null
+    logRecords.get(1).getMdc("trace_id") == "00000000000000000000000000000000"
+    logRecords.get(1).getMdc("span_id") == "0000000000000000"
+    logRecords.get(1).getMdc("trace_flags") == "00"
 
     logRecords.get(0).message == "log message 3"
     // this explicit getMdcCopy() call here is to make sure that whole instrumentation is tested
@@ -89,5 +92,8 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     logRecords.get(0).getMdc("trace_id") == span2.spanContext.traceId
     logRecords.get(0).getMdc("span_id") == span2.spanContext.spanId
     logRecords.get(0).getMdc("trace_flags") == "01"
+
+    cleanup:
+    logRecords.clear()
   }
 }

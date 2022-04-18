@@ -16,9 +16,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.Hashtable;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -27,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.MDC;
 
-public class JbossLoggingEventInstrumentation implements TypeInstrumentation {
+public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.logmanager.ExtLogRecord");
@@ -41,11 +43,11 @@ public class JbossLoggingEventInstrumentation implements TypeInstrumentation {
             .and(named("getMdc"))
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
-        JbossLoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
+        JbossExtLogRecordInstrumentation.class.getName() + "$GetMdcAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("getMdcCopy")).and(takesArguments(0)),
-        JbossLoggingEventInstrumentation.class.getName() + "$GetMdcCopyAdvice");
+        isMethod().and(isPublic()).and(named("copyMdc")).and(takesArguments(0)),
+        JbossExtLogRecordInstrumentation.class.getName() + "$GetMdcCopyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -62,12 +64,9 @@ public class JbossLoggingEventInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        Span span = VirtualField.find(ExtLogRecord.class, Span.class).get(record);
-        if (span == null || !span.getSpanContext().isValid()) {
-          return;
-        }
+        Context context = VirtualField.find(ExtLogRecord.class, Context.class).get(record);
+        SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
 
-        SpanContext spanContext = span.getSpanContext();
         switch (key) {
           case TRACE_ID:
             value = spanContext.getTraceId();
