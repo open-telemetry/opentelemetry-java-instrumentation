@@ -22,6 +22,13 @@ jobs:
       - name: Drop snapshot from version
         run: |
           sed -ri "s/val snapshot = true/val snapshot = false/" version.gradle.kts
+          sed -ri "s/-SNAPSHOT//" examples/distro/build.gradle
+          sed -ri "s/-SNAPSHOT//" examples/extension/build.gradle
+
+      - name: Bump download link version
+        run: |
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
+          sed -Ei "s,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$version/," README.md
 
       - name: Set git user
         run: |
