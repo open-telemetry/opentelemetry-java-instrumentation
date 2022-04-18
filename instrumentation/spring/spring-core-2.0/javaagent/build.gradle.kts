@@ -11,6 +11,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   library("org.springframework:spring-core:2.0")
 
   // 3.0 introduces submit() methods

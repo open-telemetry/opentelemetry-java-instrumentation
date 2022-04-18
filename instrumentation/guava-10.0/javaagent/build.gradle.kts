@@ -17,6 +17,8 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   library("com.google.guava:guava:10.0")
   compileOnly(project(":instrumentation-api-annotation-support"))
 

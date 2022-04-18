@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_16;
 import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.LogEventMapper;
-import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;

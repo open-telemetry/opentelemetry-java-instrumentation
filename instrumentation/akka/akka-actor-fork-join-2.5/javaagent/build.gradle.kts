@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   library("com.typesafe.akka:akka-actor_2.11:2.5.0")
 
   testImplementation(project(":instrumentation:executors:testing"))

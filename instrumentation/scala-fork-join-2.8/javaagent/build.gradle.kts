@@ -18,6 +18,8 @@ testSets {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   library("org.scala-lang:scala-library:2.8.0")
 
   latestDepTestLibrary("org.scala-lang:scala-library:2.11.+")

@@ -15,10 +15,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.concurrent.ExecutorAdviceHelper;
+import io.opentelemetry.javaagent.bootstrap.concurrent.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorAdviceHelper;
-import io.opentelemetry.javaagent.instrumentation.api.concurrent.PropagatedContext;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.Callable;

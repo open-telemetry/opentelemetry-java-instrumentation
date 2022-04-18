@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;

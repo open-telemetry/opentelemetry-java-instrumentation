@@ -13,7 +13,7 @@ jobs:
   publish:
     uses: ./.github/workflows/reusable-smoke-test-images.yml
     with:
-      project: :smoke-tests:images:spring-boot
+      project: ":smoke-tests:images:spring-boot"
       publish: true
 
   open-issue-on-failure:

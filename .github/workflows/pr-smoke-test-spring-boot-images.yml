@@ -10,5 +10,5 @@ jobs:
   build:
     uses: ./.github/workflows/reusable-smoke-test-images.yml
     with:
-      project: :smoke-tests:images:spring-boot
+      project: ":smoke-tests:images:spring-boot"
       cache-read-only: true

@@ -3,16 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.internal;
+package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 public final class InstrumentedTaskClasses {
 
   private static final Logger logger = Logger.getLogger(Config.class.getName());

@@ -9,8 +9,8 @@ import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
-import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.instrumentation.api.appender.internal.AgentLogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
