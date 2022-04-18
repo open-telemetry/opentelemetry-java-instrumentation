@@ -83,9 +83,9 @@ jobs:
         with:
           name: javacore-test-${{ matrix.test-java-version }}
           path: |
-            "**/hs_err_pid*.log"
-            "**/javacore.*.txt"
-            "**/Snap.*.trc"
-            "**/core.*.dmp"
-            "**/jitdump.*.dmp"
+            **/hs_err_pid*.log
+            **/javacore.*.txt
+            **/Snap.*.trc
+            **/core.*.dmp
+            **/jitdump.*.dmp
           if-no-files-found: ignore
