@@ -73,10 +73,17 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
+          # we expect crash dumps eiter in root director or in smoke-tests
+          # not using **/ here because actions/upload-artifact fails with long paths https://github.com/actions/upload-artifact/issues/309
           path: |
-            **/hs_err_pid*.log
-            **/javacore.*.txt
-            **/Snap.*.trc
-            **/core.*.dmp
-            **/jitdump.*.dmp
+            hs_err_pid*.log
+            smoke-tests/hs_err_pid*.log
+            javacore.*.txt
+            smoke-tests/javacore.*.txt
+            Snap.*.trc
+            smoke-tests/Snap.*.trc
+            core.*.dmp
+            smoke-tests/core.*.dmp
+            jitdump.*.dmp
+            smoke-tests/jitdump.*.dmp
           if-no-files-found: ignore
