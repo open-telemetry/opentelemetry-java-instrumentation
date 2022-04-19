@@ -55,6 +55,20 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Build
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          # running suite "none" compiles everything needed by smoke tests without executing any tests
+          arguments: ":smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}"
+          # only push cache for one matrix option per OS since github action cache space is limited
+          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
+
       - name: Test
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -63,10 +77,8 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: ":smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}"
-          # only push cache for one matrix option per OS since github action cache space is limited
-          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
+          # Build step takes care of caching
+          cache-disabled: true
 
       - name: Upload jvm crash dump files if any
         if: always()

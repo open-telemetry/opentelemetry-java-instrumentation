@@ -72,6 +72,10 @@ tasks {
         suites.values.forEach {
           exclude(it)
         }
+      } else if (smokeTestSuite == "none") {
+        // Exclude all tests. Running this suite will compile everything needed by smoke tests
+        // without executing any tests.
+        exclude("**/*")
       } else {
         throw GradleException("Unknown smoke test suite: $smokeTestSuite")
       }
