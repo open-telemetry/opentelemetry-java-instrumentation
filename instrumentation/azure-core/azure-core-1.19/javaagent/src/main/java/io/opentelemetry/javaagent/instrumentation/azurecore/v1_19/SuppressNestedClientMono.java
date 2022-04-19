@@ -25,13 +25,23 @@ public class SuppressNestedClientMono<T> extends Mono<T> {
   @Override
   public void subscribe(CoreSubscriber<? super T> actual) {
     Context parentContext = currentContext();
-    if (SpanKey.ALL_CLIENTS.fromContextOrNull(parentContext) == null) {
-      try (Scope ignored =
-          SpanKey.ALL_CLIENTS.storeInContext(parentContext, Span.getInvalid()).makeCurrent()) {
+    if (doesNotHaveClientSpan(parentContext)) {
+      try (Scope ignored = disallowNestedClientSpan(parentContext).makeCurrent()) {
         delegate.subscribe(actual);
       }
     } else {
       delegate.subscribe(actual);
     }
+  }
+
+  private static boolean doesNotHaveClientSpan(Context parentContext) {
+    return SpanKey.KIND_CLIENT.fromContextOrNull(parentContext) == null
+        && SpanKey.HTTP_CLIENT.fromContextOrNull(parentContext) == null;
+  }
+
+  private static Context disallowNestedClientSpan(Context parentContext) {
+    Span span = Span.getInvalid();
+    return SpanKey.HTTP_CLIENT.storeInContext(
+        SpanKey.KIND_CLIENT.storeInContext(parentContext, span), span);
   }
 }

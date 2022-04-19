@@ -31,7 +31,7 @@ class HttpRouteHolderTest {
 
     Context context = Context.root();
     context = context.with(span);
-    context = SpanKey.SERVER.storeInContext(context, span);
+    context = SpanKey.HTTP_SERVER.storeInContext(context, span);
     context = HttpRouteHolder.get().start(context, null, Attributes.empty());
 
     assertNull(HttpRouteHolder.getRoute(context));

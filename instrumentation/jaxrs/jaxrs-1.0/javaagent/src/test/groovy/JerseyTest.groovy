@@ -27,7 +27,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
   def "test #resource"() {
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runWithServerSpan("test.span") {
+    def response = runWithHttpServerSpan("test.span") {
       resources.client().resource(resource).post(String)
     }
 
@@ -66,7 +66,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
 
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runWithServerSpan("test.span") {
+    def response = runWithHttpServerSpan("test.span") {
       resources.client().resource(resource).post(String)
     }
 

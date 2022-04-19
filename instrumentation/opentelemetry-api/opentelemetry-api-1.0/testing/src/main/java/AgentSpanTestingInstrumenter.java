@@ -4,12 +4,16 @@
  */
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import javax.annotation.Nullable;
 
 public final class AgentSpanTestingInstrumenter {
 
@@ -23,8 +27,16 @@ public final class AgentSpanTestingInstrumenter {
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
           .newInstrumenter(request -> request.kind);
 
-  public static Context startServerSpan(String name) {
-    return start(name, SpanKind.SERVER);
+  private static final Instrumenter<Request, Void> INSTRUMENTER_HTTP_SERVER =
+      Instrumenter.<Request, Void>builder(
+              GlobalOpenTelemetry.get(), "test", request -> request.name)
+          .addAttributesExtractor(HttpServerSpanKeyAttributesExtractor.INSTANCE)
+          .addContextCustomizer(
+              (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
+          .newInstrumenter(request -> request.kind);
+
+  public static Context startHttpServerSpan(String name) {
+    return INSTRUMENTER_HTTP_SERVER.start(Context.current(), new Request(name, SpanKind.SERVER));
   }
 
   public static Context startClientSpan(String name) {
@@ -48,6 +60,10 @@ public final class AgentSpanTestingInstrumenter {
     INSTRUMENTER.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
   }
 
+  public static void endHttpServer(Context context, Throwable error) {
+    INSTRUMENTER_HTTP_SERVER.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
+  }
+
   private static final class Request {
     private final String name;
     private final SpanKind kind;
@@ -60,15 +76,43 @@ public final class AgentSpanTestingInstrumenter {
 
   private static SpanKey[] getSpanKeys() {
     return new SpanKey[] {
-      SpanKey.SERVER,
+      // span kind keys
+      SpanKey.KIND_SERVER,
+      SpanKey.KIND_CLIENT,
+      SpanKey.KIND_CONSUMER,
+      SpanKey.KIND_PRODUCER,
+      // semantic convention keys
+      SpanKey.HTTP_SERVER,
+      SpanKey.RPC_SERVER,
       SpanKey.HTTP_CLIENT,
       SpanKey.RPC_CLIENT,
       SpanKey.DB_CLIENT,
-      SpanKey.ALL_CLIENTS,
       SpanKey.PRODUCER,
       SpanKey.CONSUMER_RECEIVE,
-      SpanKey.CONSUMER_PROCESS
+      SpanKey.CONSUMER_PROCESS,
     };
+  }
+
+  // simulate a real HTTP server implementation
+  private enum HttpServerSpanKeyAttributesExtractor
+      implements AttributesExtractor<Request, Void>, SpanKeyProvider {
+    INSTANCE;
+
+    @Override
+    public void onStart(AttributesBuilder attributes, Context parentContext, Request request) {}
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        Request request,
+        @Nullable Void unused,
+        @Nullable Throwable error) {}
+
+    @Override
+    public SpanKey internalGetSpanKey() {
+      return SpanKey.HTTP_SERVER;
+    }
   }
 
   private AgentSpanTestingInstrumenter() {}

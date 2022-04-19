@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import javax.annotation.Nullable;
 
 /** A builder of a {@link Config}. */
 public final class ConfigBuilder {
@@ -19,8 +20,10 @@ public final class ConfigBuilder {
   ConfigBuilder() {}
 
   /** Adds a single property named to the config. */
-  public ConfigBuilder addProperty(String name, String value) {
-    allProperties.put(NamingConvention.DOT.normalize(name), value);
+  public ConfigBuilder addProperty(String name, @Nullable String value) {
+    if (value != null) {
+      allProperties.put(NamingConvention.DOT.normalize(name), value);
+    }
     return this;
   }
 

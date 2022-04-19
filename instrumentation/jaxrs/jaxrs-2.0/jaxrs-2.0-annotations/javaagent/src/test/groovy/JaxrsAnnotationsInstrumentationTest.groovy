@@ -23,7 +23,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
   @Unroll
   def "span named '#paramName' from annotations on class '#className' when is not root span"() {
     setup:
-    runWithServerSpan("test") {
+    runWithHttpServerSpan("test") {
       obj.call()
     }
 
@@ -50,7 +50,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
     }
 
     when: "multiple calls to the same method"
-    runWithServerSpan("test") {
+    runWithHttpServerSpan("test") {
       (1..10).each {
         obj.call()
       }
@@ -112,7 +112,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
 
   def "no annotations has no effect"() {
     setup:
-    runWithServerSpan("test") {
+    runWithHttpServerSpan("test") {
       obj.call()
     }
 

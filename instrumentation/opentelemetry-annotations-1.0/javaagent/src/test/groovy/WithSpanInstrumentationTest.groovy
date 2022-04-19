@@ -18,7 +18,6 @@ import net.bytebuddy.matcher.ElementMatchers
 import java.lang.reflect.Modifier
 import java.util.concurrent.CompletableFuture
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.SpanKind.SERVER
@@ -99,42 +98,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
         span(1) {
           name "TracedWithSpan.otel"
           childOf span(0)
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
-  def "should not capture multiple server spans"() {
-    setup:
-    new TracedWithSpan().nestedServers()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "TracedWithSpan.nestedServers"
-          kind SERVER
-          hasNoParent()
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
-  def "should not capture multiple client spans"() {
-    setup:
-    new TracedWithSpan().nestedClients()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "TracedWithSpan.nestedClients"
-          kind CLIENT
-          hasNoParent()
           attributes {
           }
         }

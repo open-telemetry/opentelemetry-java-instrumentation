@@ -76,7 +76,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final TimeExtractor<REQUEST, RESPONSE> timeExtractor;
   private final boolean enabled;
-  private final SpanSuppressionStrategy spanSuppressionStrategy;
+  private final SpanSuppressor spanSuppressor;
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
@@ -91,7 +91,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.timeExtractor = builder.timeExtractor;
     this.enabled = builder.enabled;
-    this.spanSuppressionStrategy = builder.buildSpanSuppressionStrategy();
+    this.spanSuppressor = builder.buildSpanSuppressor();
   }
 
   /**
@@ -105,7 +105,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       return false;
     }
     SpanKind spanKind = spanKindExtractor.extract(request);
-    boolean suppressed = spanSuppressionStrategy.shouldSuppress(parentContext, spanKind);
+    boolean suppressed = spanSuppressor.shouldSuppress(parentContext, spanKind);
 
     if (suppressed) {
       supportability.recordSuppressedSpan(spanKind, instrumentationName);
@@ -162,7 +162,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       }
     }
 
-    return spanSuppressionStrategy.storeInContext(context, spanKind, span);
+    return spanSuppressor.storeInContext(context, spanKind, span);
   }
 
   /**

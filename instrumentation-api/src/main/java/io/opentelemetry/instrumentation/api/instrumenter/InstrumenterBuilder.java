@@ -10,7 +10,6 @@ import static java.util.Objects.requireNonNull;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.TracerBuilder;
@@ -36,10 +35,8 @@ import javax.annotation.Nullable;
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
-  /** Instrumentation type suppression configuration property key. */
-  private static final boolean ENABLE_SPAN_SUPPRESSION_BY_TYPE =
-      Config.get()
-          .getBoolean("otel.instrumentation.experimental.outgoing-span-suppression-by-type", false);
+  private static final SpanSuppressionStrategy spanSuppressionStrategy =
+      SpanSuppressionStrategy.fromConfig(Config.get());
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -60,8 +57,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   @Nullable TimeExtractor<REQUEST, RESPONSE> timeExtractor = null;
   boolean enabled = true;
-
-  private boolean enableSpanSuppressionByType = ENABLE_SPAN_SUPPRESSION_BY_TYPE;
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -192,42 +187,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  // visible for tests
-  /**
-   * Enables CLIENT nested span suppression based on the instrumentation type.
-   *
-   * <p><strong>When enabled:</strong>.
-   *
-   * <ul>
-   *   <li>CLIENT nested spans are suppressed depending on their type: {@code
-   *       HttpClientAttributesExtractor HTTP}, {@code RpcClientAttributesExtractor RPC} or {@code
-   *       DbClientAttributesExtractor database} clients. If a span with the same type is present in
-   *       the parent context object, new span of the same type will not be started.
-   * </ul>
-   *
-   * <p><strong>When disabled:</strong>
-   *
-   * <ul>
-   *   <li>CLIENT nested spans are always suppressed.
-   * </ul>
-   *
-   * <p>For all other {@linkplain SpanKind span kinds} the suppression rules are as follows:
-   *
-   * <ul>
-   *   <li>SERVER nested spans are always suppressed. If a SERVER span is present in the parent
-   *       context object, new SERVER span will not be started.
-   *   <li>Messaging (PRODUCER and CONSUMER) nested spans are suppressed depending on their {@code
-   *       MessageOperation operation}. If a span with the same operation is present in the parent
-   *       context object, new span with the same operation will not be started.
-   *   <li>INTERNAL spans are never suppressed.
-   * </ul>
-   */
-  InstrumenterBuilder<REQUEST, RESPONSE> enableInstrumentationTypeSuppression(
-      boolean enableInstrumentationType) {
-    this.enableSpanSuppressionByType = enableInstrumentationType;
-    return this;
-  }
-
   /**
    * Returns a new {@link Instrumenter} which will create client spans and inject context into
    * requests.
@@ -327,13 +286,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return listeners;
   }
 
-  SpanSuppressionStrategy buildSpanSuppressionStrategy() {
-    Set<SpanKey> spanKeys = getSpanKeysFromAttributesExtractors();
-    if (enableSpanSuppressionByType) {
-      return SpanSuppressionStrategy.from(spanKeys);
-    }
-    // if not enabled, preserve current behavior, not distinguishing CLIENT instrumentation types
-    return SpanSuppressionStrategy.suppressNestedClients(spanKeys);
+  SpanSuppressor buildSpanSuppressor() {
+    return spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors());
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {

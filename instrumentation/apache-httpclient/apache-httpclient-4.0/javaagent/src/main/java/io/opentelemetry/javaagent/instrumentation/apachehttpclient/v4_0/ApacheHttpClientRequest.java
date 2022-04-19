@@ -50,7 +50,7 @@ public final class ApacheHttpClientRequest {
 
   // minimize memory overhead by not using streams
   static List<String> headersToList(Header[] headers) {
-    if (headers.length == 0) {
+    if (headers == null || headers.length == 0) {
       return Collections.emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);

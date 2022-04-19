@@ -38,7 +38,7 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String spanName,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = AgentSpanTestingInstrumenter.startServerSpan(spanName);
+      context = AgentSpanTestingInstrumenter.startHttpServerSpan(spanName);
       scope = context.makeCurrent();
     }
 
@@ -48,7 +48,7 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      AgentSpanTestingInstrumenter.end(context, throwable);
+      AgentSpanTestingInstrumenter.endHttpServer(context, throwable);
     }
   }
 

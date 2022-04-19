@@ -73,7 +73,8 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelSpanName") String spanName) {
       Context parentContext = currentContext();
       spanName = TwilioSingletons.spanName(that, methodName);
-      if (!instrumenter().shouldStart(parentContext, spanName)) {
+      if (!instrumenter().shouldStart(parentContext, spanName)
+          || TwilioAsyncMarker.isMarkedAsync(parentContext)) {
         return;
       }
 

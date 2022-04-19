@@ -164,11 +164,17 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
     AgentSpanTesting.runWithAllSpanKeys("parent") {
       assert Span.current() != null
       def spanKeys = [
-        SpanKey.SERVER,
+        // span kind keys
+        SpanKey.KIND_SERVER,
+        SpanKey.KIND_CLIENT,
+        SpanKey.KIND_CONSUMER,
+        SpanKey.KIND_PRODUCER,
+        // semantic convention keys
+        SpanKey.HTTP_SERVER,
+        SpanKey.RPC_SERVER,
         SpanKey.HTTP_CLIENT,
         SpanKey.RPC_CLIENT,
         SpanKey.DB_CLIENT,
-        SpanKey.ALL_CLIENTS,
         SpanKey.PRODUCER,
         SpanKey.CONSUMER_RECEIVE,
         SpanKey.CONSUMER_PROCESS,

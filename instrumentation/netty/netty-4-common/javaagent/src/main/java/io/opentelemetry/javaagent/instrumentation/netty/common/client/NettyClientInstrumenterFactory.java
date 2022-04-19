@@ -9,6 +9,7 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
@@ -51,16 +52,29 @@ public final class NettyClientInstrumenterFactory {
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
     NettyConnectNetAttributesGetter netAttributesGetter = new NettyConnectNetAttributesGetter();
-    Instrumenter<NettyConnectionRequest, Channel> instrumenter =
+
+    InstrumenterBuilder<NettyConnectionRequest, Channel> instrumenterBuilder =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
-            .setTimeExtractor(new NettyConnectionTimeExtractor())
-            .newInstrumenter(
-                connectionTelemetryEnabled
-                    ? SpanKindExtractor.alwaysInternal()
-                    : SpanKindExtractor.alwaysClient());
+            .setTimeExtractor(new NettyConnectionTimeExtractor());
+    if (!connectionTelemetryEnabled) {
+      // when the connection telemetry is not enabled, netty creates CONNECT spans whenever a
+      // connection error occurs - because there is no HTTP span in that scenario, if raw netty
+      // connection occurs before an HTTP message is even formed
+      // we don't want that span when a higher-level HTTP library (like reactor-netty or async http
+      // client) is used, the connection phase is a part of the HTTP span for these
+      // for that to happen, the CONNECT span will "pretend" to be a full HTTP span when connection
+      // telemetry is off
+      instrumenterBuilder.addAttributesExtractor(HttpClientSpanKeyAttributesExtractor.INSTANCE);
+    }
+
+    Instrumenter<NettyConnectionRequest, Channel> instrumenter =
+        instrumenterBuilder.newInstrumenter(
+            connectionTelemetryEnabled
+                ? SpanKindExtractor.alwaysInternal()
+                : SpanKindExtractor.alwaysClient());
 
     return connectionTelemetryEnabled
         ? new NettyConnectionInstrumenterImpl(instrumenter)
