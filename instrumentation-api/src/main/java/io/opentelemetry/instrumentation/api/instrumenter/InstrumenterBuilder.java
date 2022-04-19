@@ -192,16 +192,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /**
-   * Allows to disable the {@link Instrumenter}.
-   *
-   * @deprecated Use {@link #setEnabled(boolean)} instead.
-   */
-  @Deprecated
-  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
-    return setEnabled(!disabled);
-  }
-
   // visible for tests
   /**
    * Enables CLIENT nested span suppression based on the instrumentation type.

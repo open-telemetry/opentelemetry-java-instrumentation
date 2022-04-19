@@ -38,20 +38,6 @@ public interface AttributesExtractor<REQUEST, RESPONSE> {
       @Nullable Throwable error);
 
   /**
-   * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code
-   * value} is not {@code null}.
-   *
-   * @deprecated This method will be removed.
-   */
-  // TODO: remove after 1.13 release
-  @Deprecated
-  default <T> void set(AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
-    if (value != null) {
-      attributes.put(key, value);
-    }
-  }
-
-  /**
    * Returns an {@link AttributesExtractor} implementation that always extracts the provided
    * constant value.
    */

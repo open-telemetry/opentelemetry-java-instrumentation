@@ -64,20 +64,6 @@ public abstract class InstrumentationModule implements Ordered {
   }
 
   /**
-   * Creates an instrumentation module.
-   *
-   * @see #InstrumentationModule(String, String...)
-   * @deprecated Use {@link #InstrumentationModule(String, String...)} instead.
-   */
-  @Deprecated
-  protected InstrumentationModule(List<String> instrumentationNames) {
-    if (instrumentationNames.isEmpty()) {
-      throw new IllegalArgumentException("InstrumentationModules must be named");
-    }
-    this.instrumentationNames = unmodifiableSet(new LinkedHashSet<>(instrumentationNames));
-  }
-
-  /**
    * Returns all instrumentation names assigned to this module. See {@link
    * #InstrumentationModule(String, String...)} for more details about instrumentation names.
    */
@@ -91,16 +77,6 @@ public abstract class InstrumentationModule implements Ordered {
    */
   public final String instrumentationName() {
     return instrumentationNames.iterator().next();
-  }
-
-  /**
-   * Returns true if this instrumentation module should be installed.
-   *
-   * @deprecated This method will be removed.
-   */
-  @Deprecated
-  public final boolean isEnabled() {
-    return Config.get().isInstrumentationEnabled(instrumentationNames, defaultEnabled());
   }
 
   /**
