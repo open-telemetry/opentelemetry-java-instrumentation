@@ -58,7 +58,8 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          # only push cache for one matrix option per OS since github action cache space is limited
+          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
 
