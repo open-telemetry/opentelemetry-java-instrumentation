@@ -160,28 +160,16 @@ public final class HttpRouteHolder {
     return httpRouteHolder == null ? null : httpRouteHolder.route;
   }
 
-  /**
-   * This method is internal and is hence not for public use. Its API is unstable and can change at
-   * any time.
-   */
   @SuppressWarnings("unused") // used by the opentelemetry-api bridge instrumentation
   static HttpRouteHolder internalCreate(int updatedBySourceOrder, @Nullable String route) {
     return new HttpRouteHolder(updatedBySourceOrder, route);
   }
 
-  /**
-   * This method is internal and is hence not for public use. Its API is unstable and can change at
-   * any time.
-   */
   @SuppressWarnings("unused") // used by the opentelemetry-api bridge instrumentation
   int internalGetUpdatedBySourceOrder() {
     return updatedBySourceOrder;
   }
 
-  /**
-   * This method is internal and is hence not for public use. Its API is unstable and can change at
-   * any time.
-   */
   @SuppressWarnings("unused") // used by the opentelemetry-api bridge instrumentation
   @Nullable
   String internalGetRoute() {
