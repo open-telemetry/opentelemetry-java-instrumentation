@@ -87,8 +87,6 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     logRecords.get(1).getMdc("trace_flags") == "00"
 
     logRecords.get(0).message == "log message 3"
-    // this explicit getMdcCopy() call here is to make sure that whole instrumentation is tested
-    logRecords.get(0).copyMdc()
     logRecords.get(0).getMdc("trace_id") == span2.spanContext.traceId
     logRecords.get(0).getMdc("span_id") == span2.spanContext.spanId
     logRecords.get(0).getMdc("trace_flags") == "01"

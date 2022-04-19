@@ -14,20 +14,16 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.Hashtable;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.logmanager.ExtLogRecord;
-import org.jboss.logmanager.MDC;
 
 public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
   @Override
@@ -44,10 +40,6 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
         JbossExtLogRecordInstrumentation.class.getName() + "$GetMdcAdvice");
-
-    transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("copyMdc")).and(takesArguments(0)),
-        JbossExtLogRecordInstrumentation.class.getName() + "$GetMdcCopyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -65,6 +57,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         }
 
         Context context = VirtualField.find(ExtLogRecord.class, Context.class).get(record);
+        if (context == null) {
+          return;
+        }
         SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
 
         switch (key) {
@@ -81,33 +76,6 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
             // do nothing
         }
       }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class GetMdcCopyAdvice {
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This ExtLogRecord record,
-        @Advice.FieldValue(value = "mdcCopy", readOnly = false) Map<String, String> mdcCopy) {
-      // this advice basically replaces the original method
-
-      Hashtable mdc = new Hashtable(MDC.copy());
-
-      // Assume already instrumented event if traceId is present.
-      if (!mdc.containsKey(TRACE_ID)) {
-        Span span = VirtualField.find(ExtLogRecord.class, Span.class).get(record);
-        if (span != null && span.getSpanContext().isValid()) {
-          SpanContext spanContext = span.getSpanContext();
-          mdc.put(TRACE_ID, spanContext.getTraceId());
-          mdc.put(SPAN_ID, spanContext.getSpanId());
-          mdc.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
-        }
-      }
-
-      mdcCopy = mdc;
     }
   }
 }

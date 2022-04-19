@@ -13,6 +13,4 @@ muzzle {
 
 dependencies {
   library("org.jboss.logmanager:jboss-logmanager:1.1.0.GA")
-
-  compileOnly(project(":instrumentation-appender-api-internal"))
 }
