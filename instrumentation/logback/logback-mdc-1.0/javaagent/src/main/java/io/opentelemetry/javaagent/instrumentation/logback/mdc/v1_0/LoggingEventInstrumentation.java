@@ -17,12 +17,13 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.logback.v1_0.internal.UnionMap;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -63,13 +64,17 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Span currentSpan = VirtualField.find(ILoggingEvent.class, Span.class).get(event);
-      if (currentSpan == null || !currentSpan.getSpanContext().isValid()) {
+      Context context = VirtualField.find(ILoggingEvent.class, Context.class).get(event);
+      if (context == null) {
+        return;
+      }
+
+      SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+      if (!spanContext.isValid()) {
         return;
       }
 
       Map<String, String> spanContextData = new HashMap<>();
-      SpanContext spanContext = currentSpan.getSpanContext();
       spanContextData.put(TRACE_ID, spanContext.getTraceId());
       spanContextData.put(SPAN_ID, spanContext.getSpanId());
       spanContextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());

@@ -14,16 +14,15 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Hashtable;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.log4j.MDC;
 import org.apache.log4j.spi.LoggingEvent;
 
 public class LoggingEventInstrumentation implements TypeInstrumentation {
@@ -41,10 +40,6 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
         LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
-
-    transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("getMDCCopy")).and(takesArguments(0)),
-        LoggingEventInstrumentation.class.getName() + "$GetMdcCopyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -61,12 +56,16 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        Span span = VirtualField.find(LoggingEvent.class, Span.class).get(event);
-        if (span == null || !span.getSpanContext().isValid()) {
+        Context context = VirtualField.find(LoggingEvent.class, Context.class).get(event);
+        if (context == null) {
           return;
         }
 
-        SpanContext spanContext = span.getSpanContext();
+        SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+        if (!spanContext.isValid()) {
+          return;
+        }
+
         switch (key) {
           case TRACE_ID:
             value = spanContext.getTraceId();
@@ -80,43 +79,6 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           default:
             // do nothing
         }
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class GetMdcCopyAdvice {
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This LoggingEvent event,
-        @Advice.FieldValue(value = "mdcCopyLookupRequired", readOnly = false) boolean copyRequired,
-        @Advice.FieldValue(value = "mdcCopy", readOnly = false) Hashtable mdcCopy) {
-      // this advice basically replaces the original method
-
-      if (copyRequired) {
-        copyRequired = false;
-
-        Hashtable mdc = new Hashtable();
-
-        Hashtable originalMdc = MDC.getContext();
-        if (originalMdc != null) {
-          mdc.putAll(originalMdc);
-        }
-
-        // Assume already instrumented event if traceId is present.
-        if (!mdc.containsKey(TRACE_ID)) {
-          Span span = VirtualField.find(LoggingEvent.class, Span.class).get(event);
-          if (span != null && span.getSpanContext().isValid()) {
-            SpanContext spanContext = span.getSpanContext();
-            mdc.put(TRACE_ID, spanContext.getTraceId());
-            mdc.put(SPAN_ID, spanContext.getSpanId());
-            mdc.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
-          }
-        }
-
-        mdcCopy = mdc;
       }
     }
   }
