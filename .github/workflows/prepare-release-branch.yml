@@ -11,7 +11,7 @@ jobs:
       - name: Create release branch
         id: create-release-branch
         run: |
-          version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
           release_branch_name=$(echo $version | sed -E 's,([0-9]+)\.([0-9]+)\.0,release/v\1.\2.x,')
 
           git push origin HEAD:$release_branch_name
@@ -19,9 +19,17 @@ jobs:
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
 
-      - name: Drop snapshot from version
+      - name: Update version
         run: |
           sed -ri "s/val snapshot = true/val snapshot = false/" version.gradle.kts
+
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
+          .github/scripts/update-examples.sh "$version"
+
+      - name: Update download link version
+        run: |
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
+          sed -Ei "s,https://github\.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$version/," README.md
 
       - name: Set git user
         run: |
@@ -45,9 +53,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Bump snapshot version
+      - name: Update version
         run: |
-          version=$(grep -Eo "[0-9]+.[0-9]+.0-SNAPSHOT" version.gradle.kts | sed 's/-SNAPSHOT//')
+          version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
           if [[ $version =~ ([0-9]+).([0-9]+).0 ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
@@ -56,7 +64,9 @@ jobs:
             exit 1
           fi
           next_version="$major.$((minor + 1)).0"
-          sed -ri "s/$version-SNAPSHOT/$next_version-SNAPSHOT/" version.gradle.kts
+          sed -ri "s/[0-9]+\.[0-9]+\.[0-9]+/$next_version/" version.gradle.kts
+
+          .github/scripts/update-examples.sh "$next_version-SNAPSHOT"
 
       - name: Set git user
         run: |
@@ -67,10 +77,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          msg="Bump version"
+          msg="Update version"
           git commit -a -m "$msg"
-          git push origin HEAD:bump-snapshot-version
+          git push origin HEAD:update-version-on-main
           gh pr create --title "$msg" \
                        --body "$msg" \
-                       --head bump-snapshot-version \
+                       --head update-version-on-main \
                        --base main

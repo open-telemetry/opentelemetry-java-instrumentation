@@ -13,8 +13,8 @@ plugins {
   id "com.github.johnrengelman.shadow" version "7.1.2"
   id "com.diffplug.spotless" version "6.3.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.13.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "1.13.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.14.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "1.14.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -24,8 +24,8 @@ ext {
   versions = [
     opentelemetry              : "1.12.0",
     opentelemetryAlpha         : "1.12.0-alpha",
-    opentelemetryJavaagent     : "1.13.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "1.13.0-alpha-SNAPSHOT",
+    opentelemetryJavaagent     : "1.14.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "1.14.0-alpha-SNAPSHOT",
   ]
 
   deps = [

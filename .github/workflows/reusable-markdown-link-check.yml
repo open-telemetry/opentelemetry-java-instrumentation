@@ -18,5 +18,4 @@ jobs:
                  -name '*.md' \
                  -not -path './CHANGELOG.md' \
                  -not -path './licenses/*' \
-               | xargs markdown-link-check \
-                       --config .github/scripts/markdown-link-check-config.json
+               | xargs .github/scripts/markdown-link-check-with-retry.sh

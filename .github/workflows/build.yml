@@ -26,7 +26,7 @@ jobs:
     # release branches are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
-    if: ${{ !startsWith(github.ref_name, 'v') }}
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -44,7 +44,7 @@ jobs:
     # release branches are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
-    if: ${{ !startsWith(github.ref_name, 'v') }}
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-muzzle.yml
 
   gradle-plugins:
@@ -57,13 +57,13 @@ jobs:
     # release branches are excluded to avoid unnecessary maintenance if external links break
     # (and also because the README.md javaagent download link has to be updated on release branches
     #  before the release download has been published)
-    if: ${{ !startsWith(github.ref_name, 'v') }}
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-markdown-link-check.yml
 
   misspell-check:
     # release branches are excluded to avoid unnecessary maintenance if new misspellings are added
     # to the misspell dictionary
-    if: ${{ !startsWith(github.ref_name, 'v') }}
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-misspell-check.yml
 
   publish-snapshots:

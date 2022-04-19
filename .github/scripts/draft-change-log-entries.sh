@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts | head -1)
+version=$(grep -Eo "[0-9]+.[0-9]+.0" version.gradle.kts)
 
 if [[ $version =~ ([0-9]+).([0-9]+).0 ]]; then
   major="${BASH_REMATCH[1]}"
@@ -12,7 +12,7 @@ fi
 
 if [[ $minor == 0 ]]; then
   prior_major=$((major - 1))
-  prior_minor=$(grep -Po "^## Version $prior_major.\K([0-9]+)" CHANGELOG.md  | head -1)
+  prior_minor=$(grep -Po "^## Version $prior_major.\K([0-9]+)" CHANGELOG.md | head -1)
   prior_version="$prior_major.$prior_minor"
 else
   prior_version="$major.$((minor - 1)).0"
