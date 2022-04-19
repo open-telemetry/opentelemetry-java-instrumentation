@@ -22,7 +22,7 @@ jobs:
         # this will fail if there have been conflicting change log updates introduced in main
       - name: Create pull request against main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           git format-patch --stdout HEAD..origin/$GITHUB_REF_NAME CHANGELOG.md | git apply
           msg="Merge change log updates from $GITHUB_REF_NAME to main"

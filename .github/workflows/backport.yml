@@ -23,7 +23,7 @@ jobs:
       - name: Create pull request
         env:
           NUMBER: ${{ github.event.inputs.number }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
           title=$(gh pr view $NUMBER --json title --jq .title)

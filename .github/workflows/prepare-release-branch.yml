@@ -38,7 +38,7 @@ jobs:
 
       - name: Create pull request against the release branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           msg="Prepare release $VERSION"
           git commit -a -m "$msg"
@@ -75,7 +75,7 @@ jobs:
 
       - name: Create pull request against main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           msg="Update version"
           git commit -a -m "$msg"

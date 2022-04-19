@@ -98,7 +98,7 @@ jobs:
 
       - name: Generate release notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           # conditional blocks not indented because of the heredoc
           if [[ $VERSION == *.0 ]]; then
@@ -138,7 +138,7 @@ jobs:
 
       - name: Create GitHub release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-$VERSION.jar opentelemetry-javaagent.jar
           gh release create --target $GITHUB_REF_NAME \
@@ -150,7 +150,7 @@ jobs:
 
       - name: Update the change log with the release date
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
           sed -ri "s/## Version $VERSION .*/## Version $VERSION ($date)/" CHANGELOG.md
@@ -162,7 +162,7 @@ jobs:
 
       - name: Create pull request against the release branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           msg="Add $VERSION release date to the change log"
           git commit -a -m "$msg"
