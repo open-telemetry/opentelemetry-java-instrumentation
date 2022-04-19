@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -44,8 +44,8 @@ public class LoggerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) ILoggingEvent event) {
-      VirtualField.find(ILoggingEvent.class, Span.class)
-          .set(event, Java8BytecodeBridge.currentSpan());
+      VirtualField.find(ILoggingEvent.class, Context.class)
+          .set(event, Java8BytecodeBridge.currentContext());
     }
   }
 }
