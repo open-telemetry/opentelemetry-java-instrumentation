@@ -1,16 +1,17 @@
 ## Contributing
 
-Pull requests for bug fixes are welcome, but before submitting new features
-or changes to current functionality [open an
-issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
-and discuss your ideas or propose the changes you wish to make. After a
-resolution is reached a PR can be submitted for review.
+Pull requests for bug fixes are always welcome!
 
-In order to build and test this whole repository you need JDK 11+.
-Some instrumentations and tests may put constraints on which java versions they support.
-See [Running the tests](./docs/contributing/running-tests.md) for more details.
+Before submitting new features or changes to current functionality, it is recommended to first
+[open an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
+and discuss your ideas or propose the changes you wish to make.
 
 ### Building
+
+In order to build and test this whole repository you need JDK 11+.
+
+Some instrumentations and tests may put constraints on which java versions they support.
+See [Running the tests](./docs/contributing/running-tests.md) for more details.
 
 #### Snapshot builds
 
