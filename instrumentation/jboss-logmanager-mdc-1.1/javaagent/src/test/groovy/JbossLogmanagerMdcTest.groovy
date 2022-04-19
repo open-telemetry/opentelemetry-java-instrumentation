@@ -46,9 +46,9 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     then:
     logRecords.size() == 1
     logRecords.get(0).message == "log message 1"
-    logRecords.get(0).getMdc("trace_id") == "00000000000000000000000000000000"
-    logRecords.get(0).getMdc("span_id") == "0000000000000000"
-    logRecords.get(0).getMdc("trace_flags") == "00"
+    logRecords.get(0).getMdc("trace_id") == null
+    logRecords.get(0).getMdc("span_id") == null
+    logRecords.get(0).getMdc("trace_flags") == null
 
     cleanup:
     logRecords.clear()
@@ -82,9 +82,9 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     logRecords.get(2).getMdc("trace_flags") == "01"
 
     logRecords.get(1).message == "log message 2"
-    logRecords.get(1).getMdc("trace_id") == "00000000000000000000000000000000"
-    logRecords.get(1).getMdc("span_id") == "0000000000000000"
-    logRecords.get(1).getMdc("trace_flags") == "00"
+    logRecords.get(1).getMdc("trace_id") == null
+    logRecords.get(1).getMdc("span_id") == null
+    logRecords.get(1).getMdc("trace_flags") == null
 
     logRecords.get(0).message == "log message 3"
     logRecords.get(0).getMdc("trace_id") == span2.spanContext.traceId

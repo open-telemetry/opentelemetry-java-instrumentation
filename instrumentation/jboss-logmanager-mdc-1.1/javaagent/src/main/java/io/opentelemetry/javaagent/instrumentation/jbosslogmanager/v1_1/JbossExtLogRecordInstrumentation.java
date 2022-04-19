@@ -61,6 +61,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
           return;
         }
         SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+        if (!spanContext.isValid()) {
+          return;
+        }
 
         switch (key) {
           case TRACE_ID:
