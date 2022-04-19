@@ -72,6 +72,8 @@ tasks {
         suites.values.forEach {
           exclude(it)
         }
+      } else if (smokeTestSuite == "none") {
+        exclude("**/*")
       } else {
         throw GradleException("Unknown smoke test suite: $smokeTestSuite")
       }
