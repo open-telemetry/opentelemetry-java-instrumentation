@@ -175,8 +175,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: opentelemetry-java-bot/opentelemetry-operator
-          # this is the PAT used for "git push" below
-          token: ${{ secrets.OPENTELEMETRY_JAVA_BOT_TOKEN }}
+          # this is the personal access token used for "git push" below
+          token: ${{ secrets.BOT_TOKEN }}
 
       - name: Initialize pull request branch
         run: |
@@ -195,8 +195,8 @@ jobs:
 
       - name: Create pull request against opentelemetry-operator
         env:
-          # this is the PAT used for "gh pr create" below
-          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRY_JAVA_BOT_TOKEN }}
+          # this is the personal access token used for "gh pr create" below
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           msg="Update opentelemetry-javaagent version to $VERSION"
           git commit -a -m "$msg"
