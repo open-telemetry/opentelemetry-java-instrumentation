@@ -39,10 +39,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          msg="Prepare release $VERSION"
-          git commit -a -m "$msg"
-          git push origin HEAD:prepare-release-$VERSION
-          gh pr create --title "[$GITHUB_REF_NAME] $msg" \
-                       --body "$msg" \
-                       --head prepare-release-$VERSION \
+          message="Prepare release $VERSION"
+          branch=prepare-release-$VERSION
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "[$GITHUB_REF_NAME] $message" \
+                       --body "$message." \
+                       --head $branch \
                        --base $GITHUB_REF_NAME

@@ -164,12 +164,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          msg="Add $VERSION release date to the change log"
-          git commit -a -m "$msg"
-          git push origin HEAD:add-$VERSION-release-date
-          gh pr create --title "[$GITHUB_REF_NAME] $msg" \
-                       --body "$msg" \
-                       --head add-$VERSION-release-date \
+          message="Add the release date for $VERSION to the change log"
+          branch=add-release-date-for-$VERSION
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "[$GITHUB_REF_NAME] $message" \
+                       --body "$message." \
+                       --head $branch \
                        --base $GITHUB_REF_NAME
 
       - uses: actions/checkout@v3
@@ -198,16 +200,16 @@ jobs:
           # this is the personal access token used for "gh pr create" below
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          msg="Update opentelemetry-javaagent version to $VERSION"
-          git commit -a -m "$msg"
+          message="Update the javaagent version to $VERSION"
+          body="Update the javaagent version to \`$VERSION\`."
 
           # gh pr create doesn't have a way to explicitly specify different head and base
           # repositories currently, but it will implicitly pick up the head from a different
           # repository if you set up a tracking branch
 
+          git commit -a -m "$message"
           git push --set-upstream origin update-opentelemetry-javaagent-to-$VERSION
-
-          gh pr create --title "$msg" \
-                       --body "$msg" \
+          gh pr create --title "$message" \
+                       --body "$body" \
                        --repo open-telemetry/opentelemetry-operator
                        --base main

@@ -24,11 +24,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
+          message="Merge change log updates from $GITHUB_REF_NAME"
+          body="Merge change log updates from \`$GITHUB_REF_NAME\`."
+          branch=merge-change-log-updates-from-${GITHUB_REF_NAME//\//-}
+
           git format-patch --stdout HEAD..origin/$GITHUB_REF_NAME CHANGELOG.md | git apply
-          msg="Merge change log updates from $GITHUB_REF_NAME to main"
-          git commit -a -m "$msg"
-          git push origin HEAD:merge-change-log-updates-to-main
-          gh pr create --title "$msg" \
-                       --body "$msg" \
-                       --head merge-change-log-updates-to-main \
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --head $branch \
                        --base main
