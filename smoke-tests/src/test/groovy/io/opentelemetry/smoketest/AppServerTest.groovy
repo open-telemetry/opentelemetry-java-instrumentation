@@ -396,6 +396,40 @@ abstract class AppServerTest extends SmokeTest {
     System.err.println("totalSwapSpaceSize " + os.totalSwapSpaceSize)
     System.err.println("freeSwapSpaceSize " + os.freeSwapSpaceSize)
     System.err.println("committedVirtualMemorySize " + os.committedVirtualMemorySize)
+
+    ProcessHandle.allProcesses()
+      .forEach({process ->
+        def s = String.format("%8d %8s %10s %26s %-40s",
+          process.pid(),
+          text(process.parent().map(ProcessHandle::pid)),
+          text(process.info().user()),
+          text(process.info().startInstant()),
+          text(process.info().commandLine()))
+        System.err.println(s)
+      })
+
+    boolean windows = System.getProperty("os.name").toLowerCase().contains("windows")
+    try {
+      String line
+      Process p
+      if (windows) {
+        p = Runtime.getRuntime().exec(System.getenv("windir") + "\\system32\\" + "tasklist.exe")
+      } else {
+        p = Runtime.getRuntime().exec("ps aux")
+      }
+      BufferedReader input =
+        new BufferedReader(new InputStreamReader(p.getInputStream()))
+      while ((line = input.readLine()) != null) {
+        System.err.println(line)
+      }
+      input.close()
+    } catch (Exception err) {
+      err.printStackTrace()
+    }
+  }
+
+  def text(def optional) {
+    return optional.map(Object::toString).orElse("-")
   }
 
   protected String getSpanName(String path) {
