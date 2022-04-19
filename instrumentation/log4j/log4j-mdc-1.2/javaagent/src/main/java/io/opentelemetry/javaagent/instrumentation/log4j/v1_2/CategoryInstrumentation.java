@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -43,8 +43,8 @@ public class CategoryInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) LoggingEvent event) {
-      VirtualField.find(LoggingEvent.class, Span.class)
-          .set(event, Java8BytecodeBridge.currentSpan());
+      VirtualField.find(LoggingEvent.class, Context.class)
+          .set(event, Java8BytecodeBridge.currentContext());
     }
   }
 }

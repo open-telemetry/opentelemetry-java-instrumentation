@@ -61,37 +61,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
     return new InstrumenterBuilder<>(openTelemetry, instrumentationName, spanNameExtractor);
   }
 
-  /**
-   * Returns a new {@link InstrumenterBuilder}.
-   *
-   * <p>The {@code instrumentationName} is the name of the instrumentation library, not the name of
-   * the instrument*ed* library. The value passed in this parameter should uniquely identify the
-   * instrumentation library so that during troubleshooting it's possible to pinpoint what tracer
-   * produced problematic telemetry.
-   *
-   * <p>The {@code instrumentationVersion} is the version of the instrumentation library, not the
-   * version of the instrument*ed* library.
-   *
-   * <p>In this project we use a convention to encode the minimum supported version of the
-   * instrument*ed* library into the instrumentation name, for example {@code
-   * io.opentelemetry.apache-httpclient-4.0}. This way, if there are different instrumentations for
-   * different library versions it's easy to find out which instrumentations produced the telemetry
-   * data.
-   *
-   * @deprecated Use the {@link InstrumenterBuilder#setInstrumentationVersion(String)} method
-   *     instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> builder(
-      OpenTelemetry openTelemetry,
-      String instrumentationName,
-      String instrumentationVersion,
-      SpanNameExtractor<? super REQUEST> spanNameExtractor) {
-    return Instrumenter.<REQUEST, RESPONSE>builder(
-            openTelemetry, instrumentationName, spanNameExtractor)
-        .setInstrumentationVersion(instrumentationVersion);
-  }
-
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private final String instrumentationName;

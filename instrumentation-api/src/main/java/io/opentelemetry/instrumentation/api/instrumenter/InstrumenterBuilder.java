@@ -188,16 +188,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Allows to disable the {@link Instrumenter}.
-   *
-   * @deprecated Use {@link #setEnabled(boolean)} instead.
-   */
-  @Deprecated
-  public InstrumenterBuilder<REQUEST, RESPONSE> setDisabled(boolean disabled) {
-    return setEnabled(!disabled);
-  }
-
-  /**
    * Returns a new {@link Instrumenter} which will create client spans and inject context into
    * requests.
    */
