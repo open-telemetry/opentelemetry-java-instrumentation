@@ -35,7 +35,6 @@ public abstract class Config {
   @Nullable private static volatile Config instance = null;
 
   /** Start building a new {@link Config} instance. */
-  @SuppressWarnings("deprecation")
   public static ConfigBuilder builder() {
     return new ConfigBuilder();
   }
@@ -188,50 +187,5 @@ public abstract class Config {
 
   private String getRawProperty(String name, String defaultValue) {
     return getAllProperties().getOrDefault(NamingConvention.DOT.normalize(name), defaultValue);
-  }
-
-  /**
-   * Returns {@code true} when instrumentation is enabled.
-   *
-   * @deprecated This method will be removed.
-   */
-  @Deprecated
-  public boolean isInstrumentationEnabled(
-      Iterable<String> instrumentationNames, boolean defaultEnabled) {
-    return isInstrumentationPropertyEnabled(instrumentationNames, "enabled", defaultEnabled);
-  }
-
-  /**
-   * Returns {@code true} when instrumentation is enabled.
-   *
-   * @deprecated This method will be removed.
-   */
-  @Deprecated
-  public boolean isInstrumentationPropertyEnabled(
-      Iterable<String> instrumentationNames, String suffix, boolean defaultEnabled) {
-    // If default is enabled, we want to enable individually,
-    // if default is disabled, we want to disable individually.
-    boolean anyEnabled = defaultEnabled;
-    for (String name : instrumentationNames) {
-      String propertyName = "otel.instrumentation." + name + '.' + suffix;
-      boolean enabled = getBoolean(propertyName, defaultEnabled);
-
-      if (defaultEnabled) {
-        anyEnabled &= enabled;
-      } else {
-        anyEnabled |= enabled;
-      }
-    }
-    return anyEnabled;
-  }
-
-  /**
-   * Returns {@code true} when agent runs in debug mode.
-   *
-   * @deprecated This method will be removed.
-   */
-  @Deprecated
-  public boolean isAgentDebugEnabled() {
-    return getBoolean("otel.javaagent.debug", false);
   }
 }
