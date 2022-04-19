@@ -30,7 +30,7 @@ public final class AgentSpanTestingInstrumenter {
   private static final Instrumenter<Request, Void> INSTRUMENTER_HTTP_SERVER =
       Instrumenter.<Request, Void>builder(
               GlobalOpenTelemetry.get(), "test", request -> request.name)
-          .addAttributesExtractor(HttpServerAttributesExtractor.INSTANCE)
+          .addAttributesExtractor(HttpServerSpanKeyAttributesExtractor.INSTANCE)
           .addContextCustomizer(
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
           .newInstrumenter(request -> request.kind);
@@ -94,7 +94,7 @@ public final class AgentSpanTestingInstrumenter {
   }
 
   // simulate a real HTTP server implementation
-  private enum HttpServerAttributesExtractor
+  private enum HttpServerSpanKeyAttributesExtractor
       implements AttributesExtractor<Request, Void>, SpanKeyProvider {
     INSTANCE;
 

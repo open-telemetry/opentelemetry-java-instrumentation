@@ -174,7 +174,8 @@ class InstrumenterTest {
             .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
-    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    assertThat(spanContext.isValid()).isTrue();
 
     instrumenter.end(context, REQUEST, RESPONSE, null);
 
@@ -187,8 +188,8 @@ class InstrumenterTest {
                         span.hasName("span")
                             .hasKind(SpanKind.SERVER)
                             .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                            .hasTraceId(Span.fromContext(context).getSpanContext().getTraceId())
-                            .hasSpanId(Span.fromContext(context).getSpanContext().getSpanId())
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasLinks(expectedSpanLink())

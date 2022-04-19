@@ -78,24 +78,24 @@ interface SpanSuppressor {
 
   final class BySpanKey implements SpanSuppressor {
 
-    private final Set<SpanKey> outgoingSpanKeys;
+    private final Set<SpanKey> spanKeys;
 
-    BySpanKey(Set<SpanKey> outgoingSpanKeys) {
-      this.outgoingSpanKeys = outgoingSpanKeys;
+    BySpanKey(Set<SpanKey> spanKeys) {
+      this.spanKeys = spanKeys;
     }
 
     @Override
     public Context storeInContext(Context context, SpanKind spanKind, Span span) {
-      for (SpanKey outgoingSpanKey : outgoingSpanKeys) {
-        context = outgoingSpanKey.storeInContext(context, span);
+      for (SpanKey spanKey : spanKeys) {
+        context = spanKey.storeInContext(context, span);
       }
       return context;
     }
 
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-      for (SpanKey outgoingSpanKey : outgoingSpanKeys) {
-        if (outgoingSpanKey.fromContextOrNull(parentContext) == null) {
+      for (SpanKey spanKey : spanKeys) {
+        if (spanKey.fromContextOrNull(parentContext) == null) {
           return false;
         }
       }

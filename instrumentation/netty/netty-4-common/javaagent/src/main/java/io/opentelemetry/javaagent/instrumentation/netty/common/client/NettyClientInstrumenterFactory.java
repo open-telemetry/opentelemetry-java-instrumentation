@@ -61,13 +61,13 @@ public final class NettyClientInstrumenterFactory {
             .setTimeExtractor(new NettyConnectionTimeExtractor());
     if (!connectionTelemetryEnabled) {
       // when the connection telemetry is not enabled, netty creates CONNECT spans whenever a
-      // connection error occurs - because there is no HTTP span in that scenario, in raw netty
+      // connection error occurs - because there is no HTTP span in that scenario, if raw netty
       // connection occurs before an HTTP message is even formed
       // we don't want that span when a higher-level HTTP library (like reactor-netty or async http
       // client) is used, the connection phase is a part of the HTTP span for these
       // for that to happen, the CONNECT span will "pretend" to be a full HTTP span when connection
       // telemetry is off
-      instrumenterBuilder.addAttributesExtractor(MockHttpAttributesExtractor.INSTANCE);
+      instrumenterBuilder.addAttributesExtractor(HttpClientSpanKeyAttributesExtractor.INSTANCE);
     }
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =

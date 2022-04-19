@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
  * Attributes extractor that pretends it's a {@link HttpClientAttributesExtractor} so that error
  * only CONNECT spans can be suppressed by higher level HTTP clients based on netty.
  */
-enum MockHttpAttributesExtractor
+enum HttpClientSpanKeyAttributesExtractor
     implements AttributesExtractor<NettyConnectionRequest, Channel>, SpanKeyProvider {
   INSTANCE;
 
