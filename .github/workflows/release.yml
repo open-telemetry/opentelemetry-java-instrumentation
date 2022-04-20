@@ -98,7 +98,7 @@ jobs:
 
       - name: Generate release notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           # conditional blocks not indented because of the heredoc
           if [[ $VERSION == *.0 ]]; then
@@ -138,7 +138,7 @@ jobs:
 
       - name: Create GitHub release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-$VERSION.jar opentelemetry-javaagent.jar
           gh release create --target $GITHUB_REF_NAME \
@@ -150,7 +150,7 @@ jobs:
 
       - name: Update the change log with the release date
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
           sed -ri "s/## Version $VERSION .*/## Version $VERSION ($date)/" CHANGELOG.md
@@ -162,21 +162,23 @@ jobs:
 
       - name: Create pull request against the release branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          msg="Add $VERSION release date to the change log"
-          git commit -a -m "$msg"
-          git push origin HEAD:add-$VERSION-release-date
-          gh pr create --title "[$GITHUB_REF_NAME] $msg" \
-                       --body "$msg" \
-                       --head add-$VERSION-release-date \
+          message="Add the release date for $VERSION to the change log"
+          branch=add-release-date-for-$VERSION
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "[$GITHUB_REF_NAME] $message" \
+                       --body "$message." \
+                       --head $branch \
                        --base $GITHUB_REF_NAME
 
       - uses: actions/checkout@v3
         with:
           repository: opentelemetry-java-bot/opentelemetry-operator
-          # this is the PAT used for "git push" below
-          token: ${{ secrets.OPENTELEMETRY_JAVA_BOT_TOKEN }}
+          # this is the personal access token used for "git push" below
+          token: ${{ secrets.BOT_TOKEN }}
 
       - name: Initialize pull request branch
         run: |
@@ -195,19 +197,19 @@ jobs:
 
       - name: Create pull request against opentelemetry-operator
         env:
-          # this is the PAT used for "gh pr create" below
-          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRY_JAVA_BOT_TOKEN }}
+          # this is the personal access token used for "gh pr create" below
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          msg="Update opentelemetry-javaagent version to $VERSION"
-          git commit -a -m "$msg"
+          message="Update the javaagent version to $VERSION"
+          body="Update the javaagent version to \`$VERSION\`."
 
           # gh pr create doesn't have a way to explicitly specify different head and base
           # repositories currently, but it will implicitly pick up the head from a different
           # repository if you set up a tracking branch
 
+          git commit -a -m "$message"
           git push --set-upstream origin update-opentelemetry-javaagent-to-$VERSION
-
-          gh pr create --title "$msg" \
-                       --body "$msg" \
+          gh pr create --title "$message" \
+                       --body "$body" \
                        --repo open-telemetry/opentelemetry-operator
                        --base main

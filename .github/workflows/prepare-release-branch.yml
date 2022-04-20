@@ -38,14 +38,16 @@ jobs:
 
       - name: Create pull request against the release branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          msg="Prepare release $VERSION"
-          git commit -a -m "$msg"
-          git push origin HEAD:prepare-release-$VERSION
-          gh pr create --title "[$RELEASE_BRANCH_NAME] $msg" \
-                       --body "$msg" \
-                       --head prepare-release-$VERSION \
+          message="Prepare release $VERSION"
+          branch=prepare-release-$VERSION
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "[$RELEASE_BRANCH_NAME] $message" \
+                       --body "$message." \
+                       --head $branch \
                        --base $RELEASE_BRANCH_NAME
 
   create-pull-request-against-main:
@@ -68,6 +70,8 @@ jobs:
 
           .github/scripts/update-examples.sh "$next_version-SNAPSHOT"
 
+          echo "NEXT_VERSION=$next_version" >> $GITHUB_ENV
+
       - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
@@ -75,12 +79,15 @@ jobs:
 
       - name: Create pull request against main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          msg="Update version"
-          git commit -a -m "$msg"
-          git push origin HEAD:update-version-on-main
-          gh pr create --title "$msg" \
-                       --body "$msg" \
-                       --head update-version-on-main \
+          message="Update version to $NEXT_VERSION"
+          body="Update version to \`$NEXT_VERSION\`."
+          branch=update-version-to-$NEXT_VERSION
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --head $branch \
                        --base main
