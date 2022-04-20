@@ -21,8 +21,8 @@
     (important: note that the meaning is inverted)
   * `otel.instrumentation.netty.always-create-connect-span`
     -> `otel.instrumentation.netty.connection-telemetry.enabled`
-  * `otel.instrumentation.netty.ssl-telemetry.enabled`
-    -> `otel.instrumentation.netty.ssl-telemetry.enabled`
+  * `otel.instrumentation.reactor-netty.always-create-connect-span`
+    -> `otel.instrumentation.reactor-netty.connection-telemetry.enabled`
 - Runtime memory metric names were updated to reflect
   [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics)
 - Micrometer library instrumentation has been deprecated as it has been moved to the core repo and
