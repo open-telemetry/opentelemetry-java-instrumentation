@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.axis2;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.server.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.axis2.jaxws.core.MessageContext;
@@ -15,7 +15,7 @@ import org.apache.axis2.jaxws.core.MessageContext;
 public final class Axis2ServerSpanNaming {
 
   public static void updateServerSpan(Context context, Axis2Request axis2Request) {
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

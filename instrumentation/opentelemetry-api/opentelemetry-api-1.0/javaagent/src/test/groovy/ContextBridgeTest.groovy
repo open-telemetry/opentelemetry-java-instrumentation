@@ -9,8 +9,8 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan
 import io.opentelemetry.instrumentation.api.internal.SpanKey
-import io.opentelemetry.instrumentation.api.server.ServerSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
 import java.util.concurrent.CountDownLatch
@@ -148,13 +148,13 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
     Context.current() == Context.root()
   }
 
-  def "test server span bridge"() {
+  def "test local root span bridge"() {
     expect:
     AgentSpanTesting.runWithServerSpan("server") {
       assert Span.current() != null
-      assert ServerSpan.fromContextOrNull(Context.current()) != null
+      assert LocalRootSpan.fromContextOrNull(Context.current()) != null
       runWithSpan("internal") {
-        assert ServerSpan.fromContextOrNull(Context.current()) != null
+        assert LocalRootSpan.fromContextOrNull(Context.current()) != null
       }
     }
   }

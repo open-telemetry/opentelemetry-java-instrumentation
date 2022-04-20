@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jsf;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.server.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
@@ -16,7 +16,7 @@ public final class JsfServerSpanNaming {
 
   public static void updateViewName(Context context, FacesContext facesContext) {
     // just update the server span name, without touching the http.route
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

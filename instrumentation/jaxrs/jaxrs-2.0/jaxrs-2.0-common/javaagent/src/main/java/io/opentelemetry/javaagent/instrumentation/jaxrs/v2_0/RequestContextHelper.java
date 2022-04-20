@@ -9,9 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSinglet
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
-import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.ws.rs.container.ContainerRequestContext;
 
@@ -25,7 +25,7 @@ public final class RequestContextHelper {
 
     requestContext.setProperty(JaxrsSingletons.ABORT_HANDLED, true);
     Context parentContext = Java8BytecodeBridge.currentContext();
-    Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(parentContext);
     Span currentSpan = Java8BytecodeBridge.spanFromContext(parentContext);
 
     HttpRouteHolder.updateHttpRoute(

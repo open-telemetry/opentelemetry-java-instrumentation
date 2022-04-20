@@ -69,20 +69,9 @@ class SpanSuppressionStrategyTest {
     assertFalse(suppressor.shouldSuppress(context, spanKind));
   }
 
-  @Test
-  void none_shouldStoreServerSpanInContext() {
-    SpanSuppressor suppressor = SpanSuppressionStrategy.NONE.create(emptySet());
-    Context context = Context.root();
-
-    Context newContext = suppressor.storeInContext(context, SpanKind.SERVER, span);
-
-    assertNotSame(newContext, context);
-    assertSame(span, SpanKey.KIND_SERVER.fromContextOrNull(newContext));
-  }
-
   @ParameterizedTest
-  @EnumSource(value = SpanKind.class, mode = EnumSource.Mode.EXCLUDE, names = "SERVER")
-  void none_shouldNotStoreNonServerSpansInContext(SpanKind spanKind) {
+  @EnumSource(value = SpanKind.class)
+  void none_shouldNotStoreSpansInContext(SpanKind spanKind) {
     SpanSuppressor suppressor = SpanSuppressionStrategy.NONE.create(emptySet());
     Context context = Context.root();
 
