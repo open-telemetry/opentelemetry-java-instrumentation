@@ -63,7 +63,7 @@ final class TracingFilter implements Filter {
       throw e;
     }
     if (isSynchronous) {
-      instrumenter.end(context, request, result, null);
+      instrumenter.end(context, request, result, result.getException());
     }
     return result;
   }
