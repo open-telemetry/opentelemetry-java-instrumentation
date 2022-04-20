@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource
 import io.opentelemetry.instrumentation.api.internal.SpanKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import spock.lang.Unroll
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -194,25 +195,31 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def "test HttpRouteHolder bridge"() {
+  @Unroll
+  def "test HttpRouteHolder bridge: #desc"() {
     when:
     AgentSpanTesting.runWithHttpServerSpan("server") {
-      HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.CONTROLLER, "/test/:id")
+      HttpRouteHolder.updateHttpRoute(Context.current(), source, "/test/controller/:id")
     }
 
     then:
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "/test/:id"
+          name expectedRoute
           kind SpanKind.SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_ROUTE" "/test/:id"
+            "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }
       }
     }
+
+    where:
+    desc                                                                            | source                     | expectedRoute
+    "using the same source as the server instrumentation should not override route" | HttpRouteSource.SERVLET    | "/test/server/*"
+    "source with higher order value should override route"                          | HttpRouteSource.CONTROLLER | "/test/controller/:id"
   }
 
   // TODO (trask)

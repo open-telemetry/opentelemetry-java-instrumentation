@@ -12,6 +12,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 
@@ -36,7 +37,9 @@ public final class AgentSpanTestingInstrumenter {
           .newInstrumenter(SpanKindExtractor.alwaysServer());
 
   public static Context startHttpServerSpan(String name) {
-    return HTTP_SERVER_INSTRUMENTER.start(Context.current(), name);
+    Context context = HTTP_SERVER_INSTRUMENTER.start(Context.current(), name);
+    HttpRouteHolder.updateHttpRoute(context, HttpRouteSource.SERVLET, "/test/server/*");
+    return context;
   }
 
   public static void endHttpServer(Context context, Throwable error) {
@@ -58,20 +61,20 @@ public final class AgentSpanTestingInstrumenter {
 
   private static SpanKey[] getAllSpanKeys() {
     return new SpanKey[] {
-        // span kind keys
-        SpanKey.KIND_SERVER,
-        SpanKey.KIND_CLIENT,
-        SpanKey.KIND_CONSUMER,
-        SpanKey.KIND_PRODUCER,
-        // semantic convention keys
-        SpanKey.HTTP_SERVER,
-        SpanKey.RPC_SERVER,
-        SpanKey.HTTP_CLIENT,
-        SpanKey.RPC_CLIENT,
-        SpanKey.DB_CLIENT,
-        SpanKey.PRODUCER,
-        SpanKey.CONSUMER_RECEIVE,
-        SpanKey.CONSUMER_PROCESS,
+      // span kind keys
+      SpanKey.KIND_SERVER,
+      SpanKey.KIND_CLIENT,
+      SpanKey.KIND_CONSUMER,
+      SpanKey.KIND_PRODUCER,
+      // semantic convention keys
+      SpanKey.HTTP_SERVER,
+      SpanKey.RPC_SERVER,
+      SpanKey.HTTP_CLIENT,
+      SpanKey.RPC_CLIENT,
+      SpanKey.DB_CLIENT,
+      SpanKey.PRODUCER,
+      SpanKey.CONSUMER_RECEIVE,
+      SpanKey.CONSUMER_PROCESS,
     };
   }
 

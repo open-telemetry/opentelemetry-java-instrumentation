@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.instrumentationapi;
 
 import application.io.opentelemetry.api.trace.Span;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.ContextKeyBridge;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -17,9 +18,9 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
-final class InstrumentationApiContextBridging {
+public final class InstrumentationApiContextBridging {
 
-  static List<ContextKeyBridge<?, ?>> instrumentationApiBridges() {
+  public static List<ContextKeyBridge<?, ?>> instrumentationApiBridges() {
     List<ContextKeyBridge<?, ?>> bridges = new ArrayList<>();
 
     try {
@@ -108,57 +109,53 @@ final class InstrumentationApiContextBridging {
   static {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
 
-    Class<?> agentHttpRouteHolder = null;
+    Class<?> agentHttpRouteState = null;
     MethodHandle agentCreate = null;
     MethodHandle agentGetUpdatedBySourceOrder = null;
     MethodHandle agentGetRoute = null;
-    Class<?> applicationHttpRouteHolder = null;
+    Class<?> applicationHttpRouteState = null;
     MethodHandle applicationCreate = null;
     MethodHandle applicationGetUpdatedBySourceOrder = null;
     MethodHandle applicationGetRoute = null;
 
     try {
-      agentHttpRouteHolder =
-          Class.forName("io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder");
+      agentHttpRouteState =
+          Class.forName("io.opentelemetry.instrumentation.api.internal.HttpRouteState");
       agentCreate =
           lookup.findStatic(
-              agentHttpRouteHolder,
-              "internalCreate",
-              MethodType.methodType(agentHttpRouteHolder, int.class, String.class));
+              agentHttpRouteState,
+              "create",
+              MethodType.methodType(agentHttpRouteState, int.class, String.class));
       agentGetUpdatedBySourceOrder =
           lookup.findVirtual(
-              agentHttpRouteHolder,
-              "internalGetUpdatedBySourceOrder",
-              MethodType.methodType(int.class));
+              agentHttpRouteState, "getUpdatedBySourceOrder", MethodType.methodType(int.class));
       agentGetRoute =
-          lookup.findVirtual(
-              agentHttpRouteHolder, "internalGetRoute", MethodType.methodType(String.class));
+          lookup.findVirtual(agentHttpRouteState, "getRoute", MethodType.methodType(String.class));
 
-      applicationHttpRouteHolder =
-          Class.forName(
-              "application.io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder");
+      applicationHttpRouteState =
+          Class.forName("application.io.opentelemetry.instrumentation.api.internal.HttpRouteState");
       applicationCreate =
           lookup.findStatic(
-              applicationHttpRouteHolder,
-              "internalCreate",
-              MethodType.methodType(applicationHttpRouteHolder, int.class, String.class));
+              applicationHttpRouteState,
+              "create",
+              MethodType.methodType(applicationHttpRouteState, int.class, String.class));
       applicationGetUpdatedBySourceOrder =
           lookup.findVirtual(
-              applicationHttpRouteHolder,
-              "internalGetUpdatedBySourceOrder",
+              applicationHttpRouteState,
+              "getUpdatedBySourceOrder",
               MethodType.methodType(int.class));
       applicationGetRoute =
           lookup.findVirtual(
-              applicationHttpRouteHolder, "internalGetRoute", MethodType.methodType(String.class));
+              applicationHttpRouteState, "getRoute", MethodType.methodType(String.class));
     } catch (Throwable ignored) {
       // instrumentation-api may be absent on the classpath, or it might be an older version
     }
 
-    AGENT_HTTP_ROUTE_HOLDER = agentHttpRouteHolder;
+    AGENT_HTTP_ROUTE_HOLDER = agentHttpRouteState;
     AGENT_CREATE = agentCreate;
     AGENT_GET_UPDATED_BY_SOURCE_ORDER = agentGetUpdatedBySourceOrder;
     AGENT_GET_ROUTE = agentGetRoute;
-    APPLICATION_HTTP_ROUTE_HOLDER = applicationHttpRouteHolder;
+    APPLICATION_HTTP_ROUTE_HOLDER = applicationHttpRouteState;
     APPLICATION_CREATE = applicationCreate;
     APPLICATION_GET_UPDATED_BY_SOURCE_ORDER = applicationGetUpdatedBySourceOrder;
     APPLICATION_GET_ROUTE = applicationGetRoute;

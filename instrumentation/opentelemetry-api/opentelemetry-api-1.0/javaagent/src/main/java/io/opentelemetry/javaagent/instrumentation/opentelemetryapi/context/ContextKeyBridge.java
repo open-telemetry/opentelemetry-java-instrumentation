@@ -11,14 +11,14 @@ import java.lang.reflect.Field;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-final class ContextKeyBridge<APPLICATION, AGENT> {
+public final class ContextKeyBridge<APPLICATION, AGENT> {
 
   private final ContextKey<APPLICATION> applicationContextKey;
   private final io.opentelemetry.context.ContextKey<AGENT> agentContextKey;
   private final Function<APPLICATION, AGENT> toAgent;
   private final Function<AGENT, APPLICATION> toApplication;
 
-  ContextKeyBridge(
+  public ContextKeyBridge(
       String applicationKeyHolderClassName,
       String agentKeyHolderClassName,
       Function<AGENT, APPLICATION> toApplication,
@@ -27,7 +27,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
     this(applicationKeyHolderClassName, agentKeyHolderClassName, "KEY", toApplication, toAgent);
   }
 
-  ContextKeyBridge(
+  public ContextKeyBridge(
       String applicationKeyHolderClassName,
       String agentKeyHolderClassName,
       String fieldName,
@@ -61,7 +61,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
   }
 
   @SuppressWarnings("unchecked")
-  ContextKeyBridge(
+  public ContextKeyBridge(
       Class<?> applicationKeyHolderClass,
       Class<?> agentKeyHolderClass,
       String applicationFieldName,
@@ -85,7 +85,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
   }
 
   @Nullable
-  <V> V get(AgentContextStorage.AgentContextWrapper contextWrapper, ContextKey<V> requestedKey) {
+  <V> V get(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey) {
     if (requestedKey == applicationContextKey) {
       AGENT agentValue = contextWrapper.agentContext.get(agentContextKey);
       if (agentValue == null) {
@@ -100,8 +100,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
   }
 
   @Nullable
-  <V> Context with(
-      AgentContextStorage.AgentContextWrapper contextWrapper, ContextKey<V> requestedKey, V value) {
+  <V> Context with(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey, V value) {
     if (requestedKey == applicationContextKey) {
       @SuppressWarnings("unchecked")
       APPLICATION applicationValue = (APPLICATION) value;
@@ -109,7 +108,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
       if (agentValue == null) {
         return contextWrapper;
       }
-      return new AgentContextStorage.AgentContextWrapper(
+      return new AgentContextWrapper(
           contextWrapper.agentContext.with(agentContextKey, agentValue),
           contextWrapper.applicationContext);
     }
