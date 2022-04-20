@@ -70,6 +70,8 @@ jobs:
 
           .github/scripts/update-examples.sh "$next_version-SNAPSHOT"
 
+          echo "NEXT_VERSION=$next_version" >> $GITHUB_ENV
+
       - name: Set git user
         run: |
           git config user.name opentelemetry-java-bot
