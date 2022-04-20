@@ -1,7 +1,7 @@
 val snapshot = false
 
 allprojects {
-  var ver = "1.13.0"
+  var ver = "1.13.1"
   if (findProperty("otel.stable") != "true") {
     ver += "-alpha"
   }
