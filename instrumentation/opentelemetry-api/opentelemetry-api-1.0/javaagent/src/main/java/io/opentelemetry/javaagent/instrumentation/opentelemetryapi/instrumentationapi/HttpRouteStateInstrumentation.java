@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class HttpRouteStateInstrumentation implements TypeInstrumentation {
-  
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("application.io.opentelemetry.instrumentation.api.internal.HttpRouteState");
