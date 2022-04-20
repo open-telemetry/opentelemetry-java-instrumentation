@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 1.13.1 (unreleased)
+
+### 🛠️ Bug fixes
+
+- Fix duplicate class error on Android build
+  ([#5882](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5882))
+
 ## Version 1.13.0 (2022-04-19)
 
 ### Migration notes
