@@ -14,15 +14,13 @@ public final class KafkaClientsConsumerProcessTracing {
 
   private KafkaClientsConsumerProcessTracing() {}
 
-  public static void enableWrapping() {
-    wrappingEnabled.set(true);
-  }
-
-  public static void disableWrapping() {
-    wrappingEnabled.set(false);
+  public static boolean setEnabled(boolean enabled) {
+    boolean previous = wrappingEnabled.get();
+    wrappingEnabled.set(enabled);
+    return previous;
   }
 
   public static boolean wrappingEnabled() {
-    return wrappingEnabled.get() == true;
+    return wrappingEnabled.get();
   }
 }

@@ -7,14 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessWrapper;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-public class TracingIterable<K, V>
-    implements Iterable<ConsumerRecord<K, V>>,
-        KafkaClientsConsumerProcessWrapper<Iterable<ConsumerRecord<K, V>>> {
+public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
   private final Iterable<ConsumerRecord<K, V>> delegate;
   @Nullable private final Context receiveContext;
   private boolean firstIterator = true;
@@ -47,10 +44,5 @@ public class TracingIterable<K, V>
     }
 
     return it;
-  }
-
-  @Override
-  public Iterable<ConsumerRecord<K, V>> unwrap() {
-    return delegate;
   }
 }

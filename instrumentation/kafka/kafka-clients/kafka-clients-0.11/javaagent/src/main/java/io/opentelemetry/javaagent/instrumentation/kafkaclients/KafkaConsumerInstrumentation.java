@@ -17,12 +17,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.kafka.internal.ReceivedRecords;
 import io.opentelemetry.instrumentation.kafka.internal.Timer;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 public class KafkaConsumerInstrumentation implements TypeInstrumentation {
@@ -74,6 +76,18 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         VirtualField<ConsumerRecords<?, ?>, Context> consumerRecordsContext =
             VirtualField.find(ConsumerRecords.class, Context.class);
         consumerRecordsContext.set(records, context);
+
+        // disable process tracing and store the receive span for each individual record too
+        boolean previousValue = KafkaClientsConsumerProcessTracing.setEnabled(false);
+        try {
+          VirtualField<ConsumerRecord<?, ?>, Context> consumerRecordContext =
+              VirtualField.find(ConsumerRecord.class, Context.class);
+          for (ConsumerRecord<?, ?> record : records) {
+            consumerRecordContext.set(record, context);
+          }
+        } finally {
+          KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
+        }
       }
     }
   }
