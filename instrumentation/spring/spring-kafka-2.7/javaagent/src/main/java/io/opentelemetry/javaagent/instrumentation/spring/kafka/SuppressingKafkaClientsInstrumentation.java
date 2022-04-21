@@ -31,13 +31,13 @@ public class SuppressingKafkaClientsInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class RunLoopAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      KafkaClientsConsumerProcessTracing.disableWrapping();
+    public static boolean onEnter() {
+      return KafkaClientsConsumerProcessTracing.setEnabled(false);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit() {
-      KafkaClientsConsumerProcessTracing.enableWrapping();
+    public static void onExit(@Advice.Enter boolean previousValue) {
+      KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
     }
   }
 }
