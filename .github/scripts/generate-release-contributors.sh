@@ -3,14 +3,15 @@
 # shellcheck disable=SC2016
 # shellcheck disable=SC2086
 
-from_version=$1
-to_version=$2
+# this should be run on the release branch
 
-# get the date of the first commit on main that wasn't in the from_version
+from_version=$1
+
+# get the date of the first commit that was not in the from_version
 from=$(git log --reverse --pretty=format:"%cI" $from_version..HEAD | head -1)
 
-# get the last commit on main that was in the to_version
-to=$(git merge-base HEAD $to_version | xargs git log -1 --pretty=format:"%cI")
+# get the last commit on main that was included in the release
+to=$(git merge-base origin/main HEAD | xargs git log -1 --pretty=format:"%cI")
 
 contributors1=$(gh api graphql --paginate -F q="repo:$GITHUB_REPOSITORY is:pr base:main is:merged merged:$from..$to" -f query='
 query($q: String!, $endCursor: String) {
@@ -66,7 +67,7 @@ query($q: String!, $endCursor: String) {
   }
 }
 ' --jq '.data.search.edges.[].node.body' \
-  | grep -oE "#[0-9]{4,}|issues/[0-9]{4,}" \
+  | grep -oE "#[0-9]{4,}|$GITHUB_REPOSITORY/issues/[0-9]{4,}" \
   | grep -oE "[0-9]{4,}" \
   | xargs -I{} gh issue view {} --json 'author,url' --jq '[.author.login,.url]' \
   | grep -v '/pull/' \
