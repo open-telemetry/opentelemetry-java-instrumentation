@@ -162,6 +162,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       }
     }
 
+    if (LocalRootSpan.isLocalRoot(parentContext)) {
+      context = LocalRootSpan.store(context, span);
+    }
+
     return spanSuppressor.storeInContext(context, spanKind, span);
   }
 

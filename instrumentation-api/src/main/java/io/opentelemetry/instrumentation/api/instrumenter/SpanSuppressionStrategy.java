@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.BySpanKey;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.DelegateBySpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.JustStoreServer;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.Noop;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -21,16 +20,11 @@ import java.util.Map;
 import java.util.Set;
 
 enum SpanSuppressionStrategy {
-  /**
-   * Do not suppress spans at all.
-   *
-   * <p>This strategy will mark spans of {@link SpanKind#SERVER SERVER} kind in the context, so that
-   * they can be accessed using {@code ServerSpan}, but will not suppress server spans.
-   */
+  /** Do not suppress spans at all. */
   NONE {
     @Override
     SpanSuppressor create(Set<SpanKey> spanKeys) {
-      return JustStoreServer.INSTANCE;
+      return Noop.INSTANCE;
     }
   },
   /**

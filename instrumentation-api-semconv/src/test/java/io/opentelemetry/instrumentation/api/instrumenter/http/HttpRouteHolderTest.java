@@ -8,31 +8,24 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class HttpRouteHolderTest {
 
+  @RegisterExtension final OpenTelemetryExtension testing = OpenTelemetryExtension.create();
+
   @Test
   void shouldSetRouteEvenIfSpanIsNotSampled() {
-    Span span =
-        Span.wrap(
-            SpanContext.create(
-                "00000000000000000000000000000042",
-                "0000000000000012",
-                TraceFlags.getDefault(),
-                TraceState.getDefault()));
+    Instrumenter<String, Void> instrumenter =
+        Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "test", s -> s)
+            .addContextCustomizer(HttpRouteHolder.get())
+            .newInstrumenter();
 
-    Context context = Context.root();
-    context = context.with(span);
-    context = SpanKey.HTTP_SERVER.storeInContext(context, span);
-    context = HttpRouteHolder.get().start(context, null, Attributes.empty());
+    Context context = instrumenter.start(Context.root(), "test");
 
     assertNull(HttpRouteHolder.getRoute(context));
 

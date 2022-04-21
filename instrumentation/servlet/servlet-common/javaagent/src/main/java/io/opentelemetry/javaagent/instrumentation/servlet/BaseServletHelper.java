@@ -12,8 +12,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import io.opentelemetry.instrumentation.api.server.ServerSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
@@ -103,7 +103,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     if (parameterExtractor == null || !AppServerBridge.captureServletAttributes(context)) {
       return;
     }
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

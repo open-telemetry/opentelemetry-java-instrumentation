@@ -250,6 +250,7 @@ class InstrumenterTest {
 
     Context context = instrumenter.start(Context.root(), request);
     assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
+    assertThat(LocalRootSpan.fromContext(context)).isSameAs(Span.fromContext(context));
 
     instrumenter.end(context, request, RESPONSE, null);
 
@@ -358,6 +359,7 @@ class InstrumenterTest {
 
     assertThat(spanContext.isValid()).isTrue();
     assertThat(request).containsKey("traceparent");
+    assertThat(LocalRootSpan.fromContextOrNull(context)).isNull();
 
     instrumenter.end(context, request, RESPONSE, new IllegalStateException("test"));
 
