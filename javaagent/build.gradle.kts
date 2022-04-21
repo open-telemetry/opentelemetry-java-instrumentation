@@ -14,17 +14,20 @@ description = "OpenTelemetry Javaagent"
 group = "io.opentelemetry.javaagent"
 
 // this configuration collects libs that will be placed in the bootstrap classloader
+//这个配置用来收集存放在 bootstrap classloader 中的类库
 val bootstrapLibs by configurations.creating {
-  isCanBeResolved = true
+   isCanBeResolved = true
   isCanBeConsumed = false
 }
 // this configuration collects only required instrumentations and agent machinery
+// 这个配置只收集 instrumentations 和 agent
 val baseJavaagentLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
 
 // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
+// 这个配置收集放在 agent classloader 的类库，用于和应用程序代码隔离
 val javaagentLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
@@ -32,12 +35,14 @@ val javaagentLibs by configurations.creating {
 }
 
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
+// 从 agent lib 中排除 bootstrap 的依赖项
 listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
     exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
     exclude("io.opentelemetry", "opentelemetry-semconv")
   }
+
 }
 
 val licenseReportDependencies by configurations.creating {
@@ -245,7 +250,8 @@ fun CopySpec.isolateClasses(jars: Iterable<File>) {
     from(zipTree(it)) {
       // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
       into("inst")
-      rename("(^.*)\\.class\$", "\$1.classdata")
+      // TODO ---  为了方便 debug 不进行 class文件 后缀的替换
+//      rename("(^.*)\\.class\$", "\$1.classdata")
       // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
       rename("""^LICENSE$""", "LICENSE.renamed")
       exclude("META-INF/INDEX.LIST")

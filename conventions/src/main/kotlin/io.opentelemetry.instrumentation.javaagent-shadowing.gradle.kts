@@ -13,9 +13,14 @@ tasks.withType<ShadowJar>().configureEach {
   mergeServiceFiles("software/amazon/awssdk/global/handlers")
 
   exclude("**/module-info.class")
+  // Exclude org.slf4j.impl.StaticLoggerBinder and isolate user logs
+  exclude("org/slf4j/impl/StaticLoggerBinder.class")
 
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")
+  // Prevents conflict with other Logback instances. Important for premain.
+  relocate("ch.qos.logback", "io.opentelemetry.javaagent.ch.qos.logback")
+
   // rewrite dependencies calling Logger.getLogger
   relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
 

@@ -105,6 +105,7 @@ public final class AgentInitializer {
   private static AgentStarter createAgentStarter(
       ClassLoader agentClassLoader, Instrumentation instrumentation, File javaagentFile)
       throws Exception {
+    // 使用 AgentClassLoader 加载 AgentStarterImpl
     Class<?> starterClass =
         agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentStarterImpl");
     Constructor<?> constructor =

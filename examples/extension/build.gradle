@@ -36,6 +36,9 @@ ext {
 repositories {
   mavenCentral()
   maven {
+    url 'https://maven.aliyun.com/repository/public/'
+  }
+  maven {
     name = "sonatype"
     url = uri("https://oss.sonatype.org/content/repositories/snapshots")
   }
@@ -137,7 +140,7 @@ tasks {
     useJUnitPlatform()
 
     inputs.files(layout.files(tasks.shadowJar))
-    inputs.files(layout.files(tasks.extendedAgent))
+//    inputs.files(layout.files(tasks.extendedAgent))
 
     systemProperty 'io.opentelemetry.smoketest.agentPath', configurations.otel.singleFile.absolutePath
     systemProperty 'io.opentelemetry.smoketest.extendedAgentPath', tasks.extendedAgent.archiveFile.get().asFile.absolutePath

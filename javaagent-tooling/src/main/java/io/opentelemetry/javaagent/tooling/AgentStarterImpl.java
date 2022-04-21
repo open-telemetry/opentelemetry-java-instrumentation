@@ -58,10 +58,12 @@ public class AgentStarterImpl implements AgentStarter {
 
   @Override
   public void start() {
+    // 为外部扩展创建类加载器并和Agent ClassLoader实现聚合
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), javaagentFile);
     ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
       Thread.currentThread().setContextClassLoader(extensionClassLoader);
+      // 安装 BytebuddyAgent
       AgentInstaller.installBytebuddyAgent(instrumentation);
     } finally {
       Thread.currentThread().setContextClassLoader(savedContextClassLoader);

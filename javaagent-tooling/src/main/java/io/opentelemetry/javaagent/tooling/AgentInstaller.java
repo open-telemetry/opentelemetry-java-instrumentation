@@ -93,6 +93,7 @@ public class AgentInstaller {
   public static void installBytebuddyAgent(Instrumentation inst) {
     logVersionInfo();
     Config config = Config.get();
+    // 是否开启 tracing
     if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
@@ -111,7 +112,7 @@ public class AgentInstaller {
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
       Instrumentation inst, Iterable<AgentListener> agentListeners) {
-
+    // 在代理中使用弱引用策略。这将防止对策略的类加载器的引用泄漏，以防应用程序被卸载(以及它们的所有类被卸载)。
     WeakRefAsyncOperationEndStrategies.initialize();
 
     EmbeddedInstrumentationProperties.setPropertiesLoader(
@@ -124,6 +125,7 @@ public class AgentInstaller {
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = null;
+    // 使用 Noop Telemetry , autoConfiguredSDK 将为 null
     if (config.getBoolean(JAVAAGENT_NOOP_CONFIG, false)) {
       logger.info("Tracing and metrics are disabled because noop is enabled.");
       GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());

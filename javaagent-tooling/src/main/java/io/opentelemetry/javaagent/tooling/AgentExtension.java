@@ -16,6 +16,10 @@ import net.bytebuddy.agent.builder.AgentBuilder;
  *
  * <p>This is a service provider interface that requires implementations to be registered in a
  * provider-configuration file stored in the {@code META-INF/services} resource directory.
+ *
+ * <p>AgentExtension提供了一种修改/丰富OpenTelemetry Javaagent行为的方法。它可以是一个InstrumentationModule或一个完全自定义的实现。
+ * 因为扩展可能会大量修改javaagent的行为，所以建议特别小心。
+ * 这是一个服务提供者接口，它要求将实现注册到存储在META-INF/services资源目录中的提供者配置文件中。
  */
 public interface AgentExtension extends Ordered {
 

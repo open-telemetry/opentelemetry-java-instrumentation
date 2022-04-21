@@ -29,7 +29,13 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
  * user application and to make it compatible with shaded SDK used by the agent. Thus each extension
  * jar gets a separate classloader and all of them are aggregated with the help of {@link
  * MultipleParentClassLoader}.
+ *
+ * 这个类创建一个类加载器，它封装Otel Java 插装代理的任意扩展。
+ * 这些扩展可能包括SDK组件(导出器或传播器)和其他工具。它们必须被隔离和着色，
+ * 以减少对用户应用程序的干扰，并使其与代理使用的着色SDK兼容。
+ * 因此，每个扩展jar都有一个单独的类加载器，并且所有的类都在MultipleParentClassLoader的帮助下被聚合。
  */
+
 // TODO find a way to initialize logging before using this class
 // Used by AgentInitializer
 @SuppressWarnings({"unused", "SystemOut"})
@@ -46,9 +52,9 @@ public class ExtensionClassLoader extends URLClassLoader {
 
   public static ClassLoader getInstance(ClassLoader parent, File javaagentFile) {
     List<URL> extensions = new ArrayList<>();
-
+    // 获取嵌入式的 extensions
     includeEmbeddedExtensionsIfFound(parent, extensions, javaagentFile);
-
+    // 获取外置的 extensions url
     extensions.addAll(
         parseLocation(
             System.getProperty(EXTENSIONS_CONFIG, System.getenv("OTEL_JAVAAGENT_EXTENSIONS")),

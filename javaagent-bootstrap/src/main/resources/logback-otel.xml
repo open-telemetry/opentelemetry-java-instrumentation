@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <appender name="console" class="io.opentelemetry.javaagent.ch.qos.logback.core.ConsoleAppender">
+    <layout class="io.opentelemetry.javaagent.ch.qos.logback.classic.PatternLayout">
+      <Pattern>
+        [v1] [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] %logger %msg%n
+      </Pattern>
+    </layout>
+  </appender>
+
+  <appender name="file" class="io.opentelemetry.javaagent.ch.qos.logback.core.FileAppender">
+    <file>${user.home}/chj/data/log/otel-agent.log</file>
+    <append>true</append>
+    <layout class="io.opentelemetry.javaagent.ch.qos.logback.classic.PatternLayout">
+      <Pattern>
+        [v1] [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] %logger %msg%n
+      </Pattern>
+    </layout>
+  </appender>
+
+  <root level="WARN">
+    <appender-ref ref="file"/>
+  </root>
+
+  <logger name="io.opentelemetry" level="debug"/>
+
+</configuration>

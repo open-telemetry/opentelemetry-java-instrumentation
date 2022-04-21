@@ -80,13 +80,14 @@ public class AgentClassLoader extends URLClassLoader {
     if (internalJarFileName == null) {
       throw new IllegalArgumentException("Internal jar file name should be set");
     }
-
+    // BootstrapClassLoader的替代品。用于查找引导程序资源和检测附加的资源
     bootstrapProxy = new BootstrapClassLoaderProxy(this);
-
+    // instrumentation 目录 -> inst
     jarEntryPrefix =
         internalJarFileName
             + (internalJarFileName.isEmpty() || internalJarFileName.endsWith("/") ? "" : "/");
     try {
+      // /Users/wangxiaowei1/lixiang/opentelemetry-tutorial/opentelemetry-javaagent.jar
       jarFile = new JarFile(javaagentFile, false);
       // base url for constructing jar entry urls
       // we use a custom protocol instead of typical jar:file: because we don't want to be affected
@@ -203,9 +204,10 @@ public class AgentClassLoader extends URLClassLoader {
   private JarEntry findJarEntry(String name) {
     // shading renames .class to .classdata
     boolean isClass = name.endsWith(".class");
-    if (isClass) {
-      name += getClassSuffix();
-    }
+    // TODO --- 为了方便 debug 不添加 data 后缀
+//    if (isClass) {
+//      name += getClassSuffix();
+//    }
 
     JarEntry jarEntry = jarFile.getJarEntry(jarEntryPrefix + name);
     if (MULTI_RELEASE_JAR_ENABLE) {
