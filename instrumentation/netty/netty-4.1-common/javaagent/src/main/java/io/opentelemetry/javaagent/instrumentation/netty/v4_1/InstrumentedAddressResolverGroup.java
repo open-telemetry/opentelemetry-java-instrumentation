@@ -22,7 +22,7 @@ public final class InstrumentedAddressResolverGroup<T extends SocketAddress>
 
   public static <T extends SocketAddress> AddressResolverGroup<T> wrap(
       NettyConnectionInstrumenter instrumenter, AddressResolverGroup<T> delegate) {
-    if (delegate instanceof InstrumentedAddressResolverGroup) {
+    if (delegate == null || delegate instanceof InstrumentedAddressResolverGroup) {
       return delegate;
     }
     return new InstrumentedAddressResolverGroup<>(instrumenter, delegate);
