@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.instrumentationapi;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
 
 import application.io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.ContextKeyBridge;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -18,9 +17,9 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class InstrumentationApiContextBridging {
+final class InstrumentationApiContextBridging {
 
-  public static List<ContextKeyBridge<?, ?>> instrumentationApiBridges() {
+  static List<ContextKeyBridge<?, ?>> instrumentationApiBridges() {
     List<ContextKeyBridge<?, ?>> bridges = new ArrayList<>();
 
     try {
@@ -33,6 +32,7 @@ public final class InstrumentationApiContextBridging {
     } catch (Throwable e) {
       // no instrumentation-api on classpath
     }
+
     try {
       // old SERVER_KEY bridge - needed to make legacy ServerSpan work, for users who're using old
       // instrumentation-api version with the newest agent version
@@ -72,7 +72,7 @@ public final class InstrumentationApiContextBridging {
       }
     }
 
-    ContextKeyBridge<?, ?> httpRouteHolderBridge = httpRouteHolderBridge();
+    ContextKeyBridge<?, ?> httpRouteHolderBridge = httpRouteStateBridge();
     if (httpRouteHolderBridge != null) {
       bridges.add(httpRouteHolderBridge);
     }
@@ -96,12 +96,12 @@ public final class InstrumentationApiContextBridging {
     }
   }
 
-  private static final Class<?> AGENT_HTTP_ROUTE_HOLDER;
+  private static final Class<?> AGENT_HTTP_ROUTE_STATE;
   private static final MethodHandle AGENT_CREATE;
   private static final MethodHandle AGENT_GET_UPDATED_BY_SOURCE_ORDER;
   private static final MethodHandle AGENT_GET_ROUTE;
 
-  private static final Class<?> APPLICATION_HTTP_ROUTE_HOLDER;
+  private static final Class<?> APPLICATION_HTTP_ROUTE_STATE;
   private static final MethodHandle APPLICATION_CREATE;
   private static final MethodHandle APPLICATION_GET_UPDATED_BY_SOURCE_ORDER;
   private static final MethodHandle APPLICATION_GET_ROUTE;
@@ -151,19 +151,19 @@ public final class InstrumentationApiContextBridging {
       // instrumentation-api may be absent on the classpath, or it might be an older version
     }
 
-    AGENT_HTTP_ROUTE_HOLDER = agentHttpRouteState;
+    AGENT_HTTP_ROUTE_STATE = agentHttpRouteState;
     AGENT_CREATE = agentCreate;
     AGENT_GET_UPDATED_BY_SOURCE_ORDER = agentGetUpdatedBySourceOrder;
     AGENT_GET_ROUTE = agentGetRoute;
-    APPLICATION_HTTP_ROUTE_HOLDER = applicationHttpRouteState;
+    APPLICATION_HTTP_ROUTE_STATE = applicationHttpRouteState;
     APPLICATION_CREATE = applicationCreate;
     APPLICATION_GET_UPDATED_BY_SOURCE_ORDER = applicationGetUpdatedBySourceOrder;
     APPLICATION_GET_ROUTE = applicationGetRoute;
   }
 
   @Nullable
-  private static ContextKeyBridge<?, ?> httpRouteHolderBridge() {
-    if (APPLICATION_HTTP_ROUTE_HOLDER == null
+  private static ContextKeyBridge<?, ?> httpRouteStateBridge() {
+    if (APPLICATION_HTTP_ROUTE_STATE == null
         || APPLICATION_CREATE == null
         || APPLICATION_GET_UPDATED_BY_SOURCE_ORDER == null
         || APPLICATION_GET_ROUTE == null) {
@@ -172,20 +172,20 @@ public final class InstrumentationApiContextBridging {
     }
     try {
       return new ContextKeyBridge<>(
-          APPLICATION_HTTP_ROUTE_HOLDER,
-          AGENT_HTTP_ROUTE_HOLDER,
+          APPLICATION_HTTP_ROUTE_STATE,
+          AGENT_HTTP_ROUTE_STATE,
           "KEY",
           "KEY",
-          httpRouteHolderConvert(
+          httpRouteStateConvert(
               APPLICATION_CREATE, AGENT_GET_UPDATED_BY_SOURCE_ORDER, AGENT_GET_ROUTE),
-          httpRouteHolderConvert(
+          httpRouteStateConvert(
               AGENT_CREATE, APPLICATION_GET_UPDATED_BY_SOURCE_ORDER, APPLICATION_GET_ROUTE));
     } catch (Throwable ignored) {
       return null;
     }
   }
 
-  private static Function<Object, Object> httpRouteHolderConvert(
+  private static Function<Object, Object> httpRouteStateConvert(
       MethodHandle create, MethodHandle getUpdatedBySourceOrder, MethodHandle getRoute) {
     return httpRouteHolder -> {
       try {

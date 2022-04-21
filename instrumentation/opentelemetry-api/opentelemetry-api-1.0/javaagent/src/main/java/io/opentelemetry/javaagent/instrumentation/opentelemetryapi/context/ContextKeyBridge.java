@@ -11,14 +11,15 @@ import java.lang.reflect.Field;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-public final class ContextKeyBridge<APPLICATION, AGENT> {
+final class ContextKeyBridge<APPLICATION, AGENT> {
 
   private final ContextKey<APPLICATION> applicationContextKey;
   private final io.opentelemetry.context.ContextKey<AGENT> agentContextKey;
   private final Function<APPLICATION, AGENT> toAgent;
   private final Function<AGENT, APPLICATION> toApplication;
 
-  public ContextKeyBridge(
+  // TODO: maybe add a builder instead of all those constructors?
+  ContextKeyBridge(
       String applicationKeyHolderClassName,
       String agentKeyHolderClassName,
       Function<AGENT, APPLICATION> toApplication,
@@ -27,7 +28,7 @@ public final class ContextKeyBridge<APPLICATION, AGENT> {
     this(applicationKeyHolderClassName, agentKeyHolderClassName, "KEY", toApplication, toAgent);
   }
 
-  public ContextKeyBridge(
+  ContextKeyBridge(
       String applicationKeyHolderClassName,
       String agentKeyHolderClassName,
       String fieldName,
@@ -61,7 +62,7 @@ public final class ContextKeyBridge<APPLICATION, AGENT> {
   }
 
   @SuppressWarnings("unchecked")
-  public ContextKeyBridge(
+  ContextKeyBridge(
       Class<?> applicationKeyHolderClass,
       Class<?> agentKeyHolderClass,
       String applicationFieldName,

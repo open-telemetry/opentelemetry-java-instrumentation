@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.instrumentationapi.HttpRouteStateInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -25,8 +24,6 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
         new ContextInstrumentation(),
         new ContextStorageWrappersInstrumentation(),
         new OpenTelemetryInstrumentation(),
-        new SpanInstrumentation(),
-        // instrumentation-api specific instrumentation
-        new HttpRouteStateInstrumentation());
+        new SpanInstrumentation());
   }
 }

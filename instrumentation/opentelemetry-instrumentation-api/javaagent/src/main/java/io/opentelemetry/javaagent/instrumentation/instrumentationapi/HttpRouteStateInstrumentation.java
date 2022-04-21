@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.instrumentationapi;
+package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -11,12 +11,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextWrapper;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpRouteStateInstrumentation implements TypeInstrumentation {
+final class HttpRouteStateInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -41,11 +41,8 @@ public class HttpRouteStateInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) int updatedBySourceOrder,
         @Advice.Argument(2) String route) {
 
-      if (!(applicationContext instanceof AgentContextWrapper)) {
-        return;
-      }
       io.opentelemetry.context.Context agentContext =
-          ((AgentContextWrapper) applicationContext).getAgentContext();
+          AgentContextStorage.getAgentContext(applicationContext);
 
       io.opentelemetry.instrumentation.api.internal.HttpRouteState agentRouteState =
           io.opentelemetry.instrumentation.api.internal.HttpRouteState.fromContextOrNull(

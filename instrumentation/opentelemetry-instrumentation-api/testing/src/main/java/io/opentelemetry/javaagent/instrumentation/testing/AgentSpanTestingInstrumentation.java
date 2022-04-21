@@ -19,7 +19,7 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("AgentSpanTesting");
+    return named("io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting");
   }
 
   @Override

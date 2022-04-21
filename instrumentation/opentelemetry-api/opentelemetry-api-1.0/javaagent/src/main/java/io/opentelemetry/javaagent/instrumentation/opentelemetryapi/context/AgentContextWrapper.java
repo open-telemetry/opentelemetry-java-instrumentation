@@ -9,13 +9,12 @@ import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.ContextKey;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.baggage.BaggageBridging;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.instrumentationapi.InstrumentationApiContextBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class AgentContextWrapper implements Context {
+final class AgentContextWrapper implements Context {
 
   static final List<ContextKeyBridge<?, ?>> CONTEXT_KEY_BRIDGES;
 

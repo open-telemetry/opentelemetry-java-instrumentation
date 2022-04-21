@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.testing;
+
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 
 public class AgentSpanTesting {
