@@ -10,39 +10,25 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRecordGetter;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessWrapper;
-import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-public class KafkaBatchProcessSpanLinksExtractor
+final class KafkaBatchProcessSpanLinksExtractor
     implements SpanLinksExtractor<ConsumerRecords<?, ?>> {
 
   private final SpanLinksExtractor<ConsumerRecord<?, ?>> singleRecordLinkExtractor;
 
-  public KafkaBatchProcessSpanLinksExtractor(ContextPropagators contextPropagators) {
+  KafkaBatchProcessSpanLinksExtractor(ContextPropagators contextPropagators) {
     this.singleRecordLinkExtractor =
         SpanLinksExtractor.fromUpstreamRequest(
             contextPropagators, KafkaConsumerRecordGetter.INSTANCE);
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public void extract(
       SpanLinksBuilder spanLinks, Context parentContext, ConsumerRecords<?, ?> records) {
 
-    Iterator<? extends ConsumerRecord<?, ?>> it = records.iterator();
-
-    // this will forcefully suppress the kafka-clients CONSUMER instrumentation even though there's
-    // no current CONSUMER span
-    if (it instanceof KafkaClientsConsumerProcessWrapper) {
-      it =
-          ((KafkaClientsConsumerProcessWrapper<Iterator<? extends ConsumerRecord<?, ?>>>) it)
-              .unwrap();
-    }
-
-    while (it.hasNext()) {
-      ConsumerRecord<?, ?> record = it.next();
+    for (ConsumerRecord<?, ?> record : records) {
       // explicitly passing root to avoid situation where context propagation is turned off and the
       // parent (CONSUMER receive) span is linked
       singleRecordLinkExtractor.extract(spanLinks, Context.root(), record);

@@ -8,17 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 @AutoValue
-public abstract class State<K, V> {
+public abstract class State<REQUEST> {
 
-  public static <K, V> State<K, V> create(
-      ConsumerRecords<K, V> request, Context context, Scope scope) {
+  public static <REQUEST> State<REQUEST> create(REQUEST request, Context context, Scope scope) {
     return new AutoValue_State<>(request, context, scope);
   }
 
-  public abstract ConsumerRecords<K, V> request();
+  public abstract REQUEST request();
 
   public abstract Context context();
 
