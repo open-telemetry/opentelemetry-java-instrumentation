@@ -42,9 +42,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-logging-otlp")
 
   implementation("io.opentelemetry:opentelemetry-exporter-prometheus")
-  implementation("io.prometheus:simpleclient")
-  implementation("io.prometheus:simpleclient_httpserver")
-
   implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
