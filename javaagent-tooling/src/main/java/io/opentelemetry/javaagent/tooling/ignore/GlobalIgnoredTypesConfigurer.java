@@ -117,6 +117,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("jdk.internal.reflect.DelegatingClassLoader")
         .ignoreClassLoader("clojure.lang.DynamicClassLoader")
         .ignoreClassLoader("org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader")
+        .ignoreClassLoader(
+            "org.springframework.context.support.ContextTypeMatchClassLoader$ContextOverridingClassLoader")
         .ignoreClassLoader("sun.misc.Launcher$ExtClassLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
         .ignoreClassLoader(ExtensionClassLoader.class.getName());
