@@ -48,7 +48,7 @@ jobs:
     # release branch PRs are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
-    if: ${{ !startsWith(github.base_ref, 'v') }}
+    if: ${{ !startsWith(github.base_ref, 'release/') }}
     uses: ./.github/workflows/reusable-muzzle.yml
     with:
       cache-read-only: true
@@ -91,7 +91,7 @@ jobs:
           needs.assemble.result != 'success' ||
           needs.test.result != 'success' ||
           needs.smoke-test.result != 'success' ||
-          needs.muzzle.result != 'success' ||
+          (!startsWith(github.base_ref, 'release/') && needs.muzzle.result != 'success') ||
           needs.gradle-plugins.result != 'success' ||
           needs.examples.result != 'success'
         run: exit 1
