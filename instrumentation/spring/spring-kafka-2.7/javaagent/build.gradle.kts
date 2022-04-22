@@ -22,18 +22,46 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
-  testImplementation("org.testcontainers:kafka")
+  testImplementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+}
+
+testing {
+  suites {
+    // CompletableFuture behaves differently if ForkJoinPool has no parallelism
+    val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("org.springframework.kafka:spring-kafka:2.7.0")
+        implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
+        implementation("org.springframework.boot:spring-boot-starter-test:2.5.3")
+        implementation("org.springframework.boot:spring-boot-starter:2.5.3")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+            jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+          }
+        }
+      }
+    }
+  }
 }
 
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testing.suites)
   }
 }

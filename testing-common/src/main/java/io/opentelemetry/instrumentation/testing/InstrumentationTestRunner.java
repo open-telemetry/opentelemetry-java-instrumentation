@@ -18,10 +18,12 @@ import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.awaitility.core.ConditionTimeoutException;
 
 /**
@@ -71,11 +73,23 @@ public abstract class InstrumentationTestRunner {
 
   @SafeVarargs
   @SuppressWarnings("varargs")
+  public final void waitAndAssertSortedTraces(
+      Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
+    waitAndAssertTraces(traceComparator, Arrays.asList(assertions));
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
   public final void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
     waitAndAssertTraces(Arrays.asList(assertions));
   }
 
   public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
+    waitAndAssertTraces(null, assertions);
+  }
+
+  private <T extends Consumer<TraceAssert>> void waitAndAssertTraces(
+      @Nullable Comparator<List<SpanData>> traceComparator, Iterable<T> assertions) {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
 
@@ -84,6 +98,9 @@ public abstract class InstrumentationTestRunner {
           .untilAsserted(
               () -> {
                 List<List<SpanData>> traces = waitForTraces(assertionsList.size());
+                if (traceComparator != null) {
+                  traces.sort(traceComparator);
+                }
                 TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
               });
     } catch (ConditionTimeoutException e) {
