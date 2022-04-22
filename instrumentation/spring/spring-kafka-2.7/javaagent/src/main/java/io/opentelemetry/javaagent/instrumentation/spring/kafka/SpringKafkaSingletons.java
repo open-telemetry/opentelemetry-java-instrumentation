@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -18,10 +19,13 @@ public final class SpringKafkaSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-kafka-2.7";
 
-  private static final Instrumenter<ConsumerRecords<?, ?>, Void> PROCESS_INSTRUMENTER =
-      buildProcessInstrumenter();
+  private static final Instrumenter<ConsumerRecords<?, ?>, Void> BATCH_PROCESS_INSTRUMENTER =
+      buildBatchProcessInstrumenter();
+  private static final Instrumenter<ConsumerRecord<?, ?>, Void> PROCESS_INSTRUMENTER =
+      KafkaInstrumenterFactory.createConsumerProcessInstrumenter(
+          INSTRUMENTATION_NAME, SpringKafkaErrorCauseExtractor.INSTANCE);
 
-  private static Instrumenter<ConsumerRecords<?, ?>, Void> buildProcessInstrumenter() {
+  private static Instrumenter<ConsumerRecords<?, ?>, Void> buildBatchProcessInstrumenter() {
     KafkaBatchProcessAttributesGetter getter = KafkaBatchProcessAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
@@ -32,15 +36,15 @@ public final class SpringKafkaSingletons {
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .addSpanLinksExtractor(
             new KafkaBatchProcessSpanLinksExtractor(GlobalOpenTelemetry.getPropagators()))
-        .setErrorCauseExtractor(new KafkaBatchErrorCauseExtractor())
+        .setErrorCauseExtractor(SpringKafkaErrorCauseExtractor.INSTANCE)
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public static Instrumenter<ConsumerRecord<?, ?>, Void> receiveInstrumenter() {
-    return null;
+  public static Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter() {
+    return BATCH_PROCESS_INSTRUMENTER;
   }
 
-  public static Instrumenter<ConsumerRecords<?, ?>, Void> processInstrumenter() {
+  public static Instrumenter<ConsumerRecord<?, ?>, Void> processInstrumenter() {
     return PROCESS_INSTRUMENTER;
   }
 
