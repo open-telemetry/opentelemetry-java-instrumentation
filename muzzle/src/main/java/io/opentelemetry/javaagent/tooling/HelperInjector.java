@@ -52,6 +52,10 @@ public class HelperInjector implements Transformer {
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(HelperInjector.class);
 
+  // a hook for static instrumentation used to save additional classes created by the agent
+  // see https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/static-instrumenter
+  public static StaticInstrumenterHook staticInstrumenterHook;
+
   static {
     InjectedClassHelper.internalSetHelperClassDetector(HelperInjector::isInjectedClass);
     InjectedClassHelper.internalSetHelperClassLoader(HelperInjector::loadHelperClass);
@@ -273,6 +277,11 @@ public class HelperInjector implements Transformer {
 
   private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)
       throws IOException {
+
+    if (staticInstrumenterHook != null) {
+      staticInstrumenterHook.injectClasses(classnameToBytes);
+    }
+
     if (ClassInjector.UsingUnsafe.isAvailable()) {
       return ClassInjector.UsingUnsafe.ofBootLoader().injectRaw(classnameToBytes);
     }
