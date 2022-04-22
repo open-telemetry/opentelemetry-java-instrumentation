@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 1.13.1 (unreleased)
+## Version 1.13.1 ()
 
 ### 🛠️ Bug fixes
 
