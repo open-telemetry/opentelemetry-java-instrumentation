@@ -41,6 +41,7 @@ public class UrlClassLoaderInstrumentation implements TypeInstrumentation {
         UrlClassLoaderInstrumentation.class.getName() + "$InvalidateClassLoaderMatcher");
   }
 
+  @SuppressWarnings("unused")
   public static class InvalidateClassLoaderMatcher {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This URLClassLoader loader) {
