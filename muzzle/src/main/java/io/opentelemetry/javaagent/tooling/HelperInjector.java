@@ -54,7 +54,7 @@ public class HelperInjector implements Transformer {
 
   // a hook for static instrumentation used to save additional classes created by the agent
   // see https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/static-instrumenter
-  public static StaticInstrumenterHook staticInstrumenterHook;
+  private static volatile StaticInstrumenterHook staticInstrumenterHook;
 
   static {
     InjectedClassHelper.internalSetHelperClassDetector(HelperInjector::isInjectedClass);
@@ -139,6 +139,10 @@ public class HelperInjector implements Transformer {
       bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
     }
     return new HelperInjector(requestingName, bytes, instrumentation);
+  }
+
+  public static void setStaticInstrumenterHook(StaticInstrumenterHook hook) {
+    staticInstrumenterHook = hook;
   }
 
   private Map<String, byte[]> getHelperMap() throws IOException {
