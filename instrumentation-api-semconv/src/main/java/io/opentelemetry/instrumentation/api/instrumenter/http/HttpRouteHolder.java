@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
+import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -25,24 +25,18 @@ import javax.annotation.Nullable;
  */
 public final class HttpRouteHolder {
 
-  private static final ContextKey<HttpRouteHolder> CONTEXT_KEY =
-      ContextKey.named("opentelemetry-http-server-route-key");
-
   /**
    * Returns a {@link ContextCustomizer} that initializes a {@link HttpRouteHolder} in the {@link
    * Context} returned from {@link Instrumenter#start(Context, Object)}.
    */
   public static <REQUEST> ContextCustomizer<REQUEST> get() {
     return (context, request, startAttributes) -> {
-      if (context.get(CONTEXT_KEY) != null) {
+      if (HttpRouteState.fromContextOrNull(context) != null) {
         return context;
       }
-      return context.with(CONTEXT_KEY, new HttpRouteHolder());
+      return context.with(HttpRouteState.create(0, null));
     };
   }
-
-  private volatile int updatedBySourceOrder = 0;
-  @Nullable private volatile String route;
 
   private HttpRouteHolder() {}
 
@@ -107,8 +101,8 @@ public final class HttpRouteHolder {
     if (serverSpan == null) {
       return;
     }
-    HttpRouteHolder httpRouteHolder = context.get(CONTEXT_KEY);
-    if (httpRouteHolder == null) {
+    HttpRouteState httpRouteState = HttpRouteState.fromContextOrNull(context);
+    if (httpRouteState == null) {
       String httpRoute = httpRouteGetter.get(context, arg1, arg2);
       if (httpRoute != null && !httpRoute.isEmpty()) {
         // update both span name and attribute, since there's no HttpRouteHolder in the context
@@ -120,27 +114,26 @@ public final class HttpRouteHolder {
     // special case for servlet filters, even when we have a route from previous filter see whether
     // the new route is better and if so use it instead
     boolean onlyIfBetterRoute =
-        !source.useFirst && source.order == httpRouteHolder.updatedBySourceOrder;
-    if (source.order > httpRouteHolder.updatedBySourceOrder || onlyIfBetterRoute) {
+        !source.useFirst && source.order == httpRouteState.getUpdatedBySourceOrder();
+    if (source.order > httpRouteState.getUpdatedBySourceOrder() || onlyIfBetterRoute) {
       String route = httpRouteGetter.get(context, arg1, arg2);
       if (route != null
           && !route.isEmpty()
-          && (!onlyIfBetterRoute || httpRouteHolder.isBetterRoute(route))) {
+          && (!onlyIfBetterRoute || isBetterRoute(httpRouteState, route))) {
 
         // update just the span name - the attribute will be picked up by the
         // HttpServerAttributesExtractor at the end of request processing
         serverSpan.updateName(route);
 
-        httpRouteHolder.updatedBySourceOrder = source.order;
-        httpRouteHolder.route = route;
+        httpRouteState.update(context, source.order, route);
       }
     }
   }
 
   // This is used when setting route from a servlet filter to pick the most descriptive (longest)
   // route.
-  private boolean isBetterRoute(String name) {
-    String route = this.route;
+  private static boolean isBetterRoute(HttpRouteState httpRouteState, String name) {
+    String route = httpRouteState.getRoute();
     int routeLength = route == null ? 0 : route.length();
     return name.length() > routeLength;
   }
@@ -151,8 +144,8 @@ public final class HttpRouteHolder {
    */
   @Nullable
   static String getRoute(Context context) {
-    HttpRouteHolder httpRouteHolder = context.get(CONTEXT_KEY);
-    return httpRouteHolder == null ? null : httpRouteHolder.route;
+    HttpRouteState httpRouteState = HttpRouteState.fromContextOrNull(context);
+    return httpRouteState == null ? null : httpRouteState.getRoute();
   }
 
   private static final class OneArgAdapter<T> implements HttpRouteBiGetter<T, HttpRouteGetter<T>> {

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.testing;
+
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 
 public class AgentSpanTesting {
@@ -11,15 +13,7 @@ public class AgentSpanTesting {
    * Runs the provided {@code runnable} inside the scope of an SERVER span with name {@code
    * spanName}.
    */
-  public static void runWithServerSpan(String spanName, Runnable runnable) {
-    runnable.run();
-  }
-
-  /**
-   * Runs the provided {@code runnable} inside the scope of an CLIENT span with name {@code
-   * spanName}.
-   */
-  public static void runWithClientSpan(String spanName, Runnable runnable) {
+  public static void runWithHttpServerSpan(String spanName, Runnable runnable) {
     runnable.run();
   }
 

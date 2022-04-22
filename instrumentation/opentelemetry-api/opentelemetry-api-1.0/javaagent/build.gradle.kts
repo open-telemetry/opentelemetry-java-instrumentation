@@ -42,39 +42,4 @@ dependencies {
   // @WithSpan annotation is used to generate spans in ContextBridgeTest
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testInstrumentation(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
-
-  testImplementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing"))
-}
-
-testing {
-  suites {
-    val testOldInstrumentationApi by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")
-        implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
-        implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing"))
-      }
-    }
-  }
-}
-
-configurations.configureEach {
-  if (name.contains("testOldInstrumentationApi")) {
-    resolutionStrategy {
-      dependencySubstitution {
-        // version 1.13.0 contains the old ServerSpan implementation that uses SERVER_KEY context key
-        substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv"))
-          .using(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:1.13.0-alpha"))
-        substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api"))
-          .using(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:1.13.0-alpha"))
-      }
-    }
-  }
-}
-
-tasks {
-  check {
-    dependsOn(testing.suites)
-  }
 }
