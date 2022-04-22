@@ -1,11 +1,13 @@
 # Changelog
 
-## Version 1.13.1 (unreleased)
+## Version 1.13.1 (2022-04-22)
 
 ### 🛠️ Bug fixes
 
 - Fix duplicate class error on Android build
   ([#5882](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5882))
+- Fix spring-kafka single record instrumentation
+  ([#5904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5904))
 
 ## Version 1.13.0 (2022-04-19)
 
