@@ -22,8 +22,9 @@ public final class SpringKafkaSingletons {
   private static final Instrumenter<ConsumerRecords<?, ?>, Void> BATCH_PROCESS_INSTRUMENTER =
       buildBatchProcessInstrumenter();
   private static final Instrumenter<ConsumerRecord<?, ?>, Void> PROCESS_INSTRUMENTER =
-      KafkaInstrumenterFactory.createConsumerProcessInstrumenter(
-          INSTRUMENTATION_NAME, SpringKafkaErrorCauseExtractor.INSTANCE);
+      new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
+          .setErrorCauseExtractor(SpringKafkaErrorCauseExtractor.INSTANCE)
+          .createConsumerProcessInstrumenter();
 
   private static Instrumenter<ConsumerRecords<?, ?>, Void> buildBatchProcessInstrumenter() {
     KafkaBatchProcessAttributesGetter getter = KafkaBatchProcessAttributesGetter.INSTANCE;
