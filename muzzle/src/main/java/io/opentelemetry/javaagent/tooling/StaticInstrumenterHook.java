@@ -9,8 +9,8 @@ import java.util.Map;
 
 /**
  * This hook can be registered in an agent extension by setting the
- * HelperInjector.staticInstrumenterHook field.
- * It is used to process additional classes created by the agent.
+ * HelperInjector.staticInstrumenterHook field. It is used to process additional classes created by
+ * the agent.
  */
 public interface StaticInstrumenterHook {
 
