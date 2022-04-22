@@ -54,7 +54,7 @@ abstract class KafkaClientBaseTest extends InstrumentationSpecification {
 
     // create test topic
     AdminClient.create(["bootstrap.servers": kafka.bootstrapServers]).withCloseable { admin ->
-      admin.createTopics([new NewTopic(SHARED_TOPIC, 1, (short) 1)]).all().get(10, TimeUnit.SECONDS)
+      admin.createTopics([new NewTopic(SHARED_TOPIC, 1, (short) 1)]).all().get(30, TimeUnit.SECONDS)
     }
 
     producer = new KafkaProducer<>(producerProps())
