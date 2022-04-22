@@ -65,14 +65,14 @@ jobs:
 
   # this is not a required check to avoid blocking pull requests if external links break
   markdown-link-check:
-    # release branches are completely excluded to avoid unnecessary maintenance
+    # release branches are excluded to avoid unnecessary maintenance
     if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-markdown-link-check.yml
 
   # this is not a required check to avoid blocking pull requests if new misspellings are added
   # to the misspell dictionary
   misspell-check:
-    # release branches are completely excluded to avoid unnecessary maintenance
+    # release branches are excluded to avoid unnecessary maintenance
     if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-misspell-check.yml
 
