@@ -64,6 +64,7 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
 
 
   public static class MessageListenerWrapper<T> implements MessageListener<T> {
+    private static final long serialVersionUID = 1L;
 
     private final MessageListener<T> delegator;
 

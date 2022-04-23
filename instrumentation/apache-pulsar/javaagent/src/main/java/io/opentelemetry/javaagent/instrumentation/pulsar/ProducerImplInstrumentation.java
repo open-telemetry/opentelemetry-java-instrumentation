@@ -125,6 +125,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
 
   public static class SendCallbackWrapper implements SendCallback {
+    private static final long serialVersionUID = 1L;
 
     private final String topic;
     private final Context context;
