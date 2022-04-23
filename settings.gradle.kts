@@ -432,6 +432,9 @@ include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
 
+
+include("instrumentation:apache-pulsar:javaagent")
+
 // benchmark
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
