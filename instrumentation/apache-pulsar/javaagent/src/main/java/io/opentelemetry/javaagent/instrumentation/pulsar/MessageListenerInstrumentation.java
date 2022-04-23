@@ -33,17 +33,15 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    //return hasSuperType(named("org.apache.pulsar.client.api.MessageListener"));
-    //can't enhance MessageListener here like above due to jvm can't enhance lambda.
+    // return hasSuperType(named("org.apache.pulsar.client.api.MessageListener"));
+    // can't enhance MessageListener here like above due to jvm can't enhance lambda.
     return named("org.apache.pulsar.client.impl.conf.ConsumerConfigurationData");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("getMessageListener")),
+        isMethod().and(isPublic()).and(named("getMessageListener")),
         MessageListenerInstrumentation.class.getName() + "$ConsumerConfigurationDataMethodAdviser");
   }
 
@@ -52,7 +50,8 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     @Advice.AssignReturned.ToReturned
-    public MessageListener<?> after(@Advice.This ConsumerConfigurationData<?> data,
+    public MessageListener<?> after(
+        @Advice.This ConsumerConfigurationData<?> data,
         @Advice.Return MessageListener<?> listener) {
       if (null == listener) {
         return null;
@@ -61,7 +60,6 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
       return new MessageListenerWrapper<>(listener);
     }
   }
-
 
   public static class MessageListenerWrapper<T> implements MessageListener<T> {
     private static final long serialVersionUID = 1L;
@@ -79,14 +77,16 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
       String topic = null == info ? consumer.getTopic() : info.getTopic();
       String mid = null == info ? "unknown" : info.getMessageId();
 
-      Span span = TRACER.spanBuilder("Pulsar://MessageListener/received")
-          .setParent(parent)
-          .setSpanKind(SpanKind.CONSUMER)
-          .setAttribute(TOPIC, topic)
-          .setAttribute(MESSAGE_ID, mid)
-          .setAttribute(SUBSCRIPTION, consumer.getSubscription())
-          .setAttribute(CONSUMER_NAME, consumer.getConsumerName())
-          .startSpan();
+      Span span =
+          TRACER
+              .spanBuilder("Pulsar://MessageListener/received")
+              .setParent(parent)
+              .setSpanKind(SpanKind.CONSUMER)
+              .setAttribute(TOPIC, topic)
+              .setAttribute(MESSAGE_ID, mid)
+              .setAttribute(SUBSCRIPTION, consumer.getSubscription())
+              .setAttribute(CONSUMER_NAME, consumer.getConsumerName())
+              .startSpan();
 
       try {
         this.delegator.received(consumer, msg);

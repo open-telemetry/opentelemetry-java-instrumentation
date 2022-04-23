@@ -28,17 +28,15 @@ public class MessageInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(),
-        MessageInstrumentation.class.getName() + "$MessageConstructorAdviser");
+        isConstructor(), MessageInstrumentation.class.getName() + "$MessageConstructorAdviser");
   }
-
 
   @SuppressWarnings("unused")
   public static class MessageConstructorAdviser {
 
     @Advice.OnMethodEnter
-    public void before(@Advice.This Message<?> message,
-        @Advice.AllArguments Object[] allArguments) {
+    public void before(
+        @Advice.This Message<?> message, @Advice.AllArguments Object[] allArguments) {
 
       if (message instanceof MessageImpl) {
         MessageEnhanceInfo.virtualField(message, new MessageEnhanceInfo());
@@ -49,7 +47,6 @@ public class MessageInstrumentation implements TypeInstrumentation {
           MessageEnhanceInfo.virtualField(message, MessageEnhanceInfo.virtualField(impl));
         }
       }
-
     }
   }
 }

@@ -26,7 +26,6 @@ public class ClientEnhanceInfo {
     return url;
   }
 
-
   public static void virtualField(Producer<?> instance, ClientEnhanceInfo info) {
     VirtualField.find(Producer.class, ClientEnhanceInfo.class).set(instance, info);
   }

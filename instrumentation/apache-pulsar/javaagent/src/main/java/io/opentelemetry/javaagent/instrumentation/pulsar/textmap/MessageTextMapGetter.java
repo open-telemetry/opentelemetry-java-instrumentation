@@ -12,7 +12,6 @@ import org.apache.pulsar.client.impl.MessageImpl;
 public final class MessageTextMapGetter implements TextMapGetter<MessageImpl<?>> {
   public static final TextMapGetter<MessageImpl<?>> INSTANCE = new MessageTextMapGetter();
 
-
   @Override
   public Iterable<String> keys(MessageImpl<?> message) {
     return message.getProperties().keySet();

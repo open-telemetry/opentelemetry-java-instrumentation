@@ -42,7 +42,6 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   private static final Tracer TRACER = PulsarTelemetry.tracer();
   private static final TextMapPropagator PROPAGATOR = PulsarTelemetry.propagator();
 
-
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pulsar.client.ProducerImpl");
@@ -51,8 +50,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArgument(1, String.class)),
+        isConstructor().and(takesArgument(1, String.class)),
         ProducerImplInstrumentation.class.getName() + "$ProducerImplConstructorAdviser");
 
     transformer.applyAdviceToMethod(
@@ -66,7 +64,8 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   public static class ProducerImplConstructorAdviser {
 
     @Advice.OnMethodEnter
-    public void intercept(@Advice.This ProducerImpl<?> producer,
+    public void intercept(
+        @Advice.This ProducerImpl<?> producer,
         @Argument(value = 0) PulsarClient client,
         @Advice.Argument(value = 1) String topic) {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
@@ -74,14 +73,14 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       ClientEnhanceInfo info = new ClientEnhanceInfo(topic, url);
       ClientEnhanceInfo.virtualField(producer, info);
     }
-
   }
 
   @SuppressWarnings("unused")
   public static class ProducerSendAsyncMethodAdviser {
 
     @Advice.OnMethodEnter
-    public void before(@Advice.This ProducerImpl<?> producer,
+    public void before(
+        @Advice.This ProducerImpl<?> producer,
         @Advice.AllArguments(readOnly = false) Object[] allArguments) {
       ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(producer);
       if (null == info) {
@@ -89,13 +88,15 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       }
 
       MessageImpl<?> messageImpl = (MessageImpl<?>) allArguments[0];
-      Span span = TRACER.spanBuilder("Pulsar://Producer/sendAsync")
-          .setParent(Context.current())
-          .setSpanKind(SpanKind.PRODUCER)
-          .setAttribute(SERVICE_URL, info.getUrl())
-          .setAttribute(TOPIC, info.getTopic())
-          .setAttribute(PRODUCER_NAME, producer.getProducerName())
-          .startSpan();
+      Span span =
+          TRACER
+              .spanBuilder("Pulsar://Producer/sendAsync")
+              .setParent(Context.current())
+              .setSpanKind(SpanKind.PRODUCER)
+              .setAttribute(SERVICE_URL, info.getUrl())
+              .setAttribute(TOPIC, info.getTopic())
+              .setAttribute(PRODUCER_NAME, producer.getProducerName())
+              .startSpan();
 
       Context current = Context.current();
       PROPAGATOR.inject(current, messageImpl, MessageTextMapSetter.INSTANCE);
@@ -107,8 +108,8 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     public void after(@Advice.Thrown Throwable t, @Advice.This ProducerImpl<?> producer) {
-      ClientEnhanceInfo info = VirtualField.find(ProducerImpl.class, ClientEnhanceInfo.class)
-          .get(producer);
+      ClientEnhanceInfo info =
+          VirtualField.find(ProducerImpl.class, ClientEnhanceInfo.class).get(producer);
       if (null == info) {
         return;
       }
@@ -122,7 +123,6 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
     }
   }
 
-
   public static class SendCallbackWrapper implements SendCallback {
     private static final long serialVersionUID = 1L;
 
@@ -131,8 +131,8 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
     private final MessageImpl<?> message;
     private final SendCallback delegator;
 
-    public SendCallbackWrapper(String topic, Context context, MessageImpl<?> message,
-        SendCallback callback) {
+    public SendCallbackWrapper(
+        String topic, Context context, MessageImpl<?> message, SendCallback callback) {
       this.topic = topic;
       this.context = context;
       this.message = message;
@@ -141,15 +141,17 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
     @Override
     public void sendComplete(Exception e) {
-      SpanBuilder builder = TRACER
-          .spanBuilder("Pulsar://Producer/Callback")
-          .setParent(this.context)
-          .setSpanKind(SpanKind.PRODUCER)
-          .setAttribute(TOPIC, topic);
+      SpanBuilder builder =
+          TRACER
+              .spanBuilder("Pulsar://Producer/Callback")
+              .setParent(this.context)
+              .setSpanKind(SpanKind.PRODUCER)
+              .setAttribute(TOPIC, topic);
 
-      //set message id
-      if (e == null && null != message.getMessageId() && message
-          .getMessageId() instanceof MessageIdImpl) {
+      // set message id
+      if (e == null
+          && null != message.getMessageId()
+          && message.getMessageId() instanceof MessageIdImpl) {
         MessageIdImpl messageId = (MessageIdImpl) message.getMessageId();
         String midStr = messageId.getLedgerId() + ":" + messageId.getEntryId();
         builder.setAttribute(MESSAGE_ID, midStr);
@@ -187,5 +189,4 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       return this.delegator.getFuture();
     }
   }
-
 }

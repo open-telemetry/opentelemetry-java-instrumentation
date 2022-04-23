@@ -47,24 +47,22 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     String klassName = ConsumerImplInstrumentation.class.getName();
 
-    transformer.applyAdviceToMethod(
-        isConstructor(),
-        klassName + "$ConsumerImplConstructorAdviser"
-    );
+    transformer.applyAdviceToMethod(isConstructor(), klassName + "$ConsumerImplConstructorAdviser");
 
-    transformer.applyAdviceToMethod(isMethod()
+    transformer.applyAdviceToMethod(
+        isMethod()
             .and(isProtected())
             .and(named("messageProcessed"))
             .and(takesArgument(0, named("org.apache.pulsar.client.api.Message"))),
         klassName + "$ConsumerImplMethodAdviser");
   }
 
-
   @SuppressWarnings("unused")
   public static class ConsumerImplConstructorAdviser {
 
     @Advice.OnMethodEnter
-    public void before(@Advice.This ConsumerImpl<?> consumer,
+    public void before(
+        @Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) PulsarClient client,
         @Advice.Argument(value = 1) String topic) {
 
@@ -80,8 +78,8 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   public static class ConsumerImplMethodAdviser {
 
     @Advice.OnMethodEnter
-    public void before(@Advice.This ConsumerImpl<?> consumer,
-        @Advice.Argument(value = 0) Message<?> message) {
+    public void before(
+        @Advice.This ConsumerImpl<?> consumer, @Advice.Argument(value = 0) Message<?> message) {
       ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(consumer);
       if (null == info) {
         return;
@@ -91,18 +89,21 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       Context context =
           PROPAGATOR.extract(Context.current(), messageImpl, MessageTextMapGetter.INSTANCE);
 
-      Span span = TRACER.spanBuilder("Pulsar://ConsumerImpl/messageProcessed")
-          .setParent(context)
-          .setSpanKind(SpanKind.CONSUMER)
-          .setAttribute(SERVICE_URL, info.getUrl())
-          .setAttribute(TOPIC, info.getTopic())
-          .setAttribute(SUBSCRIPTION, consumer.getSubscription())
-          .setAttribute(CONSUMER_NAME, consumer.getConsumerName())
-          .startSpan();
+      Span span =
+          TRACER
+              .spanBuilder("Pulsar://ConsumerImpl/messageProcessed")
+              .setParent(context)
+              .setSpanKind(SpanKind.CONSUMER)
+              .setAttribute(SERVICE_URL, info.getUrl())
+              .setAttribute(TOPIC, info.getTopic())
+              .setAttribute(SUBSCRIPTION, consumer.getSubscription())
+              .setAttribute(CONSUMER_NAME, consumer.getConsumerName())
+              .startSpan();
     }
 
     @Advice.OnMethodExit
-    public void after(@Advice.This ConsumerImpl<?> consumer,
+    public void after(
+        @Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Thrown Throwable t) {
       ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(consumer);
@@ -112,8 +113,8 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
       MessageEnhanceInfo messageEnhanceInfo = MessageEnhanceInfo.virtualField(message);
       if (null != messageEnhanceInfo) {
-        messageEnhanceInfo
-            .setFields(Context.current(), consumer.getTopic(), message.getMessageId());
+        messageEnhanceInfo.setFields(
+            Context.current(), consumer.getTopic(), message.getMessageId());
       }
 
       Span span = Span.current();
@@ -124,5 +125,4 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       span.end();
     }
   }
-
 }

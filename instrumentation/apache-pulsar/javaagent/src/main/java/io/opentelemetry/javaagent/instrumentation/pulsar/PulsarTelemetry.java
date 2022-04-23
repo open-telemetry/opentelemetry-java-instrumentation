@@ -14,17 +14,16 @@ public final class PulsarTelemetry {
 
   private static final String INSTRUMENTATION = "io.opentelemetry:pulsar-client";
   public static final AttributeKey<String> TOPIC = AttributeKey.stringKey("messaging_pulsar_topic");
-  public static final AttributeKey<String> SERVICE_URL = AttributeKey
-      .stringKey("messaging_pulsar_service_url");
-  public static final AttributeKey<String> SUBSCRIPTION = AttributeKey
-      .stringKey("messaging_pulsar_subscription");
-  public static final AttributeKey<String> PRODUCER_NAME = AttributeKey
-      .stringKey("messaging_pulsar_producer_name");
-  public static final AttributeKey<String> CONSUMER_NAME = AttributeKey
-      .stringKey("messaging_pulsar_consumer_name");
-  public static final AttributeKey<String> MESSAGE_ID = AttributeKey
-      .stringKey("messaging_pulsar_message_id");
-
+  public static final AttributeKey<String> SERVICE_URL =
+      AttributeKey.stringKey("messaging_pulsar_service_url");
+  public static final AttributeKey<String> SUBSCRIPTION =
+      AttributeKey.stringKey("messaging_pulsar_subscription");
+  public static final AttributeKey<String> PRODUCER_NAME =
+      AttributeKey.stringKey("messaging_pulsar_producer_name");
+  public static final AttributeKey<String> CONSUMER_NAME =
+      AttributeKey.stringKey("messaging_pulsar_consumer_name");
+  public static final AttributeKey<String> MESSAGE_ID =
+      AttributeKey.stringKey("messaging_pulsar_message_id");
 
   private PulsarTelemetry() {}
 
