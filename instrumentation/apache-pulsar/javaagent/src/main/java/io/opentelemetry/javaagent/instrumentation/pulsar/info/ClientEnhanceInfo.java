@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.info;
 
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import org.apache.pulsar.client.api.Consumer;
+import org.apache.pulsar.client.api.Producer;
 
 public class ClientEnhanceInfo {
   private final String topic;
@@ -25,11 +27,19 @@ public class ClientEnhanceInfo {
   }
 
 
-  public static <T> void virtualField(Class<T> klass, T instance, ClientEnhanceInfo info) {
-    VirtualField.find(klass, ClientEnhanceInfo.class).set(instance, info);
+  public static void virtualField(Producer<?> instance, ClientEnhanceInfo info) {
+    VirtualField.find(Producer.class, ClientEnhanceInfo.class).set(instance, info);
   }
 
-  public static <T> ClientEnhanceInfo virtualField(Class<T> klass, T instance) {
-    return VirtualField.find(klass, ClientEnhanceInfo.class).get(instance);
+  public static ClientEnhanceInfo virtualField(Producer<?> instance) {
+    return VirtualField.find(Producer.class, ClientEnhanceInfo.class).get(instance);
+  }
+
+  public static void virtualField(Consumer<?> instance, ClientEnhanceInfo info) {
+    VirtualField.find(Consumer.class, ClientEnhanceInfo.class).set(instance, info);
+  }
+
+  public static ClientEnhanceInfo virtualField(Consumer<?> instance) {
+    return VirtualField.find(Consumer.class, ClientEnhanceInfo.class).get(instance);
   }
 }

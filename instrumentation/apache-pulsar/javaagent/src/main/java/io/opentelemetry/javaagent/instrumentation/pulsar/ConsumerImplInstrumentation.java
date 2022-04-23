@@ -5,6 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.CONSUMER_NAME;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SERVICE_URL;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SUBSCRIPTION;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isProtected;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
@@ -23,17 +33,6 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.ConsumerImpl;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
-
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.CONSUMER_NAME;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SERVICE_URL;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SUBSCRIPTION;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
-
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isProtected;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 public class ConsumerImplInstrumentation implements TypeInstrumentation {
   private static final Tracer TRACER = PulsarTelemetry.tracer();
@@ -73,7 +72,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       String url = pulsarClient.getLookup().getServiceUrl();
 
       ClientEnhanceInfo info = new ClientEnhanceInfo(topic, url);
-      ClientEnhanceInfo.virtualField(ConsumerImpl.class, consumer, info);
+      ClientEnhanceInfo.virtualField(consumer, info);
     }
   }
 
@@ -83,7 +82,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public void before(@Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) Message<?> message) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(ConsumerImpl.class, consumer);
+      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(consumer);
       if (null == info) {
         return;
       }
@@ -106,7 +105,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     public void after(@Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Thrown Throwable t) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(ConsumerImpl.class, consumer);
+      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(consumer);
       if (null == info) {
         return;
       }

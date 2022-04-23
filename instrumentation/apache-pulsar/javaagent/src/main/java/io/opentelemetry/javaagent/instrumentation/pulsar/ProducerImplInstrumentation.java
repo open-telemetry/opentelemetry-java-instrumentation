@@ -5,6 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.MESSAGE_ID;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.PRODUCER_NAME;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SERVICE_URL;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -16,6 +25,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.ClientEnhanceInfo;
 import io.opentelemetry.javaagent.instrumentation.pulsar.textmap.MessageTextMapSetter;
+import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bind.annotation.Argument;
@@ -27,17 +37,6 @@ import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.client.impl.ProducerImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.impl.SendCallback;
-import java.util.concurrent.CompletableFuture;
-
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.MESSAGE_ID;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SERVICE_URL;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.PRODUCER_NAME;
-
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 public class ProducerImplInstrumentation implements TypeInstrumentation {
   private static final Tracer TRACER = PulsarTelemetry.tracer();
@@ -73,7 +72,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String url = pulsarClient.getLookup().getServiceUrl();
       ClientEnhanceInfo info = new ClientEnhanceInfo(topic, url);
-      ClientEnhanceInfo.virtualField(ProducerImpl.class, producer, info);
+      ClientEnhanceInfo.virtualField(producer, info);
     }
 
   }
@@ -84,7 +83,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public void before(@Advice.This ProducerImpl<?> producer,
         @Advice.AllArguments(readOnly = false) Object[] allArguments) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(ProducerImpl.class, producer);
+      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(producer);
       if (null == info) {
         return;
       }
