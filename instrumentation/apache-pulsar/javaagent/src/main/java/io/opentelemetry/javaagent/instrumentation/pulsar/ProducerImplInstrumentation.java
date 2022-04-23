@@ -160,8 +160,9 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
       try {
         this.delegator.sendComplete(e);
-      } catch (Exception ex) {
-        span.recordException(ex);
+      } catch (Throwable t) {
+        span.recordException(t);
+        throw t;
       } finally {
         span.end();
       }

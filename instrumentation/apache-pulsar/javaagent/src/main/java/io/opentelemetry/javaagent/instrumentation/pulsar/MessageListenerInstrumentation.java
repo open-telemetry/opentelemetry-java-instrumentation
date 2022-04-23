@@ -92,6 +92,7 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
         this.delegator.received(consumer, msg);
       } catch (Throwable t) {
         span.recordException(t);
+        throw t;
       } finally {
         span.end();
       }
