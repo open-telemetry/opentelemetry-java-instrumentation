@@ -4,5 +4,5 @@ plugins {
 
 
 dependencies {
-  library("org.apache.pulsar:pulsar-client:2.9.0")
+  library("org.apache.pulsar:pulsar-client:2.8.0")
 }

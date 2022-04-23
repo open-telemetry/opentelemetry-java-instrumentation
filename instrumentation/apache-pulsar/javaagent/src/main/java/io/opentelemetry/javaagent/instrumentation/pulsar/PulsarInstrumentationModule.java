@@ -14,7 +14,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class PulsarInstrumentationModule extends InstrumentationModule {
   public PulsarInstrumentationModule() {
-    super("apache-pulsar", "apache-pulsar-2.9.0");
+    super("apache-pulsar", "apache-pulsar-2.8.0");
   }
 
   @Override
