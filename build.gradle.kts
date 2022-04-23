@@ -31,4 +31,44 @@ nexusPublishing {
   }
 }
 
+//仓库配置
+repositories {
+    //mavenLocal { setUrl("file://${project.rootDir}/lib") }
+    //首先去本地仓库找
+    mavenLocal()
+    //然后去阿里仓库找
+    // build.gradle:
+    // maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
+
+    // build.gradle.kts:
+    maven { url = uri("https://repo.spring.io/release") }
+    maven { url = uri("https://repo.spring.io/milestone") }
+    maven { url = uri("https://plugins.gradle.org/m2/") }
+    maven {
+        isAllowInsecureProtocol = true
+        setUrl("https://maven.aliyun.com/nexus/content/groups/public/")
+    }
+    maven {
+        isAllowInsecureProtocol = true
+        url = uri("https://maven.aliyun.com/repository/public") }
+    maven {
+        isAllowInsecureProtocol = true
+        url = uri("https://maven.aliyun.com/repository/google") }
+    maven {
+        isAllowInsecureProtocol = true
+        url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+    maven {
+        isAllowInsecureProtocol = true
+        url = uri("https://maven.aliyun.com/repository/spring-plugin") }
+    maven {
+        isAllowInsecureProtocol = true
+        url = uri("https://maven.aliyun.com/repository/apache-snapshots") }
+    maven {
+        isAllowInsecureProtocol = true
+        url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local/") }
+    google()
+    //最后从maven中央仓库找
+    mavenCentral()
+}
+
 description = "OpenTelemetry instrumentations for Java"
