@@ -111,7 +111,9 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit
-    public static void after(@Advice.Thrown Throwable t, @Advice.This ProducerImpl<?> producer,
+    public static void after(
+        @Advice.Thrown Throwable t,
+        @Advice.This ProducerImpl<?> producer,
         @Advice.Return Scope scope) {
       ClientEnhanceInfo info =
           VirtualField.find(ProducerImpl.class, ClientEnhanceInfo.class).get(producer);

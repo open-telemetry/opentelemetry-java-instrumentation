@@ -80,8 +80,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     public static Scope before(
-        @Advice.This ConsumerImpl<?> consumer,
-        @Advice.Argument(value = 0) Message<?> message) {
+        @Advice.This ConsumerImpl<?> consumer, @Advice.Argument(value = 0) Message<?> message) {
       ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(consumer);
       if (null == info) {
         return Scope.noop();
@@ -119,8 +118,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
       MessageEnhanceInfo messageInfo = MessageEnhanceInfo.virtualField(message);
       if (null != messageInfo) {
-        messageInfo.setFields(
-            Context.current(), consumer.getTopic(), message.getMessageId());
+        messageInfo.setFields(Context.current(), consumer.getTopic(), message.getMessageId());
       }
 
       Span span = Span.current();
