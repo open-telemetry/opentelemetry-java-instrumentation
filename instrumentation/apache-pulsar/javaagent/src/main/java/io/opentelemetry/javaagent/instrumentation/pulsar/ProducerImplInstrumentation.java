@@ -21,7 +21,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.ClientEnhanceInfo;
@@ -115,8 +114,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable t,
         @Advice.This ProducerImpl<?> producer,
         @Advice.Return Scope scope) {
-      ClientEnhanceInfo info =
-          VirtualField.find(ProducerImpl.class, ClientEnhanceInfo.class).get(producer);
+      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(producer);
       if (null == info || null == scope) {
         if (null != scope) {
           scope.close();
