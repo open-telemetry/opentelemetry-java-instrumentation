@@ -13,6 +13,8 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -21,6 +23,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 public abstract class AbstractSpringKafkaTest {
+
+  private static final Logger logger = LoggerFactory.getLogger(AbstractSpringKafkaTest.class);
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -87,7 +91,7 @@ public abstract class AbstractSpringKafkaTest {
       } else if (i < maxAttempts) {
         testing.waitForTraces(2);
         testing.clearData();
-        System.err.println("Messages weren't received as batch, retrying");
+        logger.info("Messages weren't received as batch, retrying");
       }
     }
   }

@@ -30,7 +30,6 @@ dependencies {
 
 testing {
   suites {
-    // CompletableFuture behaves differently if ForkJoinPool has no parallelism
     val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
       dependencies {
         implementation("org.springframework.kafka:spring-kafka:2.7.0")
