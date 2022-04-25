@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.CONSUMER_NAME;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.PROPAGATOR;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SERVICE_URL;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SUBSCRIPTION;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -17,10 +19,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.ClientEnhanceInfo;
@@ -36,8 +36,6 @@ import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 
 public class ConsumerImplInstrumentation implements TypeInstrumentation {
-  private static final Tracer TRACER = PulsarTelemetry.tracer();
-  private static final TextMapPropagator PROPAGATOR = PulsarTelemetry.propagator();
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -61,7 +59,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerImplConstructorAdviser {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodExit
     public static void before(
         @Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) PulsarClient client,
@@ -102,7 +100,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
           .makeCurrent();
     }
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void after(
         @Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) Message<?> message,

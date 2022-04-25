@@ -25,13 +25,9 @@ public final class PulsarTelemetry {
   public static final AttributeKey<String> MESSAGE_ID =
       AttributeKey.stringKey("messaging_pulsar_message_id");
 
+  public static final Tracer TRACER = GlobalOpenTelemetry.getTracer(INSTRUMENTATION);
+  public static final TextMapPropagator PROPAGATOR =
+      GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
+
   private PulsarTelemetry() {}
-
-  public static Tracer tracer() {
-    return GlobalOpenTelemetry.get().getTracer(INSTRUMENTATION);
-  }
-
-  public static TextMapPropagator propagator() {
-    return GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator();
-  }
 }

@@ -34,7 +34,7 @@ public class MessageInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MessageConstructorAdviser {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodExit
     public static void before(
         @Advice.This Message<?> message, @Advice.AllArguments Object[] allArguments) {
 

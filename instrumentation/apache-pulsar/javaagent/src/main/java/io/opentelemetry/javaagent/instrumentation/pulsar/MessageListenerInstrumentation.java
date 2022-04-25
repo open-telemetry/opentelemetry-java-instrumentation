@@ -8,14 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.pulsar;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.CONSUMER_NAME;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.MESSAGE_ID;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SUBSCRIPTION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingDestinationKindValues.TOPIC;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -23,6 +23,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.MessageEnhanceInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -30,7 +31,6 @@ import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
 
 public class MessageListenerInstrumentation implements TypeInstrumentation {
-  private static final Tracer TRACER = PulsarTelemetry.tracer();
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -50,15 +50,15 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
   public static class ConsumerConfigurationDataMethodAdviser {
 
     @Advice.OnMethodExit
-    @Advice.AssignReturned.ToReturned
-    public static MessageListener<?> after(
+    public static void after(
         @Advice.This ConsumerConfigurationData<?> data,
-        @Advice.Return MessageListener<?> listener) {
+        @Advice.Return(readOnly = false, typing = Assigner.Typing.DYNAMIC)
+            MessageListener<?> listener) {
       if (null == listener) {
-        return null;
+        return;
       }
 
-      return new MessageListenerWrapper<>(listener);
+      listener = new MessageListenerWrapper<>(listener);
     }
   }
 

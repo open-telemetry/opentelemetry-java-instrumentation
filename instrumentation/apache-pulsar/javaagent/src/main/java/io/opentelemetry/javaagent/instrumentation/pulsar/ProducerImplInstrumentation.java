@@ -7,20 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.pulsar;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.MESSAGE_ID;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.PRODUCER_NAME;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.PROPAGATOR;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SERVICE_URL;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.ClientEnhanceInfo;
@@ -28,7 +29,7 @@ import io.opentelemetry.javaagent.instrumentation.pulsar.textmap.MessageTextMapS
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bind.annotation.Argument;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -39,18 +40,16 @@ import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.impl.SendCallback;
 
 public class ProducerImplInstrumentation implements TypeInstrumentation {
-  private static final Tracer TRACER = PulsarTelemetry.tracer();
-  private static final TextMapPropagator PROPAGATOR = PulsarTelemetry.propagator();
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.pulsar.client.ProducerImpl");
+    return named("org.apache.pulsar.client.impl.ProducerImpl");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(1, String.class)),
+        isConstructor().and(isPublic()),
         ProducerImplInstrumentation.class.getName() + "$ProducerImplConstructorAdviser");
 
     transformer.applyAdviceToMethod(
@@ -63,10 +62,10 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerImplConstructorAdviser {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodExit
     public static void intercept(
         @Advice.This ProducerImpl<?> producer,
-        @Argument(value = 0) PulsarClient client,
+        @Advice.Argument(value = 0) PulsarClient client,
         @Advice.Argument(value = 1) String topic) {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String url = pulsarClient.getLookup().getServiceUrl();
@@ -79,16 +78,19 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   public static class ProducerSendAsyncMethodAdviser {
 
     @Advice.OnMethodEnter
-    public static Scope before(
+    public static void before(
         @Advice.This ProducerImpl<?> producer,
-        @Advice.AllArguments(readOnly = false) Object[] allArguments) {
+        @Advice.AllArguments(readOnly = false, typing = Assigner.Typing.DYNAMIC)
+            Object[] allArguments,
+        @Advice.Local(value = "otelScope") Scope scope) {
       ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(producer);
       if (null == info) {
-        return Scope.noop();
+        scope = Scope.noop();
+        return;
       }
 
-      MessageImpl<?> messageImpl = (MessageImpl<?>) allArguments[0];
-      Scope scope =
+      MessageImpl<?> message = (MessageImpl<?>) allArguments[0];
+      scope =
           TRACER
               .spanBuilder("Pulsar://Producer/sendAsync")
               .setParent(Context.current())
@@ -100,20 +102,17 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
               .makeCurrent();
 
       Context current = Context.current();
-      PROPAGATOR.inject(current, messageImpl, MessageTextMapSetter.INSTANCE);
+      PROPAGATOR.inject(current, message, MessageTextMapSetter.INSTANCE);
 
-      MessageImpl<?> message = (MessageImpl<?>) allArguments[0];
       SendCallback callback = (SendCallback) allArguments[1];
       allArguments[1] = new SendCallbackWrapper(info.topic, current, message, callback);
-
-      return scope;
     }
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void after(
         @Advice.Thrown Throwable t,
         @Advice.This ProducerImpl<?> producer,
-        @Advice.Return Scope scope) {
+        @Advice.Local(value = "otelScope") Scope scope) {
       ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(producer);
       if (null == info || null == scope) {
         if (null != scope) {

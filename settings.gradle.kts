@@ -126,6 +126,9 @@ include(":smoke-tests:images:servlet:servlet-3.0")
 include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
 
+//apache pulsar
+include(":instrumentation:apache-pulsar:javaagent")
+
 include(":instrumentation:akka:akka-actor-2.5:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
@@ -432,9 +435,6 @@ include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
 
-//apache pulsar
-include(":instrumentation:apache-pulsar:javaagent")
-include(":instrumentation:apache-pulsar:testing")
 
 // benchmark
 include(":benchmark-overhead-jmh")
