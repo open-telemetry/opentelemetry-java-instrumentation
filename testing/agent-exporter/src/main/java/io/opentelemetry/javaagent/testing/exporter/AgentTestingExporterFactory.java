@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.testing.exporter;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class AgentTestingExporterFactory {
 
@@ -26,6 +27,8 @@ public class AgentTestingExporterFactory {
   }
 
   public static void reset() {
+    // Flush meter provider to remove any lingering measurements
+    AgentTestingCustomizer.metricReader.flush().join(10, TimeUnit.SECONDS);
     spanExporter.reset();
     metricExporter.reset();
     logExporter.reset();

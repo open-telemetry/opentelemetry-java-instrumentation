@@ -18,10 +18,12 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
+import io.opentelemetry.sdk.testing.assertj.MetricAssertions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -214,6 +216,56 @@ public abstract class AbstractGrpcStreamingTest {
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0]))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.server.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        MetricAssertions.assertThat(metric)
+                            .hasUnit("ms")
+                            .hasDoubleHistogram()
+                            .points()
+                            .anySatisfy(
+                                point ->
+                                    MetricAssertions.assertThat(point)
+                                        .hasAttributes(
+                                            Attributes.builder()
+                                                .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
+                                                .put(SemanticAttributes.RPC_METHOD, "Conversation")
+                                                .put(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter")
+                                                .put(SemanticAttributes.RPC_SYSTEM, "grpc")
+                                                .build()))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        MetricAssertions.assertThat(metric)
+                            .hasUnit("ms")
+                            .hasDoubleHistogram()
+                            .points()
+                            .allSatisfy(
+                                point ->
+                                    MetricAssertions.assertThat(point)
+                                        .hasAttributes(
+                                            Attributes.builder()
+                                                .put(SemanticAttributes.NET_PEER_NAME, "localhost")
+                                                .put(
+                                                    SemanticAttributes.NET_PEER_PORT,
+                                                    server.getPort())
+                                                .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
+                                                .put(SemanticAttributes.RPC_METHOD, "Conversation")
+                                                .put(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter")
+                                                .put(SemanticAttributes.RPC_SYSTEM, "grpc")
+                                                .build()))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
