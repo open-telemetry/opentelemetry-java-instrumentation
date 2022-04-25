@@ -20,7 +20,8 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
       new AgentTestingSpanProcessor(
           SimpleSpanProcessor.create(AgentTestingExporterFactory.spanExporter));
 
-  static final MetricReader metricReader = PeriodicMetricReader.builder(AgentTestingExporterFactory.metricExporter)
+  static final MetricReader metricReader =
+      PeriodicMetricReader.builder(AgentTestingExporterFactory.metricExporter)
           .setInterval(Duration.ofMillis(100))
           .build();
 
@@ -34,7 +35,6 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
         (tracerProvider, config) -> tracerProvider.addSpanProcessor(spanProcessor));
 
     autoConfigurationCustomizer.addMeterProviderCustomizer(
-        (meterProvider, config) ->
-            meterProvider.registerMetricReader(metricReader));
+        (meterProvider, config) -> meterProvider.registerMetricReader(metricReader));
   }
 }
