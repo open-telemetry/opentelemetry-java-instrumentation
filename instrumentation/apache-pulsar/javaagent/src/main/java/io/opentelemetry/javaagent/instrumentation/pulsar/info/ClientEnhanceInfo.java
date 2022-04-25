@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.info;
 
 import io.opentelemetry.instrumentation.api.field.VirtualField;
-import org.apache.pulsar.client.impl.ConsumerImpl;
-import org.apache.pulsar.client.impl.ProducerImpl;
+import org.apache.pulsar.client.api.Consumer;
+import org.apache.pulsar.client.api.Producer;
 
 /**
  * for producer and consumer, cache service_url and determine whether the instance has been
@@ -22,19 +22,19 @@ public class ClientEnhanceInfo {
     this.brokerUrl = brokerUrl;
   }
 
-  public static void virtualField(ProducerImpl<?> instance, ClientEnhanceInfo info) {
-    VirtualField.find(ProducerImpl.class, ClientEnhanceInfo.class).set(instance, info);
+  public static void virtualField(Producer<?> instance, ClientEnhanceInfo info) {
+    VirtualField.find(Producer.class, ClientEnhanceInfo.class).set(instance, info);
   }
 
-  public static ClientEnhanceInfo virtualField(ProducerImpl<?> instance) {
-    return VirtualField.find(ProducerImpl.class, ClientEnhanceInfo.class).get(instance);
+  public static ClientEnhanceInfo virtualField(Producer<?> instance) {
+    return VirtualField.find(Producer.class, ClientEnhanceInfo.class).get(instance);
   }
 
-  public static void virtualField(ConsumerImpl<?> instance, ClientEnhanceInfo info) {
-    VirtualField.find(ConsumerImpl.class, ClientEnhanceInfo.class).set(instance, info);
+  public static void virtualField(Consumer<?> instance, ClientEnhanceInfo info) {
+    VirtualField.find(Consumer.class, ClientEnhanceInfo.class).set(instance, info);
   }
 
-  public static ClientEnhanceInfo virtualField(ConsumerImpl<?> instance) {
-    return VirtualField.find(ConsumerImpl.class, ClientEnhanceInfo.class).get(instance);
+  public static ClientEnhanceInfo virtualField(Consumer<?> instance) {
+    return VirtualField.find(Consumer.class, ClientEnhanceInfo.class).get(instance);
   }
 }
