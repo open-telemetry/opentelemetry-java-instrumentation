@@ -49,7 +49,7 @@ dependencies {
 
   api("com.google.guava:guava")
 
-  compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry.proto:opentelemetry-proto")
 
