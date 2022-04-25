@@ -8,8 +8,10 @@ package io.opentelemetry.instrumentation.testing.util;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.trace.SpanId;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,16 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class TelemetryDataUtil {
+
+  public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
+    List<SpanKind> list = Arrays.asList(spanKinds);
+    return Comparator.comparing(span -> list.indexOf(span.get(0).getKind()));
+  }
+
+  public static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
+    List<String> list = Arrays.asList(names);
+    return Comparator.comparing(span -> list.indexOf(span.get(0).getName()));
+  }
 
   public static List<List<SpanData>> groupTraces(List<SpanData> spans) {
     List<List<SpanData>> traces =
