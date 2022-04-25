@@ -98,8 +98,9 @@ tasks.withType<ShadowJar>().configureEach {
   relocate("io.opentelemetry.extension.aws", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.aws")
   relocate("io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin")
 
-  // this is for instrumentation on opentelemetry-api itself
+  // this is for instrumentation of opentelemetry-api and opentelemetry-instrumentation-api
   relocate("application.io.opentelemetry", "io.opentelemetry")
+  relocate("application.io.opentelemetry.instrumentation.api", "io.opentelemetry.instrumentation.api")
 
   // this is for instrumentation on java.util.logging (since java.util.logging itself is shaded above)
   relocate("application.java.util.logging", "java.util.logging")
