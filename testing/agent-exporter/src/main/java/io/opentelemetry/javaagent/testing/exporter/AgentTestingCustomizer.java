@@ -34,6 +34,13 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
     autoConfigurationCustomizer.addTracerProviderCustomizer(
         (tracerProvider, config) -> tracerProvider.addSpanProcessor(spanProcessor));
 
+    // as we configure PeriodicMetricReader with a short interval it repeatedly logs
+    // No metric data to export - skipping export.
+    // to get rid of these log lines we change PeriodicMetricReader log level from DEBUG to INFO
+    System.setProperty(
+        "io.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader",
+        "INFO");
+
     autoConfigurationCustomizer.addMeterProviderCustomizer(
         (meterProvider, config) -> meterProvider.registerMetricReader(metricReader));
   }
