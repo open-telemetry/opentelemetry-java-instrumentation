@@ -23,7 +23,7 @@ dependencies {
   // the @WithSpan annotation references the OpenTelemetry API's SpanKind class
   //
   // see the comment in opentelemetry-api-1.0.gradle for more details
-  compileOnly(project(path = ":opentelemetry-ext-annotations-shaded-for-instrumenting", configuration = "shadow"))
+  compileOnly(project(":opentelemetry-ext-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation(project(":instrumentation-api-annotation-support"))

@@ -32,7 +32,7 @@ dependencies {
   //
   // and in the code "io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is used by
   // the agent (as those references will later be shaded)
-  compileOnly(project(path = ":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
+  compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
   // using OpenTelemetry SDK to make sure that instrumentation doesn't cause
   // OpenTelemetrySdk.getTracerProvider() to throw ClassCastException
