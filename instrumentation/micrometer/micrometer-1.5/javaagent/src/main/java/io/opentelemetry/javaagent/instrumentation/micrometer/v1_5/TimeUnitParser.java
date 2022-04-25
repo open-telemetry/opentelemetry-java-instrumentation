@@ -49,7 +49,7 @@ final class TimeUnitParser {
         if (logger.isLoggable(WARNING)) {
           logger.log(
               WARNING,
-              "Invalid base time unit: '{0}'; using 'ms' as the base time unit instead",
+              "Invalid base time unit: \"{0}\"; using 'ms' as the base time unit instead",
               value);
         }
         return TimeUnit.MILLISECONDS;
