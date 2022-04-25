@@ -16,6 +16,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvide
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import java.util.Collections;
 
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public class AgentTracerProviderConfigurer implements AutoConfigurationCustomizerProvider {
@@ -53,6 +54,8 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
   }
 
   private static boolean loggingExporterIsNotAlreadyConfigured() {
-    return !Config.get().getString("otel.traces.exporter", "").equalsIgnoreCase("logging");
+    return !Config.get()
+        .getList("otel.traces.exporter", Collections.emptyList())
+        .contains("logging");
   }
 }
