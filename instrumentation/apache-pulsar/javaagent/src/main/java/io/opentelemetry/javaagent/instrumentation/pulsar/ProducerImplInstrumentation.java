@@ -29,8 +29,8 @@ import io.opentelemetry.javaagent.instrumentation.pulsar.textmap.MessageTextMapS
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.MessageIdImpl;
@@ -80,8 +80,8 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void before(
         @Advice.This ProducerImpl<?> producer,
-        @Advice.AllArguments(readOnly = false, typing = Assigner.Typing.DYNAMIC)
-            Object[] allArguments,
+        @Advice.Argument(value = 0) Message<?> m,
+        @Advice.Argument(value = 1, readOnly = false) SendCallback callback,
         @Advice.Local(value = "otelScope") Scope scope) {
       ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(producer);
       if (null == info) {
@@ -89,7 +89,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      MessageImpl<?> message = (MessageImpl<?>) allArguments[0];
+      MessageImpl<?> message = (MessageImpl<?>) m;
       scope =
           TRACER
               .spanBuilder("Pulsar://Producer/sendAsync")
@@ -104,8 +104,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       Context current = Context.current();
       PROPAGATOR.inject(current, message, MessageTextMapSetter.INSTANCE);
 
-      SendCallback callback = (SendCallback) allArguments[1];
-      allArguments[1] = new SendCallbackWrapper(info.topic, current, message, callback);
+      callback = new SendCallbackWrapper(info.topic, current, message, callback);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
