@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.response.R
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
 import jakarta.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;

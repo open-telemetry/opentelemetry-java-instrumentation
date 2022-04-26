@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_19;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;

@@ -103,7 +103,6 @@ include(":instrumentation-api")
 include(":instrumentation-api-semconv")
 include(":instrumentation-appender-api-internal")
 include(":instrumentation-appender-sdk-internal")
-include(":javaagent-instrumentation-api")
 include(":instrumentation-api-annotation-support")
 
 // misc

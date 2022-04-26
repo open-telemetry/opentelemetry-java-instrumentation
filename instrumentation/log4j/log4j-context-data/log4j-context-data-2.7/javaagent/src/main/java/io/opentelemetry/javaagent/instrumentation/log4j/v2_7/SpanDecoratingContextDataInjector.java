@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.T
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import java.util.List;
 import org.apache.logging.log4j.core.ContextDataInjector;
 import org.apache.logging.log4j.core.config.Property;

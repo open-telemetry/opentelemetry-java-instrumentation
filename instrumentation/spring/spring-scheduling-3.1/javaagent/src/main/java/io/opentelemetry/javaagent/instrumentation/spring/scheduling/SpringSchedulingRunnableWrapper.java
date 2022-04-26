@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.SpringSchedulingSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
