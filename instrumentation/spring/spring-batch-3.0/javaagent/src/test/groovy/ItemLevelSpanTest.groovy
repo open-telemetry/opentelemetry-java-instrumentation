@@ -5,7 +5,13 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
+import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParameter
+import org.springframework.batch.core.Step
+import org.springframework.batch.core.job.AbstractJob
+import org.springframework.batch.core.step.tasklet.TaskletStep
+import org.springframework.batch.repeat.policy.SimpleCompletionPolicy
+import org.springframework.batch.repeat.support.RepeatTemplate
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
@@ -135,7 +141,7 @@ abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 23) {
+      trace(0, 19) {
         // as chunks are processed in parallel we need to sort them to guarantee that they are
         // in the expected order
         // firstly compute child span count for each chunk, we'll sort chunks from larger to smaller
@@ -255,38 +261,29 @@ abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(14)
         }
-
-        // empty chunk on thread 2, end processing
-        span(19) {
-          name "BatchJob parallelItemsJob.parallelItemsStep.Chunk"
-          kind INTERNAL
-          childOf span(1)
-        }
-        // end of stream marker
-        span(20) {
-          name "BatchJob parallelItemsJob.parallelItemsStep.ItemRead"
-          kind INTERNAL
-          childOf span(19)
-        }
-
-        // empty chunk on thread 1, end processing
-        span(21) {
-          name "BatchJob parallelItemsJob.parallelItemsStep.Chunk"
-          kind INTERNAL
-          childOf span(1)
-        }
-        // end of stream marker
-        span(22) {
-          name "BatchJob parallelItemsJob.parallelItemsStep.ItemRead"
-          kind INTERNAL
-          childOf span(21)
-        }
       }
+    }
+  }
+
+  def postProcessParallelItemsJob(String jobName, Job job) {
+    if ("parallelItemsJob" == jobName) {
+      Step step = ((AbstractJob) job).getStep("parallelItemsStep")
+      TaskletStep taskletStep = (TaskletStep) step
+      RepeatTemplate stepOperations = new RepeatTemplate()
+      // explicitly set the number of chunks we expect from this test to ensure we always get
+      // the same number of spans
+      stepOperations.setCompletionPolicy(new SimpleCompletionPolicy(3))
+      taskletStep.setStepOperations(stepOperations)
     }
   }
 }
 
 class JavaConfigItemLevelSpanTest extends ItemLevelSpanTest implements ApplicationConfigTrait {
+  @Override
+  def postProcessJob(String jobName, Job job) {
+    postProcessParallelItemsJob(jobName, job)
+  }
+
   @Override
   ConfigurableApplicationContext createApplicationContext() {
     new AnnotationConfigApplicationContext(SpringBatchApplication)
@@ -294,6 +291,11 @@ class JavaConfigItemLevelSpanTest extends ItemLevelSpanTest implements Applicati
 }
 
 class XmlConfigItemLevelSpanTest extends ItemLevelSpanTest implements ApplicationConfigTrait {
+  @Override
+  def postProcessJob(String jobName, Job job) {
+    postProcessParallelItemsJob(jobName, job)
+  }
+
   @Override
   ConfigurableApplicationContext createApplicationContext() {
     new ClassPathXmlApplicationContext("spring-batch.xml")
