@@ -141,8 +141,8 @@ public class HelperInjector implements Transformer {
     return new HelperInjector(requestingName, bytes, instrumentation);
   }
 
-  public static void setStaticInstrumenterHook(HelperInjectorListener hook) {
-    helperInjectorListener = hook;
+  public static void setHelperInjectorListener(HelperInjectorListener listener) {
+    helperInjectorListener = listener;
   }
 
   private Map<String, byte[]> getHelperMap() throws IOException {
