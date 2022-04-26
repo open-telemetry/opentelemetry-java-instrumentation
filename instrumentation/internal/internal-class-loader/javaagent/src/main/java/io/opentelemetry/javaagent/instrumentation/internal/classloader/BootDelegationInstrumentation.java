@@ -50,7 +50,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
     return not(namedOneOf(
             "java.lang.ClassLoader",
             "com.ibm.oti.vm.BootstrapClassLoader",
-            "io.opentelemetry.javaagent.instrumentation.api.AgentClassLoader"))
+            "io.opentelemetry.javaagent.bootstrap.AgentClassLoader"))
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 
