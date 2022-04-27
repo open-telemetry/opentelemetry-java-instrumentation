@@ -33,6 +33,10 @@ trait ApplicationConfigTrait {
 
   def runJob(String jobName, Map<String, JobParameter> params) {
     def job = applicationContext.getBean(jobName, Job)
+    postProcessJob(jobName, job)
     jobLauncher.run(job, new JobParameters(params))
+  }
+
+  def postProcessJob(String jobName, Job job) {
   }
 }
