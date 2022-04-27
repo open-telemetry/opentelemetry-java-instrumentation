@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -48,6 +49,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -133,6 +135,14 @@ public abstract class AbstractHttpServerTest<SERVER> {
       throw new AssertionError(
           "Subclasses of AbstractHttpServerTest must register HttpServerInstrumentationExtension");
     }
+  }
+
+  public static <T> T controller(ServerEndpoint endpoint, Supplier<T> closure) {
+    assert Span.current().getSpanContext().isValid(): "Controller should have a parent span.";
+    if (endpoint == NOT_FOUND) {
+      return closure.get();
+    }
+    return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
   }
 
   String resolveAddress(ServerEndpoint uri) {

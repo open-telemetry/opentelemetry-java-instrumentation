@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 class AkkaHttpServerInstrumentationTestAsync
     extends AbstractHttpServerInstrumentationTest {
 
-  @RegisterExtension val _: InstrumentationExtension =
+  @RegisterExtension val extension: InstrumentationExtension =
     HttpServerInstrumentationExtension.forAgent()
 
   override protected def setupServer(): AnyRef = {
