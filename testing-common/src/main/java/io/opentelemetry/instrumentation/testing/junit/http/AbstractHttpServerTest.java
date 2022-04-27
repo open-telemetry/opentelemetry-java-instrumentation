@@ -138,7 +138,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
   }
 
   public static <T> T controller(ServerEndpoint endpoint, Supplier<T> closure) {
-    assert Span.current().getSpanContext().isValid(): "Controller should have a parent span.";
+    assert Span.current().getSpanContext().isValid() : "Controller should have a parent span.";
     if (endpoint == NOT_FOUND) {
       return closure.get();
     }
