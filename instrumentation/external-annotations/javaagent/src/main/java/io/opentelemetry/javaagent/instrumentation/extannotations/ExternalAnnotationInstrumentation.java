@@ -118,7 +118,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     } else if (!configString.matches(CONFIG_FORMAT)) {
       logger.log(
           WARNING,
-          "Invalid trace annotations config '{0}'. Must match 'package.Annotation$Name;*'.",
+          "Invalid trace annotations config \"{0}\". Must match 'package.Annotation$Name;*'.",
           configString);
       return Collections.emptySet();
     } else {

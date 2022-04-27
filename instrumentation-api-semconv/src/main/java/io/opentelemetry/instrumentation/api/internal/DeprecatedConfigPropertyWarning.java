@@ -24,7 +24,7 @@ public final class DeprecatedConfigPropertyWarning {
     if (config.getString(deprecatedPropertyName) != null) {
       logger.log(
           WARNING,
-          "Deprecated property '{0}' was used; use the '{1}' property instead",
+          "Deprecated property \"{0}\" was used; use the \"{1}\" property instead",
           new Object[] {deprecatedPropertyName, newPropertyName});
     }
   }
