@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
-import io.opentelemetry.instrumentation.testing.junit.http.{HttpServerInstrumentationExtension, HttpServerTestOptions}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  HttpServerInstrumentationExtension,
+  HttpServerTestOptions
+}
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import org.junit.jupiter.api.extension.RegisterExtension
 

@@ -11,7 +11,10 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.HttpMethods.GET
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, ServerEndpoint}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  AbstractHttpServerTest,
+  ServerEndpoint
+}
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 
 import java.util.function.Supplier
