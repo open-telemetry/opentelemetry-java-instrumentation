@@ -11,7 +11,7 @@ import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.AbstractJob
 import org.springframework.batch.core.step.tasklet.TaskletStep
 import org.springframework.batch.repeat.policy.SimpleCompletionPolicy
-import org.springframework.batch.repeat.support.RepeatTemplate
+import org.springframework.batch.repeat.support.TaskExecutorRepeatTemplate
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
@@ -269,11 +269,9 @@ abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
     if ("parallelItemsJob" == jobName) {
       Step step = ((AbstractJob) job).getStep("parallelItemsStep")
       TaskletStep taskletStep = (TaskletStep) step
-      RepeatTemplate stepOperations = new RepeatTemplate()
       // explicitly set the number of chunks we expect from this test to ensure we always get
       // the same number of spans
-      stepOperations.setCompletionPolicy(new SimpleCompletionPolicy(3))
-      taskletStep.setStepOperations(stepOperations)
+      ((TaskExecutorRepeatTemplate) taskletStep.stepOperations).completionPolicy = new SimpleCompletionPolicy(3)
     }
   }
 }
