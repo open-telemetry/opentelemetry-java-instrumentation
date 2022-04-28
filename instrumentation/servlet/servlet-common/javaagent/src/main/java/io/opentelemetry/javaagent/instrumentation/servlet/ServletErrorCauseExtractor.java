@@ -15,10 +15,10 @@ public class ServletErrorCauseExtractor<REQUEST, RESPONSE> implements ErrorCause
   }
 
   @Override
-  public Throwable extractCause(Throwable error) {
+  public Throwable extract(Throwable error) {
     if (accessor.isServletException(error) && error.getCause() != null) {
       error = error.getCause();
     }
-    return ErrorCauseExtractor.jdk().extractCause(error);
+    return ErrorCauseExtractor.jdk().extract(error);
   }
 }

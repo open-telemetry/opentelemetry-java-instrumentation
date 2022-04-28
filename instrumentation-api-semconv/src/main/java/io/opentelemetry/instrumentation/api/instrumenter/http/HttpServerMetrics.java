@@ -64,7 +64,7 @@ public final class HttpServerMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes startAttributes, long startNanos) {
+  public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     activeRequests.add(1, applyActiveRequestsView(startAttributes), context);
 
     return context.with(
@@ -73,7 +73,7 @@ public final class HttpServerMetrics implements RequestListener {
   }
 
   @Override
-  public void end(Context context, Attributes endAttributes, long endNanos) {
+  public void onEnd(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.log(

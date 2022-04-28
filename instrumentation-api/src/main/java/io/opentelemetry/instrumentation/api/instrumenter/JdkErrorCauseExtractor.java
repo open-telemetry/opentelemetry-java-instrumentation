@@ -17,13 +17,13 @@ final class JdkErrorCauseExtractor implements ErrorCauseExtractor {
   private static final Class<?> COMPLETION_EXCEPTION_CLASS = getCompletionExceptionClass();
 
   @Override
-  public Throwable extractCause(Throwable error) {
+  public Throwable extract(Throwable error) {
     if (error.getCause() != null
         && (error instanceof ExecutionException
             || isInstanceOfCompletionException(error)
             || error instanceof InvocationTargetException
             || error instanceof UndeclaredThrowableException)) {
-      return extractCause(error.getCause());
+      return extract(error.getCause());
     }
     return error;
   }

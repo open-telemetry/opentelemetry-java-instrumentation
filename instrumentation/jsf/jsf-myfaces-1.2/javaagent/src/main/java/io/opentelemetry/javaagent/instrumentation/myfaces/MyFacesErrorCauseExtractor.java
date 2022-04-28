@@ -11,8 +11,8 @@ import javax.el.ELException;
 public class MyFacesErrorCauseExtractor extends JsfErrorCauseExtractor {
 
   @Override
-  public Throwable extractCause(Throwable error) {
-    error = super.extractCause(error);
+  public Throwable extract(Throwable error) {
+    error = super.extract(error);
     while (error.getCause() != null && error instanceof ELException) {
       error = error.getCause();
     }

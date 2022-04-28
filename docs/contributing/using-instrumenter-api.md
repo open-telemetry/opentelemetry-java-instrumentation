@@ -4,7 +4,7 @@ The `Instrumenter` encapsulates the entire logic for gathering telemetry, from c
 to starting and ending spans, to recording values using metrics instruments. The `Instrumenter`
 public API contains only three methods: `shouldStart()`, `start()` and `end()`. The class is
 designed to decorate the actual invocation of the instrumented library code; `shouldStart()`
-and `start()`methods are to be called at the start of the request processing, while `end()` must be
+and `start()` methods are to be called at the start of the request processing, while `end()` must be
 called when processing ends and a response arrives, or when it fails with an error.
 The `Instrumenter` is a generic class parameterized with `REQUEST` and `RESPONSE` types. They
 represent the input and output of the instrumented operation. `Instrumenter` can be configured with
@@ -254,8 +254,8 @@ The `SpanLinksExtractor` interface can be used to add links to other spans when 
 operation starts. It has a single `extract()` method that receives the following arguments:
 
 * A `SpanLinkBuilder` that can be used to add the links.
-* The parent `Context` that was passed in to `Instrumenter.start()`.
-* The `REQUEST` instance that was passed in to `Instrumenter.start()`.
+* The parent `Context` that was passed in to `Instrumenter#start()`.
+* The `REQUEST` instance that was passed in to `Instrumenter#start()`.
 
 You can read more about span links and their use
 cases [here](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#links-between-spans).
@@ -300,7 +300,7 @@ Consider the following example:
 class MyErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
-  public Throwable extractCause(Throwable error) {
+  public Throwable extract(Throwable error) {
     if (error instanceof MyLibWrapperException && error.getCause() != null) {
       error = error.getCause();
     }
@@ -361,10 +361,10 @@ and `RequestListener` interfaces. `RequestMetrics` is simply a factory interface
 the `RequestListener` - it receives an OpenTelemetry `Meter` and returns a new listener.
 The `RequestListener` contains two methods:
 
-* `start()` that gets executed when the instrumented operation starts. It returns a `Context` - it
-  can be used to store internal metrics state that should be propagated to the `end()` call, if
+* `onStart()` that gets executed when the instrumented operation starts. It returns a `Context` - it
+  can be used to store internal metrics state that should be propagated to the `onEnd()` call, if
   needed.
-* `end()` that gets executed when the instrumented operation ends.
+* `onEnd()` that gets executed when the instrumented operation ends.
 
 Both methods accept a `Context`, an instance of `Attributes` that contains either attributes
 computed on instrumented operation start or end, and the start and end nanoseconds timestamp that
@@ -389,13 +389,13 @@ class MyRequestMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes startAttributes, long startNanos) {
+  public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     activeRequests.add(1, startAttributes);
     return context.with(new MyMetricsState(startAttributes));
   }
 
   @Override
-  public void end(Context context, Attributes endAttributes, long endNanos) {
+  public void onEnd(Context context, Attributes endAttributes, long endNanos) {
     MyMetricsState state = MyMetricsState.get(context);
     activeRequests.add(1, state.startAttributes());
   }
@@ -404,9 +404,9 @@ class MyRequestMetrics implements RequestListener {
 
 The sample class listed above implements the `RequestMetrics` factory interface in the
 static `get()` method. The listener implementation uses a counter to measure the number of requests
-that are currently in flight. Notice that the state between `start()` and `end()` method is shared
-using the `MyMetricsState` class (a mostly trivial data class, not listed in the example above),
-passed between the methods using the `Context`.
+that are currently in flight. Notice that the state between `onStart()` and `onEnd()` method is
+shared using the `MyMetricsState` class (a mostly trivial data class, not listed in the example
+above), passed between the methods using the `Context`.
 
 You can add `RequestMetrics` to the `InstrumenterBuilder` using the `addRequestMetrics()` method.
 
@@ -414,7 +414,7 @@ You can add `RequestMetrics` to the `InstrumenterBuilder` using the `addRequestM
 
 In some rare cases, there is a need to enrich the `Context` before it is returned from
 the `Instrumenter#start()` method. The `ContextCustomizer` interface can be used to achieve that. It
-exposes a single `start()` method that accepts a `Context`, a `REQUEST` and `Attributes` extracted
+exposes a single `onStart()` method that accepts a `Context`, a `REQUEST` and `Attributes` extracted
 on the operation start, and returns a modified `Context`.
 
 Consider the following example:
@@ -423,7 +423,7 @@ Consider the following example:
 class MyContextCustomizer implements ContextCustomizer<Request> {
 
   @Override
-  public Context start(Context context, Request request, Attributes startAttributes) {
+  public Context onStart(Context context, Request request, Attributes startAttributes) {
     return context.with(new InProcessingAttributesHolder());
   }
 }
