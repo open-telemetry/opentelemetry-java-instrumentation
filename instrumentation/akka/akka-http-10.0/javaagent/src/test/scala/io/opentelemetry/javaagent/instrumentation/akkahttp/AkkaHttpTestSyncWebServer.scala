@@ -11,11 +11,13 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.HttpMethods.GET
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import groovy.lang.Closure
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  AbstractHttpServerTest,
+  ServerEndpoint
+}
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 
+import java.util.function.Supplier
 import scala.concurrent.Await
 
 object AkkaHttpTestSyncWebServer {
@@ -26,10 +28,10 @@ object AkkaHttpTestSyncWebServer {
   val syncHandler: HttpRequest => HttpResponse = {
     case HttpRequest(GET, uri: Uri, _, _, _) => {
       val endpoint = ServerEndpoint.forPath(uri.path.toString())
-      HttpServerTest.controller(
+      AbstractHttpServerTest.controller(
         endpoint,
-        new Closure[HttpResponse](()) {
-          def doCall(): HttpResponse = {
+        new Supplier[HttpResponse] {
+          def get(): HttpResponse = {
             val resp = HttpResponse(status = endpoint.getStatus)
             endpoint match {
               case SUCCESS => resp.withEntity(endpoint.getBody)
@@ -61,7 +63,7 @@ object AkkaHttpTestSyncWebServer {
       import scala.concurrent.duration._
       binding = Await.result(
         Http().bindAndHandleSync(syncHandler, "localhost", port),
-        10 seconds
+        10.seconds
       )
     }
   }
