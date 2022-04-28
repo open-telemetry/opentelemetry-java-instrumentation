@@ -9,15 +9,17 @@ import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.Controller
 import com.twitter.util.Future
 import groovy.lang.Closure
-import io.opentelemetry.instrumentation.test.base.HttpServerTest.controller
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
+
+import java.util.function.Supplier
 
 class FinatraController extends Controller {
   any(SUCCESS.getPath) { request: Request =>
     controller(
       SUCCESS,
-      new Closure[Response](null) {
-        override def call(): Response = {
+      new Supplier[Response] {
+        override def get(): Response = {
           response.ok(SUCCESS.getBody)
         }
       }
@@ -27,8 +29,8 @@ class FinatraController extends Controller {
   any(ERROR.getPath) { request: Request =>
     controller(
       ERROR,
-      new Closure[Response](null) {
-        override def call(): Response = {
+      new Supplier[Response] {
+        override def get(): Response = {
           response.internalServerError(ERROR.getBody)
         }
       }
@@ -38,8 +40,8 @@ class FinatraController extends Controller {
   any(QUERY_PARAM.getPath) { request: Request =>
     controller(
       QUERY_PARAM,
-      new Closure[Response](null) {
-        override def call(): Response = {
+      new Supplier[Response] {
+        override def get(): Response = {
           response.ok(QUERY_PARAM.getBody)
         }
       }
@@ -49,8 +51,8 @@ class FinatraController extends Controller {
   any(EXCEPTION.getPath) { request: Request =>
     controller(
       EXCEPTION,
-      new Closure[Future[Response]](null) {
-        override def call(): Future[Response] = {
+      new Supplier[Future[Response]] {
+        override def get(): Future[Response] = {
           throw new Exception(EXCEPTION.getBody)
         }
       }
@@ -60,8 +62,8 @@ class FinatraController extends Controller {
   any(REDIRECT.getPath) { request: Request =>
     controller(
       REDIRECT,
-      new Closure[Response](null) {
-        override def call(): Response = {
+      new Supplier[Response] {
+        override def get(): Response = {
           response.found.location(REDIRECT.getBody)
         }
       }
@@ -71,8 +73,8 @@ class FinatraController extends Controller {
   any(CAPTURE_HEADERS.getPath) { request: Request =>
     controller(
       CAPTURE_HEADERS,
-      new Closure[Response](null) {
-        override def call(): Response = {
+      new Supplier[Response] {
+        override def get(): Response = {
           response
             .ok(CAPTURE_HEADERS.getBody)
             .header(
@@ -87,8 +89,8 @@ class FinatraController extends Controller {
   any(INDEXED_CHILD.getPath) { request: Request =>
     controller(
       INDEXED_CHILD,
-      new Closure[Response](null) {
-        override def call(): Response = {
+      new Supplier[Response] {
+        override def get(): Response = {
           INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
             override def getParameter(name: String): String =
               request.getParam(name)
