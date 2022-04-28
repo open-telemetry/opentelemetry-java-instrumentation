@@ -138,11 +138,25 @@ public class AgentClassLoader extends URLClassLoader {
       throw new ClassNotFoundException(name);
     }
 
-    return super.loadClass(name, resolve);
+    synchronized (getClassLoadingLock(name)) {
+      Class<?> clazz = findLoadedClass(name);
+      // first search agent classes
+      if (clazz == null) {
+        clazz = findAgentClass(name);
+      }
+      // search from parent and urls added to this loader
+      if (clazz == null) {
+        clazz = super.loadClass(name, false);
+      }
+      if (resolve) {
+        resolveClass(clazz);
+      }
+
+      return clazz;
+    }
   }
 
-  @Override
-  protected Class<?> findClass(String name) throws ClassNotFoundException {
+  private Class<?> findAgentClass(String name) throws ClassNotFoundException {
     JarEntry jarEntry = findJarEntry(name.replace('.', '/') + ".class");
     if (jarEntry != null) {
       byte[] bytes;
@@ -156,8 +170,7 @@ public class AgentClassLoader extends URLClassLoader {
       return defineClass(name, bytes);
     }
 
-    // find class from agent initializer jar
-    return super.findClass(name);
+    return null;
   }
 
   public Class<?> defineClass(String name, byte[] bytes) {
@@ -281,7 +294,7 @@ public class AgentClassLoader extends URLClassLoader {
   public Enumeration<URL> findResources(String name) throws IOException {
     // find resources from agent initializer jar
     Enumeration<URL> delegate = super.findResources(name);
-    // agent jar can have only once resource for given name
+    // agent jar can have only one resource for given name
     URL url = findJarResource(name);
     if (url != null) {
       return new Enumeration<URL>() {
