@@ -26,7 +26,7 @@ import scala.language.postfixOps
 
 class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
 
-  @RegisterExtension val _: InstrumentationExtension =
+  @RegisterExtension val extension: InstrumentationExtension =
     HttpServerInstrumentationExtension.forAgent()
 
   private val startupThread = Executors.newSingleThreadExecutor()

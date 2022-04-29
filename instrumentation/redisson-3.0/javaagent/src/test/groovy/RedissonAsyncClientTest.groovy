@@ -6,6 +6,7 @@
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.CompletionStage
 import org.redisson.Redisson
 import org.redisson.api.RBucket
 import org.redisson.api.RFuture
@@ -86,20 +87,19 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
   def "test future whenComplete"() {
     when:
     RSet<String> rSet = redisson.getSet("set1")
-    RFuture<Boolean> result = runWithSpan("parent") {
-      RFuture<Boolean> result = rSet.addAsync("s1")
-      result.whenComplete({ res, throwable ->
+    CompletionStage<Boolean> result = runWithSpan("parent") {
+      RFuture<Boolean> future = rSet.addAsync("s1")
+      return future.whenComplete({ res, throwable ->
         if (!Span.current().getSpanContext().isValid()) {
           new Exception("Callback should have a parent span.").printStackTrace()
         }
         runWithSpan("callback") {
         }
       })
-      return result
     }
 
     then:
-    result.get(30, TimeUnit.SECONDS)
+    result.toCompletableFuture().get(30, TimeUnit.SECONDS)
     assertTraces(1) {
       trace(0, 3) {
         span(0) {

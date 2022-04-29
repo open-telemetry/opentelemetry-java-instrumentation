@@ -156,7 +156,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       if (logger.isLoggable(INFO)) {
         logger.log(
             INFO,
-            "The '{0}' method was already found in class '{1}'. Muzzle will not generate it again",
+            "The \"{0}\" method was already found in class \"{1}\". Muzzle will not generate it again",
             new Object[] {muzzleVirtualFieldsMethodName, instrumentationClassName});
       }
     }
