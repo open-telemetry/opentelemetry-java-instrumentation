@@ -66,7 +66,7 @@ tasks {
 
 if (findProperty("testLatestDeps") as Boolean) {
   configurations {
-    // akka artifact name is different for regular and latest tests
+    // finatra artifact name is different for regular and latest tests
     testImplementation {
       exclude("com.twitter", "finatra-http_2.11")
     }
