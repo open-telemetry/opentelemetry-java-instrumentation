@@ -60,7 +60,7 @@ tasks {
 
 if (findProperty("testLatestDeps") as Boolean) {
   configurations {
-    // rediscala_ artifact name is different for regular and latest tests
+    // rediscala artifact name is different for regular and latest tests
     testImplementation {
       exclude("com.github.etaty", "rediscala_2.11")
     }
