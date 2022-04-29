@@ -13,7 +13,7 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 public final class PlayWs10Singletons {
 
   private static final Instrumenter<Request, Response> INSTANCE =
-      PlayWsClientInstrumenterFactory.createInstrumenter("iio.opentelemetry.play-ws-1.0");
+      PlayWsClientInstrumenterFactory.createInstrumenter("io.opentelemetry.play-ws-1.0");
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTANCE;
