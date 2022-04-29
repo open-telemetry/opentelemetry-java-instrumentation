@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.StateHolder.HOLDER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;

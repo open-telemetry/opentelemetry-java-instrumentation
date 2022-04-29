@@ -15,7 +15,7 @@ dependencies {
   implementation("org.slf4j:jcl-over-slf4j")
   implementation("org.slf4j:jul-to-slf4j")
 
-  implementation(project(":javaagent-instrumentation-api"))
+  implementation(project(":javaagent-extension-api"))
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
 

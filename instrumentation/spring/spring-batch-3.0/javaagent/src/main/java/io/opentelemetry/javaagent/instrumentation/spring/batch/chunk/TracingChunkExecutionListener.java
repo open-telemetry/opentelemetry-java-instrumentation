@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.chunk;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.rootContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.rootContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldCreateRootSpanForChunk;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.ChunkSingletons.chunkInstrumenter;
 

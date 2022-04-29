@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.internal;
+package io.opentelemetry.javaagent.bootstrap.internal;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at

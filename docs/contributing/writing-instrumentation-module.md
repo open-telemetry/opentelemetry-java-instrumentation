@@ -320,7 +320,7 @@ method calls (or static methods in an interface) into that library results in a 
 at runtime, since Java 8 default method invocations aren't legal in Java 7 (and prior) bytecode.
 
 Since the OpenTelemetry API has many common default/static interface methods, like `Span.current()`,
-the `javaagent-instrumentation-api` artifact has a class `Java8BytecodeBridge` which provides static
+the `javaagent-extension-api` artifact has a class `Java8BytecodeBridge` which provides static
 methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
 in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
 

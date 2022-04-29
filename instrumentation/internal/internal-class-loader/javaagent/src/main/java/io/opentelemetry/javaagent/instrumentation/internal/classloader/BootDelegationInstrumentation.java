@@ -18,9 +18,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.tooling.Constants;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -50,7 +50,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
     return not(namedOneOf(
             "java.lang.ClassLoader",
             "com.ibm.oti.vm.BootstrapClassLoader",
-            "io.opentelemetry.javaagent.instrumentation.api.AgentClassLoader"))
+            "io.opentelemetry.javaagent.bootstrap.AgentClassLoader"))
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 
