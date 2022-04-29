@@ -131,8 +131,7 @@ tasks {
   val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(baseJavaagentLibs)
 
-    // exclude the bootstrap part of the javaagent-extension-api
-    exclude("io/opentelemetry/javaagent/bootstrap/**")
+    excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
@@ -142,8 +141,7 @@ tasks {
   val relocateJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
-    // exclude the bootstrap part of the javaagent-extension-api
-    exclude("io/opentelemetry/javaagent/bootstrap/**")
+    excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
@@ -275,6 +273,20 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
     exclude("META-INF/*.DSA")
     exclude("META-INF/*.SF")
   }
+}
+
+// exclude bootstrap projects from javaagent libs - they won't be added to inst/
+fun ShadowJar.excludeBootstrapClasses() {
+  dependencies {
+    exclude(project(":instrumentation-api"))
+    exclude(project(":instrumentation-api-semconv"))
+    exclude(project(":instrumentation-api-annotation-support"))
+    exclude(project(":instrumentation-appender-api-internal"))
+    exclude(project(":javaagent-bootstrap"))
+  }
+
+  // exclude the bootstrap part of the javaagent-extension-api
+  exclude("io/opentelemetry/javaagent/bootstrap/**")
 }
 
 class JavaagentProvider(
