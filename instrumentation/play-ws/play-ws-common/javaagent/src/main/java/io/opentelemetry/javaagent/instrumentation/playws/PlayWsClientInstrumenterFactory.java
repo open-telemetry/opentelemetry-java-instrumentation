@@ -16,31 +16,23 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public class PlayWsClientSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.play-ws-common";
+public final class PlayWsClientInstrumenterFactory {
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER;
-
-  static {
+  public static Instrumenter<Request, Response> createInstrumenter(String instrumentationName) {
     PlayWsClientHttpAttributesGetter httpAttributesGetter = new PlayWsClientHttpAttributesGetter();
     PlayWsClientNetAttributesGetter netAttributesGetter = new PlayWsClientNetAttributesGetter();
 
-    INSTRUMENTER =
-        Instrumenter.<Request, Response>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
-            .addRequestMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
+    return Instrumenter.<Request, Response>builder(
+            GlobalOpenTelemetry.get(),
+            instrumentationName,
+            HttpSpanNameExtractor.create(httpAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+        .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
+        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
+        .addRequestMetrics(HttpClientMetrics.get())
+        .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
-  public static Instrumenter<Request, Response> instrumenter() {
-    return INSTRUMENTER;
-  }
-
-  private PlayWsClientSingletons() {}
+  private PlayWsClientInstrumenterFactory() {}
 }
