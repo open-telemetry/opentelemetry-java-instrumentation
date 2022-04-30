@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.methodIsDeclaredByType;
-import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.JwsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.inheritsAnnotation;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
