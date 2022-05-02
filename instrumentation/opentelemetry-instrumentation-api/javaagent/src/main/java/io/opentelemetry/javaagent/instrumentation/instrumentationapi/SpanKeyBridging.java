@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public class SpanKeyBridging {
+public final class SpanKeyBridging {
 
   private static final Map<SpanKey, io.opentelemetry.instrumentation.api.internal.SpanKey>
       agentSpanKeys = createMapping();
@@ -48,4 +48,6 @@ public class SpanKeyBridging {
       SpanKey applicationSpanKey) {
     return agentSpanKeys.get(applicationSpanKey);
   }
+
+  private SpanKeyBridging() {}
 }
