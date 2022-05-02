@@ -6,6 +6,9 @@ mounted span using a custom Logback appender.
 To use it, add the module to your application's runtime classpath and add the appender to your
 `logback.xml`.
 
+Replace `OPENTELEMETRY_VERSION` with the latest
+stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation).
+
 **Maven**
 
 ```xml
@@ -13,8 +16,8 @@ To use it, add the module to your application's runtime classpath and add the ap
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-logback-1.0</artifactId>
-    <version>0.17.0-alpha</version>
+    <artifactId>opentelemetry-logback-mdc-1.0</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
 ```
@@ -23,7 +26,7 @@ To use it, add the module to your application's runtime classpath and add the ap
 
 ```kotlin
 dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-1.0:0.17.0-alpha")
+  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:OPENTELEMETRY_VERSION")
 }
 ```
 
