@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -18,9 +18,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.net.HttpURLConnection;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;

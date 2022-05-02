@@ -64,7 +64,7 @@ dependencies {
   runtime all necessary classes are provided by javaagent itself.
    */
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:${versions.opentelemetry}")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
 
   //Provides @AutoService annotation that makes registration of our SPI implementations much easier
@@ -107,7 +107,6 @@ dependencies {
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
   add("codegen", "ch.qos.logback:logback-classic:1.2.3")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support:${versions.opentelemetryJavaagentAlpha}")
-  add("muzzleBootstrap", "io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
 }

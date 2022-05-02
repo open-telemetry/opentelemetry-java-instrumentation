@@ -7,17 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Hibernate43Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;

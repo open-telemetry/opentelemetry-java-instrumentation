@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;

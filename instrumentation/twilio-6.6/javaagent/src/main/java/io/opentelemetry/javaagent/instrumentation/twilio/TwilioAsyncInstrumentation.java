@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.spanName;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;

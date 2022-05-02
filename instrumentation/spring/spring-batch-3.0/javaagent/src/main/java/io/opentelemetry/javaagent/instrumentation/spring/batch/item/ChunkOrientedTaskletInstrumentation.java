@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldTraceItems;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemSingletons.startChunk;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;

@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.tomcat.v7_0.Tomcat7Sing
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;

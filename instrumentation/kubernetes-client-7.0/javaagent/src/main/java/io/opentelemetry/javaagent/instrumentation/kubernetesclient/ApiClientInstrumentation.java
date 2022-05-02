@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientSingletons.inject;
 import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.KubernetesClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;

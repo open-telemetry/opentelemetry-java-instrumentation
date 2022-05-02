@@ -41,4 +41,15 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.5:javaagent"))
+
+  latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_2.13:+")
+}
+
+if (findProperty("testLatestDeps") as Boolean) {
+  configurations {
+    // play-ws artifact name is different for regular and latest tests
+    testImplementation {
+      exclude("com.typesafe.play", "play-ahc-ws-standalone_$scalaVersion")
+    }
+  }
 }

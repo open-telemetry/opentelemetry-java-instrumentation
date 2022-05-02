@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateSingletons.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateInstrumenterFactory.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
 
 import java.util.UUID;
 

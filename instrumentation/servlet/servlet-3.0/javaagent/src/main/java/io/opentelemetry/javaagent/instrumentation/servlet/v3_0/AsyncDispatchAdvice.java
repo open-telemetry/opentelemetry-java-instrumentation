@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.C
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
 import net.bytebuddy.asm.Advice;

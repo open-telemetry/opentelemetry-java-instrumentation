@@ -66,6 +66,9 @@ val shadowMuzzleTooling by tasks.registering(ShadowJar::class) {
 val shadowMuzzleBootstrap by tasks.registering(ShadowJar::class) {
   configurations = listOf(muzzleBootstrap)
 
+  // exclude the agent part of the javaagent-extension-api
+  exclude("io/opentelemetry/javaagent/extension/**")
+
   archiveFileName.set("bootstrap-for-muzzle-check.jar")
 }
 

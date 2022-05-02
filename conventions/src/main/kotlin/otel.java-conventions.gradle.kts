@@ -376,7 +376,6 @@ configurations.configureEach {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")).using(project(":instrumentation-api-semconv"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")).using(project(":instrumentation-api-annotation-support"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")).using(project(":instrumentation-appender-api-internal"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")).using(project(":javaagent-instrumentation-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))

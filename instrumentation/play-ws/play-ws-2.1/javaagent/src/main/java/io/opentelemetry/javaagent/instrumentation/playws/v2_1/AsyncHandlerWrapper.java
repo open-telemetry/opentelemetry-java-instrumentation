@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.playws.v2_1.PlayWs21Singletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;

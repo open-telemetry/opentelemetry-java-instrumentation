@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import javax.ws.rs.container.ContainerRequestContext;
 
 public final class RequestContextHelper {
