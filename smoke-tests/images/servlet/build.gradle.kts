@@ -140,7 +140,11 @@ fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfil
       "eclipse-temurin:$jdk"
     }
   } else if (vm == "openj9") {
-    "ibm-semeru-runtimes:open-$jdk-jdk"
+    if (isWindows) {
+      "adoptopenjdk:$jdk-openj9"
+    } else {
+      "ibm-semeru-runtimes:open-$jdk-jdk"
+    }
   } else {
     throw GradleException("Unexpected vm: $vm")
   }
