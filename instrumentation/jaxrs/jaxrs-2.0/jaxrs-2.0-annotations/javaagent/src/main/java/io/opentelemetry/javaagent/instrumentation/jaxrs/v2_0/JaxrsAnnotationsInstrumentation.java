@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotationsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -156,7 +156,8 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       if (asyncReturnValue != null) {
         // span finished by CompletionStageFinishCallback
         asyncReturnValue =
-            asyncReturnValue.handle(new CompletionStageFinishCallback<>(context, handlerData));
+            asyncReturnValue.handle(
+                new CompletionStageFinishCallback<>(instrumenter(), context, handlerData));
       }
       if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
         instrumenter().end(context, handlerData, null, null);

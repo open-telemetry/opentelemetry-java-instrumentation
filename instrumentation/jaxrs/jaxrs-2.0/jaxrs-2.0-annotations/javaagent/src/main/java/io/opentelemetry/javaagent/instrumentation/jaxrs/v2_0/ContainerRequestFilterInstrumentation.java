@@ -53,7 +53,7 @@ public class ContainerRequestFilterInstrumentation implements TypeInstrumentatio
     public static void setFilterClass(
         @Advice.This ContainerRequestFilter filter,
         @Advice.Argument(0) ContainerRequestContext context) {
-      context.setProperty(JaxrsSingletons.ABORT_FILTER_CLASS, filter.getClass());
+      context.setProperty(JaxrsConstants.ABORT_FILTER_CLASS, filter.getClass());
     }
   }
 }

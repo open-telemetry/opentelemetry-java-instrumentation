@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JerseySingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -42,7 +42,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         @Local("otelScope") Scope scope) {
       UriInfo uriInfo = requestContext.getUriInfo();
 
-      if (requestContext.getProperty(JaxrsSingletons.ABORT_HANDLED) != null
+      if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
           || !(uriInfo instanceof ResourceInfo)) {
         return;
       }
@@ -56,7 +56,8 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
       }
 
       handlerData = new HandlerData(resourceClass, method);
-      context = RequestContextHelper.createOrUpdateAbortSpan(requestContext, handlerData);
+      context =
+          RequestContextHelper.createOrUpdateAbortSpan(instrumenter(), requestContext, handlerData);
       if (context != null) {
         scope = context.makeCurrent();
       }
