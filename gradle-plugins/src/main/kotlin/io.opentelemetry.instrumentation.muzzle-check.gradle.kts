@@ -349,6 +349,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
       classifier.set(muzzleDirective.classifier)
       versions.set(version)
       assertPass.set(!muzzleDirective.assertPass.get())
+      additionalDependencies.set(muzzleDirective.additionalDependencies)
       excludedDependencies.set(muzzleDirective.excludedDependencies)
       excludedInstrumentationModules.set(muzzleDirective.excludedInstrumentationModules)
     }
