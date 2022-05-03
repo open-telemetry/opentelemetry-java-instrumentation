@@ -90,6 +90,7 @@ public abstract class AbstractSpringKafkaTest {
         break;
       } else if (i < maxAttempts) {
         testing.waitForTraces(2);
+        Thread.sleep(1_000); // sleep a bit to give time for all the spans to arrive
         testing.clearData();
         logger.info("Messages weren't received as batch, retrying");
       }
