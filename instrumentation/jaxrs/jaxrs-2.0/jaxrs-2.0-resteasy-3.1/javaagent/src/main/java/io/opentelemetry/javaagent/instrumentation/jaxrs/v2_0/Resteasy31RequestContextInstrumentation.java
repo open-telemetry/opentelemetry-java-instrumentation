@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.Resteasy31Singletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -41,7 +41,7 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
         @Local("otelHandlerData") HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
-      if (requestContext.getProperty(JaxrsSingletons.ABORT_HANDLED) != null
+      if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
           || !(requestContext instanceof PostMatchContainerRequestContext)) {
         return;
       }
@@ -52,7 +52,8 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
       Class<?> resourceClass = resourceMethodInvoker.getResourceClass();
 
       handlerData = new HandlerData(resourceClass, method);
-      context = RequestContextHelper.createOrUpdateAbortSpan(requestContext, handlerData);
+      context =
+          RequestContextHelper.createOrUpdateAbortSpan(instrumenter(), requestContext, handlerData);
       if (context != null) {
         scope = context.makeCurrent();
       }

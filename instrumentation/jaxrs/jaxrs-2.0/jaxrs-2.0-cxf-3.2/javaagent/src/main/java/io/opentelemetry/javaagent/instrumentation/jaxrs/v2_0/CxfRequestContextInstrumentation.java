@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.CxfSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -63,7 +63,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
 
-      if (requestContext.getProperty(JaxrsSingletons.ABORT_HANDLED) != null
+      if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
           || !(requestContext instanceof ContainerRequestContext)) {
         return;
       }
@@ -83,7 +83,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
       handlerData = new HandlerData(resourceClass, method);
       context =
           RequestContextHelper.createOrUpdateAbortSpan(
-              (ContainerRequestContext) requestContext, handlerData);
+              instrumenter(), (ContainerRequestContext) requestContext, handlerData);
       if (context != null) {
         scope = context.makeCurrent();
       }
