@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -23,12 +23,11 @@ public class InstrumentationApiInstrumentationModule extends InstrumentationModu
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(
-        "application.io.opentelemetry.instrumentation.api.internal.HttpRouteState");
+    return hasClassesNamed("application.io.opentelemetry.instrumentation.api.internal.SpanKey");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new HttpRouteStateInstrumentation());
+    return asList(new HttpRouteStateInstrumentation(), new SpanKeyInstrumentation());
   }
 }

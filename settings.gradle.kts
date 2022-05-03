@@ -92,6 +92,7 @@ include(":muzzle")
 // agent projects
 include(":opentelemetry-api-shaded-for-instrumenting")
 include(":opentelemetry-ext-annotations-shaded-for-instrumenting")
+include(":opentelemetry-instrumentation-api-shaded-for-instrumenting")
 include(":javaagent-bootstrap")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")

@@ -11,12 +11,10 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
 final class InstrumentationApiContextBridging {
 
   static List<ContextKeyBridge<?, ?>> instrumentationApiBridges() {
@@ -48,52 +46,12 @@ final class InstrumentationApiContextBridging {
       // no old instrumentation-api on classpath
     }
 
-    List<String> spanKeyNames =
-        Arrays.asList(
-            // span kind keys
-            "KIND_SERVER_KEY",
-            "KIND_CLIENT_KEY",
-            "KIND_CONSUMER_KEY",
-            "KIND_PRODUCER_KEY",
-            // semantic convention keys
-            "HTTP_SERVER_KEY",
-            "RPC_SERVER_KEY",
-            "HTTP_CLIENT_KEY",
-            "RPC_CLIENT_KEY",
-            "DB_CLIENT_KEY",
-            "PRODUCER_KEY",
-            "CONSUMER_RECEIVE_KEY",
-            "CONSUMER_PROCESS_KEY");
-
-    for (String spanKeyName : spanKeyNames) {
-      ContextKeyBridge<?, ?> spanKeyBridge = spanKeyBridge(spanKeyName);
-      if (spanKeyBridge != null) {
-        bridges.add(spanKeyBridge);
-      }
-    }
-
     ContextKeyBridge<?, ?> httpRouteHolderBridge = httpRouteStateBridge();
     if (httpRouteHolderBridge != null) {
       bridges.add(httpRouteHolderBridge);
     }
 
     return bridges;
-  }
-
-  @Nullable
-  private static ContextKeyBridge<Span, io.opentelemetry.api.trace.Span> spanKeyBridge(
-      String name) {
-    try {
-      return new ContextKeyBridge<>(
-          "application.io.opentelemetry.instrumentation.api.internal.SpanKey",
-          "io.opentelemetry.instrumentation.api.internal.SpanKey",
-          name,
-          Bridging::toApplication,
-          Bridging::toAgentOrNull);
-    } catch (Throwable e) {
-      // instrumentation-api may be absent on the classpath, just skip
-      return null;
-    }
   }
 
   private static final Class<?> AGENT_HTTP_ROUTE_STATE;
