@@ -10,7 +10,8 @@ plugins {
 
 data class ImageTarget(val version: List<String>, val vm: List<String>, val jdk: List<String>, val args: Map<String, String> = emptyMap(), val war: String = "servlet-3.0", val windows: Boolean = true)
 
-val extraTag = findProperty("extraTag") ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
+val extraTag = findProperty("extraTag")
+  ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
 
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
@@ -133,13 +134,17 @@ fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfil
   val image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   val jdkImage = if (vm == "hotspot") {
-    if (jdk == "18") {
+    if (jdk == "19") {
       "openjdk:$jdk"
     } else {
       "eclipse-temurin:$jdk"
     }
   } else if (vm == "openj9") {
-    "adoptopenjdk:$jdk-openj9"
+    if (isWindows) {
+      "adoptopenjdk:$jdk-openj9"
+    } else {
+      "ibm-semeru-runtimes:open-$jdk-jdk"
+    }
   } else {
     throw GradleException("Unexpected vm: $vm")
   }
