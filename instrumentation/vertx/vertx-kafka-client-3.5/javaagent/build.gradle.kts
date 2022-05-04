@@ -2,6 +2,16 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+muzzle {
+  pass {
+    group.set("io.vertx")
+    module.set("vertx-kafka-client")
+    versions.set("[3.5.0,)")
+    assertInverse.set(true)
+    extraDependency("org.apache.kafka:kafka-clients:0.11.0.0")
+  }
+}
+
 dependencies {
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
