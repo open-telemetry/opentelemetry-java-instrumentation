@@ -9,7 +9,7 @@ dependencies {
   compileOnly(project(":javaagent-bootstrap"))
 
   // ensure no cross interference
-  testInstrumentation(project(":instrumentation:jboss-logmanager-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:jboss-logmanager:jboss-logmanager-1.1:javaagent"))
 
   testImplementation("org.awaitility:awaitility")
 }
