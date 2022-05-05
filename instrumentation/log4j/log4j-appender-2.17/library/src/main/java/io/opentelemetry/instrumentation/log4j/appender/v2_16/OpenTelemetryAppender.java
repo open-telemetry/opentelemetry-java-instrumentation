@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.log4j.appender.v2_16.internal.LogEventMa
 import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.core.Appender;
@@ -24,6 +25,7 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
+import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 @Plugin(
@@ -74,12 +76,15 @@ public class OpenTelemetryAppender extends AbstractAppender {
         logEmitterProviderHolder.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
     mapper.mapLogEvent(
-        builder,
-        event.getMessage(),
-        event.getLevel(),
-        event.getThrown(),
-        event.getInstant(),
-        contextData);
+        builder, event.getMessage(), event.getLevel(), event.getThrown(), contextData);
+
+    Instant timestamp = event.getInstant();
+    if (timestamp != null) {
+      builder.setEpoch(
+          TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
+              + timestamp.getNanoOfMillisecond(),
+          TimeUnit.NANOSECONDS);
+    }
     builder.emit();
   }
 

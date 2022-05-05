@@ -30,7 +30,7 @@ public final class Log4jHelper {
     LogBuilder builder =
         AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     Map<String, String> contextData = ThreadContext.getImmutableContext();
-    mapper.mapLogEvent(builder, message, level, throwable, null, contextData);
+    mapper.mapLogEvent(builder, message, level, throwable, contextData);
     builder.emit();
   }
 
