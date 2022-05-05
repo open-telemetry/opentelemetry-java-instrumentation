@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
@@ -34,7 +35,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * ServletResponse, Throwable, CallDepth, ServletRequestContext, Context, Scope)} can get it from
  * context and set required span attribute.
  */
-public class HttpServletResponseInstrumentation implements TypeInstrumentation {
+public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.servlet.http.HttpServletResponse");
@@ -49,10 +50,12 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("sendError", "setStatus"),
-        HttpServletResponseInstrumentation.class.getName() + "$Servlet2ResponseStatusAdvice");
+        Servlet2HttpServletResponseInstrumentation.class.getName()
+            + "$Servlet2ResponseStatusAdvice");
     transformer.applyAdviceToMethod(
         named("sendRedirect"),
-        HttpServletResponseInstrumentation.class.getName() + "$Servlet2ResponseRedirectAdvice");
+        Servlet2HttpServletResponseInstrumentation.class.getName()
+            + "$Servlet2ResponseRedirectAdvice");
   }
 
   @SuppressWarnings("unused")

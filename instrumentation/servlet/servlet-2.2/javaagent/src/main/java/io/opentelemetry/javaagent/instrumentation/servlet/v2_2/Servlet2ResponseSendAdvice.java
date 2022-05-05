@@ -3,21 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.javax.response;
+package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.javax.response.ResponseSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Singletons.responseInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class ResponseSendAdvice {
+public class Servlet2ResponseSendAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void start(
@@ -31,14 +30,14 @@ public class ResponseSendAdvice {
     if (callDepth.getAndIncrement() > 0) {
       return;
     }
-    Context parentContext = Java8BytecodeBridge.currentContext();
-    // Don't want to generate a new top-level span
-    if (Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
-      classAndMethod = ClassAndMethod.create(declaringClass, methodName);
-      if (instrumenter().shouldStart(parentContext, classAndMethod)) {
-        context = instrumenter().start(parentContext, classAndMethod);
-        scope = context.makeCurrent();
-      }
+
+    HttpServletResponseAdviceHelper.StartResult result =
+        HttpServletResponseAdviceHelper.startSpan(
+            responseInstrumenter(), declaringClass, methodName);
+    if (result != null) {
+      classAndMethod = result.getClassAndMethod();
+      context = result.getContext();
+      scope = result.getScope();
     }
   }
 
@@ -52,7 +51,8 @@ public class ResponseSendAdvice {
     if (callDepth.decrementAndGet() > 0) {
       return;
     }
+
     HttpServletResponseAdviceHelper.stopSpan(
-        instrumenter(), throwable, context, scope, classAndMethod);
+        responseInstrumenter(), throwable, context, scope, classAndMethod);
   }
 }
