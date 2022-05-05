@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Axis2InstrumentationModule extends InstrumentationModule {
   public Axis2InstrumentationModule() {
-    super("axis2", "axis2-1.6");
+    super("axis2", "axis2-1.6", "jaxws");
   }
 
   @Override
