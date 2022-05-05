@@ -27,7 +27,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.7:javaagent"))
 
-  testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2-common:testing"))
+  testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
 }
 
 tasks {
