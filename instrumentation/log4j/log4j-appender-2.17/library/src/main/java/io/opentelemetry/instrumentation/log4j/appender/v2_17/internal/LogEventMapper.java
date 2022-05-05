@@ -19,11 +19,9 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 
@@ -96,7 +94,6 @@ public final class LogEventMapper<T> {
       Message message,
       Level level,
       @Nullable Throwable throwable,
-      @Nullable Instant timestamp,
       T contextData) {
 
     AttributesBuilder attributes = Attributes.builder();
@@ -123,13 +120,6 @@ public final class LogEventMapper<T> {
     builder.setAttributes(attributes.build());
 
     builder.setContext(Context.current());
-
-    if (timestamp != null) {
-      builder.setEpoch(
-          TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
-              + timestamp.getNanoOfMillisecond(),
-          TimeUnit.NANOSECONDS);
-    }
   }
 
   // visible for testing
@@ -155,16 +145,19 @@ public final class LogEventMapper<T> {
     }
 
     if (captureMapMessageAttributes) {
-      mapMessage.forEach(
-          (key, value) -> {
-            if (value != null
-                && (!checkSpecialMapMessageAttribute
-                    || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
-              attributes.put(
-                  mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey),
-                  value.toString());
-            }
-          });
+      // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
+      mapMessage
+          .getData()
+          .forEach(
+              (key, value) -> {
+                if (value != null
+                    && (!checkSpecialMapMessageAttribute
+                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
+                  attributes.put(
+                      mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey),
+                      value.toString());
+                }
+              });
     }
   }
 
