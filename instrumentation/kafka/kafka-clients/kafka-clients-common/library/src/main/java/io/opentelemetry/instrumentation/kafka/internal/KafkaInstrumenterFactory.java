@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import java.util.Collections;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 /**
@@ -117,5 +118,20 @@ public final class KafkaInstrumenterFactory {
     } else {
       return builder.newConsumerInstrumenter(KafkaConsumerRecordGetter.INSTANCE);
     }
+  }
+
+  public Instrumenter<ConsumerRecords<?, ?>, Void> createBatchProcessInstrumenter() {
+    KafkaBatchProcessAttributesGetter getter = KafkaBatchProcessAttributesGetter.INSTANCE;
+    MessageOperation operation = MessageOperation.PROCESS;
+
+    return Instrumenter.<ConsumerRecords<?, ?>, Void>builder(
+            openTelemetry,
+            instrumentationName,
+            MessagingSpanNameExtractor.create(getter, operation))
+        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
+        .addSpanLinksExtractor(
+            new KafkaBatchProcessSpanLinksExtractor(openTelemetry.getPropagators()))
+        .setErrorCauseExtractor(errorCauseExtractor)
+        .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 }

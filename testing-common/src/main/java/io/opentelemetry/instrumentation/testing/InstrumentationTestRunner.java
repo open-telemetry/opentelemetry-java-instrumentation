@@ -94,23 +94,23 @@ public abstract class InstrumentationTestRunner {
     assertions.forEach(assertionsList::add);
 
     try {
-      await()
-          .untilAsserted(
-              () -> {
-                List<List<SpanData>> traces = waitForTraces(assertionsList.size());
-                if (traceComparator != null) {
-                  traces.sort(traceComparator);
-                }
-                TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
-              });
+      await().untilAsserted(() -> doAssertTraces(traceComparator, assertionsList));
     } catch (ConditionTimeoutException e) {
       // Don't throw this failure since the stack is the awaitility thread, causing confusion.
       // Instead, just assert one more time on the test thread, which will fail with a better stack
       // trace.
       // TODO(anuraaga): There is probably a better way to do this.
-      List<List<SpanData>> traces = waitForTraces(assertionsList.size());
-      TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
+      doAssertTraces(traceComparator, assertionsList);
     }
+  }
+
+  private <T extends Consumer<TraceAssert>> void doAssertTraces(
+      @Nullable Comparator<List<SpanData>> traceComparator, List<T> assertionsList) {
+    List<List<SpanData>> traces = waitForTraces(assertionsList.size());
+    if (traceComparator != null) {
+      traces.sort(traceComparator);
+    }
+    TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
   }
 
   /**
