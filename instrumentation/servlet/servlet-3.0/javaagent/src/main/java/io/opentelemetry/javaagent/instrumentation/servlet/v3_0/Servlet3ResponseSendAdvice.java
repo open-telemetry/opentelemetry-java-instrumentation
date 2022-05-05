@@ -3,24 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.response;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.responseInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.responseInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
-public class ResponseSendAdvice {
+public class Servlet3ResponseSendAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void start(
-      @Advice.This Object response,
       @Advice.Origin("#t") Class<?> declaringClass,
       @Advice.Origin("#m") String methodName,
       @Advice.Local("otelMethod") ClassAndMethod classAndMethod,

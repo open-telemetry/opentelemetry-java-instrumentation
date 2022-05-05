@@ -14,8 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.javax.response.JavaxResponseInstrumentationFactory;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -44,7 +44,8 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
             adviceClassName(".Servlet3Advice"),
             adviceClassName(".Servlet3InitAdvice"),
             adviceClassName(".Servlet3FilterInitAdvice")),
-        JavaxResponseInstrumentationFactory.create());
+        new HttpServletResponseInstrumentation(
+            BASE_PACKAGE, adviceClassName(".Servlet3ResponseSendAdvice")));
   }
 
   private static String adviceClassName(String suffix) {
