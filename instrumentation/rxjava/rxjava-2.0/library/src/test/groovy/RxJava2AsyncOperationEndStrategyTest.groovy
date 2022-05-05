@@ -6,7 +6,7 @@
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
-import io.opentelemetry.instrumentation.rxjava2.RxJava2AsyncOperationEndStrategy
+import io.opentelemetry.instrumentation.rxjava.v2_0.RxJava2AsyncOperationEndStrategy
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe

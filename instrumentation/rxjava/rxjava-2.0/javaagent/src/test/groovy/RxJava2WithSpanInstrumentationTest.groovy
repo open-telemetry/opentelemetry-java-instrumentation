@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.rxjava2.TracedWithSpan
+import io.opentelemetry.instrumentation.rxjava.v2_0.TracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.reactivex.Completable
 import io.reactivex.Flowable
