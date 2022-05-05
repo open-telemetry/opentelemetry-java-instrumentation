@@ -54,7 +54,9 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     closeScopeAndEndSpan();
 
     ConsumerRecord<K, V> next = delegateIterator.next();
-    if (next != null && consumerProcessInstrumenter().shouldStart(parentContext, next)) {
+    if (next != null
+        && consumerProcessInstrumenter().shouldStart(parentContext, next)
+        && KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
       currentRequest = next;
       currentContext = consumerProcessInstrumenter().start(parentContext, currentRequest);
       currentScope = currentContext.makeCurrent();
