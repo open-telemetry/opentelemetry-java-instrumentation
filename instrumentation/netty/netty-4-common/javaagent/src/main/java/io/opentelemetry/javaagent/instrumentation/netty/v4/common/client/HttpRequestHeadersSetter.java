@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common.client;
+package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
 
 enum HttpRequestHeadersSetter implements TextMapSetter<HttpRequestAndChannel> {
   INSTANCE;

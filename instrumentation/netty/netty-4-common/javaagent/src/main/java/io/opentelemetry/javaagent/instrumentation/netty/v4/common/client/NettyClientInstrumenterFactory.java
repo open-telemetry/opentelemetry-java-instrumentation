@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common.client;
+package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
 
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
@@ -17,8 +17,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
 
 public final class NettyClientInstrumenterFactory {
 

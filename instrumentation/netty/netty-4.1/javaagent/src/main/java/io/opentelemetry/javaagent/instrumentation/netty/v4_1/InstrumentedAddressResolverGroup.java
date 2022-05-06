@@ -12,7 +12,7 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectionInstrumenter;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyConnectionInstrumenter;
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.function.Supplier;
