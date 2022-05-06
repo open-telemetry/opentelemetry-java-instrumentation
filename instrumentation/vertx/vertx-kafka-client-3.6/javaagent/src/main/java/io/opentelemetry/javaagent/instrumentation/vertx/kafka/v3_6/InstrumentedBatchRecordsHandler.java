@@ -47,8 +47,11 @@ public final class InstrumentedBatchRecordsHandler<K, V> implements Handler<Cons
       error = t;
       throw t;
     } finally {
-      batchProcessInstrumenter().end(context, records, null, error);
-      KafkaClientsConsumerProcessTracing.setEnabled(previousWrappingEnabled);
+      try {
+        batchProcessInstrumenter().end(context, records, null, error);
+      } finally {
+        KafkaClientsConsumerProcessTracing.setEnabled(previousWrappingEnabled);
+      }
     }
   }
 
