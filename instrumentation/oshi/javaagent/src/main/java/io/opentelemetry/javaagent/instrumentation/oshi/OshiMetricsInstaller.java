@@ -19,10 +19,14 @@ import java.util.Collections;
  */
 @AutoService(AgentListener.class)
 public class OshiMetricsInstaller implements AgentListener {
+
+  private static final boolean DEFAULT_ENABLED =
+      Config.get().getBoolean("otel.instrumentation.common.default-enabled", true);
+
   @Override
   public void afterAgent(Config config, AutoConfiguredOpenTelemetrySdk unused) {
     if (new AgentConfig(config)
-        .isInstrumentationEnabled(Collections.singleton("oshi"), /* defaultEnabled= */ true)) {
+        .isInstrumentationEnabled(Collections.singleton("oshi"), DEFAULT_ENABLED)) {
       try {
         // Call oshi.SystemInfo.getCurrentPlatformEnum() to activate SystemMetrics.
         // Oshi instrumentation will intercept this call and enable SystemMetrics.

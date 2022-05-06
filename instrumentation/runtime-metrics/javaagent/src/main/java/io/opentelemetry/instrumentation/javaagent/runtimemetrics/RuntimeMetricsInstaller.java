@@ -18,11 +18,14 @@ import java.util.Collections;
 /** An {@link AgentListener} that enables runtime metrics during agent startup. */
 @AutoService(AgentListener.class)
 public class RuntimeMetricsInstaller implements AgentListener {
+
+  private static final boolean DEFAULT_ENABLED =
+      Config.get().getBoolean("otel.instrumentation.common.default-enabled", true);
+
   @Override
   public void afterAgent(Config config, AutoConfiguredOpenTelemetrySdk unused) {
     if (new AgentConfig(config)
-        .isInstrumentationEnabled(
-            Collections.singleton("runtime-metrics"), /* defaultEnabled= */ true)) {
+        .isInstrumentationEnabled(Collections.singleton("runtime-metrics"), DEFAULT_ENABLED)) {
       GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
       MemoryPools.registerObservers(GlobalOpenTelemetry.get());
     }
