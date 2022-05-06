@@ -26,8 +26,13 @@ public class RuntimeMetricsInstaller implements AgentListener {
   public void afterAgent(Config config, AutoConfiguredOpenTelemetrySdk unused) {
     if (new AgentConfig(config)
         .isInstrumentationEnabled(Collections.singleton("runtime-metrics"), DEFAULT_ENABLED)) {
-      GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
+
       MemoryPools.registerObservers(GlobalOpenTelemetry.get());
+
+      if (config.getBoolean(
+          "otel.instrumentation.runtime-metrics.experimental-metrics.enabled", false)) {
+        GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
+      }
     }
   }
 }
