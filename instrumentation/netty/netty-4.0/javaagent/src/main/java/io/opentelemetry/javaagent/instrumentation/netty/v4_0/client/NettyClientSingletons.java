@@ -9,10 +9,10 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.DeprecatedConfigPropertyWarning;
-import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyClientInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectionInstrumenter;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettySslInstrumenter;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyClientInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyConnectionInstrumenter;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettySslInstrumenter;
 
 public final class NettyClientSingletons {
 

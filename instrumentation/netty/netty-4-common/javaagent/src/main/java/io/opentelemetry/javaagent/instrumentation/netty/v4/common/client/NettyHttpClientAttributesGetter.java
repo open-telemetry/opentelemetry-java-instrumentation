@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common.client;
+package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.common.HttpSchemeUtil.getScheme;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpSchemeUtil.getScheme;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.javaagent.instrumentation.netty.common.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;

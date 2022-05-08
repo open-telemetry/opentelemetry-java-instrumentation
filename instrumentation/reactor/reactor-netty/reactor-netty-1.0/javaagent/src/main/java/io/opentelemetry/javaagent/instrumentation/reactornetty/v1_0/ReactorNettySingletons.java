@@ -16,8 +16,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.DeprecatedConfigPropertyWarning;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyClientInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyConnectionInstrumenter;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyClientInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyConnectionInstrumenter;
 import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientResponse;
 
