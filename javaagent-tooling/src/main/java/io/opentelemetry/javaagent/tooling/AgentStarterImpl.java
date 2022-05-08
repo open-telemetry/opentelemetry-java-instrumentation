@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
+
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
@@ -14,6 +16,8 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -64,12 +68,41 @@ public class AgentStarterImpl implements AgentStarter {
     ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
       Thread.currentThread().setContextClassLoader(extensionClassLoader);
-      // setting up logging and configuration need to be done as early as possible
-      LoggingConfigurer.configureLogger();
-      ConfigInitializer.initialize();
-      AgentInstaller.installBytebuddyAgent(instrumentation, Config.get());
+      internalStart();
     } finally {
       Thread.currentThread().setContextClassLoader(savedContextClassLoader);
+    }
+  }
+
+  private void internalStart() {
+    List<LoggingCustomizer> loggingCustomizers = load(LoggingCustomizer.class);
+    if (loggingCustomizers.size() > 1) {
+      throw new IllegalStateException(
+          "More than one LoggingCustomizerProvider found: "
+              + loggingCustomizers.stream()
+                  .map(Object::getClass)
+                  .map(Class::getName)
+                  .collect(Collectors.joining(", ")));
+    }
+    LoggingCustomizer loggingCustomizer;
+    if (loggingCustomizers.isEmpty()) {
+      loggingCustomizer = new DefaultLoggingCustomizer();
+    } else {
+      loggingCustomizer = loggingCustomizers.get(0);
+    }
+    loggingCustomizer.init();
+
+    Throwable startupError = null;
+    try {
+      ConfigInitializer.initialize();
+      AgentInstaller.installBytebuddyAgent(instrumentation, Config.get());
+    } catch (Throwable t) {
+      startupError = t;
+    }
+    if (startupError == null) {
+      loggingCustomizer.onStartupSuccess();
+    } else {
+      loggingCustomizer.onStartupFailure(startupError);
     }
   }
 
