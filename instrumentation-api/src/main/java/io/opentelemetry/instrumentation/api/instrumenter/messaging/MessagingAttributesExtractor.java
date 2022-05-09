@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -33,7 +34,15 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
       set(attributes, SemanticAttributes.MESSAGING_TEMP_DESTINATION, true);
       set(attributes, SemanticAttributes.MESSAGING_DESTINATION, TEMP_DESTINATION_NAME);
     } else {
-      set(attributes, SemanticAttributes.MESSAGING_DESTINATION, destination(request));
+      if (request.getClass().getName().equals("org.apache.rocketmq.common.message.MessageClientExt")) {
+        Baggage baggage = Baggage.fromContext(parentContext);
+        String consumerGroup = baggage.getEntryValue("consumerGroup");
+        set(attributes, SemanticAttributes.MESSAGING_DESTINATION, consumerGroup);
+        Baggage delBaggage = baggage.toBuilder().remove("consumerGroup").build();
+        delBaggage.storeInContext(parentContext);
+      } else {
+        set(attributes, SemanticAttributes.MESSAGING_DESTINATION, destination(request));
+      }
     }
     set(attributes, SemanticAttributes.MESSAGING_PROTOCOL, protocol(request));
     set(attributes, SemanticAttributes.MESSAGING_PROTOCOL_VERSION, protocolVersion(request));

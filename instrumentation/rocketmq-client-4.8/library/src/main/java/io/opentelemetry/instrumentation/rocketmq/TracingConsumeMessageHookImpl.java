@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmq;
 
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Context;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
@@ -28,7 +29,12 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
       return;
     }
     Context parentContext = Context.current();
-    Context newContext = instrumenter.start(parentContext, context.getMsgList());
+
+    String consumerGroup = context.getConsumerGroup();
+    Baggage baggage = Baggage.fromContext(parentContext);
+    Baggage newBaggage = baggage.toBuilder().put("consumerGroup", consumerGroup).build();
+    Context buildContext = newBaggage.storeInContext(parentContext);
+    Context newContext = instrumenter.start(buildContext, context.getMsgList());
 
     // it's safe to store the scope in the rocketMq trace context, both before() and after() methods
     // are always called from the same thread; see:

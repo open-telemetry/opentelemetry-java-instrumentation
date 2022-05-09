@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
@@ -24,7 +23,7 @@ class RockerMqConsumerAttributeExtractor extends MessagingAttributesExtractor<Me
 
   @Override
   protected String destinationKind(MessageExt request) {
-    return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
+    return "group";
   }
 
   @Override
