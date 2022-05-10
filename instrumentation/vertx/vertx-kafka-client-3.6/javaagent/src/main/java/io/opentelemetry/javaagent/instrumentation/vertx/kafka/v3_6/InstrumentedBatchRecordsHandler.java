@@ -38,20 +38,19 @@ public final class InstrumentedBatchRecordsHandler<K, V> implements Handler<Cons
 
     // the instrumenter iterates over records when adding links, we need to suppress that
     boolean previousWrappingEnabled = KafkaClientsConsumerProcessTracing.setEnabled(false);
-
-    Context context = batchProcessInstrumenter().start(parentContext, records);
-    Throwable error = null;
-    try (Scope ignored = context.makeCurrent()) {
-      callDelegateHandler(records);
-    } catch (Throwable t) {
-      error = t;
-      throw t;
-    } finally {
-      try {
-        batchProcessInstrumenter().end(context, records, null, error);
+    try {
+      Context context = batchProcessInstrumenter().start(parentContext, records);
+      Throwable error = null;
+      try (Scope ignored = context.makeCurrent()) {
+        callDelegateHandler(records);
+      } catch (Throwable t) {
+        error = t;
+        throw t;
       } finally {
-        KafkaClientsConsumerProcessTracing.setEnabled(previousWrappingEnabled);
+        batchProcessInstrumenter().end(context, records, null, error);
       }
+    } finally {
+      KafkaClientsConsumerProcessTracing.setEnabled(previousWrappingEnabled);
     }
   }
 
