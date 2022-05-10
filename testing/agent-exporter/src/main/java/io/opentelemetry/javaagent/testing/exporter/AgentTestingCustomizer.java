@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.testing.exporter;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
+import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
@@ -36,5 +37,10 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
 
     autoConfigurationCustomizer.addMeterProviderCustomizer(
         (meterProvider, config) -> meterProvider.registerMetricReader(metricReader));
+
+    autoConfigurationCustomizer.addLogEmitterProviderCustomizer(
+        (logProvider, config) ->
+            logProvider.addLogProcessor(
+                SimpleLogProcessor.create(AgentTestingExporterFactory.logExporter)));
   }
 }
