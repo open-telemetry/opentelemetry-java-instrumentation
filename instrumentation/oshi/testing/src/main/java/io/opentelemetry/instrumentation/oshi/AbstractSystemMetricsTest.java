@@ -49,7 +49,7 @@ public abstract class AbstractSystemMetricsTest {
                             // TODO(anuraaga): Provide fuzzy value matching
                             .hasDoubleGaugeSatisfying(
                                 gauge ->
-                                    assertThat(metric.getLongSumData().getPoints())
+                                    assertThat(metric.getDoubleGaugeData().getPoints())
                                         .anySatisfy(
                                             point -> assertThat(point.getValue()).isPositive()))));
     testing()
