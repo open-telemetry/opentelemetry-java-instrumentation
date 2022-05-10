@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.test
 
+import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
@@ -60,7 +61,7 @@ class HelperInjectionTest extends Specification {
   def "helpers injected on bootstrap classloader"() {
     setup:
     ByteBuddyAgent.install()
-    AgentInstaller.installBytebuddyAgent(ByteBuddyAgent.getInstrumentation())
+    AgentInstaller.installBytebuddyAgent(ByteBuddyAgent.getInstrumentation(), Config.get())
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
     HelperInjector injector = new HelperInjector("test", [helperClassName], [], this.class.classLoader, ByteBuddyAgent.getInstrumentation())
     URLClassLoader bootstrapChild = new URLClassLoader(new URL[0], (ClassLoader) null)

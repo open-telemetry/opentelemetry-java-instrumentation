@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
+import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -62,7 +64,10 @@ public class AgentStarterImpl implements AgentStarter {
     ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
       Thread.currentThread().setContextClassLoader(extensionClassLoader);
-      AgentInstaller.installBytebuddyAgent(instrumentation);
+      // setting up logging and configuration need to be done as early as possible
+      LoggingConfigurer.configureLogger();
+      ConfigInitializer.initialize();
+      AgentInstaller.installBytebuddyAgent(instrumentation, Config.get());
     } finally {
       Thread.currentThread().setContextClassLoader(savedContextClassLoader);
     }
