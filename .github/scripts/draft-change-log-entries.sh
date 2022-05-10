@@ -18,5 +18,8 @@ else
   prior_version="$major.$((minor - 1)).0"
 fi
 
+echo "## Version $version (Unreleased)"
+echo
+
 git log --reverse --pretty=format:"- %s" "v$prior_version"..HEAD \
   | sed -r 's,\(#([0-9]+)\),\n  ([#\1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1)),'
