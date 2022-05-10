@@ -44,11 +44,10 @@ class NoReceiveTelemetrySingleRecordVertxKafkaTest extends AbstractVertxKafkaTes
     CountDownLatch sent = new CountDownLatch(1);
     testing.runWithSpan(
         "producer",
-        () -> {
-          kafkaProducer.write(
-              KafkaProducerRecord.create("testSingleTopic", "10", "testSpan"),
-              result -> sent.countDown());
-        });
+        () ->
+            sendRecord(
+                KafkaProducerRecord.create("testSingleTopic", "10", "testSpan"),
+                result -> sent.countDown()));
     assertTrue(sent.await(30, TimeUnit.SECONDS));
 
     testing.waitAndAssertTraces(
@@ -88,11 +87,10 @@ class NoReceiveTelemetrySingleRecordVertxKafkaTest extends AbstractVertxKafkaTes
     CountDownLatch sent = new CountDownLatch(1);
     testing.runWithSpan(
         "producer",
-        () -> {
-          kafkaProducer.write(
-              KafkaProducerRecord.create("testSingleTopic", "10", "error"),
-              result -> sent.countDown());
-        });
+        () ->
+            sendRecord(
+                KafkaProducerRecord.create("testSingleTopic", "10", "error"),
+                result -> sent.countDown()));
     assertTrue(sent.await(30, TimeUnit.SECONDS));
 
     testing.waitAndAssertTraces(

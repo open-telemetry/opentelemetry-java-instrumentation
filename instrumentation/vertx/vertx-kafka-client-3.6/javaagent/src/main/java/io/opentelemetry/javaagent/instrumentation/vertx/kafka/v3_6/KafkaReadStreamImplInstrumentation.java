@@ -64,7 +64,10 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static <K, V> void onEnter(
         @Advice.Argument(value = 0, readOnly = false) Handler<ConsumerRecords<K, V>> handler) {
-      // TODO: next PR
+
+      VirtualField<ConsumerRecords<K, V>, Context> receiveContextField =
+          VirtualField.find(ConsumerRecords.class, Context.class);
+      handler = new InstrumentedBatchRecordsHandler<>(receiveContextField, handler);
     }
   }
 
