@@ -35,6 +35,7 @@ jobs:
         uses: github/codeql-action/analyze@v2
 
   open-issue-on-failure:
+    # open an issue on failure because it can be easy to miss CI failure notifications
     needs: analyze
     if: failure()
-    uses: ./.github/workflows/reusable-create-issue-for-failure.yml
+    uses: ./.github/workflows/reusable-open-issue-on-failure.yml

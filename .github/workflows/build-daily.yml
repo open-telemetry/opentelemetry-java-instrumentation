@@ -62,4 +62,4 @@ jobs:
       - markdown-link-check
       - misspell-check
     if: failure()
-    uses: ./.github/workflows/reusable-create-issue-for-failure.yml
+    uses: ./.github/workflows/reusable-open-issue-on-failure.yml
