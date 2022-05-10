@@ -216,11 +216,16 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
+  @SuppressWarnings("deprecation")
   private static void runBeforeAgentListeners(
       Iterable<AgentListener> agentListeners,
       Config config,
       AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+
     for (AgentListener agentListener : agentListeners) {
+      agentListener.beforeAgent(config, autoConfiguredSdk);
+    }
+    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
       agentListener.beforeAgent(config, autoConfiguredSdk);
     }
   }
