@@ -15,15 +15,6 @@ public interface LoggingCustomizer {
   void init();
 
   /**
-   * Register a callback which will be called on synchronous startup failure.
-   *
-   * <p>Synchronous startup may or may not include running {@link
-   * io.opentelemetry.javaagent.extension.AgentListener#afterAgent(Config,
-   * AutoConfiguredOpenTelemetrySdk)}" listeners.
-   */
-  void onStartupFailure(Throwable throwable);
-
-  /**
    * Register a callback which will be called on synchronous startup success.
    *
    * <p>Synchronous startup may or may not include running {@link
@@ -31,4 +22,13 @@ public interface LoggingCustomizer {
    * AutoConfiguredOpenTelemetrySdk)}" listeners.
    */
   void onStartupSuccess();
+
+  /**
+   * Register a callback which will be called on synchronous startup failure.
+   *
+   * <p>Synchronous startup may or may not include running {@link
+   * io.opentelemetry.javaagent.extension.AgentListener#afterAgent(Config,
+   * AutoConfiguredOpenTelemetrySdk)}" listeners.
+   */
+  void onStartupFailure(Throwable throwable);
 }
