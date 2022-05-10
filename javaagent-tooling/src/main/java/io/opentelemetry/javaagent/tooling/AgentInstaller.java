@@ -195,11 +195,16 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
+  @SuppressWarnings("deprecation") // running both old and new listeners for now
   private static void runBeforeAgentListeners(
       Iterable<AgentListener> agentListeners,
       Config config,
       AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+
     for (AgentListener agentListener : agentListeners) {
+      agentListener.beforeAgent(config, autoConfiguredSdk);
+    }
+    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
       agentListener.beforeAgent(config, autoConfiguredSdk);
     }
   }
