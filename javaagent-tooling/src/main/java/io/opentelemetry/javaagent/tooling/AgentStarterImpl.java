@@ -97,6 +97,7 @@ public class AgentStarterImpl implements AgentStarter {
       ConfigInitializer.initialize();
       AgentInstaller.installBytebuddyAgent(instrumentation, Config.get());
     } catch (Throwable t) {
+      // this is logged below and not rethrown to avoid logging it twice
       startupError = t;
     }
     if (startupError == null) {
