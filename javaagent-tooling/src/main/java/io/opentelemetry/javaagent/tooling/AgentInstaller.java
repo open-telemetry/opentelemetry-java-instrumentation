@@ -216,7 +216,7 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // running both old and new listeners for now
   private static void runBeforeAgentListeners(
       Iterable<AgentListener> agentListeners,
       Config config,
