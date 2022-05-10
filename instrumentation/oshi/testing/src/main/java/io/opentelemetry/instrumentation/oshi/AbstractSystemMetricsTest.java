@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractSystemMetricsTest {
@@ -32,10 +31,12 @@ public abstract class AbstractSystemMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("By")
-                            .hasLongSum()
-                            .points()
-                            .anySatisfy(
-                                point -> Assertions.assertThat(point.getValue()).isPositive())));
+                            // TODO(anuraaga): Provide fuzzy value matching
+                            .hasLongSumSatisfying(
+                                sum ->
+                                    assertThat(metric.getLongSumData().getPoints())
+                                        .anySatisfy(
+                                            point -> assertThat(point.getValue()).isPositive()))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
@@ -45,38 +46,49 @@ public abstract class AbstractSystemMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("1")
-                            .hasDoubleGauge()
-                            .points()
-                            .anySatisfy(
-                                point -> Assertions.assertThat(point.getValue()).isPositive())));
+                            // TODO(anuraaga): Provide fuzzy value matching
+                            .hasDoubleGaugeSatisfying(
+                                gauge ->
+                                    assertThat(metric.getLongSumData().getPoints())
+                                        .anySatisfy(
+                                            point -> assertThat(point.getValue()).isPositive()))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
             "system.network.io",
-            metrics -> metrics.anySatisfy(metric -> assertThat(metric).hasUnit("By").hasLongSum()));
+            metrics ->
+                metrics.anySatisfy(
+                    metric -> assertThat(metric).hasUnit("By").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
             "system.network.packets",
             metrics ->
-                metrics.anySatisfy(metric -> assertThat(metric).hasUnit("packets").hasLongSum()));
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric).hasUnit("packets").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
             "system.network.errors",
             metrics ->
-                metrics.anySatisfy(metric -> assertThat(metric).hasUnit("errors").hasLongSum()));
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric).hasUnit("errors").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
             "system.disk.io",
-            metrics -> metrics.anySatisfy(metric -> assertThat(metric).hasUnit("By").hasLongSum()));
+            metrics ->
+                metrics.anySatisfy(
+                    metric -> assertThat(metric).hasUnit("By").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
             "system.disk.operations",
             metrics ->
                 metrics.anySatisfy(
-                    metric -> assertThat(metric).hasUnit("operations").hasLongSum()));
+                    metric ->
+                        assertThat(metric).hasUnit("operations").hasLongSumSatisfying(sum -> {})));
   }
 }

@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @SuppressWarnings("PreferJavaTimeOverload")
 class TimerSecondsTest {
 
-  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometershim";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer1shim";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -55,15 +56,16 @@ class TimerSecondsTest {
                     assertThat(metric)
                         .hasDescription("This is a test timer")
                         .hasUnit("s")
-                        .hasDoubleHistogram()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasSum(23.345)
-                                    .hasCount(3)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSum(23.345)
+                                            .hasCount(3)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testTimerSeconds.max",
@@ -73,14 +75,15 @@ class TimerSecondsTest {
                     assertThat(metric)
                         .hasDescription("This is a test timer")
                         .hasUnit("s")
-                        .hasDoubleGauge()
-                        .points()
-                        .anySatisfy(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12.345)
-                                    .attributes()
-                                    .containsEntry("tag", "value"))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12.345)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
     testing.clearData();
 
     // when
@@ -92,15 +95,7 @@ class TimerSecondsTest {
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "testTimerSeconds",
-        metrics ->
-            metrics.allSatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDoubleHistogram()
-                        .points()
-                        .noneSatisfy(point -> assertThat(point).hasSum(35.345).hasCount(4))));
+        INSTRUMENTATION_NAME, "testTimerSeconds", AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testTimerMax.max", AbstractIterableAssert::isEmpty);
   }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
@@ -15,6 +15,7 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @SuppressWarnings("PreferJavaTimeOverload")
 class PrometheusModeTest {
 
-  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometershim";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer1shim";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -60,15 +61,17 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test counter")
                         .hasUnit("items")
-                        .hasDoubleSum()
-                        .isMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
   }
 
   @Test
@@ -95,15 +98,16 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test summary")
                         .hasUnit("items")
-                        .hasDoubleHistogram()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasSum(54)
-                                    .hasCount(2)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSum(54)
+                                            .hasCount(2)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testPrometheusSummary.items.max",
@@ -113,14 +117,15 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test summary")
                         .hasUnit("items")
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(42)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(42)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -149,15 +154,17 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test function timer")
                         .hasUnit("1")
-                        .hasLongSum()
-                        .isMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(1)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(1)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testPrometheusFunctionTimer.seconds.sum",
@@ -167,14 +174,15 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test function timer")
                         .hasUnit("s")
-                        .hasDoubleSum()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(42)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(42)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -196,14 +204,15 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test gauge")
                         .hasUnit("items")
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(42)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(42)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -228,15 +237,17 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test long task timer")
                         .hasUnit("tasks")
-                        .hasLongSum()
-                        .isNotMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(1)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(1)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testPrometheusLongTaskTimer.seconds.duration",
@@ -246,17 +257,18 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test long task timer")
                         .hasUnit("s")
-                        .hasDoubleSum()
-                        .isNotMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point -> {
-                              assertThat(point)
-                                  .attributes()
-                                  .containsOnly(attributeEntry("tag", "value"));
-                              // any value >0 - duration of currently running tasks
-                              assertThat(point.getValue()).isPositive();
-                            })));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point -> {
+                                          point.hasAttributesSatisfying(
+                                              equalTo(AttributeKey.stringKey("tag"), "value"));
+                                          // any value >0 - duration of currently running tasks
+                                          assertThat(metric.getDoubleSumData().getPoints())
+                                              .satisfiesExactly(
+                                                  p -> assertThat(p.getValue()).isPositive());
+                                        }))));
 
     // when
     TimeUnit.MILLISECONDS.sleep(100);
@@ -270,14 +282,15 @@ class PrometheusModeTest {
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasLongSum()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(0)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(0)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testPrometheusLongTaskTimer.seconds.duration",
@@ -285,14 +298,15 @@ class PrometheusModeTest {
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDoubleSum()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(0)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(0)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
   }
 
   @Test
@@ -319,15 +333,16 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test timer")
                         .hasUnit("s")
-                        .hasDoubleHistogram()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasSum(16.789)
-                                    .hasCount(3)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSum(16.789)
+                                            .hasCount(3)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testPrometheusTimer.seconds.max",
@@ -337,13 +352,14 @@ class PrometheusModeTest {
                     assertThat(metric)
                         .hasDescription("This is a test timer")
                         .hasUnit("s")
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(10.789)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(10.789)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
   }
 }

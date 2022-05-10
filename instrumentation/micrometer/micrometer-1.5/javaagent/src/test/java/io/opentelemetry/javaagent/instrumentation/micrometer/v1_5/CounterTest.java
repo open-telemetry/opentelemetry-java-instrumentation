@@ -5,20 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CounterTest {
 
-  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometershim";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer1shim";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -29,7 +31,7 @@ class CounterTest {
   }
 
   @Test
-  void testCounter() {
+  void testCounter() throws Exception {
     // given
     Counter counter =
         Counter.builder("testCounter")
@@ -52,15 +54,17 @@ class CounterTest {
                     assertThat(metric)
                         .hasDescription("This is a test counter")
                         .hasUnit("items")
-                        .hasDoubleSum()
-                        .isMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(3)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(3)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
     testing.clearData();
 
     // when
@@ -68,15 +72,8 @@ class CounterTest {
     counter.increment();
 
     // then
+    Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "testCounter",
-        metrics ->
-            metrics.allSatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDoubleSum()
-                        .points()
-                        .noneSatisfy(point -> assertThat(point).hasValue(4))));
+        INSTRUMENTATION_NAME, "testCounter", AbstractIterableAssert::isEmpty);
   }
 }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -74,54 +74,54 @@ class RpcServerMetricsTest {
     listener.end(context1, responseAttributes1, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
-        .hasSize(1)
-        .anySatisfy(
+        .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
                     .hasName("rpc.server.duration")
                     .hasUnit("ms")
-                    .hasDoubleHistogram()
-                    .points()
-                    .satisfiesExactly(
-                        point -> {
-                          assertThat(point)
-                              .hasSum(150 /* millis */)
-                              .attributes()
-                              .containsOnly(
-                                  attributeEntry("rpc.system", "grpc"),
-                                  attributeEntry("rpc.service", "myservice.EchoService"),
-                                  attributeEntry("rpc.method", "exampleMethod"),
-                                  attributeEntry("net.host.name", "example.com"),
-                                  attributeEntry("net.transport", "ip_tcp"));
-                          assertThat(point).exemplars().hasSize(1);
-                          assertThat(point.getExemplars().get(0))
-                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                              .hasSpanId("090a0b0c0d0e0f00");
-                        }));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(150 /* millis */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                            equalTo(
+                                                SemanticAttributes.RPC_SERVICE,
+                                                "myservice.EchoService"),
+                                            equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
+                                            equalTo(
+                                                SemanticAttributes.NET_HOST_NAME, "example.com"),
+                                            equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))));
 
     listener.end(context2, responseAttributes2, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
-        .hasSize(1)
-        .anySatisfy(
+        .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
                     .hasName("rpc.server.duration")
                     .hasUnit("ms")
-                    .hasDoubleHistogram()
-                    .points()
-                    .satisfiesExactly(
-                        point -> {
-                          assertThat(point)
-                              .hasSum(150 /* millis */)
-                              .attributes()
-                              .containsOnly(
-                                  attributeEntry("rpc.system", "grpc"),
-                                  attributeEntry("rpc.service", "myservice.EchoService"),
-                                  attributeEntry("rpc.method", "exampleMethod"),
-                                  attributeEntry("net.host.ip", "127.0.0.1"),
-                                  attributeEntry("net.transport", "ip_tcp"));
-                        }));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(150 /* millis */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                            equalTo(
+                                                SemanticAttributes.RPC_SERVICE,
+                                                "myservice.EchoService"),
+                                            equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
+                                            equalTo(SemanticAttributes.NET_HOST_IP, "127.0.0.1"),
+                                            equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp")))));
   }
 
   private static long nanos(int millis) {

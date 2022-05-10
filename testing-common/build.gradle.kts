@@ -38,7 +38,6 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
   api("io.opentelemetry:opentelemetry-sdk-metrics")
-  api("io.opentelemetry:opentelemetry-sdk-metrics-testing")
   api("io.opentelemetry:opentelemetry-sdk-logs")
   api(project(":instrumentation-api"))
 
