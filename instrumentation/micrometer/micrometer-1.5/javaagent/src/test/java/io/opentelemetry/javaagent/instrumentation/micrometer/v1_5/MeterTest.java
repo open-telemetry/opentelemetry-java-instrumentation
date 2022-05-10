@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Statistic;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Arrays;
@@ -24,7 +25,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MeterTest {
 
-  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometershim";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer1shim";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -68,15 +69,17 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("This is a test meter")
                         .hasUnit("things")
-                        .hasDoubleSum()
-                        .isMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12345)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12345)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testMeter.total_time",
@@ -86,15 +89,17 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("This is a test meter")
                         .hasUnit("things")
-                        .hasDoubleSum()
-                        .isMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12345)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12345)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testMeter.count",
@@ -104,15 +109,17 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("This is a test meter")
                         .hasUnit("things")
-                        .hasDoubleSum()
-                        .isMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12345)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12345)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testMeter.active",
@@ -122,15 +129,17 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("This is a test meter")
                         .hasUnit("things")
-                        .hasDoubleSum()
-                        .isNotMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12345)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12345)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testMeter.duration",
@@ -140,14 +149,15 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("This is a test meter")
                         .hasUnit("things")
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12345)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12345)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testMeter.max",
@@ -157,14 +167,15 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("This is a test meter")
                         .hasUnit("things")
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12345)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12345)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testMeter.value",
@@ -174,14 +185,15 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("This is a test meter")
                         .hasUnit("things")
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12345)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12345)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "testMeter.unknown",
@@ -191,14 +203,15 @@ class MeterTest {
                     assertThat(metric)
                         .hasDescription("This is a test meter")
                         .hasUnit("things")
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12345)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12345)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
 
     // when
     Metrics.globalRegistry.remove(meter);

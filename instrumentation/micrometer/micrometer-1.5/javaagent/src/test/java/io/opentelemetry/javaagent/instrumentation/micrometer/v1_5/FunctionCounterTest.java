@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.atomic.AtomicLong;
@@ -20,7 +21,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class FunctionCounterTest {
 
-  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometershim";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer1shim";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -53,15 +54,17 @@ class FunctionCounterTest {
                     assertThat(metric)
                         .hasDescription("This is a test function counter")
                         .hasUnit("items")
-                        .hasDoubleSum()
-                        .isMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
 
     // when
     Metrics.globalRegistry.remove(counter);
@@ -98,20 +101,20 @@ class FunctionCounterTest {
                     assertThat(metric)
                         .hasDescription("This is a test function counter")
                         .hasUnit("items")
-                        .hasDoubleSum()
-                        .isMonotonic()
-                        .points()
-                        .anySatisfy(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "1")))
-                        .anySatisfy(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(13)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "2")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(AttributeKey.stringKey("tag"), "1")),
+                                        point ->
+                                            point
+                                                .hasValue(13)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"), "2"))))));
   }
 }
