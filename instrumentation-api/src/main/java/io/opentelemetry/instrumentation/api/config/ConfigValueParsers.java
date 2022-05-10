@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+
 import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,26 +57,30 @@ final class ConfigValueParsers {
   }
 
   static List<String> parseList(@SuppressWarnings("unused") String propertyName, String value) {
-    return Collections.unmodifiableList(filterBlanks(value.split(",")));
+    return unmodifiableList(filterBlanks(value.split(",")));
   }
 
   static Map<String, String> parseMap(String propertyName, String value) {
-    return parseList(propertyName, value).stream()
-        .map(keyValuePair -> trim(keyValuePair.split("=", 2)))
-        .map(
-            splitKeyValuePairs -> {
-              if (splitKeyValuePairs.size() != 2 || splitKeyValuePairs.get(0).isEmpty()) {
-                throw new ConfigParsingException(
-                    "Invalid map property: " + propertyName + "=" + value);
-              }
-              return new AbstractMap.SimpleImmutableEntry<>(
-                  splitKeyValuePairs.get(0), splitKeyValuePairs.get(1));
-            })
-        // If duplicate keys, prioritize later ones similar to duplicate system properties on a
-        // Java command line.
-        .collect(
-            Collectors.toMap(
-                Map.Entry::getKey, Map.Entry::getValue, (first, next) -> next, LinkedHashMap::new));
+    return unmodifiableMap(
+        parseList(propertyName, value).stream()
+            .map(keyValuePair -> trim(keyValuePair.split("=", 2)))
+            .map(
+                splitKeyValuePairs -> {
+                  if (splitKeyValuePairs.size() != 2 || splitKeyValuePairs.get(0).isEmpty()) {
+                    throw new ConfigParsingException(
+                        "Invalid map property: " + propertyName + "=" + value);
+                  }
+                  return new AbstractMap.SimpleImmutableEntry<>(
+                      splitKeyValuePairs.get(0), splitKeyValuePairs.get(1));
+                })
+            // If duplicate keys, prioritize later ones similar to duplicate system properties on a
+            // Java command line.
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    (first, next) -> next,
+                    LinkedHashMap::new)));
   }
 
   private static List<String> filterBlanks(String[] values) {

@@ -47,8 +47,8 @@ public final class InstrumentedSingleRecordHandler<K, V> implements Handler<Cons
     }
   }
 
-  private Context getParentContext(ConsumerRecord<K, V> records) {
-    Context receiveContext = receiveContextField.get(records);
+  private Context getParentContext(ConsumerRecord<K, V> record) {
+    Context receiveContext = receiveContextField.get(record);
 
     // use the receive CONSUMER span as parent if it's available
     return receiveContext != null ? receiveContext : Context.current();

@@ -114,6 +114,7 @@ These are the supported libraries and frameworks:
 | [Vaadin](https://vaadin.com/)                                                                                                     | 14.2+                          |
 | [Vert.x Web](https://vertx.io/docs/vertx-web/java/)                                                                               | 3.0+                           |
 | [Vert.x HttpClient](https://vertx.io/docs/apidocs/io/vertx/core/http/HttpClient.html)                                             | 3.0+                           |
+| [Vert.x Kafka Client](https://vertx.io/docs/vertx-kafka-client/java/)                                                             | 3.6+                           |
 | [Vert.x RxJava2](https://vertx.io/docs/vertx-rx/java2/)                                                                           | 3.5+                           |
 
 ## Application Servers

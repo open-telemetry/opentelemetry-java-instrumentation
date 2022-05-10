@@ -58,7 +58,7 @@ class HttpServerMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 = listener.start(parent, requestAttributes, nanos(100));
+    Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -84,7 +84,7 @@ class HttpServerMetricsTest {
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00")))));
 
-    Context context2 = listener.start(Context.root(), requestAttributes, nanos(150));
+    Context context2 = listener.onStart(Context.root(), requestAttributes, nanos(150));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -94,7 +94,7 @@ class HttpServerMetricsTest {
                     .hasLongSumSatisfying(
                         sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
 
-    listener.end(context1, responseAttributes, nanos(250));
+    listener.onEnd(context1, responseAttributes, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -125,7 +125,7 @@ class HttpServerMetricsTest {
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00")))));
 
-    listener.end(context2, responseAttributes, nanos(300));
+    listener.onEnd(context2, responseAttributes, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -160,8 +160,8 @@ class HttpServerMetricsTest {
     Context parentContext = Context.root();
 
     // when
-    Context context = listener.start(parentContext, requestAttributes, nanos(100));
-    listener.end(context, responseAttributes, nanos(200));
+    Context context = listener.onStart(parentContext, requestAttributes, nanos(100));
+    listener.onEnd(context, responseAttributes, nanos(200));
 
     // then
     assertThat(metricReader.collectAllMetrics())

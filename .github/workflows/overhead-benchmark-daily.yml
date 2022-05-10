@@ -48,4 +48,4 @@ jobs:
   open-issue-on-failure:
     needs: run-overhead-tests
     if: failure()
-    uses: ./.github/workflows/reusable-create-issue-for-failure.yml
+    uses: ./.github/workflows/reusable-open-issue-on-failure.yml

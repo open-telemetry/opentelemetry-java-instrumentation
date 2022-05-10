@@ -15,7 +15,7 @@ as the last step, which publishes a snapshot build to
 * Close the release milestone if there is one.
 * Merge a pull request to `main` updating the `CHANGELOG.md`.
   * The heading for the release should include the release version but not the release date, e.g.
-    `## Version 1.9.0 (unreleased)`.
+    `## Version 1.9.0 (Unreleased)`.
   * Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change
     log.
 * Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
@@ -37,7 +37,7 @@ and deadlocks.
   * Review and merge the backport pull request that it generates.
 * Merge a pull request to the release branch updating the `CHANGELOG.md`.
   * The heading for the release should include the release version but not the release date, e.g.
-    `## Version 1.9.1 (unreleased)`.
+    `## Version 1.9.1 (Unreleased)`.
 * Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-patch-release.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.

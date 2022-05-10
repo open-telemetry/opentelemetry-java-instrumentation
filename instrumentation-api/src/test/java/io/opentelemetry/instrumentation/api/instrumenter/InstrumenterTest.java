@@ -383,13 +383,13 @@ class InstrumenterTest {
     RequestListener requestListener =
         new RequestListener() {
           @Override
-          public Context start(Context context, Attributes startAttributes, long startNanos) {
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
             startContext.set(true);
             return context;
           }
 
           @Override
-          public void end(Context context, Attributes endAttributes, long endNanos) {
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
             endContext.set(true);
           }
         };
@@ -415,13 +415,13 @@ class InstrumenterTest {
     RequestListener requestListener =
         new RequestListener() {
           @Override
-          public Context start(Context context, Attributes startAttributes, long startNanos) {
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
             startContext.set(context);
             return context;
           }
 
           @Override
-          public void end(Context context, Attributes endAttributes, long endNanos) {
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
             endContext.set(context);
           }
         };
