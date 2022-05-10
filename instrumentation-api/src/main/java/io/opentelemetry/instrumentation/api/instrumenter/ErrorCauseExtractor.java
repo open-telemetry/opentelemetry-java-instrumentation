@@ -13,7 +13,8 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 @FunctionalInterface
 public interface ErrorCauseExtractor {
 
-  Throwable extractCause(Throwable error);
+  /** Strips away the wrapper exceptions and returns the actual cause of a request error. */
+  Throwable extract(Throwable error);
 
   /**
    * Returns a {@link ErrorCauseExtractor} which unwraps common standard library wrapping

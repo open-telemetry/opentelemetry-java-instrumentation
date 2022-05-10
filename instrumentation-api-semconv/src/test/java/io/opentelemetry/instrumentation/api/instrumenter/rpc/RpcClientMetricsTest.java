@@ -63,15 +63,15 @@ class RpcClientMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 = listener.start(parent, requestAttributes, nanos(100));
+    Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    Context context2 = listener.start(Context.root(), requestAttributes, nanos(150));
+    Context context2 = listener.onStart(Context.root(), requestAttributes, nanos(150));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    listener.end(context1, responseAttributes1, nanos(250));
+    listener.onEnd(context1, responseAttributes1, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
         .hasSize(1)
@@ -100,7 +100,7 @@ class RpcClientMetricsTest {
                               .hasSpanId("090a0b0c0d0e0f00");
                         }));
 
-    listener.end(context2, responseAttributes2, nanos(300));
+    listener.onEnd(context2, responseAttributes2, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .hasSize(1)

@@ -10,7 +10,7 @@ import org.quartz.SchedulerException;
 
 final class QuartzErrorCauseExtractor implements ErrorCauseExtractor {
   @Override
-  public Throwable extractCause(Throwable error) {
+  public Throwable extract(Throwable error) {
     Throwable userError = error;
     while (userError instanceof SchedulerException) {
       userError = ((SchedulerException) userError).getUnderlyingException();

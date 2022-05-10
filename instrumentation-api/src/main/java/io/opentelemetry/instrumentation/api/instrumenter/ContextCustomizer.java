@@ -9,16 +9,14 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 
 /**
- * Customizer of the {@link Context}. Instrumented libraries will call {@link #start(Context,
- * Object, Attributes)} during {@link Instrumenter#start(Context, Object)}, allowing customization
- * of the {@link Context} that is returned from that method.
+ * Customizer of the {@link Context}. The {@link #onStart(Context, Object, Attributes)} method will
+ * be called during the {@linkplain Instrumenter#start(Context, Object) <code>Instrumenter</code>
+ * start}, allowing customization of the {@link Context} just before the {@link Instrumenter}
+ * returns it.
  */
 @FunctionalInterface
 public interface ContextCustomizer<REQUEST> {
 
-  /**
-   * Context customizer method that is called during {@link Instrumenter#start(Context, Object)},
-   * allowing customization of the {@link Context} that is returned from that method.
-   */
-  Context start(Context context, REQUEST request, Attributes startAttributes);
+  /** Allows to customize the operation {@link Context}. */
+  Context onStart(Context context, REQUEST request, Attributes startAttributes);
 }

@@ -19,7 +19,7 @@ public final class ConfigBuilder {
   /** Constructs a new {@link ConfigBuilder}. */
   ConfigBuilder() {}
 
-  /** Adds a single property named to the config. */
+  /** Adds a single property to the config. */
   public ConfigBuilder addProperty(String name, @Nullable String value) {
     if (value != null) {
       allProperties.put(NamingConvention.DOT.normalize(name), value);
@@ -27,23 +27,24 @@ public final class ConfigBuilder {
     return this;
   }
 
-  /** Adds all properties from the passed {@code properties} to the config. */
+  /** Adds all properties from the passed {@link Properties} to the config. */
   public ConfigBuilder addProperties(Properties properties) {
     for (String name : properties.stringPropertyNames()) {
-      allProperties.put(NamingConvention.DOT.normalize(name), properties.getProperty(name));
+      addProperty(name, properties.getProperty(name));
     }
     return this;
   }
 
-  /** Adds all properties from the passed {@code properties} to the config. */
+  /** Adds all properties from the passed {@link Map} to the config. */
   public ConfigBuilder addProperties(Map<String, String> properties) {
     return fromConfigMap(properties, NamingConvention.DOT);
   }
 
   /**
-   * Adds environment variables, converted to Java property naming convention, to the config.
+   * Adds environment variables (converted to the Java property naming convention) to the config.
    *
-   * <p>Environment variable names are lowercased, and the underscores are replaced by dots.
+   * <p>Environment variable names are converted to lower case, with all underscores replaced by
+   * dots.
    */
   public ConfigBuilder addEnvironmentVariables() {
     return fromConfigMap(System.getenv(), NamingConvention.ENV_VAR);

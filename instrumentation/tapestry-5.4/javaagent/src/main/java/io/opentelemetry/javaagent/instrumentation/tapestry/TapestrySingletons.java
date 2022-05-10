@@ -25,7 +25,7 @@ public class TapestrySingletons {
                   if (error instanceof ComponentEventException) {
                     error = error.getCause();
                   }
-                  return ErrorCauseExtractor.jdk().extractCause(error);
+                  return ErrorCauseExtractor.jdk().extract(error);
                 })
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .newInstrumenter();
