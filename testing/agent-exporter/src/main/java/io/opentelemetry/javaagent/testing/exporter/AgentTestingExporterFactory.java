@@ -28,7 +28,7 @@ public class AgentTestingExporterFactory {
 
   public static void reset() {
     // Flush meter provider to remove any lingering measurements
-    AgentTestingCustomizer.metricReader.flush().join(10, TimeUnit.SECONDS);
+    AgentTestingCustomizer.metricReader.forceFlush().join(10, TimeUnit.SECONDS);
     spanExporter.reset();
     metricExporter.reset();
     logExporter.reset();

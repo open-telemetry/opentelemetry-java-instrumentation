@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.actuator;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -36,22 +37,24 @@ class ActuatorTest {
     testBean.inc();
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.micrometershim",
+        "io.opentelemetry.micrometer1shim",
         "test-counter",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
                         .hasUnit("thingies")
-                        .hasDoubleSum()
-                        .isMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(1)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(1)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(
+                                                        AttributeKey.stringKey("tag"),
+                                                        "value"))))));
 
     MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
     assertThat(meterRegistry).isNotNull().isInstanceOf(CompositeMeterRegistry.class);

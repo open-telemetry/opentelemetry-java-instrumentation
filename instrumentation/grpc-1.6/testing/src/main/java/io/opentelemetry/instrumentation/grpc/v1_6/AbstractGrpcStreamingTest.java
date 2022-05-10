@@ -18,12 +18,10 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
-import io.opentelemetry.sdk.testing.assertj.MetricAssertions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -223,22 +221,20 @@ public abstract class AbstractGrpcStreamingTest {
             metrics ->
                 metrics.anySatisfy(
                     metric ->
-                        MetricAssertions.assertThat(metric)
+                        assertThat(metric)
                             .hasUnit("ms")
-                            .hasDoubleHistogram()
-                            .points()
-                            .anySatisfy(
-                                point ->
-                                    MetricAssertions.assertThat(point)
-                                        .hasAttributes(
-                                            Attributes.builder()
-                                                .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
-                                                .put(SemanticAttributes.RPC_METHOD, "Conversation")
-                                                .put(
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_METHOD, "Conversation"),
+                                                equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter")
-                                                .put(SemanticAttributes.RPC_SYSTEM, "grpc")
-                                                .build()))));
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -246,26 +242,25 @@ public abstract class AbstractGrpcStreamingTest {
             metrics ->
                 metrics.anySatisfy(
                     metric ->
-                        MetricAssertions.assertThat(metric)
+                        assertThat(metric)
                             .hasUnit("ms")
-                            .hasDoubleHistogram()
-                            .points()
-                            .allSatisfy(
-                                point ->
-                                    MetricAssertions.assertThat(point)
-                                        .hasAttributes(
-                                            Attributes.builder()
-                                                .put(SemanticAttributes.NET_PEER_NAME, "localhost")
-                                                .put(
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                                equalTo(
                                                     SemanticAttributes.NET_PEER_PORT,
-                                                    server.getPort())
-                                                .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
-                                                .put(SemanticAttributes.RPC_METHOD, "Conversation")
-                                                .put(
+                                                    server.getPort()),
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_METHOD, "Conversation"),
+                                                equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter")
-                                                .put(SemanticAttributes.RPC_SYSTEM, "grpc")
-                                                .build()))));
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -70,42 +71,40 @@ class HttpClientMetricsTest {
     listener.onEnd(context1, responseAttributes, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
-        .hasSize(1)
-        .anySatisfy(
+        .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
                     .hasName("http.client.duration")
                     .hasUnit("ms")
-                    .hasDoubleHistogram()
-                    .points()
-                    .satisfiesExactly(
-                        point -> {
-                          assertThat(point)
-                              .hasSum(150 /* millis */)
-                              .attributes()
-                              .containsOnly(
-                                  attributeEntry("net.peer.name", "localhost"),
-                                  attributeEntry("net.peer.port", 1234),
-                                  attributeEntry("http.method", "GET"),
-                                  attributeEntry("http.flavor", "2.0"),
-                                  attributeEntry("http.status_code", 200));
-                          assertThat(point).exemplars().hasSize(1);
-                          assertThat(point.getExemplars().get(0))
-                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                              .hasSpanId("090a0b0c0d0e0f00");
-                        }));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(150 /* millis */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
-        .hasSize(1)
-        .anySatisfy(
+        .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
                     .hasName("http.client.duration")
-                    .hasDoubleHistogram()
-                    .points()
-                    .satisfiesExactly(point -> assertThat(point).hasSum(300 /* millis */)));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point -> point.hasSum(300 /* millis */))));
   }
 
   private static long nanos(int millis) {
