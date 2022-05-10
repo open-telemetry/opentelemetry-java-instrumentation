@@ -12,6 +12,9 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 // DefaultLoggingCustomizer
 public interface LoggingCustomizer {
 
+  // note that if this throws an exception, it will end up calling onStartupFailure, because
+  // otherwise that exception will bubble up to OpenTelemetryAgent where a distro cannot control the
+  // logging of it.
   void init();
 
   /**
