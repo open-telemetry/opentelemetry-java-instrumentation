@@ -90,10 +90,10 @@ public class AgentStarterImpl implements AgentStarter {
     } else {
       loggingCustomizer = loggingCustomizers.get(0);
     }
-    loggingCustomizer.init();
 
     Throwable startupError = null;
     try {
+      loggingCustomizer.init();
       ConfigInitializer.initialize();
       AgentInstaller.installBytebuddyAgent(instrumentation, Config.get());
     } catch (Throwable t) {
