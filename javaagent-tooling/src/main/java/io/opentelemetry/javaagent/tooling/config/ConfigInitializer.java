@@ -27,7 +27,11 @@ public final class ConfigInitializer {
   static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIGURATION_FILE";
 
   public static void initialize() {
-    Config.internalInitializeConfig(create(loadSpiConfiguration(), loadConfigurationFile()));
+    Config config = create(loadSpiConfiguration(), loadConfigurationFile());
+    for (ConfigCustomizer customizer : loadOrdered(ConfigCustomizer.class)) {
+      config = customizer.customize(config);
+    }
+    Config.internalInitializeConfig(config);
   }
 
   // visible for testing
