@@ -28,11 +28,8 @@ public final class DbConnectionPoolMetrics {
   static final AttributeKey<String> POOL_NAME = stringKey("pool.name");
   static final AttributeKey<String> CONNECTION_STATE = stringKey("state");
 
-  static final class ConnectionState {
-
-    static final String IDLE = "idle";
-    static final String USED = "used";
-  }
+  static final String STATE_IDLE = "idle";
+  static final String STATE_USED = "used";
 
   public static DbConnectionPoolMetrics create(
       OpenTelemetry openTelemetry, String instrumentationName, String poolName) {
@@ -53,10 +50,8 @@ public final class DbConnectionPoolMetrics {
   DbConnectionPoolMetrics(Meter meter, Attributes attributes) {
     this.meter = meter;
     this.attributes = attributes;
-    usedConnectionsAttributes =
-        attributes.toBuilder().put(CONNECTION_STATE, ConnectionState.USED).build();
-    idleConnectionsAttributes =
-        attributes.toBuilder().put(CONNECTION_STATE, ConnectionState.IDLE).build();
+    usedConnectionsAttributes = attributes.toBuilder().put(CONNECTION_STATE, STATE_USED).build();
+    idleConnectionsAttributes = attributes.toBuilder().put(CONNECTION_STATE, STATE_IDLE).build();
   }
 
   public ObservableLongUpDownCounter usedConnections(LongSupplier usedConnectionsGetter) {
