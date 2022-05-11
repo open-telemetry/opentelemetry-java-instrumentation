@@ -15,7 +15,7 @@ val otelVersion = "1.14.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.1"
+val groovyVersion = "4.0.2"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions
@@ -35,7 +35,8 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
-  "org.junit:junit-bom:5.8.2"
+  "org.junit:junit-bom:5.8.2",
+  "org.testcontainers:testcontainers-bom:1.17.1",
 )
 
 val DEPENDENCY_SETS = listOf(
@@ -57,7 +58,7 @@ val DEPENDENCY_SETS = listOf(
   DependencySet(
     "net.bytebuddy",
     // When updating, also update conventions/build.gradle.kts
-    "1.12.9",
+    "1.12.10",
     listOf("byte-buddy", "byte-buddy-dep", "byte-buddy-agent", "byte-buddy-gradle-plugin")
   ),
   DependencySet(
@@ -67,7 +68,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "org.mockito",
-    "4.4.0",
+    "4.5.1",
     listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
   ),
   DependencySet(
@@ -75,11 +76,6 @@ val DEPENDENCY_SETS = listOf(
     "1.7.36",
     listOf("slf4j-api", "slf4j-simple", "log4j-over-slf4j", "jcl-over-slf4j", "jul-to-slf4j")
   ),
-  DependencySet(
-    "org.testcontainers",
-    "1.16.3",
-    listOf("testcontainers", "junit-jupiter", "cassandra", "couchbase", "elasticsearch", "kafka", "localstack", "selenium")
-  )
 )
 
 val DEPENDENCIES = listOf(
@@ -87,7 +83,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.9.6",
+  "com.uber.nullaway:nullaway:0.9.7",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
@@ -99,14 +95,14 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.proto:opentelemetry-proto:0.16.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:0.17.0-alpha",
   "org.assertj:assertj-core:3.22.0",
   "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.junit-pioneer:junit-pioneer:1.6.2",
+  "org.junit-pioneer:junit-pioneer:1.7.0",
   "org.objenesis:objenesis:3.2",
   "org.spockframework:spock-core:2.2-M1-groovy-4.0",
   "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",
