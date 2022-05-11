@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit.db;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -53,26 +53,24 @@ public final class DbConnectionPoolMetricsAssertions {
                         .hasUnit("connections")
                         .hasDescription(
                             "The number of connections that are currently in state described by the state attribute.")
-                        .hasLongSum()
-                        .isNotMonotonic()
-                        .points()
-                        .satisfiesExactlyInAnyOrder(
-                            point ->
-                                assertThat(point)
-                                    .hasAttributes(
-                                        Attributes.of(
-                                            stringKey("pool.name"),
-                                            poolName,
-                                            stringKey("state"),
-                                            "idle")),
-                            point ->
-                                assertThat(point)
-                                    .hasAttributes(
-                                        Attributes.of(
-                                            stringKey("pool.name"),
-                                            poolName,
-                                            stringKey("state"),
-                                            "used")))));
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributes(
+                                                Attributes.of(
+                                                    stringKey("pool.name"),
+                                                    poolName,
+                                                    stringKey("state"),
+                                                    "idle")),
+                                        point ->
+                                            point.hasAttributes(
+                                                Attributes.of(
+                                                    stringKey("pool.name"),
+                                                    poolName,
+                                                    stringKey("state"),
+                                                    "used"))))));
     testing.waitAndAssertMetrics(
         instrumentationName,
         "db.client.connections.idle.min",
@@ -82,14 +80,14 @@ public final class DbConnectionPoolMetricsAssertions {
                     assertThat(metric)
                         .hasUnit("connections")
                         .hasDescription("The minimum number of idle open connections allowed.")
-                        .hasLongSum()
-                        .isNotMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasAttributes(
-                                        Attributes.of(stringKey("pool.name"), poolName)))));
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributes(
+                                                Attributes.of(
+                                                    stringKey("pool.name"), poolName))))));
     if (testMaxIdleConnections) {
       testing.waitAndAssertMetrics(
           instrumentationName,
@@ -100,14 +98,14 @@ public final class DbConnectionPoolMetricsAssertions {
                       assertThat(metric)
                           .hasUnit("connections")
                           .hasDescription("The maximum number of idle open connections allowed.")
-                          .hasLongSum()
-                          .isNotMonotonic()
-                          .points()
-                          .satisfiesExactly(
-                              point ->
-                                  assertThat(point)
-                                      .hasAttributes(
-                                          Attributes.of(stringKey("pool.name"), poolName)))));
+                          .hasLongSumSatisfying(
+                              sum ->
+                                  sum.isNotMonotonic()
+                                      .hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributes(
+                                                  Attributes.of(
+                                                      stringKey("pool.name"), poolName))))));
     }
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -118,14 +116,14 @@ public final class DbConnectionPoolMetricsAssertions {
                     assertThat(metric)
                         .hasUnit("connections")
                         .hasDescription("The maximum number of open connections allowed.")
-                        .hasLongSum()
-                        .isNotMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasAttributes(
-                                        Attributes.of(stringKey("pool.name"), poolName)))));
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributes(
+                                                Attributes.of(
+                                                    stringKey("pool.name"), poolName))))));
     testing.waitAndAssertMetrics(
         instrumentationName,
         "db.client.connections.pending_requests",
@@ -136,14 +134,14 @@ public final class DbConnectionPoolMetricsAssertions {
                         .hasUnit("requests")
                         .hasDescription(
                             "The number of pending requests for an open connection, cumulative for the entire pool.")
-                        .hasLongSum()
-                        .isNotMonotonic()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasAttributes(
-                                        Attributes.of(stringKey("pool.name"), poolName)))));
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributes(
+                                                Attributes.of(
+                                                    stringKey("pool.name"), poolName))))));
     if (testConnectionTimeouts) {
       testing.waitAndAssertMetrics(
           instrumentationName,
@@ -155,14 +153,14 @@ public final class DbConnectionPoolMetricsAssertions {
                           .hasUnit("timeouts")
                           .hasDescription(
                               "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
-                          .hasLongSum()
-                          .isMonotonic()
-                          .points()
-                          .satisfiesExactly(
-                              point ->
-                                  assertThat(point)
-                                      .hasAttributes(
-                                          Attributes.of(stringKey("pool.name"), poolName)))));
+                          .hasLongSumSatisfying(
+                              sum ->
+                                  sum.isMonotonic()
+                                      .hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributes(
+                                                  Attributes.of(
+                                                      stringKey("pool.name"), poolName))))));
     }
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -173,13 +171,12 @@ public final class DbConnectionPoolMetricsAssertions {
                     assertThat(metric)
                         .hasUnit("ms")
                         .hasDescription("The time it took to create a new connection.")
-                        .hasDoubleHistogram()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasAttributes(
-                                        Attributes.of(stringKey("pool.name"), poolName)))));
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point.hasAttributes(
+                                            Attributes.of(stringKey("pool.name"), poolName))))));
     testing.waitAndAssertMetrics(
         instrumentationName,
         "db.client.connections.wait_time",
@@ -190,13 +187,12 @@ public final class DbConnectionPoolMetricsAssertions {
                         .hasUnit("ms")
                         .hasDescription(
                             "The time it took to obtain an open connection from the pool.")
-                        .hasDoubleHistogram()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasAttributes(
-                                        Attributes.of(stringKey("pool.name"), poolName)))));
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point.hasAttributes(
+                                            Attributes.of(stringKey("pool.name"), poolName))))));
     testing.waitAndAssertMetrics(
         instrumentationName,
         "db.client.connections.use_time",
@@ -207,12 +203,11 @@ public final class DbConnectionPoolMetricsAssertions {
                         .hasUnit("ms")
                         .hasDescription(
                             "The time between borrowing a connection and returning it to the pool.")
-                        .hasDoubleHistogram()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasAttributes(
-                                        Attributes.of(stringKey("pool.name"), poolName)))));
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point.hasAttributes(
+                                            Attributes.of(stringKey("pool.name"), poolName))))));
   }
 }
