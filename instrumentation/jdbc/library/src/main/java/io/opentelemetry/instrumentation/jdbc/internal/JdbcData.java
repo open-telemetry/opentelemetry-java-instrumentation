@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

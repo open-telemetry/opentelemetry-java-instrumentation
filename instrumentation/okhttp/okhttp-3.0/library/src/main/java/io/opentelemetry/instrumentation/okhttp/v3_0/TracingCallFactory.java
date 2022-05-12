@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

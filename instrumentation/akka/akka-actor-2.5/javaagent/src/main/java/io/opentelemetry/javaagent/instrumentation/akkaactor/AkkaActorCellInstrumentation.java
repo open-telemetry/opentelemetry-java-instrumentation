@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import akka.dispatch.Envelope;
 import akka.dispatch.sysmsg.SystemMessage;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.executors.TaskAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;

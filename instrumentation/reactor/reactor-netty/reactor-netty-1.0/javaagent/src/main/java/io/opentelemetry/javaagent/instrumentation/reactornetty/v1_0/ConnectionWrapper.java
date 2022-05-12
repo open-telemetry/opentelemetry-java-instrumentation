@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.React
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPromise;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 

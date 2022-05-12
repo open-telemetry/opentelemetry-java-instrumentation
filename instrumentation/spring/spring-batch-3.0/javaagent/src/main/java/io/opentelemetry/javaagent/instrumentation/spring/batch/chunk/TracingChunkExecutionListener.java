@@ -12,7 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.Chun
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
 import javax.annotation.Nullable;
 import org.springframework.batch.core.ChunkListener;
