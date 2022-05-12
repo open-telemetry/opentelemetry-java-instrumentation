@@ -39,12 +39,12 @@ public class MessageInstrumentation implements TypeInstrumentation {
         @Advice.This Message<?> message, @Advice.AllArguments Object[] allArguments) {
 
       if (message instanceof MessageImpl) {
-        MessageEnhanceInfo.virtualField(message, new MessageEnhanceInfo());
+        MessageEnhanceInfo.setMessageEnhancedField(message, new MessageEnhanceInfo());
       } else {
         Object argument2 = allArguments[2];
         if (message instanceof TopicMessageImpl && argument2 instanceof MessageImpl) {
           MessageImpl<?> impl = (MessageImpl<?>) argument2;
-          MessageEnhanceInfo.virtualField(message, MessageEnhanceInfo.virtualField(impl));
+          MessageEnhanceInfo.setMessageEnhancedField(message, MessageEnhanceInfo.getMessageEnhancedField(impl));
         }
       }
     }

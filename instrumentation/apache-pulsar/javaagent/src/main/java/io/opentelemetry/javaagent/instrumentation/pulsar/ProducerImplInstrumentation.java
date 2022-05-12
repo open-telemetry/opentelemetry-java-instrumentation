@@ -70,7 +70,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String url = pulsarClient.getLookup().getServiceUrl();
       ClientEnhanceInfo info = new ClientEnhanceInfo(topic, url);
-      ClientEnhanceInfo.virtualField(producer, info);
+      ClientEnhanceInfo.setProducerEnhancedField(producer, info);
     }
   }
 
@@ -83,7 +83,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) Message<?> m,
         @Advice.Argument(value = 1, readOnly = false) SendCallback callback,
         @Advice.Local(value = "otelScope") Scope scope) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(producer);
+      ClientEnhanceInfo info = ClientEnhanceInfo.getProducerEnhancedField(producer);
       if (null == info) {
         scope = Scope.noop();
         return;
@@ -92,7 +92,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       MessageImpl<?> message = (MessageImpl<?>) m;
       scope =
           TRACER
-              .spanBuilder("Pulsar://Producer/sendAsync")
+              .spanBuilder("Producer/sendAsync")
               .setParent(Context.current())
               .setSpanKind(SpanKind.PRODUCER)
               .setAttribute(TOPIC, info.topic)
@@ -112,7 +112,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable t,
         @Advice.This ProducerImpl<?> producer,
         @Advice.Local(value = "otelScope") Scope scope) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(producer);
+      ClientEnhanceInfo info = ClientEnhanceInfo.getProducerEnhancedField(producer);
       if (null == info || null == scope) {
         if (null != scope) {
           scope.close();
@@ -150,7 +150,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
     public void sendComplete(Exception e) {
       SpanBuilder builder =
           TRACER
-              .spanBuilder("Pulsar://Producer/Callback")
+              .spanBuilder("Producer/Callback")
               .setParent(this.context)
               .setSpanKind(SpanKind.PRODUCER)
               .setAttribute(TOPIC, topic);

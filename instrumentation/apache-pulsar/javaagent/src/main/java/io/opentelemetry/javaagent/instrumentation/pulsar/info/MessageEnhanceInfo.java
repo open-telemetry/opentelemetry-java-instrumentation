@@ -12,6 +12,9 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 
 public class MessageEnhanceInfo {
+  private static final VirtualField<Message<?>, MessageEnhanceInfo> MESSAGE_ENHANCED_FIELD =
+      VirtualField.find(Message.class, MessageEnhanceInfo.class);
+
   private String topic;
   private String messageId;
   private Context context;
@@ -41,11 +44,11 @@ public class MessageEnhanceInfo {
     }
   }
 
-  public static void virtualField(Message<?> message, MessageEnhanceInfo context) {
-    VirtualField.find(Message.class, MessageEnhanceInfo.class).set(message, context);
+  public static void setMessageEnhancedField(Message<?> message, MessageEnhanceInfo context) {
+    MESSAGE_ENHANCED_FIELD.set(message, context);
   }
 
-  public static MessageEnhanceInfo virtualField(Message<?> message) {
-    return VirtualField.find(Message.class, MessageEnhanceInfo.class).get(message);
+  public static MessageEnhanceInfo getMessageEnhancedField(Message<?> message) {
+    return MESSAGE_ENHANCED_FIELD.get(message);
   }
 }

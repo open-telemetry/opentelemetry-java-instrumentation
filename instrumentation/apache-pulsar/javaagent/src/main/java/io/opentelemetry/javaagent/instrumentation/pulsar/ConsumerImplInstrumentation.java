@@ -59,8 +59,8 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerImplConstructorAdviser {
 
-    @Advice.OnMethodExit
-    public static void before(
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void after(
         @Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) PulsarClient client,
         @Advice.Argument(value = 1) String topic) {
@@ -69,7 +69,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       String url = pulsarClient.getLookup().getServiceUrl();
 
       ClientEnhanceInfo info = new ClientEnhanceInfo(topic, url);
-      ClientEnhanceInfo.virtualField(consumer, info);
+      ClientEnhanceInfo.setConsumerEnhancedField(consumer, info);
     }
   }
 
@@ -77,19 +77,21 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
   public static class ConsumerImplMethodAdviser {
 
     @Advice.OnMethodEnter
-    public static Scope before(
-        @Advice.This ConsumerImpl<?> consumer, @Advice.Argument(value = 0) Message<?> message) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(consumer);
+    public static void before(
+        @Advice.This ConsumerImpl<?> consumer,
+        @Advice.Argument(value = 0) Message<?> message,
+        @Advice.Local(value = "otelScope") Scope scope) {
+      ClientEnhanceInfo info = ClientEnhanceInfo.getConsumerEnhancedField(consumer);
       if (null == info) {
-        return Scope.noop();
+        scope = Scope.noop();
       }
 
       MessageImpl<?> messageImpl = (MessageImpl<?>) message;
       Context context =
           PROPAGATOR.extract(Context.current(), messageImpl, MessageTextMapGetter.INSTANCE);
 
-      return TRACER
-          .spanBuilder("Pulsar://ConsumerImpl/messageProcessed")
+      scope = TRACER
+          .spanBuilder("ConsumerImpl/messageProcessed")
           .setParent(context)
           .setSpanKind(SpanKind.CONSUMER)
           .setAttribute(TOPIC, info.topic)
@@ -105,27 +107,27 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Thrown Throwable t,
-        @Advice.Enter Scope scope) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.virtualField(consumer);
-      if (null == info || scope == null) {
+        @Advice.Local(value = "otelScope") Scope scope) {
+      ClientEnhanceInfo info = ClientEnhanceInfo.getConsumerEnhancedField(consumer);
+      if (null == info || null == scope) {
         if (null != scope) {
           scope.close();
         }
-        return;
-      }
+      } else {
+        MessageEnhanceInfo messageInfo = MessageEnhanceInfo.getMessageEnhancedField(message);
+        if (null != messageInfo) {
+          messageInfo.setFields(Context.current(), consumer.getTopic(), message.getMessageId());
+        }
 
-      MessageEnhanceInfo messageInfo = MessageEnhanceInfo.virtualField(message);
-      if (null != messageInfo) {
-        messageInfo.setFields(Context.current(), consumer.getTopic(), message.getMessageId());
-      }
+        Span span = Span.current();
+        if (t != null) {
+          span.recordException(t);
+        }
 
-      Span span = Span.current();
-      if (t != null) {
-        span.recordException(t);
+        span.end();
+        scope.close();
       }
-
-      span.end();
-      scope.close();
     }
+
   }
 }

@@ -14,6 +14,11 @@ import org.apache.pulsar.client.api.Producer;
  * enhanced.
  */
 public class ClientEnhanceInfo {
+  private static final VirtualField<Producer<?>, ClientEnhanceInfo> PRODUCER_ENHANCED_FIELD =
+      VirtualField.find(Producer.class, ClientEnhanceInfo.class);
+  private static final VirtualField<Consumer<?>, ClientEnhanceInfo> CONSUMER_ENHANCED_FIELD =
+      VirtualField.find(Consumer.class, ClientEnhanceInfo.class);
+
   public final String topic;
   public final String brokerUrl;
 
@@ -22,19 +27,19 @@ public class ClientEnhanceInfo {
     this.brokerUrl = brokerUrl;
   }
 
-  public static void virtualField(Producer<?> instance, ClientEnhanceInfo info) {
-    VirtualField.find(Producer.class, ClientEnhanceInfo.class).set(instance, info);
+  public static void setProducerEnhancedField(Producer<?> instance, ClientEnhanceInfo info) {
+    PRODUCER_ENHANCED_FIELD.set(instance, info);
   }
 
-  public static ClientEnhanceInfo virtualField(Producer<?> instance) {
-    return VirtualField.find(Producer.class, ClientEnhanceInfo.class).get(instance);
+  public static ClientEnhanceInfo getProducerEnhancedField(Producer<?> instance) {
+    return PRODUCER_ENHANCED_FIELD.get(instance);
   }
 
-  public static void virtualField(Consumer<?> instance, ClientEnhanceInfo info) {
-    VirtualField.find(Consumer.class, ClientEnhanceInfo.class).set(instance, info);
+  public static void setConsumerEnhancedField(Consumer<?> instance, ClientEnhanceInfo info) {
+    CONSUMER_ENHANCED_FIELD.set(instance, info);
   }
 
-  public static ClientEnhanceInfo virtualField(Consumer<?> instance) {
-    return VirtualField.find(Consumer.class, ClientEnhanceInfo.class).get(instance);
+  public static ClientEnhanceInfo getConsumerEnhancedField(Consumer<?> instance) {
+    return CONSUMER_ENHANCED_FIELD.get(instance);
   }
 }

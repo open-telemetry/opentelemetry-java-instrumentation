@@ -73,14 +73,14 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> msg) {
-      MessageEnhanceInfo info = MessageEnhanceInfo.virtualField(msg);
+      MessageEnhanceInfo info = MessageEnhanceInfo.getMessageEnhancedField(msg);
       Context parent = info == null ? Context.current() : info.getContext();
       String topic = null == info ? consumer.getTopic() : info.getTopic();
       String mid = null == info ? "unknown" : info.getMessageId();
 
       Span span =
           TRACER
-              .spanBuilder("Pulsar://MessageListener/received")
+              .spanBuilder("MessageListener/received")
               .setParent(parent)
               .setSpanKind(SpanKind.CONSUMER)
               .setAttribute(TOPIC, topic)
