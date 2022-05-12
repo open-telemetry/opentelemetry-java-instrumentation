@@ -15,7 +15,7 @@ import io.opentelemetry.context.Context;
  * finishing the processing of a response. These correspond to the start and end of a span when
  * tracing.
  *
- * @deprecated
+ * @deprecated Use {@link OperationListener} instead.
  */
 @Deprecated
 public interface RequestListener extends OperationListener {
