@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.field;
+package io.opentelemetry.instrumentation.api.util;
 
 import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
 import javax.annotation.Nullable;

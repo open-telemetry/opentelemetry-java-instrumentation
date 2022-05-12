@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 
 /**
  * This interface allows registering {@link VirtualField} class pairs.

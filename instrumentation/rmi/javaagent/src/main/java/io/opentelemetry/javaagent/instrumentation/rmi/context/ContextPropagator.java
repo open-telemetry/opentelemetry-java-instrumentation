@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rmi.context;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.rmi.NoSuchObjectException;

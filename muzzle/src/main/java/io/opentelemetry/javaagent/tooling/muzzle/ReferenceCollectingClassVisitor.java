@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import com.google.common.collect.EvictingQueue;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;

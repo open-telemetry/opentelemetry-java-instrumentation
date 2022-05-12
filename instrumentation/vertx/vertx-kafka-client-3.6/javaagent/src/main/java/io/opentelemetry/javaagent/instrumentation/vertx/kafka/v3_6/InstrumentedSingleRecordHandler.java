@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6.VertxK
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Handler;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
