@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.kafka.internal;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -17,10 +17,9 @@ final class KafkaBatchProcessSpanLinksExtractor
 
   private final SpanLinksExtractor<ConsumerRecord<?, ?>> singleRecordLinkExtractor;
 
-  KafkaBatchProcessSpanLinksExtractor(ContextPropagators contextPropagators) {
+  KafkaBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
     this.singleRecordLinkExtractor =
-        SpanLinksExtractor.fromUpstreamRequest(
-            contextPropagators, KafkaConsumerRecordGetter.INSTANCE);
+        SpanLinksExtractor.extractFromRequest(propagator, KafkaConsumerRecordGetter.INSTANCE);
   }
 
   @Override

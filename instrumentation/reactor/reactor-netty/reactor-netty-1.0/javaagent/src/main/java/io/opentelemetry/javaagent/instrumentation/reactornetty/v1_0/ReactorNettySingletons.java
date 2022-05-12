@@ -59,7 +59,7 @@ public final class ReactorNettySingletons {
             .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
-            .addRequestMetrics(HttpClientMetrics.get())
+            .addOperationMetrics(HttpClientMetrics.get())
             // headers are injected in ResponseReceiverInstrumenter
             .newInstrumenter(SpanKindExtractor.alwaysClient());
 

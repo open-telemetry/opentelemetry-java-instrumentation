@@ -30,7 +30,7 @@ public final class PlayWsClientInstrumenterFactory {
         .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
-        .addRequestMetrics(HttpClientMetrics.get())
+        .addOperationMetrics(HttpClientMetrics.get())
         .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 

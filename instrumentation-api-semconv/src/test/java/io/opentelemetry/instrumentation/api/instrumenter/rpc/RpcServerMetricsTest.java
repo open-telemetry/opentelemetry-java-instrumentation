@@ -14,7 +14,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -29,7 +29,7 @@ class RpcServerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
-    RequestListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
+    OperationListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder()

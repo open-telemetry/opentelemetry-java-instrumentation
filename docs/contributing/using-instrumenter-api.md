@@ -354,12 +354,12 @@ occurs) the same time source is used to compute the current timestamp.
 You can set the time extractor in the `InstrumenterBuilder` using the `setTimeExtractor()`
 method.
 
-### Register metrics by implementing the `RequestMetrics` and `RequestListener`
+### Register metrics by implementing the `OperationMetrics` and `OperationListener`
 
-If you need to add metrics to the `Instrumenter` you can implement the `RequestMetrics`
-and `RequestListener` interfaces. `RequestMetrics` is simply a factory interface for
-the `RequestListener` - it receives an OpenTelemetry `Meter` and returns a new listener.
-The `RequestListener` contains two methods:
+If you need to add metrics to the `Instrumenter` you can implement the `OperationMetrics`
+and `OperationListener` interfaces. `OperationMetrics` is simply a factory interface for
+the `OperationListener` - it receives an OpenTelemetry `Meter` and returns a new listener.
+The `OperationListener` contains two methods:
 
 * `onStart()` that gets executed when the instrumented operation starts. It returns a `Context` - it
   can be used to store internal metrics state that should be propagated to the `onEnd()` call, if
@@ -373,15 +373,15 @@ can be used to accurately compute the duration.
 Consider the following example:
 
 ```java
-class MyRequestMetrics implements RequestListener {
+class MyOperationMetrics implements OperationListener {
 
-  static RequestMetrics get() {
-    return MyRequestMetrics::new;
+  static OperationMetrics get() {
+    return MyOperationMetrics::new;
   }
 
   private final LongUpDownCounter activeRequests;
 
-  MyRequestMetrics(Meter meter) {
+  MyOperationMetrics(Meter meter) {
     activeRequests = meter
         .upDownCounterBuilder("mylib.active_requests")
         .setUnit("requests")
@@ -402,13 +402,13 @@ class MyRequestMetrics implements RequestListener {
 }
 ```
 
-The sample class listed above implements the `RequestMetrics` factory interface in the
+The sample class listed above implements the `OperationMetrics` factory interface in the
 static `get()` method. The listener implementation uses a counter to measure the number of requests
 that are currently in flight. Notice that the state between `onStart()` and `onEnd()` method is
 shared using the `MyMetricsState` class (a mostly trivial data class, not listed in the example
 above), passed between the methods using the `Context`.
 
-You can add `RequestMetrics` to the `InstrumenterBuilder` using the `addRequestMetrics()` method.
+You can add `OperationMetrics` to the `InstrumenterBuilder` using the `addOperationMetrics()` method.
 
 ### Enrich the operation `Context` with the `ContextCustomizer`
 

@@ -14,17 +14,17 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
- * {@link RequestListener} which keeps track of <a
+ * {@link OperationListener} which keeps track of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-client">RPC
  * client metrics</a>.
  */
-public final class RpcClientMetrics implements RequestListener {
+public final class RpcClientMetrics implements OperationListener {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
 
@@ -45,11 +45,11 @@ public final class RpcClientMetrics implements RequestListener {
   }
 
   /**
-   * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
+   * Returns a {@link OperationMetrics} which can be used to enable recording of {@link
    * RpcClientMetrics} on an {@link
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
-  public static RequestMetrics get() {
+  public static OperationMetrics get() {
     return RpcClientMetrics::new;
   }
 

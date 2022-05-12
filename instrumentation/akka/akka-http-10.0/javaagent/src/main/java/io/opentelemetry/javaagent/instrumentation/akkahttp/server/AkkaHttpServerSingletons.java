@@ -29,7 +29,7 @@ public class AkkaHttpServerSingletons {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
-            .addRequestMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get())
             .newServerInstrumenter(AkkaHttpServerHeaders.INSTANCE);
   }

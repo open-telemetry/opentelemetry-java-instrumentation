@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -112,8 +111,9 @@ public final class KafkaInstrumenterFactory {
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else if (ExperimentalConfig.get().messagingReceiveInstrumentationEnabled()) {
       builder.addSpanLinksExtractor(
-          SpanLinksExtractor.fromUpstreamRequest(
-              GlobalOpenTelemetry.getPropagators(), KafkaConsumerRecordGetter.INSTANCE));
+          SpanLinksExtractor.extractFromRequest(
+              openTelemetry.getPropagators().getTextMapPropagator(),
+              KafkaConsumerRecordGetter.INSTANCE));
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
       return builder.newConsumerInstrumenter(KafkaConsumerRecordGetter.INSTANCE);
@@ -130,7 +130,8 @@ public final class KafkaInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .addSpanLinksExtractor(
-            new KafkaBatchProcessSpanLinksExtractor(openTelemetry.getPropagators()))
+            new KafkaBatchProcessSpanLinksExtractor(
+                openTelemetry.getPropagators().getTextMapPropagator()))
         .setErrorCauseExtractor(errorCauseExtractor)
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

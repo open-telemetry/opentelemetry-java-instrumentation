@@ -32,7 +32,7 @@ public final class NettyServerInstrumenterFactory {
         .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new NettyNetServerAttributesGetter()))
-        .addRequestMetrics(HttpServerMetrics.get())
+        .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer((context, request, attributes) -> NettyErrorHolder.init(context))
         .addContextCustomizer(HttpRouteHolder.get())
         .newServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);

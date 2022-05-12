@@ -46,7 +46,7 @@ public final class UndertowSingletons {
                       .recordException()
                       .init(context);
                 })
-            .addRequestMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(UndertowExchangeGetter.INSTANCE);
   }
 

@@ -34,7 +34,7 @@ public final class VertxClientInstrumenterFactory {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
-            .addRequestMetrics(HttpClientMetrics.get());
+            .addOperationMetrics(HttpClientMetrics.get());
 
     if (netAttributesGetter != null) {
       NetClientAttributesExtractor<HttpClientRequest, HttpClientResponse> netAttributesExtractor =

@@ -155,7 +155,7 @@ public final class ArmeriaTelemetryBuilder {
                 HttpSpanStatusExtractor.create(clientAttributesGetter)))
         .addAttributesExtractor(netClientAttributesExtractor)
         .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
-        .addRequestMetrics(HttpClientMetrics.get());
+        .addOperationMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
@@ -163,7 +163,7 @@ public final class ArmeriaTelemetryBuilder {
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new ArmeriaNetServerAttributesGetter()))
         .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
-        .addRequestMetrics(HttpServerMetrics.get())
+        .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer(HttpRouteHolder.get());
 
     if (peerService != null) {

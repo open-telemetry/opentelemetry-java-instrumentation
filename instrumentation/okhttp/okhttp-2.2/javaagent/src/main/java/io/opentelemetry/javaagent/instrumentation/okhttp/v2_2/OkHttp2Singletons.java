@@ -42,7 +42,7 @@ public final class OkHttp2Singletons {
             .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(netClientAttributesGetter))
-            .addRequestMetrics(HttpClientMetrics.get())
+            .addOperationMetrics(HttpClientMetrics.get())
             .newInstrumenter(alwaysClient());
 
     TRACING_INTERCEPTOR = new TracingInterceptor(INSTRUMENTER, openTelemetry.getPropagators());

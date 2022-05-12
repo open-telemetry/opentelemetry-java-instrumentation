@@ -36,7 +36,7 @@ public final class AsyncHttpClientSingletons {
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributeGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributeGetter))
             .addAttributesExtractor(new AsyncHttpClientAdditionalAttributesExtractor())
-            .addRequestMetrics(HttpClientMetrics.get())
+            .addOperationMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
