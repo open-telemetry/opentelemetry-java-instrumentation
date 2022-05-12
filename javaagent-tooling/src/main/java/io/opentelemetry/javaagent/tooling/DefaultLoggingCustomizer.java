@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import java.util.Locale;
 
-final class LoggingConfigurer {
+final class DefaultLoggingCustomizer implements LoggingCustomizer {
 
   private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.showDateTime";
@@ -20,7 +20,8 @@ final class LoggingConfigurer {
   private static final String SIMPLE_LOGGER_PREFIX =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.log.";
 
-  static void configureLogger() {
+  @Override
+  public void init() {
     setSystemPropertyDefault(SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY, "true");
     setSystemPropertyDefault(
         SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY, SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT);
@@ -33,6 +34,17 @@ final class LoggingConfigurer {
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "muzzleMatcher", "OFF");
     }
   }
+
+  @Override
+  @SuppressWarnings("SystemOut")
+  public void onStartupFailure(Throwable throwable) {
+    // not sure if we have a log manager here, so just print
+    System.err.println("OpenTelemetry Javaagent failed to start");
+    throwable.printStackTrace();
+  }
+
+  @Override
+  public void onStartupSuccess() {}
 
   private static void setSystemPropertyDefault(String property, String value) {
     if (System.getProperty(property) == null) {
@@ -61,6 +73,4 @@ final class LoggingConfigurer {
     }
     return false;
   }
-
-  private LoggingConfigurer() {}
 }
