@@ -546,7 +546,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       Type ownerType = Type.getType("L" + owner + ";");
 
       // remember used context classes if this is an VirtualField.get() call
-      if ("io.opentelemetry.instrumentation.api.field.VirtualField".equals(ownerType.getClassName())
+      if ("io.opentelemetry.instrumentation.api.util.VirtualField".equals(ownerType.getClassName())
           && "find".equals(name)
           && methodType.getDescriptor().equals(getVirtualFieldDescriptor)) {
         // in case of invalid scenario (not using .class ref directly) don't store anything and
