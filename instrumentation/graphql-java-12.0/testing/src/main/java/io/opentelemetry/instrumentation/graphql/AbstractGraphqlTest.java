@@ -23,6 +23,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -198,6 +199,7 @@ public abstract class AbstractGraphqlTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfying(Attributes::isEmpty)
+                            .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -243,6 +245,7 @@ public abstract class AbstractGraphqlTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfying(Attributes::isEmpty)
+                            .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
