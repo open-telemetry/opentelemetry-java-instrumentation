@@ -74,7 +74,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
       attributesExtractors;
   private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
-  private final List<? extends RequestListener> requestListeners;
+  private final List<? extends OperationListener> operationListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final TimeExtractor<REQUEST, RESPONSE> timeExtractor;
   private final boolean enabled;
@@ -89,7 +89,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.spanLinksExtractors = new ArrayList<>(builder.spanLinksExtractors);
     this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
     this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
-    this.requestListeners = builder.buildRequestListeners();
+    this.operationListeners = builder.buildOperationListeners();
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.timeExtractor = builder.timeExtractor;
     this.enabled = builder.enabled;
@@ -162,10 +162,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       context = contextCustomizer.onStart(context, request, attributes);
     }
 
-    if (!requestListeners.isEmpty()) {
+    if (!operationListeners.isEmpty()) {
       long startNanos = getNanos(startTime);
-      for (RequestListener requestListener : requestListeners) {
-        context = requestListener.onStart(context, attributes, startNanos);
+      for (OperationListener operationListener : operationListeners) {
+        context = operationListener.onStart(context, attributes, startNanos);
       }
     }
 
@@ -206,10 +206,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       endTime = timeExtractor.extractEndTime(request, response, error);
     }
 
-    if (!requestListeners.isEmpty()) {
+    if (!operationListeners.isEmpty()) {
       long endNanos = getNanos(endTime);
-      ListIterator<? extends RequestListener> i =
-          requestListeners.listIterator(requestListeners.size());
+      ListIterator<? extends OperationListener> i =
+          operationListeners.listIterator(operationListeners.size());
       while (i.hasPrevious()) {
         i.previous().onEnd(context, attributes, endNanos);
       }

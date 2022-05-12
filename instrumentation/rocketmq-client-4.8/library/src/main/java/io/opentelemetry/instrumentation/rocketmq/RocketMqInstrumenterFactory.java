@@ -95,8 +95,9 @@ class RocketMqInstrumenterFactory {
 
     if (batch) {
       SpanLinksExtractor<MessageExt> spanLinksExtractor =
-          SpanLinksExtractor.fromUpstreamRequest(
-              openTelemetry.getPropagators(), TextMapExtractAdapter.INSTANCE);
+          SpanLinksExtractor.extractFromRequest(
+              openTelemetry.getPropagators().getTextMapPropagator(),
+              TextMapExtractAdapter.INSTANCE);
 
       return builder
           .addSpanLinksExtractor(spanLinksExtractor)

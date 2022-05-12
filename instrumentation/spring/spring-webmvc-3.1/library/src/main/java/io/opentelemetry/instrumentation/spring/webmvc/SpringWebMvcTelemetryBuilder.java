@@ -85,7 +85,7 @@ public final class SpringWebMvcTelemetryBuilder {
             .addAttributesExtractor(
                 NetServerAttributesExtractor.create(new SpringWebMvcNetAttributesGetter()))
             .addAttributesExtractors(additionalExtractors)
-            .addRequestMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get())
             .newServerInstrumenter(JavaxHttpServletRequestGetter.INSTANCE);
 

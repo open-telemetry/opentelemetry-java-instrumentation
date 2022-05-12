@@ -7,21 +7,21 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
 final class PropagatorBasedSpanLinksExtractor<REQUEST> implements SpanLinksExtractor<REQUEST> {
-  private final ContextPropagators propagators;
+  private final TextMapPropagator propagator;
   private final TextMapGetter<REQUEST> getter;
 
-  PropagatorBasedSpanLinksExtractor(ContextPropagators propagators, TextMapGetter<REQUEST> getter) {
-    this.propagators = propagators;
+  PropagatorBasedSpanLinksExtractor(TextMapPropagator propagator, TextMapGetter<REQUEST> getter) {
+    this.propagator = propagator;
     this.getter = getter;
   }
 
   @Override
   public void extract(SpanLinksBuilder spanLinks, Context parentContext, REQUEST request) {
-    Context extracted = propagators.getTextMapPropagator().extract(parentContext, request, getter);
+    Context extracted = propagator.extract(parentContext, request, getter);
     spanLinks.addLink(Span.fromContext(extracted).getSpanContext());
   }
 }

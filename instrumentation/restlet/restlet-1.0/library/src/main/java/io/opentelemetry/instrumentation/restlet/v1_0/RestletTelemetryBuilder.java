@@ -82,7 +82,7 @@ public final class RestletTelemetryBuilder {
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
-            .addRequestMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(RestletHeadersGetter.INSTANCE);
 
     return new RestletTelemetry(instrumenter);

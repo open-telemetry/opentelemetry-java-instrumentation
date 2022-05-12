@@ -129,12 +129,12 @@ public final class GrpcTelemetryBuilder {
     clientInstrumenterBuilder
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesGetter))
-        .addRequestMetrics(RpcClientMetrics.get());
+        .addOperationMetrics(RpcClientMetrics.get());
     serverInstrumenterBuilder
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new GrpcNetServerAttributesGetter()))
-        .addRequestMetrics(RpcServerMetrics.get());
+        .addOperationMetrics(RpcServerMetrics.get());
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(

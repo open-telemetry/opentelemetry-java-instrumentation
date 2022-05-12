@@ -88,7 +88,7 @@ public final class SpringWebfluxTelemetryBuilder {
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
-            .addRequestMetrics(HttpClientMetrics.get());
+            .addOperationMetrics(HttpClientMetrics.get());
 
     if (SpringWebfluxExperimentalAttributesExtractor.enabled()) {
       builder.addAttributesExtractor(new SpringWebfluxExperimentalAttributesExtractor());

@@ -48,8 +48,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
-  private final List<RequestListener> requestListeners = new ArrayList<>();
-  private final List<RequestMetrics> requestMetrics = new ArrayList<>();
+  private final List<OperationListener> operationListeners = new ArrayList<>();
+  private final List<OperationMetrics> operationMetrics = new ArrayList<>();
 
   @Nullable private String instrumentationVersion;
   @Nullable private String schemaUrl = null;
@@ -144,18 +144,42 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /** Adds a {@link RequestListener} that will be called when request processing starts and ends. */
+  /**
+   * Adds a {@link RequestListener} that will be called when request processing starts and ends.
+   *
+   * @deprecated Use {@link #addOperationListener(OperationListener)} instead.
+   */
+  @Deprecated
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestListener(RequestListener listener) {
-    requestListeners.add(listener);
-    return this;
+    return addOperationListener(listener);
   }
 
   /**
    * Adds a {@link RequestMetrics} that will produce a {@link RequestListener} capturing the
    * requests processing metrics.
+   *
+   * @deprecated Use {@link #addOperationMetrics(OperationMetrics)} instead.
    */
+  @Deprecated
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
-    requestMetrics.add(factory);
+    return addOperationMetrics(factory);
+  }
+
+  /**
+   * Adds a {@link OperationListener} that will be called when an instrumented operation starts and
+   * ends.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addOperationListener(OperationListener listener) {
+    operationListeners.add(listener);
+    return this;
+  }
+
+  /**
+   * Adds a {@link OperationMetrics} that will produce a {@link OperationListener} capturing the
+   * requests processing metrics.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addOperationMetrics(OperationMetrics factory) {
+    operationMetrics.add(factory);
     return this;
   }
 
@@ -268,15 +292,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return tracerBuilder.build();
   }
 
-  List<RequestListener> buildRequestListeners() {
+  List<OperationListener> buildOperationListeners() {
     // just copy the listeners list if there are no metrics registered
-    if (requestMetrics.isEmpty()) {
-      return new ArrayList<>(requestListeners);
+    if (operationMetrics.isEmpty()) {
+      return new ArrayList<>(operationListeners);
     }
 
-    List<RequestListener> listeners =
-        new ArrayList<>(requestListeners.size() + requestMetrics.size());
-    listeners.addAll(requestListeners);
+    List<OperationListener> listeners =
+        new ArrayList<>(operationListeners.size() + operationMetrics.size());
+    listeners.addAll(operationListeners);
 
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationName);
     if (instrumentationVersion != null) {
@@ -286,7 +310,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       meterBuilder.setSchemaUrl(schemaUrl);
     }
     Meter meter = meterBuilder.build();
-    for (RequestMetrics factory : requestMetrics) {
+    for (OperationMetrics factory : operationMetrics) {
       listeners.add(factory.create(meter));
     }
 

@@ -35,7 +35,7 @@ final class NettyServerSingletons {
                 HttpServerAttributesExtractor.create(httpServerAttributesGetter))
             .addAttributesExtractor(
                 NetServerAttributesExtractor.create(new NettyNetServerAttributesGetter()))
-            .addRequestMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .addContextCustomizer(HttpRouteHolder.get())

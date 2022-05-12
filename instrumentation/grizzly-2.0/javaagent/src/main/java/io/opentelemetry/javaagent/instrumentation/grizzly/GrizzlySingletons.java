@@ -32,7 +32,7 @@ public final class GrizzlySingletons {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
-            .addRequestMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) -> GrizzlyErrorHolder.init(context))
             .addContextCustomizer(HttpRouteHolder.get())
