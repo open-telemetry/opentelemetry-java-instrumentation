@@ -39,11 +39,9 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) MetricsTrackerFactory metricsTrackerFactory) {
+        @Advice.Argument(value = 0, readOnly = false) MetricsTrackerFactory userMetricsTracker) {
 
-      if (!(metricsTrackerFactory instanceof OpenTelemetryMetricsTrackerFactory)) {
-        metricsTrackerFactory = new OpenTelemetryMetricsTrackerFactory(metricsTrackerFactory);
-      }
+      userMetricsTracker = HikariSingletons.createMetricsTrackerFactory(userMetricsTracker);
     }
   }
 }
