@@ -209,8 +209,10 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      ReceiveRequest request =
-          ReceiveRequest.create(queue, timer, response, channel.getConnection());
+      // pass the started timer to the instrumenter
+      parentContext = parentContext.with(timer);
+
+      ReceiveRequest request = ReceiveRequest.create(queue, response, channel.getConnection());
       if (!receiveInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
