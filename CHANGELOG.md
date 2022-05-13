@@ -1,5 +1,84 @@
 # Changelog
 
+## Version 1.14.0 (Unreleased)
+
+### Migration notes:
+
+- The `opentelemetry-log4j-appender-2.16` artifact has been renamed to
+  `opentelemetry-log4j-appender-2.17`
+- The `opentelemetry-log4j-context-data-2.16-autoconfigure` artifact has been renamed to
+  `opentelemetry-log4j-context-data-2.17-autoconfigure`
+- Micrometer library instrumentation has been removed as it has been moved to the core repo and
+  is now published under `io.opentelemetry:opentelemetry-micrometer1-shim`
+- The rxjava javaagent instrumentation names for suppression have changed to `rxjava`
+- `AgentListener#beforeAgent()` has been deprecated, as it is not expect to be needed by extensions
+  authors
+- Several changes in the Instrumentation API
+  - `RequestMetrics` has been renamed to `OperationMetrics`
+  - `RequestListener` has been renamed to `OperationListener`
+  - `ErrorCauseExtractor#extractCause()` has been renamed to `extract()`
+  - `ContextCustomizer` and `RequestListener` `start()`/`end()` methods have been renamed to
+    `onStart()`/`onEnd()`
+
+### 🌟 New javaagent instrumentation
+
+- Add jboss-logmanager mdc support
+  ([#5842](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5842))
+- Spring-kafka single record instrumentation
+  ([#5904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5904))
+- Add metrics instrumentation for grpc
+  ([#5923](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5923))
+- Add vertx-kafka-client instrumentation
+  ([#5973](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5973),
+   [#5982](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5982))
+- Hide the GC runtime metrics behind an experimental config flag
+  ([#5990](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5990))
+- Add HikariCP connection pool metrics
+  ([#6003](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6003))
+
+### 🌟 New library instrumentation
+
+- Add metrics instrumentation for grpc
+  ([#5923](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5923))
+- Add HikariCP library instrumentation
+  ([#6023](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6023))
+
+### 📈 Enhancements
+
+- Enable span suppression by SpanKey by default
+  ([#5779](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5779))
+- record exception in dubbo high version
+  ([#5892](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5892))
+- Introduce LocalRootSpan (replacing ServerSpan)
+  ([#5896](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5896))
+- Add javaagent<->application context bridge for HttpRouteHolder
+  ([#5838](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5838))
+- Exclude spring temporary type matching class loader
+  ([#5912](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5912))
+- Load agent classes child first
+  ([#5950](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5950))
+- Avoid looking up annotation types during type matching
+  ([#5906](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5906))
+
+### 🛠️ Bug fixes
+
+- Fix duplicate class error on Android build
+  ([#5882](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5882))
+- Avoid npe in netty 4.1 instrumentation
+  ([#5902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5902))
+- Fix logging exporter autoconfiguration issue
+  ([#5928](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5928))
+- fix NPE for commons-httpclient v3.1
+  ([#5944](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5944)) (#5949)
+- Exclude duplicate project classes from inst/
+  ([#5957](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5957))
+- Ignore known problematic jdbc wrappers
+  ([#5967](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5967))
+- Fix default enabled for runtime and oshi metrics
+  ([#5989](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5989))
+- Mitigate against another kafka leak
+  ([#6021](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6021))
+
 ## Version 1.13.1 (2022-04-22)
 
 ### 🛠️ Bug fixes
