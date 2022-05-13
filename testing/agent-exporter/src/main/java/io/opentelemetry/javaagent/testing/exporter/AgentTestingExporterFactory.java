@@ -19,6 +19,7 @@ public class AgentTestingExporterFactory {
   }
 
   public static List<byte[]> getMetricExportRequests() {
+    AgentTestingCustomizer.metricReader.forceFlush().join(10, TimeUnit.SECONDS);
     return metricExporter.getCollectedExportRequests();
   }
 

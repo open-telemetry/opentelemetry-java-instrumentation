@@ -23,7 +23,9 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
 
   static final MetricReader metricReader =
       PeriodicMetricReader.builder(AgentTestingExporterFactory.metricExporter)
-          .setInterval(Duration.ofMillis(100))
+          // Set really long interval. We'll call forceFlush when we need the metrics
+          // instead of collecting them periodically.
+          .setInterval(Duration.ofNanos(Long.MAX_VALUE))
           .build();
 
   static void reset() {
