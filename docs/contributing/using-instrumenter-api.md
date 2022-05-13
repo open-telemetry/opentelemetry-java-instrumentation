@@ -325,31 +325,31 @@ In some cases, the instrumented library provides a way to retrieve accurate time
 operation starts and ends. The `TimeExtractor` interface can be used to
 feed this information into OpenTelemetry trace and metrics data.
 
-`extractStartTime()` can only extract the timestamp from the request. `extractEndTime()`
-accepts the request, an optional response, and an optional `Throwable` error. Consider the following
-example:
+`extractStartTime()` can extract the timestamp from the parent `Context` and the
+request. `extractEndTime()` accepts the `Context` that was returned from `Instrumenter#start()` and
+the request. Consider the following example:
 
 ```java
 class MyTimeExtractor implements TimeExtractor<Request, Response> {
 
   @Override
-  public Instant extractStartTime(Request request) {
+  public Instant extractStartTime(Context parentContext, Request request) {
     return request.startTimestamp();
   }
 
   @Override
-  public Instant extractEndTime(Request request, @Nullable Response response, @Nullable Throwable error) {
-    if (response != null) {
-      return response.endTimestamp();
-    }
-    return request.clock().now();
+  public Instant extractEndTime(Context context, Request request) {
+    Instant endTime = context.get(END_TIME);
+    return endTime == null ?
+        request.clock().now() :
+        endTime;
   }
 }
 ```
 
-The sample implementations above use the request to retrieve the start timestamp. The response is
-used to compute the end time if it is available; in case it is missing (for example, when an error
-occurs) the same time source is used to compute the current timestamp.
+The sample implementations above use the request to retrieve the start timestamp. The end time is
+retrieved from the context; in case it is missing (for example, when the context was not updated
+because of an error) the same time source is used to compute the current timestamp.
 
 You can set the time extractor in the `InstrumenterBuilder` using the `setTimeExtractor()`
 method.
