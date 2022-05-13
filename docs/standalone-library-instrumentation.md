@@ -11,6 +11,7 @@ that can be used if you prefer that over using the Java agent:
 * [gRPC](../instrumentation/grpc-1.6/library)
 * [Guava](../instrumentation/guava-10.0/library)
 * [GraphQL Java](../instrumentation/graphql-java-12.0/library)
+* [HikariCP](../instrumentation/hikaricp-3.0/library)
 * [JDBC](../instrumentation/jdbc/library)
 * [Ktor 1.0](../instrumentation/ktor/ktor-1.0/library)
 * [Ktor 2.0](../instrumentation/ktor/ktor-2.0/library)

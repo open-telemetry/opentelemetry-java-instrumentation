@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hikaricp;
+package io.opentelemetry.instrumentation.hikaricp;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import io.opentelemetry.api.common.Attributes;

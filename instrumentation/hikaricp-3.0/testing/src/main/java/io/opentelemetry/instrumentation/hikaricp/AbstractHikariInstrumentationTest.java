@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hikaricp;
+package io.opentelemetry.instrumentation.hikaricp;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.atLeastOnce;
@@ -13,12 +13,14 @@ import static org.mockito.Mockito.when;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
+import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -28,10 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HikariCpInstrumentationTest {
-
-  @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+public abstract class AbstractHikariInstrumentationTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -39,14 +38,20 @@ class HikariCpInstrumentationTest {
   @Mock Connection connectionMock;
   @Mock IMetricsTracker userMetricsMock;
 
+  protected abstract InstrumentationExtension testing();
+
+  protected abstract void configure(
+      HikariConfig poolConfig, @Nullable MetricsTrackerFactory userTracker);
+
   @Test
-  void shouldReportMetrics() throws Exception {
+  void shouldReportMetrics() throws SQLException, InterruptedException {
     // given
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
 
     HikariDataSource hikariDataSource = new HikariDataSource();
     hikariDataSource.setPoolName("testPool");
     hikariDataSource.setDataSource(dataSourceMock);
+    configure(hikariDataSource, null);
 
     // when
     Connection hikariConnection = hikariDataSource.getConnection();
@@ -54,7 +59,7 @@ class HikariCpInstrumentationTest {
     hikariConnection.close();
 
     // then
-    DbConnectionPoolMetricsAssertions.create(testing, "io.opentelemetry.hikaricp-3.0", "testPool")
+    DbConnectionPoolMetricsAssertions.create(testing(), "io.opentelemetry.hikaricp-3.0", "testPool")
         .disableMaxIdleConnections()
         // no timeouts happen during this test
         .disableConnectionTimeouts()
@@ -65,37 +70,41 @@ class HikariCpInstrumentationTest {
 
     // sleep exporter interval
     Thread.sleep(100);
-    testing.clearData();
+    testing().clearData();
     Thread.sleep(100);
 
     // then
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.hikaricp-3.0",
-        "db.client.connections.usage",
-        AbstractIterableAssert::isEmpty);
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.hikaricp-3.0",
-        "db.client.connections.idle.min",
-        AbstractIterableAssert::isEmpty);
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.hikaricp-3.0",
-        "db.client.connections.max",
-        AbstractIterableAssert::isEmpty);
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.hikaricp-3.0",
-        "db.client.connections.pending_requests",
-        AbstractIterableAssert::isEmpty);
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.hikaricp-3.0",
+            "db.client.connections.usage",
+            AbstractIterableAssert::isEmpty);
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.hikaricp-3.0",
+            "db.client.connections.idle.min",
+            AbstractIterableAssert::isEmpty);
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.hikaricp-3.0",
+            "db.client.connections.max",
+            AbstractIterableAssert::isEmpty);
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.hikaricp-3.0",
+            "db.client.connections.pending_requests",
+            AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void shouldNotBreakCustomUserMetrics() throws Exception {
+  void shouldNotBreakCustomUserMetrics() throws SQLException, InterruptedException {
     // given
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
 
     HikariConfig hikariConfig = new HikariConfig();
     hikariConfig.setPoolName("anotherTestPool");
     hikariConfig.setDataSource(dataSourceMock);
-    hikariConfig.setMetricsTrackerFactory((poolName, poolStats) -> userMetricsMock);
+    configure(hikariConfig, (poolName, poolStats) -> userMetricsMock);
 
     HikariDataSource hikariDataSource = new HikariDataSource(hikariConfig);
     cleanup.deferCleanup(hikariDataSource);
@@ -107,7 +116,7 @@ class HikariCpInstrumentationTest {
 
     // then
     DbConnectionPoolMetricsAssertions.create(
-            testing, "io.opentelemetry.hikaricp-3.0", "anotherTestPool")
+            testing(), "io.opentelemetry.hikaricp-3.0", "anotherTestPool")
         .disableMaxIdleConnections()
         // no timeouts happen during this test
         .disableConnectionTimeouts()

@@ -3,25 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hikaricp;
+package io.opentelemetry.instrumentation.hikaricp;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import io.opentelemetry.instrumentation.api.metrics.db.DbConnectionPoolMetrics;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory {
+final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hikaricp-3.0";
 
+  private final OpenTelemetry openTelemetry;
   @Nullable private final MetricsTrackerFactory userMetricsFactory;
 
-  public OpenTelemetryMetricsTrackerFactory(@Nullable MetricsTrackerFactory userMetricsFactory) {
+  OpenTelemetryMetricsTrackerFactory(
+      OpenTelemetry openTelemetry, @Nullable MetricsTrackerFactory userMetricsFactory) {
+    this.openTelemetry = openTelemetry;
     this.userMetricsFactory = userMetricsFactory;
   }
 
@@ -33,7 +36,7 @@ public final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerF
             : userMetricsFactory.create(poolName, poolStats);
 
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, poolName);
+        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
 
     List<ObservableLongUpDownCounter> observableInstruments =
         Arrays.asList(

@@ -16,4 +16,8 @@ muzzle {
 
 dependencies {
   library("com.zaxxer:HikariCP:3.0.0")
+
+  implementation(project(":instrumentation:hikaricp-3.0:library"))
+
+  testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
 }
