@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import io.opentelemetry.context.Context;
 import java.time.Instant;
 import javax.annotation.Nullable;
 
@@ -18,9 +19,36 @@ import javax.annotation.Nullable;
  */
 public interface TimeExtractor<REQUEST, RESPONSE> {
 
+  /**
+   * Returns the timestamp marking the start of the request processing.
+   *
+   * @deprecated Use {@link #extractStartTime(Context, Object)} instead.
+   */
+  @Deprecated
+  default Instant extractStartTime(REQUEST request) {
+    throw new UnsupportedOperationException(
+        "This method variant is deprecated and will be removed in the next minor release.");
+  }
+
   /** Returns the timestamp marking the start of the request processing. */
-  Instant extractStartTime(REQUEST request);
+  default Instant extractStartTime(Context parentContext, REQUEST request) {
+    return extractStartTime(request);
+  }
+
+  /**
+   * Returns the timestamp marking the end of the request processing.
+   *
+   * @deprecated Use {@link #extractEndTime(Context, Object)} instead.
+   */
+  @Deprecated
+  default Instant extractEndTime(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    throw new UnsupportedOperationException(
+        "This method variant is deprecated and will be removed in the next minor release.");
+  }
 
   /** Returns the timestamp marking the end of the request processing. */
-  Instant extractEndTime(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
+  default Instant extractEndTime(Context context, REQUEST request) {
+    return extractEndTime(request, null, null);
+  }
 }

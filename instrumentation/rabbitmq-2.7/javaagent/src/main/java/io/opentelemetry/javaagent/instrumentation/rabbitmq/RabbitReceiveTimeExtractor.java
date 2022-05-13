@@ -6,20 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.rabbitmq.client.GetResponse;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.TimeExtractor;
 import java.time.Instant;
-import javax.annotation.Nullable;
 
 class RabbitReceiveTimeExtractor implements TimeExtractor<ReceiveRequest, GetResponse> {
 
   @Override
-  public Instant extractStartTime(ReceiveRequest request) {
+  public Instant extractStartTime(Context parentContext, ReceiveRequest request) {
     return request.startTime();
   }
 
   @Override
-  public Instant extractEndTime(
-      ReceiveRequest request, @Nullable GetResponse response, @Nullable Throwable error) {
+  public Instant extractEndTime(Context context, ReceiveRequest request) {
     return request.now();
   }
 }

@@ -128,15 +128,16 @@ class InstrumenterTest {
 
   static class TestTimeExtractor implements TimeExtractor<Instant, Instant> {
 
+    static final ContextKey<Instant> END_TIME = ContextKey.named("endTime");
+
     @Override
-    public Instant extractStartTime(Instant request) {
+    public Instant extractStartTime(Context parentContext, Instant request) {
       return request;
     }
 
     @Override
-    public Instant extractEndTime(
-        Instant request, @Nullable Instant response, @Nullable Throwable error) {
-      return response;
+    public Instant extractEndTime(Context context, Instant request) {
+      return context.get(END_TIME);
     }
   }
 
@@ -453,7 +454,7 @@ class InstrumenterTest {
 
     // when
     Context context = instrumenter.start(Context.root(), startTime);
-    instrumenter.end(context, startTime, endTime, null);
+    instrumenter.end(context.with(TestTimeExtractor.END_TIME, endTime), startTime, endTime, null);
 
     // then
     otelTesting

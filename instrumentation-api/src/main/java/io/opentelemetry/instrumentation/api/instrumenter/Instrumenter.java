@@ -138,7 +138,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Instant startTime = null;
     if (timeExtractor != null) {
-      startTime = timeExtractor.extractStartTime(request);
+      startTime = timeExtractor.extractStartTime(parentContext, request);
       spanBuilder.setStartTimestamp(startTime);
     }
 
@@ -203,7 +203,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Instant endTime = null;
     if (timeExtractor != null) {
-      endTime = timeExtractor.extractEndTime(request, response, error);
+      endTime = timeExtractor.extractEndTime(context, request);
     }
 
     if (!operationListeners.isEmpty()) {

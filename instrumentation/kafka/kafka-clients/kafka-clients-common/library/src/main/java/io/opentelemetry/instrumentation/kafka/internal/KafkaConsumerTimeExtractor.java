@@ -5,20 +5,19 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.TimeExtractor;
 import java.time.Instant;
-import javax.annotation.Nullable;
 
 class KafkaConsumerTimeExtractor implements TimeExtractor<ReceivedRecords, Void> {
 
   @Override
-  public Instant extractStartTime(ReceivedRecords request) {
+  public Instant extractStartTime(Context parentContext, ReceivedRecords request) {
     return request.startTime();
   }
 
   @Override
-  public Instant extractEndTime(
-      ReceivedRecords request, @Nullable Void unused, @Nullable Throwable error) {
+  public Instant extractEndTime(Context context, ReceivedRecords request) {
     return request.now();
   }
 }
