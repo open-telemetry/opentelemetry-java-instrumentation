@@ -28,7 +28,7 @@ public final class PulsarTelemetry {
   public static final AttributeKey<String> CONSUMER_NAME =
       AttributeKey.stringKey("messaging_pulsar_consumer_name");
 
-  public static final AttributeKey<String> MESSAGE_ID =SemanticAttributes.MESSAGING_MESSAGE_ID;
+  public static final AttributeKey<String> MESSAGE_ID = SemanticAttributes.MESSAGING_MESSAGE_ID;
 
   public static final Tracer TRACER = GlobalOpenTelemetry.getTracer(INSTRUMENTATION);
 

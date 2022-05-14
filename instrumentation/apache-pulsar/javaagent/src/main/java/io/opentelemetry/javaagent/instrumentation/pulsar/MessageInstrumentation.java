@@ -44,7 +44,8 @@ public class MessageInstrumentation implements TypeInstrumentation {
         Object argument2 = allArguments[2];
         if (message instanceof TopicMessageImpl && argument2 instanceof MessageImpl) {
           MessageImpl<?> impl = (MessageImpl<?>) argument2;
-          MessageEnhanceInfo.setMessageEnhancedField(message, MessageEnhanceInfo.getMessageEnhancedField(impl));
+          MessageEnhanceInfo info = MessageEnhanceInfo.getMessageEnhancedField(impl);
+          MessageEnhanceInfo.setMessageEnhancedField(message, info);
         }
       }
     }
