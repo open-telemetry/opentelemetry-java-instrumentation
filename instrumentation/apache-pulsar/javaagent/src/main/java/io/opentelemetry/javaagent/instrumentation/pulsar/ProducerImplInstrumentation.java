@@ -22,6 +22,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.ClientEnhanceInfo;
@@ -32,6 +33,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
+import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 import org.apache.pulsar.client.impl.MessageImpl;
@@ -70,7 +72,10 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String url = pulsarClient.getLookup().getServiceUrl();
       ClientEnhanceInfo info = new ClientEnhanceInfo(topic, url);
-      ClientEnhanceInfo.setProducerEnhancedField(producer, info);
+
+      VirtualField<Producer<?>, ClientEnhanceInfo> virtualField =
+          VirtualField.find(Producer.class, ClientEnhanceInfo.class);
+      virtualField.set(producer, info);
     }
   }
 
@@ -83,9 +88,11 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) Message<?> m,
         @Advice.Argument(value = 1, readOnly = false) SendCallback callback,
         @Advice.Local(value = "otelScope") Scope scope) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.getProducerEnhancedField(producer);
+      VirtualField<Producer<?>, ClientEnhanceInfo> virtualField =
+          VirtualField.find(Producer.class, ClientEnhanceInfo.class);
+      ClientEnhanceInfo info = virtualField.get(producer);
       if (null == info) {
-        scope = Scope.noop();
+        scope = null;
         return;
       }
 
@@ -112,21 +119,15 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable t,
         @Advice.This ProducerImpl<?> producer,
         @Advice.Local(value = "otelScope") Scope scope) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.getProducerEnhancedField(producer);
-      if (null == info || null == scope) {
-        if (null != scope) {
-          scope.close();
+      if (scope != null) {
+        Span span = Span.current();
+        if (null != t) {
+          span.recordException(t);
         }
-        return;
-      }
 
-      Span span = Span.current();
-      if (null != t) {
-        span.recordException(t);
+        span.end();
+        scope.close();
       }
-
-      span.end();
-      scope.close();
     }
   }
 

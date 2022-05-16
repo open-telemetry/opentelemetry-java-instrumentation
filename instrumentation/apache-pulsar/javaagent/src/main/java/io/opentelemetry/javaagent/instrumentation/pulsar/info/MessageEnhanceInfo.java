@@ -6,14 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.info;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
-import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 
 public class MessageEnhanceInfo {
-  private static final VirtualField<Message<?>, MessageEnhanceInfo> MESSAGE_ENHANCED_FIELD =
-      VirtualField.find(Message.class, MessageEnhanceInfo.class);
 
   private String topic;
   private String messageId;
@@ -42,13 +38,5 @@ public class MessageEnhanceInfo {
     } else {
       this.messageId = "unknown";
     }
-  }
-
-  public static void setMessageEnhancedField(Message<?> message, MessageEnhanceInfo context) {
-    MESSAGE_ENHANCED_FIELD.set(message, context);
-  }
-
-  public static MessageEnhanceInfo getMessageEnhancedField(Message<?> message) {
-    return MESSAGE_ENHANCED_FIELD.get(message);
   }
 }

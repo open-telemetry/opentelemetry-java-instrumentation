@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.MessageEnhanceInfo;
@@ -37,15 +38,17 @@ public class MessageInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit
     public static void before(
         @Advice.This Message<?> message, @Advice.AllArguments Object[] allArguments) {
+      VirtualField<Message<?>, MessageEnhanceInfo> virtualField =
+          VirtualField.find(Message.class, MessageEnhanceInfo.class);
 
       if (message instanceof MessageImpl) {
-        MessageEnhanceInfo.setMessageEnhancedField(message, new MessageEnhanceInfo());
+        virtualField.set(message, new MessageEnhanceInfo());
       } else {
         Object argument2 = allArguments[2];
         if (message instanceof TopicMessageImpl && argument2 instanceof MessageImpl) {
           MessageImpl<?> impl = (MessageImpl<?>) argument2;
-          MessageEnhanceInfo info = MessageEnhanceInfo.getMessageEnhancedField(impl);
-          MessageEnhanceInfo.setMessageEnhancedField(message, info);
+          MessageEnhanceInfo info = virtualField.get(impl);
+          virtualField.set(message, info);
         }
       }
     }

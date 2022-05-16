@@ -18,6 +18,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.MessageEnhanceInfo;
@@ -73,7 +74,10 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> msg) {
-      MessageEnhanceInfo info = MessageEnhanceInfo.getMessageEnhancedField(msg);
+      VirtualField<Message<?>, MessageEnhanceInfo> virtualField =
+          VirtualField.find(Message.class, MessageEnhanceInfo.class);
+      MessageEnhanceInfo info = virtualField.get(msg);
+
       Context parent = info == null ? Context.current() : info.getContext();
       String topic = null == info ? consumer.getTopic() : info.getTopic();
       String mid = null == info ? "unknown" : info.getMessageId();

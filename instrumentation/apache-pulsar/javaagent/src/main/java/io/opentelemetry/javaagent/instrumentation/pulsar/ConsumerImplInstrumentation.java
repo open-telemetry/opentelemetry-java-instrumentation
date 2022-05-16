@@ -21,6 +21,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.info.ClientEnhanceInfo;
@@ -29,6 +30,7 @@ import io.opentelemetry.javaagent.instrumentation.pulsar.textmap.MessageTextMapG
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.ConsumerImpl;
@@ -67,9 +69,11 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String url = pulsarClient.getLookup().getServiceUrl();
-
       ClientEnhanceInfo info = new ClientEnhanceInfo(topic, url);
-      ClientEnhanceInfo.setConsumerEnhancedField(consumer, info);
+
+      VirtualField<Consumer<?>, ClientEnhanceInfo> virtualField =
+          VirtualField.find(Consumer.class, ClientEnhanceInfo.class);
+      virtualField.set(consumer, info);
     }
   }
 
@@ -81,9 +85,12 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Local(value = "otelScope") Scope scope) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.getConsumerEnhancedField(consumer);
+      VirtualField<Consumer<?>, ClientEnhanceInfo> virtualField =
+          VirtualField.find(Consumer.class, ClientEnhanceInfo.class);
+      ClientEnhanceInfo info = virtualField.get(consumer);
       if (null == info) {
-        scope = Scope.noop();
+        scope = null;
+        return;
       }
 
       MessageImpl<?> messageImpl = (MessageImpl<?>) message;
@@ -108,13 +115,11 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Thrown Throwable t,
         @Advice.Local(value = "otelScope") Scope scope) {
-      ClientEnhanceInfo info = ClientEnhanceInfo.getConsumerEnhancedField(consumer);
-      if (null == info || null == scope) {
-        if (null != scope) {
-          scope.close();
-        }
-      } else {
-        MessageEnhanceInfo messageInfo = MessageEnhanceInfo.getMessageEnhancedField(message);
+      if (scope != null) {
+        VirtualField<Message<?>, MessageEnhanceInfo> virtualField =
+            VirtualField.find(Message.class, MessageEnhanceInfo.class);
+        MessageEnhanceInfo messageInfo = virtualField.get(message);
+
         if (null != messageInfo) {
           messageInfo.setFields(Context.current(), consumer.getTopic(), message.getMessageId());
         }
