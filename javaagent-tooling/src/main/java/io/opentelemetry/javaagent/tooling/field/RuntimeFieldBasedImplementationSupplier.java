@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getVirtualFieldImplementationClassName;
 
-import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 

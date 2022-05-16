@@ -8,12 +8,15 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.trace.SpanKind;
 
 /**
- * Extractor or {@link SpanKind}. In most cases, the span kind will be constant for server or client
- * requests, but you may need to implement a custom {@link SpanKindExtractor} if a framework can
- * generate different kinds of spans, for example both HTTP and messaging spans.
+ * Extractor of the {@link SpanKind}. In most cases, the span kind will be constant for server or
+ * client requests, but you may need to implement a custom {@link SpanKindExtractor} if a framework
+ * can generate different kinds of spans, for example both HTTP and messaging spans.
  */
 @FunctionalInterface
 public interface SpanKindExtractor<REQUEST> {
+
+  /** Returns the {@link SpanKind} corresponding to the {@link REQUEST}. */
+  SpanKind extract(REQUEST request);
 
   /** Returns a {@link SpanNameExtractor} which always returns {@link SpanKind#INTERNAL}. */
   static <REQUEST> SpanKindExtractor<REQUEST> alwaysInternal() {
@@ -39,7 +42,4 @@ public interface SpanKindExtractor<REQUEST> {
   static <REQUEST> SpanKindExtractor<REQUEST> alwaysConsumer() {
     return request -> SpanKind.CONSUMER;
   }
-
-  /** Returns the {@link SpanKind} corresponding to the {@link REQUEST}. */
-  SpanKind extract(REQUEST request);
 }

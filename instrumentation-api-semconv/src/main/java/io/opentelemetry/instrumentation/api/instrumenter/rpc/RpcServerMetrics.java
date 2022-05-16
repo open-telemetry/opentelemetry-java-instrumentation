@@ -14,17 +14,17 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
- * {@link RequestListener} which keeps track of <a
+ * {@link OperationListener} which keeps track of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-server">RPC
  * server metrics</a>.
  */
-public final class RpcServerMetrics implements RequestListener {
+public final class RpcServerMetrics implements OperationListener {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
 
@@ -45,23 +45,23 @@ public final class RpcServerMetrics implements RequestListener {
   }
 
   /**
-   * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
+   * Returns a {@link OperationMetrics} which can be used to enable recording of {@link
    * RpcServerMetrics} on an {@link
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
-  public static RequestMetrics get() {
+  public static OperationMetrics get() {
     return RpcServerMetrics::new;
   }
 
   @Override
-  public Context start(Context context, Attributes startAttributes, long startNanos) {
+  public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
         RPC_SERVER_REQUEST_METRICS_STATE,
         new AutoValue_RpcServerMetrics_State(startAttributes, startNanos));
   }
 
   @Override
-  public void end(Context context, Attributes endAttributes, long endNanos) {
+  public void onEnd(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(RPC_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.log(

@@ -13,7 +13,7 @@ public final class ClassNames {
   private static final Cache<Class<?>, String> simpleNames = Cache.weak();
 
   /**
-   * Returns a simple name based on a given class reference, e.g. for use in span names and span
+   * Returns a simple class name based on a given class reference, e.g. for use in span names and
    * attributes. Anonymous classes are named based on their parent.
    */
   public static String simpleName(Class<?> type) {

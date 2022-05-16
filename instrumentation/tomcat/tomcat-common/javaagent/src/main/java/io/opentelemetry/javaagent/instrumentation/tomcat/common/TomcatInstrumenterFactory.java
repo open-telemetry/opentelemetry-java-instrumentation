@@ -49,7 +49,7 @@ public final class TomcatInstrumenterFactory {
                     .captureServletAttributes()
                     .recordException()
                     .init(context))
-        .addRequestMetrics(HttpServerMetrics.get())
+        .addOperationMetrics(HttpServerMetrics.get())
         .newServerInstrumenter(TomcatRequestGetter.INSTANCE);
   }
 }

@@ -34,7 +34,7 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   @Override
   public AggregationTemporality getAggregationTemporality(InstrumentType instrumentType) {
-    return AggregationTemporality.CUMULATIVE;
+    return AggregationTemporality.DELTA;
   }
 
   @Override

@@ -6,11 +6,14 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import java.lang.instrument.Instrumentation;
+import javax.annotation.Nullable;
 
-/** This class serves as a "everywhere accessible" source of {@link Instrumentation} instance. */
+/** This class serves as an "everywhere accessible" source of {@link Instrumentation} instance. */
 public class InstrumentationHolder {
-  private static volatile Instrumentation instrumentation;
 
+  @Nullable private static volatile Instrumentation instrumentation;
+
+  @Nullable
   public static Instrumentation getInstrumentation() {
     return instrumentation;
   }

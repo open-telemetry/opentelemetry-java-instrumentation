@@ -205,6 +205,51 @@ public abstract class AbstractGrpcTest {
                                                             "SENT"),
                                                         entry(
                                                             SemanticAttributes.MESSAGE_ID, 2L))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.server.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_PORT,
+                                                    server.getPort()),
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
   }
 
   @Test
@@ -349,6 +394,51 @@ public abstract class AbstractGrpcTest {
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.server.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_PORT,
+                                                    server.getPort()),
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
   }
 
   @Test
@@ -501,6 +591,51 @@ public abstract class AbstractGrpcTest {
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.server.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_PORT,
+                                                    server.getPort()),
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
   }
 
   @ParameterizedTest
@@ -610,6 +745,51 @@ public abstract class AbstractGrpcTest {
                                     span.hasException(status.getCause());
                                   }
                                 })));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.server.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_PORT,
+                                                    server.getPort()),
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
   }
 
   @ParameterizedTest
@@ -717,6 +897,51 @@ public abstract class AbstractGrpcTest {
                                                       entry(SemanticAttributes.MESSAGE_ID, 1L)));
                                   span.hasException(status.asRuntimeException());
                                 })));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.server.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_PORT,
+                                                    server.getPort()),
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
   }
 
   static class ErrorProvider implements ArgumentsProvider {

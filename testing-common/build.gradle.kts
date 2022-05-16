@@ -38,7 +38,6 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
   api("io.opentelemetry:opentelemetry-sdk-metrics")
-  api("io.opentelemetry:opentelemetry-sdk-metrics-testing")
   api("io.opentelemetry:opentelemetry-sdk-logs")
   api(project(":instrumentation-api"))
 
@@ -49,7 +48,7 @@ dependencies {
 
   api("com.google.guava:guava")
 
-  compileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry.proto:opentelemetry-proto")
 
@@ -65,7 +64,6 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
 
-  testImplementation(project(":javaagent-instrumentation-api"))
   testImplementation(project(":javaagent-tooling"))
   testImplementation(project(":javaagent-bootstrap"))
   testImplementation(project(":javaagent-extension-api"))

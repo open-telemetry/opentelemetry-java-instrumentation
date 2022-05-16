@@ -9,12 +9,16 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 
 /**
- * A listener of the start and end of a request. Instrumented libraries will call {@link
- * #start(Context, Attributes, long)} as early as possible in the processing of a request and {@link
- * #end(Context, Attributes, long)} as late as possible when finishing the request. These correspond
- * to the start and end of a span when tracing.
+ * A listener of the start and end of an instrumented operation. The {@link #onStart(Context,
+ * Attributes, long)} methods will be called as early as possible in the processing of a request;
+ * and the {@link #onEnd(Context, Attributes, long)} method will be called as late as possible when
+ * finishing the processing of a response. These correspond to the start and end of a span when
+ * tracing.
+ *
+ * @deprecated Use {@link OperationListener} instead.
  */
-public interface RequestListener {
+@Deprecated
+public interface RequestListener extends OperationListener {
 
   /**
    * Listener method that is called at the start of a request. If any state needs to be kept between
@@ -23,14 +27,34 @@ public interface RequestListener {
    *
    * @param startNanos The nanosecond timestamp marking the start of the request. Can be used to
    *     compute the duration of the entire operation.
+   * @deprecated Implement the {@link #onStart(Context, Attributes, long)} method instead.
    */
-  Context start(Context context, Attributes startAttributes, long startNanos);
+  @Deprecated
+  default Context start(Context context, Attributes startAttributes, long startNanos) {
+    throw new UnsupportedOperationException(
+        "This method variant is deprecated and will be removed in the next minor release.");
+  }
+
+  @Override
+  default Context onStart(Context context, Attributes startAttributes, long startNanos) {
+    return start(context, startAttributes, startNanos);
+  }
 
   /**
    * Listener method that is called at the end of a request.
    *
    * @param endNanos The nanosecond timestamp marking the end of the request. Can be used to compute
    *     the duration of the entire operation.
+   * @deprecated Implement the {@link #onEnd(Context, Attributes, long)} method instead.
    */
-  void end(Context context, Attributes endAttributes, long endNanos);
+  @Deprecated
+  default void end(Context context, Attributes endAttributes, long endNanos) {
+    throw new UnsupportedOperationException(
+        "This method variant is deprecated and will be removed in the next minor release.");
+  }
+
+  @Override
+  default void onEnd(Context context, Attributes endAttributes, long endNanos) {
+    end(context, endAttributes, endNanos);
+  }
 }

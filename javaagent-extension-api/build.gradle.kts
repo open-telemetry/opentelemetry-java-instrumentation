@@ -11,10 +11,7 @@ dependencies {
   api("net.bytebuddy:byte-buddy-dep")
 
   implementation(project(":instrumentation-api"))
-  implementation(project(":javaagent-instrumentation-api"))
 
-  // metrics are unstable, do not expose as api
-  implementation("io.opentelemetry:opentelemetry-sdk-metrics")
   // autoconfigure is unstable, do not expose as api
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 

@@ -41,14 +41,13 @@ public final class KafkaTelemetryBuilder {
   }
 
   public KafkaTelemetry build() {
+    KafkaInstrumenterFactory instrumenterFactory =
+        new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME);
+
     return new KafkaTelemetry(
         openTelemetry,
-        KafkaInstrumenterFactory.createProducerInstrumenter(
-            INSTRUMENTATION_NAME, openTelemetry, producerAttributesExtractors),
-        KafkaInstrumenterFactory.createConsumerOperationInstrumenter(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            MessageOperation.RECEIVE,
-            consumerAttributesExtractors));
+        instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
+        instrumenterFactory.createConsumerOperationInstrumenter(
+            MessageOperation.RECEIVE, consumerAttributesExtractors));
   }
 }

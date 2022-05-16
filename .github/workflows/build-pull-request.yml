@@ -48,7 +48,7 @@ jobs:
     # release branch PRs are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
-    if: ${{ !startsWith(github.base_ref, 'v') }}
+    if: ${{ !startsWith(github.base_ref, 'release/') }}
     uses: ./.github/workflows/reusable-muzzle.yml
     with:
       cache-read-only: true
@@ -65,11 +65,15 @@ jobs:
 
   # this is not a required check to avoid blocking pull requests if external links break
   markdown-link-check:
+    # release branches are excluded to avoid unnecessary maintenance
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-markdown-link-check.yml
 
   # this is not a required check to avoid blocking pull requests if new misspellings are added
   # to the misspell dictionary
   misspell-check:
+    # release branches are excluded to avoid unnecessary maintenance
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-misspell-check.yml
 
   required-status-check:
@@ -87,7 +91,7 @@ jobs:
           needs.assemble.result != 'success' ||
           needs.test.result != 'success' ||
           needs.smoke-test.result != 'success' ||
-          needs.muzzle.result != 'success' ||
+          (!startsWith(github.base_ref, 'release/') && needs.muzzle.result != 'success') ||
           needs.gradle-plugins.result != 'success' ||
           needs.examples.result != 'success'
         run: exit 1

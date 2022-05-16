@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import org.assertj.core.api.ListAssert;
@@ -107,6 +108,13 @@ public abstract class InstrumentationExtension
    */
   public List<List<SpanData>> waitForTraces(int numberOfTraces) {
     return testRunner.waitForTraces(numberOfTraces);
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertSortedTraces(
+      Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
+    testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
   }
 
   @SafeVarargs

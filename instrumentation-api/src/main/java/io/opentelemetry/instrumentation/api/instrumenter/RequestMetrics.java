@@ -7,9 +7,14 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.metrics.Meter;
 
-/** A factory for a {@link RequestListener} for recording metrics using a {@link Meter}. */
-@FunctionalInterface
-public interface RequestMetrics {
-  /** Returns a {@link RequestListener} for recording metrics using the given {@link Meter}. */
+/**
+ * A factory for creating a {@link RequestListener} instance that records operation metrics.
+ *
+ * @deprecated Use {@link OperationMetrics} instead.
+ */
+@Deprecated
+public interface RequestMetrics extends OperationMetrics {
+
+  @Override
   RequestListener create(Meter meter);
 }

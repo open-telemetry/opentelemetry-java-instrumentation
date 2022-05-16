@@ -22,7 +22,6 @@ dependencies {
   // instrumentation infrastructure for testing too.
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")
   // Apply common dependencies for instrumentation.
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api") {
@@ -91,6 +90,9 @@ class JavaagentTestArgumentsProvider(
     // in smoke tests instead.
     "-Dotel.javaagent.add-thread-details=false",
     "-Dotel.metrics.exporter=otlp",
+    // suppress repeated logging of "No metric data to export - skipping export."
+    // since PeriodicMetricReader is configured with a short interval
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
     // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",

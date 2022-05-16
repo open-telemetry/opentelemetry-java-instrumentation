@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,35 +20,38 @@ import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
-// TODO(anuraaga): Need to define what are actually useful knobs, perhaps even providing a
-// base-class
-// for instrumentation library builders.
 /**
- * An instrumenter of the start and end of a request/response lifecycle. Almost all instrumentation
- * of libraries falls into modeling start and end, generating observability signals from these such
- * as a tracing {@link Span}, or metrics such as the duration taken, active requests, etc. When
- * instrumenting a library, there will generally be four steps.
+ * The {@link Instrumenter} encapsulates the entire logic for gathering telemetry, from collecting
+ * the data, to starting and ending spans, to recording values using metrics instruments.
+ *
+ * <p>An {@link Instrumenter} is called at the start and the end of a request/response lifecycle.
+ * When instrumenting a library, there will generally be four steps.
  *
  * <ul>
  *   <li>Create an {@link Instrumenter} using {@link InstrumenterBuilder}. Use the builder to
  *       configure any library-specific customizations, and also expose useful knobs to your user.
- *   <li>Call {@link Instrumenter#shouldStart(Context, Object)} and do not proceed if {@code false}.
+ *   <li>Call {@link Instrumenter#shouldStart(Context, Object)} and do not proceed if it returns
+ *       {@code false}.
  *   <li>Call {@link Instrumenter#start(Context, Object)} at the beginning of a request.
  *   <li>Call {@link Instrumenter#end(Context, Object, Object, Throwable)} at the end of a request.
  * </ul>
+ *
+ * <p>For more detailed information about using the {@link Instrumenter} see the <a
+ * href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/using-instrumenter-api.md">Using
+ * the Instrumenter API</a> page.
  */
 public class Instrumenter<REQUEST, RESPONSE> {
 
   /**
    * Returns a new {@link InstrumenterBuilder}.
    *
-   * <p>The {@code instrumentationName} is the name of the instrumentation library, not the name of
-   * the instrument*ed* library. The value passed in this parameter should uniquely identify the
-   * instrumentation library so that during troubleshooting it's possible to pinpoint what tracer
-   * produced problematic telemetry.
+   * <p>The {@code instrumentationName} indicates the instrumentation library name, not the
+   * instrument<b>ed</b> library name. The value passed in this parameter should uniquely identify
+   * the instrumentation library so that during troubleshooting it's possible to determine where the
+   * telemetry came from.
    *
-   * <p>In this project we use a convention to encode the minimum supported version of the
-   * instrument*ed* library into the instrumentation name, for example {@code
+   * <p>In OpenTelemetry instrumentations we use a convention to encode the minimum supported
+   * version of the instrument<b>ed</b> library into the instrumentation name, for example {@code
    * io.opentelemetry.apache-httpclient-4.0}. This way, if there are different instrumentations for
    * different library versions it's easy to find out which instrumentations produced the telemetry
    * data.
@@ -72,7 +74,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
       attributesExtractors;
   private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
-  private final List<? extends RequestListener> requestListeners;
+  private final List<? extends OperationListener> operationListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final TimeExtractor<REQUEST, RESPONSE> timeExtractor;
   private final boolean enabled;
@@ -87,7 +89,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.spanLinksExtractors = new ArrayList<>(builder.spanLinksExtractors);
     this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
     this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
-    this.requestListeners = builder.buildRequestListeners();
+    this.operationListeners = builder.buildOperationListeners();
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.timeExtractor = builder.timeExtractor;
     this.enabled = builder.enabled;
@@ -95,10 +97,14 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns whether instrumentation should be applied for the {@link REQUEST}. If {@code true},
-   * call {@link #start(Context, Object)} and {@link #end(Context, Object, Object, Throwable)}
-   * around the operation being instrumented, or if {@code false} execute the operation directly
-   * without calling those methods.
+   * Determines whether the operation should be instrumented for telemetry or not. If the return
+   * value is {@code true}, call {@link #start(Context, Object)} and {@link #end(Context, Object,
+   * Object, Throwable)} around the instrumented operation; if the return value is false {@code
+   * false} execute the operation directly without calling those methods.
+   *
+   * <p>The {@code parentContext} is the parent of the resulting instrumented operation and should
+   * usually be {@link Context#current() Context.current()}. The {@code request} is the request
+   * object of this operation.
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
     if (!enabled) {
@@ -114,11 +120,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Starts a new operation to be instrumented. The {@code parentContext} is the parent of the
-   * resulting instrumented operation and should usually be {@code Context.current()}. The {@code
-   * request} is the request object of this operation. The returned {@link Context} should be
-   * propagated along with the operation and passed to {@link #end(Context, Object, Object,
-   * Throwable)} when it is finished.
+   * Starts a new instrumented operation. The returned {@link Context} should be propagated along
+   * with the operation and passed to the {@link #end(Context, Object, Object, Throwable)} method
+   * when it is finished.
+   *
+   * <p>The {@code parentContext} is the parent of the resulting instrumented operation and should
+   * usually be {@link Context#current() Context.current()}. The {@code request} is the request
+   * object of this operation.
    */
   public Context start(Context parentContext, REQUEST request) {
     SpanKind spanKind = spanKindExtractor.extract(request);
@@ -139,11 +147,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       spanLinksExtractor.extract(spanLinksBuilder, parentContext, request);
     }
 
-    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
+    UnsafeAttributes attributes = new UnsafeAttributes();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onStart(attributesBuilder, parentContext, request);
+      extractor.onStart(attributes, parentContext, request);
     }
-    Attributes attributes = attributesBuilder;
 
     Context context = parentContext;
 
@@ -152,13 +159,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
     context = context.with(span);
 
     for (ContextCustomizer<? super REQUEST> contextCustomizer : contextCustomizers) {
-      context = contextCustomizer.start(context, request, attributes);
+      context = contextCustomizer.onStart(context, request, attributes);
     }
 
-    if (!requestListeners.isEmpty()) {
+    if (!operationListeners.isEmpty()) {
       long startNanos = getNanos(startTime);
-      for (RequestListener requestListener : requestListeners) {
-        context = requestListener.start(context, attributes, startNanos);
+      for (OperationListener operationListener : operationListeners) {
+        context = operationListener.onStart(context, attributes, startNanos);
       }
     }
 
@@ -170,17 +177,21 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Ends an instrumented operation. The {@link Context} must be what was returned from {@link
-   * #start(Context, Object)}. {@code request} is the request object of the operation, {@code
+   * Ends an instrumented operation. It is of extreme importance for this method to be always called
+   * after {@link #start(Context, Object) start()}. Calling {@code start()} without later {@code
+   * end()} will result in inaccurate or wrong telemetry and context leaks.
+   *
+   * <p>The {@code context} must be the same value that was returned from {@link #start(Context,
+   * Object)}. The {@code request} parameter is the request object of the operation, {@code
    * response} is the response object of the operation, and {@code error} is an exception that was
-   * thrown by the operation, or {@code null} if none was thrown.
+   * thrown by the operation or {@code null} if no error occurred.
    */
   public void end(
       Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
     if (error != null) {
-      error = errorCauseExtractor.extractCause(error);
+      error = errorCauseExtractor.extract(error);
       span.recordException(error);
     }
 
@@ -195,12 +206,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
       endTime = timeExtractor.extractEndTime(request, response, error);
     }
 
-    if (!requestListeners.isEmpty()) {
+    if (!operationListeners.isEmpty()) {
       long endNanos = getNanos(endTime);
-      ListIterator<? extends RequestListener> i =
-          requestListeners.listIterator(requestListeners.size());
+      ListIterator<? extends OperationListener> i =
+          operationListeners.listIterator(operationListeners.size());
       while (i.hasPrevious()) {
-        i.previous().end(context, attributes, endNanos);
+        i.previous().onEnd(context, attributes, endNanos);
       }
     }
 

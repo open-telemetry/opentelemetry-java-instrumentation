@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.dropwizard.jetty.NonblockingServletHolder
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
+import org.eclipse.jetty.servlet.ServletHolder
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 import test.JaxRsTestApplication
@@ -18,7 +18,7 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
 
     def handler = new ServletContextHandler(ServletContextHandler.SESSIONS)
     handler.setContextPath("/")
-    handler.addServlet(new NonblockingServletHolder(servlet), "/*")
+    handler.addServlet(new ServletHolder(servlet), "/*")
 
     def server = new Server(port)
     server.setHandler(handler)

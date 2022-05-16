@@ -75,7 +75,7 @@ public final class ConfigInitializer {
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
-      logger.log(SEVERE, "Configuration file '{0}' not found.", configurationFilePath);
+      logger.log(SEVERE, "Configuration file \"{0}\" not found.", configurationFilePath);
       return properties;
     }
 
@@ -83,11 +83,11 @@ public final class ConfigInitializer {
         new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
       properties.load(reader);
     } catch (FileNotFoundException fnf) {
-      logger.log(SEVERE, "Configuration file '{0}' not found.", configurationFilePath);
+      logger.log(SEVERE, "Configuration file \"{0}\" not found.", configurationFilePath);
     } catch (IOException ioe) {
       logger.log(
           SEVERE,
-          "Configuration file '{0}' cannot be accessed or correctly parsed.",
+          "Configuration file \"{0}\" cannot be accessed or correctly parsed.",
           configurationFilePath);
     }
 

@@ -36,7 +36,7 @@ import scala.util.{Failure, Success}
 class AkkaHttpClientInstrumentationTest
     extends AbstractHttpClientTest[HttpRequest] {
 
-  @RegisterExtension val _: InstrumentationExtension =
+  @RegisterExtension val extension: InstrumentationExtension =
     HttpClientInstrumentationExtension.forAgent()
 
   val system: ActorSystem = ActorSystem.create()

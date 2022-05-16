@@ -19,7 +19,7 @@ sourceSets {
 }
 
 dependencies {
-  compileOnly(project(path = ":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded", configuration = "shadow"))
+  compileOnly(project(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded", configuration = "shadow"))
 
   library("com.azure:azure-core:1.19.0")
 

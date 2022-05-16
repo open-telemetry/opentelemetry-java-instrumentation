@@ -15,11 +15,15 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationList;
+import net.bytebuddy.description.annotation.AnnotationValue;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.MethodList;
+import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -294,6 +298,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   /** Based on TypePool.Default.WithLazyResolution */
   private class AgentTypePool extends TypePool.Default {
+    // ThreadLocal used for detecting loading of annotation types
+    private final ThreadLocal<Boolean> loadingAnnotations = new ThreadLocal<>();
     private final WeakReference<ClassLoader> classLoaderRef;
 
     public AgentTypePool(
@@ -331,6 +337,18 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       return resolution;
     }
 
+    void enterLoadAnnotations() {
+      loadingAnnotations.set(Boolean.TRUE);
+    }
+
+    void exitLoadAnnotations() {
+      loadingAnnotations.set(null);
+    }
+
+    boolean isLoadingAnnotations() {
+      return loadingAnnotations.get() != null;
+    }
+
     /** Based on TypePool.Default.WithLazyResolution.LazyResolution */
     private class LazyResolution implements TypePool.Resolution {
       private final WeakReference<ClassLoader> classLoaderRef;
@@ -343,6 +361,19 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
       @Override
       public boolean isResolved() {
+        // Like jdk, byte-buddy getDeclaredAnnotations does not report annotations whose class is
+        // missing. To do this it needs to locate the bytes for annotation types used in class.
+        // Which means that if we have a matcher that matches methods annotated with @Foo byte-buddy
+        // will end up location bytes for all annotations used on any method in the classes that
+        // this matcher is applied to. From our perspective this is unreasonable, we just want to
+        // match based on annotation name with as little overhead as possible. As we match only
+        // based on annotation name we never need to locate the bytes for the annotation type.
+        // See TypePool.Default.LazyTypeDescription.LazyAnnotationDescription.asList()
+        // When isResolved() is called during loading of annotations delay resolving to avoid
+        // looking up the class bytes.
+        if (isLoadingAnnotations()) {
+          return true;
+        }
         return doResolve(name).isResolved();
       }
 
@@ -354,6 +385,11 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         // super class and interfaces multiple times
         if (cached == null) {
           cached = new AgentTypePool.LazyTypeDescription(classLoaderRef, name);
+          // if we know that an annotation is being loaded wrap the result so that we wouldn't
+          // need to resolve the class bytes to tell whether it is an annotation
+          if (isLoadingAnnotations()) {
+            cached = new AnnotationTypeDescription(cached);
+          }
         }
         return cached;
       }
@@ -376,7 +412,15 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       @Override
       public AnnotationList getDeclaredAnnotations() {
         if (annotations == null) {
-          annotations = delegate().getDeclaredAnnotations();
+          TypeDescription delegate = delegate();
+          // Run getDeclaredAnnotations with ThreadLocal. ThreadLocal helps us detect types looked
+          // up by getDeclaredAnnotations and treat them specially.
+          enterLoadAnnotations();
+          try {
+            annotations = delegate.getDeclaredAnnotations();
+          } finally {
+            exitLoadAnnotations();
+          }
         }
         return annotations;
       }
@@ -413,12 +457,12 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return name;
       }
 
-      private volatile Generic cachedSuperClass;
+      private volatile TypeDescription.Generic cachedSuperClass;
 
       @Override
-      public Generic getSuperClass() {
+      public TypeDescription.Generic getSuperClass() {
         if (cachedSuperClass == null) {
-          Generic superClassDescription = delegate().getSuperClass();
+          TypeDescription.Generic superClassDescription = delegate().getSuperClass();
           ClassLoader classLoader = classLoaderRef.get();
           if (canUseFindLoadedClass() && classLoader != null && superClassDescription != null) {
             String superName = superClassDescription.getTypeName();
@@ -445,7 +489,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
             // here we use raw types and loose generic info
             // we don't expect to have matchers that would use the generic info
             List<TypeDescription> result = new ArrayList<>();
-            for (Generic interfaceDescription : interfaces) {
+            for (TypeDescription.Generic interfaceDescription : interfaces) {
               String interfaceName = interfaceDescription.getTypeName();
               Class<?> interfaceClass = findLoadedClass(classLoader, interfaceName);
               if (interfaceClass != null) {
@@ -460,6 +504,45 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
           cachedInterfaces = interfaces;
         }
         return cachedInterfaces;
+      }
+
+      private class LazyAnnotationMethodDescription extends DelegatingMethodDescription {
+
+        LazyAnnotationMethodDescription(MethodDescription.InDefinedShape method) {
+          super(method);
+        }
+
+        @Override
+        public AnnotationList getDeclaredAnnotations() {
+          // Run getDeclaredAnnotations with ThreadLocal. ThreadLocal helps us detect types looked
+          // up by getDeclaredAnnotations and treat them specially.
+          enterLoadAnnotations();
+          try {
+            return method.getDeclaredAnnotations();
+          } finally {
+            exitLoadAnnotations();
+          }
+        }
+      }
+
+      @Override
+      public MethodList<MethodDescription.InDefinedShape> getDeclaredMethods() {
+        MethodList<MethodDescription.InDefinedShape> methods = super.getDeclaredMethods();
+
+        class MethodListWrapper extends MethodList.AbstractBase<MethodDescription.InDefinedShape> {
+
+          @Override
+          public MethodDescription.InDefinedShape get(int index) {
+            return new LazyAnnotationMethodDescription(methods.get(index));
+          }
+
+          @Override
+          public int size() {
+            return methods.size();
+          }
+        }
+
+        return new MethodListWrapper();
       }
     }
 
@@ -493,10 +576,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return name;
       }
 
-      private volatile Generic cachedSuperClass;
+      private volatile TypeDescription.Generic cachedSuperClass;
 
       @Override
-      public Generic getSuperClass() {
+      public TypeDescription.Generic getSuperClass() {
         if (cachedSuperClass == null) {
           Class<?> clazz = classRef.get();
           if (clazz == null) {
@@ -555,5 +638,92 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       pool = poolStrategy.typePool(classFileLocator, clazz.getClassLoader());
     }
     return pool.new LazyTypeDescriptionWithClass(clazz);
+  }
+
+  /**
+   * Class descriptor that claims to represent an annotation without checking whether the underlying
+   * type really is an annotation.
+   */
+  private static class AnnotationTypeDescription
+      extends TypeDescription.AbstractBase.OfSimpleType.WithDelegation {
+    private final TypeDescription delegate;
+
+    AnnotationTypeDescription(TypeDescription delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    protected TypeDescription delegate() {
+      return delegate;
+    }
+
+    @Override
+    public String getName() {
+      return delegate.getName();
+    }
+
+    @Override
+    public boolean isAnnotation() {
+      // by default byte-buddy checks whether class modifiers have annotation bit set
+      // as we wish to avoid looking up the class bytes we assume that every that was expected
+      // to be an annotation really is an annotation and return true here
+      // See TypePool.Default.LazyTypeDescription.LazyAnnotationDescription.asList()
+      return true;
+    }
+  }
+
+  private static class DelegatingMethodDescription
+      extends MethodDescription.InDefinedShape.AbstractBase {
+    protected final MethodDescription.InDefinedShape method;
+
+    DelegatingMethodDescription(MethodDescription.InDefinedShape method) {
+      this.method = method;
+    }
+
+    @Nonnull
+    @Override
+    public TypeDescription getDeclaringType() {
+      return method.getDeclaringType();
+    }
+
+    @Override
+    public TypeDescription.Generic getReturnType() {
+      return method.getReturnType();
+    }
+
+    @Override
+    public ParameterList<ParameterDescription.InDefinedShape> getParameters() {
+      return method.getParameters();
+    }
+
+    @Override
+    public TypeList.Generic getExceptionTypes() {
+      return method.getExceptionTypes();
+    }
+
+    @Override
+    public AnnotationValue<?, ?> getDefaultValue() {
+      return method.getDefaultValue();
+    }
+
+    @Override
+    public String getInternalName() {
+      return method.getInternalName();
+    }
+
+    @Override
+    public TypeList.Generic getTypeVariables() {
+      return method.getTypeVariables();
+    }
+
+    @Override
+    public int getModifiers() {
+      return method.getModifiers();
+    }
+
+    @Override
+    public AnnotationList getDeclaredAnnotations() {
+      return method.getDeclaredAnnotations();
+    }
   }
 }

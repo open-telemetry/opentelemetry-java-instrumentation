@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -14,9 +14,10 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ class HttpClientMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
-    RequestListener listener = HttpClientMetrics.get().create(meterProvider.get("test"));
+    OperationListener listener = HttpClientMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder()
@@ -59,53 +60,51 @@ class HttpClientMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 = listener.start(parent, requestAttributes, nanos(100));
+    Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    Context context2 = listener.start(Context.root(), requestAttributes, nanos(150));
+    Context context2 = listener.onStart(Context.root(), requestAttributes, nanos(150));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    listener.end(context1, responseAttributes, nanos(250));
+    listener.onEnd(context1, responseAttributes, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
-        .hasSize(1)
-        .anySatisfy(
+        .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
                     .hasName("http.client.duration")
                     .hasUnit("ms")
-                    .hasDoubleHistogram()
-                    .points()
-                    .satisfiesExactly(
-                        point -> {
-                          assertThat(point)
-                              .hasSum(150 /* millis */)
-                              .attributes()
-                              .containsOnly(
-                                  attributeEntry("net.peer.name", "localhost"),
-                                  attributeEntry("net.peer.port", 1234),
-                                  attributeEntry("http.method", "GET"),
-                                  attributeEntry("http.flavor", "2.0"),
-                                  attributeEntry("http.status_code", 200));
-                          assertThat(point).exemplars().hasSize(1);
-                          assertThat(point.getExemplars().get(0))
-                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                              .hasSpanId("090a0b0c0d0e0f00");
-                        }));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(150 /* millis */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))));
 
-    listener.end(context2, responseAttributes, nanos(300));
+    listener.onEnd(context2, responseAttributes, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
-        .hasSize(1)
-        .anySatisfy(
+        .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
                     .hasName("http.client.duration")
-                    .hasDoubleHistogram()
-                    .points()
-                    .satisfiesExactly(point -> assertThat(point).hasSum(300 /* millis */)));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point -> point.hasSum(300 /* millis */))));
   }
 
   private static long nanos(int millis) {

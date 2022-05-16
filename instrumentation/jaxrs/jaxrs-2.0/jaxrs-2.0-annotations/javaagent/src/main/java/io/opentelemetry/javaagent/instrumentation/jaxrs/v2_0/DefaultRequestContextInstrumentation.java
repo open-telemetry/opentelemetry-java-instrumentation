@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotationsSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
@@ -41,12 +41,12 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         @Local("otelHandlerData") HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
-      if (requestContext.getProperty(JaxrsSingletons.ABORT_HANDLED) != null) {
+      if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null) {
         return;
       }
 
       Class<?> filterClass =
-          (Class<?>) requestContext.getProperty(JaxrsSingletons.ABORT_FILTER_CLASS);
+          (Class<?>) requestContext.getProperty(JaxrsConstants.ABORT_FILTER_CLASS);
       Method method = null;
       try {
         method = filterClass.getMethod("filter", ContainerRequestContext.class);

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.executors;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 
 /** Advice helper methods for concurrent task (e.g. {@link Runnable}) instrumentations. */

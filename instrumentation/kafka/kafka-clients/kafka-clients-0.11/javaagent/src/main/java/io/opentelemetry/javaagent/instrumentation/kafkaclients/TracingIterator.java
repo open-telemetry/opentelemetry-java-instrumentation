@@ -53,8 +53,13 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     // in case they didn't call hasNext()...
     closeScopeAndEndSpan();
 
+    // it's important not to suppress consumer span creation here using Instrumenter.shouldStart()
+    // because this instrumentation can leak the context and so there may be a leaked consumer span
+    // in the context, in which case it's important to overwrite the leaked span instead of
+    // suppressing the correct span
+    // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
     ConsumerRecord<K, V> next = delegateIterator.next();
-    if (next != null && consumerProcessInstrumenter().shouldStart(parentContext, next)) {
+    if (next != null && KafkaClientsConsumerProcessTracing.wrappingEnabled()) {
       currentRequest = next;
       currentContext = consumerProcessInstrumenter().start(parentContext, currentRequest);
       currentScope = currentContext.makeCurrent();

@@ -63,15 +63,21 @@ public class ResultsCollector {
       throws IOException {
     Path k6File = namingConvention.k6Results(agent);
     String json = new String(Files.readAllBytes(k6File));
-    double iterationAvg = JsonPath.read(json, "$.metrics.iteration_duration.avg");
-    double iterationP95 = JsonPath.read(json, "$.metrics.iteration_duration['p(95)']");
-    double requestAvg = JsonPath.read(json, "$.metrics.http_req_duration.avg");
-    double requestP95 = JsonPath.read(json, "$.metrics.http_req_duration['p(95)']");
+    double iterationAvg = read(json, "$.metrics.iteration_duration.avg");
+    double iterationP95 = read(json, "$.metrics.iteration_duration['p(95)']");
+    double requestAvg = read(json, "$.metrics.http_req_duration.avg");
+    double requestP95 = read(json, "$.metrics.http_req_duration['p(95)']");
     return builder
         .iterationAvg(iterationAvg)
         .iterationP95(iterationP95)
         .requestAvg(requestAvg)
         .requestP95(requestP95);
+  }
+
+  private static double read(String json, String jsonPath) {
+    // JsonPath.read returns either Double or BigDecimal
+    Number result = JsonPath.read(json, jsonPath);
+    return result.doubleValue();
   }
 
   private AppPerfResults.Builder addJfrResults(AppPerfResults.Builder builder, Agent agent)

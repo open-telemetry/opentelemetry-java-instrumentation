@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
@@ -28,6 +29,7 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of {@link InstrumentationTestRunner} that initializes OpenTelemetry SDK and
@@ -44,7 +46,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
     GlobalOpenTelemetry.resetForTest();
 
     testSpanExporter = InMemorySpanExporter.create();
-    testMetricExporter = InMemoryMetricExporter.create();
+    testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
 
     openTelemetry =
         OpenTelemetrySdk.builder()
@@ -89,6 +91,8 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   @Override
   public void clearAllExportedData() {
+    // Flush meter provider to remove any lingering measurements
+    openTelemetry.getSdkMeterProvider().forceFlush().join(10, TimeUnit.SECONDS);
     testSpanExporter.reset();
     testMetricExporter.reset();
     forceFlushCalled = false;

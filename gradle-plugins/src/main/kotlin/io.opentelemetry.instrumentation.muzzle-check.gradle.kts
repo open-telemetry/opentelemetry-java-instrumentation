@@ -66,6 +66,9 @@ val shadowMuzzleTooling by tasks.registering(ShadowJar::class) {
 val shadowMuzzleBootstrap by tasks.registering(ShadowJar::class) {
   configurations = listOf(muzzleBootstrap)
 
+  // exclude the agent part of the javaagent-extension-api
+  exclude("io/opentelemetry/javaagent/extension/**")
+
   archiveFileName.set("bootstrap-for-muzzle-check.jar")
 }
 
@@ -98,8 +101,9 @@ tasks.withType<ShadowJar>().configureEach {
   relocate("io.opentelemetry.extension.aws", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.aws")
   relocate("io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin")
 
-  // this is for instrumentation on opentelemetry-api itself
+  // this is for instrumentation of opentelemetry-api and opentelemetry-instrumentation-api
   relocate("application.io.opentelemetry", "io.opentelemetry")
+  relocate("application.io.opentelemetry.instrumentation.api", "io.opentelemetry.instrumentation.api")
 
   // this is for instrumentation on java.util.logging (since java.util.logging itself is shaded above)
   relocate("application.java.util.logging", "java.util.logging")
@@ -282,7 +286,8 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
       val instrumentationCL = createInstrumentationClassloader()
       val userCL = createClassLoaderForTask(config)
       withContextClassLoader(instrumentationCL) {
-        MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL, muzzleDirective.assertPass.get())
+        MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL,
+          muzzleDirective.excludedInstrumentationModules.get(), muzzleDirective.assertPass.get())
       }
 
       for (thread in Thread.getAllStackTraces().keys) {
@@ -344,7 +349,9 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
       classifier.set(muzzleDirective.classifier)
       versions.set(version)
       assertPass.set(!muzzleDirective.assertPass.get())
+      additionalDependencies.set(muzzleDirective.additionalDependencies)
       excludedDependencies.set(muzzleDirective.excludedDependencies)
+      excludedInstrumentationModules.set(muzzleDirective.excludedInstrumentationModules)
     }
     inverseDirectives.add(inverseDirective)
   }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -14,7 +14,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -29,7 +29,7 @@ class RpcClientMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
-    RequestListener listener = RpcClientMetrics.get().create(meterProvider.get("test"));
+    OperationListener listener = RpcClientMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder()
@@ -63,67 +63,67 @@ class RpcClientMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 = listener.start(parent, requestAttributes, nanos(100));
+    Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    Context context2 = listener.start(Context.root(), requestAttributes, nanos(150));
+    Context context2 = listener.onStart(Context.root(), requestAttributes, nanos(150));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    listener.end(context1, responseAttributes1, nanos(250));
+    listener.onEnd(context1, responseAttributes1, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
-        .hasSize(1)
-        .anySatisfy(
+        .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
                     .hasName("rpc.client.duration")
                     .hasUnit("ms")
-                    .hasDoubleHistogram()
-                    .points()
-                    .satisfiesExactly(
-                        point -> {
-                          assertThat(point)
-                              .hasSum(150 /* millis */)
-                              .attributes()
-                              .containsOnly(
-                                  attributeEntry("rpc.system", "grpc"),
-                                  attributeEntry("rpc.service", "myservice.EchoService"),
-                                  attributeEntry("rpc.method", "exampleMethod"),
-                                  attributeEntry("net.peer.name", "example.com"),
-                                  attributeEntry("net.peer.port", 8080),
-                                  attributeEntry("net.transport", "ip_tcp"));
-                          assertThat(point).exemplars().hasSize(1);
-                          assertThat(point.getExemplars().get(0))
-                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                              .hasSpanId("090a0b0c0d0e0f00");
-                        }));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(150 /* millis */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                            equalTo(
+                                                SemanticAttributes.RPC_SERVICE,
+                                                "myservice.EchoService"),
+                                            equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
+                                            equalTo(
+                                                SemanticAttributes.NET_PEER_NAME, "example.com"),
+                                            equalTo(SemanticAttributes.NET_PEER_PORT, 8080),
+                                            equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))));
 
-    listener.end(context2, responseAttributes2, nanos(300));
+    listener.onEnd(context2, responseAttributes2, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
-        .hasSize(1)
-        .anySatisfy(
+        .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
                     .hasName("rpc.client.duration")
                     .hasUnit("ms")
-                    .hasDoubleHistogram()
-                    .points()
-                    .satisfiesExactly(
-                        point -> {
-                          assertThat(point)
-                              .hasSum(150 /* millis */)
-                              .attributes()
-                              .containsOnly(
-                                  attributeEntry("rpc.system", "grpc"),
-                                  attributeEntry("rpc.service", "myservice.EchoService"),
-                                  attributeEntry("rpc.method", "exampleMethod"),
-                                  attributeEntry("net.peer.ip", "127.0.0.1"),
-                                  attributeEntry("net.peer.port", 8080),
-                                  attributeEntry("net.transport", "ip_tcp"));
-                        }));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(150 /* millis */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                            equalTo(
+                                                SemanticAttributes.RPC_SERVICE,
+                                                "myservice.EchoService"),
+                                            equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
+                                            equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
+                                            equalTo(SemanticAttributes.NET_PEER_PORT, 8080),
+                                            equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp")))));
   }
 
   private static long nanos(int millis) {

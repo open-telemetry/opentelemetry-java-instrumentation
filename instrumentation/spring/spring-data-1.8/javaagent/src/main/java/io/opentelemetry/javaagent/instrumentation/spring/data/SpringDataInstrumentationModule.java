@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.data.SpringDataSingletons.instrumenter;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;

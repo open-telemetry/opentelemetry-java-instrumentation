@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.extension.matcher;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.javaagent.instrumentation.api.internal.ClassLoaderMatcherCacheHolder;
-import io.opentelemetry.javaagent.instrumentation.api.internal.InClassLoaderMatcher;
+import io.opentelemetry.javaagent.bootstrap.internal.ClassLoaderMatcherCacheHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.InClassLoaderMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {

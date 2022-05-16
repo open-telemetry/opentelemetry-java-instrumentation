@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -22,7 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class GaugeTest {
 
-  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometershim";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer1shim";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -52,14 +53,15 @@ class GaugeTest {
                     assertThat(metric)
                         .hasDescription("This is a test gauge")
                         .hasUnit("items")
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(42)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "value")))));
+                        .hasDoubleGaugeSatisfying(
+                            g ->
+                                g.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(42)
+                                            .hasAttributesSatisfying(
+                                                equalTo(
+                                                    AttributeKey.stringKey("tag"), "value"))))));
 
     // when
     Metrics.globalRegistry.remove(gauge);
@@ -96,20 +98,19 @@ class GaugeTest {
                     assertThat(metric)
                         .hasDescription("This is a test gauge")
                         .hasUnit("items")
-                        .hasDoubleGauge()
-                        .points()
-                        .anySatisfy(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(12)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "1")))
-                        .anySatisfy(
-                            point ->
-                                assertThat(point)
-                                    .hasValue(42)
-                                    .attributes()
-                                    .containsOnly(attributeEntry("tag", "2")))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge ->
+                                gauge.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12)
+                                            .hasAttributesSatisfying(
+                                                equalTo(AttributeKey.stringKey("tag"), "1")),
+                                    point ->
+                                        point
+                                            .hasValue(42)
+                                            .hasAttributesSatisfying(
+                                                equalTo(AttributeKey.stringKey("tag"), "2"))))));
   }
 
   @Test
@@ -128,9 +129,8 @@ class GaugeTest {
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDoubleGauge()
-                        .points()
-                        .satisfiesExactly(point -> assertThat(point).hasValue(42))));
+                        .hasDoubleGaugeSatisfying(
+                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42)))));
 
     // when
     WeakReference<AtomicLong> numWeakRef = new WeakReference<>(num);

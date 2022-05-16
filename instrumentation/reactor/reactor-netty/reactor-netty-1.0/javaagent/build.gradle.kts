@@ -7,12 +7,15 @@ muzzle {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
     versions.set("[,1.0.0)")
+    assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyInstrumentationModule")
   }
   pass {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty-http")
     versions.set("[1.0.0,)")
     assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyInstrumentationModule")
   }
 }
 
@@ -20,7 +23,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:netty:netty-4.1-common:javaagent"))
+  implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   library("io.projectreactor.netty:reactor-netty-http:1.0.0")

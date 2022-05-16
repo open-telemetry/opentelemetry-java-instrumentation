@@ -18,13 +18,13 @@ import javax.annotation.Nullable;
 /**
  * Represents the global agent configuration consisting of system properties, environment variables,
  * contents of the agent configuration file and properties defined by the {@code
- * ConfigPropertySource} SPI (see {@code ConfigInitializer} and {@link ConfigBuilder}).
+ * ConfigPropertySource} SPI implementations.
  *
  * <p>In case any {@code get*()} method variant gets called for the same property more than once
  * (e.g. each time an advice class executes) it is suggested to cache the result instead of
  * repeatedly calling {@link Config}. Agent configuration does not change during the runtime so
- * retrieving the property once and storing its result in e.g. static final field allows JIT to do
- * its magic and remove some code branches.
+ * retrieving the property once and storing its result in a static final field allows JIT to do its
+ * magic and remove some code branches.
  */
 @AutoValue
 public abstract class Config {
@@ -47,9 +47,8 @@ public abstract class Config {
   Config() {}
 
   /**
-   * Sets the agent configuration singleton. This method is only supposed to be called once, from
-   * the agent classloader just before the first instrumentation is loaded (and before {@link
-   * Config#get()} is used for the first time).
+   * Sets the agent configuration singleton. This method is only supposed to be called once, during
+   * the agent initialization, just before {@link Config#get()} is used for the first time.
    *
    * <p>This method is internal and is hence not for public use. Its API is unstable and can change
    * at any time.
@@ -73,7 +72,10 @@ public abstract class Config {
     return instance;
   }
 
-  /** Returns all properties stored in this instance. The returned map is unmodifiable. */
+  /**
+   * Returns all properties stored in this {@link Config} instance. The returned map is
+   * unmodifiable.
+   */
   public abstract Map<String, String> getAllProperties();
 
   /**
@@ -102,8 +104,8 @@ public abstract class Config {
   }
 
   /**
-   * Returns a integer-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed.
+   * Returns an integer-valued configuration property or {@code defaultValue} if a property with
+   * name {@code name} has not been configured or when parsing has failed.
    */
   public int getInt(String name, int defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseInt, defaultValue);
@@ -140,6 +142,8 @@ public abstract class Config {
    * </ul>
    *
    * <p>If no unit is specified, milliseconds is the assumed duration unit.
+   *
+   * <p>Examples: 10s, 20ms, 5000
    */
   public Duration getDuration(String name, Duration defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseDuration, defaultValue);
@@ -148,7 +152,7 @@ public abstract class Config {
   /**
    * Returns a list-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured. The format of the original value must be comma-separated,
-   * e.g. {@code one,two,three}.
+   * e.g. {@code one,two,three}. The returned list is unmodifiable.
    */
   public List<String> getList(String name, List<String> defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseList, defaultValue);
@@ -158,7 +162,7 @@ public abstract class Config {
    * Returns a map-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured or when parsing has failed. The format of the original
    * value must be comma-separated for each key, with an '=' separating the key and value, e.g.
-   * {@code key=value,anotherKey=anotherValue}.
+   * {@code key=value,anotherKey=anotherValue}. The returned map is unmodifiable.
    */
   public Map<String, String> getMap(String name, Map<String, String> defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseMap, defaultValue);

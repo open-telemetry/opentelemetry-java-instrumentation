@@ -38,7 +38,7 @@ dependencies {
   testImplementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
 
   // make IntelliJ see shaded Armeria
-  testCompileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  testCompileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 }
 
 tasks {

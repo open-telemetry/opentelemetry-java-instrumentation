@@ -28,12 +28,10 @@ import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
-import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
@@ -60,7 +58,7 @@ import net.bytebuddy.utility.JavaModule;
 
 public class AgentInstaller {
 
-  private static final Logger logger;
+  private static final Logger logger = Logger.getLogger(AgentInstaller.class.getName());
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
   static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
@@ -77,49 +75,32 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
-  static {
-    LoggingConfigurer.configureLogger();
-    logger = Logger.getLogger(AgentInstaller.class.getName());
-
+  public static void installBytebuddyAgent(Instrumentation inst, Config config) {
     addByteBuddyRawSetting();
-    // this needs to be done as early as possible - before the first Config.get() call
-    ConfigInitializer.initialize();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
     if (strictContextStressorMillis != null) {
       io.opentelemetry.context.ContextStorage.addWrapper(
           storage -> new StrictContextStressor(storage, strictContextStressorMillis));
     }
-  }
 
-  public static void installBytebuddyAgent(Instrumentation inst) {
     logVersionInfo();
-    Config config = Config.get();
     if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
-      installBytebuddyAgent(inst, agentListeners);
+      installBytebuddyAgent(inst, config, agentListeners);
     } else {
       logger.fine("Tracing is disabled, not installing instrumentations.");
     }
   }
 
-  /**
-   * Install the core bytebuddy agent along with all implementations of {@link
-   * InstrumentationModule}.
-   *
-   * @param inst Java Instrumentation used to install bytebuddy
-   * @return the agent's class transformer
-   */
-  public static ResettableClassFileTransformer installBytebuddyAgent(
-      Instrumentation inst, Iterable<AgentListener> agentListeners) {
+  private static void installBytebuddyAgent(
+      Instrumentation inst, Config config, Iterable<AgentListener> agentListeners) {
 
     WeakRefAsyncOperationEndStrategies.initialize();
 
     EmbeddedInstrumentationProperties.setPropertiesLoader(
         AgentInitializer.getExtensionsClassLoader());
-
-    Config config = Config.get();
 
     setBootstrapPackages(config);
     setDefineClassHandler();
@@ -192,8 +173,6 @@ public class AgentInstaller {
     if (autoConfiguredSdk != null) {
       runAfterAgentListeners(agentListeners, config, autoConfiguredSdk);
     }
-
-    return resettableClassFileTransformer;
   }
 
   private static void setupUnsafe(Instrumentation inst) {
@@ -216,11 +195,16 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
+  @SuppressWarnings("deprecation") // running both old and new listeners for now
   private static void runBeforeAgentListeners(
       Iterable<AgentListener> agentListeners,
       Config config,
       AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+
     for (AgentListener agentListener : agentListeners) {
+      agentListener.beforeAgent(config, autoConfiguredSdk);
+    }
+    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
       agentListener.beforeAgent(config, autoConfiguredSdk);
     }
   }

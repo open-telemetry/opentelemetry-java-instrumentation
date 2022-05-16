@@ -13,9 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.javaagent.bootstrap.internal.ClassLoaderMatcherCacheHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.internal.ClassLoaderMatcherCacheHolder;
 import java.net.URL;
 import java.net.URLClassLoader;
 import net.bytebuddy.asm.Advice;
@@ -41,6 +41,7 @@ public class UrlClassLoaderInstrumentation implements TypeInstrumentation {
         UrlClassLoaderInstrumentation.class.getName() + "$InvalidateClassLoaderMatcher");
   }
 
+  @SuppressWarnings("unused")
   public static class InvalidateClassLoaderMatcher {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This URLClassLoader loader) {

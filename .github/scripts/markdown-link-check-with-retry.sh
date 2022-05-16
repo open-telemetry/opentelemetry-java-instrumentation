@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+# this script helps to reduce sporadic link check failures by retrying at a file-by-file level
+
 retry_count=3
 
 for file in "$@"; do

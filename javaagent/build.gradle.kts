@@ -23,12 +23,19 @@ val baseJavaagentLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
-
 // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
 val javaagentLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
   extendsFrom(baseJavaagentLibs)
+}
+
+// exclude javaagent dependencies from the bootstrap classpath
+bootstrapLibs.run {
+  exclude("net.bytebuddy")
+  exclude("org.ow2.asm")
+  exclude("io.opentelemetry", "opentelemetry-sdk")
+  exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure")
 }
 
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
@@ -50,14 +57,17 @@ dependencies {
   bootstrapLibs(project(":instrumentation-api-annotation-support"))
   bootstrapLibs(project(":instrumentation-appender-api-internal"))
   bootstrapLibs(project(":javaagent-bootstrap"))
-  bootstrapLibs(project(":javaagent-instrumentation-api"))
 
+  // extension-api contains both bootstrap packages and agent packages
+  bootstrapLibs(project(":javaagent-extension-api"))
   baseJavaagentLibs(project(":javaagent-extension-api"))
+
   baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":muzzle"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
@@ -75,7 +85,7 @@ dependencies {
   licenseReportDependencies(project(":javaagent-extension-api"))
 
   testCompileOnly(project(":javaagent-bootstrap"))
-  testCompileOnly(project(":javaagent-instrumentation-api"))
+  testCompileOnly(project(":javaagent-extension-api"))
 
   testImplementation("com.google.guava:guava")
   testImplementation("io.opentelemetry:opentelemetry-sdk")
@@ -108,34 +118,46 @@ tasks {
     }
   }
 
+  val buildBootstrapLibs by registering(ShadowJar::class) {
+    configurations = listOf(bootstrapLibs)
+
+    // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
+    exclude("io/opentelemetry/javaagent/extension/**")
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    archiveFileName.set("bootstrapLibs.jar")
+  }
+
   val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(baseJavaagentLibs)
+
+    excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
-
-    excludeBootstrapJars()
   }
 
   val relocateJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
+    excludeBootstrapClasses()
+
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("javaagentLibs-relocated.jar")
-
-    excludeBootstrapJars()
   }
 
   // Includes everything needed for OOTB experience
   val shadowJar by existing(ShadowJar::class) {
-    configurations = listOf(bootstrapLibs)
+    dependsOn(buildBootstrapLibs)
+    from(zipTree(buildBootstrapLibs.get().archiveFile))
 
     dependsOn(relocateJavaagentLibs)
-    isolateClasses(relocateJavaagentLibs.get().outputs.files)
+    isolateClasses(relocateJavaagentLibs.get().archiveFile)
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveClassifier.set("")
 
@@ -153,12 +175,13 @@ tasks {
 
   // Includes only the agent machinery and required instrumentations
   val baseJavaagentJar by registering(ShadowJar::class) {
-    configurations = listOf(bootstrapLibs)
+    dependsOn(buildBootstrapLibs)
+    from(zipTree(buildBootstrapLibs.get().archiveFile))
 
     dependsOn(relocateBaseJavaagentLibs)
-    isolateClasses(relocateBaseJavaagentLibs.get().outputs.files)
+    isolateClasses(relocateBaseJavaagentLibs.get().archiveFile)
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveClassifier.set("base")
 
@@ -240,31 +263,31 @@ licenseReport {
   filters = arrayOf(LicenseBundleNormalizer("$projectDir/license-normalizer-bundle.json", true))
 }
 
-fun CopySpec.isolateClasses(jars: Iterable<File>) {
-  jars.forEach {
-    from(zipTree(it)) {
-      // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
-      into("inst")
-      rename("(^.*)\\.class\$", "\$1.classdata")
-      // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-      rename("""^LICENSE$""", "LICENSE.renamed")
-      exclude("META-INF/INDEX.LIST")
-      exclude("META-INF/*.DSA")
-      exclude("META-INF/*.SF")
-    }
+fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
+  from(zipTree(jar)) {
+    // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
+    into("inst")
+    rename("(^.*)\\.class\$", "\$1.classdata")
+    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+    rename("""^LICENSE$""", "LICENSE.renamed")
+    exclude("META-INF/INDEX.LIST")
+    exclude("META-INF/*.DSA")
+    exclude("META-INF/*.SF")
   }
 }
 
 // exclude bootstrap projects from javaagent libs - they won't be added to inst/
-fun ShadowJar.excludeBootstrapJars() {
+fun ShadowJar.excludeBootstrapClasses() {
   dependencies {
     exclude(project(":instrumentation-api"))
     exclude(project(":instrumentation-api-semconv"))
     exclude(project(":instrumentation-api-annotation-support"))
     exclude(project(":instrumentation-appender-api-internal"))
     exclude(project(":javaagent-bootstrap"))
-    exclude(project(":javaagent-instrumentation-api"))
   }
+
+  // exclude the bootstrap part of the javaagent-extension-api
+  exclude("io/opentelemetry/javaagent/bootstrap/**")
 }
 
 class JavaagentProvider(

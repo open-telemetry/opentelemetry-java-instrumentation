@@ -22,7 +22,7 @@ jobs:
           java-version: 17
 
       - name: Login to GitHub package registry
-        uses: docker/login-action@v1.10.0
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -73,4 +73,4 @@ jobs:
       - publishLinux
       - publishWindows
     if: failure()
-    uses: ./.github/workflows/reusable-create-issue-for-failure.yml
+    uses: ./.github/workflows/reusable-open-issue-on-failure.yml

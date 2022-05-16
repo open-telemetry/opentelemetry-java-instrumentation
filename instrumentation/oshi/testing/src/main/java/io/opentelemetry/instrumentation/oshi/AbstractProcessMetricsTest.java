@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import static io.opentelemetry.sdk.testing.assertj.MetricAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
@@ -31,9 +31,12 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("By")
-                            .hasLongSum()
-                            .points()
-                            .anySatisfy(point -> assertThat(point.getValue()).isPositive())));
+                            // TODO(anuraaga): Provide fuzzy value matching
+                            .hasLongSumSatisfying(
+                                sum ->
+                                    assertThat(metric.getLongSumData().getPoints())
+                                        .anySatisfy(
+                                            point -> assertThat(point.getValue()).isPositive()))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
@@ -43,8 +46,11 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("ms")
-                            .hasLongGauge()
-                            .points()
-                            .anySatisfy(point -> assertThat(point.getValue()).isPositive())));
+                            // TODO(anuraaga): Provide fuzzy value matching
+                            .hasLongGaugeSatisfying(
+                                gauge ->
+                                    assertThat(metric.getLongGaugeData().getPoints())
+                                        .anySatisfy(
+                                            point -> assertThat(point.getValue()).isPositive()))));
   }
 }

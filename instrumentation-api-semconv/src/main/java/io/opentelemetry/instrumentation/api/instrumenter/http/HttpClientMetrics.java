@@ -14,17 +14,17 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
- * {@link RequestListener} which keeps track of <a
+ * {@link OperationListener} which keeps track of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-client">HTTP
  * client metrics</a>.
  */
-public final class HttpClientMetrics implements RequestListener {
+public final class HttpClientMetrics implements OperationListener {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
 
@@ -34,11 +34,11 @@ public final class HttpClientMetrics implements RequestListener {
   private static final Logger logger = Logger.getLogger(HttpClientMetrics.class.getName());
 
   /**
-   * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
+   * Returns a {@link OperationMetrics} which can be used to enable recording of {@link
    * HttpClientMetrics} on an {@link
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
-  public static RequestMetrics get() {
+  public static OperationMetrics get() {
     return HttpClientMetrics::new;
   }
 
@@ -54,14 +54,14 @@ public final class HttpClientMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes startAttributes, long startNanos) {
+  public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
         HTTP_CLIENT_REQUEST_METRICS_STATE,
         new AutoValue_HttpClientMetrics_State(startAttributes, startNanos));
   }
 
   @Override
-  public void end(Context context, Attributes endAttributes, long endNanos) {
+  public void onEnd(Context context, Attributes endAttributes, long endNanos) {
     State state = context.get(HTTP_CLIENT_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.log(

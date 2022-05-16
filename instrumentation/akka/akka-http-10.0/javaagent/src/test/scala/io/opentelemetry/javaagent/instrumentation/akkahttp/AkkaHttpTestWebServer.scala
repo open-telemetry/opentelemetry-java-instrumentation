@@ -53,7 +53,7 @@ object AkkaHttpTestWebServer {
     if (null == binding) {
       import scala.concurrent.duration._
       binding =
-        Await.result(Http().bindAndHandle(route, "localhost", port), 10 seconds)
+        Await.result(Http().bindAndHandle(route, "localhost", port), 10.seconds)
     }
   }
 

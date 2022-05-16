@@ -34,7 +34,7 @@ public final class LibertyDispatcherSingletons {
             .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addContextCustomizer(HttpRouteHolder.get())
-            .addRequestMetrics(HttpServerMetrics.get())
+            .addOperationMetrics(HttpServerMetrics.get())
             .newServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);
   }
 

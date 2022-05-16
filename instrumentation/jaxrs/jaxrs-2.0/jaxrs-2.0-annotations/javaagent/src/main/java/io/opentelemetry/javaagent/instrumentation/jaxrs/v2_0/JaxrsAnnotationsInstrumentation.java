@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotationsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,13 +17,13 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionStage;
 import javax.ws.rs.Path;
@@ -156,7 +156,8 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       if (asyncReturnValue != null) {
         // span finished by CompletionStageFinishCallback
         asyncReturnValue =
-            asyncReturnValue.handle(new CompletionStageFinishCallback<>(context, handlerData));
+            asyncReturnValue.handle(
+                new CompletionStageFinishCallback<>(instrumenter(), context, handlerData));
       }
       if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
         instrumenter().end(context, handlerData, null, null);

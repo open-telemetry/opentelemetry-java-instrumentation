@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.playws.v1_0.PlayWs10Singletons.instrumenter;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;

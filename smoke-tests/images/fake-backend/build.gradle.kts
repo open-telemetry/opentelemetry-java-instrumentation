@@ -17,7 +17,8 @@ dependencies {
   runtimeOnly("org.slf4j:slf4j-simple")
 }
 
-val extraTag = findProperty("extraTag") ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val extraTag = findProperty("extraTag")
+  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 jib {
   from.image = "gcr.io/distroless/java-debian10:11"
@@ -40,7 +41,7 @@ tasks {
 
   shadowJar {
     manifest {
-      attributes(mapOf("Main-Class" to "io.opentelemetry.smoketest.fakebackend.FakeBackendMain"))
+      attributes("Main-Class" to "io.opentelemetry.smoketest.fakebackend.FakeBackendMain")
     }
   }
 

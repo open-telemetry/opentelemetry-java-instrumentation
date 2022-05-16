@@ -47,7 +47,7 @@ public class RestletInstrumenterFactory {
         .addAttributesExtractor(httpServerAttributesExtractor)
         .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
-        .addRequestMetrics(HttpServerMetrics.get())
+        .addOperationMetrics(HttpServerMetrics.get())
         .newServerInstrumenter(new RestletHeadersGetter());
   }
 }

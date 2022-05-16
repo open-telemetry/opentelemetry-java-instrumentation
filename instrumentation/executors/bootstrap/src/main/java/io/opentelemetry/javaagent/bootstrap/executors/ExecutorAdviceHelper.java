@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.bootstrap.executors;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
 import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;

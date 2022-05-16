@@ -214,6 +214,53 @@ public abstract class AbstractGrpcStreamingTest {
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0]))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.server.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_METHOD, "Conversation"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_PEER_PORT,
+                                                    server.getPort()),
+                                                equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_METHOD, "Conversation"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_SERVICE,
+                                                    "example.Greeter"),
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {

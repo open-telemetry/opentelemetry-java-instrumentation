@@ -62,8 +62,6 @@ Replace `SPRING_VERSION` with the version of spring you're using.
 Replace `SPRING_WEBFLUX_VERSION` with the version of spring-webflux you're using.
  - Minimum version: `5.0`
 
-Replace `SLF4J_VERSION` with the version of slf4j you're using.
-
 For Maven add to your `pom.xml`:
 
 ```xml

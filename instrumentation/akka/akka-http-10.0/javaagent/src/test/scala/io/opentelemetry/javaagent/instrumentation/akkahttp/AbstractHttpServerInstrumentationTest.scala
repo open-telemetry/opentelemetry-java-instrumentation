@@ -21,7 +21,7 @@ import java.util.function.Function
 abstract class AbstractHttpServerInstrumentationTest
     extends AbstractHttpServerTest[Object] {
 
-  override final protected def configure(
+  override protected def configure(
       options: HttpServerTestOptions
   ): Unit = {
     options.setTestCaptureHttpHeaders(false)
