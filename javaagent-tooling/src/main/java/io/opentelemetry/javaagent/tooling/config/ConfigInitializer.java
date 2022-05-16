@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static java.util.logging.Level.SEVERE;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.extension.config.ConfigCustomizer;
 import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -27,8 +29,9 @@ public final class ConfigInitializer {
   static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIGURATION_FILE";
 
   public static void initialize() {
-    Config config = create(loadSpiConfiguration(), loadConfigurationFile());
-    for (ConfigCustomizer customizer : loadOrdered(ConfigCustomizer.class)) {
+    List<ConfigCustomizer> customizers = loadOrdered(ConfigCustomizer.class);
+    Config config = create(loadSpiConfiguration(customizers), loadConfigurationFile());
+    for (ConfigCustomizer customizer : customizers) {
       config = customizer.customize(config);
     }
     Config.internalInitializeConfig(config);
@@ -45,10 +48,14 @@ public final class ConfigInitializer {
   }
 
   /** Retrieves all default configuration overloads using SPI and initializes Config. */
-  private static Properties loadSpiConfiguration() {
+  @SuppressWarnings("deprecation") // loads the old config SPI
+  private static Properties loadSpiConfiguration(List<ConfigCustomizer> customizers) {
     Properties propertiesFromSpi = new Properties();
     for (ConfigPropertySource propertySource : loadOrdered(ConfigPropertySource.class)) {
       propertiesFromSpi.putAll(propertySource.getProperties());
+    }
+    for (ConfigCustomizer customizer : customizers) {
+      propertiesFromSpi.putAll(customizer.defaultProperties());
     }
     return propertiesFromSpi;
   }
