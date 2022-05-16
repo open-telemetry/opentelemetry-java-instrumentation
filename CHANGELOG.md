@@ -69,7 +69,7 @@
 - Fix logging exporter autoconfiguration issue
   ([#5928](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5928))
 - fix NPE for commons-httpclient v3.1
-  ([#5944](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5944)) (#5949)
+  ([#5949](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5949))
 - Exclude duplicate project classes from inst/
   ([#5957](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5957))
 - Ignore known problematic jdbc wrappers
