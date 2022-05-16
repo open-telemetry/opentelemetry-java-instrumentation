@@ -10,7 +10,6 @@ import static java.util.logging.Level.SEVERE;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.config.ConfigCustomizer;
-import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -51,7 +50,8 @@ public final class ConfigInitializer {
   @SuppressWarnings("deprecation") // loads the old config SPI
   private static Properties loadSpiConfiguration(List<ConfigCustomizer> customizers) {
     Properties propertiesFromSpi = new Properties();
-    for (ConfigPropertySource propertySource : loadOrdered(ConfigPropertySource.class)) {
+    for (io.opentelemetry.javaagent.extension.config.ConfigPropertySource propertySource :
+        loadOrdered(io.opentelemetry.javaagent.extension.config.ConfigPropertySource.class)) {
       propertiesFromSpi.putAll(propertySource.getProperties());
     }
     for (ConfigCustomizer customizer : customizers) {
