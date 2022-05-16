@@ -134,6 +134,5 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         scope.close();
       }
     }
-
   }
 }
