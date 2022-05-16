@@ -13,6 +13,7 @@
 - The rxjava javaagent instrumentation names for suppression have changed to `rxjava`
 - `AgentListener#beforeAgent()` has been deprecated, as it is not expect to be needed by extensions
   authors
+- `ConfigPropertySource` has been deprecated in favor of `ConfigCustomizer`
 - Several changes in the Instrumentation API
   - `RequestMetrics` has been renamed to `OperationMetrics`
   - `RequestListener` has been renamed to `OperationListener`
@@ -59,6 +60,8 @@
   ([#5950](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5950))
 - Avoid looking up annotation types during type matching
   ([#5906](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/5906))
+- Add an SPI for customizing Config just before it's set
+  ([#6010](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6010))
 
 ### 🛠️ Bug fixes
 
