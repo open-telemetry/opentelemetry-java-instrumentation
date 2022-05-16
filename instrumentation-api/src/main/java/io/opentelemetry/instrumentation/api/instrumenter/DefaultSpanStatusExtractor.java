@@ -21,4 +21,15 @@ final class DefaultSpanStatusExtractor<REQUEST, RESPONSE>
     }
     return StatusCode.UNSET;
   }
+
+  @Override
+  public void extract(
+      SpanStatusBuilder spanStatusBuilder,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
+    if (error != null) {
+      spanStatusBuilder.setStatus(StatusCode.ERROR, error.toString());
+    }
+  }
 }
