@@ -97,16 +97,17 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       Context context =
           PROPAGATOR.extract(Context.current(), messageImpl, MessageTextMapGetter.INSTANCE);
 
-      scope = TRACER
-          .spanBuilder("ConsumerImpl/messageProcessed")
-          .setParent(context)
-          .setSpanKind(SpanKind.CONSUMER)
-          .setAttribute(TOPIC, info.topic)
-          .setAttribute(SERVICE_URL, info.brokerUrl)
-          .setAttribute(SUBSCRIPTION, consumer.getSubscription())
-          .setAttribute(CONSUMER_NAME, consumer.getConsumerName())
-          .startSpan()
-          .makeCurrent();
+      scope =
+          TRACER
+              .spanBuilder("ConsumerImpl/messageProcessed")
+              .setParent(context)
+              .setSpanKind(SpanKind.CONSUMER)
+              .setAttribute(TOPIC, info.topic)
+              .setAttribute(SERVICE_URL, info.brokerUrl)
+              .setAttribute(SUBSCRIPTION, consumer.getSubscription())
+              .setAttribute(CONSUMER_NAME, consumer.getConsumerName())
+              .startSpan()
+              .makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
