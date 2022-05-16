@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
@@ -49,16 +50,21 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public StatusCode extract(REQUEST request, @Nullable RESPONSE response, Throwable error) {
+  public void extract(
+      SpanStatusBuilder spanStatusBuilder,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      Throwable error) {
     if (response != null) {
       Integer statusCode = getter.statusCode(request, response);
       if (statusCode != null) {
         StatusCode statusCodeObj = statusConverter.statusFromHttpStatus(statusCode);
         if (statusCodeObj == StatusCode.ERROR) {
-          return statusCodeObj;
+          spanStatusBuilder.setStatus(statusCodeObj);
+          return;
         }
       }
     }
-    return SpanStatusExtractor.getDefault().extract(request, response, error);
+    SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
   }
 }

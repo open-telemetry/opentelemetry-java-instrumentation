@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 
 /** A builder that exposes methods for setting the status of a span. */
@@ -39,7 +40,7 @@ public interface SpanStatusBuilder {
    * @param statusCode the {@link StatusCode} to set.
    * @param description the description of the {@code Status}.
    * @return this.
-   * @see io.opentelemetry.api.trace.Span#setStatus(StatusCode,String)
+   * @see Span#setStatus(StatusCode, String)
    */
   SpanStatusBuilder setStatus(StatusCode statusCode, String description);
 }

@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -21,49 +23,70 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class HttpClientSpanStatusExtractorTest {
+
   @Mock private HttpClientAttributesGetter<Map<String, String>, Map<String, String>> getter;
+
+  @Mock private SpanStatusBuilder spanStatusBuilder;
 
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasStatus(int statusCode) {
+    StatusCode expectedStatusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode);
     when(getter.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
-    assertThat(
-            HttpSpanStatusExtractor.create(getter)
-                .extract(Collections.emptyMap(), Collections.emptyMap(), null))
-        .isEqualTo(HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode));
+
+    HttpSpanStatusExtractor.create(getter)
+        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
+
+    if (expectedStatusCode != StatusCode.UNSET) {
+      verify(spanStatusBuilder).setStatus(expectedStatusCode);
+    } else {
+      verifyNoInteractions(spanStatusBuilder);
+    }
   }
 
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasStatusAndException(int statusCode) {
+    StatusCode expectedStatusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode);
     when(getter.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
 
     // Presence of exception has no effect.
-    assertThat(
-            HttpSpanStatusExtractor.create(getter)
-                .extract(
-                    Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
-        .isEqualTo(StatusCode.ERROR);
+    HttpSpanStatusExtractor.create(getter)
+        .extract(
+            spanStatusBuilder,
+            Collections.emptyMap(),
+            Collections.emptyMap(),
+            new IllegalStateException("test"));
+
+    if (expectedStatusCode != StatusCode.UNSET) {
+      verify(spanStatusBuilder).setStatus(expectedStatusCode);
+    } else {
+      verify(spanStatusBuilder)
+          .setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
+    }
   }
 
   @Test
   void hasNoStatus_fallsBackToDefault_unset() {
     when(getter.statusCode(anyMap(), anyMap())).thenReturn(null);
 
-    assertThat(
-            HttpSpanStatusExtractor.create(getter)
-                .extract(Collections.emptyMap(), Collections.emptyMap(), null))
-        .isEqualTo(StatusCode.UNSET);
+    HttpSpanStatusExtractor.create(getter)
+        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
+
+    verifyNoInteractions(spanStatusBuilder);
   }
 
   @Test
   void hasNoStatus_fallsBackToDefault_error() {
     when(getter.statusCode(anyMap(), anyMap())).thenReturn(null);
 
-    assertThat(
-            HttpSpanStatusExtractor.create(getter)
-                .extract(
-                    Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
-        .isEqualTo(StatusCode.ERROR);
+    HttpSpanStatusExtractor.create(getter)
+        .extract(
+            spanStatusBuilder,
+            Collections.emptyMap(),
+            Collections.emptyMap(),
+            new IllegalStateException("test"));
+
+    verify(spanStatusBuilder).setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
   }
 }

@@ -5,30 +5,36 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.opentelemetry.api.trace.StatusCode;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class DefaultSpanStatusExtractorTest {
+
+  @Mock SpanStatusBuilder spanStatusBuilder;
 
   @Test
   void noException() {
-    assertThat(
-            SpanStatusExtractor.getDefault()
-                .extract(Collections.emptyMap(), Collections.emptyMap(), null))
-        .isEqualTo(StatusCode.UNSET);
+    SpanStatusExtractor.getDefault()
+        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
+    verifyNoInteractions(spanStatusBuilder);
   }
 
   @Test
   void exception() {
-    assertThat(
-            SpanStatusExtractor.getDefault()
-                .extract(
-                    Collections.emptyMap(),
-                    Collections.emptyMap(),
-                    new IllegalStateException("test")))
-        .isEqualTo(StatusCode.ERROR);
+    SpanStatusExtractor.getDefault()
+        .extract(
+            spanStatusBuilder,
+            Collections.emptyMap(),
+            Collections.emptyMap(),
+            new IllegalStateException("test"));
+    verify(spanStatusBuilder).setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
   }
 }

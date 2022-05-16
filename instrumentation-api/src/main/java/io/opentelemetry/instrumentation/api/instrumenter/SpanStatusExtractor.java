@@ -16,18 +16,12 @@ import javax.annotation.Nullable;
 @FunctionalInterface
 public interface SpanStatusExtractor<REQUEST, RESPONSE> {
 
-  /** Returns the {@link StatusCode}. */
-  StatusCode extract(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
-
   /** Extracts the status from the response and sets it to the {@code spanStatusBuilder}. */
-  default void extract(
+  void extract(
       SpanStatusBuilder spanStatusBuilder,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {
-    StatusCode statusCode = extract(request, response, error);
-    spanStatusBuilder.setStatus(statusCode);
-  }
+      @Nullable Throwable error);
 
   /**
    * Returns the default {@link SpanStatusExtractor}, which returns {@link StatusCode#ERROR} if the

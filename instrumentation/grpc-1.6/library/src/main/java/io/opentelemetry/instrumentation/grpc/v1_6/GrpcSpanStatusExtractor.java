@@ -9,12 +9,17 @@ import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
 final class GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status> {
   @Override
-  public StatusCode extract(GrpcRequest request, Status status, @Nullable Throwable error) {
+  public void extract(
+      SpanStatusBuilder spanStatusBuilder,
+      GrpcRequest request,
+      Status status,
+      @Nullable Throwable error) {
     if (status == null) {
       if (error instanceof StatusRuntimeException) {
         status = ((StatusRuntimeException) error).getStatus();
@@ -24,10 +29,12 @@ final class GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, 
     }
     if (status != null) {
       if (status.isOk()) {
-        return StatusCode.UNSET;
+        spanStatusBuilder.setStatus(StatusCode.UNSET);
+      } else {
+        spanStatusBuilder.setStatus(StatusCode.ERROR);
       }
-      return StatusCode.ERROR;
+    } else {
+      SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, status, error);
     }
-    return SpanStatusExtractor.getDefault().extract(request, status, error);
   }
 }
