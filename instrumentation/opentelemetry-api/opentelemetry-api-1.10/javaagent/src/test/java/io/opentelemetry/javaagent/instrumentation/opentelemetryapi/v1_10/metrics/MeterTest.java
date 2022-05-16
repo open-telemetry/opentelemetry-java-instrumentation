@@ -17,8 +17,15 @@ import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableDoubleCounter;
+import io.opentelemetry.api.metrics.ObservableDoubleGauge;
+import io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter;
+import io.opentelemetry.api.metrics.ObservableLongCounter;
+import io.opentelemetry.api.metrics.ObservableLongGauge;
+import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -76,12 +83,14 @@ class MeterTest {
   }
 
   @Test
-  void longUpDownCounter() {
-    LongUpDownCounter instrument =
-        meter.upDownCounterBuilder("test").setDescription("d").setUnit("u").build();
-
-    instrument.add(5, Attributes.of(AttributeKey.stringKey("q"), "r"));
-    instrument.add(6, Attributes.of(AttributeKey.stringKey("q"), "r"));
+  void observableLongCounter() throws InterruptedException {
+    ObservableLongCounter observableCounter =
+        meter
+            .counterBuilder("test")
+            .setDescription("d")
+            .setUnit("u")
+            .buildWithCallback(
+                result -> result.record(11, Attributes.of(AttributeKey.stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -97,13 +106,22 @@ class MeterTest {
                                 instrumentationName, "1.2.3", /* schemaUrl= */ null))
                         .hasLongSumSatisfying(
                             sum ->
-                                sum.isNotMonotonic()
+                                sum.isMonotonic()
                                     .hasPointsSatisfying(
                                         point ->
                                             point
                                                 .hasValue(11)
                                                 .hasAttributesSatisfying(
                                                     equalTo(AttributeKey.stringKey("q"), "r"))))));
+
+    observableCounter.close();
+
+    // sleep exporter interval
+    Thread.sleep(100);
+    testing.clearData();
+    Thread.sleep(100);
+
+    testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -138,6 +156,122 @@ class MeterTest {
   }
 
   @Test
+  void observableDoubleCounter() throws InterruptedException {
+    ObservableDoubleCounter observableCounter =
+        meter
+            .counterBuilder("test")
+            .ofDoubles()
+            .setDescription("d")
+            .setUnit("u")
+            .buildWithCallback(
+                result -> result.record(12.1, Attributes.of(AttributeKey.stringKey("q"), "r")));
+
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "test",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("d")
+                        .hasUnit("u")
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12.1)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+
+    observableCounter.close();
+
+    // sleep exporter interval
+    Thread.sleep(100);
+    testing.clearData();
+    Thread.sleep(100);
+
+    testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
+  void longUpDownCounter() {
+    LongUpDownCounter instrument =
+        meter.upDownCounterBuilder("test").setDescription("d").setUnit("u").build();
+
+    instrument.add(5, Attributes.of(AttributeKey.stringKey("q"), "r"));
+    instrument.add(6, Attributes.of(AttributeKey.stringKey("q"), "r"));
+
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "test",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("d")
+                        .hasUnit("u")
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(11)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+  }
+
+  @Test
+  void observableLongUpDownCounter() throws InterruptedException {
+    ObservableLongUpDownCounter observableCounter =
+        meter
+            .upDownCounterBuilder("test")
+            .setDescription("d")
+            .setUnit("u")
+            .buildWithCallback(
+                result -> result.record(11, Attributes.of(AttributeKey.stringKey("q"), "r")));
+
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "test",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("d")
+                        .hasUnit("u")
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(11)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+
+    observableCounter.close();
+
+    // sleep exporter interval
+    Thread.sleep(100);
+    testing.clearData();
+    Thread.sleep(100);
+
+    testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
   void doubleUpDownCounter() {
     DoubleUpDownCounter instrument =
         meter.upDownCounterBuilder("test").ofDoubles().setDescription("d").setUnit("u").build();
@@ -166,6 +300,49 @@ class MeterTest {
                                                 .hasValue(12.1)
                                                 .hasAttributesSatisfying(
                                                     equalTo(AttributeKey.stringKey("q"), "r"))))));
+  }
+
+  @Test
+  void observableDoubleUpDownCounter() throws InterruptedException {
+    ObservableDoubleUpDownCounter observableCounter =
+        meter
+            .upDownCounterBuilder("test")
+            .ofDoubles()
+            .setDescription("d")
+            .setUnit("u")
+            .buildWithCallback(
+                result -> result.record(12.1, Attributes.of(AttributeKey.stringKey("q"), "r")));
+
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "test",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("d")
+                        .hasUnit("u")
+                        .hasInstrumentationScope(
+                            InstrumentationScopeInfo.create(
+                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                        .hasDoubleSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(12.1)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(AttributeKey.stringKey("q"), "r"))))));
+
+    observableCounter.close();
+
+    // sleep exporter interval
+    Thread.sleep(100);
+    testing.clearData();
+    Thread.sleep(100);
+
+    testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -229,14 +406,15 @@ class MeterTest {
   }
 
   @Test
-  void longGauge() {
-    meter
-        .gaugeBuilder("test")
-        .ofLongs()
-        .setDescription("d")
-        .setUnit("u")
-        .buildWithCallback(
-            result -> result.record(123, Attributes.of(AttributeKey.stringKey("q"), "r")));
+  void longGauge() throws InterruptedException {
+    ObservableLongGauge observableGauge =
+        meter
+            .gaugeBuilder("test")
+            .ofLongs()
+            .setDescription("d")
+            .setUnit("u")
+            .buildWithCallback(
+                result -> result.record(123, Attributes.of(AttributeKey.stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -258,16 +436,26 @@ class MeterTest {
                                             .hasValue(123)
                                             .hasAttributesSatisfying(
                                                 equalTo(AttributeKey.stringKey("q"), "r"))))));
+
+    observableGauge.close();
+
+    // sleep exporter interval
+    Thread.sleep(100);
+    testing.clearData();
+    Thread.sleep(100);
+
+    testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void doubleGauge() {
-    meter
-        .gaugeBuilder("test")
-        .setDescription("d")
-        .setUnit("u")
-        .buildWithCallback(
-            result -> result.record(1.23, Attributes.of(AttributeKey.stringKey("q"), "r")));
+  void doubleGauge() throws InterruptedException {
+    ObservableDoubleGauge observableGauge =
+        meter
+            .gaugeBuilder("test")
+            .setDescription("d")
+            .setUnit("u")
+            .buildWithCallback(
+                result -> result.record(1.23, Attributes.of(AttributeKey.stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -289,5 +477,14 @@ class MeterTest {
                                             .hasValue(1.23)
                                             .hasAttributesSatisfying(
                                                 equalTo(AttributeKey.stringKey("q"), "r"))))));
+
+    observableGauge.close();
+
+    // sleep exporter interval
+    Thread.sleep(100);
+    testing.clearData();
+    Thread.sleep(100);
+
+    testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 }
