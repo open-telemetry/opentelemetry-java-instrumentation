@@ -14,10 +14,15 @@ import javax.annotation.Nullable;
 /** A builder of a {@link Config}. */
 public final class ConfigBuilder {
 
-  private final Map<String, String> allProperties = new HashMap<>();
+  private final Map<String, String> allProperties;
 
-  /** Constructs a new {@link ConfigBuilder}. */
-  ConfigBuilder() {}
+  ConfigBuilder() {
+    allProperties = new HashMap<>();
+  }
+
+  ConfigBuilder(Map<String, String> propertiesToCopy) {
+    allProperties = new HashMap<>(propertiesToCopy);
+  }
 
   /** Adds a single property to the config. */
   public ConfigBuilder addProperty(String name, @Nullable String value) {

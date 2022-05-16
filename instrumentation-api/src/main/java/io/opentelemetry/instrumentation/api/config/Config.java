@@ -192,4 +192,12 @@ public abstract class Config {
   private String getRawProperty(String name, String defaultValue) {
     return getAllProperties().getOrDefault(NamingConvention.DOT.normalize(name), defaultValue);
   }
+
+  /**
+   * Returns a new {@link ConfigBuilder} instance populated with the properties of this {@link
+   * Config}.
+   */
+  public ConfigBuilder toBuilder() {
+    return new ConfigBuilder(getAllProperties());
+  }
 }
