@@ -57,10 +57,3 @@ Same settings as above for new release branches (`release/**`), except:
 * Allow deletions: CHECKED
 
   So that bot PR branches can be deleted
-
-## Tag protections
-
-* `v*`
-
-  To prevent accidents. Though sometimes useful for release snafu, so may reconsider if
-  maintainers lose admin rights.
