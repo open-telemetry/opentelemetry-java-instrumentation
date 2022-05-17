@@ -53,7 +53,7 @@ class MuzzleGradlePluginUtil {
      */
     @Suppress("UNCHECKED_CAST")
     fun assertInstrumentationMuzzled(agentClassLoader: ClassLoader, userClassLoader: ClassLoader,
-                                     excludedInstrumentationNames: List<String>, assertPass: Boolean) {
+                                     excludedInstrumentationNames: Set<String>, assertPass: Boolean) {
 
       val matcherClass = agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher")
 
@@ -63,7 +63,7 @@ class MuzzleGradlePluginUtil {
       // We cannot reference Mismatch class directly here, because we are loaded from a different
       // classloader.
       val allMismatches = matcherClass
-        .getMethod("matchesAll", ClassLoader::class.java, Boolean::class.javaPrimitiveType, List::class.java)
+        .getMethod("matchesAll", ClassLoader::class.java, Boolean::class.javaPrimitiveType, Set::class.java)
         .invoke(null, userClassLoader, assertPass, excludedInstrumentationNames)
         as Map<String, List<Any>>
 

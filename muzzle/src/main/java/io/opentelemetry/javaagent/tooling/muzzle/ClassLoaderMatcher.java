@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 /**
  * This class verifies that a given {@link ClassLoader} satisfies all expectations of a given {@link
@@ -30,7 +31,7 @@ public class ClassLoaderMatcher {
    * <p>The returned map will be empty if and only if no instrumentation modules were found.
    */
   public static Map<String, List<Mismatch>> matchesAll(
-      ClassLoader classLoader, boolean injectHelpers, List<String> excludedInstrumentationNames) {
+      ClassLoader classLoader, boolean injectHelpers, Set<String> excludedInstrumentationNames) {
     Map<String, List<Mismatch>> result = new HashMap<>();
     ServiceLoader.load(InstrumentationModule.class)
         .forEach(

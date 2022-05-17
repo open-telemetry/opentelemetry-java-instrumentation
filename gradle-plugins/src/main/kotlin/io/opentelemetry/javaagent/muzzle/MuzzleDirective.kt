@@ -20,7 +20,7 @@ abstract class MuzzleDirective {
   abstract val skipVersions: SetProperty<String>
   abstract val additionalDependencies: ListProperty<Any>
   abstract val excludedDependencies: ListProperty<String>
-  abstract val excludedInstrumentationNames: ListProperty<String>
+  abstract val excludedInstrumentationNames: SetProperty<String>
   abstract val assertPass: Property<Boolean>
   abstract val assertInverse: Property<Boolean>
   internal abstract val coreJdk: Property<Boolean> // use coreJdk() function below to enable
