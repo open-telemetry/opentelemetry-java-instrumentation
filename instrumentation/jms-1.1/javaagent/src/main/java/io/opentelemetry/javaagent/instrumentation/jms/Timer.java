@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 public final class Timer {
 
@@ -21,12 +22,16 @@ public final class Timer {
     this.startNanoTime = startNanoTime;
   }
 
-  public Instant startTime() {
-    return startTime;
+  public long startTimeNanos() {
+    return toNanos(startTime);
   }
 
-  public Instant endTime() {
+  public long nowNanos() {
     long durationNanos = System.nanoTime() - startNanoTime;
-    return startTime().plusNanos(durationNanos);
+    return toNanos(startTime.plusNanos(durationNanos));
+  }
+
+  private static long toNanos(Instant time) {
+    return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafka.internal;
 
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -25,12 +26,16 @@ public final class Timer {
     this.startNanoTime = startNanoTime;
   }
 
-  public Instant startTime() {
-    return startTime;
+  public long startTimeNanos() {
+    return toNanos(startTime);
   }
 
-  public Instant now() {
+  public long nowNanos() {
     long durationNanos = System.nanoTime() - startNanoTime;
-    return startTime().plusNanos(durationNanos);
+    return toNanos(startTime.plusNanos(durationNanos));
+  }
+
+  private static long toNanos(Instant time) {
+    return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
 }

@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
 import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.Timer;
 import javax.annotation.Nullable;
 
 final class NettyErrorOnlyConnectionInstrumenter implements NettyConnectionInstrumenter {
@@ -27,15 +29,16 @@ final class NettyErrorOnlyConnectionInstrumenter implements NettyConnectionInstr
 
   @Override
   public Context start(Context parentContext, NettyConnectionRequest request) {
-    return parentContext;
+    return parentContext.with(Timer.start());
   }
 
   @Override
   public void end(
       Context context, NettyConnectionRequest request, Channel channel, @Nullable Throwable error) {
     if (error != null && instrumenter.shouldStart(context, request)) {
-      Context connectContext = instrumenter.start(context, request);
-      instrumenter.end(connectContext, request, channel, error);
+      Timer timer = Timer.get(context);
+      InstrumenterUtil.startAndEnd(
+          instrumenter, context, request, channel, error, timer.startTimeNanos(), timer.nowNanos());
     }
   }
 }
