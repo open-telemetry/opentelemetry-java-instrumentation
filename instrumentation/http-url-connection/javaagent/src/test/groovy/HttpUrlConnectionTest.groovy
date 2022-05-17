@@ -258,4 +258,69 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
       }
     }
   }
+
+  def "sun.net.www.protocol.http.HttpURLConnection.getOutputStream should transform GET into POST"() {
+    setup:
+    def url = resolveAddress("/success").toURL()
+    runWithSpan("someTrace") {
+
+      HttpURLConnection connection = url.openConnection()
+
+      def connectionClassName = connection.getClass().getCanonicalName()
+
+      assert "sun.net.www.protocol.http.HttpURLConnection".equals(connectionClassName)
+
+      connection.setRequestMethod("GET")
+
+      String urlParameters = "q=ASDF&w=&e=&r=12345&t="
+
+      // Send GET request
+      connection.setDoOutput(true)
+      DataOutputStream wr = new DataOutputStream(connection.getOutputStream())
+      wr.writeBytes(urlParameters)
+      wr.flush()
+      wr.close()
+
+      assert connection.getResponseCode() == STATUS
+
+      def stream = connection.inputStream
+      def lines = stream.readLines()
+      stream.close()
+      assert lines == [RESPONSE]
+    }
+
+    expect:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          name "someTrace"
+          hasNoParent()
+          attributes {
+          }
+        }
+        span(1) {
+          name "HTTP POST"
+          kind CLIENT
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_URL" "$url"
+            "$SemanticAttributes.HTTP_METHOD" "POST"
+            "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
+            "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+          }
+        }
+        span(2) {
+          name "test-http-server"
+          kind SERVER
+          childOf span(1)
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
 }
