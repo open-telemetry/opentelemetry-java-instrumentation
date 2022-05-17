@@ -5,10 +5,11 @@
 
 set -e -u -o pipefail
 
+curl https://raw.githubusercontent.com/open-telemetry/opentelemetry.io/main/content/en/docs/instrumentation/java/automatic/agent-config.md > agent-config.md
+
 comm -3 \
   <(
-    sed -n '/----------------------/,${p;/^$/q}' \
-        ../opentelemetry.io/content/en/docs/instrumentation/java/automatic/agent-config.md \
+    sed -n '/----------------------/,${p;/^$/q}' agent-config.md \
       | sed '1d;$d' \
       | cut -d '|' -f 3 \
       | tr -d ' ' \
