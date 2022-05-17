@@ -61,7 +61,8 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("connected") boolean connected,
         @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Origin("#m") String methodName) {
 
       callDepth = CallDepth.forClass(HttpURLConnection.class);
       if (callDepth.getAndIncrement() > 0) {
@@ -71,7 +72,8 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, connection)) {
+      Class<? extends HttpURLConnection> connectionClass = connection.getClass();
+      if (!instrumenter(connectionClass, methodName).shouldStart(parentContext, connection)) {
         return;
       }
 
@@ -89,7 +91,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context context = instrumenter().start(parentContext, connection);
+      Context context = instrumenter(connectionClass, methodName).start(parentContext, connection);
       httpUrlState = new HttpUrlState(context);
       storage.set(connection, httpUrlState);
       scope = context.makeCurrent();
@@ -116,15 +118,16 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
       callDepth.getAndIncrement();
       try {
         scope.close();
+        Class<? extends HttpURLConnection> connectionClass = connection.getClass();
 
         if (throwable != null) {
           if (responseCode >= 400) {
             // HttpURLConnection unnecessarily throws exception on error response.
             // None of the other http clients do this, so not recording the exception on the span
             // to be consistent with the telemetry for other http clients.
-            instrumenter().end(httpUrlState.context, connection, responseCode, null);
+            instrumenter(connectionClass, methodName).end(httpUrlState.context, connection, responseCode, null);
           } else {
-            instrumenter()
+            instrumenter(connectionClass, methodName)
                 .end(
                     httpUrlState.context,
                     connection,
@@ -136,7 +139,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
           // responseCode field is sometimes not populated.
           // We can't call getResponseCode() due to some unwanted side-effects
           // (e.g. breaks getOutputStream).
-          instrumenter().end(httpUrlState.context, connection, responseCode, null);
+          instrumenter(connectionClass, methodName).end(httpUrlState.context, connection, responseCode, null);
           httpUrlState.finished = true;
         }
       } finally {

@@ -19,10 +19,12 @@ public final class HttpUrlConnectionSingletons {
 
   private static final Instrumenter<HttpURLConnection, Integer> INSTRUMENTER;
 
+  private static final Instrumenter<HttpURLConnection, Integer> SUN_INSTRUMENTER;
+
   static {
-    HttpUrlHttpAttributesGetter httpAttributesGetter = new HttpUrlHttpAttributesGetter();
     HttpUrlNetAttributesGetter netAttributesGetter = new HttpUrlNetAttributesGetter();
 
+    HttpUrlHttpAttributesGetter httpAttributesGetter = new HttpUrlHttpAttributesGetter();
     INSTRUMENTER =
         Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),
@@ -34,11 +36,38 @@ public final class HttpUrlConnectionSingletons {
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .addRequestMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(RequestPropertySetter.INSTANCE);
-  }
 
-  public static Instrumenter<HttpURLConnection, Integer> instrumenter() {
-    return INSTRUMENTER;
+    SunHttpUrlHttpAttributesGetter sunHttpUrlHttpAttributesGetter = new SunHttpUrlHttpAttributesGetter();
+    SUN_INSTRUMENTER =
+        Instrumenter.<HttpURLConnection, Integer>builder(
+                GlobalOpenTelemetry.get(),
+                "io.opentelemetry.http-url-connection-sun",
+                HttpSpanNameExtractor.create(sunHttpUrlHttpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(sunHttpUrlHttpAttributesGetter))
+            .addAttributesExtractor(
+                HttpClientAttributesExtractor.create(sunHttpUrlHttpAttributesGetter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
+            .addRequestMetrics(HttpClientMetrics.get())
+            .newClientInstrumenter(RequestPropertySetter.INSTANCE);
   }
 
   private HttpUrlConnectionSingletons() {}
+
+  public static Instrumenter<HttpURLConnection, Integer> instrumenter(
+      Class<? extends HttpURLConnection> connectionClass, String methodName) {
+
+    if(isGetOutputStreamMethodOfSunConnection(connectionClass, methodName)) {
+      return SUN_INSTRUMENTER;
+    }
+
+    return INSTRUMENTER;
+  }
+
+  private static boolean isGetOutputStreamMethodOfSunConnection(
+      Class<? extends HttpURLConnection> connectionClass, String methodName) {
+    String instrumentationClassAsString =  connectionClass.toString();
+    return instrumentationClassAsString.contains("sun.net.www.protocol.http.HttpURLConnection")
+        && "getOutputStream".equals(methodName);
+  }
 }
