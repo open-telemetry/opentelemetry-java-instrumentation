@@ -6,10 +6,12 @@
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.Callable
 import java.util.concurrent.CompletionStage
 import org.redisson.Redisson
 import org.redisson.api.RBucket
 import org.redisson.api.RFuture
+import org.redisson.api.RScheduledExecutorService
 import org.redisson.api.RSet
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
@@ -129,5 +131,21 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     }
   }
 
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6033
+  def "test schedule"() {
+    RScheduledExecutorService executorService = redisson.getExecutorService("EXECUTOR")
+    def taskId = executorService.schedule(new MyCallable(), 0, TimeUnit.SECONDS)
+      .getTaskId()
+    expect:
+    taskId != null
+  }
+
+  private static class MyCallable implements Callable, Serializable {
+
+    @Override
+    Object call() throws Exception {
+      return null
+    }
+  }
 }
 

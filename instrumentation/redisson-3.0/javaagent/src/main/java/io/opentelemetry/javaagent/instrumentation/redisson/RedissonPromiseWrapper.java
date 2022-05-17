@@ -14,16 +14,19 @@ public class RedissonPromiseWrapper<T> extends RedissonPromise<T> implements Pro
   private volatile EndOperationListener<T> endOperationListener;
 
   private RedissonPromiseWrapper(RPromise<T> delegate) {
+    Context context = Context.current();
     this.whenComplete(
         (result, error) -> {
           EndOperationListener<T> endOperationListener = this.endOperationListener;
           if (endOperationListener != null) {
             endOperationListener.accept(result, error);
           }
-          if (error != null) {
-            delegate.tryFailure(error);
-          } else {
-            delegate.trySuccess(result);
+          try (Scope ignored = context.makeCurrent()) {
+            if (error != null) {
+              delegate.tryFailure(error);
+            } else {
+              delegate.trySuccess(result);
+            }
           }
         });
   }
@@ -38,32 +41,6 @@ public class RedissonPromiseWrapper<T> extends RedissonPromise<T> implements Pro
     }
 
     return new RedissonPromiseWrapper<>(delegate);
-  }
-
-  /**
-   * Wrap {@link RPromise} to run callbacks with the context that was current at the time this
-   * method was called.
-   *
-   * <p>This method should be called on, or as close as possible to, the {@link RPromise} that is
-   * returned to the user to ensure that the callbacks added by user are run in appropriate context.
-   */
-  public static <T> RPromise<T> wrapContext(RPromise<T> promise) {
-    Context context = Context.current();
-    // when returned promise is completed, complete input promise with context that was current
-    // at the time when the promise was wrapped
-    RPromise<T> result = new RedissonPromise<T>();
-    result.whenComplete(
-        (value, error) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            if (error != null) {
-              promise.tryFailure(error);
-            } else {
-              promise.trySuccess(value);
-            }
-          }
-        });
-
-    return result;
   }
 
   @Override
