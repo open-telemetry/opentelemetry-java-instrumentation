@@ -47,7 +47,11 @@ public final class GraphQLTelemetry {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   } else {
                     SpanStatusExtractor.getDefault()
-                        .extract(spanStatusBuilder, instrumentationExecutionParameters, executionResult, error);
+                        .extract(
+                            spanStatusBuilder,
+                            instrumentationExecutionParameters,
+                            executionResult,
+                            error);
                   }
                 });
     if (captureExperimentalSpanAttributes) {
