@@ -145,27 +145,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Adds a {@link RequestListener} that will be called when request processing starts and ends.
-   *
-   * @deprecated Use {@link #addOperationListener(OperationListener)} instead.
-   */
-  @Deprecated
-  public InstrumenterBuilder<REQUEST, RESPONSE> addRequestListener(RequestListener listener) {
-    return addOperationListener(listener);
-  }
-
-  /**
-   * Adds a {@link RequestMetrics} that will produce a {@link RequestListener} capturing the
-   * requests processing metrics.
-   *
-   * @deprecated Use {@link #addOperationMetrics(OperationMetrics)} instead.
-   */
-  @Deprecated
-  public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
-    return addOperationMetrics(factory);
-  }
-
-  /**
    * Adds a {@link OperationListener} that will be called when an instrumented operation starts and
    * ends.
    */

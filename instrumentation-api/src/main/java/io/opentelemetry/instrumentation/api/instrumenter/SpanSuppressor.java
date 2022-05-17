@@ -32,23 +32,6 @@ interface SpanSuppressor {
     }
   }
 
-  enum JustStoreServer implements SpanSuppressor {
-    INSTANCE;
-
-    @Override
-    public Context storeInContext(Context context, SpanKind spanKind, Span span) {
-      if (spanKind == SpanKind.SERVER) {
-        return SpanKey.KIND_SERVER.storeInContext(context, span);
-      }
-      return context;
-    }
-
-    @Override
-    public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-      return false;
-    }
-  }
-
   final class DelegateBySpanKind implements SpanSuppressor {
 
     private final Map<SpanKind, SpanSuppressor> delegates;
