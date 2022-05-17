@@ -42,12 +42,13 @@ public final class GraphQLTelemetry {
         Instrumenter.<InstrumentationExecutionParameters, ExecutionResult>builder(
                 openTelemetry, INSTRUMENTATION_NAME, ignored -> "GraphQL Query")
             .setSpanStatusExtractor(
-                (instrumentationExecutionParameters, executionResult, error) -> {
+                (spanStatusBuilder, instrumentationExecutionParameters, executionResult, error) -> {
                   if (!executionResult.getErrors().isEmpty()) {
-                    return StatusCode.ERROR;
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault()
+                        .extract(spanStatusBuilder, instrumentationExecutionParameters, executionResult, error);
                   }
-                  return SpanStatusExtractor.getDefault()
-                      .extract(instrumentationExecutionParameters, executionResult, error);
                 });
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
