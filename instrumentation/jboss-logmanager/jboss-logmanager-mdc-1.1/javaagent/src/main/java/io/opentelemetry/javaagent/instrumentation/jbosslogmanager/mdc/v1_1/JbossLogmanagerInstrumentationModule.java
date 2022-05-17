@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.v1_1;
+package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 
 import static java.util.Arrays.asList;
 
