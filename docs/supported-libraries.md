@@ -12,7 +12,6 @@ or [contributing](../CONTRIBUTING.md).
   * [Application Servers](#application-servers)
   * [JVMs and Operating Systems](#jvms-and-operating-systems)
   * [Disabled instrumentations](#disabled-instrumentations)
-    + [Grizzly instrumentation](#grizzly-instrumentation)
 
 ## Libraries / Frameworks
 
@@ -152,13 +151,3 @@ For this reason, the following instrumentations are disabled by default:
 
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:
 `-Dotel.instrumentation.jdbc-datasource.enabled=true`
-
-### Grizzly instrumentation
-
-When you use
-[Grizzly](https://javaee.github.io/grizzly/httpserverframework.html) for
-Servlet-based applications, you get better experience from Servlet-specific
-support. As these two instrumentations conflict with each other, more generic
-instrumentation for Grizzly HTTP server is disabled by default. If needed,
-you can enable it by adding the following system property:
-`-Dotel.instrumentation.grizzly.enabled=true`

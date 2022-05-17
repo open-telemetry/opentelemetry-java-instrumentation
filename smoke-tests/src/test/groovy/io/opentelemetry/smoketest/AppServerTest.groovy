@@ -265,10 +265,10 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.target", "/app/exception") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
+    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
-    traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 1
+    traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
 
     where:
     [appServer, jdk, isWindows] << getTestParams()
