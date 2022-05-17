@@ -28,9 +28,7 @@ final class GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, 
       }
     }
     if (status != null) {
-      if (status.isOk()) {
-        spanStatusBuilder.setStatus(StatusCode.UNSET);
-      } else {
+      if (!status.isOk()) {
         spanStatusBuilder.setStatus(StatusCode.ERROR);
       }
     } else {
