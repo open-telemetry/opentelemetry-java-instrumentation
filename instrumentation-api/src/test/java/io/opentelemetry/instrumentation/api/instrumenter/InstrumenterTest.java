@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
@@ -224,11 +223,7 @@ class InstrumenterTest {
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span")
-                            .hasStatus(
-                                StatusData.create(
-                                    StatusCode.ERROR, "java.lang.IllegalStateException: test"))));
+                    span -> span.hasName("span").hasStatus(StatusData.error())));
   }
 
   @Test
@@ -337,11 +332,7 @@ class InstrumenterTest {
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span")
-                            .hasStatus(
-                                StatusData.create(
-                                    StatusCode.ERROR, "java.lang.IllegalStateException: test"))));
+                    span -> span.hasName("span").hasStatus(StatusData.error())));
   }
 
   @Test

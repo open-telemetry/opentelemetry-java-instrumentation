@@ -78,8 +78,7 @@ class HttpSpanStatusExtractorTest {
     if (expectedStatusCode == StatusCode.ERROR) {
       verify(spanStatusBuilder).setStatus(expectedStatusCode);
     } else {
-      verify(spanStatusBuilder)
-          .setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
+      verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
     }
   }
 
@@ -100,8 +99,7 @@ class HttpSpanStatusExtractorTest {
     if (expectedStatusCode == StatusCode.ERROR) {
       verify(spanStatusBuilder).setStatus(expectedStatusCode);
     } else {
-      verify(spanStatusBuilder)
-          .setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
+      verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
     }
   }
 
@@ -135,7 +133,7 @@ class HttpSpanStatusExtractorTest {
             Collections.emptyMap(),
             Collections.emptyMap(),
             new IllegalStateException("test"));
-    verify(spanStatusBuilder).setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
+    verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 
   @Test
@@ -148,6 +146,6 @@ class HttpSpanStatusExtractorTest {
             Collections.emptyMap(),
             Collections.emptyMap(),
             new IllegalStateException("test"));
-    verify(spanStatusBuilder).setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
+    verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 }

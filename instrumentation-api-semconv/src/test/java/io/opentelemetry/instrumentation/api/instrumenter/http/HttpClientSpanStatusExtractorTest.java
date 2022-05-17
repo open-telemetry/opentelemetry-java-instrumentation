@@ -61,8 +61,7 @@ class HttpClientSpanStatusExtractorTest {
     if (expectedStatusCode != StatusCode.UNSET) {
       verify(spanStatusBuilder).setStatus(expectedStatusCode);
     } else {
-      verify(spanStatusBuilder)
-          .setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
+      verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
     }
   }
 
@@ -87,6 +86,6 @@ class HttpClientSpanStatusExtractorTest {
             Collections.emptyMap(),
             new IllegalStateException("test"));
 
-    verify(spanStatusBuilder).setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
+    verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 }

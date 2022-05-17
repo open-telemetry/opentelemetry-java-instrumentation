@@ -35,6 +35,6 @@ class DefaultSpanStatusExtractorTest {
             Collections.emptyMap(),
             Collections.emptyMap(),
             new IllegalStateException("test"));
-    verify(spanStatusBuilder).setStatus(StatusCode.ERROR, "java.lang.IllegalStateException: test");
+    verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 }
