@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 1.14.0 (Unreleased)
+## Version 1.14.0 (2022-05-17)
 
 ### Migration notes:
 
