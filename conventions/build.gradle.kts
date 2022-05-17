@@ -49,7 +49,7 @@ dependencies {
   implementation("org.gradle:test-retry-gradle-plugin:1.3.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.5.4")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.9")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.10")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.6.6")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:2.0.2")

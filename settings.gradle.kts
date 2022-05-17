@@ -10,6 +10,11 @@ pluginManagement {
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.6.0"
   }
+
+  repositories {
+    gradlePluginPortal()
+    mavenCentral()
+  }
 }
 
 plugins {
