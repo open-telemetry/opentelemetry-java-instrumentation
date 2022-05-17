@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
@@ -20,18 +19,6 @@ public interface SpanLinksExtractor<REQUEST> {
    * {@code spanLinks}.
    */
   void extract(SpanLinksBuilder spanLinks, Context parentContext, REQUEST request);
-
-  /**
-   * Returns a new {@link SpanLinksExtractor} that will extract a {@link SpanContext} from the
-   * request using configured {@code propagators}.
-   *
-   * @deprecated Use {@link #extractFromRequest(TextMapPropagator, TextMapGetter)} instead.
-   */
-  @Deprecated
-  static <REQUEST> SpanLinksExtractor<REQUEST> fromUpstreamRequest(
-      ContextPropagators propagators, TextMapGetter<REQUEST> getter) {
-    return extractFromRequest(propagators.getTextMapPropagator(), getter);
-  }
 
   /**
    * Returns a new {@link SpanLinksExtractor} that will extract a {@link SpanContext} from the
