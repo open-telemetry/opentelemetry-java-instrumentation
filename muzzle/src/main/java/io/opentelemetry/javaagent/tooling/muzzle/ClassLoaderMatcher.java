@@ -30,12 +30,16 @@ public class ClassLoaderMatcher {
    * <p>The returned map will be empty if and only if no instrumentation modules were found.
    */
   public static Map<String, List<Mismatch>> matchesAll(
-      ClassLoader classLoader, boolean injectHelpers) {
+      ClassLoader classLoader, boolean injectHelpers, List<String> excludedInstrumentationNames) {
     Map<String, List<Mismatch>> result = new HashMap<>();
     ServiceLoader.load(InstrumentationModule.class)
         .forEach(
             module -> {
-              result.put(module.getClass().getName(), matches(module, classLoader, injectHelpers));
+              if (module.instrumentationNames().stream()
+                  .noneMatch(excludedInstrumentationNames::contains)) {
+                result.put(
+                    module.getClass().getName(), matches(module, classLoader, injectHelpers));
+              }
             });
     return result;
   }
