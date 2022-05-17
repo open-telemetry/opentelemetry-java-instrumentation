@@ -36,11 +36,6 @@ abstract class PayaraSmokeTest extends AppServerTest {
     }
     return super.getSpanName(path)
   }
-
-  @Override
-  boolean testRequestWebInfWebXml() {
-    false
-  }
 }
 
 @AppServer(version = "5.2020.6", jdk = "8")
