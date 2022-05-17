@@ -21,7 +21,7 @@ jobs:
           echo "VERSION=$major_minor.$((patch + 1))" >> $GITHUB_ENV
 
       - name: Update version
-        run: .github/scripts/update-version.sh $VERSION ${VERSION}-alpha
+        run: .github/scripts/update-version.sh $VERSION
 
       - name: Update download link version
         run: |
