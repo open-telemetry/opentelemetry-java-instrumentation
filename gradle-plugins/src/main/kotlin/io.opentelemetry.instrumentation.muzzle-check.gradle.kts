@@ -287,7 +287,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
       val userCL = createClassLoaderForTask(config)
       withContextClassLoader(instrumentationCL) {
         MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL,
-          muzzleDirective.excludedInstrumentationModules.get(), muzzleDirective.assertPass.get())
+          muzzleDirective.excludedInstrumentationNames.get(), muzzleDirective.assertPass.get())
       }
 
       for (thread in Thread.getAllStackTraces().keys) {
@@ -351,7 +351,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
       assertPass.set(!muzzleDirective.assertPass.get())
       additionalDependencies.set(muzzleDirective.additionalDependencies)
       excludedDependencies.set(muzzleDirective.excludedDependencies)
-      excludedInstrumentationModules.set(muzzleDirective.excludedInstrumentationModules)
+      excludedInstrumentationNames.set(muzzleDirective.excludedInstrumentationNames)
     }
     inverseDirectives.add(inverseDirective)
   }

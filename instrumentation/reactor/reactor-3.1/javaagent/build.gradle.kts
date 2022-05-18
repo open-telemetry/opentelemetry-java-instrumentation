@@ -9,7 +9,7 @@ muzzle {
     versions.set("[3.1.0.RELEASE,)")
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     assertInverse.set(true)
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.opentelemetryapi.OpenTelemetryApiInstrumentationModule")
+    excludeInstrumentationName("opentelemetry-api")
   }
 }
 
