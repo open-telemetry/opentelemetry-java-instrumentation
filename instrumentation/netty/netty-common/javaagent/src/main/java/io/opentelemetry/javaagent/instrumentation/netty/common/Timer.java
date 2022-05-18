@@ -9,7 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 
 public final class Timer implements ImplicitContextKeyed {
 
@@ -34,19 +33,6 @@ public final class Timer implements ImplicitContextKeyed {
   public Instant now() {
     long durationNanos = System.nanoTime() - startNanoTime;
     return startTime().plusNanos(durationNanos);
-  }
-
-  public long startTimeNanos() {
-    return toNanos(startTime);
-  }
-
-  public long nowNanos() {
-    long durationNanos = System.nanoTime() - startNanoTime;
-    return toNanos(startTime.plusNanos(durationNanos));
-  }
-
-  private static long toNanos(Instant time) {
-    return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
 
   @Override

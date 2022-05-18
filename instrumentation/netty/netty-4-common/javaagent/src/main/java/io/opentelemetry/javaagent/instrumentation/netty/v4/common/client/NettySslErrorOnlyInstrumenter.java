@@ -35,7 +35,7 @@ final class NettySslErrorOnlyInstrumenter implements NettySslInstrumenter {
     if (error != null && instrumenter.shouldStart(context, request)) {
       Timer timer = Timer.get(context);
       InstrumenterUtil.startAndEnd(
-          instrumenter, context, request, null, error, timer.startTimeNanos(), timer.nowNanos());
+          instrumenter, context, request, null, error, timer.startTime(), timer.now());
     }
   }
 }

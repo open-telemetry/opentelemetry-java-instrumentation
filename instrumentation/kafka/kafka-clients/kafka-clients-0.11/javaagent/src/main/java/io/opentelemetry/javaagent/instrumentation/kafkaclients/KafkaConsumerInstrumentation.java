@@ -72,8 +72,8 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
                 records,
                 null,
                 error,
-                timer.startTimeNanos(),
-                timer.nowNanos());
+                timer.startTime(),
+                timer.now());
 
         // we're storing the context of the receive span so that process spans can use it as parent
         // context even though the span has ended

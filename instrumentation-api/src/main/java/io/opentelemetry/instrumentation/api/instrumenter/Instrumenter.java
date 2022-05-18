@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -150,14 +151,14 @@ public class Instrumenter<REQUEST, RESPONSE> {
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error,
-      long startTimeNanos,
-      long endTimeNanos) {
-    Context context = doStart(parentContext, request, startTimeNanos);
-    doEnd(context, request, response, error, endTimeNanos);
+      Instant startTime,
+      Instant endTime) {
+    Context context = doStart(parentContext, request, startTime);
+    doEnd(context, request, response, error, endTime);
     return context;
   }
 
-  private Context doStart(Context parentContext, REQUEST request, @Nullable Long startTimeNanos) {
+  private Context doStart(Context parentContext, REQUEST request, @Nullable Instant startTime) {
     SpanKind spanKind = spanKindExtractor.extract(request);
     SpanBuilder spanBuilder =
         tracer
@@ -165,8 +166,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
             .setSpanKind(spanKind)
             .setParent(parentContext);
 
-    if (startTimeNanos != null) {
-      spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
+    if (startTime != null) {
+      spanBuilder.setStartTimestamp(startTime);
     }
 
     SpanLinksBuilder spanLinksBuilder = new SpanLinksBuilderImpl(spanBuilder);
@@ -190,7 +191,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     if (!operationListeners.isEmpty()) {
-      long startNanos = startTimeNanos == null ? System.nanoTime() : startTimeNanos;
+      long startNanos = getNanos(startTime);
       for (OperationListener operationListener : operationListeners) {
         context = operationListener.onStart(context, attributes, startNanos);
       }
@@ -208,7 +209,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error,
-      @Nullable Long endTimeNanos) {
+      @Nullable Instant endTime) {
     Span span = Span.fromContext(context);
 
     if (error != null) {
@@ -223,7 +224,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     span.setAllAttributes(attributes);
 
     if (!operationListeners.isEmpty()) {
-      long endNanos = endTimeNanos == null ? System.nanoTime() : endTimeNanos;
+      long endNanos = getNanos(endTime);
       ListIterator<? extends OperationListener> i =
           operationListeners.listIterator(operationListeners.size());
       while (i.hasPrevious()) {
@@ -236,10 +237,17 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.setStatus(statusCode);
     }
 
-    if (endTimeNanos != null) {
-      span.end(endTimeNanos, TimeUnit.NANOSECONDS);
+    if (endTime != null) {
+      span.end(endTime);
     } else {
       span.end();
     }
+  }
+
+  private static long getNanos(@Nullable Instant time) {
+    if (time == null) {
+      return System.nanoTime();
+    }
+    return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
 }

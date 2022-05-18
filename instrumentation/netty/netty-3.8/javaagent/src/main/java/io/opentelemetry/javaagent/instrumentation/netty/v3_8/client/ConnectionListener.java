@@ -36,8 +36,8 @@ public final class ConnectionListener implements ChannelFutureListener {
           request,
           future.getChannel(),
           cause,
-          timer.startTimeNanos(),
-          timer.nowNanos());
+          timer.startTime(),
+          timer.now());
     }
   }
 }

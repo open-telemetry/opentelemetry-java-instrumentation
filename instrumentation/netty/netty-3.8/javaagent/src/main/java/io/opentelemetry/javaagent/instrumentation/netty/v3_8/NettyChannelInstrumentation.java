@@ -100,8 +100,8 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
               request,
               null,
               error,
-              timer.startTimeNanos(),
-              timer.nowNanos());
+              timer.startTime(),
+              timer.now());
         }
       } else {
         channelFuture.addListener(new ConnectionListener(parentContext, request, timer));

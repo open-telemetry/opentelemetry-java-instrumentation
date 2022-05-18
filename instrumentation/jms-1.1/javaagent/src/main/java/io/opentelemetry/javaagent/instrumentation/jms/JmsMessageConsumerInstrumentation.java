@@ -72,8 +72,8 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
             request,
             null,
             throwable,
-            timer.startTimeNanos(),
-            timer.nowNanos());
+            timer.startTime(),
+            timer.now());
       }
     }
   }

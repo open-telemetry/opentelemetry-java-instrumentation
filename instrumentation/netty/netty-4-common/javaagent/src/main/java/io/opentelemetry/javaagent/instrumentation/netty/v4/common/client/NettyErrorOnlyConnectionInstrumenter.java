@@ -38,7 +38,7 @@ final class NettyErrorOnlyConnectionInstrumenter implements NettyConnectionInstr
     if (error != null && instrumenter.shouldStart(context, request)) {
       Timer timer = Timer.get(context);
       InstrumenterUtil.startAndEnd(
-          instrumenter, context, request, channel, error, timer.startTimeNanos(), timer.nowNanos());
+          instrumenter, context, request, channel, error, timer.startTime(), timer.now());
     }
   }
 }
