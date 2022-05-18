@@ -568,8 +568,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                           .hasParent(trace.getSpan(0)));
           boolean jdk8 = "1.8".equals(System.getProperty("java.specification.version"));
           if (jdk8) {
-            // on some netty based http clients odering of `CONNECT` and `callback` span isn't
-            // guranteed when running on jdk8
+            // on some netty based http clients order of `CONNECT` and `callback` spans isn't
+            // guaranteed when running on jdk8
             trace.hasSpansSatisfyingExactlyInAnyOrder(spanAsserts);
           } else {
             trace.hasSpansSatisfyingExactly(spanAsserts);
