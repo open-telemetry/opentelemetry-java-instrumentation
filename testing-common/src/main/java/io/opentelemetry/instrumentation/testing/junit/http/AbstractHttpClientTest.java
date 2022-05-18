@@ -22,6 +22,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -554,14 +555,25 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  assertClientSpan(span, uri, method, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError),
-              span ->
-                  span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
+          List<Consumer<SpanDataAssert>> spanAsserts =
+              Arrays.asList(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      assertClientSpan(span, uri, method, null)
+                          .hasParent(trace.getSpan(0))
+                          .hasException(clientError),
+                  span ->
+                      span.hasName("callback")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0)));
+          boolean jdk8 = "1.8".equals(System.getProperty("java.specification.version"));
+          if (jdk8) {
+            // on some netty based http clients order of `CONNECT` and `callback` spans isn't
+            // guaranteed when running on jdk8
+            trace.hasSpansSatisfyingExactlyInAnyOrder(spanAsserts);
+          } else {
+            trace.hasSpansSatisfyingExactly(spanAsserts);
+          }
         });
   }
 
