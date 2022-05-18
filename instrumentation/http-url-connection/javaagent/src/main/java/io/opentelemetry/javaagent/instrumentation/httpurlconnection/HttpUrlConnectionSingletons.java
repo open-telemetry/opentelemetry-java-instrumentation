@@ -67,8 +67,7 @@ public final class HttpUrlConnectionSingletons {
 
   private static boolean isGetOutputStreamMethodOfSunConnection(
       Class<? extends HttpURLConnection> connectionClass, String methodName) {
-    String instrumentationClassAsString = connectionClass.toString();
-    return instrumentationClassAsString.contains("sun.net.www.protocol.http.HttpURLConnection")
+    return connectionClass.getName().equals("sun.net.www.protocol.http.HttpURLConnection")
         && "getOutputStream".equals(methodName);
   }
 }
