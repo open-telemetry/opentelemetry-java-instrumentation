@@ -42,6 +42,7 @@ class ClassesTest {
                 metricData ->
                     assertThat(metricData)
                         .hasDescription("Number of classes loaded since JVM start")
+                        .hasUnit("1")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.hasPointsSatisfying(
@@ -55,6 +56,7 @@ class ClassesTest {
                 metricData ->
                     assertThat(metricData)
                         .hasDescription("Number of classes unloaded since JVM start")
+                        .hasUnit("1")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.hasPointsSatisfying(
@@ -68,6 +70,7 @@ class ClassesTest {
                 metricData ->
                     assertThat(metricData)
                         .hasDescription("Number of classes currently loaded")
+                        .hasUnit("1")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.hasPointsSatisfying(
