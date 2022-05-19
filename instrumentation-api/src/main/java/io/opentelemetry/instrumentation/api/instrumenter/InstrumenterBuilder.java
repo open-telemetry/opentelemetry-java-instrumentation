@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import static java.util.Objects.requireNonNull;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
@@ -57,7 +55,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
-  @Nullable TimeExtractor<REQUEST, RESPONSE> timeExtractor = null;
   boolean enabled = true;
 
   InstrumenterBuilder(
@@ -181,10 +178,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * {@link TimeExtractor} will be used to generate any duration metrics, but the internal metric
    * timestamp (when it occurred) will always be stamped with "now" when the metric is recorded
    * (i.e. there is no way to back date a metric recording).
+   *
+   * @deprecated Setting operation start and end times is not currently supported.
    */
+  @Deprecated
   public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractor(
       TimeExtractor<REQUEST, RESPONSE> timeExtractor) {
-    this.timeExtractor = requireNonNull(timeExtractor);
     return this;
   }
 

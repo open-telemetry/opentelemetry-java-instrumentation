@@ -57,8 +57,7 @@ public final class NettyClientInstrumenterFactory {
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
-            .setTimeExtractor(new NettyConnectionTimeExtractor());
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter));
     if (!connectionTelemetryEnabled) {
       // when the connection telemetry is not enabled, netty creates CONNECT spans whenever a
       // connection error occurs - because there is no HTTP span in that scenario, if raw netty
@@ -88,7 +87,6 @@ public final class NettyClientInstrumenterFactory {
                 GlobalOpenTelemetry.get(), instrumentationName, NettySslRequest::spanName)
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
-            .setTimeExtractor(new NettySslTimeExtractor())
             .newInstrumenter(
                 sslTelemetryEnabled
                     ? SpanKindExtractor.alwaysInternal()

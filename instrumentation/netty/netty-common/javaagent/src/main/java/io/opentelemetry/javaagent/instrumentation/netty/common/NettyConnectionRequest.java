@@ -13,16 +13,14 @@ import javax.annotation.Nullable;
 public abstract class NettyConnectionRequest {
 
   public static NettyConnectionRequest resolve(SocketAddress remoteAddress) {
-    return new AutoValue_NettyConnectionRequest("RESOLVE", Timer.start(), remoteAddress);
+    return new AutoValue_NettyConnectionRequest("RESOLVE", remoteAddress);
   }
 
   public static NettyConnectionRequest connect(SocketAddress remoteAddress) {
-    return new AutoValue_NettyConnectionRequest("CONNECT", Timer.start(), remoteAddress);
+    return new AutoValue_NettyConnectionRequest("CONNECT", remoteAddress);
   }
 
   public abstract String spanName();
-
-  public abstract Timer timer();
 
   @Nullable
   public abstract SocketAddress remoteAddressOnStart();

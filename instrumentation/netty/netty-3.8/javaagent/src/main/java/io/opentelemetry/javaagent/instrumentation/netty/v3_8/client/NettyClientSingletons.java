@@ -58,7 +58,6 @@ public final class NettyClientSingletons {
             .addAttributesExtractor(nettyConnectAttributesExtractor)
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(nettyConnectAttributesGetter))
-            .setTimeExtractor(new NettyConnectionTimeExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

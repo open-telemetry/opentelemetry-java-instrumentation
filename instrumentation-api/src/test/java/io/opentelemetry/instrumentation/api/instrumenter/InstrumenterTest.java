@@ -29,7 +29,6 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -123,20 +122,6 @@ class InstrumenterTest {
               request.get("linkSpanId"),
               TraceFlags.getSampled(),
               TraceState.getDefault()));
-    }
-  }
-
-  static class TestTimeExtractor implements TimeExtractor<Instant, Instant> {
-
-    @Override
-    public Instant extractStartTime(Instant request) {
-      return request;
-    }
-
-    @Override
-    public Instant extractEndTime(
-        Instant request, @Nullable Instant response, @Nullable Throwable error) {
-      return response;
     }
   }
 
@@ -437,31 +422,6 @@ class InstrumenterTest {
 
     assertThat(Span.fromContext(startContext.get()).getSpanContext().isValid()).isTrue();
     assertThat(Span.fromContext(endContext.get()).getSpanContext().isValid()).isTrue();
-  }
-
-  @Test
-  void shouldStartSpanWithGivenStartTime() {
-    // given
-    Instrumenter<Instant, Instant> instrumenter =
-        Instrumenter.<Instant, Instant>builder(
-                otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .setTimeExtractor(new TestTimeExtractor())
-            .newInstrumenter();
-
-    Instant startTime = Instant.ofEpochSecond(100);
-    Instant endTime = Instant.ofEpochSecond(123);
-
-    // when
-    Context context = instrumenter.start(Context.root(), startTime);
-    instrumenter.end(context, startTime, endTime, null);
-
-    // then
-    otelTesting
-        .assertTraces()
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("test span").startsAt(startTime).endsAt(endTime)));
   }
 
   @Test
