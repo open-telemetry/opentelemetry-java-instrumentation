@@ -20,6 +20,8 @@
   - `ErrorCauseExtractor#extractCause()` has been renamed to `extract()`
   - `ContextCustomizer` and `RequestListener` `start()`/`end()` methods have been renamed to
     `onStart()`/`onEnd()`
+- The `opentelemetry-javaagent-instrumentation-api` artifact has been merged into the
+  `opentelemetry-javaagent-extension-api` artifact
 
 ### 🌟 New javaagent instrumentation
 
