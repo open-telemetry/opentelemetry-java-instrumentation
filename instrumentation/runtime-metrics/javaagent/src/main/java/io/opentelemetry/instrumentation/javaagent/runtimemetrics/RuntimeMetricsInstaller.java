@@ -10,6 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.runtimemetrics.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimemetrics.MemoryPools;
+import io.opentelemetry.instrumentation.runtimemetrics.Threads;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -28,6 +29,7 @@ public class RuntimeMetricsInstaller implements AgentListener {
         .isInstrumentationEnabled(Collections.singleton("runtime-metrics"), DEFAULT_ENABLED)) {
 
       MemoryPools.registerObservers(GlobalOpenTelemetry.get());
+      Threads.registerObservers(GlobalOpenTelemetry.get());
 
       if (config.getBoolean(
           "otel.instrumentation.runtime-metrics.experimental-metrics.enabled", false)) {
