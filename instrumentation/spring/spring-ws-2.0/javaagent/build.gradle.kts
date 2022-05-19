@@ -1,5 +1,5 @@
 plugins {
-  id("org.unbroken-dome.xjc") version "2.0.0"
+  id("org.unbroken-dome.xjc")
   id("otel.javaagent-instrumentation")
 }
 
