@@ -40,7 +40,7 @@ public final class Threads {
     Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");
 
     meter
-        .counterBuilder("process.runtime.jvm.threads.count")
+        .upDownCounterBuilder("process.runtime.jvm.threads.count")
         .setDescription("Number of executing threads")
         .setUnit("1")
         .buildWithCallback(

@@ -43,8 +43,9 @@ class ThreadsTest {
                         .hasUnit("1")
                         .hasLongSumSatisfying(
                             sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point.hasValue(3).hasAttributes(Attributes.empty())))));
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasValue(3).hasAttributes(Attributes.empty())))));
   }
 }
