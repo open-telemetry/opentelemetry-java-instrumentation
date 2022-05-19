@@ -21,7 +21,7 @@
   - `ContextCustomizer` and `RequestListener` `start()`/`end()` methods have been renamed to
     `onStart()`/`onEnd()`
 - The `opentelemetry-javaagent-instrumentation-api` artifact has been merged into the
-  the `opentelemetry-javaagent-extension-api` artifact
+  `opentelemetry-javaagent-extension-api` artifact
 
 ### 🌟 New javaagent instrumentation
 
