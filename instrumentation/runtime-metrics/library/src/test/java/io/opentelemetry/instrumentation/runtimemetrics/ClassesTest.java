@@ -45,9 +45,10 @@ class ClassesTest {
                         .hasUnit("1")
                         .hasLongSumSatisfying(
                             sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point.hasValue(3).hasAttributes(Attributes.empty())))));
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasValue(3).hasAttributes(Attributes.empty())))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-metrics",
         "process.runtime.jvm.classes.unloaded",
@@ -59,9 +60,10 @@ class ClassesTest {
                         .hasUnit("1")
                         .hasLongSumSatisfying(
                             sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point.hasValue(2).hasAttributes(Attributes.empty())))));
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasValue(2).hasAttributes(Attributes.empty())))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-metrics",
         "process.runtime.jvm.classes.current_loaded",
@@ -73,8 +75,9 @@ class ClassesTest {
                         .hasUnit("1")
                         .hasLongSumSatisfying(
                             sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point.hasValue(1).hasAttributes(Attributes.empty())))));
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasValue(1).hasAttributes(Attributes.empty())))));
   }
 }
