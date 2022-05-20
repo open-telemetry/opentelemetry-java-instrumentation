@@ -10,6 +10,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 
 /**
@@ -17,24 +18,24 @@ import org.apache.kafka.common.TopicPartition;
  * any time.
  */
 public enum KafkaReceiveAttributesGetter
-    implements MessagingAttributesGetter<ReceivedRecords, Void> {
+    implements MessagingAttributesGetter<ConsumerRecords<?, ?>, Void> {
   INSTANCE;
 
   @Override
-  public String system(ReceivedRecords receivedRecords) {
+  public String system(ConsumerRecords<?, ?> consumerRecords) {
     return "kafka";
   }
 
   @Override
-  public String destinationKind(ReceivedRecords receivedRecords) {
+  public String destinationKind(ConsumerRecords<?, ?> consumerRecords) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
   @Nullable
-  public String destination(ReceivedRecords receivedRecords) {
+  public String destination(ConsumerRecords<?, ?> consumerRecords) {
     Set<String> topics =
-        receivedRecords.records().partitions().stream()
+        consumerRecords.partitions().stream()
             .map(TopicPartition::topic)
             .collect(Collectors.toSet());
     // only return topic when there's exactly one in the batch
@@ -42,49 +43,49 @@ public enum KafkaReceiveAttributesGetter
   }
 
   @Override
-  public boolean temporaryDestination(ReceivedRecords receivedRecords) {
+  public boolean temporaryDestination(ConsumerRecords<?, ?> consumerRecords) {
     return false;
   }
 
   @Override
   @Nullable
-  public String protocol(ReceivedRecords receivedRecords) {
+  public String protocol(ConsumerRecords<?, ?> consumerRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public String protocolVersion(ReceivedRecords receivedRecords) {
+  public String protocolVersion(ConsumerRecords<?, ?> consumerRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public String url(ReceivedRecords receivedRecords) {
+  public String url(ConsumerRecords<?, ?> consumerRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public String conversationId(ReceivedRecords receivedRecords) {
+  public String conversationId(ConsumerRecords<?, ?> consumerRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long messagePayloadSize(ReceivedRecords receivedRecords) {
+  public Long messagePayloadSize(ConsumerRecords<?, ?> consumerRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long messagePayloadCompressedSize(ReceivedRecords receivedRecords) {
+  public Long messagePayloadCompressedSize(ConsumerRecords<?, ?> consumerRecords) {
     return null;
   }
 
   @Override
   @Nullable
-  public String messageId(ReceivedRecords receivedRecords, @Nullable Void unused) {
+  public String messageId(ConsumerRecords<?, ?> consumerRecords, @Nullable Void unused) {
     return null;
   }
 }

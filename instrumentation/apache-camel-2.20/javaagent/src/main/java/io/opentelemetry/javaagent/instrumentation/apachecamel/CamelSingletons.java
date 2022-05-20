@@ -63,11 +63,10 @@ public final class CamelSingletons {
         };
 
     SpanStatusExtractor<CamelRequest, Void> spanStatusExtractor =
-        (request, unused, error) -> {
+        (spanStatusBuilder, request, unused, error) -> {
           if (request.getExchange().isFailed()) {
-            return StatusCode.ERROR;
+            spanStatusBuilder.setStatus(StatusCode.ERROR);
           }
-          return null;
         };
 
     InstrumenterBuilder<CamelRequest, Void> builder =

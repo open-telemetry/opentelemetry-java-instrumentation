@@ -14,11 +14,14 @@ final class DefaultSpanStatusExtractor<REQUEST, RESPONSE>
   static final SpanStatusExtractor<Object, Object> INSTANCE = new DefaultSpanStatusExtractor<>();
 
   @Override
-  public StatusCode extract(
-      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+  public void extract(
+      SpanStatusBuilder spanStatusBuilder,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
+
     if (error != null) {
-      return StatusCode.ERROR;
+      spanStatusBuilder.setStatus(StatusCode.ERROR);
     }
-    return StatusCode.UNSET;
   }
 }

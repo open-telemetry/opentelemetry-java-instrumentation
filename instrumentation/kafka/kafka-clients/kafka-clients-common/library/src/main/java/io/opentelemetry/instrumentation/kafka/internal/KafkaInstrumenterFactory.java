@@ -62,24 +62,16 @@ public final class KafkaInstrumenterFactory {
         .newInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
-  public Instrumenter<ReceivedRecords, Void> createConsumerReceiveInstrumenter() {
-    return createConsumerReceiveInstrumenter(Collections.emptyList());
-  }
-
-  public Instrumenter<ReceivedRecords, Void> createConsumerReceiveInstrumenter(
-      Iterable<AttributesExtractor<ReceivedRecords, Void>> extractors) {
-
+  public Instrumenter<ConsumerRecords<?, ?>, Void> createConsumerReceiveInstrumenter() {
     KafkaReceiveAttributesGetter getter = KafkaReceiveAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.RECEIVE;
 
-    return Instrumenter.<ReceivedRecords, Void>builder(
+    return Instrumenter.<ConsumerRecords<?, ?>, Void>builder(
             openTelemetry,
             instrumentationName,
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
-        .addAttributesExtractors(extractors)
         .setErrorCauseExtractor(errorCauseExtractor)
-        .setTimeExtractor(new KafkaConsumerTimeExtractor())
         .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

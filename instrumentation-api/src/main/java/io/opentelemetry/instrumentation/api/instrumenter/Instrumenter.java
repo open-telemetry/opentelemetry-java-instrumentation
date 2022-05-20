@@ -9,7 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
@@ -76,7 +75,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
   private final List<? extends OperationListener> operationListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
-  @Nullable private final TimeExtractor<REQUEST, RESPONSE> timeExtractor;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
 
@@ -91,7 +89,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
     this.operationListeners = builder.buildOperationListeners();
     this.errorCauseExtractor = builder.errorCauseExtractor;
-    this.timeExtractor = builder.timeExtractor;
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
   }
@@ -129,6 +126,38 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * object of this operation.
    */
   public Context start(Context parentContext, REQUEST request) {
+    return doStart(parentContext, request, null);
+  }
+
+  /**
+   * Ends an instrumented operation. It is of extreme importance for this method to be always called
+   * after {@link #start(Context, Object) start()}. Calling {@code start()} without later {@code
+   * end()} will result in inaccurate or wrong telemetry and context leaks.
+   *
+   * <p>The {@code context} must be the same value that was returned from {@link #start(Context,
+   * Object)}. The {@code request} parameter is the request object of the operation, {@code
+   * response} is the response object of the operation, and {@code error} is an exception that was
+   * thrown by the operation or {@code null} if no error occurred.
+   */
+  public void end(
+      Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    doEnd(context, request, response, error, null);
+  }
+
+  /** Internal method for creating spans with given start/end timestamps. */
+  Context startAndEnd(
+      Context parentContext,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error,
+      Instant startTime,
+      Instant endTime) {
+    Context context = doStart(parentContext, request, startTime);
+    doEnd(context, request, response, error, endTime);
+    return context;
+  }
+
+  private Context doStart(Context parentContext, REQUEST request, @Nullable Instant startTime) {
     SpanKind spanKind = spanKindExtractor.extract(request);
     SpanBuilder spanBuilder =
         tracer
@@ -136,9 +165,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
             .setSpanKind(spanKind)
             .setParent(parentContext);
 
-    Instant startTime = null;
-    if (timeExtractor != null) {
-      startTime = timeExtractor.extractStartTime(request);
+    if (startTime != null) {
       spanBuilder.setStartTimestamp(startTime);
     }
 
@@ -176,18 +203,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
     return spanSuppressor.storeInContext(context, spanKind, span);
   }
 
-  /**
-   * Ends an instrumented operation. It is of extreme importance for this method to be always called
-   * after {@link #start(Context, Object) start()}. Calling {@code start()} without later {@code
-   * end()} will result in inaccurate or wrong telemetry and context leaks.
-   *
-   * <p>The {@code context} must be the same value that was returned from {@link #start(Context,
-   * Object)}. The {@code request} parameter is the request object of the operation, {@code
-   * response} is the response object of the operation, and {@code error} is an exception that was
-   * thrown by the operation or {@code null} if no error occurred.
-   */
-  public void end(
-      Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+  private void doEnd(
+      Context context,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error,
+      @Nullable Instant endTime) {
     Span span = Span.fromContext(context);
 
     if (error != null) {
@@ -201,11 +222,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
     span.setAllAttributes(attributes);
 
-    Instant endTime = null;
-    if (timeExtractor != null) {
-      endTime = timeExtractor.extractEndTime(request, response, error);
-    }
-
     if (!operationListeners.isEmpty()) {
       long endNanos = getNanos(endTime);
       ListIterator<? extends OperationListener> i =
@@ -215,10 +231,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
       }
     }
 
-    StatusCode statusCode = spanStatusExtractor.extract(request, response, error);
-    if (statusCode != StatusCode.UNSET) {
-      span.setStatus(statusCode);
-    }
+    SpanStatusBuilder spanStatusBuilder = new SpanStatusBuilderImpl(span);
+    spanStatusExtractor.extract(spanStatusBuilder, request, response, error);
 
     if (endTime != null) {
       span.end(endTime);

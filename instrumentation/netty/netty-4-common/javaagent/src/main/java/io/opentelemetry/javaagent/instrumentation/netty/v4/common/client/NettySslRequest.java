@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
 
 import com.google.auto.value.AutoValue;
 import io.netty.channel.Channel;
-import io.opentelemetry.javaagent.instrumentation.netty.common.Timer;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -15,14 +14,12 @@ import javax.annotation.Nullable;
 public abstract class NettySslRequest {
 
   static NettySslRequest create(Channel channel) {
-    return new AutoValue_NettySslRequest(Timer.start(), channel, channel.remoteAddress());
+    return new AutoValue_NettySslRequest(channel, channel.remoteAddress());
   }
 
   String spanName() {
     return "SSL handshake";
   }
-
-  abstract Timer timer();
 
   abstract Channel channel();
 

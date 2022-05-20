@@ -15,11 +15,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
+import io.opentelemetry.javaagent.instrumentation.netty.common.Timer;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.ConnectionListener;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
@@ -58,7 +60,8 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         @Advice.This Channel channel,
         @Advice.Argument(0) SocketAddress remoteAddress,
         @Advice.Local("otelParentContext") Context parentContext,
-        @Advice.Local("otelRequest") NettyConnectionRequest request) {
+        @Advice.Local("otelRequest") NettyConnectionRequest request,
+        @Advice.Local("otelTimer") Timer timer) {
 
       parentContext = Java8BytecodeBridge.currentContext();
       Span span = Java8BytecodeBridge.spanFromContext(parentContext);
@@ -74,6 +77,7 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
       virtualField.set(channel, new NettyConnectionContext(parentContext));
 
       request = NettyConnectionRequest.connect(remoteAddress);
+      timer = Timer.start();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -81,7 +85,8 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         @Advice.Return ChannelFuture channelFuture,
         @Advice.Thrown Throwable error,
         @Advice.Local("otelParentContext") Context parentContext,
-        @Advice.Local("otelRequest") NettyConnectionRequest request) {
+        @Advice.Local("otelRequest") NettyConnectionRequest request,
+        @Advice.Local("otelTimer") Timer timer) {
 
       if (request == null) {
         return;
@@ -89,11 +94,17 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
 
       if (error != null) {
         if (connectionInstrumenter().shouldStart(parentContext, request)) {
-          Context context = connectionInstrumenter().start(parentContext, request);
-          connectionInstrumenter().end(context, request, null, error);
+          InstrumenterUtil.startAndEnd(
+              connectionInstrumenter(),
+              parentContext,
+              request,
+              null,
+              error,
+              timer.startTime(),
+              timer.now());
         }
       } else {
-        channelFuture.addListener(new ConnectionListener(parentContext, request));
+        channelFuture.addListener(new ConnectionListener(parentContext, request, timer));
       }
     }
   }

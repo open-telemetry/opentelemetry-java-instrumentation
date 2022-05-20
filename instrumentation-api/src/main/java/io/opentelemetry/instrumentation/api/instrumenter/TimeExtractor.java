@@ -15,7 +15,10 @@ import javax.annotation.Nullable;
  * {@link TimeExtractor} will be used to generate any duration metrics, but the internal metric
  * timestamp (when it occurred) will always be stamped with "now" when the metric is recorded (i.e.
  * there is no way to back date a metric recording).
+ *
+ * @deprecated Setting operation start and end times is not currently supported.
  */
+@Deprecated
 public interface TimeExtractor<REQUEST, RESPONSE> {
 
   /** Returns the timestamp marking the start of the request processing. */

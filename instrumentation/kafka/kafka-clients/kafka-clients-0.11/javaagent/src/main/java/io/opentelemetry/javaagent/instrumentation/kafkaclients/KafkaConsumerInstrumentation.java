@@ -14,8 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.kafka.internal.ReceivedRecords;
 import io.opentelemetry.instrumentation.kafka.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -64,10 +64,16 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = currentContext();
-      ReceivedRecords receivedRecords = ReceivedRecords.create(records, timer);
-      if (consumerReceiveInstrumenter().shouldStart(parentContext, receivedRecords)) {
-        Context context = consumerReceiveInstrumenter().start(parentContext, receivedRecords);
-        consumerReceiveInstrumenter().end(context, receivedRecords, null, error);
+      if (consumerReceiveInstrumenter().shouldStart(parentContext, records)) {
+        Context context =
+            InstrumenterUtil.startAndEnd(
+                consumerReceiveInstrumenter(),
+                parentContext,
+                records,
+                null,
+                error,
+                timer.startTime(),
+                timer.now());
 
         // we're storing the context of the receive span so that process spans can use it as parent
         // context even though the span has ended
