@@ -19,12 +19,10 @@ public final class HttpUrlConnectionSingletons {
 
   private static final Instrumenter<HttpURLConnection, Integer> INSTRUMENTER;
 
-  private static final Instrumenter<HttpURLConnection, Integer> SUN_INSTRUMENTER;
-
   static {
+    HttpUrlHttpAttributesGetter httpAttributesGetter = new HttpUrlHttpAttributesGetter();
     HttpUrlNetAttributesGetter netAttributesGetter = new HttpUrlNetAttributesGetter();
 
-    HttpUrlHttpAttributesGetter httpAttributesGetter = new HttpUrlHttpAttributesGetter();
     INSTRUMENTER =
         Instrumenter.<HttpURLConnection, Integer>builder(
                 GlobalOpenTelemetry.get(),
@@ -34,40 +32,17 @@ public final class HttpUrlConnectionSingletons {
             .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
-            .addOperationMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(RequestPropertySetter.INSTANCE);
-
-    SunHttpUrlHttpAttributesGetter sunHttpUrlHttpAttributesGetter =
-        new SunHttpUrlHttpAttributesGetter();
-    SUN_INSTRUMENTER =
-        Instrumenter.<HttpURLConnection, Integer>builder(
-                GlobalOpenTelemetry.get(),
-                "io.opentelemetry.http-url-connection-sun",
-                HttpSpanNameExtractor.create(sunHttpUrlHttpAttributesGetter))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(sunHttpUrlHttpAttributesGetter))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(sunHttpUrlHttpAttributesGetter))
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(HttpMethodAttributeExtractor.create())
+            .addContextCustomizer(
+                (context, httpRequestPacket, startAttributes) ->
+                    GetOutputStreamContext.init(context))
             .addOperationMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(RequestPropertySetter.INSTANCE);
   }
 
-  private HttpUrlConnectionSingletons() {}
-
-  public static Instrumenter<HttpURLConnection, Integer> instrumenter(
-      Class<? extends HttpURLConnection> connectionClass, String methodName) {
-
-    if (isGetOutputStreamMethodOfSunConnection(connectionClass, methodName)) {
-      return SUN_INSTRUMENTER;
-    }
-
+  public static Instrumenter<HttpURLConnection, Integer> instrumenter() {
     return INSTRUMENTER;
   }
 
-  private static boolean isGetOutputStreamMethodOfSunConnection(
-      Class<? extends HttpURLConnection> connectionClass, String methodName) {
-    return connectionClass.getName().equals("sun.net.www.protocol.http.HttpURLConnection")
-        && "getOutputStream".equals(methodName);
-  }
+  private HttpUrlConnectionSingletons() {}
 }
