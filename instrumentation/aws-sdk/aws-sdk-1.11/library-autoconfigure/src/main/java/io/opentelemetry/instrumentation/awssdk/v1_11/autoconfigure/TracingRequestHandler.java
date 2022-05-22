@@ -11,7 +11,7 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTracing;
+import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.
@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTracing;
 public class TracingRequestHandler extends RequestHandler2 {
 
   private static final RequestHandler2 DELEGATE =
-      AwsSdkTracing.builder(GlobalOpenTelemetry.get())
+      AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
               Config.get()
                   .getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes", false))

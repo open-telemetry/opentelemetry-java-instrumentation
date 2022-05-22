@@ -11,20 +11,14 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service")
 
+  compileOnly(project(":instrumentation-api"))
   compileOnly(project(":javaagent-extension-api"))
-  compileOnly(project(":javaagent-instrumentation-api"))
+  compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
 
-  compileOnly(project(":instrumentation-api-appender"))
-  compileOnly(project(":instrumentation-sdk-appender"))
+  compileOnly(project(":instrumentation-appender-api-internal"))
+  compileOnly(project(":instrumentation-appender-sdk-internal"))
 
-  implementation("io.grpc:grpc-core:1.33.1")
-  implementation("io.grpc:grpc-protobuf:1.33.1")
-  implementation("io.grpc:grpc-stub:1.33.1")
-  implementation("io.opentelemetry:opentelemetry-exporter-otlp")
-  implementation("io.opentelemetry:opentelemetry-exporter-otlp-metrics")
-  implementation("io.opentelemetry:opentelemetry-exporter-otlp-logs")
-  implementation("io.opentelemetry.proto:opentelemetry-proto")
+  implementation("io.opentelemetry:opentelemetry-exporter-otlp-common")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  compileOnly("org.slf4j:slf4j-api")
 }

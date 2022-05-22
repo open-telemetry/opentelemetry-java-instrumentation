@@ -5,96 +5,59 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import io.grpc.Server;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.stub.StreamObserver;
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
-import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
+import static java.util.logging.Level.INFO;
+
+import io.opentelemetry.exporter.internal.otlp.traces.TraceRequestMarshaler;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Logger;
 
 class OtlpInMemorySpanExporter implements SpanExporter {
 
-  private static final Logger logger = LoggerFactory.getLogger(OtlpInMemorySpanExporter.class);
+  private static final Logger logger = Logger.getLogger(OtlpInMemorySpanExporter.class.getName());
 
-  private final BlockingQueue<ExportTraceServiceRequest> collectedRequests =
-      new LinkedBlockingQueue<>();
+  private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
 
   List<byte[]> getCollectedExportRequests() {
-    return collectedRequests.stream()
-        .map(ExportTraceServiceRequest::toByteArray)
-        .collect(Collectors.toList());
+    return new ArrayList<>(collectedRequests);
   }
 
   void reset() {
-    delegate.flush().join(1, TimeUnit.SECONDS);
     collectedRequests.clear();
-  }
-
-  private final Server collector;
-  private final SpanExporter delegate;
-
-  OtlpInMemorySpanExporter() {
-    String serverName = InProcessServerBuilder.generateName();
-
-    collector =
-        InProcessServerBuilder.forName(serverName)
-            .directExecutor()
-            .addService(new InMemoryOtlpCollector())
-            .build();
-    try {
-      collector.start();
-    } catch (IOException e) {
-      throw new AssertionError("Could not start in-process collector.", e);
-    }
-
-    delegate =
-        OtlpGrpcSpanExporter.builder()
-            .setChannel(InProcessChannelBuilder.forName(serverName).directExecutor().build())
-            .build();
   }
 
   @Override
   public CompletableResultCode export(Collection<SpanData> spans) {
     for (SpanData span : spans) {
-      logger.info("Exporting span {}", span);
+      logger.log(INFO, "Exporting span {0}", span);
     }
-    return delegate.export(spans);
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    try {
+      TraceRequestMarshaler.create(spans).writeBinaryTo(bos);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    collectedRequests.add(bos.toByteArray());
+    return CompletableResultCode.ofSuccess();
   }
 
   @Override
   public CompletableResultCode flush() {
-    return delegate.flush();
+    return CompletableResultCode.ofSuccess();
   }
 
   @Override
   public CompletableResultCode shutdown() {
-    collector.shutdown();
-    return delegate.shutdown();
-  }
-
-  private class InMemoryOtlpCollector extends TraceServiceGrpc.TraceServiceImplBase {
-
-    @Override
-    public void export(
-        ExportTraceServiceRequest request,
-        StreamObserver<ExportTraceServiceResponse> responseObserver) {
-      collectedRequests.add(request);
-      responseObserver.onNext(ExportTraceServiceResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-    }
+    reset();
+    return CompletableResultCode.ofSuccess();
   }
 }

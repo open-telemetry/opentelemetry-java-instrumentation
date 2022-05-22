@@ -5,32 +5,30 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents the global agent configuration consisting of system properties, environment variables,
  * contents of the agent configuration file and properties defined by the {@code
- * ConfigPropertySource} SPI (see {@code ConfigInitializer} and {@link ConfigBuilder}).
+ * ConfigPropertySource} SPI implementations.
  *
  * <p>In case any {@code get*()} method variant gets called for the same property more than once
  * (e.g. each time an advice class executes) it is suggested to cache the result instead of
  * repeatedly calling {@link Config}. Agent configuration does not change during the runtime so
- * retrieving the property once and storing its result in e.g. static final field allows JIT to do
- * its magic and remove some code branches.
+ * retrieving the property once and storing its result in a static final field allows JIT to do its
+ * magic and remove some code branches.
  */
 @AutoValue
 public abstract class Config {
-  private static final Logger logger = LoggerFactory.getLogger(Config.class);
+  private static final Logger logger = Logger.getLogger(Config.class.getName());
 
   // lazy initialized, so that javaagent can set it, and library instrumentation can fall back and
   // read system properties
@@ -49,13 +47,15 @@ public abstract class Config {
   Config() {}
 
   /**
-   * Sets the agent configuration singleton. This method is only supposed to be called once, from
-   * the agent classloader just before the first instrumentation is loaded (and before {@link
-   * Config#get()} is used for the first time).
+   * Sets the agent configuration singleton. This method is only supposed to be called once, during
+   * the agent initialization, just before {@link Config#get()} is used for the first time.
+   *
+   * <p>This method is internal and is hence not for public use. Its API is unstable and can change
+   * at any time.
    */
   public static void internalInitializeConfig(Config config) {
     if (instance != null) {
-      logger.warn("Config#INSTANCE was already set earlier");
+      logger.warning("Config#INSTANCE was already set earlier");
       return;
     }
     instance = requireNonNull(config);
@@ -67,12 +67,15 @@ public abstract class Config {
       // this should only happen in library instrumentation
       //
       // no need to synchronize because worst case is creating instance more than once
-      instance = builder().readEnvironmentVariables().readSystemProperties().build();
+      instance = builder().addEnvironmentVariables().addSystemProperties().build();
     }
     return instance;
   }
 
-  /** Returns all properties stored in this instance. The returned map is unmodifiable. */
+  /**
+   * Returns all properties stored in this {@link Config} instance. The returned map is
+   * unmodifiable.
+   */
   public abstract Map<String, String> getAllProperties();
 
   /**
@@ -93,18 +96,6 @@ public abstract class Config {
   }
 
   /**
-   * Returns a boolean-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * @deprecated Use the {@link #getBoolean(String, boolean)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Boolean getBoolean(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseBoolean);
-  }
-
-  /**
    * Returns a boolean-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured.
    */
@@ -113,100 +104,32 @@ public abstract class Config {
   }
 
   /**
-   * Returns a integer-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * @throws ConfigParsingException if the property is not a valid integer.
-   * @deprecated Use the {@link #getInt(String, int)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Integer getInt(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseInt);
-  }
-
-  /**
-   * Returns a integer-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
-   * {@link #getInt(String)}.
+   * Returns an integer-valued configuration property or {@code defaultValue} if a property with
+   * name {@code name} has not been configured or when parsing has failed.
    */
   public int getInt(String name, int defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseInt, defaultValue);
   }
 
   /**
-   * Returns a long-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * @throws ConfigParsingException if the property is not a valid long.
-   * @deprecated Use the {@link #getLong(String, long)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Long getLong(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseLong);
-  }
-
-  /**
    * Returns a long-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
-   * {@link #getLong(String)}.
+   * {@code name} has not been configured or when parsing has failed.
    */
   public long getLong(String name, long defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseLong, defaultValue);
   }
 
   /**
-   * Returns a double-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * @throws ConfigParsingException if the property is not a valid long.
-   * @deprecated Use the {@link #getDouble(String, double)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Double getDouble(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseDouble);
-  }
-
-  /**
    * Returns a double-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
-   * {@link #getDouble(String)}.
+   * {@code name} has not been configured or when parsing has failed.
    */
   public double getDouble(String name, double defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseDouble, defaultValue);
   }
 
   /**
-   * Returns a duration-valued configuration property or {@code null} if a property with name {@code
-   * name} has not been configured.
-   *
-   * <p>Durations can be of the form "{number}{unit}", where unit is one of:
-   *
-   * <ul>
-   *   <li>ms
-   *   <li>s
-   *   <li>m
-   *   <li>h
-   *   <li>d
-   * </ul>
-   *
-   * <p>If no unit is specified, milliseconds is the assumed duration unit.
-   *
-   * @throws ConfigParsingException if the property is not a valid long.
-   * @deprecated Use the {@link #getDuration(String, Duration)} variant instead.
-   */
-  @Deprecated
-  @Nullable
-  public Duration getDuration(String name) {
-    return getTypedProperty(name, ConfigValueParsers::parseDuration);
-  }
-
-  /**
    * Returns a duration-valued configuration property or {@code defaultValue} if a property with
-   * name {@code name} has not been configured or when parsing has failed. This is the safe variant
-   * of {@link #getDuration(String)}.
+   * name {@code name} has not been configured or when parsing has failed.
    *
    * <p>Durations can be of the form "{number}{unit}", where unit is one of:
    *
@@ -219,53 +142,27 @@ public abstract class Config {
    * </ul>
    *
    * <p>If no unit is specified, milliseconds is the assumed duration unit.
+   *
+   * <p>Examples: 10s, 20ms, 5000
    */
   public Duration getDuration(String name, Duration defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseDuration, defaultValue);
   }
 
   /**
-   * Returns a list-valued configuration property or an empty list if a property with name {@code
-   * name} has not been configured. The format of the original value must be comma-separated, e.g.
-   * {@code one,two,three}.
-   *
-   * @deprecated Use the {@link #getList(String, List)} variant instead.
-   */
-  @Deprecated
-  public List<String> getList(String name) {
-    List<String> list = getTypedProperty(name, ConfigValueParsers::parseList);
-    return list == null ? emptyList() : list;
-  }
-
-  /**
    * Returns a list-valued configuration property or {@code defaultValue} if a property with name
    * {@code name} has not been configured. The format of the original value must be comma-separated,
-   * e.g. {@code one,two,three}.
+   * e.g. {@code one,two,three}. The returned list is unmodifiable.
    */
   public List<String> getList(String name, List<String> defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseList, defaultValue);
   }
 
   /**
-   * Returns a map-valued configuration property or an empty map if a property with name {@code
-   * name} has not been configured. The format of the original value must be comma-separated for
-   * each key, with an '=' separating the key and value, e.g. {@code
-   * key=value,anotherKey=anotherValue}.
-   *
-   * @throws ConfigParsingException if the property is not a valid long.
-   * @deprecated Use the {@link #getMap(String, Map)} variant instead.
-   */
-  @Deprecated
-  public Map<String, String> getMap(String name) {
-    Map<String, String> map = getTypedProperty(name, ConfigValueParsers::parseMap);
-    return map == null ? emptyMap() : map;
-  }
-
-  /**
    * Returns a map-valued configuration property or {@code defaultValue} if a property with name
-   * {@code name} has not been configured or when parsing has failed. This is the safe variant of
-   * {@link #getMap(String)}. The format of the original value must be comma-separated for each key,
-   * with an '=' separating the key and value, e.g. {@code key=value,anotherKey=anotherValue}.
+   * {@code name} has not been configured or when parsing has failed. The format of the original
+   * value must be comma-separated for each key, with an '=' separating the key and value, e.g.
+   * {@code key=value,anotherKey=anotherValue}. The returned map is unmodifiable.
    */
   public Map<String, String> getMap(String name, Map<String, String> defaultValue) {
     return safeGetTypedProperty(name, ConfigValueParsers::parseMap, defaultValue);
@@ -276,7 +173,9 @@ public abstract class Config {
       T value = getTypedProperty(name, parser);
       return value == null ? defaultValue : value;
     } catch (RuntimeException t) {
-      logger.debug("Error occurred during parsing: {}", t.getMessage(), t);
+      if (logger.isLoggable(FINE)) {
+        logger.log(FINE, "Error occurred during parsing: " + t.getMessage(), t);
+      }
       return defaultValue;
     }
   }
@@ -294,30 +193,11 @@ public abstract class Config {
     return getAllProperties().getOrDefault(NamingConvention.DOT.normalize(name), defaultValue);
   }
 
-  public boolean isInstrumentationEnabled(
-      Iterable<String> instrumentationNames, boolean defaultEnabled) {
-    return isInstrumentationPropertyEnabled(instrumentationNames, "enabled", defaultEnabled);
-  }
-
-  public boolean isInstrumentationPropertyEnabled(
-      Iterable<String> instrumentationNames, String suffix, boolean defaultEnabled) {
-    // If default is enabled, we want to enable individually,
-    // if default is disabled, we want to disable individually.
-    boolean anyEnabled = defaultEnabled;
-    for (String name : instrumentationNames) {
-      String propertyName = "otel.instrumentation." + name + '.' + suffix;
-      boolean enabled = getBoolean(propertyName, defaultEnabled);
-
-      if (defaultEnabled) {
-        anyEnabled &= enabled;
-      } else {
-        anyEnabled |= enabled;
-      }
-    }
-    return anyEnabled;
-  }
-
-  public boolean isAgentDebugEnabled() {
-    return getBoolean("otel.javaagent.debug", false);
+  /**
+   * Returns a new {@link ConfigBuilder} instance populated with the properties of this {@link
+   * Config}.
+   */
+  public ConfigBuilder toBuilder() {
+    return new ConfigBuilder(getAllProperties());
   }
 }

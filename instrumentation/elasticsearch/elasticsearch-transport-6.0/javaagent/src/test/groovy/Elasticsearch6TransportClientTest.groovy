@@ -105,7 +105,6 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
@@ -224,7 +223,6 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
@@ -240,7 +238,6 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
@@ -271,7 +268,6 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "IndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
@@ -293,7 +289,6 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"

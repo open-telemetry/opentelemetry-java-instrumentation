@@ -38,13 +38,11 @@ dependencies {
   testImplementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
 
   // make IntelliJ see shaded Armeria
-  testCompileOnly(project(path = ":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  testCompileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 }
 
 tasks {
   test {
-    inputs.files(project(":javaagent").tasks.getByName("shadowJar").outputs.files)
-
     testLogging.showStandardStreams = true
 
     // TODO investigate why smoke tests occasionally hang forever
@@ -74,6 +72,10 @@ tasks {
         suites.values.forEach {
           exclude(it)
         }
+      } else if (smokeTestSuite == "none") {
+        // Exclude all tests. Running this suite will compile everything needed by smoke tests
+        // without executing any tests.
+        exclude("**/*")
       } else {
         throw GradleException("Unknown smoke test suite: $smokeTestSuite")
       }
@@ -81,6 +83,8 @@ tasks {
 
     val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
+      .withPropertyName("javaagent")
+      .withNormalizer(ClasspathNormalizer::class)
 
     doFirst {
       jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")

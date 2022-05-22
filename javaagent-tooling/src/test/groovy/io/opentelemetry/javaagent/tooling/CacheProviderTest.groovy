@@ -96,10 +96,8 @@ class CacheProviderTest extends Specification {
     def poolStrat = new AgentCachingPoolStrategy()
 
     def loader = newClassLoader()
-    def loaderHash = loader.hashCode()
-    def loaderRef = new WeakReference<ClassLoader>(loader)
 
-    def cacheProvider = poolStrat.createCacheProvider(loaderHash, loaderRef)
+    def cacheProvider = poolStrat.getCacheProvider(loader)
 
     when:
     cacheProvider.register("foo", new TypePool.Resolution.Simple(TypeDescription.VOID))
@@ -114,12 +112,9 @@ class CacheProviderTest extends Specification {
     def poolStrat = new AgentCachingPoolStrategy()
 
     def loader1 = newClassLoader()
-    def loaderHash1 = loader1.hashCode()
-    def loaderRef1A = new WeakReference<ClassLoader>(loader1)
-    def loaderRef1B = new WeakReference<ClassLoader>(loader1)
 
-    def cacheProvider1A = poolStrat.createCacheProvider(loaderHash1, loaderRef1A)
-    def cacheProvider1B = poolStrat.createCacheProvider(loaderHash1, loaderRef1B)
+    def cacheProvider1A = poolStrat.getCacheProvider(loader1)
+    def cacheProvider1B = poolStrat.getCacheProvider(loader1)
 
     when:
     cacheProvider1A.register("foo", newVoid())
@@ -137,15 +132,10 @@ class CacheProviderTest extends Specification {
     def poolStrat = new AgentCachingPoolStrategy()
 
     def loader1 = newClassLoader()
-    def loaderHash1 = loader1.hashCode()
-    def loaderRef1 = new WeakReference<ClassLoader>(loader1)
-
     def loader2 = newClassLoader()
-    def loaderHash2 = loader2.hashCode()
-    def loaderRef2 = new WeakReference<ClassLoader>(loader2)
 
-    def cacheProvider1 = poolStrat.createCacheProvider(loaderHash1, loaderRef1)
-    def cacheProvider2 = poolStrat.createCacheProvider(loaderHash2, loaderRef2)
+    def cacheProvider1 = poolStrat.getCacheProvider(loader1)
+    def cacheProvider2 = poolStrat.getCacheProvider(loader2)
 
     when:
     cacheProvider1.register("foo", newVoid())

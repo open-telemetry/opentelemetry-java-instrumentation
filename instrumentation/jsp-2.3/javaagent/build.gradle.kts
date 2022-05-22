@@ -44,6 +44,10 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dorg.apache.catalina.startup.ContextConfig.jarsToSkip=*")
   jvmArgs("-Dorg.apache.catalina.startup.TldConfig.jarsToSkip=*")
 
+  // required on jdk17
+  jvmArgs("--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.jsp.experimental-span-attributes=true")
 }

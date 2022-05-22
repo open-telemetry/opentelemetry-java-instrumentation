@@ -5,7 +5,8 @@
 
 package server.base
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
+
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.context.annotation.Bean
@@ -44,7 +45,7 @@ class DelayedHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxServerTe
   static class RouteFactory extends ServerTestRouteFactory {
 
     @Override
-    protected Mono<ServerResponse> wrapResponse(HttpServerTest.ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction) {
+    protected Mono<ServerResponse> wrapResponse(ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction) {
       return response.delayElement(Duration.ofMillis(10)).map({ original ->
         return controller(endpoint, {
           spanAction.run()
@@ -55,7 +56,7 @@ class DelayedHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxServerTe
   }
 
   @Override
-  boolean hasHandlerAsControllerParentSpan(HttpServerTest.ServerEndpoint endpoint) {
+  boolean hasHandlerAsControllerParentSpan(ServerEndpoint endpoint) {
     return false
   }
 }

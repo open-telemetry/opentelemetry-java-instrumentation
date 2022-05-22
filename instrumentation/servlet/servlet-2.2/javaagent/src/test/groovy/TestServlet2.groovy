@@ -3,26 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 class TestServlet2 {
 
-  static class Sync extends AbstractHttpServlet {
+  static class Sync extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       req.getRequestDispatcher()
-      HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
+      ServerEndpoint endpoint = ServerEndpoint.forPath(req.servletPath)
       HttpServerTest.controller(endpoint) {
         resp.contentType = "text/plain"
         switch (endpoint) {
@@ -43,7 +43,7 @@ class TestServlet2 {
           case EXCEPTION:
             throw new Exception(endpoint.body)
           case INDEXED_CHILD:
-            INDEXED_CHILD.collectSpanAttributes {name -> req.getParameter(name) }
+            INDEXED_CHILD.collectSpanAttributes { name -> req.getParameter(name) }
             resp.status = endpoint.status
             resp.writer.print(endpoint.body)
             break

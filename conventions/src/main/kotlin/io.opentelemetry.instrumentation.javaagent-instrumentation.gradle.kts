@@ -6,12 +6,11 @@ plugins {
 
 dependencies {
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")
-  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-appender")
-  add("muzzleBootstrap", "io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
-  add("muzzleTooling", "org.slf4j:slf4j-simple")
 
   /*
     Dependencies added to this configuration will be found by the muzzle gradle plugin during code

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -101,13 +101,13 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler bodyHandler,
+        @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler<?> bodyHandler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelScope") Scope scope) {
       parentContext = currentContext();
       if (bodyHandler != null) {
-        bodyHandler = new BodyHandlerWrapper(bodyHandler, parentContext);
+        bodyHandler = new BodyHandlerWrapper<>(bodyHandler, parentContext);
       }
       if (!instrumenter().shouldStart(parentContext, httpRequest)) {
         return;

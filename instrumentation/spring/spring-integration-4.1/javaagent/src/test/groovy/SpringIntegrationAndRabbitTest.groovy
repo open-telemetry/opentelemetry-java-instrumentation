@@ -11,7 +11,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.server.ServerTraceUtils.runUnderServerTrace
 
 class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification implements WithRabbitProducerConsumerTrait {
   def setupSpec() {
@@ -25,7 +24,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
   def "should cooperate with existing RabbitMQ instrumentation"() {
     when:
     // simulate the workflow being triggered by HTTP request
-    runUnderServerTrace("HTTP GET") {
+    runWithHttpServerSpan("HTTP GET") {
       producerContext.getBean("producer", Runnable).run()
     }
 

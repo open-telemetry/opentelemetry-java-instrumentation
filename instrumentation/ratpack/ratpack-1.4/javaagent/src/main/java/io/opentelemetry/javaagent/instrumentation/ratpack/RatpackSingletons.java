@@ -10,7 +10,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import ratpack.handling.Context;
 
 public final class RatpackSingletons {
@@ -40,8 +41,8 @@ public final class RatpackSingletons {
     }
 
     // update the netty server span name; FILTER is probably the best match for ratpack Handlers
-    ServerSpanNaming.updateServerSpanName(
-        otelContext, ServerSpanNaming.Source.FILTER, (context, name) -> name, matchedRoute);
+    HttpRouteHolder.updateHttpRoute(
+        otelContext, HttpRouteSource.FILTER, (context, name) -> name, matchedRoute);
     return matchedRoute;
   }
 
@@ -49,7 +50,7 @@ public final class RatpackSingletons {
   public static void onError(io.opentelemetry.context.Context context, Throwable error) {
     Span span = Span.fromContext(context);
     span.setStatus(StatusCode.ERROR);
-    span.recordException(ErrorCauseExtractor.jdk().extractCause(error));
+    span.recordException(ErrorCauseExtractor.jdk().extract(error));
   }
 
   private RatpackSingletons() {}

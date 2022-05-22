@@ -100,7 +100,7 @@
                     COMPACT_CTOR_DEF"/>
     </module>
     <module name="SuppressionXpathSingleFilter">
-      <!-- suppresion is required till https://github.com/checkstyle/checkstyle/issues/7541 -->
+      <!-- suppression is required till https://github.com/checkstyle/checkstyle/issues/7541 -->
       <property name="id" value="RightCurlyAlone"/>
       <property name="query" value="//RCURLY[parent::SLIST[count(./*)=1]
                                      or preceding-sibling::*[last()][self::LCURLY]]"/>
@@ -172,7 +172,7 @@
     </module>
     <module name="PackageName">
       <!-- modified from default to support packages like
-           io.opentelemetry.javaagent.instrumentation.log4j.v2_16 and
+           io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_17 and
            io.opentelemetry.javaagent.instrumentation.netty.v4_1.client -->
       <property name="format"
         value="^[a-z]+(\.[a-z][a-z0-9]*)*(\.v[0-9]+_[0-9]+(_[0-9]+)?)?(\.[a-z][a-z0-9]*)*$"/>
@@ -390,8 +390,9 @@
   <!-- skip jflex generated files -->
   <module name="SuppressionSingleFilter">
     <property name="checks" value=".*"/>
+    <!-- TODO(anuraaga): Fix path after https://github.com/jprante/gradle-plugin-jflex/issues/20 -->
     <property name="files"
-      value="instrumentation-api[/\\]build[/\\]generated[/\\]sources[/\\]jflex"/>
+      value="instrumentation-api[/\\]build[/\\]generated[/\\]sources[/\\]main"/>
   </module>
   <module name="SuppressionSingleFilter">
     <property name="checks" value="MethodName"/>

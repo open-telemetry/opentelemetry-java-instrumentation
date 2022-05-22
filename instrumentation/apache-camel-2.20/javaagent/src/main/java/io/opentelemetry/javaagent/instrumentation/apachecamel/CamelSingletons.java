@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -39,7 +40,8 @@ public final class CamelSingletons {
         new AttributesExtractor<CamelRequest, Void>() {
 
           @Override
-          public void onStart(AttributesBuilder attributes, CamelRequest camelRequest) {
+          public void onStart(
+              AttributesBuilder attributes, Context parentContext, CamelRequest camelRequest) {
             SpanDecorator spanDecorator = camelRequest.getSpanDecorator();
             spanDecorator.pre(
                 attributes,
@@ -51,6 +53,7 @@ public final class CamelSingletons {
           @Override
           public void onEnd(
               AttributesBuilder attributes,
+              Context context,
               CamelRequest camelRequest,
               @Nullable Void unused,
               @Nullable Throwable error) {
@@ -60,11 +63,10 @@ public final class CamelSingletons {
         };
 
     SpanStatusExtractor<CamelRequest, Void> spanStatusExtractor =
-        (request, unused, error) -> {
+        (spanStatusBuilder, request, unused, error) -> {
           if (request.getExchange().isFailed()) {
-            return StatusCode.ERROR;
+            spanStatusBuilder.setStatus(StatusCode.ERROR);
           }
-          return null;
         };
 
     InstrumenterBuilder<CamelRequest, Void> builder =

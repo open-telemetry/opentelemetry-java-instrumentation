@@ -81,7 +81,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name "CrudRepository.findAll"
+          name "DocRepository.findAll"
           kind INTERNAL
           attributes {
           }
@@ -117,7 +117,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          name "ElasticsearchRepository.index"
+          name "DocRepository.index"
           kind INTERNAL
           attributes {
           }
@@ -166,7 +166,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name "CrudRepository.findById"
+          name "DocRepository.findById"
           kind INTERNAL
           attributes {
           }
@@ -201,7 +201,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
     assertTraces(2) {
       trace(0, 3) {
         span(0) {
-          name "ElasticsearchRepository.index"
+          name "DocRepository.index"
           kind INTERNAL
           attributes {
           }
@@ -242,7 +242,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
       }
       trace(1, 2) {
         span(0) {
-          name "CrudRepository.findById"
+          name "DocRepository.findById"
           kind INTERNAL
           attributes {
           }
@@ -276,7 +276,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
     assertTraces(2) {
       trace(0, 3) {
         span(0) {
-          name "CrudRepository.deleteById"
+          name "DocRepository.deleteById"
           kind INTERNAL
           attributes {
           }
@@ -317,7 +317,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
 
       trace(1, 2) {
         span(0) {
-          name "CrudRepository.findAll"
+          name "DocRepository.findAll"
           kind INTERNAL
           attributes {
           }

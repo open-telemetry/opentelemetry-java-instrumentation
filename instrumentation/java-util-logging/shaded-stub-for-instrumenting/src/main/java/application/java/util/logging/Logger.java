@@ -12,6 +12,10 @@ import java.util.logging.Level;
 // after java.util.logging.Logger is shaded to the "PatchLogger"
 public class Logger {
 
+  public String getName() {
+    throw new UnsupportedOperationException();
+  }
+
   public boolean isLoggable(@SuppressWarnings("unused") Level level) {
     throw new UnsupportedOperationException();
   }

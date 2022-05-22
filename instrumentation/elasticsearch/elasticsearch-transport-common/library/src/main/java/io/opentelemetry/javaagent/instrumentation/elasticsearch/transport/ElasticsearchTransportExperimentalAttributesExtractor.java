@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
@@ -21,7 +22,10 @@ import org.elasticsearch.action.support.replication.ReplicationResponse;
 public class ElasticsearchTransportExperimentalAttributesExtractor
     implements AttributesExtractor<ElasticTransportRequest, ActionResponse> {
   @Override
-  public void onStart(AttributesBuilder attributes, ElasticTransportRequest transportRequest) {
+  public void onStart(
+      AttributesBuilder attributes,
+      Context parentContext,
+      ElasticTransportRequest transportRequest) {
     Object request = transportRequest.getRequest();
     attributes.put("elasticsearch.action", transportRequest.getAction().getClass().getSimpleName());
     attributes.put("elasticsearch.request", request.getClass().getSimpleName());
@@ -45,8 +49,9 @@ public class ElasticsearchTransportExperimentalAttributesExtractor
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       ElasticTransportRequest request,
-      ActionResponse response,
+      @Nullable ActionResponse response,
       @Nullable Throwable error) {
     if (response instanceof GetResponse) {
       GetResponse resp = (GetResponse) response;

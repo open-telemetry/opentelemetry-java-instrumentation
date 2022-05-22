@@ -29,7 +29,7 @@ class Config {
     return new NodeBuilder()
   }
 
-  @Bean(destroyMethod = "close")
+  @Bean
   Node elasticSearchNode() {
     def tmpDir = File.createTempFile("test-es-working-dir-", "")
     tmpDir.delete()

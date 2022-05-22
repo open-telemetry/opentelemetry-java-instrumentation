@@ -14,9 +14,10 @@ import java.time.Duration
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
@@ -76,10 +77,10 @@ class SpringBootSmokeTest extends SmokeTest {
 
     then: "JVM metrics are exported"
     def metrics = new MetricsInspector(waitForMetrics())
-    metrics.hasMetricsNamed("runtime.jvm.gc.time")
-    metrics.hasMetricsNamed("runtime.jvm.gc.count")
-    metrics.hasMetricsNamed("runtime.jvm.memory.area")
-    metrics.hasMetricsNamed("runtime.jvm.memory.pool")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.init")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.usage")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.max")
 
     cleanup:
     stopTarget()

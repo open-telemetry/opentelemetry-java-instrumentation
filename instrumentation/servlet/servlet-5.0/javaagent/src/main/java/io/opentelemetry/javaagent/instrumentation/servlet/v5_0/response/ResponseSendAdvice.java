@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.response;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.response.ResponseSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.responseInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
 import jakarta.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
@@ -33,14 +32,13 @@ public class ResponseSendAdvice {
       return;
     }
 
-    Context parentContext = Java8BytecodeBridge.currentContext();
-    // Don't want to generate a new top-level span
-    if (Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
-      classAndMethod = ClassAndMethod.create(declaringClass, methodName);
-      if (instrumenter().shouldStart(parentContext, classAndMethod)) {
-        context = instrumenter().start(parentContext, classAndMethod);
-        scope = context.makeCurrent();
-      }
+    HttpServletResponseAdviceHelper.StartResult result =
+        HttpServletResponseAdviceHelper.startSpan(
+            responseInstrumenter(), declaringClass, methodName);
+    if (result != null) {
+      classAndMethod = result.getClassAndMethod();
+      context = result.getContext();
+      scope = result.getScope();
     }
   }
 
@@ -54,7 +52,8 @@ public class ResponseSendAdvice {
     if (callDepth.decrementAndGet() > 0) {
       return;
     }
+
     HttpServletResponseAdviceHelper.stopSpan(
-        instrumenter(), throwable, context, scope, classAndMethod);
+        responseInstrumenter(), throwable, context, scope, classAndMethod);
   }
 }

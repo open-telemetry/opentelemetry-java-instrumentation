@@ -133,6 +133,7 @@ public class IntegrationTestUtils {
     return className.replace('.', '/') + ".class";
   }
 
+  @SuppressWarnings("unchecked")
   public static List<String> getBootstrapPackagePrefixes() throws Exception {
     Field f =
         getAgentClassLoader()

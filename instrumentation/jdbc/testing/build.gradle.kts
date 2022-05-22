@@ -8,5 +8,5 @@ plugins {
 }
 
 dependencies {
-  implementation("org.codehaus.groovy:groovy-all")
+  implementation("org.apache.groovy:groovy")
 }

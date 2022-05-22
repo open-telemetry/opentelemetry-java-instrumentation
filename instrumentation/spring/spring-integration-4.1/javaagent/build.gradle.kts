@@ -38,7 +38,6 @@ tasks {
   val testWithRabbitInstrumentation by registering(Test::class) {
     filter {
       includeTestsMatching("SpringIntegrationAndRabbitTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/SpringIntegrationAndRabbitTest.*")
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
@@ -48,7 +47,6 @@ tasks {
   val testWithProducerInstrumentation by registering(Test::class) {
     filter {
       includeTestsMatching("SpringCloudStreamProducerTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/SpringCloudStreamProducerTest.*")
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
@@ -57,16 +55,17 @@ tasks {
   }
 
   test {
-    dependsOn(testWithRabbitInstrumentation)
-    dependsOn(testWithProducerInstrumentation)
-
     filter {
       excludeTestsMatching("SpringIntegrationAndRabbitTest")
       excludeTestsMatching("SpringCloudStreamProducerTest")
-      isFailOnNoMatchingTests = false
     }
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+  }
+
+  check {
+    dependsOn(testWithRabbitInstrumentation)
+    dependsOn(testWithProducerInstrumentation)
   }
 
   withType<Test>().configureEach {

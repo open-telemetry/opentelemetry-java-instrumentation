@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNameSupplier;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 public class JaxrsServerSpanNaming {
 
-  public static final ServerSpanNameSupplier<HandlerData> SERVER_SPAN_NAME =
+  public static final HttpRouteGetter<HandlerData> SERVER_SPAN_NAME =
       (context, handlerData) -> {
         String pathBasedSpanName = handlerData.getServerSpanName();
         // If path based name is empty skip prepending context path so that path based name would

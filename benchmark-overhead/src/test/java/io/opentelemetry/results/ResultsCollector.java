@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.results;
 
 import com.jayway.jsonpath.JsonPath;
@@ -27,7 +28,6 @@ public class ResultsCollector {
     this.runDurations = runDurations;
   }
 
-
   public List<AppPerfResults> collect(TestConfig config) {
     return config.getAgents().stream()
         .map(a -> readAgentResults(a, config))
@@ -36,10 +36,11 @@ public class ResultsCollector {
 
   private AppPerfResults readAgentResults(Agent agent, TestConfig config) {
     try {
-      AppPerfResults.Builder builder = AppPerfResults.builder()
-          .agent(agent)
-          .runDurationMs(runDurations.get(agent.getName()))
-          .config(config);
+      AppPerfResults.Builder builder =
+          AppPerfResults.builder()
+              .agent(agent)
+              .runDurationMs(runDurations.get(agent.getName()))
+              .config(config);
 
       builder = addStartupTime(builder, agent);
       builder = addK6Results(builder, agent);
@@ -62,15 +63,21 @@ public class ResultsCollector {
       throws IOException {
     Path k6File = namingConvention.k6Results(agent);
     String json = new String(Files.readAllBytes(k6File));
-    double iterationAvg = JsonPath.read(json, "$.metrics.iteration_duration.avg");
-    double iterationP95 = JsonPath.read(json, "$.metrics.iteration_duration['p(95)']");
-    double requestAvg = JsonPath.read(json, "$.metrics.http_req_duration.avg");
-    double requestP95 = JsonPath.read(json, "$.metrics.http_req_duration['p(95)']");
+    double iterationAvg = read(json, "$.metrics.iteration_duration.avg");
+    double iterationP95 = read(json, "$.metrics.iteration_duration['p(95)']");
+    double requestAvg = read(json, "$.metrics.http_req_duration.avg");
+    double requestP95 = read(json, "$.metrics.http_req_duration['p(95)']");
     return builder
         .iterationAvg(iterationAvg)
         .iterationP95(iterationP95)
         .requestAvg(requestAvg)
         .requestP95(requestP95);
+  }
+
+  private static double read(String json, String jsonPath) {
+    // JsonPath.read returns either Double or BigDecimal
+    Number result = JsonPath.read(json, jsonPath);
+    return result.doubleValue();
   }
 
   private AppPerfResults.Builder addJfrResults(AppPerfResults.Builder builder, Agent agent)
@@ -134,5 +141,4 @@ public class ResultsCollector {
   private long computeTotalGcPauseNanos(Path jfrFile) throws IOException {
     return JFRUtils.sumLongEventValues(jfrFile, "jdk.GCPhasePause", "duration");
   }
-
 }

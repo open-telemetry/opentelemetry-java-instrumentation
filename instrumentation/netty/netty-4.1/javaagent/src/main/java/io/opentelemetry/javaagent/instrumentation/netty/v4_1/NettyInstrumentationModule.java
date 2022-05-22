@@ -11,7 +11,7 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyFutureInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.NettyFutureInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 

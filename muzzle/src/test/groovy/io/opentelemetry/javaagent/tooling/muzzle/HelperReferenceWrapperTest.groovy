@@ -9,8 +9,8 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source
 import muzzle.HelperReferenceWrapperTestClasses
-import org.objectweb.asm.Type
 import net.bytebuddy.pool.TypePool
+import org.objectweb.asm.Type
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -46,7 +46,8 @@ class HelperReferenceWrapperTest extends Specification {
     ]
 
     when:
-    def helperWrapper = new HelperReferenceWrapper.Factory(typePool, references).create(helperClass)
+    def helperClassPredicate = new HelperClassPredicate({ false })
+    def helperWrapper = new HelperReferenceWrapper.Factory(typePool, references, helperClassPredicate).create(helperClass)
 
     then:
     with(helperWrapper) { helper ->

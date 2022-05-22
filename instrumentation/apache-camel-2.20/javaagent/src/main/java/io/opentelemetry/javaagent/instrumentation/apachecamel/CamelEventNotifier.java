@@ -25,18 +25,18 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.getSpanDecorator;
 import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import java.util.EventObject;
+import java.util.logging.Logger;
 import org.apache.camel.management.event.ExchangeSendingEvent;
 import org.apache.camel.management.event.ExchangeSentEvent;
 import org.apache.camel.support.EventNotifierSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class CamelEventNotifier extends EventNotifierSupport {
 
-  private static final Logger logger = LoggerFactory.getLogger(CamelEventNotifier.class);
+  private static final Logger logger = Logger.getLogger(CamelEventNotifier.class.getName());
 
   @Override
   public void notify(EventObject event) {
@@ -66,7 +66,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
     ActiveContextManager.activate(context, request);
     CamelPropagationUtil.injectParent(context, ese.getExchange().getIn().getHeaders());
 
-    logger.debug("[Exchange sending] Initiator span started: {}", context);
+    logger.log(FINE, "[Exchange sending] Initiator span started: {0}", context);
   }
 
   private static Context startOnExchangeSending(CamelRequest request) {
@@ -85,7 +85,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
     }
 
     Context context = ActiveContextManager.deactivate(event.getExchange());
-    logger.debug("[Exchange sent] Initiator span finished: {}", context);
+    logger.log(FINE, "[Exchange sent] Initiator span finished: {0}", context);
   }
 
   @Override

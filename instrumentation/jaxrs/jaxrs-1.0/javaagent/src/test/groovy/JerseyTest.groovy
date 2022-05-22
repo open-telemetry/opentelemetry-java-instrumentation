@@ -12,7 +12,6 @@ import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 class JerseyTest extends AgentInstrumentationSpecification {
 
@@ -28,7 +27,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
   def "test #resource"() {
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runUnderServerTrace("test.span") {
+    def response = runWithHttpServerSpan("test.span") {
       resources.client().resource(resource).post(String)
     }
 
@@ -38,9 +37,10 @@ class JerseyTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name expectedSpanName
+          name expectedRoute
           kind SERVER
           attributes {
+            "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }
 
@@ -56,7 +56,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
     }
 
     where:
-    resource           | expectedSpanName      | controllerName | expectedResponse
+    resource           | expectedRoute         | controllerName | expectedResponse
     "/test/hello/bob"  | "/test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
     "/test2/hello/bob" | "/test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
     "/test3/hi/bob"    | "/test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"
@@ -66,7 +66,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
 
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def response = runUnderServerTrace("test.span") {
+    def response = runWithHttpServerSpan("test.span") {
       resources.client().resource(resource).post(String)
     }
 
@@ -76,9 +76,10 @@ class JerseyTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name expectedSpanName
+          name expectedRoute
           kind SERVER
           attributes {
+            "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }
         span(1) {
@@ -94,7 +95,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
     }
 
     where:
-    resource        | expectedSpanName | controller1Name | expectedResponse
-    "/test3/nested" | "/test3/nested"  | "Test3.nested"  | "Test3 nested!"
+    resource        | expectedRoute   | controller1Name | expectedResponse
+    "/test3/nested" | "/test3/nested" | "Test3.nested"  | "Test3 nested!"
   }
 }

@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -41,7 +42,7 @@ public class OverheadTests {
   private static final Network NETWORK = Network.newNetwork();
   private static GenericContainer<?> collector;
   private final NamingConventions namingConventions = new NamingConventions();
-  private final Map<String,Long> runDurations = new HashMap<>();
+  private final Map<String, Long> runDurations = new HashMap<>();
 
   @BeforeAll
   static void setUp() {
@@ -71,7 +72,8 @@ public class OverheadTests {
                 fail("Unhandled exception in " + config.getName(), e);
               }
             });
-    List<AppPerfResults> results = new ResultsCollector(namingConventions.local, runDurations).collect(config);
+    List<AppPerfResults> results =
+        new ResultsCollector(namingConventions.local, runDurations).collect(config);
     new MainResultsPersister(config).write(results);
   }
 
@@ -86,7 +88,7 @@ public class OverheadTests {
     writeStartupTimeFile(agent, start);
 
     if (config.getWarmupSeconds() > 0) {
-      doWarmupPhase(config);
+      doWarmupPhase(config, petclinic);
     }
 
     long testStart = System.currentTimeMillis();
@@ -113,7 +115,7 @@ public class OverheadTests {
       "jcmd",
       "1",
       "JFR.start",
-      "settings=profile",
+      "settings=/app/overhead.jfc",
       "dumponexit=true",
       "name=petclinic",
       "filename=" + outFile
@@ -121,20 +123,29 @@ public class OverheadTests {
     petclinic.execInContainer(command);
   }
 
-  private void doWarmupPhase(TestConfig testConfig) {
-    long start = System.currentTimeMillis();
-    System.out.println(
-        "Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
-    while (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start)
-        < testConfig.getWarmupSeconds()) {
+  private void doWarmupPhase(TestConfig testConfig, GenericContainer<?> petclinic) throws IOException, InterruptedException {
+    System.out.println("Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
+
+    // excluding the JFR recording from the warmup causes strange inconsistencies in the results
+    System.out.println("Starting disposable JFR warmup recording...");
+    String[] startCommand = {"jcmd", "1", "JFR.start", "settings=/app/overhead.jfc", "dumponexit=true", "name=warmup", "filename=warmup.jfr"};
+    petclinic.execInContainer(startCommand);
+
+    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(testConfig.getWarmupSeconds());
+    while(System.currentTimeMillis() < deadline) {
       GenericContainer<?> k6 =
           new GenericContainer<>(DockerImageName.parse("loadimpact/k6"))
               .withNetwork(NETWORK)
               .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
-              .withCommand("run", "-u", "5", "-i", "25", "/app/basic.js")
+              .withCommand("run", "-u", "5", "-i", "200", "/app/basic.js")
               .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
       k6.start();
     }
+
+    System.out.println("Stopping disposable JFR warmup recording...");
+    String[] stopCommand = {"jcmd", "1", "JFR.stop", "name=warmup"};
+    petclinic.execInContainer(stopCommand);
+
     System.out.println("Warmup complete.");
   }
 

@@ -71,10 +71,6 @@ public class LibertyRequest {
     return httpDispatcherLink.getRemoteHostAddress();
   }
 
-  public String peerName() {
-    return httpDispatcherLink.getRemoteHostName(false);
-  }
-
   public String getProtocol() {
     return httpRequestMessage.getVersion();
   }

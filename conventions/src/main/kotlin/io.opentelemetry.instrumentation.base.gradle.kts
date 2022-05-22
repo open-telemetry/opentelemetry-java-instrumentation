@@ -30,6 +30,23 @@ plugins {
 val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 extra["testLatestDeps"] = testLatestDeps
 
+@CacheableRule
+abstract class TestLatestDepsRule : ComponentMetadataRule {
+  override fun execute(context: ComponentMetadataContext) {
+    val version = context.details.id.version
+    if (version.contains("-alpha", true)
+      || version.contains("-beta", true)
+      || version.contains("-rc", true)
+      || version.contains("-m", true) // e.g. spring milestones are published to grails repo
+      || version.contains(".alpha", true) // e.g. netty
+      || version.contains(".beta", true) // e.g. hibernate
+      || version.contains(".cr", true) // e.g. hibernate
+    ) {
+      context.details.status = "milestone"
+    }
+  }
+}
+
 configurations {
   val library by creating {
     isCanBeResolved = false
@@ -53,13 +70,19 @@ configurations {
       val dep = copy()
       if (testLatestDeps) {
         (dep as ExternalDependency).version {
-          require("+")
+          require("latest.release")
         }
       }
       testImplementation.dependencies.add(dep)
     }
   }
   if (testLatestDeps) {
+    dependencies {
+      components {
+        all<TestLatestDepsRule>()
+      }
+    }
+
     latestDepTestLibrary.dependencies.whenObjectAdded {
       val dep = copy()
       val declaredVersion = dep.version
@@ -78,11 +101,51 @@ configurations {
 
 if (testLatestDeps) {
   afterEvaluate {
+    tasks {
+      withType<JavaCompile>().configureEach {
+        with(options) {
+          // We may use methods that are deprecated in future versions, we check lint on the normal
+          // build and don't need this for testLatestDeps.
+          compilerArgs.add("-Xlint:-deprecation")
+        }
+      }
+    }
+
     if (tasks.names.contains("latestDepTest")) {
       val latestDepTest by tasks.existing
       tasks.named("test").configure {
         dependsOn(latestDepTest)
       }
     }
+  }
+}
+
+tasks {
+  val generateInstrumentationVersionFile by registering {
+    val name = computeInstrumentationName()
+    val version = project.version as String
+    inputs.property("instrumentation.name", name)
+    inputs.property("instrumentation.version", version)
+
+    val propertiesDir = File(project.buildDir, "generated/instrumentationVersion/META-INF/io/opentelemetry/instrumentation/")
+    outputs.dir(propertiesDir)
+
+    doLast {
+      File(propertiesDir, "$name.properties").writeText("version=$version")
+    }
+  }
+}
+
+fun computeInstrumentationName(): String {
+  val name = when (projectDir.name) {
+    "javaagent", "library", "library-autoconfigure" -> projectDir.parentFile.name
+    else -> project.name
+  }
+  return "io.opentelemetry.$name"
+}
+
+sourceSets {
+  main {
+    output.dir("build/generated/instrumentationVersion", "builtBy" to "generateInstrumentationVersionFile")
   }
 }

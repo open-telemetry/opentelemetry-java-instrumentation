@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -39,32 +39,43 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This RedisConnection connection,
         @Advice.Argument(0) Object arg,
-        @Advice.Local("otelRedissonRequest") RedissonRequest request,
+        @Advice.Local("otelRequest") RedissonRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
       Context parentContext = currentContext();
       InetSocketAddress remoteAddress = (InetSocketAddress) connection.getChannel().remoteAddress();
       request = RedissonRequest.create(remoteAddress, arg);
+      PromiseWrapper<?> promise = request.getPromiseWrapper();
+      if (promise == null) {
+        return;
+      }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
       context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
+
+      promise.setEndOperationListener(new EndOperationListener<>(context, request));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRedissonRequest") RedissonRequest request,
+        @Advice.Local("otelRequest") RedissonRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
       if (scope == null) {
         return;
       }
-
       scope.close();
-      instrumenter().end(context, request, null, throwable);
+
+      if (throwable != null) {
+        instrumenter().end(context, request, null, throwable);
+      }
+      // span ended in EndOperationListener
     }
   }
 }

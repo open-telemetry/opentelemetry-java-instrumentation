@@ -8,11 +8,20 @@ package io.opentelemetry.smoketest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 
-@IgnoreIf({ os.windows })
+import java.time.Duration
+
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
+
+@IgnoreIf({ useWindowsContainers() })
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20210917.1246460868"
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening for HTTP.*")
   }
 
   def "play smoke test on JDK #jdk"(int jdk) {

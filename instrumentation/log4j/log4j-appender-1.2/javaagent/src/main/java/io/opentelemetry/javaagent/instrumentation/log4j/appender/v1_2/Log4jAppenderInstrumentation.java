@@ -11,10 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.appender.LogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -56,7 +56,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       // framework delegates to another
       callDepth = CallDepth.forClass(LogEmitterProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        Log4jHelper.capture(logger, level, message, t);
+        LogEventMapper.INSTANCE.capture(logger, level, message, t);
       }
     }
 

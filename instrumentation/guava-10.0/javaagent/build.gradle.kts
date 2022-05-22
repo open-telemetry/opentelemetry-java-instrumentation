@@ -17,10 +17,13 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   library("com.google.guava:guava:10.0")
   compileOnly(project(":instrumentation-api-annotation-support"))
 
   implementation(project(":instrumentation:guava-10.0:library"))
 
+  testImplementation(project(":instrumentation:opentelemetry-annotations-1.0:testing"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }

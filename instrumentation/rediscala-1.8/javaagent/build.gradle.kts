@@ -48,10 +48,21 @@ muzzle {
 
 dependencies {
   library("com.github.etaty:rediscala_2.11:1.8.0")
+
+  latestDepTestLibrary("com.github.etaty:rediscala_2.13:+")
 }
 
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+  }
+}
+
+if (findProperty("testLatestDeps") as Boolean) {
+  configurations {
+    // rediscala artifact name is different for regular and latest tests
+    testImplementation {
+      exclude("com.github.etaty", "rediscala_2.11")
+    }
   }
 }

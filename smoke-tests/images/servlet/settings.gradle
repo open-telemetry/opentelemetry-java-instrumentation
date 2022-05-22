@@ -1,4 +1,0 @@
-rootProject.name = 'matrix'
-
-include ':servlet-3.0'
-include ':servlet-5.0'

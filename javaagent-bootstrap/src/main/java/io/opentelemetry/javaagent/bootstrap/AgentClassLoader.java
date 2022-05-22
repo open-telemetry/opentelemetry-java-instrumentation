@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -69,10 +71,9 @@ public class AgentClassLoader extends URLClassLoader {
    *
    * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
-   * @param parent Classloader parent. Should null (bootstrap), or the platform classloader for java
    */
-  public AgentClassLoader(File javaagentFile, String internalJarFileName, ClassLoader parent) {
-    super(new URL[] {}, parent);
+  public AgentClassLoader(File javaagentFile, String internalJarFileName) {
+    super(new URL[] {}, getParentClassLoader());
     if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
     }
@@ -114,6 +115,13 @@ public class AgentClassLoader extends URLClassLoader {
     }
   }
 
+  private static ClassLoader getParentClassLoader() {
+    if (JAVA_VERSION > 8) {
+      return new JdkHttpServerClassLoader();
+    }
+    return null;
+  }
+
   private static int getJavaVersion() {
     String javaSpecVersion = System.getProperty("java.specification.version");
     if ("1.8".equals(javaSpecVersion)) {
@@ -130,11 +138,25 @@ public class AgentClassLoader extends URLClassLoader {
       throw new ClassNotFoundException(name);
     }
 
-    return super.loadClass(name, resolve);
+    synchronized (getClassLoadingLock(name)) {
+      Class<?> clazz = findLoadedClass(name);
+      // first search agent classes
+      if (clazz == null) {
+        clazz = findAgentClass(name);
+      }
+      // search from parent and urls added to this loader
+      if (clazz == null) {
+        clazz = super.loadClass(name, false);
+      }
+      if (resolve) {
+        resolveClass(clazz);
+      }
+
+      return clazz;
+    }
   }
 
-  @Override
-  protected Class<?> findClass(String name) throws ClassNotFoundException {
+  private Class<?> findAgentClass(String name) throws ClassNotFoundException {
     JarEntry jarEntry = findJarEntry(name.replace('.', '/') + ".class");
     if (jarEntry != null) {
       byte[] bytes;
@@ -148,8 +170,7 @@ public class AgentClassLoader extends URLClassLoader {
       return defineClass(name, bytes);
     }
 
-    // find class from agent initializer jar
-    return super.findClass(name);
+    return null;
   }
 
   public Class<?> defineClass(String name, byte[] bytes) {
@@ -273,7 +294,7 @@ public class AgentClassLoader extends URLClassLoader {
   public Enumeration<URL> findResources(String name) throws IOException {
     // find resources from agent initializer jar
     Enumeration<URL> delegate = super.findResources(name);
-    // agent jar can have only once resource for given name
+    // agent jar can have only one resource for given name
     URL url = findJarResource(name);
     if (url != null) {
       return new Enumeration<URL>() {
@@ -418,6 +439,46 @@ public class AgentClassLoader extends URLClassLoader {
         // Ignore
       }
       return -1;
+    }
+  }
+
+  private static class JdkHttpServerClassLoader extends ClassLoader {
+
+    static {
+      // this class loader doesn't load any classes, so this is technically unnecessary,
+      // but included for safety, just in case we every change Class.forName() below back to
+      // super.loadClass()
+      registerAsParallelCapable();
+    }
+
+    private final ClassLoader platformClassLoader = getPlatformLoader();
+
+    public JdkHttpServerClassLoader() {
+      super(null);
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      // prometheus exporter uses jdk http server, load it from the platform class loader
+      if (name != null && name.startsWith("com.sun.net.httpserver.")) {
+        return platformClassLoader.loadClass(name);
+      }
+      return Class.forName(name, false, null);
+    }
+
+    private static ClassLoader getPlatformLoader() {
+      /*
+       Must invoke ClassLoader.getPlatformClassLoader by reflection to remain
+       compatible with java 8.
+      */
+      try {
+        Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
+        return (ClassLoader) method.invoke(null);
+      } catch (InvocationTargetException
+          | NoSuchMethodException
+          | IllegalAccessException exception) {
+        throw new IllegalStateException(exception);
+      }
     }
   }
 }

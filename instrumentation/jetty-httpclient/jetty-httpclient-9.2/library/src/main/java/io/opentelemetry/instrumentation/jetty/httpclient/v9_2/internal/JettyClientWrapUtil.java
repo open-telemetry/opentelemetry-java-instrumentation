@@ -14,6 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jetty.client.api.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class JettyClientWrapUtil {
   private static final Class<?>[] listenerInterfaces = {
     Response.CompleteListener.class,
@@ -63,7 +67,7 @@ public final class JettyClientWrapUtil {
     return (Response.ResponseListener)
         Proxy.newProxyInstance(
             listenerClass.getClassLoader(),
-            interfaces.toArray(new Class[0]),
+            interfaces.toArray(new Class<?>[0]),
             (proxy, method, args) -> {
               try (Scope ignored = context.makeCurrent()) {
                 return method.invoke(listener, args);

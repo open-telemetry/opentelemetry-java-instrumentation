@@ -5,31 +5,22 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
-import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.instrumentation.ratpack.RatpackTracing
+
+import io.opentelemetry.instrumentation.ratpack.RatpackTelemetry
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import ratpack.server.RatpackServerSpec
 
 class RatpackRoutesTest extends AbstractRatpackRoutesTest implements LibraryTestTrait {
   @Override
   void configure(RatpackServerSpec serverSpec) {
-    RatpackTracing tracing = RatpackTracing.create(openTelemetry)
+    RatpackTelemetry telemetry = RatpackTelemetry.create(openTelemetry)
     serverSpec.registryOf {
-      tracing.configureServerRegistry(it)
+      telemetry.configureServerRegistry(it)
     }
   }
 
   @Override
   boolean hasHandlerSpan() {
     return false
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    return [
-      SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.NET_TRANSPORT
-    ]
   }
 }

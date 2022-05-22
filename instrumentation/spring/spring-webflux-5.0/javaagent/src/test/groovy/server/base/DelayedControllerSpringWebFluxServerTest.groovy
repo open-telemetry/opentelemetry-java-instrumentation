@@ -5,7 +5,7 @@
 
 package server.base
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.context.annotation.Bean
@@ -44,8 +44,7 @@ class DelayedControllerSpringWebFluxServerTest extends ControllerSpringWebFluxSe
   @RestController
   static class Controller extends ServerTestController {
     @Override
-    protected <T> Mono<T> wrapControllerMethod(
-      HttpServerTest.ServerEndpoint endpoint, Callable<T> handler) {
+    protected <T> Mono<T> wrapControllerMethod(ServerEndpoint endpoint, Callable<T> handler) {
 
       return Mono.just("")
         .delayElement(Duration.ofMillis(10))

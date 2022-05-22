@@ -5,7 +5,7 @@
 
 package server.base;
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.URI;
 import java.util.concurrent.Callable;
 import org.springframework.http.HttpStatus;

@@ -5,17 +5,31 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
+import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationList;
+import net.bytebuddy.description.annotation.AnnotationValue;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.MethodList;
+import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.pool.TypePool;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  *
@@ -36,6 +50,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
+
+  private static final boolean REFLECTION_ENABLED =
+      Config.get().getBoolean("otel.instrumentation.internal-reflection.enabled", true);
+  private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
   static final int TYPE_CAPACITY = 64;
 
@@ -61,42 +79,81 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   final SharedResolutionCacheAdapter bootstrapCacheProvider =
       new SharedResolutionCacheAdapter(BOOTSTRAP_HASH, null, sharedResolutionCache);
 
+  private final AgentLocationStrategy locationStrategy;
+
+  public AgentCachingPoolStrategy(AgentLocationStrategy locationStrategy) {
+    this.locationStrategy = locationStrategy;
+  }
+
+  private static Method getFindLoadedClassMethod() {
+    // instrumentation is null when this code is called from muzzle
+    Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
+    if (instrumentation == null) {
+      return null;
+    }
+    if (JavaModule.isSupported()) {
+      // ensure that we have access to ClassLoader.findLoadedClass
+      // if modular runtime is used export java.lang package from java.base module to the
+      // module of this class
+      JavaModule currentModule = JavaModule.ofType(AgentCachingPoolStrategy.class);
+      JavaModule javaBase = JavaModule.ofType(ClassLoader.class);
+      if (javaBase != null && javaBase.isNamed() && currentModule != null) {
+        ClassInjector.UsingInstrumentation.redefineModule(
+            instrumentation,
+            javaBase,
+            Collections.emptySet(),
+            Collections.emptyMap(),
+            Collections.singletonMap("java.lang", Collections.singleton(currentModule)),
+            Collections.emptySet(),
+            Collections.emptyMap());
+      }
+    }
+    try {
+      Method method = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+      method.setAccessible(true);
+      return method;
+    } catch (NoSuchMethodException exception) {
+      throw new IllegalStateException(exception);
+    }
+  }
+
+  private static boolean canUseFindLoadedClass() {
+    return findLoadedClassMethod != null;
+  }
+
+  private static Class<?> findLoadedClass(ClassLoader classLoader, String className) {
+    try {
+      return (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
+    } catch (Exception exception) {
+      throw new IllegalStateException(exception);
+    }
+  }
+
   @Override
-  public final TypePool typePool(ClassFileLocator classFileLocator, ClassLoader classLoader) {
+  public AgentTypePool typePool(ClassFileLocator classFileLocator, ClassLoader classLoader) {
+    return new AgentTypePool(
+        getCacheProvider(classLoader),
+        classFileLocator,
+        classLoader,
+        TypePool.Default.ReaderMode.FAST);
+  }
+
+  @Override
+  public AgentTypePool typePool(
+      ClassFileLocator classFileLocator, ClassLoader classLoader, String name) {
+    return typePool(classFileLocator, classLoader);
+  }
+
+  private TypePool.CacheProvider getCacheProvider(ClassLoader classLoader) {
     if (classLoader == null) {
-      return createCachingTypePool(bootstrapCacheProvider, classFileLocator);
+      return bootstrapCacheProvider;
     }
 
     WeakReference<ClassLoader> loaderRef =
         loaderRefCache.computeIfAbsent(classLoader, WeakReference::new);
 
     int loaderHash = classLoader.hashCode();
-    return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
-  }
-
-  @Override
-  public final TypePool typePool(
-      ClassFileLocator classFileLocator, ClassLoader classLoader, String name) {
-    return typePool(classFileLocator, classLoader);
-  }
-
-  private TypePool.CacheProvider createCacheProvider(
-      int loaderHash, WeakReference<ClassLoader> loaderRef) {
     return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);
-  }
-
-  private TypePool createCachingTypePool(
-      int loaderHash, WeakReference<ClassLoader> loaderRef, ClassFileLocator classFileLocator) {
-    return new TypePool.Default.WithLazyResolution(
-        createCacheProvider(loaderHash, loaderRef),
-        classFileLocator,
-        TypePool.Default.ReaderMode.FAST);
-  }
-
-  private static TypePool createCachingTypePool(
-      TypePool.CacheProvider cacheProvider, ClassFileLocator classFileLocator) {
-    return new TypePool.Default.WithLazyResolution(
-        cacheProvider, classFileLocator, TypePool.Default.ReaderMode.FAST);
   }
 
   /**
@@ -108,7 +165,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    *
    * <p>The loaderHash exists to avoid calling get & strengthening the Reference.
    */
-  static final class TypeCacheKey {
+  private static final class TypeCacheKey {
     private final int loaderHash;
     private final WeakReference<ClassLoader> loaderRef;
     private final String className;
@@ -172,7 +229,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
       return hashCode;
     }
 
@@ -190,10 +247,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
   }
 
-  static final class SharedResolutionCacheAdapter implements TypePool.CacheProvider {
+  private static final class SharedResolutionCacheAdapter implements TypePool.CacheProvider {
     private static final String OBJECT_NAME = "java.lang.Object";
     private static final TypePool.Resolution OBJECT_RESOLUTION =
-        new TypePool.Resolution.Simple(new CachingTypeDescription(TypeDescription.OBJECT));
+        new TypePool.Resolution.Simple(TypeDescription.OBJECT);
 
     private final int loaderHash;
     private final WeakReference<ClassLoader> loaderRef;
@@ -229,8 +286,6 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return resolution;
       }
 
-      resolution = new CachingResolution(resolution);
-
       sharedResolutionCache.put(new TypeCacheKey(loaderHash, loaderRef, className), resolution);
       return resolution;
     }
@@ -241,46 +296,359 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
   }
 
-  private static class CachingResolution implements TypePool.Resolution {
-    private final TypePool.Resolution delegate;
-    private TypeDescription cachedResolution;
+  /** Based on TypePool.Default.WithLazyResolution */
+  private class AgentTypePool extends TypePool.Default {
+    // ThreadLocal used for detecting loading of annotation types
+    private final ThreadLocal<Boolean> loadingAnnotations = new ThreadLocal<>();
+    private final WeakReference<ClassLoader> classLoaderRef;
 
-    public CachingResolution(TypePool.Resolution delegate) {
-
-      this.delegate = delegate;
+    public AgentTypePool(
+        TypePool.CacheProvider cacheProvider,
+        ClassFileLocator classFileLocator,
+        ClassLoader classLoader,
+        TypePool.Default.ReaderMode readerMode) {
+      super(cacheProvider, classFileLocator, readerMode);
+      this.classLoaderRef = new WeakReference<>(classLoader);
     }
 
     @Override
-    public boolean isResolved() {
-      return delegate.isResolved();
+    protected TypePool.Resolution doDescribe(String name) {
+      return new AgentTypePool.LazyResolution(classLoaderRef, name);
     }
 
     @Override
-    public TypeDescription resolve() {
-      // Intentionally not "thread safe". Duplicate work deemed an acceptable trade-off.
-      if (cachedResolution == null) {
-        cachedResolution = new CachingTypeDescription(delegate.resolve());
+    protected TypePool.Resolution doCache(String name, TypePool.Resolution resolution) {
+      return resolution;
+    }
+
+    /**
+     * Non-lazily resolves a type name.
+     *
+     * @param name The name of the type to resolve.
+     * @return The resolution for the type of this name.
+     */
+    protected TypePool.Resolution doResolve(String name) {
+      TypePool.Resolution resolution = cacheProvider.find(name);
+      if (resolution == null) {
+        // calling super.doDescribe that will locate the class bytes and parse them unlike
+        // doDescribe in this class that returns a lazy resolution without parsing the class bytes
+        resolution = cacheProvider.register(name, super.doDescribe(name));
       }
-      return cachedResolution;
+      return resolution;
+    }
+
+    void enterLoadAnnotations() {
+      loadingAnnotations.set(Boolean.TRUE);
+    }
+
+    void exitLoadAnnotations() {
+      loadingAnnotations.set(null);
+    }
+
+    boolean isLoadingAnnotations() {
+      return loadingAnnotations.get() != null;
+    }
+
+    /** Based on TypePool.Default.WithLazyResolution.LazyResolution */
+    private class LazyResolution implements TypePool.Resolution {
+      private final WeakReference<ClassLoader> classLoaderRef;
+      private final String name;
+
+      LazyResolution(WeakReference<ClassLoader> classLoaderRef, String name) {
+        this.classLoaderRef = classLoaderRef;
+        this.name = name;
+      }
+
+      @Override
+      public boolean isResolved() {
+        // Like jdk, byte-buddy getDeclaredAnnotations does not report annotations whose class is
+        // missing. To do this it needs to locate the bytes for annotation types used in class.
+        // Which means that if we have a matcher that matches methods annotated with @Foo byte-buddy
+        // will end up location bytes for all annotations used on any method in the classes that
+        // this matcher is applied to. From our perspective this is unreasonable, we just want to
+        // match based on annotation name with as little overhead as possible. As we match only
+        // based on annotation name we never need to locate the bytes for the annotation type.
+        // See TypePool.Default.LazyTypeDescription.LazyAnnotationDescription.asList()
+        // When isResolved() is called during loading of annotations delay resolving to avoid
+        // looking up the class bytes.
+        if (isLoadingAnnotations()) {
+          return true;
+        }
+        return doResolve(name).isResolved();
+      }
+
+      private volatile TypeDescription cached;
+
+      @Override
+      public TypeDescription resolve() {
+        // unlike byte-buddy implementation we cache the descriptor to avoid having to find
+        // super class and interfaces multiple times
+        if (cached == null) {
+          cached = new AgentTypePool.LazyTypeDescription(classLoaderRef, name);
+          // if we know that an annotation is being loaded wrap the result so that we wouldn't
+          // need to resolve the class bytes to tell whether it is an annotation
+          if (isLoadingAnnotations()) {
+            cached = new AnnotationTypeDescription(cached);
+          }
+        }
+        return cached;
+      }
+    }
+
+    private abstract class CachingTypeDescription
+        extends TypeDescription.AbstractBase.OfSimpleType.WithDelegation {
+      private volatile TypeDescription delegate;
+
+      @Override
+      protected TypeDescription delegate() {
+        if (delegate == null) {
+          delegate = doResolve(getName()).resolve();
+        }
+        return delegate;
+      }
+
+      private volatile AnnotationList annotations;
+
+      @Override
+      public AnnotationList getDeclaredAnnotations() {
+        if (annotations == null) {
+          TypeDescription delegate = delegate();
+          // Run getDeclaredAnnotations with ThreadLocal. ThreadLocal helps us detect types looked
+          // up by getDeclaredAnnotations and treat them specially.
+          enterLoadAnnotations();
+          try {
+            annotations = delegate.getDeclaredAnnotations();
+          } finally {
+            exitLoadAnnotations();
+          }
+        }
+        return annotations;
+      }
+
+      private volatile MethodList<MethodDescription.InDefinedShape> methods;
+
+      @Override
+      public MethodList<MethodDescription.InDefinedShape> getDeclaredMethods() {
+        if (methods == null) {
+          methods = delegate().getDeclaredMethods();
+        }
+        return methods;
+      }
+    }
+
+    /**
+     * Based on TypePool.Default.WithLazyResolution.LazyTypeDescription
+     *
+     * <p>Class description that attempts to use already loaded super classes for navigating class
+     * hierarchy.
+     */
+    private class LazyTypeDescription extends AgentTypePool.CachingTypeDescription {
+      // using WeakReference to ensure that caching this descriptor won't keep class loader alive
+      private final WeakReference<ClassLoader> classLoaderRef;
+      private final String name;
+
+      LazyTypeDescription(WeakReference<ClassLoader> classLoaderRef, String name) {
+        this.classLoaderRef = classLoaderRef;
+        this.name = name;
+      }
+
+      @Override
+      public String getName() {
+        return name;
+      }
+
+      private volatile TypeDescription.Generic cachedSuperClass;
+
+      @Override
+      public TypeDescription.Generic getSuperClass() {
+        if (cachedSuperClass == null) {
+          TypeDescription.Generic superClassDescription = delegate().getSuperClass();
+          ClassLoader classLoader = classLoaderRef.get();
+          if (canUseFindLoadedClass() && classLoader != null && superClassDescription != null) {
+            String superName = superClassDescription.getTypeName();
+            Class<?> superClass = findLoadedClass(classLoader, superName);
+            if (superClass != null) {
+              // here we use raw type and loose generic info
+              // we don't expect to have matchers that would use the generic info
+              superClassDescription = newTypeDescription(superClass).asGenericType();
+            }
+          }
+          cachedSuperClass = superClassDescription;
+        }
+        return cachedSuperClass;
+      }
+
+      private volatile TypeList.Generic cachedInterfaces;
+
+      @Override
+      public TypeList.Generic getInterfaces() {
+        if (cachedInterfaces == null) {
+          TypeList.Generic interfaces = delegate().getInterfaces();
+          ClassLoader classLoader = classLoaderRef.get();
+          if (canUseFindLoadedClass() && classLoader != null && !interfaces.isEmpty()) {
+            // here we use raw types and loose generic info
+            // we don't expect to have matchers that would use the generic info
+            List<TypeDescription> result = new ArrayList<>();
+            for (TypeDescription.Generic interfaceDescription : interfaces) {
+              String interfaceName = interfaceDescription.getTypeName();
+              Class<?> interfaceClass = findLoadedClass(classLoader, interfaceName);
+              if (interfaceClass != null) {
+                result.add(newTypeDescription(interfaceClass));
+              } else {
+                result.add(interfaceDescription.asErasure());
+              }
+            }
+            interfaces = new TypeList.Generic.Explicit(result);
+          }
+
+          cachedInterfaces = interfaces;
+        }
+        return cachedInterfaces;
+      }
+
+      private class LazyAnnotationMethodDescription extends DelegatingMethodDescription {
+
+        LazyAnnotationMethodDescription(MethodDescription.InDefinedShape method) {
+          super(method);
+        }
+
+        @Override
+        public AnnotationList getDeclaredAnnotations() {
+          // Run getDeclaredAnnotations with ThreadLocal. ThreadLocal helps us detect types looked
+          // up by getDeclaredAnnotations and treat them specially.
+          enterLoadAnnotations();
+          try {
+            return method.getDeclaredAnnotations();
+          } finally {
+            exitLoadAnnotations();
+          }
+        }
+      }
+
+      @Override
+      public MethodList<MethodDescription.InDefinedShape> getDeclaredMethods() {
+        MethodList<MethodDescription.InDefinedShape> methods = super.getDeclaredMethods();
+
+        class MethodListWrapper extends MethodList.AbstractBase<MethodDescription.InDefinedShape> {
+
+          @Override
+          public MethodDescription.InDefinedShape get(int index) {
+            return new LazyAnnotationMethodDescription(methods.get(index));
+          }
+
+          @Override
+          public int size() {
+            return methods.size();
+          }
+        }
+
+        return new MethodListWrapper();
+      }
+    }
+
+    private AgentTypePool.LazyTypeDescriptionWithClass newTypeDescription(Class<?> clazz) {
+      return newLazyTypeDescriptionWithClass(
+          AgentTypePool.this, AgentCachingPoolStrategy.this, clazz);
+    }
+
+    /**
+     * Based on TypePool.Default.WithLazyResolution.LazyTypeDescription
+     *
+     * <p>Class description that uses an existing class instance for navigating super class
+     * hierarchy. This should be much more efficient than finding super types through resource
+     * lookups and parsing bytecode. We are not using TypeDescription.ForLoadedType as it can cause
+     * additional classes to be loaded.
+     */
+    private class LazyTypeDescriptionWithClass extends AgentTypePool.CachingTypeDescription {
+      // using WeakReference to ensure that caching this descriptor won't keep class loader alive
+      private final WeakReference<Class<?>> classRef;
+      private final String name;
+      private final int modifiers;
+
+      LazyTypeDescriptionWithClass(Class<?> clazz) {
+        this.name = clazz.getName();
+        this.modifiers = clazz.getModifiers();
+        this.classRef = new WeakReference<>(clazz);
+      }
+
+      @Override
+      public String getName() {
+        return name;
+      }
+
+      private volatile TypeDescription.Generic cachedSuperClass;
+
+      @Override
+      public TypeDescription.Generic getSuperClass() {
+        if (cachedSuperClass == null) {
+          Class<?> clazz = classRef.get();
+          if (clazz == null) {
+            return null;
+          }
+          Class<?> superClass = clazz.getSuperclass();
+          if (superClass == null) {
+            return null;
+          }
+          // using raw type
+          cachedSuperClass = newTypeDescription(superClass).asGenericType();
+        }
+
+        return cachedSuperClass;
+      }
+
+      private volatile TypeList.Generic cachedInterfaces;
+
+      @Override
+      public TypeList.Generic getInterfaces() {
+        if (cachedInterfaces == null) {
+          List<TypeDescription> result = new ArrayList<>();
+          Class<?> clazz = classRef.get();
+          if (clazz != null) {
+            for (Class<?> interfaceClass : clazz.getInterfaces()) {
+              // virtual field accessors are removed by internal-reflection instrumentation
+              // we do this extra check for tests run with internal-reflection disabled
+              if (!REFLECTION_ENABLED
+                  && VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)) {
+                continue;
+              }
+              // using raw type
+              result.add(newTypeDescription(interfaceClass));
+            }
+          }
+          cachedInterfaces = new TypeList.Generic.Explicit(result);
+        }
+
+        return cachedInterfaces;
+      }
+
+      @Override
+      public int getModifiers() {
+        return modifiers;
+      }
     }
   }
 
+  private static AgentTypePool.LazyTypeDescriptionWithClass newLazyTypeDescriptionWithClass(
+      AgentTypePool pool, AgentCachingPoolStrategy poolStrategy, Class<?> clazz) {
+    // if class and existing pool use different class loaders create a new pool with correct class
+    // loader
+    if (pool.classLoaderRef.get() != clazz.getClassLoader()) {
+      ClassFileLocator classFileLocator =
+          poolStrategy.locationStrategy.classFileLocator(clazz.getClassLoader());
+      pool = poolStrategy.typePool(classFileLocator, clazz.getClassLoader());
+    }
+    return pool.new LazyTypeDescriptionWithClass(clazz);
+  }
+
   /**
-   * TypeDescription implementation that delegates and caches the results for the expensive calls
-   * commonly used by our instrumentation.
+   * Class descriptor that claims to represent an annotation without checking whether the underlying
+   * type really is an annotation.
    */
-  private static class CachingTypeDescription
+  private static class AnnotationTypeDescription
       extends TypeDescription.AbstractBase.OfSimpleType.WithDelegation {
     private final TypeDescription delegate;
 
-    // These fields are intentionally not "thread safe".
-    // Duplicate work deemed an acceptable trade-off.
-    private Generic superClass;
-    private TypeList.Generic interfaces;
-    private AnnotationList annotations;
-    private MethodList<MethodDescription.InDefinedShape> methods;
-
-    public CachingTypeDescription(TypeDescription delegate) {
+    AnnotationTypeDescription(TypeDescription delegate) {
       this.delegate = delegate;
     }
 
@@ -290,40 +658,72 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     @Override
-    public Generic getSuperClass() {
-      if (superClass == null) {
-        superClass = delegate.getSuperClass();
-      }
-      return superClass;
+    public String getName() {
+      return delegate.getName();
     }
 
     @Override
-    public TypeList.Generic getInterfaces() {
-      if (interfaces == null) {
-        interfaces = delegate.getInterfaces();
-      }
-      return interfaces;
+    public boolean isAnnotation() {
+      // by default byte-buddy checks whether class modifiers have annotation bit set
+      // as we wish to avoid looking up the class bytes we assume that every that was expected
+      // to be an annotation really is an annotation and return true here
+      // See TypePool.Default.LazyTypeDescription.LazyAnnotationDescription.asList()
+      return true;
+    }
+  }
+
+  private static class DelegatingMethodDescription
+      extends MethodDescription.InDefinedShape.AbstractBase {
+    protected final MethodDescription.InDefinedShape method;
+
+    DelegatingMethodDescription(MethodDescription.InDefinedShape method) {
+      this.method = method;
+    }
+
+    @Nonnull
+    @Override
+    public TypeDescription getDeclaringType() {
+      return method.getDeclaringType();
+    }
+
+    @Override
+    public TypeDescription.Generic getReturnType() {
+      return method.getReturnType();
+    }
+
+    @Override
+    public ParameterList<ParameterDescription.InDefinedShape> getParameters() {
+      return method.getParameters();
+    }
+
+    @Override
+    public TypeList.Generic getExceptionTypes() {
+      return method.getExceptionTypes();
+    }
+
+    @Override
+    public AnnotationValue<?, ?> getDefaultValue() {
+      return method.getDefaultValue();
+    }
+
+    @Override
+    public String getInternalName() {
+      return method.getInternalName();
+    }
+
+    @Override
+    public TypeList.Generic getTypeVariables() {
+      return method.getTypeVariables();
+    }
+
+    @Override
+    public int getModifiers() {
+      return method.getModifiers();
     }
 
     @Override
     public AnnotationList getDeclaredAnnotations() {
-      if (annotations == null) {
-        annotations = delegate.getDeclaredAnnotations();
-      }
-      return annotations;
-    }
-
-    @Override
-    public MethodList<MethodDescription.InDefinedShape> getDeclaredMethods() {
-      if (methods == null) {
-        methods = delegate.getDeclaredMethods();
-      }
-      return methods;
-    }
-
-    @Override
-    public String getName() {
-      return delegate.getName();
+      return method.getDeclaredAnnotations();
     }
   }
 }

@@ -5,18 +5,26 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class RuntimeVirtualFieldSupplier {
 
-  private static final Logger logger = LoggerFactory.getLogger(RuntimeVirtualFieldSupplier.class);
+  private static final Logger logger =
+      Logger.getLogger(RuntimeVirtualFieldSupplier.class.getName());
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public interface VirtualFieldSupplier {
-    <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType);
+    <U extends T, V extends F, T, F> VirtualField<U, V> find(Class<T> type, Class<F> fieldType);
   }
 
   private static final VirtualFieldSupplier DEFAULT = new CacheBasedVirtualFieldSupplier();
@@ -26,7 +34,7 @@ public final class RuntimeVirtualFieldSupplier {
   public static void set(VirtualFieldSupplier virtualFieldSupplier) {
     // only overwrite the default, cache-based supplier
     if (instance != DEFAULT) {
-      logger.warn(
+      logger.warning(
           "Runtime VirtualField supplier has already been set up, further set() calls are ignored");
       return;
     }
@@ -43,8 +51,10 @@ public final class RuntimeVirtualFieldSupplier {
         ownerToFieldToImplementationMap = Cache.weak();
 
     @Override
-    public <U extends T, T, F> VirtualField<U, F> find(Class<T> type, Class<F> fieldType) {
-      return (VirtualField<U, F>)
+    @SuppressWarnings("unchecked")
+    public <U extends T, V extends F, T, F> VirtualField<U, V> find(
+        Class<T> type, Class<F> fieldType) {
+      return (VirtualField<U, V>)
           ownerToFieldToImplementationMap
               .computeIfAbsent(type, c -> Cache.weak())
               .computeIfAbsent(fieldType, c -> new CacheBasedVirtualField<>());

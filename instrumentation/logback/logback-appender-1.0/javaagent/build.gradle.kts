@@ -17,11 +17,10 @@ muzzle {
 dependencies {
   library("ch.qos.logback:logback-classic:0.9.16")
 
-  compileOnly(project(":instrumentation-api-appender"))
+  compileOnly(project(":instrumentation-appender-api-internal"))
+  compileOnly(project(":javaagent-bootstrap"))
 
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
-
-  latestDepTestLibrary("ch.qos.logback:logback-classic:1.2.+")
 
   testImplementation("org.awaitility:awaitility")
 }
@@ -29,4 +28,5 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
+  jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
 }

@@ -18,7 +18,7 @@ muzzle {
   pass {
     group.set("org.jboss.resteasy")
     module.set("resteasy-core")
-    versions.set("[4.0.0.Final,)")
+    versions.set("[4.0.0.Final,6)")
   }
 }
 
@@ -28,6 +28,8 @@ dependencies {
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent"))
+
+  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))

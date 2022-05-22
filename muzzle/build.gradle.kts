@@ -17,16 +17,11 @@ dependencies {
 
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":instrumentation-api"))
-  implementation(project(":javaagent-instrumentation-api"))
   implementation(project(":javaagent-extension-api"))
-  implementation("org.slf4j:slf4j-api")
+
+  // Used by byte-buddy but not brought in as a transitive dependency.
+  compileOnly("com.google.code.findbugs:annotations")
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
-  testImplementation("org.assertj:assertj-core:3.19.0")
-
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.7.2"))
-  testImplementation("org.junit.jupiter:junit-jupiter-api")
-  testImplementation("org.junit.jupiter:junit-jupiter-params")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }

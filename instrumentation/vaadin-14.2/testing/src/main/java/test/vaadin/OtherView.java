@@ -12,6 +12,8 @@ import com.vaadin.flow.router.Route;
 @Route("other")
 public class OtherView extends VerticalLayout {
 
+  private static final long serialVersionUID = 1L;
+
   public OtherView() {
     Label label = new Label("Other view");
     label.setId("other.label");

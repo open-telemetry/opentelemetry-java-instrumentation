@@ -13,7 +13,7 @@ tasks {
     reports {
       xml.required.set(true)
       csv.required.set(false)
-      html.outputLocation.set(file("${buildDir}/reports/jacoco/"))
+      html.outputLocation.set(file("$buildDir/reports/jacoco/"))
     }
   }
 }

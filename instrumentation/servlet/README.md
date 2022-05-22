@@ -13,20 +13,13 @@ We support Servlet API starting from version 2.2.
 But various instrumentations apply to different versions of the API.
 
 They are divided into the following sub-modules:
-- `servlet-common` contains shared code for both `javax.servlet` and `jakarta.servlet` packages
-  - `library` contains the abstract tracer applicable to all servlet versions given an
-    implementation of `ServletAccessor` to access request and response objects of the specific
-    version
-  - `javaagent` contains shared type instrumentations which can be used by version specific modules
-    by specifying the base package and advice class to use with them. Contains some helper classes
-    used by advices to reduce code duplication. It does not define any instrumentation modules and
-    is used only as a dependency for other `javaagent` modules.
-- Version-specific modules where `library` contains the version-specific tracer and request/response
-  accessor, and `javaagent` contains the instrumentation modules and advices.
-  - `servlet-javax-common` contains instrumentations/abstract tracer common for Servlet API versions `[2.2, 5)`
-  - `servlet-2.2` contains instrumentations/tracer for Servlet API versions `[2.2, 3)` 
-  - `servlet-3.0` contains instrumentations/tracer for Servlet API versions `[3.0, 5)`
-  - `servlet-5.0` contains instrumentations/tracer for Servlet API versions `[5,)`
+- `servlet-common` contains shared code for both `javax.servlet` and `jakarta.servlet` packages.
+- Version-specific modules contain the version-specific instrumentations and request/response
+  accessor.
+  - `servlet-javax-common` contains instrumentations common for Servlet API versions `[2.2, 5)`
+  - `servlet-2.2` contains instrumentation for Servlet API versions `[2.2, 3)`
+  - `servlet-3.0` contains instrumentation for Servlet API versions `[3.0, 5)`
+  - `servlet-5.0` contains instrumentation for Servlet API versions `[5,)`
 
 ## Implementation details
 
@@ -72,14 +65,15 @@ At last, request processing may reach the specific framework that your applicati
 In this case Spring MVC and `OwnerController.initCreationForm`.
 
 If all instrumentations are enabled, then a new span will be created for every highlighted frame.
-All spans from Servlet API will have `kind=SERVER` and name based on corresponding class and method names,
-such as `ApplicationFilterChain.doFilter` or `FrameworkServlet.doGet`.
+All spans from Servlet API will have `kind=SERVER` and name based on request method, such as `HTTP GET`,
+or servlet/filter mapping corresponding to the requested path, such as `/foo/bar/*`.
 Span created by Spring MVC instrumentation will have `kind=INTERNAL` and named `OwnerController.initCreationForm`.
 
 The state described above has one significant problem.
 Observability backends usually aggregate traces based on their root spans.
-This means that ALL traces from any application deployed to Servlet container will be grouped together.
-Because their root spans will all have the same named based on common entry point.
+This means that for applications with a single controller Servlet that services all requests ALL
+traces from that application will be grouped together because their root spans will all have the same
+named based on common entry point.
 In order to alleviate this problem, instrumentations for specific frameworks, such as Spring MVC here,
 _update_ name of the span corresponding to the entry point.
 Each framework instrumentation can decide what is the best span name based on framework implementation details.

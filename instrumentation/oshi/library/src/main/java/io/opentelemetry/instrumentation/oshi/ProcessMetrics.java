@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.oshi;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
@@ -19,10 +20,18 @@ public class ProcessMetrics {
 
   private ProcessMetrics() {}
 
-  /** Register observers for java runtime metrics. */
+  /**
+   * Register observers for java runtime metrics.
+   *
+   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
+   */
+  @Deprecated
   public static void registerObservers() {
-    // TODO(anuraaga): registerObservers should accept an OpenTelemetry instance
-    Meter meter = GlobalOpenTelemetry.get().getMeterProvider().get(ProcessMetrics.class.getName());
+    registerObservers(GlobalOpenTelemetry.get());
+  }
+
+  public static void registerObservers(OpenTelemetry openTelemetry) {
+    Meter meter = openTelemetry.getMeterProvider().get("io.opentelemetry.oshi");
     SystemInfo systemInfo = new SystemInfo();
     OperatingSystem osInfo = systemInfo.getOperatingSystem();
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
@@ -30,7 +39,7 @@ public class ProcessMetrics {
     meter
         .upDownCounterBuilder("runtime.java.memory")
         .setDescription("Runtime Java memory")
-        .setUnit("bytes")
+        .setUnit("By")
         .buildWithCallback(
             r -> {
               processInfo.updateAttributes();
@@ -41,12 +50,13 @@ public class ProcessMetrics {
     meter
         .gaugeBuilder("runtime.java.cpu_time")
         .setDescription("Runtime Java CPU time")
-        .setUnit("seconds")
+        .setUnit("ms")
+        .ofLongs()
         .buildWithCallback(
             r -> {
               processInfo.updateAttributes();
-              r.record(processInfo.getUserTime() * 1000, Attributes.of(TYPE_KEY, "user"));
-              r.record(processInfo.getKernelTime() * 1000, Attributes.of(TYPE_KEY, "system"));
+              r.record(processInfo.getUserTime(), Attributes.of(TYPE_KEY, "user"));
+              r.record(processInfo.getKernelTime(), Attributes.of(TYPE_KEY, "system"));
             });
   }
 }

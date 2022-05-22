@@ -5,16 +5,20 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
+import static java.util.logging.Level.SEVERE;
+
 import io.grpc.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * {@link Context.Storage} override which uses OpenTelemetry context as the backing store. Both gRPC
  * and OpenTelemetry contexts refer to each other to ensure that both OTel context propagation
- * mechanisms and gRPC context propagation mechanisms can be used interchangably.
+ * mechanisms and gRPC context propagation mechanisms can be used interchangeably.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class ContextStorageBridge extends Context.Storage {
 
@@ -24,6 +28,12 @@ public final class ContextStorageBridge extends Context.Storage {
   private static final Context.Key<io.opentelemetry.context.Context> OTEL_CONTEXT =
       Context.key("otel-context");
   private static final Context.Key<Scope> OTEL_SCOPE = Context.key("otel-scope");
+
+  private final boolean propagateGrpcDeadline;
+
+  public ContextStorageBridge(boolean propagateGrpcDeadline) {
+    this.propagateGrpcDeadline = propagateGrpcDeadline;
+  }
 
   @Override
   public Context doAttach(Context toAttach) {
@@ -62,9 +72,7 @@ public final class ContextStorageBridge extends Context.Storage {
     Scope scope = OTEL_SCOPE.get(toRestore);
     if (scope == null) {
       logger.log(
-          Level.SEVERE,
-          "Detaching context which was not attached.",
-          new Throwable().fillInStackTrace());
+          SEVERE, "Detaching context which was not attached.", new Throwable().fillInStackTrace());
     } else {
       scope.close();
     }
@@ -84,6 +92,20 @@ public final class ContextStorageBridge extends Context.Storage {
       // This context has already been previously attached and associated with an OTel context. Just
       // create a new context referring to the current OTel context to reflect the current stack.
       // The previous context is unaffected and will continue to live in its own stack.
+
+      if (!propagateGrpcDeadline) {
+        // Because we are propagating gRPC context via OpenTelemetry here, we may also propagate a
+        // deadline where it
+        // wasn't present before. Notably, this could happen with no user intention when using the
+        // javaagent which will
+        // add OpenTelemetry propagation automatically, and cause that code to fail with a deadline
+        // cancellation. While
+        // ideally we could propagate deadline as well as gRPC intended, we cannot have existing
+        // code fail because it
+        // added the javaagent and choose to fork here.
+        current = current.fork();
+      }
+
       return current.withValue(OTEL_CONTEXT, otelContext);
     }
     return current;

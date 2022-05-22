@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,7 +27,7 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
-public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
+class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.hc.client5.http.classic.HttpClient");
@@ -174,7 +174,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler(context, parentContext, request, handler);
+            new WrappingStatusSettingResponseHandler<>(context, parentContext, request, handler);
       }
     }
 
@@ -214,7 +214,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler(context, parentContext, request, handler);
+            new WrappingStatusSettingResponseHandler<>(context, parentContext, request, handler);
       }
     }
 
@@ -294,7 +294,8 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler(context, parentContext, fullRequest, handler);
+            new WrappingStatusSettingResponseHandler<>(
+                context, parentContext, fullRequest, handler);
       }
     }
 
@@ -338,7 +339,8 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler(context, parentContext, fullRequest, handler);
+            new WrappingStatusSettingResponseHandler<>(
+                context, parentContext, fullRequest, handler);
       }
     }
 

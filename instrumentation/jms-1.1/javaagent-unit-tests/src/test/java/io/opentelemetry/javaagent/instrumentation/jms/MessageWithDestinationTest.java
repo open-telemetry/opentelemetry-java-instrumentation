@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.BDDMockito.given;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import java.time.Instant;
 import java.util.stream.Stream;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -20,7 +18,6 @@ import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +28,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class MessageWithDestinationTest {
-  private static final Instant START_TIME = Instant.ofEpochSecond(42);
 
   @Mock Message message;
   @Mock Topic topic;
@@ -39,12 +35,6 @@ class MessageWithDestinationTest {
   @Mock Queue queue;
   @Mock TemporaryQueue temporaryQueue;
   @Mock Destination destination;
-  @Mock Timer timer;
-
-  @BeforeEach
-  void setUp() {
-    given(timer.startTime()).willReturn(START_TIME);
-  }
 
   @Test
   void shouldCreateMessageWithUnknownDestination() throws JMSException {
@@ -52,11 +42,10 @@ class MessageWithDestinationTest {
     given(message.getJMSDestination()).willReturn(destination);
 
     // when
-    MessageWithDestination result = MessageWithDestination.create(message, null, timer);
+    MessageWithDestination result = MessageWithDestination.create(message, null);
 
     // then
-    assertMessage(
-        MessageOperation.SEND, "unknown", "unknown", /* expectedTemporary= */ false, result);
+    assertMessage("unknown", "unknown", /* expectedTemporary= */ false, result);
   }
 
   @Test
@@ -65,11 +54,10 @@ class MessageWithDestinationTest {
     given(message.getJMSDestination()).willThrow(JMSException.class);
 
     // when
-    MessageWithDestination result = MessageWithDestination.create(message, destination, timer);
+    MessageWithDestination result = MessageWithDestination.create(message, destination);
 
     // then
-    assertMessage(
-        MessageOperation.SEND, "unknown", "unknown", /* expectedTemporary= */ false, result);
+    assertMessage("unknown", "unknown", /* expectedTemporary= */ false, result);
   }
 
   @ParameterizedTest
@@ -91,11 +79,10 @@ class MessageWithDestinationTest {
     }
 
     // when
-    MessageWithDestination result = MessageWithDestination.create(message, null, timer);
+    MessageWithDestination result = MessageWithDestination.create(message, null);
 
     // then
-    assertMessage(
-        MessageOperation.RECEIVE, "queue", expectedDestinationName, expectedTemporary, result);
+    assertMessage("queue", expectedDestinationName, expectedTemporary, result);
   }
 
   @ParameterizedTest
@@ -117,11 +104,10 @@ class MessageWithDestinationTest {
     }
 
     // when
-    MessageWithDestination result = MessageWithDestination.create(message, null, timer);
+    MessageWithDestination result = MessageWithDestination.create(message, null);
 
     // then
-    assertMessage(
-        MessageOperation.RECEIVE, "topic", expectedDestinationName, expectedTemporary, result);
+    assertMessage("topic", expectedDestinationName, expectedTemporary, result);
   }
 
   static Stream<Arguments> destinations() {
@@ -133,7 +119,6 @@ class MessageWithDestinationTest {
   }
 
   private void assertMessage(
-      MessageOperation expectedMessageOperation,
       String expectedDestinationKind,
       String expectedDestinationName,
       boolean expectedTemporary,
@@ -143,6 +128,5 @@ class MessageWithDestinationTest {
     assertEquals(expectedDestinationKind, actual.destinationKind());
     assertEquals(expectedDestinationName, actual.destinationName());
     assertEquals(expectedTemporary, actual.isTemporaryDestination());
-    assertEquals(START_TIME, actual.startTime());
   }
 }

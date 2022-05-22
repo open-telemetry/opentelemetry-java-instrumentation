@@ -17,12 +17,11 @@ dependencies {
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 }
 
-
 dependencies {
   // Integration tests may need to define custom instrumentation modules so we include the standard
   // instrumentation infrastructure for testing too.
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")
   // Apply common dependencies for instrumentation.
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api") {
@@ -38,7 +37,16 @@ dependencies {
     exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-logs")
   }
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  // Used by byte-buddy but not brought in as a transitive dependency
+  compileOnly("com.google.code.findbugs:annotations")
+}
+
+testing {
+  suites.withType(JvmTestSuite::class).configureEach {
+    dependencies {
+      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+    }
+  }
 }
 
 val testInstrumentation by configurations.creating {
@@ -82,7 +90,10 @@ class JavaagentTestArgumentsProvider(
     // in smoke tests instead.
     "-Dotel.javaagent.add-thread-details=false",
     "-Dotel.metrics.exporter=otlp",
-    //suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
+    // suppress repeated logging of "No metric data to export - skipping export."
+    // since PeriodicMetricReader is configured with a short interval
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
+    // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
@@ -106,7 +117,7 @@ afterEvaluate {
     // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
     // configurations will include transitive dependencies as well, which tests do often need.
     classpath = classpath.filter {
-      if (file("${buildDir}/resources/main").equals(it) || file("${buildDir}/classes/java/main").equals(it)) {
+      if (file("$buildDir/resources/main").equals(it) || file("$buildDir/classes/java/main").equals(it)) {
         // The sources are packaged into the testing jar, so we need to exclude them from the test
         // classpath, which automatically inherits them, to ensure our shaded versions are used.
         return@filter false

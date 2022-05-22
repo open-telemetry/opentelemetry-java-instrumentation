@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.example.javaagent;
 
 import io.opentelemetry.context.Context;
@@ -11,7 +16,7 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#span-processor">
  * OpenTelemetry Specification</a> for more information about {@link SpanProcessor}.
  *
- * @see DemoSdkTracerProviderConfigurer
+ * @see DemoAutoConfigurationCustomizerProvider
  */
 public class DemoSpanProcessor implements SpanProcessor {
   @Override

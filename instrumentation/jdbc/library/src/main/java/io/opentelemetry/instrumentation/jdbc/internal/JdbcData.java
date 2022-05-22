@@ -5,14 +5,19 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-/** Holds info associated with JDBC connections and prepared statements. */
+/**
+ * Holds info associated with JDBC connections and prepared statements.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public final class JdbcData {
 
   private static final Map<DbInfo, WeakReference<DbInfo>> dbInfos = new WeakHashMap<>();

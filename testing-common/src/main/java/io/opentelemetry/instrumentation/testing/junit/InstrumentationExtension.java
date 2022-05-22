@@ -11,12 +11,15 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
 import io.opentelemetry.instrumentation.testing.util.ContextStorageCloser;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import org.assertj.core.api.ListAssert;
@@ -84,7 +87,7 @@ public abstract class InstrumentationExtension
                     assertThat(metrics())
                         .filteredOn(
                             data ->
-                                data.getInstrumentationLibraryInfo()
+                                data.getInstrumentationScopeInfo()
                                         .getName()
                                         .equals(instrumentationName)
                                     && data.getName().equals(metricName))));
@@ -108,7 +111,19 @@ public abstract class InstrumentationExtension
   }
 
   @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertSortedTraces(
+      Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
+    testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
   public final void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
+    testRunner.waitAndAssertTraces(assertions);
+  }
+
+  public final void waitAndAssertTraces(Iterable<? extends Consumer<TraceAssert>> assertions) {
     testRunner.waitAndAssertTraces(assertions);
   }
 
@@ -131,39 +146,52 @@ public abstract class InstrumentationExtension
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  public <E extends Throwable> void runWithClientSpan(String spanName, ThrowingRunnable<E> callback)
-      throws E {
-    testRunner.runWithClientSpan(spanName, callback);
+  public <E extends Throwable> void runWithHttpClientSpan(
+      String spanName, ThrowingRunnable<E> callback) throws E {
+    testRunner.runWithHttpClientSpan(spanName, callback);
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  public <T, E extends Throwable> T runWithClientSpan(
+  public <T, E extends Throwable> T runWithHttpClientSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testRunner.runWithClientSpan(spanName, callback);
+    return testRunner.runWithHttpClientSpan(spanName, callback);
   }
 
   /**
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  public <E extends Throwable> void runWithServerSpan(String spanName, ThrowingRunnable<E> callback)
-      throws E {
-    testRunner.runWithServerSpan(spanName, callback);
+  public <E extends Throwable> void runWithHttpServerSpan(
+      String spanName, ThrowingRunnable<E> callback) throws E {
+    testRunner.runWithHttpServerSpan(spanName, callback);
   }
 
   /**
    * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
    * spanName}.
    */
-  public <T, E extends Throwable> T runWithServerSpan(
+  public <T, E extends Throwable> T runWithHttpServerSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testRunner.runWithServerSpan(spanName, callback);
+    return testRunner.runWithHttpServerSpan(spanName, callback);
+  }
+
+  /** Returns whether forceFlush was called. */
+  public boolean forceFlushCalled() {
+    return testRunner.forceFlushCalled();
+  }
+
+  /** Returns the {@link OpenTelemetrySdk} initialied for library tests. */
+  public OpenTelemetrySdk getOpenTelemetrySdk() {
+    if (testRunner instanceof LibraryTestRunner) {
+      return ((LibraryTestRunner) testRunner).getOpenTelemetrySdk();
+    }
+    throw new IllegalStateException("Can only be called from library instrumentation tests.");
   }
 
   protected InstrumentationTestRunner getTestRunner() {

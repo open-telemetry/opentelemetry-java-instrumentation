@@ -28,9 +28,8 @@ public class MicrometerInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    // TODO: disabled by default, since not all instruments are implemented
-    return false;
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.opentelemetry.micrometer1shim.");
   }
 
   @Override

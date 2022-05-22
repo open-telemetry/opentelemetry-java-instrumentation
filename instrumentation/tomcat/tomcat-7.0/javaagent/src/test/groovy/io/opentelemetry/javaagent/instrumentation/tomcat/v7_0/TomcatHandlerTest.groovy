@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
 import org.apache.catalina.connector.Response
@@ -17,9 +17,9 @@ import org.apache.catalina.core.StandardHost
 import org.apache.catalina.startup.Tomcat
 import org.apache.catalina.valves.ErrorReportValve
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
 
 class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
 
@@ -31,16 +31,6 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   @Override
   String getContextPath() {
     return "/app"
-  }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    switch (endpoint) {
-      case NOT_FOUND:
-        return "HTTP GET"
-      default:
-        return endpoint.resolvePath(address).path
-    }
   }
 
   @Override
@@ -76,15 +66,6 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   @Override
   void stopServer(Tomcat tomcat) {
     tomcat.getServer().stop()
-  }
-
-  @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
-      SemanticAttributes.HTTP_SERVER_NAME,
-      SemanticAttributes.NET_PEER_NAME,
-      SemanticAttributes.NET_TRANSPORT
-    ]
   }
 
   @Override

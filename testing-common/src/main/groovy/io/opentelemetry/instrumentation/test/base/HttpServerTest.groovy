@@ -5,72 +5,64 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeaders
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
-import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
-import io.opentelemetry.testing.internal.armeria.common.HttpRequest
-import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
-import io.opentelemetry.testing.internal.armeria.common.MediaType
-import io.opentelemetry.testing.internal.armeria.common.QueryParams
-import io.opentelemetry.testing.internal.armeria.common.RequestHeaders
+import spock.lang.Shared
 import spock.lang.Unroll
 
 import java.util.concurrent.Callable
-import java.util.concurrent.CountDownLatch
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_HEADERS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-import static java.util.Collections.singletonList
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
 abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
-  static final String TEST_REQUEST_HEADER = "X-Test-Request"
-  static final String TEST_RESPONSE_HEADER = "X-Test-Response"
-
   def setupSpec() {
     setupServer()
+    junitTest.setupOptions()
+    junitTest.setTesting(testRunner(), client, port, address)
   }
 
   def cleanupSpec() {
     cleanupServer()
   }
 
-  static CapturedHttpHeaders capturedHttpHeadersForTesting() {
-    CapturedHttpHeaders.create(
-      singletonList(TEST_REQUEST_HEADER),
-      singletonList(TEST_RESPONSE_HEADER))
+  String expectedServerSpanName(ServerEndpoint endpoint, String method) {
+    def route = expectedHttpRoute(endpoint)
+    return route == null ? "HTTP $method" : route
   }
 
-  String expectedServerSpanName(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint) {
+    // no need to compute route if we're not expecting it
+    if (!httpAttributes(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+      return null
+    }
+
     switch (endpoint) {
+      case NOT_FOUND:
+        return null
       case PATH_PARAM:
         return getContextPath() + "/path/:id/param"
-      case NOT_FOUND:
-        return getContextPath() + "/*"
       default:
         return endpoint.resolvePath(address).path
     }
@@ -136,8 +128,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
-  Class<?> expectedExceptionClass() {
-    Exception
+  Throwable expectedException() {
+    new Exception(EXCEPTION.body)
   }
 
   boolean testRedirect() {
@@ -152,105 +144,18 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     return true
   }
 
-  List<AttributeKey<?>> extraAttributes() {
-    []
+  /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    [
+      SemanticAttributes.HTTP_ROUTE,
+      SemanticAttributes.NET_TRANSPORT,
+      SemanticAttributes.NET_PEER_PORT
+    ] as Set
   }
 
-  enum ServerEndpoint {
-    SUCCESS("success", 200, "success"),
-    REDIRECT("redirect", 302, "/redirected"),
-    ERROR("error-status", 500, "controller error"), // "error" is a special path for some frameworks
-    EXCEPTION("exception", 500, "controller exception"),
-    NOT_FOUND("notFound", 404, "not found"),
-    CAPTURE_HEADERS("captureHeaders", 200, "headers captured"),
-    CAPTURE_PARAMETERS("captureParameters", 200, "parameters captured"),
 
-    // TODO: add tests for the following cases:
-    QUERY_PARAM("query?some=query", 200, "some=query"),
-    // OkHttp never sends the fragment in the request, so these cases don't work.
-//    FRAGMENT_PARAM("fragment#some-fragment", 200, "some-fragment"),
-//    QUERY_FRAGMENT_PARAM("query/fragment?some=query#some-fragment", 200, "some=query#some-fragment"),
-    PATH_PARAM("path/123/param", 200, "123"),
-    AUTH_REQUIRED("authRequired", 200, null),
-    LOGIN("login", 302, null),
-    AUTH_ERROR("basicsecured/endpoint", 401, null),
-    INDEXED_CHILD("child", 200, ""),
-
-    public static final String ID_ATTRIBUTE_NAME = "test.request.id"
-    public static final String ID_PARAMETER_NAME = "id"
-
-    private final URI uriObj
-    private final String path
-    final String query
-    final String fragment
-    final int status
-    final String body
-
-    ServerEndpoint(String uri, int status, String body) {
-      this.uriObj = URI.create(uri)
-      this.path = uriObj.path
-      this.query = uriObj.query
-      this.fragment = uriObj.fragment
-      this.status = status
-      this.body = body
-    }
-
-    String getPath() {
-      return "/$path"
-    }
-
-    String rawPath() {
-      return path
-    }
-
-    URI resolvePath(URI address) {
-      return address.resolve(path)
-    }
-
-    URI resolve(URI address) {
-      return address.resolve(uriObj)
-    }
-
-    URI resolveWithoutFragment(URI address) {
-      def uri = resolve(address)
-      return new URI(uri.scheme, null, uri.host, uri.port, uri.path, uri.query, null)
-    }
-
-    /**
-     * Populates custom test attributes for the {@link HttpServerTest#controller} span (which must
-     * be the current span when this is called) based on URL parameters. Required for
-     * {@link #INDEXED_CHILD}.
-     */
-    void collectSpanAttributes(UrlParameterProvider parameterProvider) {
-      if (this == INDEXED_CHILD) {
-        String value = parameterProvider.getParameter(ID_PARAMETER_NAME)
-
-        if (value != null) {
-          Span.current().setAttribute(ID_ATTRIBUTE_NAME, value as long)
-        }
-      }
-    }
-
-    private static final Map<String, ServerEndpoint> PATH_MAP = values().collectEntries { [it.path, it] }
-
-    static ServerEndpoint forPath(String path) {
-      return PATH_MAP.get(path)
-    }
-
-    // Static keyword required for Scala interop
-    static interface UrlParameterProvider {
-      String getParameter(String name)
-    }
-  }
-
-  String resolveAddress(ServerEndpoint uri) {
-    def url = uri.resolvePath(address).toString()
-    // Force HTTP/1 via h1c so upgrade requests don't show up as traces
-    url = url.replace("http://", "h1c://")
-    if (uri.query != null) {
-      url += "?${uri.query}"
-    }
-    return url
+  final String resolveAddress(ServerEndpoint endpoint) {
+    return junitTest.resolveAddress(endpoint)
   }
 
   AggregatedHttpRequest request(ServerEndpoint uri, String method) {
@@ -262,260 +167,145 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     if (endpoint == NOT_FOUND) {
       return closure.call()
     }
-    return runUnderTrace("controller", closure)
+    return GlobalTraceUtil.runWithSpan("controller") {
+      closure.call()
+    }
+  }
+
+  @Shared
+  def junitTest = new AbstractHttpServerTest<Void>() {
+    @Override
+    protected Void setupServer() {
+      return null
+    }
+
+    @Override
+    protected void stopServer(Void o) {
+    }
+
+    @Override
+    protected void configure(HttpServerTestOptions options) {
+      options.expectedServerSpanNameMapper = { endpoint, method ->
+        HttpServerTest.this.expectedServerSpanName(endpoint, method)
+      }
+      options.expectedHttpRoute = { endpoint ->
+        HttpServerTest.this.expectedHttpRoute(endpoint)
+      }
+      options.contextPath = getContextPath()
+      options.httpAttributes = { endpoint ->
+        HttpServerTest.this.httpAttributes(endpoint)
+      }
+      options.expectedException = expectedException()
+      options.hasExceptionOnServerSpan = { endpoint ->
+        HttpServerTest.this.hasExceptionOnServerSpan(endpoint)
+      }
+
+      options.testRedirect = testRedirect()
+      options.testError = testError()
+      options.testErrorBody = testErrorBody()
+      options.testException = testException()
+      options.testNotFound = testNotFound()
+      options.testPathParam = testPathParam()
+      options.testCaptureHttpHeaders = testCapturedHttpHeaders()
+      options.testCaptureRequestParameters = testCapturedRequestParameters()
+    }
+
+    // Override trace assertion method. We can call java assertions from groovy but not the other
+    // way around. As we have a bunch of groovy tests that do custom assertions we need to duplicate
+    // the main trace assertion method to groovy to be able to call these assertions.
+    @Override
+    void assertTheTraces(
+        int size,
+        String traceId,
+        String parentId,
+        String method,
+        ServerEndpoint endpoint,
+        AggregatedHttpResponse response) {
+      HttpServerTest.this.assertTheTraces(size, traceId, parentId, method, endpoint, response)
+    }
+
+    @Override
+    void assertHighConcurrency(int count) {
+      HttpServerTest.this.assertHighConcurrency(count)
+    }
   }
 
   def "test success with #count requests"() {
-    setup:
-    def request = request(SUCCESS, method)
-    List<AggregatedHttpResponse> responses = (1..count).collect {
-      return client.execute(request).aggregate().join()
-    }
-
     expect:
-    responses.each { response ->
-      assert response.status().code() == SUCCESS.status
-      assert response.contentUtf8() == SUCCESS.body
-    }
-
-    and:
-    assertTheTraces(count, null, null, method, SUCCESS, null, responses[0])
+    junitTest.successfulGetRequest(count)
 
     where:
-    method = "GET"
     count << [1, 4, 50] // make multiple requests.
   }
 
   def "test success with parent"() {
-    setup:
-    def traceId = "00000000000000000000000000000123"
-    def parentId = "0000000000000456"
-    def request = AggregatedHttpRequest.of(
-      // intentionally sending mixed-case "tracePARENT" to make sure that TextMapGetters are not case-sensitive
-      request(SUCCESS, method).headers().toBuilder()
-        .set("tracePARENT", "00-" + traceId.toString() + "-" + parentId.toString() + "-01")
-        .build())
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == SUCCESS.status
-    response.contentUtf8() == SUCCESS.body
-
-    and:
-    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response)
-
-    where:
-    method = "GET"
+    junitTest.successfulGetRequestWithParent()
   }
 
   // make sure that TextMapGetters are not case-sensitive
   def "test success with uppercase TRACEPARENT header"() {
-    setup:
-    def traceId = "00000000000000000000000000000123"
-    def parentId = "0000000000000456"
-    def request = AggregatedHttpRequest.of(
-      request(SUCCESS, method).headers().toBuilder()
-        .set("TRACEPARENT", "00-" + traceId.toString() + "-" + parentId.toString() + "-01")
-        .build())
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == SUCCESS.status
-    response.contentUtf8() == SUCCESS.body
-
-    and:
-    assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response)
-
-    where:
-    method = "GET"
+    junitTest.tracingHeaderIsCaseInsensitive()
   }
 
   def "test tag query string for #endpoint"() {
-    setup:
-    def request = request(endpoint, method)
-    AggregatedHttpResponse response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == endpoint.status
-    response.contentUtf8() == endpoint.body
-
-    and:
-    assertTheTraces(1, null, null, method, endpoint, null, response)
+    junitTest.requestWithQueryString(endpoint)
 
     where:
-    method = "GET"
     endpoint << [SUCCESS, QUERY_PARAM]
   }
 
   def "test redirect"() {
-    setup:
     assumeTrue(testRedirect())
-    def request = request(REDIRECT, method)
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == REDIRECT.status
-    response.headers().get("location") == REDIRECT.body ||
-      new URI(response.headers().get("location")).normalize().toString() == "${address.resolve(REDIRECT.body)}"
-
-    and:
-    assertTheTraces(1, null, null, method, REDIRECT, null, response)
-
-    where:
-    method = "GET"
+    junitTest.requestWithRedirect()
   }
 
   def "test error"() {
-    setup:
     assumeTrue(testError())
-    def request = request(ERROR, method)
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == ERROR.status
-    if (testErrorBody()) {
-      response.contentUtf8() == ERROR.body
-    }
-
-    and:
-    assertTheTraces(1, null, null, method, ERROR, null, response)
-
-    where:
-    method = "GET"
+    junitTest.requestWithError()
   }
 
   def "test exception"() {
-    setup:
     assumeTrue(testException())
-    def request = request(EXCEPTION, method)
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == EXCEPTION.status
-
-    and:
-    assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body, response)
-
-    where:
-    method = "GET"
+    junitTest.requestWithException()
   }
 
-  def "test notFound"() {
-    setup:
+  def "test not found"() {
     assumeTrue(testNotFound())
-    def request = request(NOT_FOUND, method)
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == NOT_FOUND.status
-
-    and:
-    assertTheTraces(1, null, null, method, NOT_FOUND, null, response)
-
-    where:
-    method = "GET"
+    junitTest.requestForNotFound()
   }
 
   def "test path param"() {
-    setup:
     assumeTrue(testPathParam())
-    def request = request(PATH_PARAM, method)
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == PATH_PARAM.status
-    response.contentUtf8() == PATH_PARAM.body
-
-    and:
-    assertTheTraces(1, null, null, method, PATH_PARAM, null, response)
-
-    where:
-    method = "GET"
+    junitTest.requestWithPathParameter()
   }
 
   def "test captured HTTP headers"() {
-    setup:
     assumeTrue(testCapturedHttpHeaders())
-
-    def request = AggregatedHttpRequest.of(request(CAPTURE_HEADERS, "GET").headers()
-      .toBuilder()
-      .add(TEST_REQUEST_HEADER, "test")
-      .build())
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == CAPTURE_HEADERS.status
-    response.contentUtf8() == CAPTURE_HEADERS.body
-
-    and:
-    assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, null, response)
+    junitTest.captureHttpHeaders()
   }
 
   def "test captured request parameters"() {
-    setup:
     assumeTrue(testCapturedRequestParameters())
-
-    QueryParams formBody = QueryParams.builder()
-      .add("test-parameter", "test value õäöü")
-      .build()
-    def request = AggregatedHttpRequest.of(
-      RequestHeaders.builder(HttpMethod.POST, resolveAddress(CAPTURE_PARAMETERS))
-        .contentType(MediaType.FORM_DATA)
-        .build(),
-      HttpData.ofUtf8(formBody.toQueryString()))
-    def response = client.execute(request).aggregate().join()
-
     expect:
-    response.status().code() == CAPTURE_PARAMETERS.status
-    response.contentUtf8() == CAPTURE_PARAMETERS.body
-
-    and:
-    assertTheTraces(1, null, null, "POST", CAPTURE_PARAMETERS, null, response)
+    junitTest.captureRequestParameters()
   }
 
-  /*
-  This test fires a bunch of parallel request to the fixed backend endpoint.
-  That endpoint is supposed to create a new child span in the context of the SERVER span.
-  That child span is expected to have an attribute called "test.request.id".
-  The value of that attribute should be the value of request's parameter called "id".
-
-  This test then asserts that there is the correct number of traces (one per request executed)
-  and that each trace has exactly three spans and both first and the last spans have "test.request.id"
-  attribute with equal value. Server span is not going to have that attribute because it is not
-  under the control of this test.
-
-  This way we verify that child span created by the server actually corresponds to the client request.
-   */
-
   def "high concurrency test"() {
-    setup:
-    int count = 100
+    expect:
+    junitTest.highConcurrency()
+  }
+
+  void assertHighConcurrency(int count) {
     def endpoint = INDEXED_CHILD
-
-    def latch = new CountDownLatch(count)
-
-    def propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
-    def setter = { HttpRequestBuilder carrier, String name, String value ->
-      carrier.header(name, value)
-    }
-
-    when:
-    count.times { index ->
-      HttpRequestBuilder request = HttpRequest.builder()
-      // Force HTTP/1 via h1c so upgrade requests don't show up as traces
-        .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
-        .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
-      runUnderTrace("client " + index) {
-        Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
-        propagator.inject(Context.current(), request, setter)
-        client.execute(request.build()).aggregate().thenRun {
-          latch.countDown()
-        }
-      }
-    }
-    latch.await()
-
-    then:
     assertTraces(count) {
       (0..count - 1).each {
         trace(it, hasHandlerSpan(endpoint) ? 4 : 3) {
@@ -531,7 +321,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
               "${ServerEndpoint.ID_ATTRIBUTE_NAME}" requestId
             }
           }
-          indexedServerSpan(it, span(0), requestId)
+          indexedServerSpan(it, 1, span(0), requestId)
 
           def controllerSpanIndex = 2
 
@@ -549,7 +339,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   //FIXME: add tests for POST with large/chunked data
 
-  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, AggregatedHttpResponse response = null) {
+  void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, AggregatedHttpResponse response = null) {
     def spanCount = 1 // server span
     if (hasResponseSpan(endpoint)) {
       spanCount++
@@ -584,7 +374,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
             if (hasHandlerSpan(endpoint) && hasHandlerAsControllerParentSpan(endpoint)) {
               controllerSpanIndex++
             }
-            controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
+            controllerSpan(it, spanIndex++, span(controllerSpanIndex), endpoint == EXCEPTION ? expectedException() : null)
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
             }
@@ -601,14 +391,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
-    trace.span(index) {
-      name "controller"
-      if (errorMessage) {
-        status StatusCode.ERROR
-        errorEvent(exceptionClass, errorMessage)
-      }
-      childOf((SpanData) parent)
+  void controllerSpan(TraceAssert trace, int index, Object parent, Throwable expectedException = null) {
+    trace.assertedIndexes.add(index)
+    def spanData = trace.span(index)
+    def assertion = junitTest.assertControllerSpan(OpenTelemetryAssertions.assertThat(spanData), expectedException)
+    if (parent == null) {
+      assertion.hasParentSpanId(SpanId.invalid)
+    } else {
+      assertion.hasParentSpanId(((SpanData) parent).spanId)
     }
   }
 
@@ -648,138 +438,37 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
-    def extraAttributes = extraAttributes()
-    trace.span(index) {
-      name expectedServerSpanName(endpoint)
-      kind SpanKind.SERVER // can't use static import because of SERVER type parameter
-      if (endpoint.status >= 500) {
-        status StatusCode.ERROR
-      }
-      if (parentID != null) {
-        traceId traceID
-        parentSpanId parentID
-      } else {
-        hasNoParent()
-      }
-      if (endpoint == EXCEPTION && hasExceptionOnServerSpan(endpoint)) {
-        event(0) {
-          eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
-          attributes {
-            "$SemanticAttributes.EXCEPTION_TYPE" { it == null || it == expectedExceptionClass().name }
-            "$SemanticAttributes.EXCEPTION_MESSAGE" { it == null || it == endpoint.body }
-            "$SemanticAttributes.EXCEPTION_STACKTRACE" { it == null || it instanceof String }
-          }
-        }
-      }
-      attributes {
-        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-          "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-        }
-        // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-        "$SemanticAttributes.NET_PEER_NAME" { it == null || it == address.host }
-        "$SemanticAttributes.NET_PEER_PORT" { it == null || (it instanceof Long && it != port) }
-        "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
-
-        "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
-        "$SemanticAttributes.HTTP_METHOD" method
-        "$SemanticAttributes.HTTP_STATUS_CODE" endpoint.status
-        "$SemanticAttributes.HTTP_FLAVOR" { it == "1.1" || it == "2.0" }
-        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
-
-        "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
-        "$SemanticAttributes.HTTP_SCHEME" "http"
-        "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
-
-        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
-        } else {
-          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-          // Optional
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-        } else {
-          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          // Optional
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
-          // currently reports '/*' which is a fallback route.
-          "$SemanticAttributes.HTTP_ROUTE" String
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
-          "$SemanticAttributes.HTTP_SERVER_NAME" String
-        }
-        if (endpoint == CAPTURE_HEADERS) {
-          "http.request.header.x_test_request" { it == ["test"] }
-          "http.response.header.x_test_response" { it == ["test"] }
-        }
-        if (endpoint == CAPTURE_PARAMETERS) {
-          "servlet.request.parameter.test_parameter" { it == ["test value õäöü"] }
-        }
-      }
+    trace.assertedIndexes.add(index)
+    def spanData = trace.span(index)
+    def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData), method, endpoint)
+    if (parentID == null) {
+      assertion.hasParentSpanId(SpanId.invalid)
+    } else {
+      assertion.hasParentSpanId(parentID)
+      assertion.hasTraceId(traceID)
     }
   }
 
-  void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
-    def extraAttributes = extraAttributes()
-    ServerEndpoint endpoint = INDEXED_CHILD
-    trace.span(1) {
-      name expectedServerSpanName(endpoint)
-      kind SpanKind.SERVER // can't use static import because of SERVER type parameter
-      childOf((SpanData) parent)
-      attributes {
-        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-          "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-        }
-        // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-        "$SemanticAttributes.NET_PEER_NAME" { (it == null || it == address.host) }
-        "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
-        "$SemanticAttributes.NET_PEER_IP" { it == null || it == peerIp(endpoint) } // Optional
-
-        "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
-        "$SemanticAttributes.HTTP_METHOD" "GET"
-        "$SemanticAttributes.HTTP_STATUS_CODE" 200
-        "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
-
-        "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
-        "$SemanticAttributes.HTTP_SCHEME" "http"
-        "$SemanticAttributes.HTTP_TARGET" endpoint.resolvePath(address).getPath() + "?id=$requestId"
-
-        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
-        } else {
-          "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-          // Optional
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-        } else {
-          "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
-          // Optional
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
-          // currently reports '/*' which is a fallback route.
-          "$SemanticAttributes.HTTP_ROUTE" String
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
-          "$SemanticAttributes.HTTP_SERVER_NAME" String
-        }
-      }
+  void indexedServerSpan(TraceAssert trace, int index, Object parent, int requestId) {
+    trace.assertedIndexes.add(index)
+    def spanData = trace.span(index)
+    def assertion = junitTest.assertIndexedServerSpan(OpenTelemetryAssertions.assertThat(spanData), requestId)
+    if (parent == null) {
+      assertion.hasParentSpanId(SpanId.invalid)
+    } else {
+      assertion.hasParentSpanId(((SpanData) parent).spanId)
     }
   }
 
   void indexedControllerSpan(TraceAssert trace, int index, Object parent, int requestId) {
-    trace.span(index) {
-      name "controller"
-      childOf((SpanData) parent)
-      attributes {
-        "${ServerEndpoint.ID_ATTRIBUTE_NAME}" requestId
-      }
+    trace.assertedIndexes.add(index)
+    def spanData = trace.span(index)
+    def assertion = junitTest.assertIndexedControllerSpan(OpenTelemetryAssertions.assertThat(spanData), requestId)
+    if (parent == null) {
+      assertion.hasParentSpanId(SpanId.invalid)
+    } else {
+      assertion.hasParentSpanId(((SpanData) parent).spanId)
     }
   }
 }

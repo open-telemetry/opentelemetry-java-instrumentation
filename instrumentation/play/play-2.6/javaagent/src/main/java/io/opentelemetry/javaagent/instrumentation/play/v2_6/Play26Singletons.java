@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -60,7 +60,7 @@ public final class Play26Singletons {
 
     Span.fromContext(context).updateName(route);
     // set the span name on the upstream akka/netty span
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan != null) {
       serverSpan.updateName(route);
     }
@@ -73,12 +73,11 @@ public final class Play26Singletons {
       Option<HandlerDef> defOption = null;
       if (typedKeyGetUnderlying != null) { // Should always be non-null but just to make sure
         try {
-          defOption =
-              request
-                  .attrs()
-                  .get(
-                      (play.api.libs.typedmap.TypedKey<HandlerDef>)
-                          typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF));
+          @SuppressWarnings("unchecked")
+          play.api.libs.typedmap.TypedKey<HandlerDef> handlerDef =
+              (play.api.libs.typedmap.TypedKey<HandlerDef>)
+                  typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF);
+          defOption = request.attrs().get(handlerDef);
         } catch (IllegalAccessException | InvocationTargetException ignored) {
           // Ignore
         }

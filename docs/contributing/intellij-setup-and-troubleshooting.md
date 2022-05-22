@@ -29,7 +29,7 @@ Configuration:
 
 ## Troubleshooting
 
-Occassionally, Intellij gets confused, maybe due to the number of modules in this project,
+Occasionally, Intellij gets confused, maybe due to the number of modules in this project,
 maybe due ot other reasons. In any case, here's some things that might help:
 
 ### Invalidate Caches > "Just restart"

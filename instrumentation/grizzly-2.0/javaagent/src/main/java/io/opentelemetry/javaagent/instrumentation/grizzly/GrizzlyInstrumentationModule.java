@@ -27,9 +27,4 @@ public class GrizzlyInstrumentationModule extends InstrumentationModule {
         new HttpServerFilterInstrumentation(),
         new HttpHandlerInstrumentation());
   }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
 }

@@ -5,6 +5,7 @@
 
 import com.rabbitmq.client.ConnectionFactory
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
@@ -24,7 +25,6 @@ import static com.google.common.net.InetAddresses.isInetAddress
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 class ContextPropagationTest extends AgentInstrumentationSpecification {
 
@@ -165,7 +165,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
 
     @RabbitListener(queues = TEST_QUEUE)
     void consume(String ignored) {
-      runInternalSpan("consumer")
+      GlobalTraceUtil.runWithSpan("consumer") {}
     }
   }
 }

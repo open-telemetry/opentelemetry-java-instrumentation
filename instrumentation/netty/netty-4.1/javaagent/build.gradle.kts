@@ -25,7 +25,7 @@ muzzle {
 
 dependencies {
   library("io.netty:netty-codec-http:4.1.0.Final")
-  api(project(":instrumentation:netty:netty-4.1-common:javaagent"))
+  api(project(":instrumentation:netty:netty-4-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
@@ -36,12 +36,6 @@ dependencies {
 
   // first version with kqueue, add it only as a compile time dependency
   testCompileOnly("io.netty:netty-transport-native-kqueue:4.1.11.Final:osx-x86_64")
-
-  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:(,5.0)"))
-  latestDepTestLibrary("io.netty:netty-codec-http:(,5.0)")
-  latestDepTestLibrary("io.netty:netty-handler:(,5.0)")
-  latestDepTestLibrary("io.netty:netty-transport-native-epoll:(,5.0):linux-x86_64")
-  latestDepTestLibrary("io.netty:netty-transport-native-kqueue:(,5.0):osx-x86_64")
 }
 
 tasks {
@@ -49,22 +43,23 @@ tasks {
     filter {
       includeTestsMatching("Netty41ConnectionSpanTest")
       includeTestsMatching("Netty41ClientSslTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
-    dependsOn(testConnectionSpan)
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
       excludeTestsMatching("Netty41ClientSslTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testConnectionSpan)
   }
 }
 

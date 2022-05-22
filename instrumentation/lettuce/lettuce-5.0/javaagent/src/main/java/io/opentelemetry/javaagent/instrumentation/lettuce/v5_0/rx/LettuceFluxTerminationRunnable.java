@@ -12,8 +12,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 import org.reactivestreams.Subscription;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SignalType;
@@ -46,15 +46,15 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
       }
       instrumenter().end(context, onSubscribeConsumer.command, null, throwable);
     } else {
-      LoggerFactory.getLogger(Flux.class)
-          .error(
+      Logger.getLogger(Flux.class.getName())
+          .severe(
               "Failed to end this.context, LettuceFluxTerminationRunnable cannot find this.context "
                   + "because it probably wasn't started.");
     }
   }
 
   @Override
-  public void accept(Signal signal) {
+  public void accept(Signal<?> signal) {
     if (SignalType.ON_COMPLETE.equals(signal.getType())
         || SignalType.ON_ERROR.equals(signal.getType())) {
       finishSpan(/* isCommandCancelled= */ false, signal.getThrowable());

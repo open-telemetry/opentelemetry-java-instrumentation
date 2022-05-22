@@ -32,10 +32,10 @@ class Serializer {
       return serialize((SdkPojo) target);
     }
     if (target instanceof Collection) {
-      return serialize((Collection<Object>) target);
+      return serialize((Collection<?>) target);
     }
     if (target instanceof Map) {
-      return serialize(((Map) target).keySet());
+      return serialize(((Map<?, ?>) target).keySet());
     }
     // simple type
     return target.toString();
@@ -61,7 +61,7 @@ class Serializer {
         .orElse(null);
   }
 
-  private String serialize(Collection<Object> collection) {
+  private String serialize(Collection<?> collection) {
     String serialized = collection.stream().map(this::serialize).collect(Collectors.joining(","));
     return (StringUtils.isEmpty(serialized) ? null : "[" + serialized + "]");
   }

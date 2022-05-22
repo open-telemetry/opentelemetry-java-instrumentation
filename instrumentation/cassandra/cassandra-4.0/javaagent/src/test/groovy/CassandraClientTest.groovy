@@ -32,6 +32,8 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     cassandra = new GenericContainer("cassandra:4.0")
+      // limit memory usage
+      .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
       .withExposedPorts(9042)
       .withLogConsumer(new Slf4jLogConsumer(logger))
       .withStartupTimeout(Duration.ofSeconds(120))
@@ -131,7 +133,6 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE" Boolean
         "$SemanticAttributes.DB_CASSANDRA_PAGE_SIZE" 5000
         "$SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT" 0
-        "$SemanticAttributes.DB_CASSANDRA_KEYSPACE" keyspace
         // the SqlStatementSanitizer can't handle CREATE statements yet
         "$SemanticAttributes.DB_CASSANDRA_TABLE" table
       }

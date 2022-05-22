@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -81,10 +80,6 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
 
   abstract boolean hasHandlerSpan()
 
-  List<AttributeKey<?>> extraAttributes() {
-    []
-  }
-
   def "test bindings for #path"() {
     when:
     def resp = client.get(path).aggregate().join()
@@ -93,8 +88,6 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
     resp.status().code() == 200
     resp.contentUtf8() == route
 
-    def extraAttributes = extraAttributes()
-
     assertTraces(1) {
       trace(0, 1 + (hasHandlerSpan() ? 1 : 0)) {
         span(0) {
@@ -102,40 +95,20 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-              "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            }
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
             "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
             "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
             "$SemanticAttributes.NET_PEER_PORT" Long
+
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-
-            if (extraAttributes.contains(SemanticAttributes.HTTP_URL)) {
-              "$SemanticAttributes.HTTP_URL" "http://localhost:${app.bindPort}/${path}"
-            } else {
-              "$SemanticAttributes.HTTP_SCHEME" "http"
-              "$SemanticAttributes.HTTP_HOST" "localhost:${app.bindPort}"
-              "$SemanticAttributes.HTTP_TARGET" "/$path"
-            }
-
-            if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
-            }
-            if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-            }
-            if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-              // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
-              // currently reports '/*' which is a fallback route.
-              "$SemanticAttributes.HTTP_ROUTE" String
-            }
-            if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
-              "$SemanticAttributes.HTTP_SERVER_NAME" String
-            }
+            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.HTTP_HOST" "localhost:${app.bindPort}"
+            "$SemanticAttributes.HTTP_TARGET" "/$path"
+            "$SemanticAttributes.HTTP_ROUTE" "/$route"
           }
         }
         if (hasHandlerSpan()) {

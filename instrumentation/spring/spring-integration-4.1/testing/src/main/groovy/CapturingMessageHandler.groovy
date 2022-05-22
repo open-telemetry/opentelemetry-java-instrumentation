@@ -9,14 +9,14 @@ import org.springframework.messaging.MessagingException
 
 import java.util.concurrent.CompletableFuture
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan
 
 class CapturingMessageHandler implements MessageHandler {
   final CompletableFuture<Message<?>> captured = new CompletableFuture<>()
 
   @Override
   void handleMessage(Message<?> message) throws MessagingException {
-    runUnderTrace("handler") {
+    runWithSpan("handler") {
       captured.complete(message)
     }
   }

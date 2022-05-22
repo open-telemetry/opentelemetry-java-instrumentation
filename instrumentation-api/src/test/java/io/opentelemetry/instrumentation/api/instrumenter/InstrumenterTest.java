@@ -23,21 +23,12 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
-import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,7 +71,8 @@ class InstrumenterTest {
       implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    public void onStart(AttributesBuilder attributes, Map<String, String> request) {
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
       attributes.put("req1", request.get("req1"));
       attributes.put("req2", request.get("req2"));
     }
@@ -88,6 +80,7 @@ class InstrumenterTest {
     @Override
     public void onEnd(
         AttributesBuilder attributes,
+        Context context,
         Map<String, String> request,
         Map<String, String> response,
         @Nullable Throwable error) {
@@ -100,7 +93,8 @@ class InstrumenterTest {
       implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    public void onStart(AttributesBuilder attributes, Map<String, String> request) {
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
       attributes.put("req3", request.get("req3"));
       attributes.put("req2", request.get("req2_2"));
     }
@@ -108,6 +102,7 @@ class InstrumenterTest {
     @Override
     public void onEnd(
         AttributesBuilder attributes,
+        Context context,
         Map<String, String> request,
         Map<String, String> response,
         @Nullable Throwable error) {
@@ -130,20 +125,6 @@ class InstrumenterTest {
     }
   }
 
-  static class TestTimeExtractor implements TimeExtractor<Instant, Instant> {
-
-    @Override
-    public Instant extractStartTime(Instant request) {
-      return request;
-    }
-
-    @Override
-    public Instant extractEndTime(
-        Instant request, @Nullable Instant response, @Nullable Throwable error) {
-      return response;
-    }
-  }
-
   static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
@@ -160,19 +141,13 @@ class InstrumenterTest {
   @RegisterExtension
   static final OpenTelemetryExtension otelTesting = OpenTelemetryExtension.create();
 
-  @Mock
-  HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpClientAttributes;
+  @Mock(extraInterfaces = SpanKeyProvider.class)
+  AttributesExtractor<Map<String, String>, Map<String, String>> mockHttpClientAttributes;
 
-  @Mock
-  HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> mockHttpServerAttributes;
+  @Mock(extraInterfaces = SpanKeyProvider.class)
+  AttributesExtractor<Map<String, String>, Map<String, String>> mockDbClientAttributes;
 
-  @Mock DbAttributesExtractor<Map<String, String>, Map<String, String>> mockDbAttributes;
-
-  @Mock
-  MessagingAttributesExtractor<Map<String, String>, Map<String, String>> mockMessagingAttributes;
-
-  @Mock RpcAttributesExtractor<Map<String, String>, Map<String, String>> mockRpcAttributes;
-  @Mock NetServerAttributesExtractor<Map<String, String>, Map<String, String>> mockNetAttributes;
+  @Mock AttributesExtractor<Map<String, String>, Map<String, String>> mockNetClientAttributes;
 
   @Test
   void server() {
@@ -185,9 +160,7 @@ class InstrumenterTest {
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
-
     assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
 
     instrumenter.end(context, REQUEST, RESPONSE, null);
 
@@ -199,8 +172,7 @@ class InstrumenterTest {
                     span ->
                         span.hasName("span")
                             .hasKind(SpanKind.SERVER)
-                            .hasInstrumentationLibraryInfo(
-                                InstrumentationLibraryInfo.create("test", null))
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
                             .hasTraceId(spanContext.getTraceId())
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
@@ -227,10 +199,7 @@ class InstrumenterTest {
             .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-
-    assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
+    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
 
     instrumenter.end(context, REQUEST, RESPONSE, new IllegalStateException("test"));
 
@@ -263,11 +232,10 @@ class InstrumenterTest {
                             TraceState.getDefault()))),
             request,
             Map::put);
-    Context context = instrumenter.start(Context.root(), request);
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
 
-    assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
+    Context context = instrumenter.start(Context.root(), request);
+    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
+    assertThat(LocalRootSpan.fromContext(context)).isSameAs(Span.fromContext(context));
 
     instrumenter.end(context, request, RESPONSE, null);
 
@@ -279,43 +247,8 @@ class InstrumenterTest {
                     span ->
                         span.hasName("span")
                             .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                            .hasSpanId(spanContext.getSpanId())
+                            .hasSpanId(Span.fromContext(context).getSpanContext().getSpanId())
                             .hasParentSpanId("090a0b0c0d0e0f00")));
-  }
-
-  @Test
-  void server_http() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>builder(
-                otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .addAttributesExtractors(
-                mockHttpServerAttributes,
-                new ConstantNetPeerIpExtractor<>("2.2.2.2"),
-                new AttributesExtractor1(),
-                new AttributesExtractor2())
-            .addSpanLinksExtractor(new LinksExtractor())
-            .newServerInstrumenter(new MapGetter());
-
-    Context context = instrumenter.start(Context.root(), REQUEST);
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-
-    assertThat(spanContext.isValid()).isTrue();
-    assertThat(SpanKey.SERVER.fromContextOrNull(context).getSpanContext()).isEqualTo(spanContext);
-
-    instrumenter.end(context, REQUEST, RESPONSE, null);
-
-    otelTesting
-        .assertTraces()
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span")
-                            .hasAttributesSatisfying(
-                                attributes ->
-                                    assertThat(attributes)
-                                        .containsEntry(
-                                            SemanticAttributes.NET_PEER_IP, "2.2.2.2"))));
   }
 
   @Test
@@ -344,8 +277,7 @@ class InstrumenterTest {
                     span ->
                         span.hasName("span")
                             .hasKind(SpanKind.CLIENT)
-                            .hasInstrumentationLibraryInfo(
-                                InstrumentationLibraryInfo.create("test", null))
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
                             .hasTraceId(spanContext.getTraceId())
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
@@ -412,6 +344,7 @@ class InstrumenterTest {
 
     assertThat(spanContext.isValid()).isTrue();
     assertThat(request).containsKey("traceparent");
+    assertThat(LocalRootSpan.fromContextOrNull(context)).isNull();
 
     instrumenter.end(context, request, RESPONSE, new IllegalStateException("test"));
 
@@ -428,20 +361,52 @@ class InstrumenterTest {
   }
 
   @Test
-  void requestMetrics() {
+  void operationListeners() {
+    AtomicReference<Boolean> startContext = new AtomicReference<>();
+    AtomicReference<Boolean> endContext = new AtomicReference<>();
+
+    OperationListener operationListener =
+        new OperationListener() {
+          @Override
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+            startContext.set(true);
+            return context;
+          }
+
+          @Override
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+            endContext.set(true);
+          }
+        };
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(operationListener)
+            .newServerInstrumenter(new MapGetter());
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    instrumenter.end(context, REQUEST, RESPONSE, null);
+
+    assertThat(startContext.get()).isTrue();
+    assertThat(endContext.get()).isTrue();
+  }
+
+  @Test
+  void operationMetrics() {
     AtomicReference<Context> startContext = new AtomicReference<>();
     AtomicReference<Context> endContext = new AtomicReference<>();
 
-    RequestListener requestListener =
-        new RequestListener() {
+    OperationListener operationListener =
+        new OperationListener() {
           @Override
-          public Context start(Context context, Attributes startAttributes, long startNanos) {
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
             startContext.set(context);
             return context;
           }
 
           @Override
-          public void end(Context context, Attributes endAttributes, long endNanos) {
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
             endContext.set(context);
           }
         };
@@ -449,7 +414,7 @@ class InstrumenterTest {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .addRequestMetrics(meter -> requestListener)
+            .addOperationMetrics(meter -> operationListener)
             .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
@@ -457,31 +422,6 @@ class InstrumenterTest {
 
     assertThat(Span.fromContext(startContext.get()).getSpanContext().isValid()).isTrue();
     assertThat(Span.fromContext(endContext.get()).getSpanContext().isValid()).isTrue();
-  }
-
-  @Test
-  void shouldStartSpanWithGivenStartTime() {
-    // given
-    Instrumenter<Instant, Instant> instrumenter =
-        Instrumenter.<Instant, Instant>builder(
-                otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .setTimeExtractor(new TestTimeExtractor())
-            .newInstrumenter();
-
-    Instant startTime = Instant.ofEpochSecond(100);
-    Instant endTime = Instant.ofEpochSecond(123);
-
-    // when
-    Context context = instrumenter.start(Context.root(), startTime);
-    instrumenter.end(context, startTime, endTime, null);
-
-    // then
-    otelTesting
-        .assertTraces()
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("test span").startsAt(startTime).endsAt(endTime)));
   }
 
   @Test
@@ -526,175 +466,21 @@ class InstrumenterTest {
   }
 
   @Test
-  void clientNestedSpansSuppressed_whenInstrumentationTypeDisabled() {
-    // this test depends on default config option for InstrumentationType
+  void shouldDisableInstrumenter() {
+    Instrumenter<String, String> instrumenter =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(), "test", request -> "test span")
+            .setEnabled(false)
+            .newInstrumenter();
 
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(false);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(false);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isFalse();
-  }
-
-  @Test
-  void clientNestedSpansSuppressed_whenInstrumentationTypeDisabled2() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(false, mockDbAttributes);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(false, mockHttpClientAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isFalse();
-  }
-
-  @Test
-  void clientNestedSuppressed_whenSameInstrumentationType() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true, mockDbAttributes);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, mockDbAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    assertThat(instrumenterOuter.shouldStart(Context.root(), request)).isTrue();
-    assertThat(instrumenterInner.shouldStart(Context.root(), request)).isTrue();
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isFalse();
-  }
-
-  @Test
-  void clientNestedNotSuppressed_wehnDifferentInstrumentationCategories() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true, mockDbAttributes);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, mockHttpClientAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isTrue();
-  }
-
-  @Test
-  void clientNestedGenericNotSuppressed() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true, new AttributesExtractor1());
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, new AttributesExtractor1());
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isTrue();
-  }
-
-  @Test
-  void clientNestedGenericSpansNotSuppressed_whenNoExtractors() {
-    // this test depends on default config option for InstrumentationType
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterOuter =
-        getInstrumenterWithType(true);
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenterInner =
-        getInstrumenterWithType(true, null, null);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenterOuter.start(Context.root(), request);
-    assertThat(instrumenterInner.shouldStart(context, request)).isTrue();
-  }
-
-  @Test
-  void instrumentationTypeDetected_http() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockHttpClientAttributes, new AttributesExtractor1());
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.HTTP_CLIENT, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_db() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockDbAttributes, new AttributesExtractor2());
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.DB_CLIENT, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_rpc() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockRpcAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.RPC_CLIENT, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_producer() {
-    when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, mockMessagingAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.PRODUCER, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_mix() {
-    when(mockMessagingAttributes.operation()).thenReturn(MessageOperation.SEND);
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(
-            true,
-            new AttributesExtractor2(),
-            mockMessagingAttributes,
-            mockNetAttributes,
-            mockDbAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    validateInstrumentationTypeSpanPresent(SpanKey.PRODUCER, context);
-  }
-
-  @Test
-  void instrumentationTypeDetected_generic() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        getInstrumenterWithType(true, new AttributesExtractor2(), mockNetAttributes);
-
-    Map<String, String> request = new HashMap<>(REQUEST);
-
-    Context context = instrumenter.start(Context.root(), request);
-    Span span = Span.fromContext(context);
-
-    assertThat(span).isNotNull();
-
-    assertThat(SpanKey.HTTP_CLIENT.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.RPC_CLIENT.fromContextOrNull(context)).isNull();
-    assertThat(SpanKey.PRODUCER.fromContextOrNull(context)).isNull();
+    assertThat(instrumenter.shouldStart(Context.root(), "request")).isFalse();
   }
 
   @Test
   void instrumentationVersion_default() {
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
-        Instrumenter.builder(otelTesting.getOpenTelemetry(), "test", name -> "span");
+        Instrumenter.builder(
+            otelTesting.getOpenTelemetry(), "test-instrumentation", name -> "span");
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.newInstrumenter();
 
@@ -703,24 +489,25 @@ class InstrumenterTest {
 
     instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
 
+    // see the test-instrumentation.properties file
+    InstrumentationScopeInfo expectedLibraryInfo =
+        InstrumentationScopeInfo.create("test-instrumentation", "1.2.3", /* schemaUrl= */ null);
+
     otelTesting
         .assertTraces()
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span")
-                            .hasInstrumentationLibraryInfo(
-                                InstrumentationLibraryInfo.create(
-                                    "test", InstrumentationVersion.VERSION))));
+                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
   }
 
   @Test
   void instrumentationVersion_custom() {
-    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
-        Instrumenter.builder(otelTesting.getOpenTelemetry(), "test", "1.0", name -> "span");
-
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.newInstrumenter();
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", name -> "span")
+            .setInstrumentationVersion("1.0")
+            .newInstrumenter();
 
     Context context = instrumenter.start(Context.root(), Collections.emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();
@@ -734,63 +521,66 @@ class InstrumenterTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("span")
-                            .hasInstrumentationLibraryInfo(
-                                InstrumentationLibraryInfo.create("test", "1.0"))));
+                            .hasInstrumentationScopeInfo(
+                                InstrumentationScopeInfo.create(
+                                    "test", "1.0", /* schemaUrl= */ null))));
   }
 
-  private static void validateInstrumentationTypeSpanPresent(SpanKey spanKey, Context context) {
-    Span span = Span.fromContext(context);
+  @Test
+  void schemaUrl() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", name -> "span")
+            .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
+            .newInstrumenter();
 
-    assertThat(span).isNotNull();
-    assertThat(spanKey.fromContextOrNull(context)).isSameAs(span);
+    Context context = instrumenter.start(Context.root(), Collections.emptyMap());
+    assertThat(Span.fromContext(context)).isNotNull();
+
+    instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
+
+    InstrumentationScopeInfo expectedLibraryInfo =
+        InstrumentationScopeInfo.create("test", null, "https://opentelemetry.io/schemas/1.0.0");
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
   }
 
-  @SafeVarargs
-  private static Instrumenter<Map<String, String>, Map<String, String>> getInstrumenterWithType(
-      boolean enableInstrumentation,
-      AttributesExtractor<Map<String, String>, Map<String, String>>... attributeExtractors) {
-    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+  @Test
+  void shouldRetrieveSpanKeysFromAttributesExtractors() {
+    when(((SpanKeyProvider) mockDbClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.DB_CLIENT);
+    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.HTTP_CLIENT);
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .addAttributesExtractors(attributeExtractors)
-            .enableInstrumentationTypeSuppression(enableInstrumentation);
+            .addAttributesExtractors(
+                new AttributesExtractor2(),
+                mockHttpClientAttributes,
+                mockNetClientAttributes,
+                mockDbClientAttributes)
+            .newInstrumenter();
 
-    return builder.newClientInstrumenter(Map::put);
+    Context context = instrumenter.start(Context.root(), REQUEST);
+
+    assertThatSpanKeyWasStored(SpanKey.DB_CLIENT, context);
+    assertThatSpanKeyWasStored(SpanKey.HTTP_CLIENT, context);
+  }
+
+  private static void assertThatSpanKeyWasStored(SpanKey spanKey, Context context) {
+    Span span = Span.fromContext(context);
+    assertThat(span).isNotNull();
+    assertThat(spanKey.fromContextOrNull(context)).isSameAs(span);
   }
 
   private static LinkData expectedSpanLink() {
     return LinkData.create(
         SpanContext.create(
             LINK_TRACE_ID, LINK_SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
-  }
-
-  private static final class ConstantNetPeerIpExtractor<REQUEST, RESPONSE>
-      extends NetServerAttributesExtractor<REQUEST, RESPONSE> {
-
-    private final String peerIp;
-
-    private ConstantNetPeerIpExtractor(String peerIp) {
-      this.peerIp = peerIp;
-    }
-
-    @Override
-    public String transport(REQUEST request) {
-      return null;
-    }
-
-    @Override
-    public String peerName(REQUEST request) {
-      return null;
-    }
-
-    @Override
-    public Integer peerPort(REQUEST request) {
-      return null;
-    }
-
-    @Override
-    public String peerIp(REQUEST request) {
-      return peerIp;
-    }
   }
 }

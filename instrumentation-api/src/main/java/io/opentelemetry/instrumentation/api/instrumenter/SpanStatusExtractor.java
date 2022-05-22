@@ -9,11 +9,19 @@ import io.opentelemetry.api.trace.StatusCode;
 import javax.annotation.Nullable;
 
 /**
- * Extractor of {@link StatusCode}, which will be called after a request and response is completed
- * to determine its final status.
+ * Extractor of {@link StatusCode}. The {@link #extract(SpanStatusBuilder, Object, Object,
+ * Throwable)} method will be called after a request processing is completed to determine its final
+ * status.
  */
 @FunctionalInterface
 public interface SpanStatusExtractor<REQUEST, RESPONSE> {
+
+  /** Extracts the status from the response and sets it to the {@code spanStatusBuilder}. */
+  void extract(
+      SpanStatusBuilder spanStatusBuilder,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error);
 
   /**
    * Returns the default {@link SpanStatusExtractor}, which returns {@link StatusCode#ERROR} if the
@@ -23,7 +31,4 @@ public interface SpanStatusExtractor<REQUEST, RESPONSE> {
   static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> getDefault() {
     return (SpanStatusExtractor<REQUEST, RESPONSE>) DefaultSpanStatusExtractor.INSTANCE;
   }
-
-  /** Returns the {@link StatusCode}. */
-  StatusCode extract(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
 }

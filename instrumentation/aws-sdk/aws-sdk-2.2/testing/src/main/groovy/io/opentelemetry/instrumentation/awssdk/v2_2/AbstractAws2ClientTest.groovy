@@ -16,7 +16,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
 import software.amazon.awssdk.core.async.AsyncResponseTransformer
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder
-import software.amazon.awssdk.core.client.config.SdkClientOption
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.core.exception.SdkClientException
 import software.amazon.awssdk.core.retry.RetryPolicy
 import software.amazon.awssdk.http.apache.ApacheHttpClient
@@ -81,7 +81,11 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     server.beforeTestExecution(null)
   }
 
-  abstract void configureSdkClient(SdkClientBuilder builder)
+  void configureSdkClient(SdkClientBuilder builder) {
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build())
+  }
+
+  abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
   def "send DynamoDB #operation request with builder #builder.class.getName() mocked response"() {
     setup:
@@ -164,8 +168,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "DynamoDb"
-            "aws.operation" "CreateTable"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
+            "$SemanticAttributes.RPC_METHOD" "CreateTable"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
@@ -199,8 +204,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "DynamoDb"
-            "aws.operation" "Query"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
+            "$SemanticAttributes.RPC_METHOD" "Query"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
@@ -233,8 +239,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "$service"
-            "aws.operation" "${operation}"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "$service"
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
@@ -345,8 +352,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
-            "aws.service" "$service"
-            "aws.operation" "${operation}"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "$service"
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             if (service == "S3") {
@@ -434,8 +442,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
-            "aws.service" "$service"
-            "aws.operation" "${operation}"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "$service"
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             if (service == "S3") {
@@ -499,12 +508,10 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     // One retry so two requests.
     server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
     server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
-    def builder = S3Client.builder()
-    configureSdkClient(builder)
-    // Because the client builder does not merge overrides, the simplest way to set retry policy
-    // is to access the private field for now.
-    builder.clientConfiguration.option(SdkClientOption.RETRY_POLICY, RetryPolicy.builder().numRetries(1).build())
-    def client = builder
+    def client = S3Client.builder()
+      .overrideConfiguration(createOverrideConfigurationBuilder()
+        .retryPolicy(RetryPolicy.builder().numRetries(1).build())
+        .build())
       .endpointOverride(server.httpUri())
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
@@ -532,8 +539,9 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_URL" "${server.httpUri()}/somebucket/somekey"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "S3"
-            "aws.operation" "GetObject"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "S3"
+            "$SemanticAttributes.RPC_METHOD" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
           }

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.example.javaagent;
 
 import io.opentelemetry.api.common.Attributes;
@@ -16,7 +21,7 @@ import java.util.List;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#sampling">
  * OpenTelemetry Specification</a> for more information about span sampling.
  *
- * @see DemoSdkTracerProviderConfigurer
+ * @see DemoAutoConfigurationCustomizerProvider
  */
 public class DemoSampler implements Sampler {
   @Override

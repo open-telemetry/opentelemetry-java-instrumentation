@@ -11,7 +11,6 @@ import spock.lang.Unroll
 import java.util.logging.Level
 import java.util.logging.Logger
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.assertj.core.api.Assertions.assertThat
 import static org.awaitility.Awaitility.await
 
@@ -20,19 +19,23 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
   private static final Logger logger = Logger.getLogger("abc")
 
   @Unroll
-  def "test method=#testMethod with exception=#exception and parent=#parent"() {
+  def "test method=#testMethod with testArgs=#testArgs and parent=#parent"() {
     when:
     if (parent) {
-      runUnderTrace("parent") {
-        if (exception) {
+      runWithSpan("parent") {
+        if (testArgs == "exception") {
           logger.log(Level."${testMethod.toUpperCase()}", "xyz", new IllegalStateException("hello"))
+        } else if (testArgs == "params") {
+          logger.log(Level."${testMethod.toUpperCase()}", "xyz: {0}", 123)
         } else {
           logger."$testMethod"("xyz")
         }
       }
     } else {
-      if (exception) {
+      if (testArgs == "exception") {
         logger.log(Level."${testMethod.toUpperCase()}", "xyz", new IllegalStateException("hello"))
+      } else if (testArgs == "params") {
+        logger.log(Level."${testMethod.toUpperCase()}", "xyz: {0}", 123)
       } else {
         logger."$testMethod"("xyz")
       }
@@ -50,19 +53,27 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
             assertThat(logs).hasSize(1)
           })
       def log = logs.get(0)
-      assertThat(log.getBody().asString()).isEqualTo("xyz")
-      assertThat(log.getInstrumentationLibraryInfo().getName()).isEqualTo("abc")
+      if (testArgs == "params") {
+        assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
+      } else {
+        assertThat(log.getBody().asString()).isEqualTo("xyz")
+      }
+      assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
-      if (exception) {
+      if (testArgs == "exception") {
+        assertThat(log.getAttributes().size()).isEqualTo(5)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(JavaUtilLoggingTest.name)
       } else {
+        assertThat(log.getAttributes().size()).isEqualTo(2)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).isNull()
       }
+      assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
+      assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
       if (parent) {
         assertThat(log.getSpanContext()).isEqualTo(traces.get(0).get(0).getSpanContext())
       } else {
@@ -74,14 +85,14 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
     }
 
     where:
-    [args, exception, parent] << [
+    [args, testArgs, parent] << [
       [
         ["fine", null, null],
         ["info", Severity.INFO, "INFO"],
         ["warning", Severity.WARN, "WARNING"],
         ["severe", Severity.ERROR, "SEVERE"]
       ],
-      [true, false],
+      ["none", "exception", "param"],
       [true, false]
     ].combinations()
 

@@ -1,0 +1,30 @@
+name: Reusable - Gradle plugins
+
+on:
+  workflow_call:
+    inputs:
+      cache-read-only:
+        type: boolean
+        required: false
+      no-build-cache:
+        type: boolean
+        required: false
+
+jobs:
+  gradle-plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 11 for running Gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Build
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          build-root-directory: gradle-plugins
+          cache-read-only: ${{ inputs.cache-read-only }}

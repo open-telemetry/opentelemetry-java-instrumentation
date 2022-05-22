@@ -1,0 +1,65 @@
+name: Build (daily)
+
+on:
+  schedule:
+    # strange schedule to reduce the risk of DDOS GitHub infra
+    - cron: "24 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  test-latest-deps:
+    uses: ./.github/workflows/reusable-test-latest-deps.yml
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  smoke-test:
+    uses: ./.github/workflows/reusable-smoke-test.yml
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  muzzle:
+    uses: ./.github/workflows/reusable-muzzle.yml
+
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+
+  examples:
+    uses: ./.github/workflows/reusable-examples.yml
+
+  markdown-link-check:
+    uses: ./.github/workflows/reusable-markdown-link-check.yml
+
+  misspell-check:
+    uses: ./.github/workflows/reusable-misspell-check.yml
+
+  open-issue-on-failure:
+    needs:
+      - assemble
+      - test
+      - test-latest-deps
+      - smoke-test
+      - muzzle
+      - gradle-plugins
+      - examples
+      - markdown-link-check
+      - misspell-check
+    if: failure()
+    uses: ./.github/workflows/reusable-open-issue-on-failure.yml

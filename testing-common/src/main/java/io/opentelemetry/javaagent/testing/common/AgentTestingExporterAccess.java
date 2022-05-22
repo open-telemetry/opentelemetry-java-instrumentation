@@ -25,41 +25,45 @@ import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.ArrayValue;
-import io.opentelemetry.proto.common.v1.InstrumentationLibrary;
+import io.opentelemetry.proto.common.v1.InstrumentationScope;
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.logs.v1.InstrumentationLibraryLogs;
 import io.opentelemetry.proto.logs.v1.LogRecord;
 import io.opentelemetry.proto.logs.v1.ResourceLogs;
+import io.opentelemetry.proto.logs.v1.ScopeLogs;
 import io.opentelemetry.proto.logs.v1.SeverityNumber;
 import io.opentelemetry.proto.metrics.v1.HistogramDataPoint;
-import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
+import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
 import io.opentelemetry.proto.metrics.v1.Sum;
 import io.opentelemetry.proto.metrics.v1.SummaryDataPoint;
 import io.opentelemetry.proto.resource.v1.Resource;
-import io.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
-import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogData;
 import io.opentelemetry.sdk.logs.data.LogDataBuilder;
 import io.opentelemetry.sdk.logs.data.Severity;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
-import io.opentelemetry.sdk.metrics.data.DoubleGaugeData;
-import io.opentelemetry.sdk.metrics.data.DoubleHistogramData;
-import io.opentelemetry.sdk.metrics.data.DoubleHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
-import io.opentelemetry.sdk.metrics.data.DoubleSumData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
-import io.opentelemetry.sdk.metrics.data.LongGaugeData;
+import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
-import io.opentelemetry.sdk.metrics.data.LongSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.ValueAtPercentile;
+import io.opentelemetry.sdk.metrics.data.SummaryPointData;
+import io.opentelemetry.sdk.metrics.data.ValueAtQuantile;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableDoublePointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableGaugeData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableHistogramData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableHistogramPointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableLongPointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableMetricData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSumData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtQuantile;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -161,9 +165,8 @@ public final class AgentTestingExporterAccess {
     List<SpanData> spans = new ArrayList<>();
     for (ResourceSpans resourceSpans : allResourceSpans) {
       Resource resource = resourceSpans.getResource();
-      for (InstrumentationLibrarySpans ilSpans :
-          resourceSpans.getInstrumentationLibrarySpansList()) {
-        InstrumentationLibrary instrumentationLibrary = ilSpans.getInstrumentationLibrary();
+      for (ScopeSpans ilSpans : resourceSpans.getScopeSpansList()) {
+        InstrumentationScope instrumentationScope = ilSpans.getScope();
         for (Span span : ilSpans.getSpansList()) {
           String traceId = bytesToHex(span.getTraceId().toByteArray());
           spans.add(
@@ -184,9 +187,11 @@ public final class AgentTestingExporterAccess {
                   .setResource(
                       io.opentelemetry.sdk.resources.Resource.create(
                           fromProto(resource.getAttributesList())))
-                  .setInstrumentationLibraryInfo(
-                      InstrumentationLibraryInfo.create(
-                          instrumentationLibrary.getName(), instrumentationLibrary.getVersion()))
+                  .setInstrumentationScopeInfo(
+                      InstrumentationScopeInfo.create(
+                          instrumentationScope.getName(),
+                          instrumentationScope.getVersion(),
+                          /* schemaUrl= */ null))
                   .setName(span.getName())
                   .setStartEpochNanos(span.getStartTimeUnixNano())
                   .setEndEpochNanos(span.getEndTimeUnixNano())
@@ -254,17 +259,18 @@ public final class AgentTestingExporterAccess {
     List<MetricData> metrics = new ArrayList<>();
     for (ResourceMetrics resourceMetrics : allResourceMetrics) {
       Resource resource = resourceMetrics.getResource();
-      for (InstrumentationLibraryMetrics ilMetrics :
-          resourceMetrics.getInstrumentationLibraryMetricsList()) {
-        InstrumentationLibrary instrumentationLibrary = ilMetrics.getInstrumentationLibrary();
+      for (ScopeMetrics ilMetrics : resourceMetrics.getScopeMetricsList()) {
+        InstrumentationScope instrumentationScope = ilMetrics.getScope();
         for (Metric metric : ilMetrics.getMetricsList()) {
           metrics.add(
               createMetricData(
                   metric,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
-                  InstrumentationLibraryInfo.create(
-                      instrumentationLibrary.getName(), instrumentationLibrary.getVersion())));
+                  InstrumentationScopeInfo.create(
+                      instrumentationScope.getName(),
+                      instrumentationScope.getVersion(),
+                      /* schemaUrl= */ null)));
         }
       }
     }
@@ -295,16 +301,18 @@ public final class AgentTestingExporterAccess {
     List<LogData> logs = new ArrayList<>();
     for (ResourceLogs resourceLogs : allResourceLogs) {
       Resource resource = resourceLogs.getResource();
-      for (InstrumentationLibraryLogs ilLogs : resourceLogs.getInstrumentationLibraryLogsList()) {
-        InstrumentationLibrary instrumentationLibrary = ilLogs.getInstrumentationLibrary();
-        for (LogRecord logRecord : ilLogs.getLogsList()) {
+      for (ScopeLogs ilLogs : resourceLogs.getScopeLogsList()) {
+        InstrumentationScope instrumentationScope = ilLogs.getScope();
+        for (LogRecord logRecord : ilLogs.getLogRecordsList()) {
           logs.add(
               createLogData(
                   logRecord,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
-                  InstrumentationLibraryInfo.create(
-                      instrumentationLibrary.getName(), instrumentationLibrary.getVersion())));
+                  InstrumentationScopeInfo.create(
+                      instrumentationScope.getName(),
+                      instrumentationScope.getVersion(),
+                      /* schemaUrl= */ null)));
         }
       }
     }
@@ -314,70 +322,72 @@ public final class AgentTestingExporterAccess {
   private static MetricData createMetricData(
       Metric metric,
       io.opentelemetry.sdk.resources.Resource resource,
-      InstrumentationLibraryInfo instrumentationLibraryInfo) {
+      InstrumentationScopeInfo instrumentationScopeInfo) {
     switch (metric.getDataCase()) {
       case GAUGE:
         if (isDouble(metric.getGauge().getDataPointsList())) {
-          return MetricData.createDoubleGauge(
+          return ImmutableMetricData.createDoubleGauge(
               resource,
-              instrumentationLibraryInfo,
+              instrumentationScopeInfo,
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              DoubleGaugeData.create(getDoublePointDatas(metric.getGauge().getDataPointsList())));
+              // TODO(anuraaga): Remove usages of internal types.
+              ImmutableGaugeData.create(
+                  getDoublePointDatas(metric.getGauge().getDataPointsList())));
         } else {
-          return MetricData.createLongGauge(
+          return ImmutableMetricData.createLongGauge(
               resource,
-              instrumentationLibraryInfo,
+              instrumentationScopeInfo,
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              LongGaugeData.create(getLongPointDatas(metric.getGauge().getDataPointsList())));
+              ImmutableGaugeData.create(getLongPointDatas(metric.getGauge().getDataPointsList())));
         }
       case SUM:
         if (isDouble(metric.getSum().getDataPointsList())) {
           Sum doubleSum = metric.getSum();
-          return MetricData.createDoubleSum(
+          return ImmutableMetricData.createDoubleSum(
               resource,
-              instrumentationLibraryInfo,
+              instrumentationScopeInfo,
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              DoubleSumData.create(
+              ImmutableSumData.create(
                   doubleSum.getIsMonotonic(),
                   getTemporality(doubleSum.getAggregationTemporality()),
                   getDoublePointDatas(metric.getSum().getDataPointsList())));
         } else {
           Sum longSum = metric.getSum();
-          return MetricData.createLongSum(
+          return ImmutableMetricData.createLongSum(
               resource,
-              instrumentationLibraryInfo,
+              instrumentationScopeInfo,
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              LongSumData.create(
+              ImmutableSumData.create(
                   longSum.getIsMonotonic(),
                   getTemporality(longSum.getAggregationTemporality()),
                   getLongPointDatas(metric.getSum().getDataPointsList())));
         }
       case HISTOGRAM:
-        return MetricData.createDoubleHistogram(
+        return ImmutableMetricData.createDoubleHistogram(
             resource,
-            instrumentationLibraryInfo,
+            instrumentationScopeInfo,
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            DoubleHistogramData.create(
+            ImmutableHistogramData.create(
                 getTemporality(metric.getHistogram().getAggregationTemporality()),
                 getDoubleHistogramDataPoints(metric.getHistogram().getDataPointsList())));
       case SUMMARY:
-        return MetricData.createDoubleSummary(
+        return ImmutableMetricData.createDoubleSummary(
             resource,
-            instrumentationLibraryInfo,
+            instrumentationScopeInfo,
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            DoubleSummaryData.create(
+            ImmutableSummaryData.create(
                 getDoubleSummaryDataPoints(metric.getSummary().getDataPointsList())));
       default:
         throw new AssertionError("Unexpected metric data: " + metric.getDataCase());
@@ -387,8 +397,8 @@ public final class AgentTestingExporterAccess {
   private static LogData createLogData(
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
-      InstrumentationLibraryInfo instrumentationLibraryInfo) {
-    return LogDataBuilder.create(resource, instrumentationLibraryInfo)
+      InstrumentationScopeInfo instrumentationScopeInfo) {
+    return LogDataBuilder.create(resource, instrumentationScopeInfo)
         .setEpoch(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
         .setSpanContext(
             SpanContext.create(
@@ -398,7 +408,6 @@ public final class AgentTestingExporterAccess {
                 TraceState.getDefault()))
         .setSeverity(fromProto(logRecord.getSeverityNumber()))
         .setSeverityText(logRecord.getSeverityText())
-        .setName(logRecord.getName())
         .setBody(logRecord.getBody().getStringValue())
         .setAttributes(fromProto(logRecord.getAttributesList()))
         .build();
@@ -425,7 +434,7 @@ public final class AgentTestingExporterAccess {
                   value = point.getAsDouble();
                   break;
               }
-              return DoublePointData.create(
+              return ImmutableDoublePointData.create(
                   point.getStartTimeUnixNano(),
                   point.getTimeUnixNano(),
                   fromProto(point.getAttributesList()),
@@ -448,7 +457,7 @@ public final class AgentTestingExporterAccess {
                   value = (long) point.getAsDouble();
                   break;
               }
-              return LongPointData.create(
+              return ImmutableLongPointData.create(
                   point.getStartTimeUnixNano(),
                   point.getTimeUnixNano(),
                   fromProto(point.getAttributesList()),
@@ -457,27 +466,30 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static Collection<DoubleHistogramPointData> getDoubleHistogramDataPoints(
+  private static Collection<HistogramPointData> getDoubleHistogramDataPoints(
       List<HistogramDataPoint> dataPointsList) {
     return dataPointsList.stream()
         .map(
             point ->
-                DoubleHistogramPointData.create(
+                ImmutableHistogramPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     fromProto(point.getAttributesList()),
                     point.getSum(),
+                    // TODO(anuraaga): Read min/max from proto with 0.17.0 release.
+                    /* min= */ null,
+                    /* max= */ null,
                     point.getExplicitBoundsList(),
                     point.getBucketCountsList()))
         .collect(toList());
   }
 
-  private static Collection<DoubleSummaryPointData> getDoubleSummaryDataPoints(
+  private static Collection<SummaryPointData> getDoubleSummaryDataPoints(
       List<SummaryDataPoint> dataPointsList) {
     return dataPointsList.stream()
         .map(
             point ->
-                DoubleSummaryPointData.create(
+                ImmutableSummaryPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     fromProto(point.getAttributesList()),
@@ -487,9 +499,9 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static List<ValueAtPercentile> getValues(SummaryDataPoint point) {
+  private static List<ValueAtQuantile> getValues(SummaryDataPoint point) {
     return point.getQuantileValuesList().stream()
-        .map(v -> ValueAtPercentile.create(v.getQuantile(), v.getValue()))
+        .map(v -> ImmutableValueAtQuantile.create(v.getQuantile(), v.getValue()))
         .collect(Collectors.toList());
   }
 

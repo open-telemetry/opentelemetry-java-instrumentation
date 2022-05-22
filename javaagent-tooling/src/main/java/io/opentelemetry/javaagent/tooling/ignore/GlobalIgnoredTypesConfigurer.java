@@ -60,7 +60,6 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // the reason not to use "io.opentelemetry.javaagent." is so that javaagent instrumentation
     // tests under "io.opentelemetry.javaagent." will still be instrumented
     builder.ignoreClass("io.opentelemetry.javaagent.bootstrap.");
-    builder.ignoreClass("io.opentelemetry.javaagent.instrumentation.api.");
     builder.ignoreClass("io.opentelemetry.javaagent.shaded.");
     builder.ignoreClass("io.opentelemetry.javaagent.slf4j.");
 
@@ -117,6 +116,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("jdk.internal.reflect.DelegatingClassLoader")
         .ignoreClassLoader("clojure.lang.DynamicClassLoader")
         .ignoreClassLoader("org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader")
+        .ignoreClassLoader(
+            "org.springframework.context.support.ContextTypeMatchClassLoader$ContextOverridingClassLoader")
         .ignoreClassLoader("sun.misc.Launcher$ExtClassLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
         .ignoreClassLoader(ExtensionClassLoader.class.getName());

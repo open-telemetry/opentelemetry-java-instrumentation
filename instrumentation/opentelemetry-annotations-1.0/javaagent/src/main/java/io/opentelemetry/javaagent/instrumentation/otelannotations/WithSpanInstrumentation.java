@@ -21,9 +21,9 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -117,11 +117,8 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Origin Method originMethod,
         @Advice.Local("otelMethod") Method method,
-        @Advice.Local("otelOperationEndSupport")
-            AsyncOperationEndSupport<Method, Object> operationEndSupport,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to local variable so that there would be only one call to Class.getMethod.
       method = originMethod;
@@ -132,16 +129,12 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       if (instrumenter.shouldStart(current, method)) {
         context = instrumenter.start(current, method);
         scope = context.makeCurrent();
-        operationEndSupport =
-            AsyncOperationEndSupport.create(instrumenter, Object.class, method.getReturnType());
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Local("otelMethod") Method method,
-        @Advice.Local("otelOperationEndSupport")
-            AsyncOperationEndSupport<Method, Object> operationEndSupport,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
@@ -150,6 +143,9 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
+
+      AsyncOperationEndSupport<Method, Object> operationEndSupport =
+          AsyncOperationEndSupport.create(instrumenter(), Object.class, method.getReturnType());
       returnValue = operationEndSupport.asyncEnd(context, method, returnValue, throwable);
     }
   }
@@ -162,8 +158,6 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method originMethod,
         @Advice.Local("otelMethod") Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
-        @Advice.Local("otelOperationEndSupport")
-            AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport,
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -179,16 +173,12 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       if (instrumenter.shouldStart(current, request)) {
         context = instrumenter.start(current, request);
         scope = context.makeCurrent();
-        operationEndSupport =
-            AsyncOperationEndSupport.create(instrumenter, Object.class, method.getReturnType());
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Local("otelMethod") Method method,
-        @Advice.Local("otelOperationEndSupport")
-            AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport,
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
@@ -198,6 +188,9 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
+      AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport =
+          AsyncOperationEndSupport.create(
+              instrumenterWithAttributes(), Object.class, method.getReturnType());
       returnValue = operationEndSupport.asyncEnd(context, request, returnValue, throwable);
     }
   }

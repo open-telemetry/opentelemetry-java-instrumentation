@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 
@@ -21,29 +21,20 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
   private static final Pattern METHOD_REGEX =
       Pattern.compile("^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) ");
 
-  private final RouterFunction<?> routerFunction;
+  @Nullable private final String route;
 
   public RouteOnSuccessOrError(RouterFunction<?> routerFunction) {
-    this.routerFunction = routerFunction;
+    this.route = parseRoute(parsePredicateString(routerFunction));
   }
 
   @Override
   public void accept(HandlerFunction<?> handler, Throwable throwable) {
     if (handler != null) {
-      String predicateString = parsePredicateString();
-      if (predicateString != null) {
-        Context context = Context.current();
-        if (context != null) {
-          Span serverSpan = ServerSpan.fromContextOrNull(context);
-          if (serverSpan != null) {
-            serverSpan.updateName(ServletContextPath.prepend(context, parseRoute(predicateString)));
-          }
-        }
-      }
+      HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.CONTROLLER, route);
     }
   }
 
-  private String parsePredicateString() {
+  private static String parsePredicateString(RouterFunction<?> routerFunction) {
     String routerFunctionString = routerFunction.toString();
     // Router functions containing lambda predicates should not end up in span tags since they are
     // confusing
@@ -55,7 +46,11 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
     }
   }
 
-  private static String parseRoute(String routerString) {
+  @Nullable
+  private static String parseRoute(@Nullable String routerString) {
+    if (routerString == null) {
+      return null;
+    }
     return METHOD_REGEX
         .matcher(
             SPACES_REGEX

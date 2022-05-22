@@ -2,83 +2,67 @@
 
 OpenTelemetry Auto-Instrumentation for Java uses [SemVer standard](https://semver.org) for versioning of its artifacts.
 
-The version is specified in [version.gradle.kts](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/version.gradle.kts).
+The version is specified in [version.gradle.kts](version.gradle.kts).
 
 ## Snapshot builds
+
 Every successful CI build of the main branch automatically executes `./gradlew publishToSonatype`
 as the last step, which publishes a snapshot build to
 [Sonatype OSS snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/).
 
-## Starting the Release
+## Preparing a new major or minor release
 
-Before making the release:
+* Close the release milestone if there is one.
+* Merge a pull request to `main` updating the `CHANGELOG.md`.
+  * The heading for the release should include the release version but not the release date, e.g.
+    `## Version 1.9.0 (Unreleased)`.
+  * Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change
+    log.
+* Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
+* Review and merge the two pull requests that it creates
+  (one is targeted to the release branch and one is targeted to the `main` branch).
 
-* Merge a PR to `main` updating the `CHANGELOG.md`
-* Create a release branch, e.g. `v1.9.x`
-  ```
-  git checkout -b v1.9.x upstream/main
-  git push upstream v1.9.x
-  ```
-* Merge a PR to the release branch with the following changes
-  * Remove `-SNAPSHOT` from the version in these files:
-    * version.gradle.kts
-    * examples/distro/build.gradle
-    * examples/extension/build.gradle
-  * Bump the version in the download link in the root `README.md` file
+## Preparing a new patch release
 
-Open the release build workflow in your browser [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release-build.yml).
+All patch releases should include only bug-fixes, and must avoid adding/modifying the public APIs.
 
-You will see a button that says "Run workflow". Press the button, then enter the following:
-* Use workflow from: <select the branch from dropdown list, e.g. `v1.9.x`>
-* The release branch to use: <e.g. `v1.9.x`>
-* The version of the release: <e.g. `1.9.0`>
+In general, patch releases are only made for regressions, security vulnerabilities, memory leaks
+and deadlocks.
 
-(Yes there is redundancy between the above inputs that we plan to address.)
+* Backport pull request(s) to the release branch.
+  * Run the [Backport workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/backport.yml).
+  * Press the "Run workflow" button, then select the release branch from the dropdown list,
+    e.g. `release/v1.9.x`, then enter the pull request number that you want to backport,
+    then click the "Run workflow" button below that.
+  * Review and merge the backport pull request that it generates.
+* Merge a pull request to the release branch updating the `CHANGELOG.md`.
+  * The heading for the release should include the release version but not the release date, e.g.
+    `## Version 1.9.1 (Unreleased)`.
+* Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-patch-release.yml).
+  * Press the "Run workflow" button, then select the release branch from the dropdown list,
+    e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+* Review and merge the pull request that it creates.
 
-This triggers the release process, which builds the artifacts, publishes the artifacts, and creates
-and pushes a git tag with the version number.
+## Making the release
 
-After making the release:
+Run the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
 
-* Merge a PR to `main` with the following changes
-  * Bump version in these files to the next `-SNAPSHOT` version (e.g. from `1.9.0-SNAPSHOT` to `1.10.0-SNAPSHOT`)
-    * version.gradle.kts
-    * examples/distro/build.gradle
-    * examples/extension/build.gradle
-  * Bump the version in the download link in the root `README.md` file
+* Press the "Run workflow" button, then select the release branch from the dropdown list,
+  e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+* This workflow will publish the artifacts to maven central and will publish a GitHub release
+  with release notes based on the change log and with the javaagent jar attached.
+* Review and merge the pull request that the release workflow creates against the release branch
+  which adds the release date to the change log.
 
-## Announcement
+## After the release
 
-Once the GitHub workflow completes, go to Github [release
-page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases), press
-`Draft a new release` to write release notes about the new release. If there is already a draft
-release notes, just point it at the created tag.
+Run the [Merge change log to main workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/merge-change-log-to-main.yml).
 
-## Patch Release
-
-All patch releases should include only bug-fixes, and must avoid
-adding/modifying the public APIs.
-
-In general, patch releases are only made for bug-fixes for the following types of issues:
-* Regressions
-* Memory leaks
-* Deadlocks
-
-Before making the release:
-
-* Merge PR(s) containing the desired patches to the release branch
-* Merge a PR to the release branch updating the `CHANGELOG.md`
-* Merge a PR to the release branch updating the version in these files:
-  * version.gradle.kts
-  * examples/distro/build.gradle
-  * examples/extension/build.gradle
-
-To make a patch release, open the patch release build workflow in your browser
-[here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/patch-release-build.yml).
-
-You will see a button that says "Run workflow". Press the button, then enter the following:
-* Use workflow from: <select the branch from dropdown list, e.g. `v1.9.x`>
-* The release branch to use: <e.g. `v1.9.x`>
-* The version of the release: <e.g. `1.9.1`>
-
-(Yes there is redundancy between the above inputs that we plan to address.)
+* Press the "Run workflow" button, then select the release branch from the dropdown list,
+  e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+* This will create a pull request that merges the change log updates from the release branch
+  back to main.
+* Review and merge the pull request that it creates.
+* This workflow will fail if there have been conflicting change log updates introduced in main,
+  in which case you will need to merge the change log updates manually and send your own pull
+  request against main.

@@ -13,9 +13,36 @@ muzzle {
 
 dependencies {
   library("io.micrometer:micrometer-core:1.5.0")
+
+  implementation("io.opentelemetry:opentelemetry-micrometer1-shim")
 }
 
-// TODO: disabled by default, since not all instruments are implemented
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
+tasks {
+  val testPrometheusMode by registering(Test::class) {
+    filter {
+      includeTestsMatching("*PrometheusModeTest")
+    }
+    include("**/*PrometheusModeTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
+  }
+
+  val testBaseTimeUnit by registering(Test::class) {
+    filter {
+      includeTestsMatching("*TimerSecondsTest")
+    }
+    include("**/*TimerSecondsTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=seconds")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("*TimerSecondsTest")
+      excludeTestsMatching("*PrometheusModeTest")
+    }
+  }
+
+  check {
+    dependsOn(testBaseTimeUnit)
+    dependsOn(testPrometheusMode)
+  }
 }

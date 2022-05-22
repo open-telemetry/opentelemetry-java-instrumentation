@@ -77,13 +77,11 @@ class InMemoryExporterAssert {
   }
 
   static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
-    def list = Arrays.asList(names)
-    return Comparator.comparing { item -> list.indexOf(item[0].name) }
+    return TelemetryDataUtil.orderByRootSpanName(names)
   }
 
   static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
-    def list = Arrays.asList(spanKinds)
-    return Comparator.comparing { item -> list.indexOf(item[0].kind) }
+    return TelemetryDataUtil.orderByRootSpanKind(spanKinds)
   }
 
   void assertTracesAllVerified() {

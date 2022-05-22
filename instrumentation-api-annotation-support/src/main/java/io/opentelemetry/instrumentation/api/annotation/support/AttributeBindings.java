@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support;
 
-import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
+import io.opentelemetry.api.common.AttributesBuilder;
 
 /** Represents the bindings of method parameters to attributes of a traced method. */
-public interface AttributeBindings {
+interface AttributeBindings {
 
   /**
    * Indicates that the traced method has no parameters bound to attributes.
@@ -20,8 +20,8 @@ public interface AttributeBindings {
   /**
    * Applies the values of the method arguments as attributes on the span for the traced method.
    *
-   * @param setter the {@link AttributeSetter} for setting the attribute on the span
+   * @param target the {@link AttributesBuilder} on which to set the attribute
    * @param args the method arguments
    */
-  void apply(AttributeSetter setter, Object[] args);
+  void apply(AttributesBuilder target, Object[] args);
 }

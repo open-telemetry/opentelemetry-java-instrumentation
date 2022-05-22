@@ -8,7 +8,7 @@ dependencies {
   api(project(":testing-common"))
   api("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:1.0.2")
 
-  implementation("org.codehaus.groovy:groovy-all")
+  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.spockframework:spock-core")
 }

@@ -80,7 +80,6 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
           name SHARED_TOPIC + " receive"
           kind CONSUMER
           childOf span(1)
-          hasLink(span(1))
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC

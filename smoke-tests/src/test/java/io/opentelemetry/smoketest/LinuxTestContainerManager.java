@@ -5,12 +5,16 @@
 
 package io.opentelemetry.smoketest;
 
+import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Container;
+import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.OutputFrame;
@@ -21,6 +25,7 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 public class LinuxTestContainerManager extends AbstractTestContainerManager {
+  private static final Logger logger = LoggerFactory.getLogger(LinuxTestContainerManager.class);
   private static final Logger backendLogger = LoggerFactory.getLogger("Backend");
   private static final Logger appLogger = LoggerFactory.getLogger("App");
 
@@ -33,8 +38,9 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
     backend =
         new GenericContainer<>(
                 DockerImageName.parse(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20210918.1248928123"))
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20220411.2147767274"))
             .withExposedPorts(BACKEND_PORT)
+            .withEnv("JAVA_TOOL_OPTIONS", "-Xmx128m")
             .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT))
             .withNetwork(network)
             .withNetworkAliases(BACKEND_ALIAS)
@@ -69,14 +75,20 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
+      List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
       String[] command) {
 
     Consumer<OutputFrame> output = new ToStringConsumer();
+    List<Integer> ports = new ArrayList<>();
+    ports.add(TARGET_PORT);
+    if (extraPorts != null) {
+      ports.addAll(extraPorts);
+    }
     target =
         new GenericContainer<>(DockerImageName.parse(targetImageName))
             .withStartupTimeout(Duration.ofMinutes(5))
-            .withExposedPorts(TARGET_PORT)
+            .withExposedPorts(ports.toArray(new Integer[0]))
             .withNetwork(network)
             .withLogConsumer(output)
             .withLogConsumer(new Slf4jLogConsumer(appLogger))
@@ -103,7 +115,24 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       target = target.withCommand(command);
     }
 
-    target.start();
+    try {
+      target.start();
+    } catch (ContainerLaunchException launchException) {
+      // when container failed to start try to force a thread dump
+      try {
+        Container.ExecResult execResult = target.execInContainer("killall", "-3", "java");
+        if (execResult.getExitCode() != 0) {
+          logger.warn("Command execution failed {}", execResult);
+        }
+      } catch (IOException exception) {
+        logger.warn("Command execution failed", exception);
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+      }
+
+      throw launchException;
+    }
+
     return output;
   }
 

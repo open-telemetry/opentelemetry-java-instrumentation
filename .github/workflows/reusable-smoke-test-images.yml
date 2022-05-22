@@ -1,0 +1,66 @@
+name: PR build fake backend images for smoke tests
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        type: string
+        required: true
+      publish:
+        type: boolean
+        required: false
+      cache-read-only:
+        type: boolean
+        required: false
+      skip-java-8:
+        type: boolean
+        required: false
+      skip-java-17:
+        type: boolean
+        required: false
+      skip-java-18:
+        type: boolean
+        required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Login to GitHub package registry
+        if: ${{ inputs.publish }}
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set tag
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
+
+      - name: Set up Gradle cache
+        uses: gradle/gradle-build-action@v2
+        with:
+          cache-read-only: ${{ inputs.cache-read-only }}
+
+      - name: Build Java 8 Docker image
+        if: ${{ !inputs.skip-java-8 }}
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 11 Docker image
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 17 Docker image
+        if: ${{ !inputs.skip-java-17 }}
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 18 Docker image
+        if: ${{ !inputs.skip-java-18 }}
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain

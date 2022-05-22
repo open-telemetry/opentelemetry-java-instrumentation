@@ -7,17 +7,17 @@ package server.base
 
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.springframework.web.server.ResponseStatusException
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
 
 abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServerTest {
   @Override
-  void handlerSpan(TraceAssert trace, int index, Object parent, String method, HttpServerTest.ServerEndpoint endpoint) {
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     def handlerSpanName = "${ServerTestRouteFactory.simpleName}.lambda"
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceWebHandler.handle"

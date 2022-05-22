@@ -27,7 +27,7 @@ afterEvaluate {
 }
 
 // Version to use to compile code and run tests.
-val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_11
+val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_17
 
 java {
   toolchain {
@@ -43,15 +43,44 @@ java {
 tasks.withType<JavaCompile>().configureEach {
   with(options) {
     release.set(otelJava.minJavaVersionSupported.map { it.majorVersion.toInt() })
-    compilerArgs.add("-Werror")
+
+    if (name != "jmhCompileGeneratedClasses") {
+      compilerArgs.addAll(
+        listOf(
+          "-Xlint:all",
+          // We suppress the "try" warning because it disallows managing an auto-closeable with
+          // try-with-resources without referencing the auto-closeable within the try block.
+          "-Xlint:-try",
+          // We suppress the "processing" warning as suggested in
+          // https://groups.google.com/forum/#!topic/bazel-discuss/_R3A9TJSoPM
+          "-Xlint:-processing",
+          // We suppress the "options" warning because it prevents compilation on modern JDKs
+          "-Xlint:-options",
+
+          // Fail build on any warning
+          "-Werror"
+        )
+      )
+    }
+
+    encoding = "UTF-8"
+
+    if (name.contains("Test")) {
+      // serialVersionUID is basically guaranteed to be useless in tests
+      compilerArgs.add("-Xlint:-serial")
+    }
   }
 }
 
 // Groovy and Scala compilers don't actually understand --release option
 afterEvaluate {
   tasks.withType<GroovyCompile>().configureEach {
-    sourceCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
-    targetCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
+    var javaVersion = otelJava.minJavaVersionSupported.get().majorVersion
+    if (javaVersion == "8") {
+      javaVersion = "1.8"
+    }
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
   }
   tasks.withType<ScalaCompile>().configureEach {
     sourceCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
@@ -96,34 +125,51 @@ dependencies {
 
   compileOnly("com.google.code.findbugs:jsr305")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api")
-  testImplementation("org.junit.jupiter:junit-jupiter-params")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
-
-  testImplementation("org.objenesis:objenesis")
-  testImplementation("org.spockframework:spock-core") {
-    // exclude optional dependencies
-    exclude(group = "cglib", module = "cglib-nodep")
-    exclude(group = "net.bytebuddy", module = "byte-buddy")
-    exclude(group = "org.junit.platform", module = "junit-platform-testkit")
-    exclude(group = "org.jetbrains", module = "annotations")
-    exclude(group = "org.objenesis", module = "objenesis")
-    exclude(group = "org.ow2.asm", module = "asm")
-  }
-  testImplementation("org.spockframework:spock-junit4") {
-    // spock-core is already added as dependency
-    // exclude it here to avoid pulling in optional dependencies
-    exclude(group = "org.spockframework", module = "spock-core")
-  }
-  testImplementation("ch.qos.logback:logback-classic")
-  testImplementation("org.slf4j:log4j-over-slf4j")
-  testImplementation("org.slf4j:jcl-over-slf4j")
-  testImplementation("org.slf4j:jul-to-slf4j")
-  testImplementation("com.github.stefanbirkner:system-rules")
-
   codenarc("org.codenarc:CodeNarc:2.2.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.9"))
+}
+
+testing {
+  suites.withType(JvmTestSuite::class).configureEach {
+    dependencies {
+      implementation("org.junit.jupiter:junit-jupiter-api")
+      implementation("org.junit.jupiter:junit-jupiter-params")
+      runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
+      runtimeOnly("org.junit.vintage:junit-vintage-engine")
+
+
+      implementation("org.assertj:assertj-core")
+      implementation("org.awaitility:awaitility")
+      implementation("org.mockito:mockito-core")
+      implementation("org.mockito:mockito-inline")
+      implementation("org.mockito:mockito-junit-jupiter")
+
+      implementation("org.objenesis:objenesis")
+      implementation("org.spockframework:spock-core") {
+        with (this as ExternalDependency) {
+          // exclude optional dependencies
+          exclude(group = "cglib", module = "cglib-nodep")
+          exclude(group = "net.bytebuddy", module = "byte-buddy")
+          exclude(group = "org.junit.platform", module = "junit-platform-testkit")
+          exclude(group = "org.jetbrains", module = "annotations")
+          exclude(group = "org.objenesis", module = "objenesis")
+          exclude(group = "org.ow2.asm", module = "asm")
+        }
+      }
+      implementation("org.spockframework:spock-junit4") {
+        with (this as ExternalDependency) {
+          // spock-core is already added as dependency
+          // exclude it here to avoid pulling in optional dependencies
+          exclude(group = "org.spockframework", module = "spock-core")
+        }
+      }
+      implementation("ch.qos.logback:logback-classic")
+      implementation("org.slf4j:log4j-over-slf4j")
+      implementation("org.slf4j:jcl-over-slf4j")
+      implementation("org.slf4j:jul-to-slf4j")
+      implementation("com.github.stefanbirkner:system-rules")
+    }
+  }
 }
 
 tasks {
@@ -166,6 +212,13 @@ tasks {
   withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
+    dirMode = Integer.parseInt("0755", 8)
+    fileMode = Integer.parseInt("0644", 8)
+  }
+
+  // Convenient when updating errorprone
+  register("compileAllJava") {
+    dependsOn(withType<JavaCompile>())
   }
 }
 
@@ -187,11 +240,8 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   return true
 }
 
-class TestcontainersBuildService : BuildService<BuildServiceParameters.None?> {
-  override fun getParameters(): BuildServiceParameters.None? {
-    return null
-  }
-}
+abstract class TestcontainersBuildService : BuildService<BuildServiceParameters.None>
+
 // To limit number of concurrently running resource intensive tests add
 // tasks {
 //   test {
@@ -213,7 +263,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
 
   // Disable default resource providers since they cause lots of output we don't need.
-  jvmArgs("-Dotel.java.disabled.resource.providers=${resourceClassesCsv}")
+  jvmArgs("-Dotel.java.disabled.resource.providers=$resourceClassesCsv")
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
   // Work around payara not working when this is set for some reason.
@@ -247,7 +297,8 @@ class KeystoreArgumentsProvider(
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
     "-Djavax.net.ssl.trustStore=${trustStore.absolutePath}",
-    "-Djavax.net.ssl.trustStorePassword=testing")
+    "-Djavax.net.ssl.trustStorePassword=testing"
+  )
 }
 
 afterEvaluate {
@@ -256,19 +307,23 @@ afterEvaluate {
     ?: false
   tasks.withType<Test>().configureEach {
     if (testJavaVersion != null) {
-      javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
-        implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
-      })
+      javaLauncher.set(
+        javaToolchains.launcherFor {
+          languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
+          implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
+        }
+      )
       isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
     } else {
       // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
       // the default test task's version so commands like `./gradlew check` can test all projects regardless
       // of Java version.
       if (!isJavaVersionAllowed(DEFAULT_JAVA_VERSION) && otelJava.maxJavaVersionForTests.isPresent) {
-        javaLauncher.set(javaToolchains.launcherFor {
-          languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
-        })
+        javaLauncher.set(
+          javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
+          }
+        )
       }
     }
 
@@ -320,9 +375,9 @@ configurations.configureEach {
     // what modules they add to reference generically.
     dependencySubstitution {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")).using(project(":instrumentation-api-semconv"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")).using(project(":instrumentation-api-annotation-support"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-appender")).using(project(":instrumentation-api-appender"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-api")).using(project(":javaagent-instrumentation-api"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")).using(project(":instrumentation-appender-api-internal"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))

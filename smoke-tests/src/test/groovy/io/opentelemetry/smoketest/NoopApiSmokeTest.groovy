@@ -12,7 +12,9 @@ import spock.lang.Unroll
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
-@IgnoreIf({ os.windows })
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
+
+@IgnoreIf({ useWindowsContainers() })
 class NoopApiSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {

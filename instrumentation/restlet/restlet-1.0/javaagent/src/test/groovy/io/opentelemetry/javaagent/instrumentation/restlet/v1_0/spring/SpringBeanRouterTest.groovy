@@ -13,5 +13,5 @@ class SpringBeanRouterTest extends AbstractSpringServerTest implements AgentTest
   String getConfigurationName() {
     return "springBeanRouterConf.xml"
   }
-  
+
 }

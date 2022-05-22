@@ -24,8 +24,14 @@ public interface TestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
+      List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
       String[] command);
 
   void stopTarget();
+
+  static boolean useWindowsContainers() {
+    return !"1".equals(System.getenv("USE_LINUX_CONTAINERS"))
+        && System.getProperty("os.name").toLowerCase().contains("windows");
+  }
 }

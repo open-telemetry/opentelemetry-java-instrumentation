@@ -12,20 +12,26 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.ratpack.OpenTelemetryServerHandler
 import io.opentelemetry.instrumentation.ratpack.RatpackFunctionalTest
-import io.opentelemetry.instrumentation.ratpack.RatpackTracing
+import io.opentelemetry.instrumentation.ratpack.RatpackTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.export.SpanExporter
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import ratpack.exec.ExecInitializer
 import ratpack.exec.ExecInterceptor
 import ratpack.guice.Guice
+import ratpack.http.client.HttpClient
 import ratpack.server.RatpackServer
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
 import javax.inject.Singleton
+
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET
 
 class RatpackServerApplicationTest extends Specification {
 
@@ -40,10 +46,35 @@ class RatpackServerApplicationTest extends Specification {
       def attributes = spanData.attributes.asMap()
 
       spanData.kind == SpanKind.SERVER
-      attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-      attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
-      attributes[SemanticAttributes.HTTP_METHOD] == "GET"
-      attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+      attributes[HTTP_ROUTE] == "/foo"
+      attributes[HTTP_TARGET] == "/foo"
+      attributes[HTTP_METHOD] == "GET"
+      attributes[HTTP_STATUS_CODE] == 200L
+    }
+  }
+
+  def "propagate trace to http calls"() {
+    expect:
+    app.test { httpClient -> "hi-bar" == httpClient.get("bar").body.text }
+
+    new PollingConditions().eventually {
+      def spanData = app.spanExporter.finishedSpanItems.find { it.name == "/bar" }
+      def spanDataClient = app.spanExporter.finishedSpanItems.find { it.name == "HTTP GET" }
+      def attributes = spanData.attributes.asMap()
+
+      spanData.traceId == spanDataClient.traceId
+
+      spanData.kind == SpanKind.SERVER
+      attributes[HTTP_ROUTE] == "/bar"
+      attributes[HTTP_TARGET] == "/bar"
+      attributes[HTTP_METHOD] == "GET"
+      attributes[HTTP_STATUS_CODE] == 200L
+
+      spanDataClient.kind == SpanKind.CLIENT
+      def attributesClient = spanDataClient.attributes.asMap()
+      attributesClient[HTTP_ROUTE] == "/other"
+      attributesClient[HTTP_METHOD] == "GET"
+      attributesClient[HTTP_STATUS_CODE] == 200L
     }
   }
 
@@ -67,19 +98,19 @@ class OpenTelemetryModule extends AbstractModule {
 
   @Singleton
   @Provides
-  RatpackTracing ratpackTracing(OpenTelemetry openTelemetry) {
-    return RatpackTracing.create(openTelemetry)
+  RatpackTelemetry ratpackTracing(OpenTelemetry openTelemetry) {
+    return RatpackTelemetry.create(openTelemetry)
   }
 
   @Singleton
   @Provides
-  OpenTelemetryServerHandler ratpackServerHandler(RatpackTracing ratpackTracing) {
+  OpenTelemetryServerHandler ratpackServerHandler(RatpackTelemetry ratpackTracing) {
     return ratpackTracing.getOpenTelemetryServerHandler()
   }
 
   @Singleton
   @Provides
-  ExecInterceptor ratpackExecInterceptor(RatpackTracing ratpackTracing) {
+  ExecInterceptor ratpackExecInterceptor(RatpackTelemetry ratpackTracing) {
     return ratpackTracing.getOpenTelemetryExecInterceptor()
   }
 
@@ -91,6 +122,18 @@ class OpenTelemetryModule extends AbstractModule {
       .build()
     return OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build()
   }
+
+  @Singleton
+  @Provides
+  HttpClient instrumentedHttpClient(RatpackTelemetry ratpackTracing) {
+    return ratpackTracing.instrumentHttpClient(HttpClient.of {})
+  }
+
+  @Singleton
+  @Provides
+  ExecInitializer ratpackExecInitializer(RatpackTelemetry ratpackTracing) {
+    return ratpackTracing.getOpenTelemetryExecInitializer()
+  }
 }
 
 @CompileStatic
@@ -99,19 +142,17 @@ class RatpackApp {
   static void main(String... args) {
     RatpackServer.start { server ->
       server
-        .registry(
-          Guice.registry { bindings ->
-            bindings
-              .module(OpenTelemetryModule)
-          }
-        )
+        .registry(Guice.registry { b -> b.module(OpenTelemetryModule) })
         .handlers { chain ->
           chain
             .get("ignore") { ctx -> ctx.render("ignored") }
             .all(OpenTelemetryServerHandler)
             .get("foo") { ctx -> ctx.render("hi-foo") }
+            .get("bar") { ctx ->
+              ctx.get(HttpClient).get(ctx.get(URI))
+                .then { ctx.render("hi-bar") }
+            }
         }
     }
   }
 }
-

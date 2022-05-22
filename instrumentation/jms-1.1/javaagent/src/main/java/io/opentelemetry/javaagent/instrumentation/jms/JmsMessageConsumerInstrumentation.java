@@ -13,9 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -62,11 +63,17 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      MessageWithDestination request = MessageWithDestination.create(message, null, timer);
+      MessageWithDestination request = MessageWithDestination.create(message, null);
 
       if (consumerInstrumenter().shouldStart(parentContext, request)) {
-        Context context = consumerInstrumenter().start(parentContext, request);
-        consumerInstrumenter().end(context, request, null, throwable);
+        InstrumenterUtil.startAndEnd(
+            consumerInstrumenter(),
+            parentContext,
+            request,
+            null,
+            throwable,
+            timer.startTime(),
+            timer.now());
       }
     }
   }

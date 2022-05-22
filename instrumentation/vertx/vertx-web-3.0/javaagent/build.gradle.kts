@@ -35,7 +35,10 @@ dependencies {
 
   add("version3TestImplementation", "io.vertx:vertx-web:3.0.0")
   add("version3TestImplementation", "io.vertx:vertx-jdbc-client:3.0.0")
+  add("version3TestImplementation", "io.vertx:vertx-codegen:3.0.0")
+  add("version3TestImplementation", "io.vertx:vertx-docgen:3.0.0")
 
   add("latestDepTestImplementation", "io.vertx:vertx-web:4.+")
   add("latestDepTestImplementation", "io.vertx:vertx-jdbc-client:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-codegen:4.+")
 }

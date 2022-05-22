@@ -13,14 +13,20 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import java.lang.instrument.Instrumentation;
 import java.rmi.server.ObjID;
+import java.util.Collections;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.utility.JavaModule;
 import sun.rmi.transport.Connection;
 
 /**
@@ -58,6 +64,30 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("sun.rmi.transport.Connection")))
             .and(takesArgument(1, named("java.rmi.server.ObjID"))),
         getClass().getName() + "$StreamRemoteCallConstructorAdvice");
+
+    // expose sun.rmi.transport.StreamRemoteCall to helper classes
+    transformer.applyTransformer(
+        (builder, typeDescription, classLoader, module) -> {
+          if (JavaModule.isSupported()
+              && classLoader == null
+              && "sun.rmi.transport.StreamRemoteCall".equals(typeDescription.getName())
+              && module != null) {
+            Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
+            ClassInjector.UsingInstrumentation.redefineModule(
+                instrumentation,
+                module,
+                Collections.emptySet(),
+                Collections.emptyMap(),
+                Collections.singletonMap(
+                    "sun.rmi.transport",
+                    // AgentClassLoader is in unnamed module of the bootstrap class loader which is
+                    // where helper classes are also
+                    Collections.singleton(JavaModule.ofType(AgentClassLoader.class))),
+                Collections.emptySet(),
+                Collections.emptyMap());
+          }
+          return builder;
+        });
   }
 
   @SuppressWarnings("unused")

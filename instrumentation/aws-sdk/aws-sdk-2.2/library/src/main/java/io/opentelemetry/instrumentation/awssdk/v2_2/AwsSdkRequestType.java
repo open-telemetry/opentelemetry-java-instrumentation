@@ -14,8 +14,8 @@ import java.util.Map;
 enum AwsSdkRequestType {
   S3(request("aws.bucket.name", "Bucket")),
   SQS(request("aws.queue.url", "QueueUrl"), request("aws.queue.name", "QueueName")),
-  Kinesis(request("aws.stream.name", "StreamName")),
-  DynamoDB(request("aws.table.name", "TableName"));
+  KINESIS(request("aws.stream.name", "StreamName")),
+  DYNAMODB(request("aws.table.name", "TableName"));
 
   // Wrapping in unmodifiableMap
   @SuppressWarnings("ImmutableEnumChecker")

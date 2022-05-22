@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
@@ -18,6 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,8 +33,6 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // FIXME: This instrumentation only incorporates sending the command, not processing the
-    // result.
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("sendCommand"))
@@ -80,7 +79,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      instrumenter().end(context, request, null, throwable);
+      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
 
@@ -116,7 +115,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      instrumenter().end(context, request, null, throwable);
+      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
 }

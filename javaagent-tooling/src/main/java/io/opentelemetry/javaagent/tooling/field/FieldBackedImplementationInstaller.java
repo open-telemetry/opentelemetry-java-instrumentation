@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static java.util.logging.Level.FINEST;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -17,6 +18,8 @@ import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
+import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
+import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import java.lang.instrument.Instrumentation;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,6 +30,7 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 
 /**
@@ -174,20 +178,36 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
          */
         synchronized (INSTALLED_VIRTUAL_FIELD_MATCHERS) {
           if (INSTALLED_VIRTUAL_FIELD_MATCHERS.contains(entry)) {
-            logger.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
+            if (logger.isLoggable(FINEST)) {
+              logger.log(
+                  FINEST,
+                  "Skipping builder for {0} {1}",
+                  new Object[] {instrumenterClass.getName(), entry});
+            }
             continue;
           }
 
-          logger.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
+          if (logger.isLoggable(FINEST)) {
+            logger.log(
+                FINEST,
+                "Making builder for {0} {1}",
+                new Object[] {instrumenterClass.getName(), entry});
+          }
           INSTALLED_VIRTUAL_FIELD_MATCHERS.add(entry);
 
           /*
            * For each virtual field defined in a current instrumentation we create an agent builder
            * that injects necessary fields.
            */
+          ElementMatcher<TypeDescription> typeMatcher =
+              new NamedMatcher<>(
+                  "VirtualField",
+                  new IgnoreFailedTypeMatcher(
+                      not(isAbstract()).and(hasSuperType(named(entry.getKey())))));
+
           builder =
               builder
-                  .type(not(isAbstract()).and(hasSuperType(named(entry.getKey()))))
+                  .type(typeMatcher)
                   .and(safeToInjectFieldsMatcher())
                   .and(InstrumentationModuleInstaller.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);

@@ -19,7 +19,6 @@ import javax.ws.rs.ext.Provider
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.UNSET
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 @Unroll
 abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
@@ -37,7 +36,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
       return makeRequest(resource)
     }
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    return runUnderServerTrace("test.span") {
+    return runWithHttpServerSpan("test.span") {
       makeRequest(resource)
     }
   }
@@ -135,6 +134,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
           kind SERVER
           if (!runsOnServer()) {
             attributes {
+              "$SemanticAttributes.HTTP_ROUTE" parentResourceName
             }
           }
         }

@@ -22,6 +22,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,6 +49,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHttpClientTest<REQUEST> {
+  public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
+  public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
+
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
 
@@ -126,11 +130,11 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   /** Returns the connection timeout that should be used when setting up tested clients. */
   protected final Duration connectTimeout() {
-    return Duration.ofSeconds(5);
+    return CONNECTION_TIMEOUT;
   }
 
   protected final Duration readTimeout() {
-    return Duration.ofSeconds(2);
+    return READ_TIMEOUT;
   }
 
   private InstrumentationTestRunner testing;
@@ -199,9 +203,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   void verifyExtension() {
     if (testing == null) {
       throw new AssertionError(
-          "Subclasses of AbstractHttpClientTest must register either "
-              + "HttpClientLibraryInstrumentationExtension or "
-              + "HttpClientAgentInstrumentationExtension");
+          "Subclasses of AbstractHttpClientTest must register HttpClientInstrumentationExtension");
     }
   }
 
@@ -261,7 +263,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     URI uri = resolveAddress("/success");
     int responseCode =
-        testing.runWithClientSpan("parent-client-span", () -> doRequest(method, uri));
+        testing.runWithHttpClientSpan("parent-client-span", () -> doRequest(method, uri));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -398,7 +400,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
           for (int i = 0; i < options.maxRedirects; i++) {
             assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           }
-          trace.hasSpansSatisfyingExactly(assertions.toArray(new Consumer[0]));
+          trace.hasSpansSatisfyingExactly(assertions);
         });
   }
 
@@ -553,14 +555,25 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  assertClientSpan(span, uri, method, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError),
-              span ->
-                  span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
+          List<Consumer<SpanDataAssert>> spanAsserts =
+              Arrays.asList(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      assertClientSpan(span, uri, method, null)
+                          .hasParent(trace.getSpan(0))
+                          .hasException(clientError),
+                  span ->
+                      span.hasName("callback")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0)));
+          boolean jdk8 = "1.8".equals(System.getProperty("java.specification.version"));
+          if (jdk8) {
+            // on some netty based http clients order of `CONNECT` and `callback` spans isn't
+            // guaranteed when running on jdk8
+            trace.hasSpansSatisfyingExactlyInAnyOrder(spanAsserts);
+          } else {
+            trace.hasSpansSatisfyingExactly(spanAsserts);
+          }
         });
   }
 
@@ -682,17 +695,22 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               throw new AssertionError(e);
             }
             try {
-              testing.runWithSpan(
-                  "Parent span " + index,
-                  () -> {
-                    Span.current().setAttribute("test.request.id", index);
-                    doRequest(
-                        method,
-                        uri,
-                        Collections.singletonMap("test-request-id", String.valueOf(index)));
-                  });
-            } catch (Exception e) {
-              throw new AssertionError(e);
+              Integer result =
+                  testing.runWithSpan(
+                      "Parent span " + index,
+                      () -> {
+                        Span.current().setAttribute("test.request.id", index);
+                        return doRequest(
+                            method,
+                            uri,
+                            Collections.singletonMap("test-request-id", String.valueOf(index)));
+                      });
+              assertThat(result).isEqualTo(200);
+            } catch (Throwable throwable) {
+              if (throwable instanceof AssertionError) {
+                throw (AssertionError) throwable;
+              }
+              throw new AssertionError(throwable);
             }
           };
       pool.submit(job);
@@ -834,19 +852,23 @@ public abstract class AbstractHttpClientTest<REQUEST> {
             } catch (InterruptedException e) {
               throw new AssertionError(e);
             }
-            testing.runWithSpan(
-                "Parent span " + index,
-                () -> {
-                  Span.current().setAttribute("test.request.id", index);
-                  try {
-                    singleConnection.doRequest(
-                        path, Collections.singletonMap("test-request-id", String.valueOf(index)));
-                  } catch (InterruptedException e) {
-                    throw new AssertionError(e);
-                  } catch (Exception e) {
-                    throw new AssertionError(e);
-                  }
-                });
+            try {
+              Integer result =
+                  testing.runWithSpan(
+                      "Parent span " + index,
+                      () -> {
+                        Span.current().setAttribute("test.request.id", index);
+                        return singleConnection.doRequest(
+                            path,
+                            Collections.singletonMap("test-request-id", String.valueOf(index)));
+                      });
+              assertThat(result).isEqualTo(200);
+            } catch (Throwable throwable) {
+              if (throwable instanceof AssertionError) {
+                throw (AssertionError) throwable;
+              }
+              throw new AssertionError(throwable);
+            }
           };
       pool.submit(job);
     }
@@ -924,9 +946,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
               }
 
-              // Optional
-              // TODO(anuraaga): Move to test knob rather than always treating
-              // as optional
+              // TODO(anuraaga): Move to test knob rather than always treating as optional
               if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_IP)) {
                 if (uri.getHost().equals("192.0.2.1")) {
                   // NB(anuraaga): This branch seems to currently only be exercised on Java 15.
@@ -1098,7 +1118,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   private int doRequestWithExistingTracingHeaders(String method, URI uri) throws Exception {
-    Map<String, String> headers = new HashMap();
+    Map<String, String> headers = new HashMap<>();
     for (String field :
         testing.getOpenTelemetry().getPropagators().getTextMapPropagator().fields()) {
       headers.put(field, "12345789");

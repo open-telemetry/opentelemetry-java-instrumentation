@@ -14,10 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
-import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
+import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -58,7 +58,7 @@ public class CouchbaseClusterInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      CouchbaseRequest request = CouchbaseRequest.create(null, declaringClass, methodName);
+      CouchbaseRequestInfo request = CouchbaseRequestInfo.create(null, declaringClass, methodName);
       result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }

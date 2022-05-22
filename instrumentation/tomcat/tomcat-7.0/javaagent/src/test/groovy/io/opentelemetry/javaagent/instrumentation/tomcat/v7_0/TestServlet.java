@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -18,18 +19,18 @@ public class TestServlet extends HttpServlet {
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String path = req.getServletPath();
 
-    HttpServerTest.ServerEndpoint serverEndpoint = HttpServerTest.ServerEndpoint.forPath(path);
+    ServerEndpoint serverEndpoint = ServerEndpoint.forPath(path);
     if (serverEndpoint != null) {
       HttpServerTest.controller(
           serverEndpoint,
           () -> {
-            if (serverEndpoint == HttpServerTest.ServerEndpoint.EXCEPTION) {
+            if (serverEndpoint == ServerEndpoint.EXCEPTION) {
               throw new Exception(serverEndpoint.getBody());
             }
-            if (serverEndpoint == HttpServerTest.ServerEndpoint.CAPTURE_HEADERS) {
+            if (serverEndpoint == ServerEndpoint.CAPTURE_HEADERS) {
               resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
             }
-            if (serverEndpoint == HttpServerTest.ServerEndpoint.CAPTURE_PARAMETERS) {
+            if (serverEndpoint == ServerEndpoint.CAPTURE_PARAMETERS) {
               req.setCharacterEncoding("UTF8");
               String value = req.getParameter("test-parameter");
               if (!"test value õäöü".equals(value)) {
@@ -37,13 +38,13 @@ public class TestServlet extends HttpServlet {
                     "request parameter does not have expected value " + value);
               }
             }
-            if (serverEndpoint == HttpServerTest.ServerEndpoint.INDEXED_CHILD) {
-              HttpServerTest.ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(req::getParameter);
+            if (serverEndpoint == ServerEndpoint.INDEXED_CHILD) {
+              ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(req::getParameter);
             }
             resp.getWriter().print(serverEndpoint.getBody());
-            if (serverEndpoint == HttpServerTest.ServerEndpoint.REDIRECT) {
+            if (serverEndpoint == ServerEndpoint.REDIRECT) {
               resp.sendRedirect(serverEndpoint.getBody());
-            } else if (serverEndpoint == HttpServerTest.ServerEndpoint.ERROR) {
+            } else if (serverEndpoint == ServerEndpoint.ERROR) {
               resp.sendError(serverEndpoint.getStatus(), serverEndpoint.getBody());
             } else {
               resp.setStatus(serverEndpoint.getStatus());

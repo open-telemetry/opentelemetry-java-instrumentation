@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -13,6 +11,7 @@ import spark.Spark
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class SparkJavaBasedTest extends AgentInstrumentationSpecification {
 
@@ -48,6 +47,7 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
@@ -57,8 +57,7 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.HTTP_SERVER_NAME" String
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.HTTP_ROUTE" "/param/:param"
           }
         }
       }

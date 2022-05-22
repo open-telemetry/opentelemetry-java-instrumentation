@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -48,6 +49,9 @@ public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
       HttpRequestPacket request = GrizzlyStateStorage.removeRequest(ctx);
       if (context != null && request != null) {
         Throwable error = GrizzlyErrorHolder.getOrDefault(context, throwable);
+        if (error == null) {
+          error = AppServerBridge.getException(context);
+        }
         instrumenter().end(context, request, null, error);
       }
     }

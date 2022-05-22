@@ -9,8 +9,9 @@ import com.twitter.finatra.http.contexts.RouteInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ClassNames;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.instrumentation.api.util.ClassNames;
 
 public final class FinatraSingletons {
 
@@ -24,8 +25,8 @@ public final class FinatraSingletons {
   }
 
   public static void updateServerSpanName(Context context, RouteInfo routeInfo) {
-    ServerSpanNaming.updateServerSpanName(
-        context, ServerSpanNaming.Source.CONTROLLER, (c, route) -> route.path(), routeInfo);
+    HttpRouteHolder.updateHttpRoute(
+        context, HttpRouteSource.CONTROLLER, (c, route) -> route.path(), routeInfo);
   }
 
   private FinatraSingletons() {}

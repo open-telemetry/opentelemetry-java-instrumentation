@@ -12,10 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -86,7 +86,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
   public static class RememberNettyRequestAdvice {
 
     @Advice.OnMethodExit
-    public static void rememberNettyRequest(@Advice.Return NettyResponseFuture responseFuture) {
+    public static void rememberNettyRequest(@Advice.Return NettyResponseFuture<?> responseFuture) {
       RequestContext requestContext =
           VirtualField.find(AsyncHandler.class, RequestContext.class)
               .get(responseFuture.getAsyncHandler());

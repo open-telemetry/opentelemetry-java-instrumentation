@@ -1,0 +1,99 @@
+name: Reusable - Smoke test
+
+on:
+  workflow_call:
+    inputs:
+      skip-windows:
+        type: boolean
+        required: false
+      cache-read-only:
+        type: boolean
+        required: false
+      no-build-cache:
+        type: boolean
+        required: false
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY:
+        required: false
+      GE_CACHE_USERNAME:
+        required: false
+      GE_CACHE_PASSWORD:
+        required: false
+
+jobs:
+  smoke-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - windows-2019
+          - ubuntu-latest
+        smoke-test-suite:
+          - jetty
+          - liberty
+          - payara
+          - tomcat
+          - tomee
+          - websphere
+          - wildfly
+          - other
+        exclude:
+          - os: ${{ inputs.skip-windows && 'windows-2019' || '' }}
+          - os: windows-2019
+            smoke-test-suite: websphere
+      fail-fast: false
+    steps:
+      - name: Support long paths
+        run: git config --system core.longpaths true
+        if: matrix.os == 'windows-2019'
+
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle cache
+        uses: gradle/gradle-build-action@v2
+        with:
+          # only push cache for one matrix option per OS since github action cache space is limited
+          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
+
+      - name: Build
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        # running suite "none" compiles everything needed by smoke tests without executing any tests
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+
+      - name: Test
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+
+      - name: Upload jvm crash dump files if any
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
+          # we expect crash dumps either in root director or in smoke-tests
+          # not using **/ here because actions/upload-artifact fails with long paths https://github.com/actions/upload-artifact/issues/309
+          path: |
+            hs_err_pid*.log
+            smoke-tests/hs_err_pid*.log
+            javacore.*.txt
+            smoke-tests/javacore.*.txt
+            Snap.*.trc
+            smoke-tests/Snap.*.trc
+            core.*.dmp
+            smoke-tests/core.*.dmp
+            jitdump.*.dmp
+            smoke-tests/jitdump.*.dmp
+          if-no-files-found: ignore

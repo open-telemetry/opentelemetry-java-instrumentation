@@ -6,8 +6,9 @@ muzzle {
   pass {
     group.set("org.apache.cxf")
     module.set("cxf-rt-frontend-jaxws")
+    // all earlier versions in maven central also pass muzzle check,
+    // but 3.0.0 is already 8 years old and testing earlier versions adds complexity
     versions.set("[3.0.0,)")
-    assertInverse.set(true)
     extraDependency("javax.servlet:javax.servlet-api:3.0.1")
   }
 }

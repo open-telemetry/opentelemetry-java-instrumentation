@@ -10,6 +10,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * The {@link AttributesBuilder} and {@link Attributes} used by the instrumentation API. We are able
@@ -20,6 +21,8 @@ import java.util.Map;
  */
 final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
     implements Attributes, AttributesBuilder {
+
+  private static final long serialVersionUID = 1L;
 
   // Attributes
 
@@ -65,5 +68,13 @@ final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
   public AttributesBuilder putAll(Attributes attributes) {
     attributes.forEach(this::put);
     return this;
+  }
+
+  @Override
+  public void forEach(BiConsumer<? super AttributeKey<?>, ? super Object> action) {
+    // https://github.com/open-telemetry/opentelemetry-java/issues/4161
+    // Help out android desugaring by having an explicit call to HashMap.forEach, when forEach is
+    // just called through Attributes.forEach desugaring is unable to correctly handle it.
+    super.forEach(action);
   }
 }

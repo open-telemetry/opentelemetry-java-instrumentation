@@ -31,7 +31,7 @@ class JdkErrorCauseExtractorTest {
             .getConstructor(Throwable.class)
             .newInstance(new IllegalArgumentException("test"));
 
-    assertThat(ErrorCauseExtractor.jdk().extractCause(exception))
+    assertThat(ErrorCauseExtractor.jdk().extract(exception))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("test");
   }
@@ -40,7 +40,7 @@ class JdkErrorCauseExtractorTest {
   void multipleUnwraps() {
     assertThat(
             ErrorCauseExtractor.jdk()
-                .extractCause(
+                .extract(
                     new ExecutionException(
                         new UndeclaredThrowableException(new IllegalArgumentException("test")))))
         .isInstanceOf(IllegalArgumentException.class)
@@ -49,13 +49,12 @@ class JdkErrorCauseExtractorTest {
 
   @Test
   void notWrapped() {
-    assertThat(ErrorCauseExtractor.jdk().extractCause(new IllegalArgumentException("test")))
+    assertThat(ErrorCauseExtractor.jdk().extract(new IllegalArgumentException("test")))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("test");
     assertThat(
             ErrorCauseExtractor.jdk()
-                .extractCause(
-                    new IllegalArgumentException("test", new IllegalStateException("state"))))
+                .extract(new IllegalArgumentException("test", new IllegalStateException("state"))))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("test");
   }

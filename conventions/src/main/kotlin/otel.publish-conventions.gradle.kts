@@ -9,10 +9,8 @@ publishing {
       plugins.withId("java-platform") {
         from(components["javaPlatform"])
       }
-      if(project.path != ":javaagent"){
-        plugins.withId("java-library") {
-          from(components["java"])
-        }
+      plugins.withId("java-library") {
+        from(components["java"])
       }
 
       versionMapping {
@@ -32,8 +30,10 @@ publishing {
           throw GradleException("groupId is not set for this project or its parent ${project.parent}")
         }
 
-        pom.description.set(project.description
-          ?: "Instrumentation of Java libraries using OpenTelemetry.")
+        pom.description.set(
+          project.description
+            ?: "Instrumentation of Java libraries using OpenTelemetry."
+        )
       }
 
       pom {

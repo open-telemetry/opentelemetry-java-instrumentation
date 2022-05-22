@@ -17,7 +17,16 @@ dependencies {
 
   implementation("com.google.guava:guava")
 
-  implementation("org.codehaus.groovy:groovy-all")
+  api("org.junit-pioneer:junit-pioneer")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
+}
+
+tasks {
+  compileJava {
+    with(options) {
+      // We generate stubs using an old version of protobuf to test old versions of gRPC,
+      // where this lint error triggers.
+      compilerArgs.add("-Xlint:-cast")
+    }
+  }
 }

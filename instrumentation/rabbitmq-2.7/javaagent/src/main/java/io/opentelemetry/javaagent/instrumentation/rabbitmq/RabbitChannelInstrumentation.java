@@ -31,10 +31,11 @@ import com.rabbitmq.client.MessageProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.util.HashMap;
@@ -209,16 +210,21 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      ReceiveRequest request =
-          ReceiveRequest.create(queue, timer, response, channel.getConnection());
+      ReceiveRequest request = ReceiveRequest.create(queue, response, channel.getConnection());
       if (!receiveInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
       // can't create span and put into scope in method enter above, because can't add parent after
       // span creation
-      Context context = receiveInstrumenter().start(parentContext, request);
-      receiveInstrumenter().end(context, request, null, throwable);
+      InstrumenterUtil.startAndEnd(
+          receiveInstrumenter(),
+          parentContext,
+          request,
+          null,
+          throwable,
+          timer.startTime(),
+          timer.now());
     }
   }
 

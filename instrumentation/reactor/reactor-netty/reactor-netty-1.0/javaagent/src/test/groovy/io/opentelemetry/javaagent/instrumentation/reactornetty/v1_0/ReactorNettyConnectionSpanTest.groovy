@@ -55,6 +55,8 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
     responseCode == 200
     assertTraces(1) {
       trace(0, 5) {
+        def list = Arrays.asList("RESOLVE", "CONNECT")
+        spans.subList(2, 4).sort(Comparator.comparing { item -> list.indexOf(item.name) })
         span(0) {
           name "parent"
           kind INTERNAL
@@ -127,6 +129,8 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
     and:
     assertTraces(1) {
       trace(0, 4) {
+        def list = Arrays.asList("RESOLVE", "CONNECT")
+        spans.subList(2, 4).sort(Comparator.comparing { item -> list.indexOf(item.name) })
         span(0) {
           name "parent"
           kind INTERNAL

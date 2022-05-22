@@ -24,20 +24,20 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Utility class for managing active contexts as a stack associated with an exchange. */
 class ActiveContextManager {
 
   private static final String ACTIVE_CONTEXT_PROPERTY = "OpenTelemetry.activeContext";
 
-  private static final Logger logger = LoggerFactory.getLogger(ActiveContextManager.class);
+  private static final Logger logger = Logger.getLogger(ActiveContextManager.class.getName());
 
   private ActiveContextManager() {}
 
@@ -53,7 +53,7 @@ class ActiveContextManager {
     ContextWithScope parent = exchange.getProperty(ACTIVE_CONTEXT_PROPERTY, ContextWithScope.class);
     ContextWithScope contextWithScope = ContextWithScope.activate(parent, context, request);
     exchange.setProperty(ACTIVE_CONTEXT_PROPERTY, contextWithScope);
-    logger.debug("Activated a span: {}", contextWithScope);
+    logger.log(FINE, "Activated a span: {0}", contextWithScope);
   }
 
   /**
@@ -70,7 +70,7 @@ class ActiveContextManager {
     if (contextWithScope != null) {
       contextWithScope.deactivate(exchange.getException());
       exchange.setProperty(ACTIVE_CONTEXT_PROPERTY, contextWithScope.getParent());
-      logger.debug("Deactivated span: {}", contextWithScope);
+      logger.log(FINE, "Deactivated span: {0}", contextWithScope);
       return contextWithScope.context;
     }
 

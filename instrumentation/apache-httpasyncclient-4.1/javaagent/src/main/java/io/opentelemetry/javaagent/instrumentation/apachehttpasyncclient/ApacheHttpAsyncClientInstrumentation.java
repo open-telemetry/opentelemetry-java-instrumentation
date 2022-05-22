@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -19,6 +19,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
+import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,8 +33,6 @@ import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
@@ -146,7 +145,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
   public static class WrappedFutureCallback<T> implements FutureCallback<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger(WrappedFutureCallback.class);
+    private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;
     private final HttpContext httpContext;
@@ -167,7 +166,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public void completed(T result) {
       if (context == null) {
         // this is unexpected
-        logger.debug("context was never set");
+        logger.fine("context was never set");
         completeDelegate(result);
         return;
       }
@@ -188,7 +187,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public void failed(Exception ex) {
       if (context == null) {
         // this is unexpected
-        logger.debug("context was never set");
+        logger.fine("context was never set");
         failDelegate(ex);
         return;
       }
@@ -210,7 +209,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public void cancelled() {
       if (context == null) {
         // this is unexpected
-        logger.debug("context was never set");
+        logger.fine("context was never set");
         cancelDelegate();
         return;
       }

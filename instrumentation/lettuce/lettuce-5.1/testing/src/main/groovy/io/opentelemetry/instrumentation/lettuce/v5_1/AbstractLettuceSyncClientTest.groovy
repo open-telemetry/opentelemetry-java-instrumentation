@@ -447,15 +447,14 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "DEBUG SEGFAULT"
           }
-          event(0) {
-            eventName "redis.encode.start"
-          }
-          event(1) {
-            eventName "redis.encode.end"
-          }
-          if (Boolean.getBoolean("testLatestDeps")) {
-            // Seems to only be recorded with Lettuce 6+
-            errorEvent(RedisException, "Connection disconnected", 2)
+          if (!Boolean.getBoolean("testLatestDeps")) {
+            // these are no longer recorded since Lettuce 6.1.6
+            event(0) {
+              eventName "redis.encode.start"
+            }
+            event(1) {
+              eventName "redis.encode.end"
+            }
           }
         }
       }

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
@@ -16,14 +15,15 @@ import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
@@ -35,6 +35,9 @@ import javax.annotation.Nullable;
 
 final class OpenTelemetryTracing implements Tracing {
 
+  private static final NetClientAttributesExtractor<OpenTelemetryEndpoint, Void>
+      netAttributesExtractor =
+          NetClientAttributesExtractor.create(new LettuceNetAttributesGetter());
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer) {
@@ -108,7 +111,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
   }
 
-  private static class OpenTelemetryEndpoint implements Endpoint {
+  static class OpenTelemetryEndpoint implements Endpoint {
     @Nullable final String ip;
     final int port;
     @Nullable final String name;
@@ -152,7 +155,7 @@ final class OpenTelemetryTracing implements Tracing {
               .setSpanKind(SpanKind.CLIENT)
               .setParent(context)
               .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystemValues.REDIS);
-      return new OpenTelemetrySpan(spanBuilder);
+      return new OpenTelemetrySpan(context, spanBuilder);
     }
   }
 
@@ -161,19 +164,18 @@ final class OpenTelemetryTracing implements Tracing {
   // particularly safe, synchronizing all accesses. Relying on implementation details would allow
   // reducing synchronization but the impact should be minimal.
   private static class OpenTelemetrySpan extends Tracer.Span {
+
+    private final Context context;
     private final SpanBuilder spanBuilder;
 
     @Nullable private String name;
-
     @Nullable private List<Object> events;
-
     @Nullable private Throwable error;
-
     @Nullable private Span span;
-
     @Nullable private String args;
 
-    OpenTelemetrySpan(SpanBuilder spanBuilder) {
+    OpenTelemetrySpan(Context context, SpanBuilder spanBuilder) {
+      this.context = context;
       this.spanBuilder = spanBuilder;
     }
 
@@ -191,17 +193,25 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
-        if (span != null) {
-          fillEndpoint(span::setAttribute, (OpenTelemetryEndpoint) endpoint);
-        } else {
-          fillEndpoint(spanBuilder::setAttribute, (OpenTelemetryEndpoint) endpoint);
-        }
+        fillEndpoint((OpenTelemetryEndpoint) endpoint);
       }
       return this;
     }
 
+    private void fillEndpoint(OpenTelemetryEndpoint endpoint) {
+      AttributesBuilder attributesBuilder = Attributes.builder();
+      Context currentContext = span == null ? context : context.with(span);
+      netAttributesExtractor.onEnd(attributesBuilder, currentContext, endpoint, null, null);
+      if (span != null) {
+        span.setAllAttributes(attributesBuilder.build());
+      } else {
+        spanBuilder.setAllAttributes(attributesBuilder.build());
+      }
+    }
+
     // Added and called in 6.0+
     // @Override
+    @SuppressWarnings("UnusedMethod")
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       start();
 
@@ -314,10 +324,5 @@ final class OpenTelemetryTracing implements Tracing {
       }
       span.end();
     }
-  }
-
-  private static void fillEndpoint(AttributeSetter span, OpenTelemetryEndpoint endpoint) {
-    span.setAttribute(SemanticAttributes.NET_TRANSPORT, IP_TCP);
-    NetPeerAttributes.INSTANCE.setNetPeer(span, endpoint.name, endpoint.ip, endpoint.port);
   }
 }

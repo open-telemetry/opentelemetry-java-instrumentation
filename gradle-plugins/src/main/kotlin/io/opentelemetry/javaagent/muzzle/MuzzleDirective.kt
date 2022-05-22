@@ -20,6 +20,7 @@ abstract class MuzzleDirective {
   abstract val skipVersions: SetProperty<String>
   abstract val additionalDependencies: ListProperty<Any>
   abstract val excludedDependencies: ListProperty<String>
+  abstract val excludedInstrumentationNames: SetProperty<String>
   abstract val assertPass: Property<Boolean>
   abstract val assertInverse: Property<Boolean>
   internal abstract val coreJdk: Property<Boolean> // use coreJdk() function below to enable
@@ -30,6 +31,7 @@ abstract class MuzzleDirective {
     skipVersions.convention(emptySet())
     additionalDependencies.convention(listOf())
     excludedDependencies.convention(listOf())
+    excludedInstrumentationNames.convention(listOf())
     assertPass.convention(false)
     assertInverse.convention(false)
     coreJdk.convention(false)
@@ -56,6 +58,15 @@ abstract class MuzzleDirective {
    */
   fun excludeDependency(excludeString: String?) {
     excludedDependencies.add(excludeString!!)
+  }
+
+  /**
+   * Excludes an instrumentation module from the current muzzle test.
+   *
+   * @param excludeString An instrumentation module class name to exclude
+   */
+  fun excludeInstrumentationName(excludeString: String) {
+    excludedInstrumentationNames.add(excludeString)
   }
 
   fun skip(vararg version: String?) {

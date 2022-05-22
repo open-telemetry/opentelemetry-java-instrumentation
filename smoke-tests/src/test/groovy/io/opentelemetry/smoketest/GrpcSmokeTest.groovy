@@ -12,16 +12,23 @@ import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
+import java.time.Duration
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20211213.1570880329"
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server started.*")
   }
 
   @Unroll

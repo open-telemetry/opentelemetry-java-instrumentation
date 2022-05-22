@@ -5,6 +5,7 @@
 
 package io.opentelemetry.smoketest
 
+import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
@@ -18,6 +19,7 @@ import spock.lang.Specification
 import java.util.regex.Pattern
 import java.util.stream.Stream
 
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
 abstract class SmokeTest extends Specification {
@@ -56,6 +58,14 @@ abstract class SmokeTest extends Specification {
     return []
   }
 
+  /**
+   * Subclasses can override this method to provide additional ports that should be exposed from the
+   * target container
+   */
+  protected List<ResourceMapping> getExtraPorts() {
+    return []
+  }
+
   def setupSpec() {
     containerManager.startEnvironmentOnce()
     telemetryRetriever = new TelemetryRetriever(containerManager.getBackendMappedPort())
@@ -67,7 +77,7 @@ abstract class SmokeTest extends Specification {
 
   def startTarget(String jdk, String serverVersion, boolean windows) {
     def targetImage = getTargetImage(jdk, serverVersion, windows)
-    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, extraResources, getWaitStrategy(), getCommand())
+    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, extraResources, extraPorts, getWaitStrategy(), getCommand())
   }
 
   protected abstract String getTargetImage(String jdk)
@@ -108,7 +118,7 @@ abstract class SmokeTest extends Specification {
   protected static Stream<Span> getSpanStream(Collection<ExportTraceServiceRequest> traces) {
     return traces.stream()
       .flatMap { it.getResourceSpansList().stream() }
-      .flatMap { it.getInstrumentationLibrarySpansList().stream() }
+      .flatMap { it.getScopeSpansList().stream() }
       .flatMap { it.getSpansList().stream() }
   }
 
@@ -118,6 +128,10 @@ abstract class SmokeTest extends Specification {
 
   protected Collection<ExportMetricsServiceRequest> waitForMetrics() {
     return telemetryRetriever.waitForMetrics()
+  }
+
+  protected Collection<ExportLogsServiceRequest> waitForLogs() {
+    return telemetryRetriever.waitForLogs()
   }
 
   protected static Set<String> getLoggedTraceIds(ToStringConsumer output) {
@@ -139,13 +153,6 @@ abstract class SmokeTest extends Specification {
   }
 
   private static TestContainerManager createContainerManager() {
-    boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
-
-    if (isWindows && "1" != System.getenv("USE_LINUX_CONTAINERS")) {
-      return new WindowsTestContainerManager()
-    }
-
-    return new LinuxTestContainerManager()
+    return useWindowsContainers() ? new WindowsTestContainerManager() : new LinuxTestContainerManager()
   }
-
 }

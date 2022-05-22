@@ -10,9 +10,11 @@ import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.TransportAddress
 import org.elasticsearch.env.Environment
+import org.elasticsearch.http.BindHttpException
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
+import org.elasticsearch.transport.BindTransportException
 import org.elasticsearch.transport.Netty3Plugin
 import org.elasticsearch.transport.RemoteTransportException
 import org.elasticsearch.transport.TransportService
@@ -20,9 +22,12 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import java.util.concurrent.TimeUnit
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static org.awaitility.Awaitility.await
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportClientTest {
@@ -55,7 +60,21 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
       .put("discovery.type", "single-node")
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
-    testNode.start()
+    // retry when starting elasticsearch fails with
+    // org.elasticsearch.http.BindHttpException: Failed to resolve host [[]]
+    // Caused by: java.net.SocketException: No such device (getFlags() failed)
+    // or
+    // org.elasticsearch.transport.BindTransportException: Failed to resolve host null
+    // Caused by: java.net.SocketException: No such device (getFlags() failed)
+    await()
+      .atMost(10, TimeUnit.SECONDS)
+      .ignoreExceptionsMatching({
+        BindHttpException.isInstance(it) || BindTransportException.isInstance(it)
+      })
+      .until({
+        testNode.start()
+        true
+      })
     tcpPublishAddress = testNode.injector().getInstance(TransportService).boundAddress().publishAddress()
 
     client = new PreBuiltTransportClient(

@@ -5,23 +5,27 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+
+import java.util.logging.Logger;
 
 public final class VersionLogger {
 
-  private static final Logger logger = LoggerFactory.getLogger(VersionLogger.class);
+  private static final Logger logger = Logger.getLogger(VersionLogger.class.getName());
 
   public static void logAllVersions() {
-    logger.info("opentelemetry-javaagent - version: {}", InstrumentationVersion.VERSION);
-    if (logger.isDebugEnabled()) {
-      logger.debug(
-          "Running on Java {}. JVM {} - {} - {}",
-          System.getProperty("java.version"),
-          System.getProperty("java.vm.name"),
-          System.getProperty("java.vm.vendor"),
-          System.getProperty("java.vm.version"));
+    logger.log(INFO, "opentelemetry-javaagent - version: {0}", AgentVersion.VERSION);
+    if (logger.isLoggable(FINE)) {
+      logger.log(
+          FINE,
+          "Running on Java {0}. JVM {1} - {2} - {3}",
+          new Object[] {
+            System.getProperty("java.version"),
+            System.getProperty("java.vm.name"),
+            System.getProperty("java.vm.vendor"),
+            System.getProperty("java.vm.version")
+          });
     }
   }
 

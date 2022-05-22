@@ -14,6 +14,6 @@ class OkHttp3Test extends AbstractOkHttp3Test implements LibraryTestTrait {
 
   @Override
   Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {
-    return OkHttpTracing.create(getOpenTelemetry()).newCallFactory(clientBuilder.build())
+    return OkHttpTelemetry.create(getOpenTelemetry()).newCallFactory(clientBuilder.build())
   }
 }

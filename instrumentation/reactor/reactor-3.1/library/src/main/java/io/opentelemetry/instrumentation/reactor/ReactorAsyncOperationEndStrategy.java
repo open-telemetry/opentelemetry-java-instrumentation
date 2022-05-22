@@ -19,7 +19,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
-  private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
+  // Visible for testing
+  static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("reactor.canceled");
 
   public static ReactorAsyncOperationEndStrategy create() {
@@ -80,6 +81,8 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
    */
   private abstract class EndOnFirstNotificationConsumer extends AtomicBoolean
       implements Runnable, Consumer<Throwable> {
+
+    private static final long serialVersionUID = 1L;
 
     private final Context context;
 

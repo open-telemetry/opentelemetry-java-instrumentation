@@ -9,6 +9,9 @@ import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 
+import java.time.Duration
+
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 import static java.util.stream.Collectors.toSet
 
 abstract class PropagationTest extends SmokeTest {
@@ -16,6 +19,11 @@ abstract class PropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20211213.1570880324"
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started SpringbootApplication in.*")
   }
 
   def "Should propagate test"() {
@@ -42,11 +50,11 @@ abstract class PropagationTest extends SmokeTest {
 
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class DefaultPropagationTest extends PropagationTest {
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class W3CPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -54,7 +62,7 @@ class W3CPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class B3PropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -62,7 +70,7 @@ class B3PropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class B3MultiPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -70,7 +78,7 @@ class B3MultiPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class JaegerPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -78,11 +86,16 @@ class JaegerPropagationTest extends PropagationTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class OtTracePropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20211213.1570880324"
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started SpringbootApplication in.*")
   }
 
   // OtTracer only propagates lower half of trace ID so we have to mangle the trace IDs similar to
@@ -114,7 +127,7 @@ class OtTracePropagationTest extends SmokeTest {
   }
 }
 
-@IgnoreIf({ os.windows })
+@IgnoreIf({ useWindowsContainers() })
 class XRayPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {

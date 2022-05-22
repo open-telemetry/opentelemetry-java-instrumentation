@@ -1,0 +1,21 @@
+name: Reusable - Markdown link check
+
+on:
+  workflow_call:
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check
+
+      - name: Run markdown-link-check
+        run: |
+          find . -type f \
+                 -name '*.md' \
+                 -not -path './CHANGELOG.md' \
+                 -not -path './licenses/*' \
+               | xargs .github/scripts/markdown-link-check-with-retry.sh

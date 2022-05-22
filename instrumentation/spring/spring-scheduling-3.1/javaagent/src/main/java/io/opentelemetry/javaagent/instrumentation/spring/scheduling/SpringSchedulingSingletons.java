@@ -7,25 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
-import org.springframework.scheduling.support.ScheduledMethodRunnable;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 
 public final class SpringSchedulingSingletons {
 
-  private static final Instrumenter<Runnable, Void> INSTRUMENTER =
-      Instrumenter.<Runnable, Void>builder(
-              GlobalOpenTelemetry.get(),
-              "io.opentelemetry.spring-scheduling-3.1",
-              SpringSchedulingSingletons::extractSpanName)
-          .newInstrumenter();
+  private static final Instrumenter<Runnable, Void> INSTRUMENTER;
 
-  private static String extractSpanName(Runnable runnable) {
-    if (runnable instanceof ScheduledMethodRunnable) {
-      ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
-      return SpanNames.fromMethod(scheduledMethodRunnable.getMethod());
-    } else {
-      return SpanNames.fromMethod(runnable.getClass(), "run");
-    }
+  static {
+    SpringSchedulingCodeAttributesGetter codeAttributesGetter =
+        new SpringSchedulingCodeAttributesGetter();
+    INSTRUMENTER =
+        Instrumenter.<Runnable, Void>builder(
+                GlobalOpenTelemetry.get(),
+                "io.opentelemetry.spring-scheduling-3.1",
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            .newInstrumenter();
   }
 
   public static Instrumenter<Runnable, Void> instrumenter() {

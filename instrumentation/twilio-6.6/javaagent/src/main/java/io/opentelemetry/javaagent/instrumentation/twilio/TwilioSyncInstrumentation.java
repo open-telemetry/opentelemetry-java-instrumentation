@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -73,7 +73,8 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelSpanName") String spanName) {
       Context parentContext = currentContext();
       spanName = TwilioSingletons.spanName(that, methodName);
-      if (!instrumenter().shouldStart(parentContext, spanName)) {
+      if (!instrumenter().shouldStart(parentContext, spanName)
+          || TwilioAsyncMarker.isMarkedAsync(parentContext)) {
         return;
       }
 

@@ -8,6 +8,7 @@ package com.ibm.ws.http.dispatcher.internal.channel;
 import com.ibm.wsspi.http.HttpResponse;
 
 // https://github.com/OpenLiberty/open-liberty/blob/master/dev/com.ibm.ws.transport.http/src/com/ibm/ws/http/dispatcher/internal/channel/HttpDispatcherLink.java
+@SuppressWarnings("OtelInternalJavadoc")
 public class HttpDispatcherLink {
 
   public int getRemotePort() {
@@ -15,10 +16,6 @@ public class HttpDispatcherLink {
   }
 
   public String getRemoteHostAddress() {
-    throw new UnsupportedOperationException();
-  }
-
-  public String getRemoteHostName(boolean canonical) {
     throw new UnsupportedOperationException();
   }
 

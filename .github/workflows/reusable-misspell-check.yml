@@ -1,0 +1,21 @@
+name: Reusable - Misspell check
+
+on:
+  workflow_call:
+
+jobs:
+  misspell-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install misspell
+        run: |
+          curl -L -o ./install-misspell.sh https://git.io/misspell
+          sh ./install-misspell.sh
+
+      - name: Run misspell
+        run: |
+          find . -type f \
+                 -not -path './licenses/*' \
+               | xargs bin/misspell -error

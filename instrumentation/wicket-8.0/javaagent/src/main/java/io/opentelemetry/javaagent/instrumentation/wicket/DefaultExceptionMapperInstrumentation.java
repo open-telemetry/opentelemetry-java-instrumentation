@@ -9,10 +9,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.InvocationTargetException;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -38,7 +38,7 @@ public class DefaultExceptionMapperInstrumentation implements TypeInstrumentatio
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onExit(@Advice.Argument(0) Exception exception) {
-      Span serverSpan = ServerSpan.fromContextOrNull(Java8BytecodeBridge.currentContext());
+      Span serverSpan = LocalRootSpan.fromContextOrNull(Java8BytecodeBridge.currentContext());
       if (serverSpan != null) {
         // unwrap exception
         Throwable throwable = exception;

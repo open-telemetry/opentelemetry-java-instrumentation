@@ -24,7 +24,7 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
   def setupSpec() {
     redisServer.start()
     port = redisServer.getMappedPort(6379)
-    jedis = new Jedis("localhost", port)
+    jedis = new Jedis("127.0.0.1", port)
   }
 
   def cleanupSpec() {
@@ -51,7 +51,6 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION" "SET"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
@@ -78,7 +77,6 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION" "SET"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
@@ -93,7 +91,6 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET foo"
             "$SemanticAttributes.DB_OPERATION" "GET"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
@@ -120,7 +117,6 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION" "SET"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
@@ -135,7 +131,6 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
             "$SemanticAttributes.DB_OPERATION" "RANDOMKEY"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP

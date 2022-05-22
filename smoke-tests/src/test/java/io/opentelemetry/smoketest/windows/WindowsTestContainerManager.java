@@ -76,10 +76,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .exec()
             .getId();
 
-    String backendSuffix = "-windows-20210611.927888723";
-
     String backendImageName =
-        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20210918.1248928123";
+        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20220411.2147767274";
     if (!imageExists(backendImageName)) {
       pullImage(backendImageName);
     }
@@ -91,6 +89,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
                 command
                     .withAliases(BACKEND_ALIAS)
                     .withExposedPorts(ExposedPort.tcp(BACKEND_PORT))
+                    .withEnv("JAVA_TOOL_OPTIONS=-Xmx128m")
                     .withHostConfig(
                         HostConfig.newHostConfig()
                             .withAutoRemove(true)
@@ -134,8 +133,13 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
+      List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
       String[] cmd) {
+    if (extraPorts != null && !extraPorts.isEmpty()) {
+      throw new UnsupportedOperationException("extra ports not supported");
+    }
+
     stopTarget();
 
     if (!imageExists(targetImageName)) {
@@ -338,6 +342,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     }
   }
 
+  // https://github.com/google/error-prone/issues/3090
+  @SuppressWarnings("MethodCanBeStatic")
   private interface Waiter {
     default void configureLogger(ContainerLogHandler logHandler) {}
 

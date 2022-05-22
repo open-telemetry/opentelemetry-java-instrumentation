@@ -7,15 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
-public class CouchbaseSpanNameExtractor implements SpanNameExtractor<CouchbaseRequest> {
-  private final SpanNameExtractor<CouchbaseRequest> dbSpanNameExtractor;
+public class CouchbaseSpanNameExtractor implements SpanNameExtractor<CouchbaseRequestInfo> {
+  private final SpanNameExtractor<CouchbaseRequestInfo> dbSpanNameExtractor;
 
-  public CouchbaseSpanNameExtractor(SpanNameExtractor<CouchbaseRequest> dbSpanNameExtractor) {
+  public CouchbaseSpanNameExtractor(SpanNameExtractor<CouchbaseRequestInfo> dbSpanNameExtractor) {
     this.dbSpanNameExtractor = dbSpanNameExtractor;
   }
 
   @Override
-  public String extract(CouchbaseRequest couchbaseRequest) {
+  public String extract(CouchbaseRequestInfo couchbaseRequest) {
     if (couchbaseRequest.isMethodCall()) {
       return couchbaseRequest.operation();
     }

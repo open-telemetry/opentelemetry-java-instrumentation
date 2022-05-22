@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import play.api.mvc.Request;
 import scala.Option;
 
@@ -33,7 +33,7 @@ public final class Play24Singletons {
 
     Span.fromContext(context).updateName(route);
     // set the span name on the upstream akka/netty span
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan != null) {
       serverSpan.updateName(route);
     }

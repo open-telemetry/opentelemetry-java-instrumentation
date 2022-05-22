@@ -8,7 +8,11 @@ package io.opentelemetry.smoketest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import spock.lang.IgnoreIf
 
-@IgnoreIf({ os.windows })
+import java.time.Duration
+
+import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
+
+@IgnoreIf({ useWindowsContainers() })
 class SpringBootWithSamplingSmokeTest extends SmokeTest {
 
   static final double SAMPLER_PROBABILITY = 0.2
@@ -17,6 +21,11 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20211213.1570880324"
+  }
+
+  @Override
+  protected TargetWaitStrategy getWaitStrategy() {
+    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started SpringbootApplication in.*")
   }
 
   @Override

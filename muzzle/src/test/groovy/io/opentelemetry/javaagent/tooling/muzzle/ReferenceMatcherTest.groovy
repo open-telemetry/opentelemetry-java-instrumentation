@@ -11,6 +11,9 @@ import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source
+import io.opentelemetry.test.AnotherTestInterface
+import io.opentelemetry.test.TestAbstractSuperClass
+import io.opentelemetry.test.TestInterface
 import muzzle.TestClasses
 import muzzle.TestClasses.MethodBodyAdvice
 import org.objectweb.asm.Type
@@ -209,7 +212,7 @@ class ReferenceMatcherTest extends Specification {
   def "should fail #desc helper classes that does not implement all abstract methods"() {
     given:
     def reference = ClassRef.builder(className)
-      .setSuperClassName(TestHelperClasses.HelperSuperClass.name)
+      .setSuperClassName(TestAbstractSuperClass.name)
       .addMethod(new Source[0], [] as Flag[], "someMethod", Type.VOID_TYPE)
       .build()
 
@@ -228,10 +231,10 @@ class ReferenceMatcherTest extends Specification {
 
   def "should fail #desc helper classes that do not implement all abstract methods - even if empty abstract class reference exists"() {
     given:
-    def emptySuperClassRef = ClassRef.builder(TestHelperClasses.HelperSuperClass.name)
+    def emptySuperClassRef = ClassRef.builder(TestAbstractSuperClass.name)
       .build()
     def reference = ClassRef.builder(className)
-      .setSuperClassName(TestHelperClasses.HelperSuperClass.name)
+      .setSuperClassName(TestAbstractSuperClass.name)
       .addMethod(new Source[0], [] as Flag[], "someMethod", Type.VOID_TYPE)
       .build()
 
@@ -254,13 +257,13 @@ class ReferenceMatcherTest extends Specification {
     given:
     def baseHelper = ClassRef.builder("io.opentelemetry.instrumentation.BaseHelper")
       .setSuperClassName(Object.name)
-      .addInterfaceName(TestHelperClasses.HelperInterface.name)
+      .addInterfaceName(TestInterface.name)
       .addMethod(new Source[0], [] as Flag[], "foo", Type.VOID_TYPE)
       .build()
     // abstract HelperInterface#foo() is implemented by BaseHelper
     def helper = ClassRef.builder(className)
       .setSuperClassName(baseHelper.className)
-      .addInterfaceName(TestHelperClasses.AnotherHelperInterface.name)
+      .addInterfaceName(AnotherTestInterface.name)
       .addMethod(new Source[0], [] as Flag[], "bar", Type.VOID_TYPE)
       .build()
 

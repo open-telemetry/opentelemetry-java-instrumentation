@@ -5,16 +5,17 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import static java.util.logging.Level.FINE;
+
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.PatchLogger;
 import io.opentelemetry.javaagent.tooling.util.Trie;
+import java.util.logging.Logger;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
-  private static final Logger logger = LoggerFactory.getLogger(IgnoredClassLoadersMatcher.class);
+  private static final Logger logger = Logger.getLogger(IgnoredClassLoadersMatcher.class.getName());
 
   /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
   private static final Cache<ClassLoader, Boolean> skipCache = Cache.weak();
@@ -70,7 +71,7 @@ public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.Abstract
   private static boolean delegatesToBootstrap(ClassLoader loader) {
     boolean delegates = true;
     if (!loadsExpectedClass(loader, PatchLogger.class)) {
-      logger.debug("loader {} failed to delegate bootstrap agent class", loader);
+      logger.log(FINE, "loader {0} failed to delegate bootstrap agent class", loader);
       delegates = false;
     }
     return delegates;

@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.results;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -18,30 +19,32 @@ import java.util.stream.Collectors;
 class CsvPersister implements ResultsPersister {
 
   // The fields as they are output, in order, but spread across agents
-  private final static List<FieldSpec> FIELDS = Arrays.asList(
-      FieldSpec.of("startupDurationMs", r -> r.startupDurationMs),
-      FieldSpec.of("minHeapUsed", r -> r.heapUsed.min),
-      FieldSpec.of("maxHeapUsed", r -> r.heapUsed.max),
-      FieldSpec.of("totalAllocatedMB", r -> r.getTotalAllocatedMB()),
-      FieldSpec.of("totalGCTime", r -> r.totalGCTime),
-      FieldSpec.of("maxThreadContextSwitchRate", r -> r.maxThreadContextSwitchRate),
-      FieldSpec.of("iterationAvg", r -> r.iterationAvg),
-      FieldSpec.of("iterationP95", r -> r.iterationP95),
-      FieldSpec.of("requestAvg", r -> r.requestAvg),
-      FieldSpec.of("requestP95", r -> r.requestP95),
-      FieldSpec.of("netReadAvg", r -> r.averageNetworkRead),
-      FieldSpec.of("netWriteAvg", r -> r.averageNetworkWrite),
-      FieldSpec.of("peakThreadCount", r -> r.peakThreadCount),
-      FieldSpec.of("averageCpuUser", r -> r.averageJvmUserCpu),
-      FieldSpec.of("maxCpuUser", r -> r.maxJvmUserCpu),
-      FieldSpec.of("averageMachineCpuTotal", r -> r.averageMachineCpuTotal),
-      FieldSpec.of("runDurationMs", r -> r.runDurationMs),
-      FieldSpec.of("gcPauseMs", r -> NANOSECONDS.toMillis(r.totalGcPauseNanos))
-  );
+  private static final List<FieldSpec> FIELDS =
+      Arrays.asList(
+          FieldSpec.of("startupDurationMs", r -> r.startupDurationMs),
+          FieldSpec.of("minHeapUsed", r -> r.heapUsed.min),
+          FieldSpec.of("maxHeapUsed", r -> r.heapUsed.max),
+          FieldSpec.of("totalAllocatedMB", r -> r.getTotalAllocatedMB()),
+          FieldSpec.of("totalGCTime", r -> r.totalGCTime),
+          FieldSpec.of("maxThreadContextSwitchRate", r -> r.maxThreadContextSwitchRate),
+          FieldSpec.of("iterationAvg", r -> r.iterationAvg),
+          FieldSpec.of("iterationP95", r -> r.iterationP95),
+          FieldSpec.of("requestAvg", r -> r.requestAvg),
+          FieldSpec.of("requestP95", r -> r.requestP95),
+          FieldSpec.of("netReadAvg", r -> r.averageNetworkRead),
+          FieldSpec.of("netWriteAvg", r -> r.averageNetworkWrite),
+          FieldSpec.of("peakThreadCount", r -> r.peakThreadCount),
+          FieldSpec.of("averageCpuUser", r -> r.averageJvmUserCpu),
+          FieldSpec.of("maxCpuUser", r -> r.maxJvmUserCpu),
+          FieldSpec.of("averageMachineCpuTotal", r -> r.averageMachineCpuTotal),
+          FieldSpec.of("runDurationMs", r -> r.runDurationMs),
+          FieldSpec.of("gcPauseMs", r -> NANOSECONDS.toMillis(r.totalGcPauseNanos)));
 
   private final Path resultsFile;
 
-  public CsvPersister(Path resultsFile) {this.resultsFile = resultsFile;}
+  public CsvPersister(Path resultsFile) {
+    this.resultsFile = resultsFile;
+  }
 
   @Override
   public void write(List<AppPerfResults> results) {
@@ -98,14 +101,14 @@ class CsvPersister implements ResultsPersister {
 
   static class FieldSpec {
     private final String name;
-    private final Function<AppPerfResults,Object> getter;
+    private final Function<AppPerfResults, Object> getter;
 
     public FieldSpec(String name, Function<AppPerfResults, Object> getter) {
       this.name = name;
       this.getter = getter;
     }
 
-    static FieldSpec of(String name, Function<AppPerfResults,Object> getter){
+    static FieldSpec of(String name, Function<AppPerfResults, Object> getter) {
       return new FieldSpec(name, getter);
     }
   }

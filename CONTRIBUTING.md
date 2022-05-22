@@ -1,26 +1,28 @@
 ## Contributing
 
-Pull requests for bug fixes are welcome, but before submitting new features
-or changes to current functionality [open an
-issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
-and discuss your ideas or propose the changes you wish to make. After a
-resolution is reached a PR can be submitted for review.
+Pull requests for bug fixes are always welcome!
 
-In order to build and test this whole repository you need JDK 11+.
-Some instrumentations and tests may put constraints on which java versions they support.
-See [Running the tests](./docs/contributing/running-tests.md) for more details.
+Before submitting new features or changes to current functionality, it is recommended to first
+[open an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
+and discuss your ideas or propose the changes you wish to make.
 
 ### Building
+
+In order to build and test this whole repository you need JDK 11+.
+
+Some instrumentations and tests may put constraints on which java versions they support.
+See [Running the tests](./docs/contributing/running-tests.md) for more details.
 
 #### Snapshot builds
 
 For developers testing code changes before a release is complete, there are
 snapshot builds of the `main` branch. They are available from
-the Sonatype OSS snapshots repository at https://oss.sonatype.org/content/repositories/snapshots/ ([browse](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/))
+the Sonatype OSS snapshots repository at `https://oss.sonatype.org/content/repositories/snapshots/`
+([browse](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/))
 
 #### Building from source
 
-Build using Java 11:
+Build using Java 11+:
 
 ```bash
 java -version

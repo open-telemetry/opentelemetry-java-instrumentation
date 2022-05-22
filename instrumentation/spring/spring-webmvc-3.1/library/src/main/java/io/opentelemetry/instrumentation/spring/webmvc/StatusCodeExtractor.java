@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.webmvc;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -16,11 +17,13 @@ final class StatusCodeExtractor
     implements AttributesExtractor<HttpServletRequest, HttpServletResponse> {
 
   @Override
-  public void onStart(AttributesBuilder attributes, HttpServletRequest httpServletRequest) {}
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, HttpServletRequest httpServletRequest) {}
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       HttpServletRequest httpServletRequest,
       @Nullable HttpServletResponse response,
       @Nullable Throwable error) {
@@ -37,7 +40,7 @@ final class StatusCodeExtractor
         statusCode = response.getStatus();
       }
 
-      set(attributes, SemanticAttributes.HTTP_STATUS_CODE, statusCode);
+      attributes.put(SemanticAttributes.HTTP_STATUS_CODE, statusCode);
     }
   }
 }

@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
   errorprone("com.google.errorprone:error_prone_core")
+  errorprone(project(":custom-checks"))
 }
 
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
@@ -24,6 +25,13 @@ tasks {
 
         excludedPaths.set(".*/build/generated/.*|.*/concurrentlinkedhashmap/.*")
 
+        // Still Java 8
+        disable("Varifier")
+
+        // We often override a method returning Iterable which this makes tedious
+        // for questionable value.
+        disable("PreferredInterfaceType")
+
         // it's very convenient to debug stuff in the javaagent using System.out.println
         // and we don't want to conditionally only check this in CI
         // because then the remote gradle cache won't work for local builds
@@ -39,6 +47,10 @@ tasks {
         disable("AutoValueImmutableFields")
         disable("StringSplitter")
         disable("ImmutableMemberCollection")
+
+        // Fully qualified names may be necessary when deprecating a class to avoid
+        // deprecation warning.
+        disable("UnnecessarilyFullyQualified")
 
         // Don't currently use this (to indicate a local variable that's mutated) but could
         // consider for future.
@@ -73,9 +85,6 @@ tasks {
         // We end up using obsolete types if a library we're instrumenting uses them.
         disable("JdkObsolete")
         disable("JavaUtilDate")
-
-        // Limits API possibilities
-        disable("NoFunctionalReturnType")
 
         // Storing into a variable in onEnter triggers this unfortunately.
         // TODO(anuraaga): Only disable for auto instrumentation project.

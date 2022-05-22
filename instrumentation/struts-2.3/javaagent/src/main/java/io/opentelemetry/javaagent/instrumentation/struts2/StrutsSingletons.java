@@ -18,15 +18,15 @@ public class StrutsSingletons {
   private static final Instrumenter<ActionInvocation, Void> INSTRUMENTER;
 
   static {
-    CodeAttributesExtractor<ActionInvocation, Void> codeAttributes =
-        new StrutsCodeAttributesExtractor();
+    StrutsCodeAttributesGetter codeAttributesGetter = new StrutsCodeAttributesGetter();
+
     INSTRUMENTER =
         Instrumenter.<ActionInvocation, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                CodeSpanNameExtractor.create(codeAttributes))
-            .addAttributesExtractor(codeAttributes)
-            .setDisabled(ExperimentalConfig.get().suppressControllerSpans())
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .newInstrumenter();
   }
 

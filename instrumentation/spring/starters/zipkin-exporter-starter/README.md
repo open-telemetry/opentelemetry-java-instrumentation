@@ -34,4 +34,5 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-s
 
 ### Starter Guide
 
-Check out the opentelemetry-api [quick start](https://github.com/open-telemetry/opentelemetry-java/blob/main/QUICKSTART.md) to learn more about OpenTelemetry instrumentation.
+Check out [OpenTelemetry Manual Instrumentation](https://opentelemetry.io/docs/instrumentation/java/manual/) to learn more about
+using the OpenTelemetry API to instrument your code.

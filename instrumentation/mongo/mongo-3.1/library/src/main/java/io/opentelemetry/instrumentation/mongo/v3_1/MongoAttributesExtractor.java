@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,13 +19,18 @@ import org.bson.BsonValue;
 
 class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEvent, Void> {
   @Override
-  public void onStart(AttributesBuilder attributes, CommandStartedEvent event) {
-    set(attributes, DB_MONGODB_COLLECTION, collectionName(event));
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, CommandStartedEvent event) {
+    String collectionName = collectionName(event);
+    if (collectionName != null) {
+      attributes.put(DB_MONGODB_COLLECTION, collectionName);
+    }
   }
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       CommandStartedEvent event,
       @Nullable Void unused,
       @Nullable Throwable error) {}

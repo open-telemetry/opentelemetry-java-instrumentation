@@ -11,7 +11,6 @@ import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -36,12 +35,9 @@ final class OpenTelemetryService extends SimpleDecoratingHttpService {
 
     Context context = instrumenter.start(parentContext, ctx);
 
-    Span span = Span.fromContext(context);
-    if (span.isRecording()) {
-      ctx.log()
-          .whenComplete()
-          .thenAccept(log -> instrumenter.end(context, ctx, log, log.responseCause()));
-    }
+    ctx.log()
+        .whenComplete()
+        .thenAccept(log -> instrumenter.end(context, ctx, log, log.responseCause()));
 
     try (Scope ignored = context.makeCurrent()) {
       return unwrap().serve(ctx, req);

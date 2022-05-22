@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
 import com.mongodb.event.CommandListener;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.mongo.v3_1.MongoTracing;
+import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
 
 public final class MongoInstrumentationSingletons {
 
   public static final CommandListener LISTENER =
-      MongoTracing.create(GlobalOpenTelemetry.get()).newCommandListener();
+      MongoTelemetry.create(GlobalOpenTelemetry.get()).newCommandListener();
 
   private MongoInstrumentationSingletons() {}
 }

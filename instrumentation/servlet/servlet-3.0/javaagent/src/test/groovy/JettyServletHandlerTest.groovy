@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletHandler
@@ -12,7 +15,7 @@ import javax.servlet.Servlet
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
 
 class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
 
@@ -39,11 +42,10 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
   }
 
   @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == ServerEndpoint.CAPTURE_PARAMETERS) {
-      return "HTTP POST"
-    }
-    "HTTP GET"
+  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
+    def attributes = super.httpAttributes(endpoint)
+    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes
   }
 
   @Override
@@ -89,7 +91,7 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
   }
 
   @Override
-  Class<?> expectedExceptionClass() {
-    ServletException
+  Throwable expectedException() {
+    new ServletException(EXCEPTION.body)
   }
 }

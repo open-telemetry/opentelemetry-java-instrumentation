@@ -31,9 +31,7 @@ dependencies {
     )
   )
 
-  library("com.couchbase.client:core-io:2.1.6")
-
-  testLibrary("com.couchbase.client:java-client:3.2.0")
+  library("com.couchbase.client:java-client:3.2.0")
 
   testImplementation("org.testcontainers:couchbase")
 }

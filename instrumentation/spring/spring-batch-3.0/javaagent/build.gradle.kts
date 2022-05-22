@@ -23,7 +23,6 @@ tasks {
   val testChunkRootSpan by registering(Test::class) {
     filter {
       includeTestsMatching("*ChunkRootSpanTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/*ChunkRootSpanTest.*")
     jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
@@ -33,21 +32,22 @@ tasks {
     filter {
       includeTestsMatching("*ItemLevelSpanTest")
       includeTestsMatching("*CustomSpanEventTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
     jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
   }
 
   test {
-    dependsOn(testChunkRootSpan)
-    dependsOn(testItemLevelSpan)
     filter {
       excludeTestsMatching("*ChunkRootSpanTest")
       excludeTestsMatching("*ItemLevelSpanTest")
       excludeTestsMatching("*CustomSpanEventTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testChunkRootSpan)
+    dependsOn(testItemLevelSpan)
   }
 
   withType<Test>().configureEach {

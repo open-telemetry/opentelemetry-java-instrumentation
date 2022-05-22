@@ -57,6 +57,8 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
 
     assertTraces(1) {
       trace(0, 5) {
+        def list = Arrays.asList("RESOLVE", "CONNECT", "SSL handshake")
+        spans.subList(2, 5).sort(Comparator.comparing { item -> list.indexOf(item.name) })
         span(0) {
           name "parent"
           status ERROR
@@ -132,6 +134,8 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 6) {
+        def list = Arrays.asList("RESOLVE", "CONNECT", "SSL handshake")
+        spans.subList(2, 5).sort(Comparator.comparing { item -> list.indexOf(item.name) })
         span(0) {
           name "parent"
         }

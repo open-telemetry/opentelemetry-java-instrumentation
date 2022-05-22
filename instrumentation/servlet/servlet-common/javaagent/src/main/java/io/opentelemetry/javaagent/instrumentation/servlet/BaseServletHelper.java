@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
-import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.FILTER;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.SERVLET;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
@@ -84,7 +84,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       Context context, REQUEST request, MappingResolver mappingResolver, boolean servlet) {
     Context result = addServletContextPath(context, request);
     if (mappingResolver != null) {
-      ServerSpanNaming.updateServerSpanName(
+      HttpRouteHolder.updateHttpRoute(
           result, servlet ? SERVLET : FILTER, spanNameProvider, mappingResolver, request);
     }
 
@@ -103,7 +103,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     if (parameterExtractor == null || !AppServerBridge.captureServletAttributes(context)) {
       return;
     }
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

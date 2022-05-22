@@ -7,12 +7,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterProperties;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -26,11 +24,6 @@ class JaegerSpanExporterAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   OpenTelemetryAutoConfiguration.class, JaegerSpanExporterAutoConfiguration.class));
-
-  @AfterEach
-  void tearDown() {
-    GlobalOpenTelemetry.resetForTest();
-  }
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize JaegerGrpcSpanExporter bean")

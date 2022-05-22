@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class MetroInstrumentationModule extends InstrumentationModule {
   public MetroInstrumentationModule() {
-    super("metro", "metro-2.2");
+    super("metro", "metro-2.2", "jaxws");
   }
 
   @Override

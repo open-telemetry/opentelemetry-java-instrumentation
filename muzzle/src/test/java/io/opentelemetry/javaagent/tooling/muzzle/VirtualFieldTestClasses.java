@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 
 @SuppressWarnings("ReturnValueIgnored")
 public class VirtualFieldTestClasses {

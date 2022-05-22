@@ -1,0 +1,34 @@
+name: Reusable - Muzzle
+
+on:
+  workflow_call:
+    inputs:
+      cache-read-only:
+        type: boolean
+        required: false
+
+jobs:
+  muzzle:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task:
+          - ":instrumentation:muzzle1"
+          - ":instrumentation:muzzle2"
+          - ":instrumentation:muzzle3"
+          - ":instrumentation:muzzle4"
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Run muzzle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ${{ matrix.task }}
+          cache-read-only: ${{ inputs.cache-read-only }}

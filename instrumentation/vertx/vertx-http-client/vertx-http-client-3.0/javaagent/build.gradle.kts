@@ -14,6 +14,10 @@ muzzle {
 dependencies {
   library("io.vertx:vertx-core:3.0.0")
 
+  // vertx-codegen and vertx-docgen dependencies are needed for Xlint's annotation checking
+  library("io.vertx:vertx-codegen:3.0.0")
+  testLibrary("io.vertx:vertx-docgen:3.0.0")
+
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
@@ -26,7 +30,9 @@ dependencies {
   // Vert.x 4.0 is incompatible with our tests.
   // 3.9.7 Requires Netty 4.1.60, no other version works with it.
   latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.60.Final"))
-  latestDepTestLibrary("io.vertx:vertx-core:3.+")
+  latestDepTestLibrary("io.vertx:vertx-core:3.+") // see vertx-http-client-4.0 module
+  latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // see vertx-http-client-4.0 module
+  latestDepTestLibrary("io.vertx:vertx-docgen:3.+") // see vertx-http-client-4.0 module
 }
 
 tasks {

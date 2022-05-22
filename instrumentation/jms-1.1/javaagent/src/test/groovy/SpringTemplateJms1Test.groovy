@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.slf4j.Logger
@@ -23,7 +22,7 @@ import static Jms1Test.consumerSpan
 import static Jms1Test.producerSpan
 
 class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
-  private static final Logger logger = LoggerFactory.getLogger(SpringTemplateJms1Test)
+  private static final Logger logger = LoggerFactory.getLogger("io.opentelemetry.SpringTemplateJms1Test")
 
   private static final GenericContainer broker = new GenericContainer("rmohr/activemq:latest")
     .withExposedPorts(61616, 8161)
@@ -39,6 +38,9 @@ class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
   def setupSpec() {
     broker.start()
     ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616))
+    // to avoid InvalidDestinationException in "send and receive message generates spans"
+    // see https://issues.apache.org/jira/browse/AMQ-6155
+    connectionFactory.setWatchTopicAdvisories(false)
     Connection connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
@@ -78,24 +80,24 @@ class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
     setup:
     AtomicReference<String> msgId = new AtomicReference<>()
     Thread.start {
+      logger.info("calling receive")
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
       msgId.set(msg.getJMSMessageID())
 
+      logger.info("calling send")
       template.send(msg.getJMSReplyTo()) {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
     }
-    def receivedMessage
-    def stopwatch = Stopwatch.createStarted()
-    while (receivedMessage == null && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
-      // sendAndReceive() returns null if template.receive() has not been called yet
-      receivedMessage = template.sendAndReceive(destination) {
-        session -> template.getMessageConverter().toMessage(messageText, session)
-      }
+    logger.info("calling sendAndReceive")
+    def receivedMessage = template.sendAndReceive(destination) {
+      session -> template.getMessageConverter().toMessage(messageText, session)
     }
+    logger.info("received message " + receivedMessage)
 
     expect:
+    receivedMessage != null
     receivedMessage.text == "responded!"
     assertTraces(4) {
       traces.sort(orderByRootSpanName(

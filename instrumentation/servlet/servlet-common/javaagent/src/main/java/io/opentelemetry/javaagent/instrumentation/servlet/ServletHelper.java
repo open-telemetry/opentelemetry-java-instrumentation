@@ -92,7 +92,10 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
   }
 
   public RESPONSE getAsyncListenerResponse(REQUEST request) {
-    return (RESPONSE) accessor.getRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
+    @SuppressWarnings("unchecked")
+    RESPONSE response =
+        (RESPONSE) accessor.getRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
+    return response;
   }
 
   public void attachAsyncListener(REQUEST request) {

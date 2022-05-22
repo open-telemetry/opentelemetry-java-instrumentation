@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.metro;
 import com.sun.xml.ws.api.message.Packet;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.ws.handler.MessageContext;
@@ -21,7 +21,7 @@ public final class MetroServerSpanNaming {
       return;
     }
 
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

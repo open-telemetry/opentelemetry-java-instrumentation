@@ -4,7 +4,7 @@ The `Instrumenter` encapsulates the entire logic for gathering telemetry, from c
 to starting and ending spans, to recording values using metrics instruments. The `Instrumenter`
 public API contains only three methods: `shouldStart()`, `start()` and `end()`. The class is
 designed to decorate the actual invocation of the instrumented library code; `shouldStart()`
-and `start()`methods are to be called at the start of the request processing, while `end()` must be
+and `start()` methods are to be called at the start of the request processing, while `end()` must be
 called when processing ends and a response arrives, or when it fails with an error.
 The `Instrumenter` is a generic class parameterized with `REQUEST` and `RESPONSE` types. They
 represent the input and output of the instrumented operation. `Instrumenter` can be configured with
@@ -115,6 +115,31 @@ The `builder()` method accepts three arguments:
 
 An `Instrumenter` can be built from several smaller components. The following subsections describe
 all interfaces that can be used to customize an `Instrumenter`.
+
+### Set the instrumentation version and OpenTelemetry schema URL
+
+By setting the instrumentation library version, you let users identify which version of your
+instrumentation produced the telemetry. Make sure you always provide the version to
+the `Instrumenter`. You can do this in two ways:
+
+* By calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`.
+* By making sure that the JAR file with your instrumentation library contains a properties file in
+  the `META-INF/io/opentelemetry/instrumentation/` directory. You must name the file
+  `${instrumentationName}.properties`, where `${instrumentationName}` is the name of the
+  instrumentation library passed to the `Instrumenter#builder()` method. The file must contain a
+  single property, `version`. For example:
+
+    ```properties
+    # META-INF/io/opentelemetry/instrumentation/my-instrumentation.properties
+    version=1.2.3
+    ```
+
+  The `Instrumenter` automatically detects the properties file and determines the instrumentation
+  version based on its name.
+
+If the `Instrumenter` adheres to a specific OpenTelemetry schema, you can set the schema URL using
+the `setSchemaUrl()` method on the `InstrumenterBuilder`. To learn more about the OpenTelemetry
+schemas [see the Overview](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md).
 
 ### Name the spans using the `SpanNameExtractor`
 
@@ -229,8 +254,8 @@ The `SpanLinksExtractor` interface can be used to add links to other spans when 
 operation starts. It has a single `extract()` method that receives the following arguments:
 
 * A `SpanLinkBuilder` that can be used to add the links.
-* The parent `Context` that was passed in to `Instrumenter.start()`.
-* The `REQUEST` instance that was passed in to `Instrumenter.start()`.
+* The parent `Context` that was passed in to `Instrumenter#start()`.
+* The `REQUEST` instance that was passed in to `Instrumenter#start()`.
 
 You can read more about span links and their use
 cases [here](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#links-between-spans).
@@ -275,7 +300,7 @@ Consider the following example:
 class MyErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
-  public Throwable extractCause(Throwable error) {
+  public Throwable extract(Throwable error) {
     if (error instanceof MyLibWrapperException && error.getCause() != null) {
       error = error.getCause();
     }
@@ -294,52 +319,17 @@ default `jdk()` implementation that removes the known JDK wrapper exception type
 You can set the `ErrorCauseExtractor` in the `InstrumenterBuilder` using
 the `setErrorCauseExtractor()` method.
 
-### Provide custom operation start and end times using the `TimeExtractor`
+### Register metrics by implementing the `OperationMetrics` and `OperationListener`
 
-In some cases, the instrumented library provides a way to retrieve accurate timestamps of when the
-operation starts and ends. The `TimeExtractor` interface can be used to
-feed this information into OpenTelemetry trace and metrics data.
+If you need to add metrics to the `Instrumenter` you can implement the `OperationMetrics`
+and `OperationListener` interfaces. `OperationMetrics` is simply a factory interface for
+the `OperationListener` - it receives an OpenTelemetry `Meter` and returns a new listener.
+The `OperationListener` contains two methods:
 
-`extractStartTime()` can only extract the timestamp from the request. `extractEndTime()`
-accepts the request, an optional response, and an optional `Throwable` error. Consider the following
-example:
-
-```java
-class MyTimeExtractor implements TimeExtractor<Request, Response> {
-
-  @Override
-  public Instant extractStartTime(Request request) {
-    return request.startTimestamp();
-  }
-
-  @Override
-  public Instant extractEndTime(Request request, @Nullable Response response, @Nullable Throwable error) {
-    if (response != null) {
-      return response.endTimestamp();
-    }
-    return request.clock().now();
-  }
-}
-```
-
-The sample implementations above use the request to retrieve the start timestamp. The response is
-used to compute the end time if it is available; in case it is missing (for example, when an error
-occurs) the same time source is used to compute the current timestamp.
-
-You can set the time extractor in the `InstrumenterBuilder` using the `setTimeExtractor()`
-method.
-
-### Register metrics by implementing the `RequestMetrics` and `RequestListener`
-
-If you need to add metrics to the `Instrumenter` you can implement the `RequestMetrics`
-and `RequestListener` interfaces. `RequestMetrics` is simply a factory interface for
-the `RequestListener` - it receives an OpenTelemetry `Meter` and returns a new listener.
-The `RequestListener` contains two methods:
-
-* `start()` that gets executed when the instrumented operation starts. It returns a `Context` - it
-  can be used to store internal metrics state that should be propagated to the `end()` call, if
+* `onStart()` that gets executed when the instrumented operation starts. It returns a `Context` - it
+  can be used to store internal metrics state that should be propagated to the `onEnd()` call, if
   needed.
-* `end()` that gets executed when the instrumented operation ends.
+* `onEnd()` that gets executed when the instrumented operation ends.
 
 Both methods accept a `Context`, an instance of `Attributes` that contains either attributes
 computed on instrumented operation start or end, and the start and end nanoseconds timestamp that
@@ -348,15 +338,15 @@ can be used to accurately compute the duration.
 Consider the following example:
 
 ```java
-class MyRequestMetrics implements RequestListener {
+class MyOperationMetrics implements OperationListener {
 
-  static RequestMetrics get() {
-    return MyRequestMetrics::new;
+  static OperationMetrics get() {
+    return MyOperationMetrics::new;
   }
 
   private final LongUpDownCounter activeRequests;
 
-  MyRequestMetrics(Meter meter) {
+  MyOperationMetrics(Meter meter) {
     activeRequests = meter
         .upDownCounterBuilder("mylib.active_requests")
         .setUnit("requests")
@@ -364,32 +354,32 @@ class MyRequestMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes startAttributes, long startNanos) {
+  public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     activeRequests.add(1, startAttributes);
     return context.with(new MyMetricsState(startAttributes));
   }
 
   @Override
-  public void end(Context context, Attributes endAttributes, long endNanos) {
+  public void onEnd(Context context, Attributes endAttributes, long endNanos) {
     MyMetricsState state = MyMetricsState.get(context);
     activeRequests.add(1, state.startAttributes());
   }
 }
 ```
 
-The sample class listed above implements the `RequestMetrics` factory interface in the
+The sample class listed above implements the `OperationMetrics` factory interface in the
 static `get()` method. The listener implementation uses a counter to measure the number of requests
-that are currently in flight. Notice that the state between `start()` and `end()` method is shared
-using the `MyMetricsState` class (a mostly trivial data class, not listed in the example above),
-passed between the methods using the `Context`.
+that are currently in flight. Notice that the state between `onStart()` and `onEnd()` method is
+shared using the `MyMetricsState` class (a mostly trivial data class, not listed in the example
+above), passed between the methods using the `Context`.
 
-You can add `RequestMetrics` to the `InstrumenterBuilder` using the `addRequestMetrics()` method.
+You can add `OperationMetrics` to the `InstrumenterBuilder` using the `addOperationMetrics()` method.
 
 ### Enrich the operation `Context` with the `ContextCustomizer`
 
 In some rare cases, there is a need to enrich the `Context` before it is returned from
 the `Instrumenter#start()` method. The `ContextCustomizer` interface can be used to achieve that. It
-exposes a single `start()` method that accepts a `Context`, a `REQUEST` and `Attributes` extracted
+exposes a single `onStart()` method that accepts a `Context`, a `REQUEST` and `Attributes` extracted
 on the operation start, and returns a modified `Context`.
 
 Consider the following example:
@@ -398,7 +388,7 @@ Consider the following example:
 class MyContextCustomizer implements ContextCustomizer<Request> {
 
   @Override
-  public Context start(Context context, Request request, Attributes startAttributes) {
+  public Context onStart(Context context, Request request, Attributes startAttributes) {
     return context.with(new InProcessingAttributesHolder());
   }
 }
@@ -420,8 +410,8 @@ method.
 ### Disable the instrumentation
 
 In some rare cases it may be useful to completely disable the constructed `Instrumenter`, for
-example, based on a configuration property. The `InstrumenterBuilder` exposes a `setDisabled()`
-method for that: passing `true` will turn the newly created `Instrumenter` into a no-op instance.
+example, based on a configuration property. The `InstrumenterBuilder` exposes a `setEnabled()`
+method for that: passing `false` will turn the newly created `Instrumenter` into a no-op instance.
 
 ### Finally, set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`!
 

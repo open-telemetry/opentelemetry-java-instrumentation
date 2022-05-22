@@ -15,7 +15,7 @@ the agent and to measure how this overhead changes over time.
 
 The overhead tests here should be considered a "macro" benchmark. They serve to measure high-level
 overhead as perceived by the operator of a "typical" application. Tests are performed on a Java 11
-distribution from [AdoptOpenJDK](https://adoptopenjdk.net/).
+distribution from [Eclipse Temurin](https://projects.eclipse.org/projects/adoptium.temurin).
 
 ## Process
 
@@ -34,7 +34,7 @@ For each agent defined in a configuration, the test runner (using [testcontainer
 
 And this repeats for every agent configured in each test configuration.
 
-After all the tests are complete, the results are collected and commited back to the `/results` subdirectory as csv and summary text files.
+After all the tests are complete, the results are collected and committed back to the `/results` subdirectory as csv and summary text files.
 
 ## What do we measure?
 

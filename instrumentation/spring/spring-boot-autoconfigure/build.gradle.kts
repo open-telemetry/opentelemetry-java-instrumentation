@@ -22,9 +22,11 @@ dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter-web:${versions["org.springframework.boot"]}")
   compileOnly("org.springframework.boot:spring-boot-starter-webflux:${versions["org.springframework.boot"]}")
 
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   compileOnly("io.opentelemetry:opentelemetry-extension-annotations")
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry:opentelemetry-extension-aws")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-resources")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
   compileOnly("io.opentelemetry:opentelemetry-exporter-jaeger")
   compileOnly("io.opentelemetry:opentelemetry-exporter-otlp")
@@ -37,10 +39,11 @@ dependencies {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
 
-  testImplementation("org.assertj:assertj-core")
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry:opentelemetry-extension-aws")

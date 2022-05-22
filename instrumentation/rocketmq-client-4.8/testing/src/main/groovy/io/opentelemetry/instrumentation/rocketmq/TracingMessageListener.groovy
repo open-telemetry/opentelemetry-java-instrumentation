@@ -5,14 +5,16 @@
 
 package io.opentelemetry.instrumentation.rocketmq
 
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.TimeUnit
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus
 import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly
 import org.apache.rocketmq.common.message.MessageExt
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicInteger
+
+import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan
 
 class TracingMessageListener implements MessageListenerOrderly {
   private AtomicInteger lastBatchSize = new AtomicInteger()
@@ -22,7 +24,7 @@ class TracingMessageListener implements MessageListenerOrderly {
   ConsumeOrderlyStatus consumeMessage(List<MessageExt> list, ConsumeOrderlyContext consumeOrderlyContext) {
     lastBatchSize.set(list.size())
     messageReceived.countDown()
-    runInternalSpan("messageListener")
+    runWithSpan("messageListener") {}
     return ConsumeOrderlyStatus.SUCCESS
   }
 
@@ -32,7 +34,7 @@ class TracingMessageListener implements MessageListenerOrderly {
   }
 
   void waitForMessages() {
-    messageReceived.await()
+    messageReceived.await(30, TimeUnit.SECONDS)
   }
 
   int getLastBatchSize() {

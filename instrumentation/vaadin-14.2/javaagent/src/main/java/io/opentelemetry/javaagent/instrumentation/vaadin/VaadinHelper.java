@@ -12,7 +12,8 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.Location;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
@@ -41,9 +42,9 @@ public class VaadinHelper {
       Context context, VaadinServiceRequest request, Throwable throwable) {
     serviceInstrumenter.end(context, request, null, throwable);
 
-    ServerSpanNaming.updateServerSpanName(
+    HttpRouteHolder.updateHttpRoute(
         context,
-        ServerSpanNaming.Source.CONTROLLER,
+        HttpRouteSource.CONTROLLER,
         (c, req) -> getSpanNameForVaadinServiceContext(c, req),
         request);
   }
@@ -106,9 +107,9 @@ public class VaadinHelper {
 
   public void updateServerSpanName(Location location) {
     Context context = Context.current();
-    ServerSpanNaming.updateServerSpanName(
+    HttpRouteHolder.updateHttpRoute(
         context,
-        ServerSpanNaming.Source.NESTED_CONTROLLER,
+        HttpRouteSource.NESTED_CONTROLLER,
         (c, loc) -> ServletContextPath.prepend(c, getSpanNameForLocation(loc)),
         location);
   }

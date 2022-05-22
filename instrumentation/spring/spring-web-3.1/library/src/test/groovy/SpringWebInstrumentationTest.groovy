@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.instrumentation.spring.web.SpringWebTracing
+import io.opentelemetry.instrumentation.spring.web.SpringWebTelemetry
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
@@ -12,6 +12,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
+import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
@@ -22,8 +23,10 @@ class SpringWebInstrumentationTest extends HttpClientTest<HttpEntity<String>> im
 
   def setupSpec() {
     if (restTemplate == null) {
-      restTemplate = new RestTemplate()
-      restTemplate.getInterceptors().add(SpringWebTracing.create(getOpenTelemetry()).newInterceptor())
+      def requestFactory = new SimpleClientHttpRequestFactory()
+      requestFactory.setConnectTimeout(CONNECT_TIMEOUT_MS)
+      restTemplate = new RestTemplate(requestFactory)
+      restTemplate.getInterceptors().add(SpringWebTelemetry.create(getOpenTelemetry()).newInterceptor())
     }
   }
 

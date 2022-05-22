@@ -47,20 +47,28 @@ dependencies {
   // Required for older versions of finatra on JDKs >= 11
   testImplementation("com.sun.activation:javax.activation:1.2.0")
 
-  add("latestDepTestImplementation", "com.twitter:finatra-http_2.11:+") {
+  add("latestDepTestImplementation", "com.twitter:finatra-http_2.13:+") {
     exclude("io.netty", "netty-transport-native-epoll")
   }
 }
 
 tasks {
-  named<GroovyCompile>("compileLatestDepTestGroovy") {
-    classpath = classpath.plus(files(sourceSets["latestDepTest"].scala.classesDirectory))
-  }
-
   if (findProperty("testLatestDeps") as Boolean) {
     // Separate task
     named("test") {
       enabled = false
+    }
+    named("compileTestScala") {
+      enabled = false
+    }
+  }
+}
+
+if (findProperty("testLatestDeps") as Boolean) {
+  configurations {
+    // finatra artifact name is different for regular and latest tests
+    testImplementation {
+      exclude("com.twitter", "finatra-http_2.11")
     }
   }
 }

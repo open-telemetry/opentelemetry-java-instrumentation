@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -30,23 +31,29 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, ServletRequestContext<REQUEST> requestContext) {}
+      AttributesBuilder attributes,
+      Context parentContext,
+      ServletRequestContext<REQUEST> requestContext) {}
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
     Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
     if (principal != null) {
-      set(attributes, SemanticAttributes.ENDUSER_ID, principal.getName());
+      String name = principal.getName();
+      if (name != null) {
+        attributes.put(SemanticAttributes.ENDUSER_ID, name);
+      }
     }
     if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       return;
     }
     if (responseContext != null && responseContext.hasTimeout()) {
-      set(attributes, SERVLET_TIMEOUT, responseContext.getTimeout());
+      attributes.put(SERVLET_TIMEOUT, responseContext.getTimeout());
     }
   }
 }

@@ -9,8 +9,6 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
-import io.opentelemetry.instrumentation.api.internal.SpanKey
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
 import java.util.concurrent.CountDownLatch
@@ -146,42 +144,6 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
   def "test empty current context is root context"() {
     expect:
     Context.current() == Context.root()
-  }
-
-  def "test server span bridge"() {
-    expect:
-    AgentSpanTesting.runWithServerSpan("server") {
-      assert Span.current() != null
-      assert ServerSpan.fromContextOrNull(Context.current()) != null
-      runWithSpan("internal") {
-        assert ServerSpan.fromContextOrNull(Context.current()) != null
-      }
-    }
-  }
-
-  def "test span key bridge"() {
-    expect:
-    AgentSpanTesting.runWithAllSpanKeys("parent") {
-      assert Span.current() != null
-      def spanKeys = [
-        SpanKey.SERVER,
-        SpanKey.HTTP_CLIENT,
-        SpanKey.RPC_CLIENT,
-        SpanKey.DB_CLIENT,
-        SpanKey.ALL_CLIENTS,
-        SpanKey.PRODUCER,
-        SpanKey.CONSUMER_RECEIVE,
-        SpanKey.CONSUMER_PROCESS,
-      ]
-      spanKeys.each { spanKey ->
-        assert spanKey.fromContextOrNull(Context.current()) != null
-      }
-      runWithSpan("internal") {
-        spanKeys.each { spanKey ->
-          assert spanKey.fromContextOrNull(Context.current()) != null
-        }
-      }
-    }
   }
 
   // TODO (trask)

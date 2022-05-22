@@ -14,12 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseRequestInfo;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -62,25 +60,23 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("remoteSocket") String remoteSocket,
         @Advice.FieldValue("localSocket") String localSocket,
         @Advice.Argument(1) CouchbaseRequest request) {
-      VirtualField<CouchbaseRequest, Span> virtualField =
-          VirtualField.find(CouchbaseRequest.class, Span.class);
+      VirtualField<CouchbaseRequest, CouchbaseRequestInfo> virtualField =
+          VirtualField.find(CouchbaseRequest.class, CouchbaseRequestInfo.class);
 
-      Span span = virtualField.get(request);
-      if (span != null) {
-        NetPeerAttributes.INSTANCE.setNetPeer(span, remoteHostname, null);
+      CouchbaseRequestInfo requestInfo = virtualField.get(request);
+      if (requestInfo != null) {
+        if (remoteHostname != null) {
+          requestInfo.setPeerName(remoteHostname);
+        }
 
         if (remoteSocket != null) {
           int splitIndex = remoteSocket.lastIndexOf(":");
           if (splitIndex != -1) {
-            span.setAttribute(
-                SemanticAttributes.NET_PEER_PORT,
-                (long) Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
+            requestInfo.setPeerPort(Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
           }
         }
 
-        if (CouchbaseConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-          span.setAttribute("couchbase.local.address", localSocket);
-        }
+        requestInfo.setLocalAddress(localSocket);
       }
     }
   }

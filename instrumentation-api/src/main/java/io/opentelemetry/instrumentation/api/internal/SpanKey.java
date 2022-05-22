@@ -10,29 +10,38 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import javax.annotation.Nullable;
 
-/** Makes span keys for specific instrumentation accessible to enrich and suppress spans. */
+/**
+ * Makes span keys for specific instrumentation accessible to enrich and suppress spans.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public final class SpanKey {
 
-  // server span key
+  /* Context keys */
 
-  private static final ContextKey<Span> SERVER_KEY =
-      ContextKey.named("opentelemetry-traces-span-key-server");
+  // span kind keys
+  private static final ContextKey<Span> KIND_SERVER_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-kind-server");
+  private static final ContextKey<Span> KIND_CLIENT_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-kind-client");
+  private static final ContextKey<Span> KIND_CONSUMER_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-kind-consumer");
+  private static final ContextKey<Span> KIND_PRODUCER_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-kind-producer");
 
-  // client span keys
+  // semantic convention keys
+  private static final ContextKey<Span> HTTP_SERVER_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-http-server");
+  private static final ContextKey<Span> RPC_SERVER_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-rpc-server");
 
   private static final ContextKey<Span> HTTP_CLIENT_KEY =
-      ContextKey.named("opentelemetry-traces-span-key-http");
+      ContextKey.named("opentelemetry-traces-span-key-http-client");
   private static final ContextKey<Span> RPC_CLIENT_KEY =
-      ContextKey.named("opentelemetry-traces-span-key-rpc");
+      ContextKey.named("opentelemetry-traces-span-key-rpc-client");
   private static final ContextKey<Span> DB_CLIENT_KEY =
-      ContextKey.named("opentelemetry-traces-span-key-db");
-
-  // this is used instead of above, depending on the configuration value for
-  // otel.instrumentation.experimental.outgoing-span-suppression-by-type
-  private static final ContextKey<Span> CLIENT_KEY =
-      ContextKey.named("opentelemetry-traces-span-key-client");
-
-  // producer & consumer (messaging) span keys
+      ContextKey.named("opentelemetry-traces-span-key-db-client");
 
   private static final ContextKey<Span> PRODUCER_KEY =
       ContextKey.named("opentelemetry-traces-span-key-producer");
@@ -41,15 +50,21 @@ public final class SpanKey {
   private static final ContextKey<Span> CONSUMER_PROCESS_KEY =
       ContextKey.named("opentelemetry-traces-span-key-consumer-process");
 
-  public static final SpanKey SERVER = new SpanKey(SERVER_KEY);
+  /* Span keys */
+
+  // span kind keys
+  public static final SpanKey KIND_SERVER = new SpanKey(KIND_SERVER_KEY);
+  public static final SpanKey KIND_CLIENT = new SpanKey(KIND_CLIENT_KEY);
+  public static final SpanKey KIND_CONSUMER = new SpanKey(KIND_CONSUMER_KEY);
+  public static final SpanKey KIND_PRODUCER = new SpanKey(KIND_PRODUCER_KEY);
+
+  // semantic convention keys
+  public static final SpanKey HTTP_SERVER = new SpanKey(HTTP_SERVER_KEY);
+  public static final SpanKey RPC_SERVER = new SpanKey(RPC_SERVER_KEY);
 
   public static final SpanKey HTTP_CLIENT = new SpanKey(HTTP_CLIENT_KEY);
   public static final SpanKey RPC_CLIENT = new SpanKey(RPC_CLIENT_KEY);
   public static final SpanKey DB_CLIENT = new SpanKey(DB_CLIENT_KEY);
-
-  // this is used instead of above, depending on the configuration value for
-  // otel.instrumentation.experimental.outgoing-span-suppression-by-type
-  public static final SpanKey ALL_CLIENTS = new SpanKey(CLIENT_KEY);
 
   public static final SpanKey PRODUCER = new SpanKey(PRODUCER_KEY);
   public static final SpanKey CONSUMER_RECEIVE = new SpanKey(CONSUMER_RECEIVE_KEY);

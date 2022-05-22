@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import org.springframework.amqp.core.Message;
 
@@ -18,15 +19,15 @@ public final class SpringRabbitSingletons {
   private static final Instrumenter<Message, Void> INSTRUMENTER;
 
   static {
-    SpringRabbitMessageAttributesExtractor attributesExtractor =
-        new SpringRabbitMessageAttributesExtractor();
-    SpanNameExtractor<Message> spanNameExtractor =
-        MessagingSpanNameExtractor.create(attributesExtractor);
+    SpringRabbitMessageAttributesGetter getter = SpringRabbitMessageAttributesGetter.INSTANCE;
+    MessageOperation operation = MessageOperation.PROCESS;
 
     INSTRUMENTER =
         Instrumenter.<Message, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(attributesExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
             .newConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
   }
 

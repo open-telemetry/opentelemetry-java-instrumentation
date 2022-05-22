@@ -12,11 +12,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import io.opentelemetry.instrumentation.api.appender.LogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
+import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,7 +51,7 @@ class LogbackInstrumentation implements TypeInstrumentation {
       // logging framework delegates to another
       callDepth = CallDepth.forClass(LogEmitterProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        LoggingEventMapper.INSTANCE.capture(event);
+        LoggingEventMapper.INSTANCE.emit(AgentLogEmitterProvider.get(), event);
       }
     }
 

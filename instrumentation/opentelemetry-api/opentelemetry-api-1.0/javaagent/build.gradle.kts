@@ -32,17 +32,14 @@ dependencies {
   //
   // and in the code "io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is used by
   // the agent (as those references will later be shaded)
-  compileOnly(project(path = ":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
+  compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
   // using OpenTelemetry SDK to make sure that instrumentation doesn't cause
   // OpenTelemetrySdk.getTracerProvider() to throw ClassCastException
   testImplementation("io.opentelemetry:opentelemetry-sdk")
-  testImplementation(project(":instrumentation-api"))
+  testImplementation(project(":instrumentation-api-semconv"))
 
   // @WithSpan annotation is used to generate spans in ContextBridgeTest
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testInstrumentation(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
-
-  testImplementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing"))
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing"))
 }

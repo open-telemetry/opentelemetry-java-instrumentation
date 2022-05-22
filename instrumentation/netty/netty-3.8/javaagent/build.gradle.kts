@@ -31,7 +31,7 @@ dependencies {
   testLibrary("io.netty:netty:3.8.0.Final")
   testLibrary("com.ning:async-http-client:1.8.0")
 
-  latestDepTestLibrary("io.netty:netty:3.10.+")
+  latestDepTestLibrary("io.netty:netty:3.+") // see netty-4.0 module
   latestDepTestLibrary("com.ning:async-http-client:1.9.+")
 }
 

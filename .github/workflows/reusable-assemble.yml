@@ -1,0 +1,67 @@
+name: Reusable - Assemble
+
+on:
+  workflow_call:
+    inputs:
+      cache-read-only:
+        type: boolean
+        required: false
+      no-build-cache:
+        type: boolean
+        required: false
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY:
+        required: false
+      GE_CACHE_USERNAME:
+        required: false
+      GE_CACHE_PASSWORD:
+        required: false
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Start deadlock detector
+        run: .github/scripts/deadlock-detector.sh
+
+      - name: Assemble
+        uses: gradle/gradle-build-action@v2
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+        with:
+          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+          arguments: assemble -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          cache-read-only: ${{ inputs.cache-read-only }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
+
+      - name: Upload deadlock detector artifacts if any
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: deadlock-detector-assemble
+          path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
+
+      - name: Upload jvm crash dump files if any
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: javacore-assemble
+          path: |
+            **/hs_err_pid*.log
+            **/javacore.*.txt
+            **/Snap.*.trc
+            **/core.*.dmp
+            **/jitdump.*.dmp
+          if-no-files-found: ignore

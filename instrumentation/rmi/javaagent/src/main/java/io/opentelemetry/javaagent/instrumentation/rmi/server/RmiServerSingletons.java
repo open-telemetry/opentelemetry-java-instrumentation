@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rmi.server;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 
@@ -16,14 +17,14 @@ public final class RmiServerSingletons {
   private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 
   static {
-    RmiServerAttributesExtractor attributesExtractor = new RmiServerAttributesExtractor();
+    RmiServerAttributesGetter rpcAttributesGetter = RmiServerAttributesGetter.INSTANCE;
 
     INSTRUMENTER =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
-                RpcSpanNameExtractor.create(attributesExtractor))
-            .addAttributesExtractor(attributesExtractor)
+                RpcSpanNameExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysServer());
   }
 

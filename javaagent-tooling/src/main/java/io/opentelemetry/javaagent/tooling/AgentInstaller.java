@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
 import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installOpenTelemetrySdk;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -18,17 +19,19 @@ import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
+import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
+import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
+import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
 import io.opentelemetry.javaagent.extension.AgentListener;
-import io.opentelemetry.javaagent.extension.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
-import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
+import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
+import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
@@ -41,6 +44,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
@@ -50,12 +55,10 @@ import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AgentInstaller {
 
-  private static final Logger logger;
+  private static final Logger logger = Logger.getLogger(AgentInstaller.class.getName());
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
   static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
@@ -72,48 +75,35 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
-  static {
-    LoggingConfigurer.configureLogger();
-    logger = LoggerFactory.getLogger(AgentInstaller.class);
-
+  public static void installBytebuddyAgent(Instrumentation inst, Config config) {
     addByteBuddyRawSetting();
-    // this needs to be done as early as possible - before the first Config.get() call
-    ConfigInitializer.initialize();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
     if (strictContextStressorMillis != null) {
       io.opentelemetry.context.ContextStorage.addWrapper(
           storage -> new StrictContextStressor(storage, strictContextStressorMillis));
     }
-  }
 
-  public static void installBytebuddyAgent(Instrumentation inst) {
     logVersionInfo();
-    Config config = Config.get();
     if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
-      installBytebuddyAgent(inst, agentListeners);
+      installBytebuddyAgent(inst, config, agentListeners);
     } else {
-      logger.debug("Tracing is disabled, not installing instrumentations.");
+      logger.fine("Tracing is disabled, not installing instrumentations.");
     }
   }
 
-  /**
-   * Install the core bytebuddy agent along with all implementations of {@link
-   * InstrumentationModule}.
-   *
-   * @param inst Java Instrumentation used to install bytebuddy
-   * @return the agent's class transformer
-   */
-  public static ResettableClassFileTransformer installBytebuddyAgent(
-      Instrumentation inst, Iterable<AgentListener> agentListeners) {
+  private static void installBytebuddyAgent(
+      Instrumentation inst, Config config, Iterable<AgentListener> agentListeners) {
 
     WeakRefAsyncOperationEndStrategies.initialize();
 
-    Config config = Config.get();
+    EmbeddedInstrumentationProperties.setPropertiesLoader(
+        AgentInitializer.getExtensionsClassLoader());
 
     setBootstrapPackages(config);
+    setDefineClassHandler();
 
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
@@ -137,14 +127,14 @@ public class AgentInstaller {
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
-            .with(AgentTooling.locationStrategy(Utils.getBootstrapProxy()));
+            .with(AgentTooling.locationStrategy());
     if (JavaModule.isSupported()) {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }
 
     agentBuilder = configureIgnoredTypes(config, agentBuilder);
 
-    if (logger.isDebugEnabled()) {
+    if (AgentConfig.get().isDebugModeEnabled()) {
       agentBuilder =
           agentBuilder
               .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
@@ -155,22 +145,27 @@ public class AgentInstaller {
 
     int numberOfLoadedExtensions = 0;
     for (AgentExtension agentExtension : loadOrdered(AgentExtension.class)) {
-      logger.debug(
-          "Loading extension {} [class {}]",
-          agentExtension.extensionName(),
-          agentExtension.getClass().getName());
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Loading extension {0} [class {1}]",
+            new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
+      }
       try {
         agentBuilder = agentExtension.extend(agentBuilder);
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
-        logger.error(
-            "Unable to load extension {} [class {}]",
-            agentExtension.extensionName(),
-            agentExtension.getClass().getName(),
+        logger.log(
+            SEVERE,
+            "Unable to load extension "
+                + agentExtension.extensionName()
+                + " [class "
+                + agentExtension.getClass().getName()
+                + "]",
             e);
       }
     }
-    logger.debug("Installed {} extension(s)", numberOfLoadedExtensions);
+    logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
@@ -178,8 +173,6 @@ public class AgentInstaller {
     if (autoConfiguredSdk != null) {
       runAfterAgentListeners(agentListeners, config, autoConfiguredSdk);
     }
-
-    return resettableClassFileTransformer;
   }
 
   private static void setupUnsafe(Instrumentation inst) {
@@ -198,12 +191,20 @@ public class AgentInstaller {
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(builder.build());
   }
 
+  private static void setDefineClassHandler() {
+    DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
+  }
+
+  @SuppressWarnings("deprecation") // running both old and new listeners for now
   private static void runBeforeAgentListeners(
       Iterable<AgentListener> agentListeners,
       Config config,
       AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+
     for (AgentListener agentListener : agentListeners) {
-      agentListener.beforeAgent(config);
+      agentListener.beforeAgent(config, autoConfiguredSdk);
+    }
+    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
       agentListener.beforeAgent(config, autoConfiguredSdk);
     }
   }
@@ -219,7 +220,11 @@ public class AgentInstaller {
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))
-        .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()));
+        .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()))
+        .or(
+            (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
+              return HelperInjector.isInjectedClass(classLoader, typeDescription.getName());
+            });
   }
 
   private static void runAfterAgentListeners(
@@ -244,19 +249,26 @@ public class AgentInstaller {
     // to touch it due to classloader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
         Config.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
-    if (!shouldForceSynchronousAgentListenersCalls
-        && isJavaBefore9()
-        && isAppUsingCustomLogManager()) {
-      logger.debug("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
+    boolean javaBefore9 = isJavaBefore9();
+    if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
+      logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
       registerClassLoadCallback(
           "java.util.logging.LogManager",
           new DelayedAfterAgentCallback(config, agentListeners, autoConfiguredSdk));
     } else {
+      if (javaBefore9) {
+        // force LogManager to be initialized while we are single-threaded, because if we wait,
+        // LogManager initialization can cause a deadlock in Java 8 if done by two different threads
+        LogManager.getLogManager();
+      }
       for (AgentListener agentListener : agentListeners) {
-        agentListener.afterAgent(config);
         agentListener.afterAgent(config, autoConfiguredSdk);
       }
     }
+  }
+
+  private static boolean isJavaBefore9() {
+    return System.getProperty("java.version").startsWith("1.");
   }
 
   private static void addByteBuddyRawSetting() {
@@ -265,7 +277,7 @@ public class AgentInstaller {
       System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, "true");
       boolean rawTypes = TypeDescription.AbstractBase.RAW_TYPES;
       if (!rawTypes) {
-        logger.debug("Too late to enable {}", TypeDefinition.RAW_TYPES_PROPERTY);
+        logger.log(FINE, "Too late to enable {0}", TypeDefinition.RAW_TYPES_PROPERTY);
       }
     } finally {
       if (savedPropertyValue == null) {
@@ -278,7 +290,8 @@ public class AgentInstaller {
 
   static class RedefinitionLoggingListener implements AgentBuilder.RedefinitionStrategy.Listener {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedefinitionLoggingListener.class);
+    private static final Logger logger =
+        Logger.getLogger(RedefinitionLoggingListener.class.getName());
 
     @Override
     public void onBatch(int index, List<Class<?>> batch, List<Class<?>> types) {}
@@ -286,9 +299,11 @@ public class AgentInstaller {
     @Override
     public Iterable<? extends List<Class<?>>> onError(
         int index, List<Class<?>> batch, Throwable throwable, List<Class<?>> types) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(
-            "Exception while retransforming {} classes: {}", batch.size(), batch, throwable);
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Exception while retransforming " + batch.size() + " classes: " + batch,
+            throwable);
       }
       return Collections.emptyList();
     }
@@ -310,11 +325,12 @@ public class AgentInstaller {
         JavaModule module,
         boolean loaded,
         Throwable throwable) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(
-            "Failed to handle {} for transformation on classloader {}",
-            typeName,
-            classLoader,
+
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Failed to handle {0} for transformation on classloader {1}",
+            new Object[] {typeName, classLoader},
             throwable);
       }
     }
@@ -326,7 +342,10 @@ public class AgentInstaller {
         JavaModule module,
         boolean loaded,
         DynamicType dynamicType) {
-      logger.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE, "Transformed {0} -- {1}", new Object[] {typeDescription.getName(), classLoader});
+      }
     }
   }
 
@@ -381,10 +400,9 @@ public class AgentInstaller {
     private void runAgentListeners() {
       for (AgentListener agentListener : agentListeners) {
         try {
-          agentListener.afterAgent(config);
           agentListener.afterAgent(config, autoConfiguredSdk);
         } catch (RuntimeException e) {
-          logger.error("Failed to execute {}", agentListener.getClass().getName(), e);
+          logger.log(SEVERE, "Failed to execute " + agentListener.getClass().getName(), e);
         }
       }
     }
@@ -445,7 +463,7 @@ public class AgentInstaller {
   private static boolean isAppUsingCustomLogManager() {
     String jbossHome = System.getenv("JBOSS_HOME");
     if (jbossHome != null) {
-      logger.debug("Found JBoss: {}; assuming app is using custom LogManager", jbossHome);
+      logger.log(FINE, "Found JBoss: {0}; assuming app is using custom LogManager", jbossHome);
       // JBoss/Wildfly is known to set a custom log manager after startup.
       // Originally we were checking for the presence of a jboss class,
       // but it seems some non-jboss applications have jboss classes on the classpath.
@@ -456,15 +474,18 @@ public class AgentInstaller {
 
     String customLogManager = System.getProperty("java.util.logging.manager");
     if (customLogManager != null) {
-      logger.debug(
-          "Detected custom LogManager configuration: java.util.logging.manager={}",
+      logger.log(
+          FINE,
+          "Detected custom LogManager configuration: java.util.logging.manager={0}",
           customLogManager);
       boolean onSysClasspath =
           ClassLoader.getSystemResource(getResourceName(customLogManager)) != null;
-      logger.debug(
-          "Class {} is on system classpath: {}delaying AgentInstaller#afterAgent()",
-          customLogManager,
-          onSysClasspath ? "not " : "");
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Class {0} is on system classpath: {1}delaying AgentInstaller#afterAgent()",
+            new Object[] {customLogManager, onSysClasspath ? "not " : ""});
+      }
       // Some applications set java.util.logging.manager but never actually initialize the logger.
       // Check to see if the configured manager is on the system classpath.
       // If so, it should be safe to initialize AgentInstaller which will setup the log manager:
@@ -478,8 +499,12 @@ public class AgentInstaller {
 
   private static void logVersionInfo() {
     VersionLogger.logAllVersions();
-    logger.debug(
-        "{} loaded on {}", AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader());
+    if (logger.isLoggable(FINE)) {
+      logger.log(
+          FINE,
+          "{0} loaded on {1}",
+          new Object[] {AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader()});
+    }
   }
 
   private AgentInstaller() {}

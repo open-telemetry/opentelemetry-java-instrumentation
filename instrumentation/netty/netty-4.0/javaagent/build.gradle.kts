@@ -30,7 +30,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  latestDepTestLibrary("io.netty:netty-codec-http:4.0.56.Final")
+  latestDepTestLibrary("io.netty:netty-codec-http:4.0.+")
 }
 
 tasks {
@@ -38,20 +38,21 @@ tasks {
     filter {
       includeTestsMatching("Netty40ConnectionSpanTest")
       includeTestsMatching("Netty40ClientSslTest")
-      isFailOnNoMatchingTests = false
     }
     include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.always-create-connect-span=true")
+    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
-    dependsOn(testConnectionSpan)
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
       excludeTestsMatching("Netty40ClientSslTest")
-      isFailOnNoMatchingTests = false
     }
+  }
+
+  check {
+    dependsOn(testConnectionSpan)
   }
 }
 

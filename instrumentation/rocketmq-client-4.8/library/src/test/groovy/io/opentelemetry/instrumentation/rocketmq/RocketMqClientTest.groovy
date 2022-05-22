@@ -14,7 +14,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest implements LibraryTe
 
   @Override
   void configureMQProducer(DefaultMQProducer producer) {
-    producer.getDefaultMQProducerImpl().registerSendMessageHook(RocketMqTracing.builder(openTelemetry)
+    producer.getDefaultMQProducerImpl().registerSendMessageHook(RocketMqTelemetry.builder(openTelemetry)
       .setCaptureExperimentalSpanAttributes(
         Config.get()
           .getBoolean(
@@ -24,7 +24,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest implements LibraryTe
 
   @Override
   void configureMQPushConsumer(DefaultMQPushConsumer consumer) {
-    consumer.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(RocketMqTracing.builder(openTelemetry)
+    consumer.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(RocketMqTelemetry.builder(openTelemetry)
       .setCaptureExperimentalSpanAttributes(
         Config.get()
           .getBoolean(

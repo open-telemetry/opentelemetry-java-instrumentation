@@ -13,21 +13,16 @@ import net.bytebuddy.implementation.bytecode.StackManipulation;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class ExceptionHandlers {
-  private static final String LOG_FACTORY_NAME = LoggerFactory.class.getName().replace('.', '/');
-  private static final String LOGGER_NAME = Logger.class.getName().replace('.', '/');
-  // Bootstrap ExceptionHandler.class will always be resolvable, so we'll use it in the log name
-  private static final String HANDLER_NAME = ExceptionLogger.class.getName().replace('.', '/');
+  // Bootstrap ExceptionLogger.class will always be resolvable, so we'll use it in the log name
+  private static final String LOGGER_NAME = ExceptionLogger.class.getName().replace('.', '/');
 
   private static final ExceptionHandler EXCEPTION_STACK_HANDLER =
       new ExceptionHandler.Simple(
           new StackManipulation() {
-            // Pops one Throwable off the stack. Maxes the stack to at least 3.
-            private final StackManipulation.Size size = new StackManipulation.Size(-1, 3);
+            // Pops one Throwable off the stack. Maxes the stack to at least 2 (throwable, string).
+            private final StackManipulation.Size size = new StackManipulation.Size(-1, 2);
 
             @Override
             public boolean isValid() {
@@ -41,8 +36,7 @@ public final class ExceptionHandlers {
 
               // writes the following bytecode:
               // try {
-              //   org.slf4j.LoggerFactory.getLogger((Class)ExceptionLogger.class)
-              //     .debug("exception in instrumentation", t);
+              //   ExceptionLogger.logSuppressedError("exception in instrumentation", t);
               // } catch (Throwable t2) {
               // }
               Label logStart = new Label();
@@ -57,30 +51,23 @@ public final class ExceptionHandlers {
 
               // stack: (top) throwable
               mv.visitLabel(logStart);
-              mv.visitLdcInsn(Type.getType("L" + HANDLER_NAME + ";"));
-              mv.visitMethodInsn(
-                  Opcodes.INVOKESTATIC,
-                  LOG_FACTORY_NAME,
-                  "getLogger",
-                  "(Ljava/lang/Class;)L" + LOGGER_NAME + ";",
-                  /* isInterface= */ false);
-              mv.visitInsn(Opcodes.SWAP); // stack: (top) throwable,logger
               mv.visitLdcInsn(
                   "Failed to handle exception in instrumentation for "
                       + name
                       + " on "
                       + classLoader);
-              mv.visitInsn(Opcodes.SWAP); // stack: (top) throwable,string,logger
+              mv.visitInsn(Opcodes.SWAP); // stack: (top) throwable,string
+
               mv.visitMethodInsn(
-                  Opcodes.INVOKEINTERFACE,
+                  Opcodes.INVOKESTATIC,
                   LOGGER_NAME,
-                  "debug",
+                  "logSuppressedError",
                   "(Ljava/lang/String;Ljava/lang/Throwable;)V",
-                  /* isInterface= */ true);
+                  /* isInterface= */ false);
               mv.visitLabel(logEnd);
               mv.visitJumpInsn(Opcodes.GOTO, handlerExit);
 
-              // if the runtime can't reach our ExceptionHandler or logger,
+              // if the runtime can't reach our ExceptionLogger,
               //   silently eat the exception
               mv.visitLabel(eatException);
               if (frames) {

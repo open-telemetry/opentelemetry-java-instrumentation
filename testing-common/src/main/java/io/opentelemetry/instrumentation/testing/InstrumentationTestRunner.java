@@ -16,11 +16,14 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 import org.awaitility.core.ConditionTimeoutException;
 
 /**
@@ -30,29 +33,36 @@ import org.awaitility.core.ConditionTimeoutException;
  * @see LibraryTestRunner
  * @see AgentTestRunner
  */
-public interface InstrumentationTestRunner {
-  void beforeTestClass();
+public abstract class InstrumentationTestRunner {
 
-  void afterTestClass();
+  private final TestInstrumenters testInstrumenters;
 
-  void clearAllExportedData();
+  protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
+    testInstrumenters = new TestInstrumenters(openTelemetry);
+  }
 
-  OpenTelemetry getOpenTelemetry();
+  public abstract void beforeTestClass();
 
-  List<SpanData> getExportedSpans();
+  public abstract void afterTestClass();
 
-  List<MetricData> getExportedMetrics();
+  public abstract void clearAllExportedData();
 
-  List<LogData> getExportedLogs();
+  public abstract OpenTelemetry getOpenTelemetry();
 
-  boolean forceFlushCalled();
+  public abstract List<SpanData> getExportedSpans();
+
+  public abstract List<MetricData> getExportedMetrics();
+
+  public abstract List<LogData> getExportedLogs();
+
+  public abstract boolean forceFlushCalled();
 
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */
-  default List<List<SpanData>> traces() {
+  public final List<List<SpanData>> traces() {
     return TelemetryDataUtil.groupTraces(getExportedSpans());
   }
 
-  default List<List<SpanData>> waitForTraces(int numberOfTraces) {
+  public final List<List<SpanData>> waitForTraces(int numberOfTraces) {
     try {
       return TelemetryDataUtil.waitForTraces(
           this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS);
@@ -61,34 +71,53 @@ public interface InstrumentationTestRunner {
     }
   }
 
-  default void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertSortedTraces(
+      Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
+    waitAndAssertTraces(traceComparator, Arrays.asList(assertions));
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
+    waitAndAssertTraces(Arrays.asList(assertions));
+  }
+
+  public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
+    waitAndAssertTraces(null, assertions);
+  }
+
+  private <T extends Consumer<TraceAssert>> void waitAndAssertTraces(
+      @Nullable Comparator<List<SpanData>> traceComparator, Iterable<T> assertions) {
+    List<T> assertionsList = new ArrayList<>();
+    assertions.forEach(assertionsList::add);
+
     try {
-      await()
-          .untilAsserted(
-              () -> {
-                List<List<SpanData>> traces = waitForTraces(assertions.length);
-                TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertions);
-              });
+      await().untilAsserted(() -> doAssertTraces(traceComparator, assertionsList));
     } catch (ConditionTimeoutException e) {
       // Don't throw this failure since the stack is the awaitility thread, causing confusion.
       // Instead, just assert one more time on the test thread, which will fail with a better stack
       // trace.
       // TODO(anuraaga): There is probably a better way to do this.
-      List<List<SpanData>> traces = waitForTraces(assertions.length);
-      TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertions);
+      doAssertTraces(traceComparator, assertionsList);
     }
   }
 
-  default void waitAndAssertTraces(Iterable<? extends Consumer<TraceAssert>> assertions) {
-    waitAndAssertTraces(
-        StreamSupport.stream(assertions.spliterator(), false).toArray(Consumer[]::new));
+  private <T extends Consumer<TraceAssert>> void doAssertTraces(
+      @Nullable Comparator<List<SpanData>> traceComparator, List<T> assertionsList) {
+    List<List<SpanData>> traces = waitForTraces(assertionsList.size());
+    if (traceComparator != null) {
+      traces.sort(traceComparator);
+    }
+    TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
   }
 
   /**
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
    * spanName}.
    */
-  default <E extends Exception> void runWithSpan(String spanName, ThrowingRunnable<E> callback)
+  public final <E extends Exception> void runWithSpan(String spanName, ThrowingRunnable<E> callback)
       throws E {
     runWithSpan(
         spanName,
@@ -102,15 +131,18 @@ public interface InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
    * spanName}.
    */
-  <T, E extends Throwable> T runWithSpan(String spanName, ThrowingSupplier<T, E> callback) throws E;
+  public final <T, E extends Throwable> T runWithSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithSpan(spanName, callback);
+  }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  default <E extends Throwable> void runWithClientSpan(
+  public final <E extends Throwable> void runWithHttpClientSpan(
       String spanName, ThrowingRunnable<E> callback) throws E {
-    runWithClientSpan(
+    runWithHttpClientSpan(
         spanName,
         () -> {
           callback.run();
@@ -119,19 +151,21 @@ public interface InstrumentationTestRunner {
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  <T, E extends Throwable> T runWithClientSpan(String spanName, ThrowingSupplier<T, E> callback)
-      throws E;
+  public final <T, E extends Throwable> T runWithHttpClientSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithHttpClientSpan(spanName, callback);
+  }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  default <E extends Throwable> void runWithServerSpan(
+  public final <E extends Throwable> void runWithHttpServerSpan(
       String spanName, ThrowingRunnable<E> callback) throws E {
-    runWithServerSpan(
+    runWithHttpServerSpan(
         spanName,
         () -> {
           callback.run();
@@ -140,12 +174,17 @@ public interface InstrumentationTestRunner {
   }
 
   /**
-   * Runs the provided {@code callback} inside the scope of an CLIENT span with name {@code
+   * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  <T, E extends Throwable> T runWithServerSpan(String spanName, ThrowingSupplier<T, E> callback)
-      throws E;
+  public final <T, E extends Throwable> T runWithHttpServerSpan(
+      String spanName, ThrowingSupplier<T, E> callback) throws E {
+    return testInstrumenters.runWithHttpServerSpan(spanName, callback);
+  }
 
   /** Runs the provided {@code callback} inside the scope of a non-recording span. */
-  <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback) throws E;
+  public final <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
+      throws E {
+    return testInstrumenters.runWithNonRecordingSpan(callback);
+  }
 }

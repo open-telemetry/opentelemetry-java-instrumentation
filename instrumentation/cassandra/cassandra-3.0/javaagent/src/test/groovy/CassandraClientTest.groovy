@@ -37,6 +37,8 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     cassandra = new GenericContainer("cassandra:3")
+      // limit memory usage
+      .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
       .withExposedPorts(9042)
       .withLogConsumer(new Slf4jLogConsumer(logger))
       .withStartupTimeout(Duration.ofSeconds(120))
@@ -152,7 +154,6 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.DB_NAME" keyspace
         "$SemanticAttributes.DB_STATEMENT" statement
         "$SemanticAttributes.DB_OPERATION" operation
-        "$SemanticAttributes.DB_CASSANDRA_KEYSPACE" keyspace
         "$SemanticAttributes.DB_CASSANDRA_TABLE" table
       }
     }

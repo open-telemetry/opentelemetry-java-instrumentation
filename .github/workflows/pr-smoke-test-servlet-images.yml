@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-latest
+          - windows-2019
           - ubuntu-latest
         smoke-test-server:
           - jetty
@@ -23,42 +23,31 @@ jobs:
           - websphere
           - wildfly
         exclude:
-          - os: windows-latest
+          - os: windows-2019
             smoke-test-server: websphere
       fail-fast: false
     steps:
-      - name: Support longpaths
+      - name: Support long paths
         run: git config --system core.longpaths true
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
 
-      - uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v3
 
-      - name: Set up JDK 11 for running Gradle
-        uses: actions/setup-java@v2
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v3
         with:
-          distribution: adopt
-          java-version: 11
+          distribution: temurin
+          java-version: 17
 
-      - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.10
+      - name: Set up Gradle cache
+        uses: gradle/gradle-build-action@v2
         with:
-          job-id: matrix-smoke
-          read-only: true
-
-      - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/images/servlet/gradle/wrapper/gradle-wrapper.properties') }}
+          cache-read-only: true
 
       - name: Build Linux docker images
-        working-directory: smoke-tests/images/servlet
-        run: ./gradlew buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2019'
+        run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
       - name: Build Windows docker images
-        working-directory: smoke-tests/images/servlet
-        run: ./gradlew buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
+        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages -PsmokeTestServer=${{ matrix.smoke-test-server }}

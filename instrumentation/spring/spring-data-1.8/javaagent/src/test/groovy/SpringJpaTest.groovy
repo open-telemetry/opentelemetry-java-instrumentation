@@ -60,7 +60,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name "JpaRepository.findAll"
+          name "JpaCustomerRepository.findAll"
           kind INTERNAL
           attributes {
           }
@@ -92,7 +92,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2 + (isHibernate4 ? 0 : 1)) {
         span(0) {
-          name "CrudRepository.save"
+          name "JpaCustomerRepository.save"
           kind INTERNAL
           attributes {
           }
@@ -141,7 +141,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          name "CrudRepository.save"
+          name "JpaCustomerRepository.save"
           kind INTERNAL
           attributes {
           }
@@ -215,7 +215,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          name "CrudRepository.delete"
+          name "JpaCustomerRepository.delete"
           kind INTERNAL
           attributes {
           }
@@ -245,6 +245,45 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
             "$SemanticAttributes.DB_STATEMENT" ~/^delete /
             "$SemanticAttributes.DB_OPERATION" "DELETE"
+            "$SemanticAttributes.DB_SQL_TABLE" "JpaCustomer"
+          }
+        }
+      }
+    }
+  }
+
+  def "test custom repository method"() {
+    def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
+    def repo = context.getBean(JpaCustomerRepository)
+
+    // when Spring JPA sets up, it issues metadata queries -- clear those traces
+    clearExportedData()
+
+    setup:
+    def customers = repo.findSpecialCustomers()
+
+    expect:
+    customers.isEmpty()
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "JpaCustomerRepository.findSpecialCustomers"
+          kind INTERNAL
+          attributes {
+          }
+        }
+        span(1) { // select
+          name "SELECT test.JpaCustomer"
+          kind CLIENT
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
+            "$SemanticAttributes.DB_NAME" "test"
+            "$SemanticAttributes.DB_USER" "sa"
+            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$SemanticAttributes.DB_STATEMENT" ~/^select /
+            "$SemanticAttributes.DB_OPERATION" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE" "JpaCustomer"
           }
         }

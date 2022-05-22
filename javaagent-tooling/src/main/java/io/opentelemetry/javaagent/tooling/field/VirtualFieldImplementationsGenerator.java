@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldName
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getRealSetterName;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getVirtualFieldImplementationClassName;
 
-import io.opentelemetry.instrumentation.api.cache.Cache;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.util.HashMap;
@@ -303,7 +303,7 @@ final class VirtualFieldImplementationsGenerator {
       }
     }
 
-    public static VirtualField getVirtualField(Class keyClass, Class contextClass) {
+    public static VirtualField<?, ?> getVirtualField(Class<?> keyClass, Class<?> contextClass) {
       // We do not actually check the keyClass here - but that should be fine since compiler would
       // check things for us.
       return INSTANCE;

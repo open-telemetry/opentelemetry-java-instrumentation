@@ -14,10 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
-import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
+import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -61,7 +61,8 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      CouchbaseRequest request = CouchbaseRequest.create(bucket, declaringClass, methodName);
+      CouchbaseRequestInfo request =
+          CouchbaseRequestInfo.create(bucket, declaringClass, methodName);
       result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
@@ -87,10 +88,10 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      CouchbaseRequest request =
+      CouchbaseRequestInfo request =
           query == null
-              ? CouchbaseRequest.create(bucket, declaringClass, methodName)
-              : CouchbaseRequest.create(bucket, query);
+              ? CouchbaseRequestInfo.create(bucket, declaringClass, methodName)
+              : CouchbaseRequestInfo.create(bucket, query);
       result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }

@@ -94,7 +94,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     response != null
 
     client.requestHandler2s != null
-    client.requestHandler2s.find{it.getClass().getSimpleName() == "TracingRequestHandler"} != null
+    client.requestHandler2s.find { it.getClass().getSimpleName() == "TracingRequestHandler" } != null
 
     assertTraces(1) {
       trace(0, 1) {
@@ -110,9 +110,10 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "aws.service" { it.contains(service) }
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "${server.httpUri()}"
-            "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
@@ -132,6 +133,14 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     "S3"         | "GetObject"         | "GET"  | "/someBucket/someKey" | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true) | { c -> c.getObject("someBucket", "someKey") }                                   | ["aws.bucket.name": "someBucket"] | ""
     "DynamoDBv2" | "CreateTable"       | "POST" | "/"                   | AmazonDynamoDBClientBuilder.standard()                            | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
     "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | AmazonKinesisClientBuilder.standard()                             | { c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")) } | ["aws.stream.name": "somestream"] | ""
+    // Some users may implicitly subclass the request object to mimic a fluent style
+    "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | AmazonKinesisClientBuilder.standard()                             | { c ->
+      c.deleteStream(new DeleteStreamRequest() {
+        {
+          withStreamName("somestream")
+        }
+      })
+    }                                                                                                                                                                                                                         | ["aws.stream.name": "somestream"] | ""
     "EC2"        | "AllocateAddress"   | "POST" | "/"                   | AmazonEC2ClientBuilder.standard()                                 | { c -> c.allocateAddress() }                                                    | [:]                               | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
@@ -178,9 +187,10 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" 61
-            "aws.service" { it.contains(service) }
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
+            "$SemanticAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "http://127.0.0.1:${UNUSABLE_PORT}"
-            "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
@@ -199,8 +209,8 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
   def "timeout and retry errors not captured"() {
     setup:
     // One retry so two requests.
-    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
-    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(5000)))
+    server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(5000)))
     AmazonS3Client client = configureClient(AmazonS3ClientBuilder.standard())
       .withClientConfiguration(new ClientConfiguration()
         .withRequestTimeout(50 /* ms */)
@@ -234,9 +244,10 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "aws.service" "Amazon S3"
+            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
+            "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
+            "$SemanticAttributes.RPC_METHOD" "GetObject"
             "aws.endpoint" "${server.httpUri()}"
-            "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
           }

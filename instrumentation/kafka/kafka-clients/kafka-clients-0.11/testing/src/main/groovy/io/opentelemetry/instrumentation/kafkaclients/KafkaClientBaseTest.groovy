@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaclients
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import java.time.Duration
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.Consumer
@@ -18,13 +19,18 @@ import org.apache.kafka.common.serialization.IntegerDeserializer
 import org.apache.kafka.common.serialization.IntegerSerializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.KafkaContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.containers.wait.strategy.Wait
 import spock.lang.Shared
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 abstract class KafkaClientBaseTest extends InstrumentationSpecification {
+  private static final Logger logger = LoggerFactory.getLogger(KafkaClientBaseTest)
 
   protected static final SHARED_TOPIC = "shared.topic"
 
@@ -41,11 +47,14 @@ abstract class KafkaClientBaseTest extends InstrumentationSpecification {
 
   def setupSpec() {
     kafka = new KafkaContainer()
+      .withLogConsumer(new Slf4jLogConsumer(logger))
+      .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
+      .withStartupTimeout(Duration.ofMinutes(1))
     kafka.start()
 
     // create test topic
     AdminClient.create(["bootstrap.servers": kafka.bootstrapServers]).withCloseable { admin ->
-      admin.createTopics([new NewTopic(SHARED_TOPIC, 1, (short) 1)]).all().get(10, TimeUnit.SECONDS)
+      admin.createTopics([new NewTopic(SHARED_TOPIC, 1, (short) 1)]).all().get(30, TimeUnit.SECONDS)
     }
 
     producer = new KafkaProducer<>(producerProps())

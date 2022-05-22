@@ -22,6 +22,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   compileOnly("com.typesafe.akka:akka-actor_2.11:2.5.0")
   testImplementation("com.typesafe.akka:akka-actor_2.11:2.5.0")
 

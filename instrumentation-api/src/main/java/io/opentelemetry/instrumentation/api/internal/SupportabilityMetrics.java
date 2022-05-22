@@ -13,11 +13,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class SupportabilityMetrics {
-  private static final Logger logger = LoggerFactory.getLogger(SupportabilityMetrics.class);
+  private static final Logger logger = Logger.getLogger(SupportabilityMetrics.class.getName());
   private final boolean agentDebugEnabled;
   private final Consumer<String> reporter;
 
@@ -25,7 +28,7 @@ public final class SupportabilityMetrics {
   private final ConcurrentMap<String, AtomicLong> counters = new ConcurrentHashMap<>();
 
   private static final SupportabilityMetrics INSTANCE =
-      new SupportabilityMetrics(Config.get(), logger::debug).start();
+      new SupportabilityMetrics(Config.get(), logger::fine).start();
 
   public static SupportabilityMetrics instance() {
     return INSTANCE;
@@ -33,7 +36,7 @@ public final class SupportabilityMetrics {
 
   // visible for testing
   SupportabilityMetrics(Config config, Consumer<String> reporter) {
-    agentDebugEnabled = config.isAgentDebugEnabled();
+    agentDebugEnabled = config.getBoolean("otel.javaagent.debug", false);
     this.reporter = reporter;
   }
 
@@ -91,6 +94,10 @@ public final class SupportabilityMetrics {
     return this;
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static final class CounterNames {
     public static final String SQL_STATEMENT_SANITIZER_CACHE_MISS =
         "SqlStatementSanitizer cache miss";

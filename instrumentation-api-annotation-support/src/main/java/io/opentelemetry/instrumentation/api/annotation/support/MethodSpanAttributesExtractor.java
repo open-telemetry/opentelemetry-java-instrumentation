@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.api.annotation.support;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.cache.Cache;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import javax.annotation.Nullable;
@@ -46,18 +46,19 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, REQUEST request) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     Method method = methodExtractor.extract(request);
     AttributeBindings bindings = cache.computeIfAbsent(method, this::bind);
     if (!bindings.isEmpty()) {
       Object[] args = methodArgumentsExtractor.extract(request);
-      bindings.apply(attributes::put, args);
+      bindings.apply(attributes, args);
     }
   }
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
+      Context context,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {}
@@ -108,7 +109,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     }
 
     @Override
-    public void apply(AttributeSetter setter, Object[] args) {}
+    public void apply(AttributesBuilder target, Object[] args) {}
   }
 
   private static final class CombinedAttributeBindings implements AttributeBindings {
@@ -129,12 +130,12 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
     }
 
     @Override
-    public void apply(AttributeSetter setter, Object[] args) {
-      parent.apply(setter, args);
+    public void apply(AttributesBuilder target, Object[] args) {
+      parent.apply(target, args);
       if (args != null && args.length > index) {
         Object arg = args[index];
         if (arg != null) {
-          binding.apply(setter, arg);
+          binding.apply(target, arg);
         }
       }
     }

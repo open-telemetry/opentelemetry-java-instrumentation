@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.playws.v2_0.PlayWs20Singletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -20,8 +20,8 @@ import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 
-public class AsyncHandlerWrapper implements AsyncHandler {
-  private final AsyncHandler delegate;
+public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
+  private final AsyncHandler<T> delegate;
   private final Request request;
   private final Context context;
   private final Context parentContext;
@@ -29,7 +29,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
   public AsyncHandlerWrapper(
-      AsyncHandler delegate, Request request, Context context, Context parentContext) {
+      AsyncHandler<T> delegate, Request request, Context context, Context parentContext) {
     this.delegate = delegate;
     this.request = request;
     this.context = context;
@@ -60,7 +60,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public Object onCompleted() throws Exception {
+  public T onCompleted() throws Exception {
     Response response = builder.build();
     instrumenter().end(context, request, response, null);
 
@@ -89,7 +89,7 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public void onHostnameResolutionSuccess(String name, List list) {
+  public void onHostnameResolutionSuccess(String name, List<InetSocketAddress> list) {
     delegate.onHostnameResolutionSuccess(name, list);
   }
 

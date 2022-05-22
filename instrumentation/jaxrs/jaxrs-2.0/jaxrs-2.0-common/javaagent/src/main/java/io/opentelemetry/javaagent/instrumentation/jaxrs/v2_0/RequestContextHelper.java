@@ -5,31 +5,33 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsSingletons.instrumenter;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import javax.ws.rs.container.ContainerRequestContext;
 
 public final class RequestContextHelper {
   public static Context createOrUpdateAbortSpan(
-      ContainerRequestContext requestContext, HandlerData handlerData) {
+      Instrumenter<HandlerData, Void> instrumenter,
+      ContainerRequestContext requestContext,
+      HandlerData handlerData) {
 
     if (handlerData == null) {
       return null;
     }
 
-    requestContext.setProperty(JaxrsSingletons.ABORT_HANDLED, true);
+    requestContext.setProperty(JaxrsConstants.ABORT_HANDLED, true);
     Context parentContext = Java8BytecodeBridge.currentContext();
-    Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
+    Span serverSpan = LocalRootSpan.fromContextOrNull(parentContext);
     Span currentSpan = Java8BytecodeBridge.spanFromContext(parentContext);
 
-    ServerSpanNaming.updateServerSpanName(
+    HttpRouteHolder.updateHttpRoute(
         parentContext,
-        ServerSpanNaming.Source.CONTROLLER,
+        HttpRouteSource.CONTROLLER,
         JaxrsServerSpanNaming.SERVER_SPAN_NAME,
         handlerData);
 
@@ -39,11 +41,11 @@ public final class RequestContextHelper {
       return null;
     }
 
-    if (!instrumenter().shouldStart(parentContext, handlerData)) {
+    if (!instrumenter.shouldStart(parentContext, handlerData)) {
       return null;
     }
 
-    return instrumenter().start(parentContext, handlerData);
+    return instrumenter.start(parentContext, handlerData);
   }
 
   private RequestContextHelper() {}

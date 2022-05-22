@@ -50,10 +50,6 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
     }
   }
 
-  boolean hasHttpClientSpan() {
-    false
-  }
-
   def "simple sqs producer-consumer services"() {
     setup:
     client.createQueue("testSdkSqs")
@@ -74,9 +70,10 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "CreateQueue"
             "aws.queue.name" "testSdkSqs"
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
+            "rpc.method" "CreateQueue"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -87,7 +84,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           }
         }
       }
-      trace(1, hasHttpClientSpan() ? 3 : 2) {
+      trace(1, 2) {
         span(0) {
           name "SQS.SendMessage"
           kind PRODUCER
@@ -95,9 +92,10 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "SendMessage"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.method" "SendMessage"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -107,25 +105,17 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.transport" IP_TCP
           }
         }
-        def offset = 0
-        if (hasHttpClientSpan()) {
-          offset = 1
-          span(1) {
-            name "HTTP POST"
-            kind CLIENT
-            childOf span(0)
-          }
-        }
-        span(1 + offset) {
+        span(1) {
           name "SQS.ReceiveMessage"
           kind CONSUMER
           childOf span(0)
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -149,9 +139,10 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessage"
+            "rpc.method" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.service" "AmazonSQS"
+            "rpc.system" "aws-api"
+            "rpc.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200

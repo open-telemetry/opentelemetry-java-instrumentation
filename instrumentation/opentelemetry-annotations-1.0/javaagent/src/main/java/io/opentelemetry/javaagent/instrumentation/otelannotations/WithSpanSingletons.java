@@ -5,21 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
+import static java.util.logging.Level.FINE;
+
 import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
+import io.opentelemetry.instrumentation.api.util.SpanNames;
 import java.lang.reflect.Method;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 public final class WithSpanSingletons {
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-annotations-1.0";
 
-  private static final Logger logger = LoggerFactory.getLogger(WithSpanSingletons.class);
+  private static final Logger logger = Logger.getLogger(WithSpanSingletons.class.getName());
   private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
   private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
       createInstrumenterWithAttributes();
@@ -68,7 +69,7 @@ public final class WithSpanSingletons {
     try {
       return SpanKind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
-      logger.debug("unexpected span kind: {}", applicationSpanKind.name());
+      logger.log(FINE, "unexpected span kind: {0}", applicationSpanKind.name());
       return SpanKind.INTERNAL;
     }
   }

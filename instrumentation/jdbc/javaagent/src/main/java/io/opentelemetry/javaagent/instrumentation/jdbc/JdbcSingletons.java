@@ -9,12 +9,12 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesExtractor;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesExtractor;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesGetter;
 
 public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
@@ -22,16 +22,17 @@ public final class JdbcSingletons {
   private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor = new JdbcAttributesExtractor();
-    SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
-    JdbcNetAttributesExtractor netAttributesExtractor = new JdbcNetAttributesExtractor();
+    JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
+    JdbcNetAttributesGetter netAttributesGetter = new JdbcNetAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
-            .addAttributesExtractor(dbAttributesExtractor)
-            .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(SqlClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import com.google.common.collect.EvictingQueue;
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
@@ -362,6 +362,12 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
               ? underlyingType(Type.getType(owner))
               : Type.getType("L" + owner + ";");
 
+      // method invoked on a primitive array type
+      if (ownerType.getSort() != Type.OBJECT) {
+        super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+        return;
+      }
+
       { // ref for method return type
         Type returnType = underlyingType(methodType.getReturnType());
         if (returnType.getSort() == Type.OBJECT) {
@@ -540,7 +546,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       Type ownerType = Type.getType("L" + owner + ";");
 
       // remember used context classes if this is an VirtualField.get() call
-      if ("io.opentelemetry.instrumentation.api.field.VirtualField".equals(ownerType.getClassName())
+      if ("io.opentelemetry.instrumentation.api.util.VirtualField".equals(ownerType.getClassName())
           && "find".equals(name)
           && methodType.getDescriptor().equals(getVirtualFieldDescriptor)) {
         // in case of invalid scenario (not using .class ref directly) don't store anything and

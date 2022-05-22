@@ -1,0 +1,214 @@
+name: Release
+on:
+  workflow_dispatch:
+
+jobs:
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
+
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+
+  # test-latest-deps is intentionally not included in the release workflows
+  # because any time a new library version is released to maven central
+  # it can fail due to test code incompatibility with the new library version,
+  # or due to slight changes in emitted telemetry
+
+  smoke-test:
+    uses: ./.github/workflows/reusable-smoke-test.yml
+
+  # muzzle is intentionally not included in the release workflows
+  # because any time a new library version is released to maven central it can fail,
+  # and this is not a reason to hold up the release
+
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+
+  examples:
+    uses: ./.github/workflows/reusable-examples.yml
+
+  release:
+    needs:
+      - assemble
+      - test
+      - smoke-test
+      - gradle-plugins
+      - examples
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [[ $GITHUB_REF_NAME != release/* ]]; then
+            echo the release workflow should only be run against release branches
+            exit 1
+          fi
+
+      - uses: actions/checkout@v3
+        with:
+          # tags are needed for the generate-release-contributors.sh script
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build and publish artifacts
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
+        env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+
+      - name: Build and publish gradle plugins
+        uses: gradle/gradle-build-action@v2
+        env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        with:
+          # Don't use publishToSonatype since we don't want to publish the marker artifact
+          arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
+          build-root-directory: gradle-plugins
+
+      - name: Set environment variables
+        run: |
+          version=$(.github/scripts/get-version.sh)
+          if [[ $version =~ ([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+          else
+            echo "unexpected version: $version"
+            exit 1
+          fi
+          if [[ $patch == 0 ]]; then
+            if [[ $minor == 0 ]]; then
+              prior_major=$((major - 1))
+              prior_minor=$(grep -Po "^## Version $prior_major.\K[0-9]+" CHANGELOG.md | head -1)
+              prior_version="$prior_major.$prior_minor"
+            else
+              prior_version="$major.$((minor - 1)).0"
+            fi
+          else
+            prior_version="$major.$minor.$((patch - 1))"
+          fi
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
+
+      - name: Generate release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # conditional blocks not indented because of the heredoc
+          if [[ $VERSION == *.0 ]]; then
+          cat > release-notes.txt << EOF
+          This release targets the OpenTelemetry SDK $VERSION.
+
+          Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
+
+          EOF
+          else
+          cat > release-notes.txt << EOF
+          This is a patch release on the previous $PRIOR_VERSION release, fixing the issue(s) below.
+
+          EOF
+          fi
+
+          # the complex perl regex is needed because markdown docs render newlines as soft wraps
+          # while release notes render them as line breaks
+          sed -n "0,/^## Version $VERSION/d;/^## Version /q;p" CHANGELOG.md \
+            | perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' \
+            >> release-notes.txt
+
+          # conditional block not indented because of the heredoc
+          if [[ $VERSION == *.0 ]]; then
+          cat >> release-notes.txt << EOF
+
+          ### 🙇 Thank you
+          This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
+
+          EOF
+
+          .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION >> release-notes.txt
+          fi
+
+      - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
+          gh release create --target $GITHUB_REF_NAME \
+                            --title "Version $VERSION" \
+                            --notes-file release-notes.txt \
+                            --discussion-category announcements \
+                            v$VERSION \
+                            opentelemetry-javaagent.jar
+
+      - name: Update the change log with the release date
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
+          sed -Ei "s/## Version $VERSION .*/## Version $VERSION ($date)/" CHANGELOG.md
+
+      - name: Set git user
+        run: .github/scripts/set-git-user.sh
+
+      - name: Create pull request against the release branch
+        env:
+          # not using the default GITHUB_TOKEN because pull requests generated by it do not run any workflows
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          message="Add the release date for $VERSION to the change log"
+          branch="add-release-date-for-${VERSION}"
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "[$GITHUB_REF_NAME] $message" \
+                       --body "$message." \
+                       --head $branch \
+                       --base $GITHUB_REF_NAME
+
+      - uses: actions/checkout@v3
+        with:
+          repository: opentelemetry-java-bot/opentelemetry-operator
+          # this is the personal access token used for "git push" below
+          token: ${{ secrets.BOT_TOKEN }}
+
+      - name: Initialize pull request branch
+        run: |
+          git remote add upstream https://github.com/open-telemetry/opentelemetry-operator.git
+          git fetch upstream
+          git checkout -b update-opentelemetry-javaagent-to-${VERSION} upstream/main
+
+      - name: Update version
+        run: |
+          echo $VERSION > autoinstrumentation/java/version.txt
+
+      - name: Set git user
+        run: .github/scripts/set-git-user.sh
+
+      - name: Create pull request against opentelemetry-operator
+        env:
+          # this is the personal access token used for "gh pr create" below
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          message="Update the javaagent version to $VERSION"
+          body="Update the javaagent version to \`$VERSION\`."
+
+          # gh pr create doesn't have a way to explicitly specify different head and base
+          # repositories currently, but it will implicitly pick up the head from a different
+          # repository if you set up a tracking branch
+
+          git commit -a -m "$message"
+          git push --set-upstream origin update-opentelemetry-javaagent-to-${VERSION}
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --repo open-telemetry/opentelemetry-operator \
+                       --base main

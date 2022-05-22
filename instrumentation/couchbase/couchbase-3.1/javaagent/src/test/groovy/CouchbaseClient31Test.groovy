@@ -3,9 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import com.couchbase.client.core.env.TimeoutConfig
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
+import com.couchbase.client.java.ClusterOptions
 import com.couchbase.client.java.Collection
+import com.couchbase.client.java.env.ClusterEnvironment
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -38,10 +41,16 @@ class CouchbaseClient31Test extends AgentInstrumentationSpecification {
       .withStartupTimeout(Duration.ofSeconds(120))
     couchbase.start()
 
-    cluster = Cluster.connect(couchbase.connectionString, couchbase.username, couchbase.password)
+    ClusterEnvironment environment = ClusterEnvironment.builder()
+      .timeoutConfig(TimeoutConfig.kvTimeout(Duration.ofSeconds(10)))
+      .build()
+
+    cluster = Cluster.connect(couchbase.connectionString, ClusterOptions
+      .clusterOptions(couchbase.username, couchbase.password)
+      .environment(environment))
     def bucket = cluster.bucket("test")
     collection = bucket.defaultCollection()
-    bucket.waitUntilReady(Duration.ofSeconds(10))
+    bucket.waitUntilReady(Duration.ofSeconds(30))
   }
 
   def cleanupSpec() {

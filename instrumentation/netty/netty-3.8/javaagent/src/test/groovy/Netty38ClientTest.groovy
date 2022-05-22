@@ -10,6 +10,8 @@ import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.context.Context
+import io.opentelemetry.context.Scope
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
@@ -43,6 +45,12 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
     } else {
       builder.setMaximumNumberOfRedirects(3)
     }
+    // with connection pooling is enabled there are occasional failures in high concurrency test
+    if (builder.metaClass.getMetaMethod("setAllowPoolingConnections", boolean) != null) {
+      builder.setAllowPoolingConnections(false)
+    } else {
+      builder.setAllowPoolingConnection(false)
+    }
 
     return builder.build()
   }
@@ -64,17 +72,23 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
 
   @Override
   void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+    // TODO: context is not automatically propagated into callbacks
+    Context context = Context.current()
     // TODO(anuraaga): Do we also need to test ListenableFuture callback?
     client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override
       Void onCompleted(Response response) throws Exception {
-        requestResult.complete(response.statusCode)
+        try (Scope scope = context.makeCurrent()) {
+          requestResult.complete(response.statusCode)
+        }
         return null
       }
 
       @Override
       void onThrowable(Throwable throwable) {
-        requestResult.complete(throwable)
+        try (Scope scope = context.makeCurrent()) {
+          requestResult.complete(throwable)
+        }
       }
     })
   }

@@ -1,0 +1,97 @@
+name: Build pull request
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
+    with:
+      cache-read-only: true
+
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      cache-read-only: true
+
+  test-latest-deps:
+    # test-latest-deps is not included in the PR workflow by default
+    # because any time a new library version is released to maven central
+    # it can fail due to test code incompatibility with the new library version,
+    # or due to slight changes in emitted telemetry, which can be confusing for contributors
+    # (muzzle can also fail when a new library version is released to maven central
+    # but that happens much less often)
+    #
+    # the condition is on the steps below instead of here on the job, because skipping the job
+    # causes the job to show up as canceled in the GitHub UI which prevents the build section from
+    # collapsing when everything (else) is green
+    #
+    # and the name is updated when the steps below are skipped which makes what's happening clearer
+    # in the GitHub UI
+    uses: ./.github/workflows/reusable-test-latest-deps.yml
+    with:
+      skip: ${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
+      cache-read-only: true
+
+  smoke-test:
+    uses: ./.github/workflows/reusable-smoke-test.yml
+    with:
+      # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
+      skip-windows: true
+      cache-read-only: true
+
+  muzzle:
+    # release branch PRs are excluded
+    # because any time a new library version is released to maven central it can fail
+    # which requires unnecessary release branch maintenance, especially for patches
+    if: ${{ !startsWith(github.base_ref, 'release/') }}
+    uses: ./.github/workflows/reusable-muzzle.yml
+    with:
+      cache-read-only: true
+
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+    with:
+      no-build-cache: true
+
+  examples:
+    uses: ./.github/workflows/reusable-examples.yml
+    with:
+      cache-read-only: true
+
+  # this is not a required check to avoid blocking pull requests if external links break
+  markdown-link-check:
+    # release branches are excluded to avoid unnecessary maintenance
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
+    uses: ./.github/workflows/reusable-markdown-link-check.yml
+
+  # this is not a required check to avoid blocking pull requests if new misspellings are added
+  # to the misspell dictionary
+  misspell-check:
+    # release branches are excluded to avoid unnecessary maintenance
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
+    uses: ./.github/workflows/reusable-misspell-check.yml
+
+  required-status-check:
+    needs:
+      - assemble
+      - test
+      - smoke-test
+      - muzzle
+      - gradle-plugins
+      - examples
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - if: |
+          needs.assemble.result != 'success' ||
+          needs.test.result != 'success' ||
+          needs.smoke-test.result != 'success' ||
+          (!startsWith(github.base_ref, 'release/') && needs.muzzle.result != 'success') ||
+          needs.gradle-plugins.result != 'success' ||
+          needs.examples.result != 'success'
+        run: exit 1

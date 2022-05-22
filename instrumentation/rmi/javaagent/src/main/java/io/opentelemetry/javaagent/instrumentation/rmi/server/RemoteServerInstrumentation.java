@@ -11,15 +11,16 @@ import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerSin
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import java.rmi.Remote;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -28,7 +29,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RemoteServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("java.rmi.Remote"));
+    return implementsInterface(named("java.rmi.Remote"))
+        .and(not(nameStartsWith("org.springframework.remoting")));
   }
 
   @Override
@@ -57,6 +59,9 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
 
       // TODO review and unify with all other SERVER instrumentation
       Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
+      if (parentContext == null) {
+        return;
+      }
       request = ClassAndMethod.create(declaringClass, methodName);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;

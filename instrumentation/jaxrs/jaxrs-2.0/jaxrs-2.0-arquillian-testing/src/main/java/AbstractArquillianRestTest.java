@@ -18,11 +18,10 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import test.CdiRestResource;
 import test.EjbRestResource;
 import test.RestApplication;
@@ -52,9 +51,19 @@ public abstract class AbstractArquillianRestTest {
     return url.getPath();
   }
 
-  @ParameterizedTest
-  @CsvSource({"rest-app/cdiHello, CdiRestResource", "rest-app/ejbHello, EjbRestResource"})
-  public void testHelloRequest(String path, String className) {
+  @Test
+  public void testHelloCdiRestResource() {
+    testHelloRequest("rest-app/cdiHello", "CdiRestResource");
+  }
+
+  @Test
+  public void testHelloEjbRestResource() {
+    testHelloRequest("rest-app/ejbHello", "EjbRestResource");
+  }
+
+  // @ParameterizedTest doesn't work correctly with arquillian, all exceptions (assertion errors)
+  // thrown from the test method are ignored
+  private void testHelloRequest(String path, String className) {
     AggregatedHttpResponse response = client.get(url.resolve(path).toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);

@@ -7,7 +7,7 @@ muzzle {
   pass {
     group.set("org.hibernate")
     module.set("hibernate-core")
-    versions.set("[4.0.0.Final,)")
+    versions.set("[4.0.0.Final,6)")
     assertInverse.set(true)
   }
 }
@@ -62,6 +62,10 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
 }

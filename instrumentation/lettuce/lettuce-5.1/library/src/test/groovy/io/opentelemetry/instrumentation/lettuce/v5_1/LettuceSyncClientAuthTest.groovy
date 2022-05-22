@@ -14,7 +14,7 @@ class LettuceSyncClientAuthTest extends AbstractLettuceSyncClientAuthTest implem
   RedisClient createClient(String uri) {
     return RedisClient.create(
       ClientResources.builder()
-        .tracing(LettuceTracing.create(getOpenTelemetry()).newTracing())
+        .tracing(LettuceTelemetry.create(getOpenTelemetry()).newTracing())
         .build(),
       uri)
   }

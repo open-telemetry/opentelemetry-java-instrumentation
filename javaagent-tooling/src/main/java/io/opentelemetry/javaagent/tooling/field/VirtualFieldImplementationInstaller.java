@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.field;
 
-import io.opentelemetry.instrumentation.api.field.VirtualField;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 public interface VirtualFieldImplementationInstaller {
