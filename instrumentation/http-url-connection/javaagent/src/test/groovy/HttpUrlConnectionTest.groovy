@@ -299,7 +299,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           }
         }
         span(1) {
-          name "HTTP GET"
+          name "HTTP POST"
           kind CLIENT
           childOf span(0)
           attributes {

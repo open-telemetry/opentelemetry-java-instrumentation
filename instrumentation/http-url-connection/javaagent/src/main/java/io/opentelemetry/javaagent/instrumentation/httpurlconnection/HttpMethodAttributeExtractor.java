@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -39,6 +40,8 @@ public class HttpMethodAttributeExtractor<
       String requestMethod = connection.getRequestMethod();
       // The getOutputStream() has transformed "GET" into "POST"
       attributes.put(SemanticAttributes.HTTP_METHOD, requestMethod);
+      Span span = Span.fromContext(context);
+      span.updateName("HTTP " + requestMethod);
     }
   }
 }
