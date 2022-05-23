@@ -33,7 +33,7 @@ public class HttpMethodAttributeExtractor<
       @Nullable Integer responseCode,
       @Nullable Throwable error) {
 
-    GetOutputStreamContext getOutputStreamContext = GetOutputStreamContext.retrieveFrom(context);
+    GetOutputStreamContext getOutputStreamContext = GetOutputStreamContext.get(context);
 
     if (getOutputStreamContext.isOutputStreamMethodOfSunConnectionCalled()) {
       String requestMethod = connection.getRequestMethod();

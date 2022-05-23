@@ -118,11 +118,8 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         scope.close();
         Class<? extends HttpURLConnection> connectionClass = connection.getClass();
 
-        GetOutputStreamContext getOutputStreamContext =
-            GetOutputStreamContext.retrieveFrom(httpUrlState.context);
-
         String requestMethod = connection.getRequestMethod();
-        getOutputStreamContext.set(
+        GetOutputStreamContext.set(
             httpUrlState.context, connectionClass, methodName, requestMethod);
 
         if (throwable != null) {

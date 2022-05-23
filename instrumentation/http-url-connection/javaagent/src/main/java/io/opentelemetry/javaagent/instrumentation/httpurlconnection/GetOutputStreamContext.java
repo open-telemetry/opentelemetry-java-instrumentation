@@ -32,11 +32,11 @@ public class GetOutputStreamContext implements ImplicitContextKeyed {
     return context.with(new GetOutputStreamContext());
   }
 
-  public static GetOutputStreamContext retrieveFrom(Context context) {
+  public static GetOutputStreamContext get(Context context) {
     return context.get(KEY);
   }
 
-  public void set(
+  public static void set(
       Context context,
       Class<? extends HttpURLConnection> connectionClass,
       String methodName,
