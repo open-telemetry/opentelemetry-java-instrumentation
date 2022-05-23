@@ -120,7 +120,10 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
 
         GetOutputStreamContext getOutputStreamContext =
             GetOutputStreamContext.retrieveFrom(httpUrlState.context);
-        getOutputStreamContext.set(httpUrlState.context, connectionClass, methodName);
+
+        String requestMethod = connection.getRequestMethod();
+        getOutputStreamContext.set(
+            httpUrlState.context, connectionClass, methodName, requestMethod);
 
         if (throwable != null) {
           if (responseCode >= 400) {
