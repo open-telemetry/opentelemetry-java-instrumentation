@@ -24,7 +24,8 @@ public class HttpMethodAttributeExtractor<
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, HttpURLConnection connection) {}
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, HttpURLConnection connection) {}
 
   @Override
   public void onEnd(
