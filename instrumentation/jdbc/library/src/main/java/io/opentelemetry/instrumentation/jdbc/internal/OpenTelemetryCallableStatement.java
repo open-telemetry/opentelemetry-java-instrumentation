@@ -20,6 +20,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
