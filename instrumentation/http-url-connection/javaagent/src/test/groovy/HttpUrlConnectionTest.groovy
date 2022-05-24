@@ -274,7 +274,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
 
       String urlParameters = "q=ASDF&w=&e=&r=12345&t="
 
-      // Send GET request
+      // Send POST request
       connection.setDoOutput(true)
       DataOutputStream wr = new DataOutputStream(connection.getOutputStream())
       wr.writeBytes(urlParameters)
