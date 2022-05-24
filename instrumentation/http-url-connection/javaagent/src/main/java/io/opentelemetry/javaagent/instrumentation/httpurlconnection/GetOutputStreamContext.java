@@ -16,7 +16,7 @@ public class GetOutputStreamContext implements ImplicitContextKeyed {
   private static final ContextKey<GetOutputStreamContext> KEY =
       named("opentelemetry-http-url-connection-get-output-stream");
 
-  private boolean outputStreamMethodOfSunConnectionCalled;
+  private volatile boolean outputStreamMethodOfSunConnectionCalled;
 
   private GetOutputStreamContext() {}
 
