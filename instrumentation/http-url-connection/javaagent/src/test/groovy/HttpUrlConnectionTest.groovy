@@ -266,7 +266,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
 
       HttpURLConnection connection = url.openConnection()
 
-      def connectionClassName = connection.getClass().getCanonicalName()
+      def connectionClassName = connection.getClass().getName()
 
       assert "sun.net.www.protocol.http.HttpURLConnection".equals(connectionClassName)
 
