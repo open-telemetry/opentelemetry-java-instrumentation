@@ -22,8 +22,13 @@ public final class DbConnectionPoolMetricsAssertions {
   private final String instrumentationName;
   private final String poolName;
 
+  private boolean testMinIdleConnections = true;
   private boolean testMaxIdleConnections = true;
+  private boolean testPendingRequests = true;
   private boolean testConnectionTimeouts = true;
+  private boolean testCreateTime = true;
+  private boolean testWaitTime = true;
+  private boolean testUseTime = true;
 
   DbConnectionPoolMetricsAssertions(
       InstrumentationExtension testing, String instrumentationName, String poolName) {
@@ -32,13 +37,38 @@ public final class DbConnectionPoolMetricsAssertions {
     this.poolName = poolName;
   }
 
+  public DbConnectionPoolMetricsAssertions disableMinIdleConnections() {
+    testMinIdleConnections = false;
+    return this;
+  }
+
   public DbConnectionPoolMetricsAssertions disableMaxIdleConnections() {
     testMaxIdleConnections = false;
     return this;
   }
 
+  public DbConnectionPoolMetricsAssertions disablePendingRequests() {
+    testPendingRequests = false;
+    return this;
+  }
+
   public DbConnectionPoolMetricsAssertions disableConnectionTimeouts() {
     testConnectionTimeouts = false;
+    return this;
+  }
+
+  public DbConnectionPoolMetricsAssertions disableCreateTime() {
+    testCreateTime = false;
+    return this;
+  }
+
+  public DbConnectionPoolMetricsAssertions disableWaitTime() {
+    testWaitTime = false;
+    return this;
+  }
+
+  public DbConnectionPoolMetricsAssertions disableUseTime() {
+    testUseTime = false;
     return this;
   }
 
@@ -71,23 +101,25 @@ public final class DbConnectionPoolMetricsAssertions {
                                                     poolName,
                                                     stringKey("state"),
                                                     "used"))))));
-    testing.waitAndAssertMetrics(
-        instrumentationName,
-        "db.client.connections.idle.min",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("connections")
-                        .hasDescription("The minimum number of idle open connections allowed.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                Attributes.of(
-                                                    stringKey("pool.name"), poolName))))));
+    if (testMinIdleConnections) {
+      testing.waitAndAssertMetrics(
+          instrumentationName,
+          "db.client.connections.idle.min",
+          metrics ->
+              metrics.anySatisfy(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("connections")
+                          .hasDescription("The minimum number of idle open connections allowed.")
+                          .hasLongSumSatisfying(
+                              sum ->
+                                  sum.isNotMonotonic()
+                                      .hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributes(
+                                                  Attributes.of(
+                                                      stringKey("pool.name"), poolName))))));
+    }
     if (testMaxIdleConnections) {
       testing.waitAndAssertMetrics(
           instrumentationName,
@@ -124,24 +156,26 @@ public final class DbConnectionPoolMetricsAssertions {
                                             point.hasAttributes(
                                                 Attributes.of(
                                                     stringKey("pool.name"), poolName))))));
-    testing.waitAndAssertMetrics(
-        instrumentationName,
-        "db.client.connections.pending_requests",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("requests")
-                        .hasDescription(
-                            "The number of pending requests for an open connection, cumulative for the entire pool.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                Attributes.of(
-                                                    stringKey("pool.name"), poolName))))));
+    if (testPendingRequests) {
+      testing.waitAndAssertMetrics(
+          instrumentationName,
+          "db.client.connections.pending_requests",
+          metrics ->
+              metrics.anySatisfy(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("requests")
+                          .hasDescription(
+                              "The number of pending requests for an open connection, cumulative for the entire pool.")
+                          .hasLongSumSatisfying(
+                              sum ->
+                                  sum.isNotMonotonic()
+                                      .hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributes(
+                                                  Attributes.of(
+                                                      stringKey("pool.name"), poolName))))));
+    }
     if (testConnectionTimeouts) {
       testing.waitAndAssertMetrics(
           instrumentationName,
@@ -162,52 +196,58 @@ public final class DbConnectionPoolMetricsAssertions {
                                                   Attributes.of(
                                                       stringKey("pool.name"), poolName))))));
     }
-    testing.waitAndAssertMetrics(
-        instrumentationName,
-        "db.client.connections.create_time",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("ms")
-                        .hasDescription("The time it took to create a new connection.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point.hasAttributes(
-                                            Attributes.of(stringKey("pool.name"), poolName))))));
-    testing.waitAndAssertMetrics(
-        instrumentationName,
-        "db.client.connections.wait_time",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("ms")
-                        .hasDescription(
-                            "The time it took to obtain an open connection from the pool.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point.hasAttributes(
-                                            Attributes.of(stringKey("pool.name"), poolName))))));
-    testing.waitAndAssertMetrics(
-        instrumentationName,
-        "db.client.connections.use_time",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("ms")
-                        .hasDescription(
-                            "The time between borrowing a connection and returning it to the pool.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point.hasAttributes(
-                                            Attributes.of(stringKey("pool.name"), poolName))))));
+    if (testCreateTime) {
+      testing.waitAndAssertMetrics(
+          instrumentationName,
+          "db.client.connections.create_time",
+          metrics ->
+              metrics.anySatisfy(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("ms")
+                          .hasDescription("The time it took to create a new connection.")
+                          .hasHistogramSatisfying(
+                              histogram ->
+                                  histogram.hasPointsSatisfying(
+                                      point ->
+                                          point.hasAttributes(
+                                              Attributes.of(stringKey("pool.name"), poolName))))));
+    }
+    if (testWaitTime) {
+      testing.waitAndAssertMetrics(
+          instrumentationName,
+          "db.client.connections.wait_time",
+          metrics ->
+              metrics.anySatisfy(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("ms")
+                          .hasDescription(
+                              "The time it took to obtain an open connection from the pool.")
+                          .hasHistogramSatisfying(
+                              histogram ->
+                                  histogram.hasPointsSatisfying(
+                                      point ->
+                                          point.hasAttributes(
+                                              Attributes.of(stringKey("pool.name"), poolName))))));
+    }
+    if (testUseTime) {
+      testing.waitAndAssertMetrics(
+          instrumentationName,
+          "db.client.connections.use_time",
+          metrics ->
+              metrics.anySatisfy(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("ms")
+                          .hasDescription(
+                              "The time between borrowing a connection and returning it to the pool.")
+                          .hasHistogramSatisfying(
+                              histogram ->
+                                  histogram.hasPointsSatisfying(
+                                      point ->
+                                          point.hasAttributes(
+                                              Attributes.of(stringKey("pool.name"), poolName))))));
+    }
   }
 }
