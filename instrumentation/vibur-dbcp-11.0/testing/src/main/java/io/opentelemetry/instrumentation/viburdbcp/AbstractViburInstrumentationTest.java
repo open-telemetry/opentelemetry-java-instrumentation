@@ -84,17 +84,7 @@ public abstract class AbstractViburInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.viburdbcp-11.0",
-            "db.client.connections.idle.min",
-            AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.viburdbcp-11.0",
             "db.client.connections.max",
-            AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.viburdbcp-11.0",
-            "db.client.connections.pending_requests",
             AbstractIterableAssert::isEmpty);
   }
 }
