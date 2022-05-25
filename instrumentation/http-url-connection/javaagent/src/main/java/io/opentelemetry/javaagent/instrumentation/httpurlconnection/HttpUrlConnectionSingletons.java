@@ -32,6 +32,10 @@ public final class HttpUrlConnectionSingletons {
             .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(HttpMethodAttributeExtractor.create())
+            .addContextCustomizer(
+                (context, httpRequestPacket, startAttributes) ->
+                    GetOutputStreamContext.init(context))
             .addOperationMetrics(HttpClientMetrics.get())
             .newClientInstrumenter(RequestPropertySetter.INSTANCE);
   }

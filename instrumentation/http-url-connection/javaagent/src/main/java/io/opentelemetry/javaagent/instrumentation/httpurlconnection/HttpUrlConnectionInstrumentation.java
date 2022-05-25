@@ -116,6 +116,11 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
       callDepth.getAndIncrement();
       try {
         scope.close();
+        Class<? extends HttpURLConnection> connectionClass = connection.getClass();
+
+        String requestMethod = connection.getRequestMethod();
+        GetOutputStreamContext.set(
+            httpUrlState.context, connectionClass, methodName, requestMethod);
 
         if (throwable != null) {
           if (responseCode >= 400) {
