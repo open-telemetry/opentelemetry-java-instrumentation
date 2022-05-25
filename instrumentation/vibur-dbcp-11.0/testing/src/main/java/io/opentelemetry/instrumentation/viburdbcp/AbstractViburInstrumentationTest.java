@@ -34,6 +34,8 @@ public abstract class AbstractViburInstrumentationTest {
 
   protected abstract void configure(ViburDBCPDataSource viburDataSource);
 
+  protected abstract void shutdown(ViburDBCPDataSource viburDataSource);
+
   @Test
   void shouldReportMetrics() throws SQLException, InterruptedException {
     // given
@@ -46,9 +48,9 @@ public abstract class AbstractViburInstrumentationTest {
     viburDataSource.start();
 
     // when
-    Connection hikariConnection = viburDataSource.getConnection();
+    Connection viburConnection = viburDataSource.getConnection();
     TimeUnit.MILLISECONDS.sleep(100);
-    hikariConnection.close();
+    viburConnection.close();
 
     // then
     DbConnectionPoolMetricsAssertions.create(
@@ -66,6 +68,7 @@ public abstract class AbstractViburInstrumentationTest {
     // this one too shouldn't cause any problems when called more than once
     viburDataSource.close();
     viburDataSource.close();
+    shutdown(viburDataSource);
 
     // sleep exporter interval
     Thread.sleep(100);
@@ -75,22 +78,22 @@ public abstract class AbstractViburInstrumentationTest {
     // then
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.hikaricp-3.0",
+            "io.opentelemetry.viburdbcp-11.0",
             "db.client.connections.usage",
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.hikaricp-3.0",
+            "io.opentelemetry.viburdbcp-11.0",
             "db.client.connections.idle.min",
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.hikaricp-3.0",
+            "io.opentelemetry.viburdbcp-11.0",
             "db.client.connections.max",
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.hikaricp-3.0",
+            "io.opentelemetry.viburdbcp-11.0",
             "db.client.connections.pending_requests",
             AbstractIterableAssert::isEmpty);
   }

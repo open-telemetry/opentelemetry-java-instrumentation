@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.viburdbcp;
 
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -16,7 +15,7 @@ class ViburInstrumentationTest extends AbstractViburInstrumentationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  private ViburTelemetry telemetry;
 
   @Override
   protected InstrumentationExtension testing() {
@@ -25,8 +24,12 @@ class ViburInstrumentationTest extends AbstractViburInstrumentationTest {
 
   @Override
   protected void configure(ViburDBCPDataSource viburDataSource) {
-    ViburTelemetry telemetry = ViburTelemetry.create(testing().getOpenTelemetry());
+    telemetry = ViburTelemetry.create(testing().getOpenTelemetry());
     telemetry.registerMetrics(viburDataSource);
-    cleanup.deferCleanup(() -> telemetry.unregisterMetrics(viburDataSource));
+  }
+
+  @Override
+  protected void shutdown(ViburDBCPDataSource viburDataSource) {
+    telemetry.unregisterMetrics(viburDataSource);
   }
 }

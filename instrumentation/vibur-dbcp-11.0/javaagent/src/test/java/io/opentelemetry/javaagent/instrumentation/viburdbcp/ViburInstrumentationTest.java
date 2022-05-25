@@ -23,4 +23,7 @@ class ViburInstrumentationTest extends AbstractViburInstrumentationTest {
 
   @Override
   protected void configure(ViburDBCPDataSource viburDataSource) {}
+
+  @Override
+  protected void shutdown(ViburDBCPDataSource viburDataSource) {}
 }
