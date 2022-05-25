@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.viburdbcp;
 import io.opentelemetry.api.OpenTelemetry;
 import org.vibur.dbcp.ViburDBCPDataSource;
 
-/** Entrypoint for instrumenting Hikari database connection pools. */
+/** Entrypoint for instrumenting Vibur database connection pools. */
 public final class ViburTelemetry {
 
   /** Returns a new {@link ViburTelemetry} configured with the given {@link OpenTelemetry}. */

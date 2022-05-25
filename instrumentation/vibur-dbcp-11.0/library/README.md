@@ -1,4 +1,4 @@
-# Manual Instrumentation for HikariCP
+# Manual Instrumentation for Vibur DBCP
 
 Provides OpenTelemetry instrumentation for [Vibur DBCP](https://www.vibur.org/).
 
