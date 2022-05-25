@@ -18,6 +18,8 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
+  testInstrumentation(project(":instrumentation:redisson:redisson-3.17.2:javaagent"))
+
   testImplementation(project(":instrumentation:redisson:redisson-common:testing"))
 
   latestDepTestLibrary("org.redisson:redisson:3.17.1")
