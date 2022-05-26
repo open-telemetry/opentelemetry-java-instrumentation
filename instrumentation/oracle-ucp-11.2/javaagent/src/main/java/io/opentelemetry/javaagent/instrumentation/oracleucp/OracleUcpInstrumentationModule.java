@@ -16,7 +16,7 @@ import java.util.List;
 public class OracleUcpInstrumentationModule extends InstrumentationModule {
 
   public OracleUcpInstrumentationModule() {
-    super("oracle-ucp");
+    super("oracle-ucp", "oracle-ucp-11.2");
   }
 
   @Override
