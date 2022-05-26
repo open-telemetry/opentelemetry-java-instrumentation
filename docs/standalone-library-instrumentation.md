@@ -31,6 +31,7 @@ that can be used if you prefer that over using the Java agent:
 * [Spring RestTemplate](../instrumentation/spring/spring-web-3.1/library)
 * [Spring Web MVC](../instrumentation/spring/spring-webmvc-3.1/library)
 * [Spring WebFlux Client](../instrumentation/spring/spring-webflux-5.0/library)
+* [Vibur DBCP](../instrumentation/vibur-dbcp-11.0/library)
 
 And some libraries are publishing their own OpenTelemetry instrumentation (yay!), e.g.
 

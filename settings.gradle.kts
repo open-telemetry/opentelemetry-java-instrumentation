@@ -442,6 +442,9 @@ include(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
+include(":instrumentation:vibur-dbcp-11.0:javaagent")
+include(":instrumentation:vibur-dbcp-11.0:library")
+include(":instrumentation:vibur-dbcp-11.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
 
 // benchmark
