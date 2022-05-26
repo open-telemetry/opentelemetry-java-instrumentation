@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.redisson")
     module.set("redisson")
-    versions.set("[3.0.0,3.17.2)")
+    versions.set("[3.0.0,3.17.0)")
   }
 }
 
@@ -18,11 +18,11 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testInstrumentation(project(":instrumentation:redisson:redisson-3.17.2:javaagent"))
+  testInstrumentation(project(":instrumentation:redisson:redisson-3.17:javaagent"))
 
   testImplementation(project(":instrumentation:redisson:redisson-common:testing"))
 
-  latestDepTestLibrary("org.redisson:redisson:3.17.1")
+  latestDepTestLibrary("org.redisson:redisson:3.16.8")
 }
 
 tasks.test {

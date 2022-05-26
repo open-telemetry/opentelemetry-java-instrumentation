@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.redisson.v3_17_2;
+package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -19,12 +18,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RedissonInstrumentationModule extends InstrumentationModule {
 
   public RedissonInstrumentationModule() {
-    super("redisson", "redisson-3.17.2");
+    super("redisson", "redisson-3.17");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return not(hasClassesNamed("org.redisson.misc.RPromise"));
+    return hasClassesNamed("org.redisson.api.RFunction");
   }
 
   @Override

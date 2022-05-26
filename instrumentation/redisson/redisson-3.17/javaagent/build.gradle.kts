@@ -6,12 +6,13 @@ muzzle {
   pass {
     group.set("org.redisson")
     module.set("redisson")
-    versions.set("[3.17.2,)")
+    versions.set("[3.17.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("org.redisson:redisson:3.17.2")
+  library("org.redisson:redisson:3.17.0")
 
   implementation(project(":instrumentation:redisson:redisson-common:javaagent"))
 
