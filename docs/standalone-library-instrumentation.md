@@ -21,6 +21,7 @@ that can be used if you prefer that over using the Java agent:
 * [Logback](../instrumentation/logback/logback-appender-1.0/library)
 * [MongoDB Driver](../instrumentation/mongo/mongo-3.1/library)
 * [OkHttp](../instrumentation/okhttp/okhttp-3.0/library)
+* [Oracle UCP](../instrumentation/oracle-ucp-11.2/library)
 * [OSHI](../instrumentation/oshi/library)
 * [Reactor](../instrumentation/reactor/reactor-3.1/library)
 * [RocketMQ](../instrumentation/rocketmq-client-4.8/library)

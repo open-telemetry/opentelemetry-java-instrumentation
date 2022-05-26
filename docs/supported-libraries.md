@@ -83,6 +83,7 @@ These are the supported libraries and frameworks:
 | [MongoDB Driver](https://mongodb.github.io/mongo-java-driver/)                                                                    | 3.1+                           |
 | [Netty](https://github.com/netty/netty)                                                                                           | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                       | 2.2+                           |
+| [Oracle UCP](https://docs.oracle.com/database/121/JJUCP/)                                                                         | 11.2+                          |
 | [OSHI](https://github.com/oshi/oshi/)                                                                                             | 5.3.1+                         |
 | [Play](https://github.com/playframework/playframework)                                                                            | 2.4+ (not including 2.8.x yet) |
 | [Play WS](https://github.com/playframework/play-ws)                                                                               | 1.0+                           |
