@@ -22,7 +22,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:redisson:redisson-common:testing"))
 
-  latestDepTestLibrary("org.redisson:redisson:3.16.8")
+  latestDepTestLibrary("org.redisson:redisson:3.16.+")
 }
 
 tasks.test {
