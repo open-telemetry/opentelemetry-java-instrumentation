@@ -16,7 +16,7 @@ For Maven, add to your `pom.xml` dependencies:
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-viburdbcp-11.0</artifactId>
+    <artifactId>opentelemetry-vibur-dbcp-11.0</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -25,7 +25,7 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```groovy
-implementation("io.opentelemetry.instrumentation:opentelemetry-viburdbcp-11.0:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-vibur-dbcp-11.0:OPENTELEMETRY_VERSION")
 ```
 
 ### Usage

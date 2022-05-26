@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.viburdbcp;
 
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
@@ -17,15 +16,13 @@ import javax.sql.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.vibur.dbcp.ViburDBCPDataSource;
 
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractViburInstrumentationTest {
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
 
   @Mock DataSource dataSourceMock;
   @Mock Connection connectionMock;
@@ -53,8 +50,7 @@ public abstract class AbstractViburInstrumentationTest {
     viburConnection.close();
 
     // then
-    DbConnectionPoolMetricsAssertions.create(
-            testing(), "io.opentelemetry.viburdbcp-11.0", "testPool")
+    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "testPool")
         .disableMinIdleConnections()
         .disableMaxIdleConnections()
         .disablePendingRequests()
@@ -78,13 +74,9 @@ public abstract class AbstractViburInstrumentationTest {
     // then
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.viburdbcp-11.0",
-            "db.client.connections.usage",
-            AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "db.client.connections.usage", AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.viburdbcp-11.0",
-            "db.client.connections.max",
-            AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "db.client.connections.max", AbstractIterableAssert::isEmpty);
   }
 }

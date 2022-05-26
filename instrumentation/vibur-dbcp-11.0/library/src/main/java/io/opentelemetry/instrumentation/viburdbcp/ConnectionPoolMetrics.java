@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.vibur.dbcp.ViburDBCPDataSource;
 
 final class ConnectionPoolMetrics {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.viburdbcp-11.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // ViburDBCPDataSource does not implement equals()/hashCode(), so it's safe to keep them in a
