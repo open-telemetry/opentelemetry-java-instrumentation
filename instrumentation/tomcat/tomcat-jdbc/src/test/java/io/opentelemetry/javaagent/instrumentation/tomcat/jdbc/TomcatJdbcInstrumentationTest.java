@@ -24,12 +24,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class TomcatJdbcInstrumentationTest {
 
-  //  @RegisterExtension
-  //  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  //  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
   @Mock javax.sql.DataSource dataSourceMock;
   @Mock Connection connectionMock;
 

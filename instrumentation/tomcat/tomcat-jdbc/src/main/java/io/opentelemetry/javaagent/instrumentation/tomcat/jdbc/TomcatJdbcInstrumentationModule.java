@@ -19,11 +19,6 @@ public class TomcatJdbcInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.javaagent.instrumentation");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new DataSourceProxyInstrumentation());
   }
