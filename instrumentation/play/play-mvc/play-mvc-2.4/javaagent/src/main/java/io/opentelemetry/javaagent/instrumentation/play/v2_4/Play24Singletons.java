@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayInstrumentationModule.INSTRUMENTATION_NAME_EXTRA;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -18,7 +20,9 @@ public final class Play24Singletons {
   private static final String SPAN_NAME = "play.request";
   private static final Instrumenter<Void, Void> INSTRUMENTER =
       Instrumenter.<Void, Void>builder(
-              GlobalOpenTelemetry.get(), "io.opentelemetry.play-2.4", s -> SPAN_NAME)
+              GlobalOpenTelemetry.get(),
+              "io.opentelemetry." + INSTRUMENTATION_NAME_EXTRA,
+              s -> SPAN_NAME)
           .newInstrumenter();
 
   public static Instrumenter<Void, Void> instrumenter() {

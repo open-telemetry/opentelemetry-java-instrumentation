@@ -17,8 +17,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class PlayInstrumentationModule extends InstrumentationModule {
 
+  static final String INSTRUMENTATION_NAME = "play-mvc";
+  static final String INSTRUMENTATION_NAME_EXTRA = "play-mvc-2.4";
+
   public PlayInstrumentationModule() {
-    super("play", "play-2.4");
+    super(INSTRUMENTATION_NAME, INSTRUMENTATION_NAME_EXTRA);
   }
 
   @Override
