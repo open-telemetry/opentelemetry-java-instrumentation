@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 
 public final class DbConnectionPoolMetricsAssertions {
@@ -139,11 +140,7 @@ public final class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit("connections")
         .hasDescription("The maximum number of open connections allowed.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+        .hasLongSumSatisfying(this::verifyPoolName);
   }
 
   private void verifyMinIdleConnections() {
@@ -157,11 +154,7 @@ public final class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit("connections")
         .hasDescription("The minimum number of idle open connections allowed.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+        .hasLongSumSatisfying(this::verifyPoolName);
   }
 
   private void verifyMaxIdleConnections() {
@@ -175,11 +168,13 @@ public final class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit("connections")
         .hasDescription("The maximum number of idle open connections allowed.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+        .hasLongSumSatisfying(this::verifyPoolName);
+  }
+
+  private void verifyPoolName(LongSumAssert sum) {
+      sum.isNotMonotonic()
+          .hasPointsSatisfying(
+              point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName)));
   }
 
   private void verifyPendingRequests() {
@@ -194,11 +189,7 @@ public final class DbConnectionPoolMetricsAssertions {
         .hasUnit("requests")
         .hasDescription(
             "The number of pending requests for an open connection, cumulative for the entire pool.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+        .hasLongSumSatisfying(this::verifyPoolName);
   }
 
   private void verifyTimeouts() {
