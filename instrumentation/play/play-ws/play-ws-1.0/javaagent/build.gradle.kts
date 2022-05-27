@@ -27,9 +27,9 @@ val scalaVersion = "2.12"
 dependencies {
   library("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:1.0.2")
 
-  implementation(project(":instrumentation:play-ws:play-ws-common:javaagent"))
+  implementation(project(":instrumentation:play:play-ws:play-ws-common:javaagent"))
 
-  testImplementation(project(":instrumentation:play-ws:play-ws-common:testing"))
+  testImplementation(project(":instrumentation:play:play-ws:play-ws-common:testing"))
 
   // These are to ensure cross compatibility
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
