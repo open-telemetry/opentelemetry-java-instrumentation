@@ -12,12 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.testing.assertj.HistogramAssert;
-import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
-import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
-import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
-import java.util.function.Consumer;
-import org.assertj.core.api.ListAssert;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 
 public final class DbConnectionPoolMetricsAssertions {
 
@@ -84,139 +79,36 @@ public final class DbConnectionPoolMetricsAssertions {
   }
 
   public void assertConnectionPoolEmitsMetrics() {
-    waitAndAssertMetrics("db.client.connections.usage", this::verifyUsageMetrics);
+    verifyConnectionUsage();
     if (testMinIdleConnections) {
-      waitAndAssertMetrics("db.client.connections.idle.min", this::verifyIdleMinMetrics);
+      verifyMinIdleConnections();
     }
     if (testMaxIdleConnections) {
-      waitAndAssertMetrics("db.client.connections.idle.max", this::verifyIdleMaxMetrics);
+      verifyMaxIdleConnections();
     }
-    waitAndAssertMetrics("db.client.connections.max", this::verifyMaxConnectionsMetrics);
-
+    verifyMaxConnections();
     if (testPendingRequests) {
-      waitAndAssertMetrics(
-          "db.client.connections.pending_requests", this::verifyConnectionsPendingMetrics);
+      verifyPendingRequests();
     }
     if (testConnectionTimeouts) {
-      waitAndAssertMetrics("db.client.connections.timeouts", this::verifyConnectionsTimeoutMetrics);
+      verifyTimeouts();
     }
     if (testCreateTime) {
-      waitAndAssertMetrics(
-          "db.client.connections.create_time", this::verifyConnectionsCreateTimeMetrics);
+      verifyCreateTime();
     }
     if (testWaitTime) {
-      waitAndAssertMetrics(
-          "db.client.connections.wait_time", this::verifyConnectionsWaitTimeMetrics);
+      verifyWaitTime();
     }
     if (testUseTime) {
-      waitAndAssertMetrics("db.client.connections.use_time", this::verifyConnectionsUseTimeMetrics);
+      verifyUseTime();
     }
   }
 
-  private void waitAndAssertMetrics(
-      String metricName, Consumer<ListAssert<MetricData>> assertions) {
-    testing.waitAndAssertMetrics(instrumentationName, metricName, assertions);
-  }
-
-  private void verifyConnectionsUseTimeMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(
-        metric ->
-            assertThat(metric)
-                .hasUnit("ms")
-                .hasDescription(
-                    "The time between borrowing a connection and returning it to the pool.")
-                .hasHistogramSatisfying(this::verifyHistogramPoolName));
-  }
-
-  private void verifyConnectionsWaitTimeMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(this::verifyConnectionsWaitTimeMetric);
-  }
-
-  private void verifyConnectionsWaitTimeMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("ms")
-        .hasDescription("The time it took to obtain an open connection from the pool.")
-        .hasHistogramSatisfying(this::verifyHistogramPoolName);
-  }
-
-  private void verifyHistogramPoolName(HistogramAssert histogram) {
-    histogram.hasPointsSatisfying(this::verifyPoolName);
-  }
-
-  private void verifyConnectionsCreateTimeMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(this::verifyConnectionsCreateTimeMetric);
-  }
-
-  private void verifyConnectionsCreateTimeMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("ms")
-        .hasDescription("The time it took to create a new connection.")
-        .hasHistogramSatisfying(this::verifyHistogramPoolName);
-  }
-
-  private void verifyConnectionsTimeoutMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(this::verifyConnectionsTimeoutMetric);
-  }
-
-  private void verifyConnectionsTimeoutMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("timeouts")
-        .hasDescription(
-            "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
-        .hasLongSumSatisfying(sum -> sum.isMonotonic().hasPointsSatisfying(this::verifyPoolName));
-  }
-
-  private void verifyConnectionsPendingMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(this::verifyConnectionsPendingMetric);
-  }
-
-  private void verifyConnectionsPendingMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("requests")
-        .hasDescription(
-            "The number of pending requests for an open connection, cumulative for the entire pool.")
-        .hasLongSumSatisfying(this::verifyNotMonotonicSumAndPoolName);
-  }
-
-  private void verifyNotMonotonicSumAndPoolName(LongSumAssert sum) {
-    sum.isNotMonotonic().hasPointsSatisfying(this::verifyPoolName);
-  }
-
-  private void verifyMaxConnectionsMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(this::verifyMaxConnectionsMetric);
-  }
-
-  private void verifyMaxConnectionsMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("connections")
-        .hasDescription("The maximum number of open connections allowed.")
-        .hasLongSumSatisfying(this::verifyNotMonotonicSumAndPoolName);
-  }
-
-  private void verifyIdleMaxMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(this::verifyIdleMaxMetric);
-  }
-
-  private void verifyIdleMaxMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("connections")
-        .hasDescription("The maximum number of idle open connections allowed.")
-        .hasLongSumSatisfying(this::verifyNotMonotonicSumAndPoolName);
-  }
-
-  private void verifyIdleMinMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(this::verifyIdleMinMetric);
-  }
-
-  private void verifyIdleMinMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("connections")
-        .hasDescription("The minimum number of idle open connections allowed.")
-        .hasLongSumSatisfying(this::verifyNotMonotonicSumAndPoolName);
-  }
-
-  private void verifyUsageMetrics(ListAssert<MetricData> metrics) {
-    metrics.anySatisfy(this::verifyUsageMetric);
+  private void verifyConnectionUsage() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.usage",
+        metrics -> metrics.anySatisfy(this::verifyUsageMetric));
   }
 
   private void verifyUsageMetric(MetricData metric) {
@@ -236,11 +128,146 @@ public final class DbConnectionPoolMetricsAssertions {
                                 Attributes.of(POOL_NAME_KEY, poolName, STATE_KEY, "used"))));
   }
 
-  private void verifyPoolName(HistogramPointAssert point) {
-    point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName));
+  private void verifyMaxConnections() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.max",
+        metrics -> metrics.anySatisfy(this::verifyMaxConnectionsMetric));
   }
 
-  private void verifyPoolName(LongPointAssert point) {
-    point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName));
+  private void verifyMaxConnectionsMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("connections")
+        .hasDescription("The maximum number of open connections allowed.")
+        .hasLongSumSatisfying(
+            sum ->
+                sum.isNotMonotonic()
+                    .hasPointsSatisfying(
+                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+  }
+
+  private void verifyMinIdleConnections() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.idle.min",
+        metrics -> metrics.anySatisfy(this::verifyMinIdleConnectionsMetric));
+  }
+
+  private void verifyMinIdleConnectionsMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("connections")
+        .hasDescription("The minimum number of idle open connections allowed.")
+        .hasLongSumSatisfying(
+            sum ->
+                sum.isNotMonotonic()
+                    .hasPointsSatisfying(
+                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+  }
+
+  private void verifyMaxIdleConnections() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.idle.max",
+        metrics -> metrics.anySatisfy(this::verifyMaxIdleConnectionsMetric));
+  }
+
+  private void verifyMaxIdleConnectionsMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("connections")
+        .hasDescription("The maximum number of idle open connections allowed.")
+        .hasLongSumSatisfying(
+            sum ->
+                sum.isNotMonotonic()
+                    .hasPointsSatisfying(
+                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+  }
+
+  private void verifyPendingRequests() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.pending_requests",
+        metrics -> metrics.anySatisfy(this::verifyPendingRequestsMetric));
+  }
+
+  private void verifyPendingRequestsMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("requests")
+        .hasDescription(
+            "The number of pending requests for an open connection, cumulative for the entire pool.")
+        .hasLongSumSatisfying(
+            sum ->
+                sum.isNotMonotonic()
+                    .hasPointsSatisfying(
+                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+  }
+
+  private void verifyTimeouts() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.timeouts",
+        metrics -> metrics.anySatisfy(this::verifyTimeoutsMetric));
+  }
+
+  private void verifyTimeoutsMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("timeouts")
+        .hasDescription(
+            "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
+        .hasLongSumSatisfying(
+            sum ->
+                sum.isMonotonic()
+                    .hasPointsSatisfying(
+                        point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+  }
+
+  private void verifyCreateTime() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.create_time",
+        metrics -> metrics.anySatisfy(this::verifyCreateTimeMetric));
+  }
+
+  private void verifyCreateTimeMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("ms")
+        .hasDescription("The time it took to create a new connection.")
+        .hasHistogramSatisfying(
+            histogram ->
+                histogram.hasPointsSatisfying(
+                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+  }
+
+  private void verifyWaitTime() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.wait_time",
+        metrics -> metrics.anySatisfy(this::verifyWaitTimeMetric));
+  }
+
+  private void verifyWaitTimeMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("ms")
+        .hasDescription("The time it took to obtain an open connection from the pool.")
+        .hasHistogramSatisfying(
+            histogram ->
+                histogram.hasPointsSatisfying(
+                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
+  }
+
+  private void verifyUseTime() {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        "db.client.connections.use_time",
+        metrics -> metrics.anySatisfy(this::verifyUseTimeMetric));
+  }
+
+  private MetricAssert verifyUseTimeMetric(MetricData metric) {
+    return assertThat(metric)
+        .hasUnit("ms")
+        .hasDescription("The time between borrowing a connection and returning it to the pool.")
+        .hasHistogramSatisfying(
+            histogram ->
+                histogram.hasPointsSatisfying(
+                    point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName))));
   }
 }
