@@ -47,7 +47,8 @@ public final class Cpu {
 
   static {
     OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
-    Supplier<Double> processCpuSupplier = methodInvoker(osBean, OS_BEAN_J9, METHOD_PROCESS_CPU_LOAD);
+    Supplier<Double> processCpuSupplier =
+        methodInvoker(osBean, OS_BEAN_J9, METHOD_PROCESS_CPU_LOAD);
     if (processCpuSupplier == null) {
       processCpuSupplier = methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_PROCESS_CPU_LOAD);
     }
@@ -65,37 +66,42 @@ public final class Cpu {
 
   /** Register observers for java runtime class metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
-    INSTANCE.registerObservers(openTelemetry, ManagementFactory.getOperatingSystemMXBean(),
-        systemCpu,
-        processCpu);
+    INSTANCE.registerObservers(
+        openTelemetry, ManagementFactory.getOperatingSystemMXBean(), systemCpu, processCpu);
   }
 
   // Visible for testing
-  void registerObservers(OpenTelemetry openTelemetry, OperatingSystemMXBean osBean, @Nullable Supplier<Double> systemCpuUsage, @Nullable Supplier<Double> processCpuUsage) {
+  void registerObservers(
+      OpenTelemetry openTelemetry,
+      OperatingSystemMXBean osBean,
+      @Nullable Supplier<Double> systemCpuUsage,
+      @Nullable Supplier<Double> processCpuUsage) {
     Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");
 
     meter
         .gaugeBuilder("process.runtime.jvm.system.cpu.load_1m")
         .setDescription("Average CPU load of the whole system for the last minute")
         .setUnit("1")
-        .buildWithCallback(observableMeasurement -> {
-          double loadAverage = osBean.getSystemLoadAverage();
-          if (loadAverage >= 0) {
-            observableMeasurement.record(loadAverage);
-          }
-        });
+        .buildWithCallback(
+            observableMeasurement -> {
+              double loadAverage = osBean.getSystemLoadAverage();
+              if (loadAverage >= 0) {
+                observableMeasurement.record(loadAverage);
+              }
+            });
 
     if (systemCpuUsage != null) {
       meter
           .gaugeBuilder("process.runtime.jvm.system.cpu.utilization")
           .setDescription("Recent cpu utilization for the whole system")
           .setUnit("1")
-          .buildWithCallback(observableMeasurement -> {
-            Double cpuUsage = systemCpuUsage.get();
-            if (cpuUsage != null && cpuUsage >= 0) {
-              observableMeasurement.record(cpuUsage);
-            }
-          });
+          .buildWithCallback(
+              observableMeasurement -> {
+                Double cpuUsage = systemCpuUsage.get();
+                if (cpuUsage != null && cpuUsage >= 0) {
+                  observableMeasurement.record(cpuUsage);
+                }
+              });
     }
 
     if (processCpuUsage != null) {
@@ -103,18 +109,20 @@ public final class Cpu {
           .gaugeBuilder("process.runtime.jvm.cpu.utilization")
           .setDescription("Recent cpu utilization for the process")
           .setUnit("1")
-          .buildWithCallback(observableMeasurement -> {
-            Double cpuUsage = processCpuUsage.get();
-            if (cpuUsage != null && cpuUsage >= 0) {
-              observableMeasurement.record(cpuUsage);
-            }
-          });
+          .buildWithCallback(
+              observableMeasurement -> {
+                Double cpuUsage = processCpuUsage.get();
+                if (cpuUsage != null && cpuUsage >= 0) {
+                  observableMeasurement.record(cpuUsage);
+                }
+              });
     }
   }
 
   @Nullable
   @SuppressWarnings("ReturnValueIgnored")
-  private static Supplier<Double> methodInvoker(OperatingSystemMXBean osBean, String osBeanClassName, String methodName) {
+  private static Supplier<Double> methodInvoker(
+      OperatingSystemMXBean osBean, String osBeanClassName, String methodName) {
     try {
       Class<?> osBeanClass = Class.forName(osBeanClassName);
       osBeanClass.cast(osBean);

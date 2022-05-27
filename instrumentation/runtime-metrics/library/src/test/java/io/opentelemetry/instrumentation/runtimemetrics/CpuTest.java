@@ -32,7 +32,8 @@ class CpuTest {
     Supplier<Double> systemCpuUsage = () -> 0.11;
     Supplier<Double> processCpuUsage = () -> 0.05;
 
-    Cpu.INSTANCE.registerObservers(testing.getOpenTelemetry(), osBean, systemCpuUsage, processCpuUsage);
+    Cpu.INSTANCE.registerObservers(
+        testing.getOpenTelemetry(), osBean, systemCpuUsage, processCpuUsage);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-metrics",
@@ -44,11 +45,7 @@ class CpuTest {
                         .hasDescription("Average CPU load of the whole system for the last minute")
                         .hasUnit("1")
                         .hasDoubleGaugeSatisfying(
-                            gauge ->
-                                gauge
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point.hasValue(2.2)))));
+                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(2.2)))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-metrics",
         "process.runtime.jvm.system.cpu.utilization",
@@ -59,11 +56,7 @@ class CpuTest {
                         .hasDescription("Recent cpu utilization for the whole system")
                         .hasUnit("1")
                         .hasDoubleGaugeSatisfying(
-                            gauge ->
-                                gauge
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point.hasValue(0.11)))));
+                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.11)))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-metrics",
         "process.runtime.jvm.cpu.utilization",
@@ -74,10 +67,6 @@ class CpuTest {
                         .hasDescription("Recent cpu utilization for the process")
                         .hasUnit("1")
                         .hasDoubleGaugeSatisfying(
-                            gauge ->
-                                gauge
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point.hasValue(0.05)))));
+                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.05)))));
   }
 }
