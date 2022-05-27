@@ -20,6 +20,9 @@ public final class TomcatConnectionPoolMetrics {
   private static final OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-jdbc";
 
+  // a weak map does not make sense here because each Meter holds a reference to the dataSource
+  // DataSourceProxy does not implement equals()/hashCode(), so it's safe to keep them in a plain
+  // ConcurrentHashMap
   private static final Map<DataSourceProxy, List<ObservableLongUpDownCounter>> dataSourceMetrics =
       new ConcurrentHashMap<>();
 
