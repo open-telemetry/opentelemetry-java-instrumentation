@@ -12,7 +12,7 @@ import static org.mockito.BDDMockito.given;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ public class TomcatJdbcInstrumentationTest {
 
     // then
     await()
-        .atMost(20, TimeUnit.SECONDS)
+        .atMost(Duration.ofSeconds(20))
         .untilAsserted(() -> assertConnectionPoolMetrics(tomcatDataSource.getPoolName()));
 
     // when
@@ -62,7 +62,7 @@ public class TomcatJdbcInstrumentationTest {
 
     // then
     await()
-        .atMost(20, TimeUnit.SECONDS)
+        .atMost(Duration.ofSeconds(20))
         .untilAsserted(TomcatJdbcInstrumentationTest::assertNoConnectionPoolMetrics);
   }
 
