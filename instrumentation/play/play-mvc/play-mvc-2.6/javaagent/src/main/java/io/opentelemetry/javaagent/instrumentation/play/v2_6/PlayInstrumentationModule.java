@@ -15,11 +15,8 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class PlayInstrumentationModule extends InstrumentationModule {
 
-  static final String INSTRUMENTATION_NAME = "play-mvc";
-  static final String INSTRUMENTATION_NAME_EXTRA = "play-mvc-2.6";
-
   public PlayInstrumentationModule() {
-    super(INSTRUMENTATION_NAME, INSTRUMENTATION_NAME_EXTRA);
+    super("play", "play-2.6");
   }
 
   @Override
