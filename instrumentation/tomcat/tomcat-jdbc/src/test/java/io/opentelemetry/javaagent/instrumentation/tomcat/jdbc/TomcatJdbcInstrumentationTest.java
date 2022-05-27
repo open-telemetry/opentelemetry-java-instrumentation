@@ -6,13 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.mockito.BDDMockito.given;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
-import java.time.Duration;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -47,9 +45,7 @@ public class TomcatJdbcInstrumentationTest {
     connection.close();
 
     // then
-    await()
-        .atMost(Duration.ofSeconds(20))
-        .untilAsserted(() -> assertConnectionPoolMetrics(tomcatDataSource.getPoolName()));
+    assertConnectionPoolMetrics(tomcatDataSource.getPoolName());
 
     // when
     // this one too shouldn't cause any problems when called more than once
@@ -58,9 +54,7 @@ public class TomcatJdbcInstrumentationTest {
     testing.clearData();
 
     // then
-    await()
-        .atMost(Duration.ofSeconds(20))
-        .untilAsserted(TomcatJdbcInstrumentationTest::assertNoConnectionPoolMetrics);
+    assertNoConnectionPoolMetrics();
   }
 
   private static void assertConnectionPoolMetrics(String poolName) {
