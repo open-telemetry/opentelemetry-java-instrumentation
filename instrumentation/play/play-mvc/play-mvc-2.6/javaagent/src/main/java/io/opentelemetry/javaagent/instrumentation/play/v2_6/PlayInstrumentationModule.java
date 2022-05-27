@@ -16,7 +16,7 @@ import java.util.List;
 public class PlayInstrumentationModule extends InstrumentationModule {
 
   public PlayInstrumentationModule() {
-    super("play", "play-2.6");
+    super("play", "play-mvc-2.6");
   }
 
   @Override
