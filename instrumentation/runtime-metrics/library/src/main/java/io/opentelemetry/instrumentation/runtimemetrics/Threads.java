@@ -16,7 +16,7 @@ import java.lang.management.ThreadMXBean;
  * <p>Example usage:
  *
  * <pre>{@code
- * Classes.registerObservers(GlobalOpenTelemetry.get());
+ * Threads.registerObservers(GlobalOpenTelemetry.get());
  * }</pre>
  *
  * <p>Example metrics being exported:
