@@ -110,6 +110,7 @@ These are the supported libraries and frameworks:
 | [Spring Web Services](https://spring.io/projects/spring-ws)                                                                       | 2.0+                           |
 | [Spring WebFlux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)    | 5.0+                           |
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                         | 2.12+                          |
+| [Tomcat JDBC Pool](https://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)                                                       | 8.5.0+                         |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                   | 6.6+ (not including 8.x yet)   |
 | [Undertow](https://undertow.io/)                                                                                                  | 1.4+                           |
 | [Vaadin](https://vaadin.com/)                                                                                                     | 14.2+                          |
