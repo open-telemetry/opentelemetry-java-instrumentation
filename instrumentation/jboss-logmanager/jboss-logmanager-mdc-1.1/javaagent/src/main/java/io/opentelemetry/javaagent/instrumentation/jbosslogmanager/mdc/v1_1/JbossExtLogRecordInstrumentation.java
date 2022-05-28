@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,6 +34,7 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // available since jboss-logmanager 1.1
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
@@ -40,6 +42,11 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
         JbossExtLogRecordInstrumentation.class.getName() + "$GetMdcAdvice");
+
+    // available since jboss-logmanager 1.3
+    transformer.applyAdviceToMethod(
+        isMethod().and(isPublic()).and(takesArguments(0)).and(named("getMdcCopy")),
+        JbossExtLogRecordInstrumentation.class.getName() + "$GetMdcCopyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -78,6 +85,43 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
           default:
             // do nothing
         }
+      }
+    }
+  }
+
+  public static class GetMdcCopyAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This ExtLogRecord record,
+        @Advice.Return(readOnly = false) Map<String, String> value) {
+
+      if (value.containsKey(TRACE_ID)
+          && value.containsKey(SPAN_ID)
+          && value.containsKey(TRACE_FLAGS)) {
+        return;
+      }
+
+      Context context = VirtualField.find(ExtLogRecord.class, Context.class).get(record);
+      if (context == null) {
+        return;
+      }
+
+      SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+      if (!spanContext.isValid()) {
+        return;
+      }
+
+      if (!value.containsKey(TRACE_ID)) {
+        value.put(TRACE_ID, spanContext.getTraceId());
+      }
+
+      if (!value.containsKey(SPAN_ID)) {
+        value.put(SPAN_ID, spanContext.getSpanId());
+      }
+
+      if (!value.containsKey(TRACE_FLAGS)) {
+        value.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
       }
     }
   }
