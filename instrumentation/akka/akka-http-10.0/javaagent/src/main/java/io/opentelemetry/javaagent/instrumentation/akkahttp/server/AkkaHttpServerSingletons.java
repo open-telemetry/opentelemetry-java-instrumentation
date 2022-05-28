@@ -20,6 +20,8 @@ public class AkkaHttpServerSingletons {
 
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
+  public static final String OTEL_DISPATCHER_NAME = "otel-pinned-dispatcher";
+
   static {
     AkkaHttpServerAttributesGetter httpAttributesGetter = new AkkaHttpServerAttributesGetter();
     INSTRUMENTER =

@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
+import akka.stream.ActorAttributes;
 import akka.stream.Materializer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,18 +28,27 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // Instrumenting akka-streams bindAndHandle api was previously attempted.
-    // This proved difficult as there was no clean way to close the async scope
-    // in the graph logic after the user's request handler completes.
-    //
-    // Instead, we're instrumenting the bindAndHandle function helpers by
-    // wrapping the scala functions with our own handlers.
+    transformer.applyAdviceToMethod(
+        named("bindAndHandle").and(takesArgument(0, named("akka.stream.scaladsl.Flow"))),
+        this.getClass().getName() + "$AkkaHttpFlowAdvice");
     transformer.applyAdviceToMethod(
         named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
         this.getClass().getName() + "$AkkaHttpSyncAdvice");
     transformer.applyAdviceToMethod(
         named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
         this.getClass().getName() + "$AkkaHttpAsyncAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class AkkaHttpFlowAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapHandler(
+        @Advice.Argument(value = 0, readOnly = false)
+        akka.stream.scaladsl.Flow<HttpRequest, HttpResponse, ?> handler) {
+      handler = handler.join(new AkkaHttpServerInstrumentationModule.FlowWrapper()).withAttributes(
+          ActorAttributes.dispatcher(AkkaHttpServerSingletons.OTEL_DISPATCHER_NAME));
+    }
   }
 
   @SuppressWarnings("unused")

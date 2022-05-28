@@ -1,8 +1,3 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
 import akka.actor.ActorSystem
@@ -10,15 +5,15 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
-import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, ServerEndpoint}
+import akka.stream.scaladsl.Sink
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
+import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, ServerEndpoint}
 
 import java.util.function.Supplier
 import scala.concurrent.Await
 
-object AkkaHttpTestWebServer {
+object AkkaHttpTestSourceWebServer {
   implicit val system = ActorSystem("my-system")
   implicit val materializer = ActorMaterializer()
   // needed for the future flatMap/onComplete in the end
@@ -59,8 +54,9 @@ object AkkaHttpTestWebServer {
   def start(port: Int): Unit = synchronized {
     if (null == binding) {
       import scala.concurrent.duration._
+
       binding =
-        Await.result(Http().bindAndHandle(route, "localhost", port), 10.seconds)
+        Await.result(Http().bind( "localhost", port).map(_.handleWith(route)).to(Sink.ignore).run(), 10.seconds)
     }
   }
 
@@ -71,4 +67,5 @@ object AkkaHttpTestWebServer {
       binding = null
     }
   }
+
 }
