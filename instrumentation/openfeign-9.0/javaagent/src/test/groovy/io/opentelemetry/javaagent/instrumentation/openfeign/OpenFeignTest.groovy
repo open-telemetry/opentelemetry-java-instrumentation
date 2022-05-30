@@ -30,12 +30,8 @@ class OpenFeignTest extends HttpClientTest<OpenFeignTestingApi> implements Agent
   @Override
   final int sendRequest(OpenFeignTestingApi api, String method, URI uri,
                         Map<String, String> headers) {
-    try {
-      api.testing()
-    } catch (e) {
-      return 500
-    }
-    return 200
+    String result = api.testing()
+    return result != null ? 200 : 500
   }
 
   @Override
