@@ -21,7 +21,7 @@ public class OpenfeignInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new FeignSynchronousMethodHandlerInstrumentation(),
-        new FeignClientInstrumentation());
+    return asList(
+        new FeignSynchronousMethodHandlerInstrumentation(), new FeignClientInstrumentation());
   }
 }

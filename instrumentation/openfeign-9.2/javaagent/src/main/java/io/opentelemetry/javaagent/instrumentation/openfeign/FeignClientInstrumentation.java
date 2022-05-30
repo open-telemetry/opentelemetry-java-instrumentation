@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.openfeign;
 
-
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -45,14 +44,12 @@ public class FeignClientInstrumentation implements TypeInstrumentation {
         FeignClientInstrumentation.class.getName() + "$ClientExecuteAdvice");
   }
 
-
   @SuppressWarnings("unused")
   public static class ClientExecuteAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Return Response response,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return Response response, @Advice.Thrown Throwable throwable) {
 
       CallDepth callDepth = CallDepth.forClass(Feign.class);
       if (callDepth.getAndIncrement() > 0) {
@@ -66,7 +63,6 @@ public class FeignClientInstrumentation implements TypeInstrumentation {
       } finally {
         callDepth.decrementAndGet();
       }
-
     }
   }
 }

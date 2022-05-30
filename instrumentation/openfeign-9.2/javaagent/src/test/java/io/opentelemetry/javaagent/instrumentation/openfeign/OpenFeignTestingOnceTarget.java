@@ -17,7 +17,8 @@ public class OpenFeignTestingOnceTarget implements feign.Target<OpenfeignTesting
   public final String url;
   public final Map<String, Collection<String>> headers;
 
-  public OpenFeignTestingOnceTarget(String method,String url, Map<String, Collection<String>> headers) {
+  public OpenFeignTestingOnceTarget(
+      String method, String url, Map<String, Collection<String>> headers) {
     this.method = method;
     this.url = url;
     this.headers = headers;

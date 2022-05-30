@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.openfeign;
 
-
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.openfeign.OpenfeignInstrumentationSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -44,8 +43,7 @@ public class FeignSynchronousMethodHandlerInstrumentation implements TypeInstrum
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(named("executeAndDecode")),
-        FeignSynchronousMethodHandlerInstrumentation.class.getName() + "$ExecuteAndDecodeAdvice"
-    );
+        FeignSynchronousMethodHandlerInstrumentation.class.getName() + "$ExecuteAndDecodeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -58,8 +56,7 @@ public class FeignSynchronousMethodHandlerInstrumentation implements TypeInstrum
         @Advice.FieldValue("metadata") MethodMetadata metadata,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("invokeParam") ExecuteAndDecodeRequest request
-    ) {
+        @Advice.Local("invokeParam") ExecuteAndDecodeRequest request) {
 
       request = new ExecuteAndDecodeRequest(target, metadata, requestTemplate);
       context = instrumenter().start(Java8BytecodeBridge.currentContext(), request);
@@ -74,8 +71,7 @@ public class FeignSynchronousMethodHandlerInstrumentation implements TypeInstrum
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("invokeParam") ExecuteAndDecodeRequest request
-    ) {
+        @Advice.Local("invokeParam") ExecuteAndDecodeRequest request) {
       if (scope == null) {
         return;
       }
@@ -87,5 +83,4 @@ public class FeignSynchronousMethodHandlerInstrumentation implements TypeInstrum
       scope.close();
     }
   }
-
 }

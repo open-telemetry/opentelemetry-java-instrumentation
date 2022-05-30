@@ -17,8 +17,8 @@ public class ExecuteAndDecodeRequest {
   private final RequestTemplate requestTemplate;
   private final URI uri;
 
-  public ExecuteAndDecodeRequest(Target<?> target, MethodMetadata metadata,
-      RequestTemplate requestTemplate) {
+  public ExecuteAndDecodeRequest(
+      Target<?> target, MethodMetadata metadata, RequestTemplate requestTemplate) {
     this.target = target;
     this.metadata = metadata;
     this.requestTemplate = requestTemplate;

@@ -16,24 +16,23 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum OpenfeignAttributesGetter implements RpcAttributesGetter<ExecuteAndDecodeRequest>,
-    NetClientAttributesGetter<ExecuteAndDecodeRequest, feign.Response>,
-    HttpClientAttributesGetter<ExecuteAndDecodeRequest, feign.Response> {
+enum OpenfeignAttributesGetter
+    implements
+        RpcAttributesGetter<ExecuteAndDecodeRequest>,
+        NetClientAttributesGetter<ExecuteAndDecodeRequest, feign.Response>,
+        HttpClientAttributesGetter<ExecuteAndDecodeRequest, feign.Response> {
   INSTANCE;
 
-  @Nullable
   @Override
   public String system(ExecuteAndDecodeRequest request) {
     return "openfeign";
   }
 
-  @Nullable
   @Override
   public String service(ExecuteAndDecodeRequest request) {
-    return request.getTemplateUri().getHost();
+    return request.getTarget().name();
   }
 
-  @Nullable
   @Override
   public String method(ExecuteAndDecodeRequest request) {
     return request.getRequestTemplate().method();
@@ -54,18 +53,16 @@ enum OpenfeignAttributesGetter implements RpcAttributesGetter<ExecuteAndDecodeRe
 
   @Nullable
   @Override
-  public Long requestContentLengthUncompressed(ExecuteAndDecodeRequest request,
-      @Nullable Response response) {
+  public Long requestContentLengthUncompressed(
+      ExecuteAndDecodeRequest request, @Nullable Response response) {
     return null;
   }
 
-  @Nullable
   @Override
   public Integer statusCode(ExecuteAndDecodeRequest request, @Nullable Response response) {
     return response != null ? response.status() : 0;
   }
 
-  @Nullable
   @Override
   public Long responseContentLength(ExecuteAndDecodeRequest request, @Nullable Response response) {
     return (response != null && response.body() != null) ? response.body().length().longValue() : 0;
@@ -73,23 +70,22 @@ enum OpenfeignAttributesGetter implements RpcAttributesGetter<ExecuteAndDecodeRe
 
   @Nullable
   @Override
-  public Long responseContentLengthUncompressed(ExecuteAndDecodeRequest request,
-      @Nullable Response response) {
+  public Long responseContentLengthUncompressed(
+      ExecuteAndDecodeRequest request, @Nullable Response response) {
     return null;
   }
 
   @Override
-  public List<String> responseHeader(ExecuteAndDecodeRequest request, @Nullable Response response,
-      String name) {
-    return response != null ? new ArrayList<>(response.headers().getOrDefault(name,Collections.emptyList()))
+  public List<String> responseHeader(
+      ExecuteAndDecodeRequest request, @Nullable Response response, String name) {
+    return response != null
+        ? new ArrayList<>(response.headers().getOrDefault(name, Collections.emptyList()))
         : Collections.emptyList();
   }
 
-
-  @Nullable
   @Override
   public String url(ExecuteAndDecodeRequest request) {
-    return request.getTarget().url();
+    return request.getTarget().url() + request.getTemplateUri().getPath();
   }
 
   @Nullable
@@ -98,19 +94,20 @@ enum OpenfeignAttributesGetter implements RpcAttributesGetter<ExecuteAndDecodeRe
     return null;
   }
 
-  @Nullable
   @Override
   public String transport(ExecuteAndDecodeRequest request, @Nullable Response response) {
     return "http";
   }
 
-  @Nullable
   @Override
   public String peerName(ExecuteAndDecodeRequest request, @Nullable Response response) {
-    return service(request);
+    String host = request.getTemplateUri().getHost();
+    if (host == null || "".equals(host)) {
+      return service(request);
+    }
+    return host;
   }
 
-  @Nullable
   @Override
   public Integer peerPort(ExecuteAndDecodeRequest request, @Nullable Response response) {
     URI uri = request.getTemplateUri();
