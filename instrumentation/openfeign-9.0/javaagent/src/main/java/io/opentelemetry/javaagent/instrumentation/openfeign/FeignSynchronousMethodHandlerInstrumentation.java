@@ -14,10 +14,8 @@ import feign.MethodMetadata;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Target;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -75,10 +73,7 @@ public class FeignSynchronousMethodHandlerInstrumentation implements TypeInstrum
       if (scope == null) {
         return;
       }
-      Span span = Java8BytecodeBridge.currentSpan();
-      VirtualField<Span, Response> virtualField = VirtualField.find(Span.class, Response.class);
-      Response response = virtualField.get(span);
-      virtualField.set(span, null);
+      Response response = OpenFeignResponseHolder.get(context);
       instrumenter().end(context, request, response, throwable);
       scope.close();
     }

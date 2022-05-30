@@ -16,5 +16,4 @@ dependencies {
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-  testInstrumentation(project(":instrumentation:openfeign-9.0:javaagent"))
 }

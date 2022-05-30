@@ -9,29 +9,18 @@ import feign.Request;
 import feign.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum OpenFeignAttributesGetter
+enum OpenFeignHttpClientAttributesGetter
     implements
-        RpcAttributesGetter<ExecuteAndDecodeRequest>,
         NetClientAttributesGetter<ExecuteAndDecodeRequest, feign.Response>,
         HttpClientAttributesGetter<ExecuteAndDecodeRequest, feign.Response> {
   INSTANCE;
-
-  @Override
-  public String system(ExecuteAndDecodeRequest request) {
-    return "openfeign";
-  }
-
-  @Override
-  public String service(ExecuteAndDecodeRequest request) {
-    return request.getTarget().name();
-  }
 
   @Override
   public String method(ExecuteAndDecodeRequest request) {
@@ -58,14 +47,18 @@ enum OpenFeignAttributesGetter
     return null;
   }
 
+  @Nullable
   @Override
   public Integer statusCode(ExecuteAndDecodeRequest request, @Nullable Response response) {
-    return response != null ? response.status() : 0;
+    return response != null ? response.status() : null;
   }
 
+  @Nullable
   @Override
   public Long responseContentLength(ExecuteAndDecodeRequest request, @Nullable Response response) {
-    return (response != null && response.body() != null) ? response.body().length().longValue() : 0;
+    return (response != null && response.body() != null)
+        ? response.body().length().longValue()
+        : null;
   }
 
   @Nullable
@@ -96,14 +89,14 @@ enum OpenFeignAttributesGetter
 
   @Override
   public String transport(ExecuteAndDecodeRequest request, @Nullable Response response) {
-    return "http";
+    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   public String peerName(ExecuteAndDecodeRequest request, @Nullable Response response) {
     String host = request.getTemplateUri().getHost();
     if (host == null || "".equals(host)) {
-      return service(request);
+      return request.getTarget().name();
     }
     return host;
   }
