@@ -48,6 +48,7 @@ class MethodTest {
 
 
   static class ConfigTracedCompletableFuture {
+
     CompletableFuture<String> getResult() {
       CompletableFuture<String> completableFuture = new CompletableFuture<>();
       //can not use CompletableFuture#completeOnTimeout on language level 8
@@ -64,6 +65,7 @@ class MethodTest {
   }
 
   static class ConfigTracedCallable implements Callable<String> {
+
     @Override
     public String call() {
       return "Hello!";
