@@ -39,8 +39,8 @@ class OpenFeignTest extends HttpClientTest<OpenfeignTestingApi> implements Agent
 
   @Override
   String expectedClientSpanName(URI uri, String method) {
-    //constant span name in @RequestLine
-    return "GET localhost"
+    //constant span name in `OpenFeignTestingOnceTarget#name()`
+    return "GET OpenfeignTestingApi"
   }
 
   @Override
