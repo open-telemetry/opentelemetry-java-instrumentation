@@ -19,7 +19,6 @@ class OpenFeignTest extends HttpClientTest<OpenFeignTestingApi> implements Agent
 
   @Override
   final OpenFeignTestingApi buildRequest(String method, URI uri, Map<String, String> headers) {
-    System.out.println("Build request method:" + method + ",uri:" + uri + ",headers:" + headers)
     Map<String, Collection<String>> feignHeaders = new HashMap<>(headers.size())
     headers.forEach((k, v) -> {
       feignHeaders.put(k, Collections.singleton(v))
@@ -31,9 +30,11 @@ class OpenFeignTest extends HttpClientTest<OpenFeignTestingApi> implements Agent
   @Override
   final int sendRequest(OpenFeignTestingApi api, String method, URI uri,
                         Map<String, String> headers) {
-    System.out.println("Send request method:" + method + ",uri:" + uri + ",headers:" + headers)
-    String result = api.testing()
-    System.out.println("result:" + result)
+    try {
+      api.testing()
+    } catch (e) {
+      return 500
+    }
     return 200
   }
 
