@@ -34,7 +34,8 @@ class MethodTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributes(Attributes.empty())));
     testing.clearData();
-    new ConfigTracedCompletableFuture().getResult()
+    new ConfigTracedCompletableFuture()
+        .getResult()
         .thenAccept(t -> assertThat(t).isEqualTo("Hello!"));
     testing.waitAndAssertTraces(
         trace -> {
@@ -46,20 +47,21 @@ class MethodTest {
         });
   }
 
-
   static class ConfigTracedCompletableFuture {
 
     CompletableFuture<String> getResult() {
       CompletableFuture<String> completableFuture = new CompletableFuture<>();
-      //can not use CompletableFuture#completeOnTimeout on language level 8
-      new Thread(() -> {
-        try {
-          TimeUnit.MILLISECONDS.sleep(100);
-        } catch (InterruptedException e) {
-          //ignore
-        }
-        completableFuture.complete("Hello!");
-      }).start();
+      // can not use CompletableFuture#completeOnTimeout on language level 8
+      new Thread(
+              () -> {
+                try {
+                  TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                  // ignore
+                }
+                completableFuture.complete("Hello!");
+              })
+          .start();
       return completableFuture;
     }
   }
