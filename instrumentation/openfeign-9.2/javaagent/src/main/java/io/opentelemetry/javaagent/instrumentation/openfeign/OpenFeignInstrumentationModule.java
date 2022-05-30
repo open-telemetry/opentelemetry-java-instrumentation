@@ -13,9 +13,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OpenfeignInstrumentationModule extends InstrumentationModule {
+public class OpenFeignInstrumentationModule extends InstrumentationModule {
 
-  public OpenfeignInstrumentationModule() {
+  public OpenFeignInstrumentationModule() {
     super("openfeign", "openfeign-9.2");
   }
 

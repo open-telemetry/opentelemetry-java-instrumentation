@@ -9,7 +9,7 @@ import feign.RequestTemplate;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 
-enum OpenfeignTextMapSetter implements TextMapSetter<ExecuteAndDecodeRequest> {
+enum OpenFeignTextMapSetter implements TextMapSetter<ExecuteAndDecodeRequest> {
   INSTANCE;
 
   @Override

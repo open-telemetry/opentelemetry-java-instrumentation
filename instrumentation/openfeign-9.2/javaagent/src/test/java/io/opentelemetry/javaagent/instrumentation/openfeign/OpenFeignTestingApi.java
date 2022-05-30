@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.openfeign;
 
 import feign.RequestLine;
 
-public interface OpenfeignTestingApi {
+public interface OpenFeignTestingApi {
 
   // A fake url is set to avoid initialization errors
   @RequestLine("GET http://localhost:8080")

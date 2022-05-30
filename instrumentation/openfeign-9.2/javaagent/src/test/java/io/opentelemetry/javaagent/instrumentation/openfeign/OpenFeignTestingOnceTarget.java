@@ -11,7 +11,7 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 
-public class OpenFeignTestingOnceTarget implements feign.Target<OpenfeignTestingApi> {
+public class OpenFeignTestingOnceTarget implements feign.Target<OpenFeignTestingApi> {
 
   public final String method;
   public final String url;
@@ -25,8 +25,8 @@ public class OpenFeignTestingOnceTarget implements feign.Target<OpenfeignTesting
   }
 
   @Override
-  public Class<OpenfeignTestingApi> type() {
-    return OpenfeignTestingApi.class;
+  public Class<OpenFeignTestingApi> type() {
+    return OpenFeignTestingApi.class;
   }
 
   @Override

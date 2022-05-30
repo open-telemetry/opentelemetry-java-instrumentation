@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.openfeign;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
-public class OpenfeignSpanNameExtractor implements SpanNameExtractor<ExecuteAndDecodeRequest> {
+public class OpenFeignSpanNameExtractor implements SpanNameExtractor<ExecuteAndDecodeRequest> {
   @Override
   public String extract(ExecuteAndDecodeRequest request) {
     return request.getRequestTemplate().method() + " " + request.getTarget().name();

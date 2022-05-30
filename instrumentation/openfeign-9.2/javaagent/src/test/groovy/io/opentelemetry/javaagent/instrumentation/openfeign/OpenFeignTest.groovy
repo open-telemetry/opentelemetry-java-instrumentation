@@ -14,22 +14,22 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
-class OpenFeignTest extends HttpClientTest<OpenfeignTestingApi> implements AgentTestTrait {
+class OpenFeignTest extends HttpClientTest<OpenFeignTestingApi> implements AgentTestTrait {
 
 
   @Override
-  final OpenfeignTestingApi buildRequest(String method, URI uri, Map<String, String> headers) {
+  final OpenFeignTestingApi buildRequest(String method, URI uri, Map<String, String> headers) {
     System.out.println("Build request method:" + method + ",uri:" + uri + ",headers:" + headers)
     Map<String, Collection<String>> feignHeaders = new HashMap<>(headers.size())
     headers.forEach((k, v) -> {
       feignHeaders.put(k, Collections.singleton(v))
     })
-    Target<OpenfeignTestingApi> target = new OpenFeignTestingOnceTarget(method, uri.toString(), feignHeaders)
+    Target<OpenFeignTestingApi> target = new OpenFeignTestingOnceTarget(method, uri.toString(), feignHeaders)
     return Feign.builder().target(target)
   }
 
   @Override
-  final int sendRequest(OpenfeignTestingApi api, String method, URI uri,
+  final int sendRequest(OpenFeignTestingApi api, String method, URI uri,
                         Map<String, String> headers) {
     System.out.println("Send request method:" + method + ",uri:" + uri + ",headers:" + headers)
     String result = api.testing()

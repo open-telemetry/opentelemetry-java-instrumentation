@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum OpenfeignAttributesGetter
+enum OpenFeignAttributesGetter
     implements
         RpcAttributesGetter<ExecuteAndDecodeRequest>,
         NetClientAttributesGetter<ExecuteAndDecodeRequest, feign.Response>,

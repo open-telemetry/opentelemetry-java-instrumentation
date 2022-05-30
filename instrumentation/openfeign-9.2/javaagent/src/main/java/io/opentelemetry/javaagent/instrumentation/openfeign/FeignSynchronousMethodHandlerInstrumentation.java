@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.openfeign;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.openfeign.OpenfeignInstrumentationSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.openfeign.OpenFeignInstrumentationSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
