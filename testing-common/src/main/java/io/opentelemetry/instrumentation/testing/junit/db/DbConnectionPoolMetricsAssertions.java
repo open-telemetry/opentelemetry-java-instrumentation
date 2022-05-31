@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testing.junit.db;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -17,8 +18,8 @@ import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 
 public final class DbConnectionPoolMetricsAssertions {
 
-  public static final AttributeKey<String> POOL_NAME_KEY = stringKey("pool.name");
-  public static final AttributeKey<String> STATE_KEY = stringKey("state");
+  private static final AttributeKey<String> POOL_NAME_KEY = stringKey("pool.name");
+  private static final AttributeKey<String> STATE_KEY = stringKey("state");
 
   public static DbConnectionPoolMetricsAssertions create(
       InstrumentationExtension testing, String instrumentationName, String poolName) {
@@ -122,11 +123,11 @@ public final class DbConnectionPoolMetricsAssertions {
                 sum.isNotMonotonic()
                     .hasPointsSatisfying(
                         point ->
-                            point.hasAttributes(
-                                Attributes.of(POOL_NAME_KEY, poolName, STATE_KEY, "idle")),
+                            point.hasAttributesSatisfying(
+                                equalTo(POOL_NAME_KEY, poolName), equalTo(STATE_KEY, "idle")),
                         point ->
-                            point.hasAttributes(
-                                Attributes.of(POOL_NAME_KEY, poolName, STATE_KEY, "used"))));
+                            point.hasAttributesSatisfying(
+                                equalTo(POOL_NAME_KEY, poolName), equalTo(STATE_KEY, "used"))));
   }
 
   private void verifyMaxConnections() {
@@ -172,9 +173,8 @@ public final class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyPoolName(LongSumAssert sum) {
-      sum.isNotMonotonic()
-          .hasPointsSatisfying(
-              point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName)));
+    sum.isNotMonotonic()
+        .hasPointsSatisfying(point -> point.hasAttributes(Attributes.of(POOL_NAME_KEY, poolName)));
   }
 
   private void verifyPendingRequests() {
