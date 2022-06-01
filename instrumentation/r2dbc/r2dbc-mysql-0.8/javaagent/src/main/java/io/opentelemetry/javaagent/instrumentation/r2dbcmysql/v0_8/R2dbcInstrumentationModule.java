@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.r2dbc_mysql.v0_8;
+package io.opentelemetry.javaagent.instrumentation.r2dbcmysql.v0_8;
 
 import static java.util.Arrays.asList;
 
