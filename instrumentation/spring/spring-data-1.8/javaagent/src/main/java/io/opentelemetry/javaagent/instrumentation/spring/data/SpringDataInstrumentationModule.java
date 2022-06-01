@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -105,14 +106,16 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
       if (!isRepositoryOp || !instrumenter().shouldStart(parentContext, classAndMethod)) {
         return methodInvocation.proceed();
       }
+      Class<?> returnType = method.getReturnType();
+      AsyncOperationEndSupport<ClassAndMethod, Void> operationEndSupport =
+          AsyncOperationEndSupport.create(instrumenter(), Void.class, returnType);
 
       Context context = instrumenter().start(parentContext, classAndMethod);
       try (Scope ignored = context.makeCurrent()) {
         Object result = methodInvocation.proceed();
-        instrumenter().end(context, classAndMethod, null, null);
-        return result;
+        return operationEndSupport.asyncEnd(context, classAndMethod, result, null);
       } catch (Throwable t) {
-        instrumenter().end(context, classAndMethod, null, t);
+        operationEndSupport.asyncEnd(context, classAndMethod, null, t);
         throw t;
       }
     }

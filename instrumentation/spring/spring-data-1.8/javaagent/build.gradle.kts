@@ -27,6 +27,7 @@ val versions: Map<String, String> by project
 // For testing, chose a couple spring-data modules that are old enough to work with 1.9.0.
 dependencies {
   library("org.springframework.data:spring-data-commons:1.8.0.RELEASE")
+  implementation(project(":instrumentation-api-annotation-support"))
   compileOnly("org.springframework:spring-aop:1.2")
 
   testImplementation("org.spockframework:spock-spring:${versions["org.spockframework"]}")

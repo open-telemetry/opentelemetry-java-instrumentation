@@ -449,6 +449,7 @@ include(":instrumentation:vibur-dbcp-11.0:javaagent")
 include(":instrumentation:vibur-dbcp-11.0:library")
 include(":instrumentation:vibur-dbcp-11.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
+include("instrumentation:r2dbc:r2dbc-mysql-0.8:javaagent")
 
 // benchmark
 include(":benchmark-overhead-jmh")
