@@ -93,6 +93,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
     @Override
     public void start(Listener<RESPONSE> responseListener, Metadata headers) {
       propagators.getTextMapPropagator().inject(context, headers, MetadataSetter.INSTANCE);
+      request.setMetadata(headers);
       try (Scope ignored = context.makeCurrent()) {
         super.start(
             new TracingClientCallListener(responseListener, parentContext, context, request),
