@@ -29,8 +29,6 @@ import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-
 class GrpcTest extends AbstractGrpcTest {
 
   @RegisterExtension
