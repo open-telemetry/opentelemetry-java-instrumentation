@@ -86,7 +86,6 @@ public abstract class AbstractGrpcTest {
     }
   }
 
-
   @ParameterizedTest
   @ValueSource(strings = {"some name", "some other name"})
   void successBlockingStub(String paramName) throws Exception {
