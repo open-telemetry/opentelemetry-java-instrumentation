@@ -40,12 +40,15 @@ class GrpcTest extends AbstractGrpcTest {
   private static final AttributesExtractor<GrpcRequest, Status> customMetadataExtractor =
       new AttributesExtractor<GrpcRequest, Status>() {
         @Override
-        public void onStart(AttributesBuilder attributes, Context parentContext,
-            GrpcRequest grpcRequest) {}
+        public void onStart(
+            AttributesBuilder attributes, Context parentContext, GrpcRequest grpcRequest) {}
 
         @Override
-        public void onEnd(AttributesBuilder attributes, Context context,
-            GrpcRequest grpcRequest, @Nullable Status status,
+        public void onEnd(
+            AttributesBuilder attributes,
+            Context context,
+            GrpcRequest grpcRequest,
+            @Nullable Status status,
             @Nullable Throwable error) {
           Metadata metadata = grpcRequest.getMetadata();
           if (metadata != null && metadata.containsKey(customMetadataKey)) {
@@ -62,7 +65,8 @@ class GrpcTest extends AbstractGrpcTest {
     return configureServer(server, Function.identity());
   }
 
-  protected ServerBuilder<?> configureServer(ServerBuilder<?> server,
+  protected ServerBuilder<?> configureServer(
+      ServerBuilder<?> server,
       Function<? super GrpcTelemetryBuilder, ? extends GrpcTelemetryBuilder> customizer) {
     GrpcTelemetryBuilder builder =
         customizer.apply(GrpcTelemetry.builder(testing.getOpenTelemetry()));
@@ -74,7 +78,8 @@ class GrpcTest extends AbstractGrpcTest {
     return configureClient(client, Function.identity());
   }
 
-  protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client,
+  protected ManagedChannelBuilder<?> configureClient(
+      ManagedChannelBuilder<?> client,
       Function<? super GrpcTelemetryBuilder, ? extends GrpcTelemetryBuilder> customizer) {
     GrpcTelemetryBuilder builder =
         customizer.apply(GrpcTelemetry.builder(testing.getOpenTelemetry()));
@@ -99,18 +104,18 @@ class GrpcTest extends AbstractGrpcTest {
             responseObserver.onCompleted();
           }
         };
-    Server server = configureServer(
-        ServerBuilder.forPort(0).addService(greeter),
-        customizer -> customizer.addAttributeExtractor(customMetadataExtractor))
-        .build()
-        .start();
+    Server server =
+        configureServer(
+                ServerBuilder.forPort(0).addService(greeter),
+                customizer -> customizer.addAttributeExtractor(customMetadataExtractor))
+            .build()
+            .start();
 
     ManagedChannel channel =
         createChannel(
             configureClient(
                 ManagedChannelBuilder.forAddress("localhost", server.getPort()),
-                customizer -> customizer.addAttributeExtractor(customMetadataExtractor))
-        );
+                customizer -> customizer.addAttributeExtractor(customMetadataExtractor)));
 
     closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
     closer().add(() -> server.shutdownNow().awaitTermination());
@@ -118,9 +123,9 @@ class GrpcTest extends AbstractGrpcTest {
     Metadata extraMetadata = new Metadata();
     extraMetadata.put(customMetadataKey, "customValue");
 
-    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc
-        .newBlockingStub(channel)
-        .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(extraMetadata));
+    GreeterGrpc.GreeterBlockingStub client =
+        GreeterGrpc.newBlockingStub(channel)
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(extraMetadata));
 
     Helloworld.Response response =
         testing()
@@ -150,9 +155,6 @@ class GrpcTest extends AbstractGrpcTest {
                             .hasAttributesSatisfying(
                                 attrs ->
                                     OpenTelemetryAssertions.assertThat(attrs)
-                                        .containsEntry(customKey, "customValue"))
-                )
-        );
+                                        .containsEntry(customKey, "customValue"))));
   }
-
 }
