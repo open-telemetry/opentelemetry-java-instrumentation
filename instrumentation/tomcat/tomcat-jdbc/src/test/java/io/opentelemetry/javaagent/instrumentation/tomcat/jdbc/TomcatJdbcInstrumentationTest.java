@@ -42,6 +42,7 @@ public class TomcatJdbcInstrumentationTest {
 
     // when
     Connection connection = tomcatDataSource.getConnection();
+    Thread.sleep(100);
     connection.close();
 
     // then
@@ -51,7 +52,9 @@ public class TomcatJdbcInstrumentationTest {
     // this one too shouldn't cause any problems when called more than once
     tomcatDataSource.close();
     tomcatDataSource.close();
+    Thread.sleep(100);
     testing.clearData();
+    Thread.sleep(100);
 
     // then
     assertNoConnectionPoolMetrics();
