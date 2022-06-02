@@ -11,7 +11,7 @@ muzzle {
     module.set("resteasy-jaxrs")
     versions.set("[3.1.0.Final,3.5.0.Final)")
     // missing dependencies
-    skip("1.0.2.GA")
+    skip("1.0.2.GA", "2.3.10.Final")
     assertInverse.set(true)
   }
 
