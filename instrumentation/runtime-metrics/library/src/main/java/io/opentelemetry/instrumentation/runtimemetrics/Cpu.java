@@ -48,18 +48,22 @@ public final class Cpu {
   static {
     OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
     Supplier<Double> processCpuSupplier =
-        methodInvoker(osBean, OS_BEAN_J9, METHOD_PROCESS_CPU_LOAD);
+        methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_PROCESS_CPU_LOAD);
     if (processCpuSupplier == null) {
-      processCpuSupplier = methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_PROCESS_CPU_LOAD);
+      // More users will be on hotspot than j9, so check for j9 second
+      processCpuSupplier = methodInvoker(osBean, OS_BEAN_J9, METHOD_PROCESS_CPU_LOAD);
     }
     processCpu = processCpuSupplier;
 
-    Supplier<Double> systemCpuSupplier = methodInvoker(osBean, OS_BEAN_J9, METHOD_SYSTEM_CPU_LOAD);
-    if (systemCpuSupplier == null) {
-      systemCpuSupplier = methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_CPU_LOAD);
-    }
+    // As of java 14, com.sun.management.OperatingSystemMXBean#getCpuLoad() is preferred and
+    // #getSystemCpuLoad() is deprecated
+    Supplier<Double> systemCpuSupplier = methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_CPU_LOAD);
     if (systemCpuSupplier == null) {
       systemCpuSupplier = methodInvoker(osBean, OS_BEAN_HOTSPOT, METHOD_SYSTEM_CPU_LOAD);
+    }
+    if (systemCpuSupplier == null) {
+      // More users will be on hotspot than j9, so check for j9 second
+      systemCpuSupplier = methodInvoker(osBean, OS_BEAN_J9, METHOD_SYSTEM_CPU_LOAD);
     }
     systemCpu = systemCpuSupplier;
   }
