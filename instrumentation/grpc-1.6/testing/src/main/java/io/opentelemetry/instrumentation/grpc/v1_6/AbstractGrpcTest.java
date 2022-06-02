@@ -73,16 +73,12 @@ public abstract class AbstractGrpcTest {
 
   protected abstract InstrumentationExtension testing();
 
-  private final Queue<ThrowingRunnable<?>> closer = new ConcurrentLinkedQueue<>();
-
-  protected Queue<ThrowingRunnable<?>> closer() {
-    return closer;
-  }
+  protected final Queue<ThrowingRunnable<?>> closer = new ConcurrentLinkedQueue<>();
 
   @AfterEach
   void tearDown() throws Throwable {
-    while (!closer().isEmpty()) {
-      closer().poll().run();
+    while (!closer.isEmpty()) {
+      closer.poll().run();
     }
   }
 
@@ -102,8 +98,8 @@ public abstract class AbstractGrpcTest {
         };
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
@@ -272,8 +268,8 @@ public abstract class AbstractGrpcTest {
 
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterFutureStub client = GreeterGrpc.newFutureStub(channel);
 
@@ -461,8 +457,8 @@ public abstract class AbstractGrpcTest {
 
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
 
@@ -655,8 +651,8 @@ public abstract class AbstractGrpcTest {
         };
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
@@ -809,8 +805,8 @@ public abstract class AbstractGrpcTest {
         };
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
@@ -1031,8 +1027,8 @@ public abstract class AbstractGrpcTest {
                         }
                       }
                     }));
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
 
@@ -1187,8 +1183,8 @@ public abstract class AbstractGrpcTest {
 
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
 
@@ -1327,8 +1323,8 @@ public abstract class AbstractGrpcTest {
             .build()
             .start();
     ManagedChannel channel = createChannel(server);
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     ServerReflectionGrpc.ServerReflectionStub client = ServerReflectionGrpc.newStub(channel);
 
@@ -1492,8 +1488,8 @@ public abstract class AbstractGrpcTest {
     // Multiple calls to build on the same builder
     channelBuilder.build();
     ManagedChannel channel = channelBuilder.build();
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
@@ -1624,13 +1620,13 @@ public abstract class AbstractGrpcTest {
             .build()
             .start();
     ManagedChannel backendChannel = createChannel(backend);
-    closer().add(() -> backendChannel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> backend.shutdownNow().awaitTermination());
+    closer.add(() -> backendChannel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> backend.shutdownNow().awaitTermination());
     GreeterGrpc.GreeterBlockingStub backendStub = GreeterGrpc.newBlockingStub(backendChannel);
 
     // This executor does not propagate context without the javaagent available.
     ExecutorService executor = Executors.newFixedThreadPool(1);
-    closer().add(executor::shutdownNow);
+    closer.add(executor::shutdownNow);
 
     CountDownLatch clientCallDone = new CountDownLatch(1);
     AtomicReference<Throwable> error = new AtomicReference<>();
@@ -1664,8 +1660,8 @@ public abstract class AbstractGrpcTest {
             .build()
             .start();
     ManagedChannel frontendChannel = createChannel(frontend);
-    closer().add(() -> frontendChannel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> frontend.shutdownNow().awaitTermination());
+    closer.add(() -> frontendChannel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> frontend.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub frontendStub = GreeterGrpc.newBlockingStub(frontendChannel);
     frontendStub.sayHello(Helloworld.Request.newBuilder().setName("test").build());

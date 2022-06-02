@@ -16,6 +16,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -24,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -34,56 +34,21 @@ class GrpcTest extends AbstractGrpcTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  private static final String customKey = "customKey";
-  private static final Metadata.Key<String> customMetadataKey =
-      Metadata.Key.of(customKey, Metadata.ASCII_STRING_MARSHALLER);
-  private static final AttributesExtractor<GrpcRequest, Status> customMetadataExtractor =
-      new AttributesExtractor<GrpcRequest, Status>() {
-        @Override
-        public void onStart(
-            AttributesBuilder attributes, Context parentContext, GrpcRequest grpcRequest) {}
+  private static final AttributeKey<String> CUSTOM_KEY = AttributeKey.stringKey("customKey");
 
-        @Override
-        public void onEnd(
-            AttributesBuilder attributes,
-            Context context,
-            GrpcRequest grpcRequest,
-            @Nullable Status status,
-            @Nullable Throwable error) {
-          Metadata metadata = grpcRequest.getMetadata();
-          if (metadata != null && metadata.containsKey(customMetadataKey)) {
-            String value = metadata.get(customMetadataKey);
-            if (value != null) {
-              attributes.put(customKey, value);
-            }
-          }
-        }
-      };
+  private static final Metadata.Key<String> CUSTOM_METADATA_KEY =
+      Metadata.Key.of("customMetadataKey", Metadata.ASCII_STRING_MARSHALLER);
 
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
-    return configureServer(server, Function.identity());
-  }
-
-  protected ServerBuilder<?> configureServer(
-      ServerBuilder<?> server,
-      Function<? super GrpcTelemetryBuilder, ? extends GrpcTelemetryBuilder> customizer) {
-    GrpcTelemetryBuilder builder =
-        customizer.apply(GrpcTelemetry.builder(testing.getOpenTelemetry()));
-    return server.intercept(builder.build().newServerInterceptor());
+    return server.intercept(
+        GrpcTelemetry.builder(testing.getOpenTelemetry()).build().newServerInterceptor());
   }
 
   @Override
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
-    return configureClient(client, Function.identity());
-  }
-
-  protected ManagedChannelBuilder<?> configureClient(
-      ManagedChannelBuilder<?> client,
-      Function<? super GrpcTelemetryBuilder, ? extends GrpcTelemetryBuilder> customizer) {
-    GrpcTelemetryBuilder builder =
-        customizer.apply(GrpcTelemetry.builder(testing.getOpenTelemetry()));
-    return client.intercept(builder.build().newClientInterceptor());
+    return client.intercept(
+        GrpcTelemetry.builder(testing.getOpenTelemetry()).build().newClientInterceptor());
   }
 
   @Override
@@ -104,24 +69,32 @@ class GrpcTest extends AbstractGrpcTest {
             responseObserver.onCompleted();
           }
         };
+
     Server server =
-        configureServer(
-                ServerBuilder.forPort(0).addService(greeter),
-                customizer -> customizer.addAttributeExtractor(customMetadataExtractor))
+        ServerBuilder.forPort(0)
+            .addService(greeter)
+            .intercept(
+                GrpcTelemetry.builder(testing.getOpenTelemetry())
+                    .addAttributeExtractor(new CustomAttributesExtractor())
+                    .build()
+                    .newServerInterceptor())
             .build()
             .start();
 
     ManagedChannel channel =
         createChannel(
-            configureClient(
-                ManagedChannelBuilder.forAddress("localhost", server.getPort()),
-                customizer -> customizer.addAttributeExtractor(customMetadataExtractor)));
+            ManagedChannelBuilder.forAddress("localhost", server.getPort())
+                .intercept(
+                    GrpcTelemetry.builder(testing.getOpenTelemetry())
+                        .addAttributeExtractor(new CustomAttributesExtractor())
+                        .build()
+                        .newClientInterceptor()));
 
-    closer().add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
-    closer().add(() -> server.shutdownNow().awaitTermination());
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     Metadata extraMetadata = new Metadata();
-    extraMetadata.put(customMetadataKey, "customValue");
+    extraMetadata.put(CUSTOM_METADATA_KEY, "customValue");
 
     GreeterGrpc.GreeterBlockingStub client =
         GreeterGrpc.newBlockingStub(channel)
@@ -144,17 +117,36 @@ class GrpcTest extends AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                attrs ->
-                                    OpenTelemetryAssertions.assertThat(attrs)
-                                        .containsEntry(customKey, "customValue")),
+                            .hasAttribute(CUSTOM_KEY, "customValue"),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
-                                attrs ->
-                                    OpenTelemetryAssertions.assertThat(attrs)
-                                        .containsEntry(customKey, "customValue"))));
+                            .hasAttribute(CUSTOM_KEY, "customValue")));
+  }
+
+  private static class CustomAttributesExtractor
+      implements AttributesExtractor<GrpcRequest, Status> {
+
+    @Override
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, GrpcRequest grpcRequest) {}
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        GrpcRequest grpcRequest,
+        @Nullable Status status,
+        @Nullable Throwable error) {
+
+      Metadata metadata = grpcRequest.getMetadata();
+      if (metadata != null && metadata.containsKey(CUSTOM_METADATA_KEY)) {
+        String value = metadata.get(CUSTOM_METADATA_KEY);
+        if (value != null) {
+          attributes.put(CUSTOM_KEY, value);
+        }
+      }
+    }
   }
 }
