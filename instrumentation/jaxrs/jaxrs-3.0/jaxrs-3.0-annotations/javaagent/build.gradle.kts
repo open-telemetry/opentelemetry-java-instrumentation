@@ -6,7 +6,8 @@ muzzle {
   pass {
     group.set("jakarta.ws.rs")
     module.set("jakarta.ws.rs-api")
-    versions.set("[,]")
+    versions.set("[3.0.0,)")
+    assertInverse.set(true)
   }
 }
 
