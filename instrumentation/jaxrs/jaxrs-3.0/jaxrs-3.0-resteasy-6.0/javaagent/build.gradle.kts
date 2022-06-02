@@ -18,7 +18,7 @@ otelJava {
 dependencies {
   bootstrap(project(":instrumentation:jaxrs:jaxrs-common:bootstrap"))
 
-  compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
+  compileOnly("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
   library("org.jboss.resteasy:resteasy-core:6.0.0.Final")
 
   implementation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:javaagent"))
