@@ -30,7 +30,5 @@ class AkkaHttpServerInstrumentationTestSync
       options: HttpServerTestOptions
   ): Unit = {
     super.configure(options)
-    // FIXME: latest deps does not fill http.status_code
-    options.setTestException(!java.lang.Boolean.getBoolean("testLatestDeps"))
   }
 }

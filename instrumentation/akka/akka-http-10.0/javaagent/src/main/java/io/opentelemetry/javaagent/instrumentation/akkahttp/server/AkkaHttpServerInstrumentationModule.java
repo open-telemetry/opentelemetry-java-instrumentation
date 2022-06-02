@@ -201,11 +201,9 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
         Context parentContext = currentContext();
 
         if (instrumenter().shouldStart(parentContext, request)) {
-          scope = parentContext != null ? parentContext.makeCurrent() : null;
           ctx = instrumenter().start(parentContext, request);
-
-          currentRequest = request;
           scope = ctx.makeCurrent();
+          currentRequest = request;
         }
       }
 

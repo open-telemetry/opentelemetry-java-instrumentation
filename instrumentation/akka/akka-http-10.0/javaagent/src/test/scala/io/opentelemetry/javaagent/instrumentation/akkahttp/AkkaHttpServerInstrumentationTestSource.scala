@@ -23,9 +23,6 @@ class AkkaHttpServerInstrumentationTestSource extends AbstractHttpServerInstrume
                                     options: HttpServerTestOptions
                                   ): Unit = {
     super.configure(options)
-    //Akka HTTP actively prevents exceptions from reaching the controller through implicit handleException methods,
-    // as unhandled exceptions reaching the HTTP controller would kill the entire HTTP server.
-    options.setTestException(false)
   }
 }
 

@@ -45,7 +45,6 @@ object AkkaHttpTestSyncWebServer {
               case REDIRECT =>
                 resp.withHeaders(headers.Location(endpoint.getBody))
               case ERROR     => resp.withEntity(endpoint.getBody)
-              case EXCEPTION => throw new Exception(endpoint.getBody)
               case _ =>
                 HttpResponse(status = NOT_FOUND.getStatus)
                   .withEntity(NOT_FOUND.getBody)

@@ -7,7 +7,7 @@ muzzle {
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.11")
-    versions.set("[2.5.0,)")
+    versions.set("[2.5.0,2.6.0)") //Akka Fork Join Pool was removed in 2.6.0, replaced with java.util.concurrent implementation
   }
 }
 

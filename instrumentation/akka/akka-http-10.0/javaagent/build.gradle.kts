@@ -60,6 +60,11 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
+  //The thread propagation debug entry on the Context causes thread leakage with the way our Akka HTTP is instrumented
+  //This is because currentContext != propagatedContext when the propagation is on the same thread as the original
+  //Ideally, a Context equality check should disregard the thread-propagation-locations key
+  jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
+
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
 
