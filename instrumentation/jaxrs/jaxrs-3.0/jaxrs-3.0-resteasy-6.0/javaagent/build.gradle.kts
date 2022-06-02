@@ -11,6 +11,10 @@ muzzle {
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   bootstrap(project(":instrumentation:jaxrs:jaxrs-common:bootstrap"))
 
