@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.Resteasy31Si
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
@@ -38,7 +39,7 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
         @Advice.This ContainerRequestContext requestContext,
-        @Local("otelHandlerData") HandlerData handlerData,
+        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
       if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
@@ -51,9 +52,10 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
       Method method = resourceMethodInvoker.getMethod();
       Class<?> resourceClass = resourceMethodInvoker.getResourceClass();
 
-      handlerData = new HandlerData(resourceClass, method);
+      handlerData = new Jaxrs2HandlerData(resourceClass, method);
       context =
-          RequestContextHelper.createOrUpdateAbortSpan(instrumenter(), requestContext, handlerData);
+          Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
+              instrumenter(), requestContext, handlerData);
       if (context != null) {
         scope = context.makeCurrent();
       }
@@ -61,7 +63,7 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Local("otelHandlerData") HandlerData handlerData,
+        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {

@@ -17,6 +17,8 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.AsyncResponseData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConfig;
 import javax.ws.rs.container.AsyncResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;

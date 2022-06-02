@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory;
 
 public final class CxfSingletons {
 

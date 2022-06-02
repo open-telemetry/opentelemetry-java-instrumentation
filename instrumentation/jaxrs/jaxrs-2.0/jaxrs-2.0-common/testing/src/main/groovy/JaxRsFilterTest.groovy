@@ -49,6 +49,10 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
     false
   }
 
+  String defaultServerSpanName() {
+    "test.span"
+  }
+
   def "test #resource, #abortNormal, #abortPrematch"() {
     Assumptions.assumeTrue(!abortPrematch || testAbortPrematch())
 
@@ -73,7 +77,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name parentSpanName != null ? parentSpanName : "test.span"
+          name parentSpanName != null ? parentSpanName : defaultServerSpanName()
           kind SERVER
           if (runsOnServer() && abortNormal) {
             status UNSET
