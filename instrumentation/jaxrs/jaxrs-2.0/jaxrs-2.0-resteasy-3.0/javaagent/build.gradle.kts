@@ -21,14 +21,14 @@ muzzle {
   fail {
     group.set("org.jboss.resteasy")
     module.set("resteasy-jaxrs")
-    versions.set("(,3.0.0.Final)")
+    versions.set("(2.1.0.GA,3.0.0.Final)")
     // missing dependencies
-    skip("1.0.0.GA", "1.0.1.GA", "1.0.2.GA", "2.0.0.GA", "2.3.10.Final")
+    skip("2.3.10.Final")
   }
 
   fail {
     group.set("org.jboss.resteasy")
-    module.set("resteasy-jaxrs")
+    module.set("resteasy-core")
     versions.set("[4.0.0.Final,)")
   }
 }
