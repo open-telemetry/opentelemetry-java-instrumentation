@@ -5,16 +5,20 @@
 
 package io.opentelemetry.instrumentation.oracleucp;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import io.opentelemetry.instrumentation.testing.junit.db.MockDriver;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import oracle.ucp.admin.UniversalConnectionPoolManagerImpl;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
-import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -79,16 +83,17 @@ public abstract class AbstractOracleUcpInstrumentationTest {
     Thread.sleep(100);
 
     // then
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "db.client.connections.usage", AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "db.client.connections.max", AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "db.client.connections.pending_requests",
-            AbstractIterableAssert::isEmpty);
+    Set<String> metricNames =
+        new HashSet<>(
+            Arrays.asList(
+                "db.client.connections.usage",
+                "db.client.connections.max",
+                "db.client.connections.pending_requests"));
+    assertThat(testing().metrics())
+        .filteredOn(
+            metricData ->
+                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                    && metricNames.contains(metricData.getName()))
+        .isEmpty();
   }
 }
