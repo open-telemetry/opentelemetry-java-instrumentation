@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
@@ -59,7 +60,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
         @Advice.This AbstractRequestContextImpl requestContext,
-        @Local("otelHandlerData") HandlerData handlerData,
+        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
 
@@ -80,9 +81,9 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
       Method method = invocationInfo.getMethodInfo().getMethodToInvoke();
       Class<?> resourceClass = invocationInfo.getRealClass();
 
-      handlerData = new HandlerData(resourceClass, method);
+      handlerData = new Jaxrs2HandlerData(resourceClass, method);
       context =
-          RequestContextHelper.createOrUpdateAbortSpan(
+          Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
               instrumenter(), (ContainerRequestContext) requestContext, handlerData);
       if (context != null) {
         scope = context.makeCurrent();
@@ -91,7 +92,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Local("otelHandlerData") HandlerData handlerData,
+        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {

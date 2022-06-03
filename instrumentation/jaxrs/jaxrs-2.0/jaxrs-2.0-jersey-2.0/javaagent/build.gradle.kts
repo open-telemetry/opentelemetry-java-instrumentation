@@ -3,19 +3,19 @@ plugins {
 }
 
 muzzle {
-  // Cant assert fails because muzzle assumes all instrumentations will fail
-  // Instrumentations in jaxrs-2.0-common will pass
   pass {
     group.set("org.glassfish.jersey.core")
     module.set("jersey-server")
     versions.set("[2.0,3.0.0)")
     extraDependency("javax.servlet:javax.servlet-api:3.1.0")
+    assertInverse.set(true)
   }
   pass {
     group.set("org.glassfish.jersey.containers")
     module.set("jersey-container-servlet")
     versions.set("[2.0,3.0.0)")
     extraDependency("javax.servlet:javax.servlet-api:3.1.0")
+    assertInverse.set(true)
   }
 }
 
@@ -30,22 +30,30 @@ dependencies {
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
-
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
   testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing"))
-
-  // First version with DropwizardTestSupport:
-  testLibrary("io.dropwizard:dropwizard-testing:0.8.0")
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
-  testImplementation("com.fasterxml.jackson.module:jackson-module-afterburner")
+  testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
   latestDepTestLibrary("org.glassfish.jersey.core:jersey-server:2.+")
   latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+")
-  // this is needed because dropwizard-testing version 0.8.0 (above) pulls it in transitively,
-  // but the latest version of dropwizard-testing does not
-  latestDepTestLibrary("org.eclipse.jetty:jetty-webapp:9.+")
+  latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+")
+  latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+")
+}
+
+if (!(findProperty("testLatestDeps") as Boolean)) {
+  // early jersey versions require old guava
+  configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:14.0.1")
+
+  configurations {
+    // early jersey versions bundle asm without shading
+    testImplementation {
+      exclude("org.ow2.asm", "asm")
+      exclude("org.ow2.asm", "asm-commons")
+    }
+  }
 }
 
 tasks {
