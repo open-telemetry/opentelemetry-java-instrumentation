@@ -73,7 +73,7 @@ public abstract class AbstractGrpcTest {
 
   protected abstract InstrumentationExtension testing();
 
-  private final Queue<ThrowingRunnable<?>> closer = new ConcurrentLinkedQueue<>();
+  protected final Queue<ThrowingRunnable<?>> closer = new ConcurrentLinkedQueue<>();
 
   @AfterEach
   void tearDown() throws Throwable {

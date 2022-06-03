@@ -13,7 +13,8 @@ import javax.annotation.Nullable;
 public final class GrpcRequest {
 
   private final MethodDescriptor<?, ?> method;
-  @Nullable private final Metadata metadata;
+
+  @Nullable private volatile Metadata metadata;
 
   @Nullable private volatile SocketAddress remoteAddress;
 
@@ -33,6 +34,10 @@ public final class GrpcRequest {
   @Nullable
   public Metadata getMetadata() {
     return metadata;
+  }
+
+  void setMetadata(Metadata metadata) {
+    this.metadata = metadata;
   }
 
   @Nullable
