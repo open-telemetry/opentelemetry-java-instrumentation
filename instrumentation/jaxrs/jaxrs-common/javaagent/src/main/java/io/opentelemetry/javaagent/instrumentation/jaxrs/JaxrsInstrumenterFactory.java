@@ -13,11 +13,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtrac
 
 public final class JaxrsInstrumenterFactory {
 
-  public static <T extends HandlerData> Instrumenter<T, Void> createInstrumenter(
-      String instrumentationName) {
+  public static Instrumenter<HandlerData, Void> createInstrumenter(String instrumentationName) {
     JaxrsCodeAttributesGetter codeAttributesGetter = new JaxrsCodeAttributesGetter();
 
-    return Instrumenter.<T, Void>builder(
+    return Instrumenter.<HandlerData, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             CodeSpanNameExtractor.create(codeAttributesGetter))

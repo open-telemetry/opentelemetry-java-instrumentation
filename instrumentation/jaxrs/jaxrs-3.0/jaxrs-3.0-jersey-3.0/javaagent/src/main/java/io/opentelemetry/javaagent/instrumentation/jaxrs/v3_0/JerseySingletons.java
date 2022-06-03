@@ -6,14 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory;
 
 public final class JerseySingletons {
 
-  private static final Instrumenter<Jaxrs3HandlerData, Void> INSTANCE =
+  private static final Instrumenter<HandlerData, Void> INSTANCE =
       JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jersey-2.0");
 
-  public static Instrumenter<Jaxrs3HandlerData, Void> instrumenter() {
+  public static Instrumenter<HandlerData, Void> instrumenter() {
     return INSTANCE;
   }
 

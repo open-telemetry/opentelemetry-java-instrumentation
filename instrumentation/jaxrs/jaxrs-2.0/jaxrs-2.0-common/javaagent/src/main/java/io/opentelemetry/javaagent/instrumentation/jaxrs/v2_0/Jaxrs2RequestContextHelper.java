@@ -13,8 +13,10 @@ import io.opentelemetry.javaagent.instrumentation.jaxrs.RequestContextHelper;
 import javax.ws.rs.container.ContainerRequestContext;
 
 public final class Jaxrs2RequestContextHelper {
-  public static <T extends HandlerData> Context createOrUpdateAbortSpan(
-      Instrumenter<T, Void> instrumenter, ContainerRequestContext requestContext, T handlerData) {
+  public static Context createOrUpdateAbortSpan(
+      Instrumenter<HandlerData, Void> instrumenter,
+      ContainerRequestContext requestContext,
+      HandlerData handlerData) {
 
     if (handlerData == null) {
       return null;
