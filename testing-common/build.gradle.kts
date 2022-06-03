@@ -42,11 +42,10 @@ dependencies {
   api(project(":instrumentation-api"))
 
   api("org.assertj:assertj-core")
-
   // Needs to be api dependency due to Spock restriction.
   api("org.awaitility:awaitility")
-
   api("com.google.guava:guava")
+  api("org.mockito:mockito-core")
 
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
