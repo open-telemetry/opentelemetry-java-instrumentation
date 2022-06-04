@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.kafkaclients;
 
 import static java.lang.System.lineSeparator;
@@ -60,7 +65,9 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
    */
   static void resetForTest() {
     meter = null;
-    for(Iterator<Map.Entry<RegisteredInstrument, AutoCloseable>> it = instrumentMap.entrySet().iterator(); it.hasNext(); ) {
+    for (Iterator<Map.Entry<RegisteredInstrument, AutoCloseable>> it =
+            instrumentMap.entrySet().iterator();
+        it.hasNext(); ) {
       try {
         it.next().getValue().close();
         it.remove();
@@ -105,9 +112,7 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
                 descriptor.map(MetricDescriptor::getName).orElse(""),
                 descriptor.map(MetricDescriptor::getDescription).orElse(""),
                 descriptor.map(MetricDescriptor::getUnit).orElse(""),
-                descriptor
-                    .map(MetricDescriptor::getInstrumentType)
-                    .orElse("")));
+                descriptor.map(MetricDescriptor::getInstrumentType).orElse("")));
       }
     }
     logger.log(Level.INFO, "Mapping table" + System.lineSeparator() + sb);
@@ -163,7 +168,9 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
       RegisteredInstrument registeredInstrument,
       MetricDescriptor metricDescriptor,
       KafkaMetric kafkaMetric) {
-    if (metricDescriptor.getInstrumentType().equals(MetricDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE)) {
+    if (metricDescriptor
+        .getInstrumentType()
+        .equals(MetricDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE)) {
       return meter
           .gaugeBuilder(metricDescriptor.getName())
           .setDescription(metricDescriptor.getDescription())

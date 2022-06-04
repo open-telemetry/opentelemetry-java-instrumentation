@@ -1,9 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.kafkaclients;
 
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.metrics.KafkaMetric;
-import javax.annotation.Nullable;
 
 /**
  * A value class collecting the identifying fields of a kafka {@link MetricName}.

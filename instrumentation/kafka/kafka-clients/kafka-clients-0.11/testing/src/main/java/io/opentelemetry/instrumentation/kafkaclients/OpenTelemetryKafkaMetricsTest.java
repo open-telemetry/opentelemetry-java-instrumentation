@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.kafkaclients;
 
 import com.salesforce.kafka.test.junit5.SharedKafkaTestResource;
@@ -25,8 +30,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
   private static final List<String> TOPICS = Arrays.asList("foo", "bar", "baz", "qux");
   private static final Random RANDOM = new Random();
 
-  @RegisterExtension
-  static final SharedKafkaTestResource kafka = new SharedKafkaTestResource();
+  @RegisterExtension static final SharedKafkaTestResource kafka = new SharedKafkaTestResource();
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -38,14 +42,32 @@ abstract class OpenTelemetryKafkaMetricsTest {
     produceRecords();
     consumeRecords();
 
-    testing.waitAndAssertMetrics("io.opentelemetry.kafka-clients", "messaging.kafka.producer.outgoing-bytes.rate", unused -> {});
-    testing.waitAndAssertMetrics("io.opentelemetry.kafka-clients", "messaging.kafka.producer.responses.rate", unused -> {});
-    testing.waitAndAssertMetrics("io.opentelemetry.kafka-clients", "messaging.kafka.producer.bytes.rate", unused -> {});
-    testing.waitAndAssertMetrics("io.opentelemetry.kafka-clients", "messaging.kafka.producer.compression-ratio", unused -> {});
-    testing.waitAndAssertMetrics("io.opentelemetry.kafka-clients", "messaging.kafka.producer.record-error.rate", unused -> {});
-    testing.waitAndAssertMetrics("io.opentelemetry.kafka-clients", "messaging.kafka.producer.record-retry.rate", unused -> {});
-    testing.waitAndAssertMetrics("io.opentelemetry.kafka-clients", "messaging.kafka.producer.record-sent.rate", unused -> {});
-    testing.waitAndAssertMetrics("io.opentelemetry.kafka-clients", "messaging.kafka.consumer.lag", unused -> {});
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients",
+        "messaging.kafka.producer.outgoing-bytes.rate",
+        unused -> {});
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients", "messaging.kafka.producer.responses.rate", unused -> {});
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients", "messaging.kafka.producer.bytes.rate", unused -> {});
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients",
+        "messaging.kafka.producer.compression-ratio",
+        unused -> {});
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients",
+        "messaging.kafka.producer.record-error.rate",
+        unused -> {});
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients",
+        "messaging.kafka.producer.record-retry.rate",
+        unused -> {});
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients",
+        "messaging.kafka.producer.record-sent.rate",
+        unused -> {});
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients", "messaging.kafka.consumer.lag", unused -> {});
 
     // Print mapping table
     OpenTelemetryKafkaMetrics.printMappingTable();
