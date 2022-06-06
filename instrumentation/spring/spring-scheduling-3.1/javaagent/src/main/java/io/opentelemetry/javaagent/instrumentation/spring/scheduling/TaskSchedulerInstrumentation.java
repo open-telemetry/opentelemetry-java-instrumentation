@@ -33,8 +33,7 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   public static class ScheduleMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onSchedule(
-        @Advice.Argument(value = 0, readOnly = false) Runnable runnable) {
+    public static void onSchedule(@Advice.Argument(value = 0, readOnly = false) Runnable runnable) {
       runnable = SpringSchedulingRunnableWrapper.wrapIfNeeded(runnable);
     }
   }
