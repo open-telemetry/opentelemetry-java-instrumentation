@@ -13,6 +13,9 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.struts.GreetingServlet
 import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.session.HashSessionIdManager
+import org.eclipse.jetty.server.session.HashSessionManager
+import org.eclipse.jetty.server.session.SessionHandler
 import org.eclipse.jetty.servlet.DefaultServlet
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
@@ -104,6 +107,14 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
     def resource = new FileResource(getClass().getResource("/"))
     context.setBaseResource(resource)
     server.setHandler(context)
+
+    def sessionIdManager = new HashSessionIdManager()
+    server.setSessionIdManager(sessionIdManager)
+    def sessionManager = new HashSessionManager()
+    def sessionHandler = new SessionHandler(sessionManager)
+    context.setHandler(sessionHandler)
+    // disable adding jsessionid to url, affects redirect test
+    context.setInitParameter("org.eclipse.jetty.servlet.SessionIdPathParameterName", "none")
 
     context.addServlet(DefaultServlet, "/")
     context.addServlet(GreetingServlet, "/greetingServlet")
