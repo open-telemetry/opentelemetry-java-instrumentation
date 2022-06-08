@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
+import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
+import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
+import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER;
 import static java.lang.System.lineSeparator;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
@@ -13,13 +17,14 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
-import java.util.Comparator;
+import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -36,7 +41,7 @@ import org.apache.kafka.common.metrics.MetricsReporter;
  * //    Map<String, Object> config = new HashMap<>();
  * //    // Register OpenTelemetryKafkaMetrics as reporter
  * //    config.put(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG, OpenTelemetryKafkaMetrics.class.getName());
- * //    config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getKafkaConnectString());
+ * //    config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
  * //    ...
  * //    try (KafkaProducer<byte[], byte[]> producer = new KafkaProducer<>(config)) { ... }
  * }</pre>
@@ -84,35 +89,36 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
     StringBuilder sb = new StringBuilder();
     // Append table headers
     sb.append(
-            "| Kafka Group | Kafka Name | Kafka Description | Attribute Keys | Instrument Name | Instrument Description | Instrument Unit | Instrument Type |")
+            "| # | Metric Group | Metric Name | Attribute Keys | Instrument Name | Instrument Description | Instrument Type |")
         .append(lineSeparator())
         .append(
-            "|-------------|------------|-------------------|----------------|-----------------|------------------------|-----------------|-----------------|")
+            "|---|--------------|-------------|----------------|-----------------|------------------------|-----------------|")
         .append(lineSeparator());
     Map<String, List<KafkaMetricId>> kafkaMetricsByGroup =
         seenMetrics.stream().collect(groupingBy(KafkaMetricId::getGroup));
+    int count = 1;
     // Iterate through groups in alpha order
     for (String group : kafkaMetricsByGroup.keySet().stream().sorted().collect(toList())) {
       List<KafkaMetricId> kafkaMetricIds =
           kafkaMetricsByGroup.get(group).stream()
-              .sorted(Comparator.comparing(KafkaMetricId::getName))
+              .sorted(comparing(KafkaMetricId::getName))
               .collect(toList());
       // Iterate through metrics in alpha order by name
       for (KafkaMetricId kafkaMetricId : kafkaMetricIds) {
-        Optional<MetricDescriptor> descriptor =
-            Optional.ofNullable(KafkaMetricRegistry.getRegisteredInstrument(kafkaMetricId));
+        Optional<InstrumentDescriptor> descriptor =
+            Optional.ofNullable(KafkaMetricRegistry.getInstrumentDescriptor(kafkaMetricId));
         // Append table row
         sb.append(
             String.format(
-                "| %s | %s | %s | %s | %s | %s | %s | %s |%n",
+                "| %s | %s | %s | %s | %s | %s | %s |%n",
+                count,
                 group,
                 kafkaMetricId.getName(),
-                kafkaMetricId.getDescription(),
-                String.join(",", kafkaMetricId.getTagKeys()),
-                descriptor.map(MetricDescriptor::getName).orElse(""),
-                descriptor.map(MetricDescriptor::getDescription).orElse(""),
-                descriptor.map(MetricDescriptor::getUnit).orElse(""),
-                descriptor.map(MetricDescriptor::getInstrumentType).orElse("")));
+                String.join(",", kafkaMetricId.getAttributeKeys()),
+                descriptor.map(InstrumentDescriptor::getName).orElse(""),
+                descriptor.map(InstrumentDescriptor::getDescription).orElse(""),
+                descriptor.map(InstrumentDescriptor::getInstrumentType).orElse("")));
+        count++;
       }
     }
     logger.log(Level.INFO, "Mapping table" + System.lineSeparator() + sb);
@@ -133,11 +139,10 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
       return;
     }
 
-    MetricDescriptor metricDescriptor = KafkaMetricRegistry.getRegisteredInstrument(kafkaMetricId);
-    if (metricDescriptor == null) {
-      logger.log(
-          Level.FINEST,
-          "Metric changed but did not match any metrics from registry: " + kafkaMetricId);
+    InstrumentDescriptor instrumentDescriptor =
+        KafkaMetricRegistry.getInstrumentDescriptor(kafkaMetricId);
+    if (instrumentDescriptor == null) {
+      logger.log(Level.FINEST, "Metric changed but cannot map to instrument: " + kafkaMetricId);
       return;
     }
 
@@ -159,31 +164,43 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
           } else {
             logger.log(Level.FINEST, "Adding instrument " + registeredInstrument1);
           }
-          return createObservable(currentMeter, registeredInstrument1, metricDescriptor, metric);
+          return createObservable(
+              currentMeter, registeredInstrument1, instrumentDescriptor, metric);
         });
   }
 
   private static AutoCloseable createObservable(
       Meter meter,
       RegisteredInstrument registeredInstrument,
-      MetricDescriptor metricDescriptor,
+      InstrumentDescriptor instrumentDescriptor,
       KafkaMetric kafkaMetric) {
-    if (metricDescriptor
-        .getInstrumentType()
-        .equals(MetricDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE)) {
-      return meter
-          .gaugeBuilder(metricDescriptor.getName())
-          .setDescription(metricDescriptor.getDescription())
-          .setUnit(metricDescriptor.getUnit())
-          .buildWithCallback(
-              observableMeasurement ->
-                  observableMeasurement.record(
-                      kafkaMetric.value(), registeredInstrument.getAttributes()));
+    Consumer<ObservableDoubleMeasurement> callback =
+        observableMeasurement ->
+            observableMeasurement.record(kafkaMetric.value(), registeredInstrument.getAttributes());
+    switch (instrumentDescriptor.getInstrumentType()) {
+      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE:
+        return meter
+            .gaugeBuilder(instrumentDescriptor.getName())
+            .setDescription(instrumentDescriptor.getDescription())
+            .buildWithCallback(callback);
+      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER:
+        return meter
+            .counterBuilder(instrumentDescriptor.getName())
+            .setDescription(instrumentDescriptor.getDescription())
+            .ofDoubles()
+            .buildWithCallback(callback);
+      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER:
+        return meter
+            .upDownCounterBuilder(instrumentDescriptor.getName())
+            .setDescription(instrumentDescriptor.getDescription())
+            .ofDoubles()
+            .buildWithCallback(callback);
+      default: // Continue below to throw
     }
     // TODO: add support for other instrument types and value types as needed for new instruments
     // registered in KafkaMetricRegistry.
     // This should not happen.
-    throw new IllegalStateException("Unsupported metric descriptor: " + metricDescriptor);
+    throw new IllegalStateException("Unrecognized instrument type. This is a bug.");
   }
 
   private static Attributes toAttributes(KafkaMetric kafkaMetric) {

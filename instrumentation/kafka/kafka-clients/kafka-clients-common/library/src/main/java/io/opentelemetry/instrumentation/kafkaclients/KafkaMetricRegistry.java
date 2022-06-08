@@ -5,105 +5,74 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
-import java.util.Arrays;
-import java.util.Collections;
+import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
+import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
+import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER;
+
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 /** A registry mapping kafka metrics to corresponding OpenTelemetry metric definitions. */
 class KafkaMetricRegistry {
 
-  private static final String unitBytesPerSecond = "by/s";
-
-  private static final Map<KafkaMetricId, MetricDescriptor> registry = new HashMap<>();
+  private static final Map<Class<?>, String> measureableToInstrumentType = new HashMap<>();
+  private static final Map<String, String> descriptionCache = new ConcurrentHashMap<>();
 
   static {
-    registerProducerMetrics();
-    registerProducerTopicMetrics();
-    registerConsumerMetrics();
+    Map<String, String> classNameToType = new HashMap<>();
+    classNameToType.put(
+        "org.apache.kafka.common.metrics.stats.Rate",
+        INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER);
+    classNameToType.put(
+        "org.apache.kafka.common.metrics.stats.Avg", INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
+    classNameToType.put(
+        "org.apache.kafka.common.metrics.stats.Max", INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
+    classNameToType.put(
+        "org.apache.kafka.common.metrics.stats.Value", INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
+    classNameToType.put(
+        "org.apache.kafka.common.metrics.stats.CumulativeSum",
+        INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER);
+    classNameToType.put(
+        "org.apache.kafka.common.metrics.stats.CumulativeCount",
+        INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER);
+
+    for (Map.Entry<String, String> entry : classNameToType.entrySet()) {
+      try {
+        measureableToInstrumentType.put(Class.forName(entry.getKey()), entry.getValue());
+      } catch (ClassNotFoundException e) {
+        // Class doesn't exist in tis version of kafka client - skip
+      }
+    }
   }
 
-  private static void registerProducerMetrics() {
-    String group = "producer-metrics";
-    Set<String> tagKeys = Collections.singleton("client-id");
-
-    registry.put(
-        KafkaMetricId.create("outgoing-byte-rate", group, tagKeys),
-        MetricDescriptor.createDoubleGauge(
-            "messaging.kafka.producer.outgoing-bytes.rate",
-            "The average number of outgoing bytes sent per second to all servers.",
-            unitBytesPerSecond));
-    registry.put(
-        KafkaMetricId.create("response-rate", group, tagKeys),
-        MetricDescriptor.createDoubleGauge(
-            "messaging.kafka.producer.responses.rate",
-            "The average number of responses received per second.",
-            "{responses}/s"));
-  }
-
-  private static void registerProducerTopicMetrics() {
-    String group = "producer-topic-metrics";
-    Set<String> tagKeys = new HashSet<>(Arrays.asList("client-id", "topic"));
-
-    registry.put(
-        KafkaMetricId.create("byte-rate", group, tagKeys),
-        MetricDescriptor.createDoubleGauge(
-            "messaging.kafka.producer.bytes.rate",
-            "The average number of bytes sent per second for a specific topic.",
-            unitBytesPerSecond));
-    registry.put(
-        KafkaMetricId.create("compression-rate", group, tagKeys),
-        MetricDescriptor.createDoubleGauge(
-            "messaging.kafka.producer.compression-ratio",
-            "The average compression ratio of record batches for a specific topic.",
-            "{compression}"));
-    registry.put(
-        KafkaMetricId.create("record-error-rate", group, tagKeys),
-        MetricDescriptor.createDoubleGauge(
-            "messaging.kafka.producer.record-error.rate",
-            "The average per-second number of record sends that resulted in errors for a specific topic.",
-            "{errors}/s"));
-    registry.put(
-        KafkaMetricId.create("record-retry-rate", group, tagKeys),
-        MetricDescriptor.createDoubleGauge(
-            "messaging.kafka.producer.record-retry.rate",
-            "The average per-second number of retried record sends for a specific topic.",
-            "{retries}/s"));
-    registry.put(
-        KafkaMetricId.create("record-send-rate", group, tagKeys),
-        MetricDescriptor.createDoubleGauge(
-            "messaging.kafka.producer.record-sent.rate",
-            "The average number of records sent per second for a specific topic.",
-            "{records_sent}/s"));
-  }
-
-  private static void registerConsumerMetrics() {
-    String group = "consumer-fetch-manager-metrics";
-    Set<String> tagKeys = new HashSet<>(Arrays.asList("client-id", "topic", "partition"));
-
-    registry.put(
-        KafkaMetricId.create("records-lag", group, tagKeys),
-        MetricDescriptor.createDoubleGauge(
-            "messaging.kafka.consumer.lag",
-            "Current approximate lag of consumer group at partition of topic.",
-            "{lag}"));
-  }
-
-  /**
-   * Returns the description of the OpenTelemetry metric definition for the kafka metric, or {@code
-   * null} if no mapping exists.
-   */
   @Nullable
-  static MetricDescriptor getRegisteredInstrument(KafkaMetricId kafkaMetricId) {
-    return registry.get(kafkaMetricId);
-  }
+  static InstrumentDescriptor getInstrumentDescriptor(KafkaMetricId kafkaMetricId) {
+    // If metric is not a Measureable, we can't map it to an instrument
+    if (kafkaMetricId.getMeasureable() == null) {
+      return null;
+    }
+    String instrumentName = kafkaMetricId.getGroup() + "." + kafkaMetricId.getName();
+    String description =
+        descriptionCache.computeIfAbsent(instrumentName, s -> kafkaMetricId.getDescription());
+    String instrumentType =
+        measureableToInstrumentType.entrySet().stream()
+            .filter(entry -> entry.getKey().equals(kafkaMetricId.getMeasureable()))
+            .findFirst()
+            .map(Map.Entry::getValue)
+            .orElse(INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
 
-  // Visible for testing
-  static Set<MetricDescriptor> getMetricDescriptors() {
-    return new HashSet<>(registry.values());
+    switch (instrumentType) {
+      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE:
+        return InstrumentDescriptor.createDoubleGauge(instrumentName, description);
+      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER:
+        return InstrumentDescriptor.createDoubleCounter(instrumentName, description);
+      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER:
+        return InstrumentDescriptor.createDoubleUpDownCounter(instrumentName, description);
+      default: // Continue below to throw
+    }
+    throw new IllegalStateException("Unrecognized instrument type. This is a bug.");
   }
 
   private KafkaMetricRegistry() {}
