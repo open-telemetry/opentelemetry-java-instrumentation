@@ -84,4 +84,9 @@ public final class SpanKey {
   public Span fromContextOrNull(Context context) {
     return context.get(key);
   }
+
+  @Override
+  public String toString() {
+    return key.toString();
+  }
 }

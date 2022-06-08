@@ -16,6 +16,8 @@ dependencies {
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
+
+  testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
 }
 
 tasks.withType<Test>().configureEach {

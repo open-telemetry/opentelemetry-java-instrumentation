@@ -325,6 +325,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
 
     assertThat(response.status().code()).isEqualTo(CAPTURE_HEADERS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(CAPTURE_HEADERS.getBody());
+    assertThat(response.headers().get("X-Test-Response")).isEqualTo("test");
 
     assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, response);
   }
