@@ -83,6 +83,7 @@ These are the supported libraries and frameworks:
 | [MongoDB Driver](https://mongodb.github.io/mongo-java-driver/)                                                                    | 3.1+                           |
 | [Netty](https://github.com/netty/netty)                                                                                           | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                       | 2.2+                           |
+| [Oracle UCP](https://docs.oracle.com/database/121/JJUCP/)                                                                         | 11.2+                          |
 | [OSHI](https://github.com/oshi/oshi/)                                                                                             | 5.3.1+                         |
 | [Play](https://github.com/playframework/playframework)                                                                            | 2.4+ (not including 2.8.x yet) |
 | [Play WS](https://github.com/playframework/play-ws)                                                                               | 1.0+                           |
@@ -110,6 +111,7 @@ These are the supported libraries and frameworks:
 | [Spring Web Services](https://spring.io/projects/spring-ws)                                                                       | 2.0+                           |
 | [Spring WebFlux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)    | 5.0+                           |
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                         | 2.12+                          |
+| [Tomcat JDBC Pool](https://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html)                                                       | 8.5.0+                         |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                   | 6.6+ (not including 8.x yet)   |
 | [Undertow](https://undertow.io/)                                                                                                  | 1.4+                           |
 | [Vaadin](https://vaadin.com/)                                                                                                     | 14.2+                          |

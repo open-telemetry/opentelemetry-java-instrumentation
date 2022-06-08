@@ -21,7 +21,7 @@ pluginManagement {
 plugins {
   id("com.gradle.enterprise") version "3.10.1"
   id("com.github.burrunan.s3-build-cache") version "1.3"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.7"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.7.2"
 }
 
 dependencyResolutionManagement {
@@ -235,6 +235,8 @@ include(":instrumentation:java-http-client:javaagent")
 include(":instrumentation:java-util-logging:javaagent")
 include(":instrumentation:java-util-logging:shaded-stub-for-instrumenting")
 include(":instrumentation:jaxrs:jaxrs-common:bootstrap")
+include(":instrumentation:jaxrs:jaxrs-common:javaagent")
+include(":instrumentation:jaxrs:jaxrs-common:testing")
 include(":instrumentation:jaxrs:jaxrs-1.0:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing")
@@ -248,6 +250,11 @@ include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:testing")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-tomee-testing")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-wildfly-testing")
+include(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent")
+include(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:javaagent")
+include(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:testing")
+include(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent")
+include(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent")
 include(":instrumentation:jaxrs-client:jaxrs-client-1.1:javaagent")
 include(":instrumentation:jaxrs-client:jaxrs-client-2.0-testing")
 include(":instrumentation:jaxws:jaxws-2.0:javaagent")
@@ -342,6 +349,9 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-api:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-api:testing")
+include(":instrumentation:oracle-ucp-11.2:javaagent")
+include(":instrumentation:oracle-ucp-11.2:library")
+include(":instrumentation:oracle-ucp-11.2:testing")
 include(":instrumentation:oshi:javaagent")
 include(":instrumentation:oshi:library")
 include(":instrumentation:oshi:testing")
@@ -432,6 +442,7 @@ include(":instrumentation:tapestry-5.4:javaagent")
 include(":instrumentation:tomcat:tomcat-7.0:javaagent")
 include(":instrumentation:tomcat:tomcat-10.0:javaagent")
 include(":instrumentation:tomcat:tomcat-common:javaagent")
+include(":instrumentation:tomcat:tomcat-jdbc")
 include(":instrumentation:twilio-6.6:javaagent")
 include(":instrumentation:undertow-1.4:bootstrap")
 include(":instrumentation:undertow-1.4:javaagent")
