@@ -14,6 +14,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   static final boolean VAADIN_19 = Version.majorVersion >= 6
   static final boolean VAADIN_21 = Version.majorVersion >= 8
   static final boolean VAADIN_22 = Version.majorVersion >= 9
+  static final boolean VAADIN_23 = Version.majorVersion >= 23
 
   @Override
   List<String> getRequestHandlers() {
@@ -42,7 +43,8 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   void assertFirstRequest() {
     assertTraces(VAADIN_17 ? 9 : 8) {
       traces.sort(orderByRootSpanName("IndexHtmlRequestHandler.handleRequest",
-        getContextPath() + "/main", getContextPath(), getContextPath() + "/*"))
+        getContextPath() + "/main", getContextPath(), getContextPath() + "/*",
+        getContextPath() + "/VAADIN/*"))
 
       def handlers = getRequestHandlers("IndexHtmlRequestHandler")
       trace(0, 2 + handlers.size()) {
@@ -111,7 +113,8 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
       def count = VAADIN_17 ? 5 : 4
       for (i in 0..count) {
         trace(3 + i, 1) {
-          serverSpan(it, 0, getContextPath() + "/*")
+          def spanName = VAADIN_23 && i != 0 ? getContextPath() + "/VAADIN/*" : getContextPath() + "/*"
+          serverSpan(it, 0, spanName)
         }
       }
     }
