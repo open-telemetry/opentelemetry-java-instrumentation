@@ -20,8 +20,8 @@ To add the extension to the instrumentation agent:
           -Dotel.javaagent.extensions=build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-all.jar
           -jar myapp.jar
      ```
-Note: to load multiple extensions, you can specify a comma separated list of extension jars or directories that
-contain extension jars for the `otel.javaagent.extensions` value.
+Note: to load multiple extensions, you can specify a comma-separated list of extension jars or directories (that
+contain extension jars) for the `otel.javaagent.extensions` value.
 
 ## Embed extensions in the OpenTelemetry Agent
 
