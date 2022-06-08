@@ -16,6 +16,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -114,27 +115,38 @@ public class ExtensionClassLoader extends URLClassLoader {
     return new ExtensionClassLoader(new URL[] {extensionUrl}, parent);
   }
 
-  private static List<URL> parseLocation(String locationName, File javaagentFile) {
-    List<URL> result = new ArrayList<>();
-
+  // visible for testing
+  static List<URL> parseLocation(String locationName, File javaagentFile) {
     if (locationName == null) {
-      return result;
+      return Collections.emptyList();
+    }
+
+    List<URL> result = new ArrayList<>();
+    for (String location : locationName.split(",")) {
+      parseLocation(location, javaagentFile, result);
+    }
+
+    return result;
+  }
+
+  private static void parseLocation(String locationName, File javaagentFile, List<URL> locations) {
+    if (locationName.isEmpty()) {
+      return;
     }
 
     File location = new File(locationName);
     if (isJar(location)) {
-      addFileUrl(result, location);
+      addFileUrl(locations, location);
     } else if (location.isDirectory()) {
       File[] files = location.listFiles(ExtensionClassLoader::isJar);
       if (files != null) {
         for (File file : files) {
-          if (!file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())) {
-            addFileUrl(result, file);
+          if (isJar(file) && !file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())) {
+            addFileUrl(locations, file);
           }
         }
       }
     }
-    return result;
   }
 
   private static boolean isJar(File f) {
