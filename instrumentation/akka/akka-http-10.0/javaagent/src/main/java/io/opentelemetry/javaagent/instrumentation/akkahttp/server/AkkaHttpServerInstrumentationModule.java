@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.errorResponse;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.instrumenter;
 import static java.util.Arrays.asList;
@@ -26,6 +27,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
@@ -35,6 +37,16 @@ import scala.runtime.AbstractFunction1;
 public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
   public AkkaHttpServerInstrumentationModule() {
     super("akka-http", "akka-http-server");
+  }
+
+  /*
+  Use a classLoaderMatcher to make this instrumentation only load when Akka HTTP is on the classpath.
+  This is because DispatchersInstrumentation is instrumenting an Actor class, which may be present when HTTP is not.
+  If another instrumentation uses Actor but not HTTP, this may cause Muzzle failures. Example: Play-WS
+   */
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("akka.http.scaladsl.HttpExt");
   }
 
   @Override
