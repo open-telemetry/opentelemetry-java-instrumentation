@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
 import akka.actor.ActorSystem
@@ -8,7 +13,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
-import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, ServerEndpoint}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  AbstractHttpServerTest,
+  ServerEndpoint
+}
 
 import java.util.function.Supplier
 import scala.concurrent.Await
@@ -38,7 +46,7 @@ object AkkaHttpTestSourceWebServer {
               case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
               case REDIRECT =>
                 resp.withHeaders(headers.Location(endpoint.getBody))
-              case ERROR     => resp.withEntity(endpoint.getBody)
+              case ERROR => resp.withEntity(endpoint.getBody)
               case _ =>
                 HttpResponse(status = NOT_FOUND.getStatus)
                   .withEntity(NOT_FOUND.getBody)
@@ -55,8 +63,14 @@ object AkkaHttpTestSourceWebServer {
     if (null == binding) {
       import scala.concurrent.duration._
 
-      binding =
-        Await.result(Http().bind( "localhost", port).map(_.handleWith(route)).to(Sink.ignore).run(), 10.seconds)
+      binding = Await.result(
+        Http()
+          .bind("localhost", port)
+          .map(_.handleWith(route))
+          .to(Sink.ignore)
+          .run(),
+        10.seconds
+      )
     }
   }
 

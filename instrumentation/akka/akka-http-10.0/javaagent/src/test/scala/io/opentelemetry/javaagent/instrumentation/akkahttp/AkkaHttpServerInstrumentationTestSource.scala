@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
 import io.opentelemetry.instrumentation.testing.junit.http.{
@@ -7,7 +12,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class AkkaHttpServerInstrumentationTestSource extends AbstractHttpServerInstrumentationTest {
+class AkkaHttpServerInstrumentationTestSource
+    extends AbstractHttpServerInstrumentationTest {
   @RegisterExtension val extension: InstrumentationExtension =
     HttpServerInstrumentationExtension.forAgent()
 
@@ -20,10 +26,8 @@ class AkkaHttpServerInstrumentationTestSource extends AbstractHttpServerInstrume
     AkkaHttpTestSourceWebServer.stop()
 
   override protected def configure(
-                                    options: HttpServerTestOptions
-                                  ): Unit = {
+      options: HttpServerTestOptions
+  ): Unit = {
     super.configure(options)
   }
 }
-
-

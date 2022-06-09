@@ -24,7 +24,7 @@ public class AkkaHttpServerSingletons {
 
   public static final String OTEL_DISPATCHER_NAME = "otel-pinned-dispatcher";
   public static final Attributes OTEL_DISPATCHER_ATTRIBUTES =
-    ActorAttributes.dispatcher(OTEL_DISPATCHER_NAME).and(Attributes.name("otel-pinned-actor"));
+      ActorAttributes.dispatcher(OTEL_DISPATCHER_NAME).and(Attributes.name("otel-pinned-actor"));
 
   static {
     AkkaHttpServerAttributesGetter httpAttributesGetter = new AkkaHttpServerAttributesGetter();

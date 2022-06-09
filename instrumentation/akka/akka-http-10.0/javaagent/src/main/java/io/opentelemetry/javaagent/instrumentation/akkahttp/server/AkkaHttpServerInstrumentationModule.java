@@ -54,8 +54,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
     return asList(
         new HttpExtServerInstrumentation(),
         new AkkaHttpServerSourceInstrumentation(),
-        new DispatchersInstrumentation()
-    );
+        new DispatchersInstrumentation());
   }
 
   public static class SyncWrapper extends AbstractFunction1<HttpRequest, HttpResponse> {
@@ -127,7 +126,8 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
     }
   }
 
-  public static class FlowWrapper extends GraphStage<BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest>> {
+  public static class FlowWrapper
+      extends GraphStage<BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest>> {
     private final Inlet<HttpResponse> in1 = Inlet.create("out.in");
     private final Outlet<HttpResponse> out1 = Outlet.create("out.out");
     private final Inlet<HttpRequest> in2 = Inlet.create("in.in");
@@ -143,7 +143,8 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
       return new FlowSpanLogic(shape());
     }
 
-    //An instance of this class will be created per connection. Only one request will be processed at a time.
+    // An instance of this class will be created per connection. Only one request will be processed
+    // at a time.
     private static class FlowSpanLogic extends GraphStageLogic {
       private Context ctx = null;
       private Scope scope = null;
@@ -159,8 +160,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
               public void onPull() {
                 pull(shape.in1());
               }
-            }
-        );
+            });
 
         setHandler(
             shape.out2(),
@@ -169,8 +169,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
               public void onPull() {
                 pull(shape.in2());
               }
-            }
-        );
+            });
 
         setHandler(
             shape.in2(),
@@ -187,8 +186,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
                 finishSpan(null, ex);
                 super.onUpstreamFailure(ex);
               }
-            }
-        );
+            });
 
         setHandler(
             shape.in1(),
@@ -205,8 +203,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
                 finishSpan(null, ex);
                 super.onUpstreamFailure(ex);
               }
-            }
-        );
+            });
       }
 
       private void createSpan(HttpRequest request) {
@@ -220,7 +217,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
       }
 
       private void finishSpan(HttpResponse response, Throwable t) {
-        if(null != scope) {
+        if (null != scope) {
           scope.close();
 
           instrumenter().end(ctx, currentRequest, response, t);

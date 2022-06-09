@@ -1,10 +1,19 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.http.{HttpServerInstrumentationExtension, HttpServerTestOptions}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  HttpServerInstrumentationExtension,
+  HttpServerTestOptions
+}
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class AkkaHttpServerInstrumentationTest extends AbstractHttpServerInstrumentationTest {
+class AkkaHttpServerInstrumentationTest
+    extends AbstractHttpServerInstrumentationTest {
   @RegisterExtension val extension: InstrumentationExtension =
     HttpServerInstrumentationExtension.forAgent()
 
@@ -17,13 +26,11 @@ class AkkaHttpServerInstrumentationTest extends AbstractHttpServerInstrumentatio
     AkkaHttpTestWebServer.stop()
 
   override protected def configure(
-                                    options: HttpServerTestOptions
-                                  ): Unit = {
+      options: HttpServerTestOptions
+  ): Unit = {
     super.configure(options)
-    //Akka HTTP actively prevents exceptions from reaching the controller through implicit handleException methods,
+    // Akka HTTP actively prevents exceptions from reaching the controller through implicit handleException methods,
     // as unhandled exceptions reaching the HTTP controller would kill the entire HTTP server.
     options.setTestException(false)
   }
 }
-
-

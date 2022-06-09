@@ -35,8 +35,11 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)
-        akka.stream.scaladsl.Flow<HttpRequest, HttpResponse, ?> handler) {
-      handler = handler.join(new AkkaHttpServerInstrumentationModule.FlowWrapper()).withAttributes(AkkaHttpServerSingletons.OTEL_DISPATCHER_ATTRIBUTES);
+            akka.stream.scaladsl.Flow<HttpRequest, HttpResponse, ?> handler) {
+      handler =
+          handler
+              .join(new AkkaHttpServerInstrumentationModule.FlowWrapper())
+              .withAttributes(AkkaHttpServerSingletons.OTEL_DISPATCHER_ATTRIBUTES);
     }
   }
 }

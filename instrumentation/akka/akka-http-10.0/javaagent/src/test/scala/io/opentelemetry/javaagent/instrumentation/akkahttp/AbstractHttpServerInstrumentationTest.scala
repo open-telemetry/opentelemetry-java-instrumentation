@@ -25,7 +25,7 @@ abstract class AbstractHttpServerInstrumentationTest
       options: HttpServerTestOptions
   ): Unit = {
     options.setTestCaptureHttpHeaders(false)
-    //Akka HTTP actively prevents exceptions from reaching the controller through implicit handleException methods,
+    // Akka HTTP actively prevents exceptions from reaching the controller through implicit handleException methods,
     // as unhandled exceptions reaching the HTTP controller would kill the entire HTTP server.
     options.setTestException(false)
     options.setHttpAttributes(

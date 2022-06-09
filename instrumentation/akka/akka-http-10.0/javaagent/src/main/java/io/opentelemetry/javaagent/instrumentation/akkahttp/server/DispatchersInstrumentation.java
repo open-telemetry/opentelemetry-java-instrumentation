@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -27,14 +32,17 @@ public class DispatchersInstrumentation implements TypeInstrumentation {
     // Instrument the Dispatchers to add a custom OTEL PinnedDispatcher
     // This is used to enforce a single thread per actor
     // This should allow ThreadLocals to function properly and stop scope leakage
-    transformer.applyAdviceToMethod(isConstructor().and(takesArgument(1, named("akka.dispatch.DispatcherPrerequisites"))), this.getClass().getName() + "$DispatchersAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(1, named("akka.dispatch.DispatcherPrerequisites"))),
+        this.getClass().getName() + "$DispatchersAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DispatchersAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrapHandler(@Advice.Argument(value = 1) DispatcherPrerequisites dispatcherPrerequisites,
-                                   @Advice.This Dispatchers dispatchers) {
+    public static void wrapHandler(
+        @Advice.Argument(value = 1) DispatcherPrerequisites dispatcherPrerequisites,
+        @Advice.This Dispatchers dispatchers) {
       HashMap<String, Object> threadPoolExecutorMap = new HashMap<>();
       threadPoolExecutorMap.put("allow-core-timeout", "off");
 
@@ -44,8 +52,12 @@ public class DispatchersInstrumentation implements TypeInstrumentation {
       dispatcherConfigMap.put("executor", "thread-pool-executor");
       dispatcherConfigMap.put("thread-pool-executor", threadPoolExecutorMap);
 
-      Config config = ConfigFactory.parseMap(dispatcherConfigMap).withFallback(dispatchers.defaultDispatcherConfig());
-      dispatchers.registerConfigurator(AkkaHttpServerSingletons.OTEL_DISPATCHER_NAME, new PinnedDispatcherConfigurator(config, dispatcherPrerequisites));
+      Config config =
+          ConfigFactory.parseMap(dispatcherConfigMap)
+              .withFallback(dispatchers.defaultDispatcherConfig());
+      dispatchers.registerConfigurator(
+          AkkaHttpServerSingletons.OTEL_DISPATCHER_NAME,
+          new PinnedDispatcherConfigurator(config, dispatcherPrerequisites));
     }
   }
 }
