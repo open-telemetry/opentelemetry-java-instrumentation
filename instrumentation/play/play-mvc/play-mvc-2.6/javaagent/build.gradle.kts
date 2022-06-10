@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("org.unbroken-dome.test-sets")
 }
 
 val scalaVersion = "2.11"
@@ -34,6 +35,11 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
 }
 
+testSets {
+  // We need separate test sources to compile against latest Play.
+  create("latestDepTest")
+}
+
 dependencies {
   // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
   // here.
@@ -44,15 +50,36 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.5:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
 
-  testLibrary("com.typesafe.play:play-java_$scalaVersion:$playVersion")
-  // TODO: Play WS is a separately versioned library starting with 2.6 and needs separate instrumentation.
-  testLibrary("com.typesafe.play:play-test_$scalaVersion:$playVersion") {
+  testImplementation("com.typesafe.play:play-java_$scalaVersion:$playVersion")
+  testImplementation("com.typesafe.play:play-test_$scalaVersion:$playVersion") {
     exclude("org.eclipse.jetty.websocket", "websocket-client")
   }
 
-  // TODO: This should be changed to the latest in scala 2.13 instead of 2.11 since its ahead
-  latestDepTestLibrary("com.typesafe.play:play-java_$scalaVersion:2.+")
-  latestDepTestLibrary("com.typesafe.play:play-test_$scalaVersion:2.+") {
+  add("latestDepTestImplementation", "com.typesafe.play:play-java_2.13:2.8.+")
+  add("latestDepTestImplementation", "com.typesafe.play:play-test_2.13:2.8.+") {
     exclude("org.eclipse.jetty.websocket", "websocket-client")
+  }
+  add("latestDepTestImplementation", "com.typesafe.play:play-akka-http-server_2.13:2.8.+")
+}
+
+tasks {
+  if (findProperty("testLatestDeps") as Boolean) {
+    // disable regular test running and compiling tasks when latest dep test task is run
+    named("test") {
+      enabled = false
+    }
+    named("compileTestGroovy") {
+      enabled = false
+    }
+  }
+}
+
+if (findProperty("testLatestDeps") as Boolean) {
+  configurations {
+    // play artifact name is different for regular and latest tests
+    testImplementation {
+      exclude("com.typesafe.play", "play-java_2.11")
+      exclude("com.typesafe.play", "play-test_2.11")
+    }
   }
 }

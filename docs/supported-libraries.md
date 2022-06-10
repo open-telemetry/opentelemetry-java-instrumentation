@@ -85,7 +85,7 @@ These are the supported libraries and frameworks:
 | [OkHttp](https://github.com/square/okhttp/)                                                                                       | 2.2+                           |
 | [Oracle UCP](https://docs.oracle.com/database/121/JJUCP/)                                                                         | 11.2+                          |
 | [OSHI](https://github.com/oshi/oshi/)                                                                                             | 5.3.1+                         |
-| [Play](https://github.com/playframework/playframework)                                                                            | 2.4+ (not including 2.8.x yet) |
+| [Play](https://github.com/playframework/playframework)                                                                            | 2.4+                           |
 | [Play WS](https://github.com/playframework/play-ws)                                                                               | 1.0+                           |
 | [Quartz](https://www.quartz-scheduler.org/)                                                                                       | 2.0+                           |
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                               | 2.7+                           |
