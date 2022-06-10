@@ -34,6 +34,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   private AtomicBoolean decoratorCalled;
 
   private WebClient client;
+  private WebClient clientWithReadTimeout;
 
   @BeforeEach
   void setupClient() {
@@ -46,6 +47,12 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
                           decoratorCalled.set(true);
                           return delegate.execute(ctx, req);
                         })
+                    .factory(ClientFactory.builder().connectTimeout(connectTimeout()).build()))
+            .build();
+    clientWithReadTimeout =
+        configureClient(
+                WebClient.builder()
+                    .responseTimeout(READ_TIMEOUT)
                     .factory(ClientFactory.builder().connectTimeout(connectTimeout()).build()))
             .build();
   }
@@ -62,7 +69,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   protected final int sendRequest(
       HttpRequest request, String method, URI uri, Map<String, String> headers) {
     try {
-      return client.execute(request).aggregate().join().status().code();
+      return getClient(uri).execute(request).aggregate().join().status().code();
     } catch (CompletionException e) {
       return Exceptions.throwUnsafely(e.getCause());
     }
@@ -75,12 +82,19 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
       URI uri,
       Map<String, String> headers,
       RequestResult requestResult) {
-    client
+    getClient(uri)
         .execute(request)
         .aggregate()
         .whenComplete(
             (response, throwable) ->
                 requestResult.complete(() -> response.status().code(), throwable));
+  }
+
+  private WebClient getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout;
+    }
+    return client;
   }
 
   @Override
@@ -89,6 +103,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     options.disableTestRedirects();
     // armeria requests can't be reused
     options.disableTestReusedRequest();
+    options.enableTestReadTimeout();
 
     Set<AttributeKey<?>> extra = new HashSet<>();
     extra.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
