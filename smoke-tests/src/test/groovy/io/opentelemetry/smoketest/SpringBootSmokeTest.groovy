@@ -80,7 +80,7 @@ class SpringBootSmokeTest extends SmokeTest {
     metrics.hasMetricsNamed("process.runtime.jvm.memory.init")
     metrics.hasMetricsNamed("process.runtime.jvm.memory.usage")
     metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.max")
+    metrics.hasMetricsNamed("process.runtime.jvm.memory.limit")
 
     cleanup:
     stopTarget()
