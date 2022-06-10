@@ -9,14 +9,19 @@ import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor
 import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
 import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 /** A registry mapping kafka metrics to corresponding OpenTelemetry metric definitions. */
 class KafkaMetricRegistry {
 
+  private static final Set<String> groups = new HashSet<>(Arrays.asList("consumer", "producer"));
   private static final Map<Class<?>, String> measureableToInstrumentType = new HashMap<>();
   private static final Map<String, String> descriptionCache = new ConcurrentHashMap<>();
 
@@ -42,7 +47,7 @@ class KafkaMetricRegistry {
       try {
         measureableToInstrumentType.put(Class.forName(entry.getKey()), entry.getValue());
       } catch (ClassNotFoundException e) {
-        // Class doesn't exist in tis version of kafka client - skip
+        // Class doesn't exist in this version of kafka client - skip
       }
     }
   }
@@ -53,7 +58,12 @@ class KafkaMetricRegistry {
     if (kafkaMetricId.getMeasureable() == null) {
       return null;
     }
-    String instrumentName = kafkaMetricId.getGroup() + "." + kafkaMetricId.getName();
+    Optional<String> matchingGroup = groups.stream().filter(group -> kafkaMetricId.getGroup().contains(group)).findFirst();
+    // Only map metrics that have a matching group
+    if (!matchingGroup.isPresent()) {
+      return null;
+    }
+    String instrumentName = "kafka." + matchingGroup.get() + "." + kafkaMetricId.getName();
     String description =
         descriptionCache.computeIfAbsent(instrumentName, s -> kafkaMetricId.getDescription());
     String instrumentType =
