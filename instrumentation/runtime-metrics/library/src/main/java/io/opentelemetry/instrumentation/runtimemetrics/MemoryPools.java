@@ -83,7 +83,7 @@ public final class MemoryPools {
         .buildWithCallback(callback(poolBeans, MemoryUsage::getCommitted));
 
     meter
-        .upDownCounterBuilder("process.runtime.jvm.memory.max")
+        .upDownCounterBuilder("process.runtime.jvm.memory.limit")
         .setDescription("Measure of max obtainable memory")
         .setUnit("By")
         .buildWithCallback(callback(poolBeans, MemoryUsage::getMax));
