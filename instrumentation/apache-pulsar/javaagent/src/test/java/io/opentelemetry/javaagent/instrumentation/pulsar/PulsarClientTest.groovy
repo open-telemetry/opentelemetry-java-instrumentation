@@ -1,17 +1,20 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar
 
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.Message
 import org.apache.pulsar.client.api.MessageListener
 import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.PulsarClient
+import org.apache.pulsar.client.api.Schema
 import org.testcontainers.containers.PulsarContainer
 import org.testcontainers.utility.DockerImageName
 
 import java.nio.charset.Charset
-
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class PulsarClientTest extends AgentInstrumentationSpecification {
@@ -20,6 +23,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     DockerImageName.parse("apachepulsar/pulsar:2.8.0")
 
   PulsarContainer pulsar
+  PulsarClient client
+  String topic
   Producer<byte[]> producer
   Consumer<byte[]> consumer
 
@@ -29,27 +34,16 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     pulsar.start()
 
     def url = pulsar.pulsarBrokerUrl
-    def topic = "persistent://public/default/test_opentelemetry" + UUID.randomUUID().toString()
-
-    def client = PulsarClient.builder().serviceUrl(url).build()
-
+    topic = "persistent://public/default/test_" + UUID.randomUUID().toString()
+    client = PulsarClient.builder().serviceUrl(url).build()
     this.producer = client.newProducer().topic(topic).create()
-    this.consumer = client.newConsumer()
-      .topic(topic)
-      .subscriptionName("test_sub")
-      .messageListener(new MessageListener<byte[]>() {
-        @Override
-        void received(Consumer<byte[]> consumer, Message<byte[]> msg) {
-          consumer.acknowledge(msg)
-        }
-      })
-      .subscribe()
   }
 
   @Override
   def cleanupSpec() {
     producer?.close()
     consumer?.close()
+    client?.close()
     pulsar.close()
   }
 
@@ -59,7 +53,81 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       producer.send(UUID.randomUUID().toString().getBytes(Charset.defaultCharset()))
     }
 
-    print('------apache-pulsar------')
-    print(traces.toString())
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          name("parent")
+          kind(SpanKind.INTERNAL)
+          hasNoParent()
+        }
+
+        span(1) {
+          name("Producer/sendAsync")
+          kind(PRODUCER)
+          childOf span(0)
+        }
+
+        span(2) {
+          name("Producer/Callback")
+          kind(PRODUCER)
+          childOf(span(0))
+        }
+      }
+    }
+  }
+
+  def "test send and consume message"() {
+    setup:
+    def latch = new CountDownLatch(1)
+    consumer = client.newConsumer(Schema.BYTES)
+      .subscriptionName("test_sub")
+      .messageListener(new MessageListener<byte[]>() {
+        @Override
+        void received(Consumer<byte[]> consumer, Message<byte[]> msg) {
+          latch.countDown()
+          consumer.acknowledge(msg)
+        }
+      })
+      .subscribe()
+
+    runWithSpan("parent") {
+      producer.send(UUID.randomUUID().toString().getBytes(Charset.defaultCharset()))
+    }
+
+    latch.await(1, TimeUnit.MINUTES)
+
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          name("parent")
+          kind(SpanKind.INTERNAL)
+          hasNoParent()
+        }
+
+        span(1) {
+          name("Producer/sendAsync")
+          kind(PRODUCER)
+          childOf span(0)
+        }
+
+        span(2) {
+          name("Producer/Callback")
+          kind(PRODUCER)
+          childOf(span(0))
+        }
+
+        span(3) {
+          name("ConsumerImpl/messageProcessed")
+          kind(CONSUMER)
+          childOf span(1)
+        }
+
+        span(4) {
+          name("MessageListener/received")
+          kind(CONSUMER)
+          childOf(span(1))
+        }
+      }
+    }
   }
 }
