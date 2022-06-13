@@ -18,6 +18,8 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.time.Duration
 import reactor.netty.http.client.HttpClient
 
 import java.util.concurrent.CountDownLatch
@@ -33,17 +35,25 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
+  boolean testReadTimeout() {
+    true
+  }
+
+  @Override
   String userAgent() {
     return "ReactorNetty"
   }
 
   @Override
   HttpClient.ResponseReceiver buildRequest(String method, URI uri, Map<String, String> headers) {
-    return createHttpClient()
+    def client = createHttpClient()
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
       .baseUrl(resolveAddress("").toString())
-      ."${method.toLowerCase()}"()
+    if (uri.toString().contains("/read-timeout")) {
+      client = client.responseTimeout(Duration.ofMillis(READ_TIMEOUT_MS))
+    }
+    return client."${method.toLowerCase()}"()
       .uri(uri.toString())
   }
 
@@ -88,7 +98,13 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       case "https://192.0.2.1/": // non routable address
         return []
     }
-    return super.httpAttributes(uri)
+    def attributes = super.httpAttributes(uri)
+    if (uri.toString().contains("/read-timeout")) {
+      attributes.remove(SemanticAttributes.NET_PEER_NAME)
+      attributes.remove(SemanticAttributes.NET_PEER_PORT)
+      attributes.remove(SemanticAttributes.HTTP_FLAVOR)
+    }
+    attributes
   }
 
   abstract HttpClient createHttpClient()

@@ -28,13 +28,19 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
+  boolean testReadTimeout() {
+    true
+  }
+
+  @Override
   String userAgent() {
     return "ReactorNetty"
   }
 
   @Override
   HttpClient.ResponseReceiver buildRequest(String method, URI uri, Map<String, String> headers) {
-    return createHttpClient()
+    def readTimeout = uri.toString().contains("/read-timeout")
+    return createHttpClient(readTimeout)
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
       .baseUrl(resolveAddress("").toString())
@@ -97,7 +103,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     return super.httpAttributes(uri)
   }
 
-  abstract HttpClient createHttpClient()
+  abstract HttpClient createHttpClient(boolean readTimeout)
 
   def "should expose context to http client callbacks"() {
     given:
@@ -107,7 +113,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     def afterResponseSpan = new AtomicReference<Span>()
     def latch = new CountDownLatch(1)
 
-    def httpClient = createHttpClient()
+    def httpClient = createHttpClient(false)
       .doOnRequest({ rq, con -> onRequestSpan.set(Span.current()) })
       .doAfterRequest({ rq, con -> afterRequestSpan.set(Span.current()) })
       .doOnResponse({ rs, con -> onResponseSpan.set(Span.current()) })
@@ -155,7 +161,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     given:
     def onRequestErrorSpan = new AtomicReference<Span>()
 
-    def httpClient = createHttpClient()
+    def httpClient = createHttpClient(false)
       .doOnRequestError({ rq, err -> onRequestErrorSpan.set(Span.current()) })
 
     when:

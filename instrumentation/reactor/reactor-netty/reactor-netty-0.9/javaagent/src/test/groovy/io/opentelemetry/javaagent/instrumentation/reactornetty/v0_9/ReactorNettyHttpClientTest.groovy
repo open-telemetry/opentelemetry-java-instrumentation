@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
 
 import io.netty.channel.ChannelOption
+import io.netty.handler.timeout.ReadTimeoutHandler
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
+import java.util.concurrent.TimeUnit
 import reactor.netty.http.client.HttpClient
 
 import java.util.concurrent.ExecutionException
@@ -14,8 +16,13 @@ import java.util.concurrent.TimeoutException
 
 class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
 
-  HttpClient createHttpClient() {
+  HttpClient createHttpClient(boolean readTimeout) {
     return HttpClient.create().tcpConfiguration({ tcpClient ->
+      if (readTimeout) {
+        tcpClient = tcpClient.doOnConnected({ connection ->
+          connection.addHandlerLast(new ReadTimeoutHandler(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+        })
+      }
       tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
     })
   }
