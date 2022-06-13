@@ -35,7 +35,8 @@ jobs:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
       skip: ${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
-      cache-read-only: true
+      #cache-read-only: true
+      no-build-cache: true
 
   smoke-test:
     uses: ./.github/workflows/reusable-smoke-test.yml
