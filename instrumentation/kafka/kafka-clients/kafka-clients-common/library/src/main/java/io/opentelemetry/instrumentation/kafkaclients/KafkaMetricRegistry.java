@@ -58,7 +58,8 @@ class KafkaMetricRegistry {
     if (kafkaMetricId.getMeasureable() == null) {
       return null;
     }
-    Optional<String> matchingGroup = groups.stream().filter(group -> kafkaMetricId.getGroup().contains(group)).findFirst();
+    Optional<String> matchingGroup =
+        groups.stream().filter(group -> kafkaMetricId.getGroup().contains(group)).findFirst();
     // Only map metrics that have a matching group
     if (!matchingGroup.isPresent()) {
       return null;
