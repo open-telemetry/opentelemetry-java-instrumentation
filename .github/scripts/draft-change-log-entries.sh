@@ -23,7 +23,7 @@ else
   range="v$major.$((minor - 1)).0..HEAD"
 fi
 
-echo "## Version $version (Unreleased)"
+echo "## Unreleased"
 echo
 
 git log --reverse --pretty=format:"- %s" $range \
