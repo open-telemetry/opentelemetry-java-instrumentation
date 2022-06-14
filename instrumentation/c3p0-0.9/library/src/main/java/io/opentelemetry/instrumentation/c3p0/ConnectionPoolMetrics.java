@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.c3p0;
 
-import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
+import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import io.opentelemetry.instrumentation.api.metrics.db.DbConnectionPoolMetrics;
@@ -21,13 +21,12 @@ final class ConnectionPoolMetrics {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.c3p0-0.9";
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
-  // AbstractPoolBackedDataSource implements equals() & hashCode() in IdentityTokenResolvable,
+  // PooledDataSource implements equals() & hashCode() in IdentityTokenResolvable,
   // that's why we wrap it with IdentityDataSourceKey that uses identity comparison instead
   private static final Map<IdentityDataSourceKey, List<ObservableLongUpDownCounter>>
       dataSourceMetrics = new ConcurrentHashMap<>();
 
-  public static void registerMetrics(
-      OpenTelemetry openTelemetry, AbstractPoolBackedDataSource dataSource) {
+  public static void registerMetrics(OpenTelemetry openTelemetry, PooledDataSource dataSource) {
     dataSourceMetrics.compute(
         new IdentityDataSourceKey(dataSource),
         (key, existingCounters) ->
@@ -41,7 +40,7 @@ final class ConnectionPoolMetrics {
     // remove old counters from the registry in case they were already there
     removeMetersFromRegistry(existingCounters);
 
-    AbstractPoolBackedDataSource dataSource = key.dataSource;
+    PooledDataSource dataSource = key.dataSource;
 
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
@@ -54,7 +53,7 @@ final class ConnectionPoolMetrics {
             wrapThrowingSupplier(dataSource::getNumThreadsAwaitingCheckoutDefaultUser)));
   }
 
-  public static void unregisterMetrics(AbstractPoolBackedDataSource dataSource) {
+  public static void unregisterMetrics(PooledDataSource dataSource) {
     List<ObservableLongUpDownCounter> meters =
         dataSourceMetrics.remove(new IdentityDataSourceKey(dataSource));
     removeMetersFromRegistry(meters);
@@ -70,13 +69,13 @@ final class ConnectionPoolMetrics {
   }
 
   /**
-   * A wrapper over {@link AbstractPoolBackedDataSource} that implements identity comparison in its
-   * {@link #equals(Object)} and {@link #hashCode()} methods.
+   * A wrapper over {@link PooledDataSource} that implements identity comparison in its {@link
+   * #equals(Object)} and {@link #hashCode()} methods.
    */
   static final class IdentityDataSourceKey {
-    final AbstractPoolBackedDataSource dataSource;
+    final PooledDataSource dataSource;
 
-    IdentityDataSourceKey(AbstractPoolBackedDataSource dataSource) {
+    IdentityDataSourceKey(PooledDataSource dataSource) {
       this.dataSource = dataSource;
     }
 

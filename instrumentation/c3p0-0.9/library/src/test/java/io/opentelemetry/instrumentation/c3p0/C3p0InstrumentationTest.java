@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.c3p0;
 
-import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
+import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,12 +29,12 @@ public class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
   }
 
   @Override
-  protected void configure(AbstractPoolBackedDataSource dataSource) {
+  protected void configure(PooledDataSource dataSource) {
     telemetry.registerMetrics(dataSource);
   }
 
   @Override
-  protected void shutdown(AbstractPoolBackedDataSource dataSource) {
+  protected void shutdown(PooledDataSource dataSource) {
     telemetry.unregisterMetrics(dataSource);
   }
 }

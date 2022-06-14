@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.c3p0;
 
-import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
+import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.instrumentation.c3p0.AbstractC3p0InstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -22,8 +22,8 @@ public class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
   }
 
   @Override
-  protected void configure(AbstractPoolBackedDataSource dataSource) {}
+  protected void configure(PooledDataSource dataSource) {}
 
   @Override
-  protected void shutdown(AbstractPoolBackedDataSource dataSource) {}
+  protected void shutdown(PooledDataSource dataSource) {}
 }

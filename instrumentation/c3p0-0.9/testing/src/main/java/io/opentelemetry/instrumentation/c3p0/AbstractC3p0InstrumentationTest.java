@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.c3p0;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
+import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import io.opentelemetry.instrumentation.testing.junit.db.MockDriver;
@@ -29,9 +29,9 @@ public abstract class AbstractC3p0InstrumentationTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract void configure(AbstractPoolBackedDataSource dataSource) throws Exception;
+  protected abstract void configure(PooledDataSource dataSource) throws Exception;
 
-  protected abstract void shutdown(AbstractPoolBackedDataSource dataSource) throws Exception;
+  protected abstract void shutdown(PooledDataSource dataSource) throws Exception;
 
   @BeforeAll
   static void setUpMocks() throws SQLException {
@@ -75,7 +75,7 @@ public abstract class AbstractC3p0InstrumentationTest {
         .isEmpty();
   }
 
-  private void assertDataSourceMetrics(AbstractPoolBackedDataSource dataSource) {
+  private void assertDataSourceMetrics(PooledDataSource dataSource) {
     String dataSourceName = dataSource.getDataSourceName();
 
     assertThat(dataSourceName)

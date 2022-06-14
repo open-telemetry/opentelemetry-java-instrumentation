@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.c3p0;
 
-import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
+import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.api.OpenTelemetry;
 
 public final class C3p0Telemetry {
@@ -21,12 +21,12 @@ public final class C3p0Telemetry {
   }
 
   /** Start collecting metrics for given connection pool. */
-  public void registerMetrics(AbstractPoolBackedDataSource universalConnectionPool) {
-    ConnectionPoolMetrics.registerMetrics(openTelemetry, universalConnectionPool);
+  public void registerMetrics(PooledDataSource dataSource) {
+    ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource);
   }
 
   /** Stop collecting metrics for given connection pool. */
-  public void unregisterMetrics(AbstractPoolBackedDataSource universalConnectionPool) {
-    ConnectionPoolMetrics.unregisterMetrics(universalConnectionPool);
+  public void unregisterMetrics(PooledDataSource dataSource) {
+    ConnectionPoolMetrics.unregisterMetrics(dataSource);
   }
 }
