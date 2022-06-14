@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -29,17 +30,47 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
 }
 
+testSets {
+  create("play24Test")
+}
+
+tasks {
+  val play24Test by existing
+
+  test {
+    dependsOn(play24Test)
+  }
+}
+
+configurations {
+  named("play24TestCompileClasspath") {
+    resolutionStrategy.force("com.typesafe.play:play-java_2.11:2.4.0")
+    resolutionStrategy.force("com.typesafe.play:play-java-ws_2.11:2.4.0")
+    resolutionStrategy.force("com.typesafe.play:play-test_2.11:2.4.0")
+  }
+  named("play24TestRuntimeClasspath") {
+    resolutionStrategy.force("com.typesafe.play:play-java_2.11:2.4.0")
+    resolutionStrategy.force("com.typesafe.play:play-java-ws_2.11:2.4.0")
+    resolutionStrategy.force("com.typesafe.play:play-test_2.11:2.4.0")
+  }
+}
+
 dependencies {
-  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
-  // here.
   compileOnly("com.typesafe.play:play_2.11:2.4.0")
 
+  testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
+  testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-2.0:javaagent"))
 
-  // Before 2.5, play used netty 3.x which isn't supported, so for better test consistency, we test with just 2.5
+  add("play24TestImplementation", "com.typesafe.play:play-java_2.11:2.4.0")
+  add("play24TestImplementation", "com.typesafe.play:play-java-ws_2.11:2.4.0")
+  add("play24TestImplementation", "com.typesafe.play:play-test_2.11:2.4.0") {
+    exclude("org.eclipse.jetty.websocket", "websocket-client")
+  }
+
   testLibrary("com.typesafe.play:play-java_2.11:2.5.0")
   testLibrary("com.typesafe.play:play-java-ws_2.11:2.5.0")
   testLibrary("com.typesafe.play:play-test_2.11:2.5.0") {

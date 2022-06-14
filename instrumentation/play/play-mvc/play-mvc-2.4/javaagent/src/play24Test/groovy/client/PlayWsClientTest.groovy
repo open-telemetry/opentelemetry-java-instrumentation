@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.CompletableFuture
 import play.libs.ws.WS
 import play.libs.ws.WSRequest
 import play.libs.ws.WSResponse
@@ -20,8 +21,6 @@ import spock.lang.Subject
 
 import java.util.concurrent.CompletionStage
 
-// Play 2.6+ uses a separately versioned client that shades the underlying dependency
-// This means our built in instrumentation won't work.
 class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTrait {
   @Subject
   @Shared
@@ -50,13 +49,22 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   }
 
   private static CompletionStage<WSResponse> internalSendRequest(WSRequest request, String method) {
-    return request.execute(method)
+    def result = new CompletableFuture<WSResponse>()
+    def promise = request.execute(method)
+    promise.onRedeem({response ->
+      result.complete(response)
+    })
+    promise.onFailure({throwable ->
+      result.completeExceptionally(throwable)
+    })
+    return result
   }
 
-  @Override
-  String userAgent() {
-    return "AHC"
-  }
+  //TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2347
+//  @Override
+//  String userAgent() {
+//    return "AHC"
+//  }
 
   @Override
   boolean testRedirects() {
