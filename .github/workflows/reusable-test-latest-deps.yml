@@ -58,7 +58,7 @@ jobs:
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
-          arguments: test --no-daemon -PtestLatestDeps=true ${{ inputs.no-build-cache && ' --no-build-cache' || '' }} :instrumentation:vaadin-14.2:javaagent:test
+          arguments: test --no-daemon -PtestLatestDeps=true ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
@@ -67,7 +67,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: deadlock-detector-test-latest-dep-${{ matrix.test-java-version }}-${{ matrix.vm }}
+          name: deadlock-detector-test-latest-dep
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
