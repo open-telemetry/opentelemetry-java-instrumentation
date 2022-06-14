@@ -1,0 +1,29 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.c3p0;
+
+import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
+import io.opentelemetry.instrumentation.c3p0.AbstractC3p0InstrumentationTest;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+public class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Override
+  protected InstrumentationExtension testing() {
+    return testing;
+  }
+
+  @Override
+  protected void configure(AbstractPoolBackedDataSource dataSource) {}
+
+  @Override
+  protected void shutdown(AbstractPoolBackedDataSource dataSource) {}
+}

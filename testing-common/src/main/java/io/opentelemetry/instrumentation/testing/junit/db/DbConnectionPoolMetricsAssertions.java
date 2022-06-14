@@ -32,6 +32,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private boolean testMinIdleConnections = true;
   private boolean testMaxIdleConnections = true;
+  private boolean testMaxConnections = true;
   private boolean testPendingRequests = true;
   private boolean testConnectionTimeouts = true;
   private boolean testCreateTime = true;
@@ -52,6 +53,11 @@ public final class DbConnectionPoolMetricsAssertions {
 
   public DbConnectionPoolMetricsAssertions disableMaxIdleConnections() {
     testMaxIdleConnections = false;
+    return this;
+  }
+
+  public DbConnectionPoolMetricsAssertions disableMaxConnections() {
+    testMaxConnections = false;
     return this;
   }
 
@@ -88,7 +94,9 @@ public final class DbConnectionPoolMetricsAssertions {
     if (testMaxIdleConnections) {
       verifyMaxIdleConnections();
     }
-    verifyMaxConnections();
+    if (testMaxConnections) {
+      verifyMaxConnections();
+    }
     if (testPendingRequests) {
       verifyPendingRequests();
     }
