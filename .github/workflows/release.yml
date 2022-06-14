@@ -181,7 +181,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ -z $PRIOR_VERSION_WHEN_PATCH ]]; then
+          if [[ $VERSION == *.0 ]]; then
             # this was not a patch release, so the version exists already in the CHANGELOG.md
 
             # update the release date
@@ -235,7 +235,7 @@ jobs:
           body="Copy log updates from \`$GITHUB_REF_NAME\`."
           branch="copy-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
 
-          if [[ -z $PRIOR_VERSION_WHEN_PATCH ]]; then
+          if [[ $VERSION == *.0 ]]; then
             if git diff --quiet; then
               echo there are no updates needed to the change log on main, not creating pull request
               exit 0 # success
