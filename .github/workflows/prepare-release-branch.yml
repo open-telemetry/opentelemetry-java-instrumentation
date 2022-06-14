@@ -32,9 +32,6 @@ jobs:
           version=${version//-SNAPSHOT/}
           if [[ $version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
             release_branch_name=$(echo $version | sed -E 's/([0-9]+)\.([0-9]+)\.0/release\/v\1.\2.x/')
-          elif [[ $version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
-            # pre-release version, e.g. 1.9.0-rc
-            release_branch_name="release/v$version"
           else
             echo "unexpected version: $version"
             exit 1
@@ -89,11 +86,6 @@ jobs:
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
             next_version="$major.$((minor + 1)).0"
-          elif [[ $version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
-            # pre-release version, e.g. 1.9.0-rc
-            major="${BASH_REMATCH[1]}"
-            minor="${BASH_REMATCH[2]}"
-            next_version="$major.$minor.0"
           else
             echo "unexpected version: $version"
             exit 1

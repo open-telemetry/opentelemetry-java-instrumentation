@@ -51,14 +51,3 @@ and deadlocks.
   * Review and merge the pull request that it creates for updating the change log in main
     (note that if this is not a patch release then the change log on main may already be up-to-date,
     in which case no pull request will be created).
-
-## Notes about "pre-releases"
-
-* Pre-release versions (e.g. `1.9.0-rc.1`) are supported, and will cause a "short-term" release branch to be created
-  based on the full version name (e.g. `release/v1.9.0-rc.1` instead of a "long-term" release branch name like
-  `release/v1.9.x`).
-* Patch releases are not supported on short-term release branches.
-* The version in `main` in this case will be bumped to the release version (e.g. `1.9.0-SNAPSHOT`).
-* To make a second pre-release version, manually update the version in `main`
-  (e.g. update it from `1.9.0-SNAPSHOT` to `1.9.0-rc.2-SNAPSHOT`)
-  before running the prepare release branch workflow for that release.
