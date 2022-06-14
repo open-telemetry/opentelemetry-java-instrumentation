@@ -69,4 +69,7 @@ dependencies {
 
   add("vaadin14LatestTestImplementation", "com.vaadin:vaadin-spring-boot-starter:14.+")
   add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:+")
+  // to work around https://github.com/vaadin/flow/issues/13952
+  // can be removed after a new version of vaadin-spring-boot-starter has been released
+  add("latestDepTestImplementation", "com.vaadin:flow-server:+")
 }
