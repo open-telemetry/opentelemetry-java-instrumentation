@@ -34,5 +34,8 @@ nexusPublishing {
 tasks.withType<JavaCompile>().configureEach {
   options.setFork(true)
 }
+tasks.withType<GroovyCompile>().configureEach {
+  options.setFork(true)
+}
 
 description = "OpenTelemetry instrumentations for Java"
