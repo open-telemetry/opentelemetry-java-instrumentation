@@ -25,6 +25,23 @@ fi
 
 echo "## Unreleased"
 echo
+echo "### Migration notes"
+echo
+echo
+echo "### 🌟 New javaagent instrumentation"
+echo
+echo
+echo "### 🌟 New library instrumentation"
+echo
+echo
+echo "### 📈 Enhancements"
+echo
+echo
+echo "### 🛠️ Bug fixes"
+echo
+echo
+echo "### 🧰 Tooling"
+echo
 
 git log --reverse --pretty=format:"- %s" $range \
-  | sed -E 's,\(#([0-9]+)\),\n  ([#\1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1)),'
+  | sed -E 's,\(#([0-9]+)\)$,\n  ([#\1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1)),'
