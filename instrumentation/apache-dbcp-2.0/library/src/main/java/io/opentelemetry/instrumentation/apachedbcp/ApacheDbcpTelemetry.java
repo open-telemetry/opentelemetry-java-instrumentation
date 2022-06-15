@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.apachedbcp;
 import io.opentelemetry.api.OpenTelemetry;
 import org.apache.commons.dbcp2.BasicDataSourceMXBean;
 
-/** Entrypoint for instrumenting Oracle UCP database connection pools. */
+/** Entrypoint for instrumenting Apache DBCP database connection pools. */
 public final class ApacheDbcpTelemetry {
 
   /** Returns a new {@link ApacheDbcpTelemetry} configured with the given {@link OpenTelemetry}. */

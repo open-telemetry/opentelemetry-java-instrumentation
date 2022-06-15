@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.apachedbcp.DataSourceMetrics;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.management.ObjectName;
@@ -59,7 +58,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   public static class PostDeregisterAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
-      DataSourceMetrics.unregisterMetrics(dataSource);
+      telemetry().unregisterMetrics(dataSource);
     }
   }
 }

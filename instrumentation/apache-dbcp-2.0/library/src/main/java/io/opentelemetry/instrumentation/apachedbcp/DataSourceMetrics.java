@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.dbcp2.BasicDataSourceMXBean;
 
-public final class DataSourceMetrics {
+final class DataSourceMetrics {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dbcp-2.0";
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
