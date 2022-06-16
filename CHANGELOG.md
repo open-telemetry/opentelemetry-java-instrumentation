@@ -1,8 +1,92 @@
 # Changelog
 
+## Unreleased
+
+### Migration notes
+
+- The `opentelemetry-jboss-logmanager-1.1` artifact has been renamed to
+  `opentelemetry-jboss-logmanager-appender-1.1`
+- The play instrumentation name has changed from `play` to `play-mvc`
+  ([#6106](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6106))
+- The vertx-http-client instrumentation name has changed from `vertx-client` to `vertx-http-client`
+  ([#6106](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6106))
+- The metric `process.runtime.java.memory.max` has been renamed to `process.runtime.java.memory.limit`
+  ([#6161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6161))
+
+### 🌟 New javaagent instrumentation
+
+- JVM classes metrics
+  ([#6069](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6069))
+- JVM threads metrics
+  ([#6070](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6070))
+- Vibur DBCP connection pool metrics
+  ([#6092](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6092))
+- tomcat-jdbc connection pool metrics
+  ([#6102](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6102))
+- JVM cpu metrics
+  ([#6107](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6107))
+- Oracle UCP connection pool metrics
+  ([#6099](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6099))
+- Apache DBCP2 datasource metrics
+  ([#6175](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6175))
+- Add instrumentation for JAX-RS 3.0
+  ([#6136](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6136))
+
+### 🌟 New library instrumentation
+
+- JVM classes metrics
+  ([#6069](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6069))
+- JVM threads metrics
+  ([#6070](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6070))
+- Vibur DBCP connection pool metrics
+  ([#6092](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6092))
+- tomcat-jdbc connection pool metrics
+  ([#6102](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6102))
+- JVM cpu metrics
+  ([#6107](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6107))
+- Oracle UCP connection pool metrics
+  ([#6099](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6099))
+- Apache DBCP2 datasource metrics
+  ([#6175](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6175))
+
+### 📈 Enhancements
+
+- Enable grizzly instrumentation by default
+  ([#6049](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6049))
+- Instrumentation for redisson 3.17.2+
+  ([#6096](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6096))
+- Instrumentation for jboss-logmanager getMdcCopy()
+  ([#6112](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6112))
+- Allow specifying a comma separated list of extensions
+  ([#6137](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6137))
+
+### 🛠️ Bug fixes
+
+- Fix redisson ClassCastException
+  ([#6054](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6054))
+- Fix debug logging
+  ([#6085](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6085))
+- HttpURLConnection instrumentation can capture wrong http.method
+  ([#6053](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6053))
+- fix bug: get return type in a wrong way for method instrumentation
+  ([#6118](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6118))
+- Show correct runnable name in spring scheduling actuator
+  ([#6140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6140))
+- Fix ClassCastException in JDBC instrumentation
+  ([#6088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6088))
+
+### 🧰 Tooling
+
+- Remove TimeExtractor and use internal API for setting start/end timestamps
+  ([#6051](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6051))
+- Change SpanStatusExtractor to use a builder that can set status description
+  ([#6035](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6035))
+- Make gRPC metadata available to AttributeExtractors
+  ([#6125](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6125))
+
 ## Version 1.14.0 (2022-05-17)
 
-### Migration notes:
+### Migration notes
 
 - The `opentelemetry-log4j-appender-2.16` artifact has been renamed to
   `opentelemetry-log4j-appender-2.17`
