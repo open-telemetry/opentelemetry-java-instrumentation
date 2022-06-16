@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.15.0 (2022-06-16)
+
 ### Migration notes
 
 - The `opentelemetry-jboss-logmanager-1.1` artifact has been renamed to
