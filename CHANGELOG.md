@@ -72,6 +72,8 @@
   ([#6118](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6118))
 - Show correct runnable name in spring scheduling actuator
   ([#6140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6140))
+- Fix ClassCastException in JDBC instrumentation
+  ([#6088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6088))
 
 ### 🧰 Tooling
 
