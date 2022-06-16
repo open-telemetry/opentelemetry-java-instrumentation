@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;

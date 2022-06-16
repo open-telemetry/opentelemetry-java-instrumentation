@@ -26,9 +26,9 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.computeDb
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.ThrowingSupplier;
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;

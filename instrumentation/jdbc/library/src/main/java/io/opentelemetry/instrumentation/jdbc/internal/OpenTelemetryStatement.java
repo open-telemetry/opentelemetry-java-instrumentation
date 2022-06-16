@@ -24,6 +24,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.inst
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
