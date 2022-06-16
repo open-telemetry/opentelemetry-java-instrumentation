@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jdbc.internal;
+package io.opentelemetry.instrumentation.jdbc.internal.dbinfo;
 
 import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;

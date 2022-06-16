@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc
 
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.jdbc.internal.DbInfo
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryCallableStatement
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryPreparedStatement

@@ -9,8 +9,13 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:jdbc:library"))
-
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  compileOnly(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow"
+    )
+  )
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
@@ -29,6 +34,16 @@ dependencies {
   latestDepTestLibrary("org.apache.derby:derby:10.14.+")
 
   testImplementation(project(":instrumentation:jdbc:testing"))
+}
+
+sourceSets {
+  main {
+    val shadedDep = project(":instrumentation:jdbc:library")
+    output.dir(
+      shadedDep.file("build/extracted/shadow-javaagent"),
+      "builtBy" to ":instrumentation:jdbc:library:extractShadowJarJavaagent"
+    )
+  }
 }
 
 tasks.withType<Test>().configureEach {
