@@ -34,12 +34,12 @@ public class RuntimeMetricsInstaller implements AgentListener {
       Classes.registerObservers(GlobalOpenTelemetry.get());
       Cpu.registerObservers(GlobalOpenTelemetry.get());
       MemoryPools.registerObservers(GlobalOpenTelemetry.get());
-      BufferPools.registerObservers(GlobalOpenTelemetry.get());
       Threads.registerObservers(GlobalOpenTelemetry.get());
 
       if (config.getBoolean(
           "otel.instrumentation.runtime-metrics.experimental-metrics.enabled", false)) {
         GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
+        BufferPools.registerObservers(GlobalOpenTelemetry.get());
       }
     }
   }
