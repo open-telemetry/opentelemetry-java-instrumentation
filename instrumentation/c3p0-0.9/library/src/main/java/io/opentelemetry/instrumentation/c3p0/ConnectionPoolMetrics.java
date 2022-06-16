@@ -108,7 +108,7 @@ final class ConnectionPoolMetrics {
       try {
         return supplier.getAsInt();
       } catch (SQLException e) {
-        return 0;
+        throw new RuntimeException("Failed to get C3P0 datasource metric", e);
       }
     };
   }
