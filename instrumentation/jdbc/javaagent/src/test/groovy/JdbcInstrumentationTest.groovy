@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.javaagent.instrumentation.jdbc.test.ProxyStatementFactory
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
@@ -819,5 +820,37 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
       }
       return super.getMetaData()
     }
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6015
+  def "test proxy statement"() {
+    def connection = new Driver().connect(jdbcUrls.get("h2"), null)
+    Statement statement = connection.createStatement()
+    Statement proxyStatement = ProxyStatementFactory.proxyStatement(statement)
+    ResultSet resultSet = runWithSpan("parent") {
+      return proxyStatement.executeQuery("SELECT 3")
+    }
+
+    expect:
+    resultSet.next()
+    resultSet.getInt(1) == 3
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "SELECT $dbNameLower"
+          kind CLIENT
+          childOf span(0)
+        }
+      }
+    }
+
+    cleanup:
+    statement.close()
+    connection.close()
   }
 }
