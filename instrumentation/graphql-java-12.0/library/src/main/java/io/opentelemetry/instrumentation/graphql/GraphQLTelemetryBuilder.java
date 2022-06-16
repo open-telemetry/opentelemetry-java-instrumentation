@@ -13,22 +13,10 @@ public final class GraphQLTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
-  private boolean captureExperimentalSpanAttributes;
   private boolean sanitizeQuery = true;
 
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-  }
-
-  /**
-   * Sets whether experimental attributes should be set to spans. These attributes may be changed or
-   * removed in the future, so only enable this if you know you do not require attributes filled by
-   * this instrumentation to be stable across versions.
-   */
-  public GraphQLTelemetryBuilder setCaptureExperimentalSpanAttributes(
-      boolean captureExperimentalSpanAttributes) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    return this;
   }
 
   /** Sets whether sensitive information should be removed from queries. Default is {@code true}. */
@@ -42,6 +30,6 @@ public final class GraphQLTelemetryBuilder {
    * GraphQLTelemetryBuilder}.
    */
   public GraphQLTelemetry build() {
-    return new GraphQLTelemetry(openTelemetry, captureExperimentalSpanAttributes, sanitizeQuery);
+    return new GraphQLTelemetry(openTelemetry, sanitizeQuery);
   }
 }

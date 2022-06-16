@@ -140,16 +140,16 @@ public abstract class AbstractGraphqlTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("QUERY findBookById")
+                        span.hasName("query findBookById")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
                                     AttributeKey.stringKey("graphql.operation.name"),
                                     "findBookById"),
-                                equalTo(AttributeKey.stringKey("graphql.operation.type"), "QUERY"),
+                                equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
                                 normalizedQueryEqualsTo(
-                                    AttributeKey.stringKey("graphql.source"),
+                                    AttributeKey.stringKey("graphql.document"),
                                     "query findBookById { bookById(id: ?) { name } }")),
                     span -> span.hasName("fetchBookById").hasParent(trace.getSpan(0))));
   }
@@ -172,13 +172,13 @@ public abstract class AbstractGraphqlTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("QUERY")
+                        span.hasName("query")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("graphql.operation.type"), "QUERY"),
+                                equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
                                 normalizedQueryEqualsTo(
-                                    AttributeKey.stringKey("graphql.source"),
+                                    AttributeKey.stringKey("graphql.document"),
                                     "query { bookById(id: ?) { name } }")),
                     span -> span.hasName("fetchBookById").hasParent(trace.getSpan(0))));
   }
@@ -195,7 +195,7 @@ public abstract class AbstractGraphqlTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GraphQL Query")
+                        span.hasName("GraphQL Operation")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfying(Attributes::isEmpty)
@@ -241,7 +241,7 @@ public abstract class AbstractGraphqlTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GraphQL Query")
+                        span.hasName("GraphQL Operation")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfying(Attributes::isEmpty)
@@ -286,16 +286,16 @@ public abstract class AbstractGraphqlTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("MUTATION addNewBook")
+                        span.hasName("mutation addNewBook")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
                                     AttributeKey.stringKey("graphql.operation.name"), "addNewBook"),
                                 equalTo(
-                                    AttributeKey.stringKey("graphql.operation.type"), "MUTATION"),
+                                    AttributeKey.stringKey("graphql.operation.type"), "mutation"),
                                 normalizedQueryEqualsTo(
-                                    AttributeKey.stringKey("graphql.source"),
+                                    AttributeKey.stringKey("graphql.document"),
                                     "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
   }
 
