@@ -26,7 +26,6 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Create release branch
-        id: create-release-branch
         run: |
           version=$(.github/scripts/get-version.sh)
           version=${version//-SNAPSHOT/}
@@ -81,7 +80,7 @@ jobs:
       - name: Set environment variables
         run: |
           version=$(.github/scripts/get-version.sh)
-          version="${version//-SNAPSHOT/}"
+          version=${version//-SNAPSHOT/}
           if [[ $version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
