@@ -149,8 +149,8 @@ jobs:
           # conditional block not indented because of the heredoc
           if [[ $VERSION == *.0 ]]; then
           cat >> /tmp/release-notes.txt << EOF
-
           ### 🙇 Thank you
+
           This release was possible thanks to the following contributors who shared their brilliant ideas and awesome pull requests:
 
           EOF

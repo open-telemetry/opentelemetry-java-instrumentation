@@ -5,6 +5,11 @@
 
 # this should be run on the release branch
 
+# NOTE if you need to run this script locally, you will need to first:
+#   git fetch upstream main
+#   git push origin upstream/main:main
+#   export GITHUB_REPOSITORY=open-telemetry/opentelemetry-java-instrumentation
+
 from_version=$1
 
 # get the date of the first commit that was not in the from_version
@@ -80,4 +85,5 @@ echo $contributors1 $contributors2 \
   | grep -v linux-foundation-easycla \
   | grep -v github-actions \
   | grep -v dependabot \
+  | grep -v opentelemetry-java-bot \
   | sed 's/^/@/'
