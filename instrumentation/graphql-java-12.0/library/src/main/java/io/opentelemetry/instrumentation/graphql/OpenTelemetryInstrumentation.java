@@ -37,21 +37,19 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Locale;
 
 final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
   private static final NodeVisitor sanitizingVisitor = new SanitizingVisitor();
   private static final AstTransformer astTransformer = new AstTransformer();
 
   private final Instrumenter<InstrumentationExecutionParameters, ExecutionResult> instrumenter;
-  private final boolean captureExperimentalSpanAttributes;
   private final boolean sanitizeQuery;
 
   OpenTelemetryInstrumentation(
       Instrumenter<InstrumentationExecutionParameters, ExecutionResult> instrumenter,
-      boolean captureExperimentalSpanAttributes,
       boolean sanitizeQuery) {
     this.instrumenter = instrumenter;
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.sanitizeQuery = sanitizeQuery;
   }
 
@@ -98,24 +96,23 @@ final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
     OperationDefinition operationDefinition =
         parameters.getExecutionContext().getOperationDefinition();
     Operation operation = operationDefinition.getOperation();
+    String operationType = operation.name().toLowerCase(Locale.ROOT);
     String operationName = operationDefinition.getName();
 
-    String spanName = operation.name();
+    String spanName = operationType;
     if (operationName != null && !operationName.isEmpty()) {
       spanName += " " + operationName;
     }
     span.updateName(spanName);
 
-    if (captureExperimentalSpanAttributes) {
-      state.setOperation(operation);
-      state.setOperationName(operationName);
+    state.setOperation(operation);
+    state.setOperationName(operationName);
 
-      Node<?> node = operationDefinition;
-      if (sanitizeQuery) {
-        node = sanitize(node);
-      }
-      state.setQuery(AstPrinter.printAst(node));
+    Node<?> node = operationDefinition;
+    if (sanitizeQuery) {
+      node = sanitize(node);
     }
+    state.setQuery(AstPrinter.printAst(node));
 
     return SimpleInstrumentationContext.noOp();
   }
