@@ -26,6 +26,17 @@ public final class GraphQLTelemetryBuilder {
   }
 
   /**
+   * Sets whether experimental attributes should be set to spans. These attributes may be changed or
+   * removed in the future, so only enable this if you know you do not require attributes filled by
+   * this instrumentation to be stable across versions.
+   */
+  @Deprecated
+  public GraphQLTelemetryBuilder setCaptureExperimentalSpanAttributes(
+      boolean captureExperimentalSpanAttributes) {
+    return this;
+  }
+
+  /**
    * Returns a new {@link GraphQLTelemetry} with the settings of this {@link
    * GraphQLTelemetryBuilder}.
    */
