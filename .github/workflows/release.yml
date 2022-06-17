@@ -42,6 +42,33 @@ jobs:
             exit 1
           fi
 
+      - uses: actions/checkout@v3
+
+      - name: Set environment variables
+        run: |
+          version=$(.github/scripts/get-version.sh)
+          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+          else
+            echo "unexpected version: $version"
+            exit 1
+          fi
+          if [[ $patch == 0 ]]; then
+            if [[ $minor == 0 ]]; then
+              prior_major=$((major - 1))
+              prior_minor=$(grep -Po "^## Version $prior_major.\K[0-9]+" CHANGELOG.md | head -1)
+              prior_version="$prior_major.$prior_minor"
+            else
+              prior_version="$major.$((minor - 1)).0"
+            fi
+          else
+            prior_version="$major.$minor.$((patch - 1))"
+          fi
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
+
         # check out main branch to verify there won't be problems with merging the change log
         # at the end of this workflow
       - uses: actions/checkout@v3
@@ -91,31 +118,6 @@ jobs:
           # Don't use publishToSonatype since we don't want to publish the marker artifact
           arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
           build-root-directory: gradle-plugins
-
-      - name: Set environment variables
-        run: |
-          version=$(.github/scripts/get-version.sh)
-          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
-            major="${BASH_REMATCH[1]}"
-            minor="${BASH_REMATCH[2]}"
-            patch="${BASH_REMATCH[3]}"
-          else
-            echo "unexpected version: $version"
-            exit 1
-          fi
-          if [[ $patch == 0 ]]; then
-            if [[ $minor == 0 ]]; then
-              prior_major=$((major - 1))
-              prior_minor=$(grep -Po "^## Version $prior_major.\K[0-9]+" CHANGELOG.md | head -1)
-              prior_version="$prior_major.$prior_minor"
-            else
-              prior_version="$major.$((minor - 1)).0"
-            fi
-          else
-            prior_version="$major.$minor.$((patch - 1))"
-          fi
-          echo "VERSION=$version" >> $GITHUB_ENV
-          echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
 
       - name: Generate release notes
         env:
