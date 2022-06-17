@@ -52,7 +52,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
         // call other interceptors
         result = next.newCall(method, callOptions);
       } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
+        instrumenter.end(context, request, Status.UNKNOWN, e);
         throw e;
       }
     }
@@ -100,7 +100,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
             new TracingClientCallListener(responseListener, parentContext, context, request),
             headers);
       } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
+        instrumenter.end(context, request, Status.UNKNOWN, e);
         throw e;
       }
     }
@@ -110,7 +110,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       try (Scope ignored = context.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
+        instrumenter.end(context, request, Status.UNKNOWN, e);
         throw e;
       }
       Span span = Span.fromContext(context);

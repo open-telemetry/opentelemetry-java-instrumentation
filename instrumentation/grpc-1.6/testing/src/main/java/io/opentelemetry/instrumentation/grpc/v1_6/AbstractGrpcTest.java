@@ -881,7 +881,10 @@ public abstract class AbstractGrpcTest {
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP))
+                                    SemanticAttributes.NetTransportValues.IP_TCP),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.UNKNOWN.value()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(2);
@@ -1289,7 +1292,10 @@ public abstract class AbstractGrpcTest {
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
-                                    SemanticAttributes.NetTransportValues.IP_TCP))
+                                    SemanticAttributes.NetTransportValues.IP_TCP),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.CANCELLED.value()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
