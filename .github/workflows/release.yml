@@ -35,7 +35,7 @@ jobs:
       - gradle-plugins
       - examples
     outputs:
-      release-version: ${{ steps.output-step.outputs.release-version }}
+      version: ${{ steps.output-step.outputs.version }}
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -252,12 +252,12 @@ jobs:
                        --base main
 
       - id: output-step
-        run: echo "::set-output name=release-version::$VERSION"
+        run: echo "::set-output name=version::$VERSION"
 
   create-operator-pull-request:
     needs: release
     uses: ./.github/workflows/reusable-create-operator-pull-request.yml
     with:
-      release-version: ${{ needs.release.outputs.release-version }}
+      javaagent-version: ${{ needs.release.outputs.version }}
     secrets:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
