@@ -39,6 +39,7 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
       sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
     }
 
+    sdkTracerProviderBuilder.addSpanProcessor(new ContextSpanProcessor());
     maybeEnableLoggingExporter(sdkTracerProviderBuilder);
 
     return sdkTracerProviderBuilder;
