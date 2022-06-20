@@ -3,7 +3,7 @@ name: Reusable - Create operator pull request
 on:
   workflow_call:
     inputs:
-      release-version:
+      javaagent-version:
         type: string
         required: true
     secrets:
@@ -12,8 +12,8 @@ on:
   # to help with partial release build failures
   workflow_dispatch:
     inputs:
-      release-version:
-        description: "Javaagent release version"
+      javaagent-version:
+        description: "Javaagent version"
         required: true
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
 
       - name: Initialize pull request branch
         env:
-          VERSION: ${{ inputs.release-version }}
+          VERSION: ${{ inputs.javaagent-version }}
         run: |
           git remote add upstream https://github.com/open-telemetry/opentelemetry-operator.git
           git fetch upstream
@@ -36,9 +36,9 @@ jobs:
 
       - name: Update version
         env:
-          VERSION: ${{ inputs.release-version }}
+          VERSION: ${{ inputs.javaagent-version }}
         run: |
-          # TODO
+          echo $VERSION > autoinstrumentation/java/version.txt
 
       - name: Set git user
         run: |
@@ -49,7 +49,7 @@ jobs:
         env:
           # this is the personal access token used for "gh pr create" below
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-          VERSION: ${{ inputs.release-version }}
+          VERSION: ${{ inputs.javaagent-version }}
         run: |
           message="Update the javaagent version to $VERSION"
           body="Update the javaagent version to \`$VERSION\`."
