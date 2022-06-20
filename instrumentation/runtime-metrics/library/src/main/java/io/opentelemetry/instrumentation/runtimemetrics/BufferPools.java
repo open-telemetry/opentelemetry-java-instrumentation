@@ -51,14 +51,14 @@ public final class BufferPools {
         .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getMemoryUsed));
 
     meter
-        .upDownCounterBuilder("process.runtime.jvm.buffer.max")
+        .upDownCounterBuilder("process.runtime.jvm.buffer.limit")
         .setDescription("Total capacity of the buffers in this pool")
         .setUnit("By")
         .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getTotalCapacity));
 
     meter
         .upDownCounterBuilder("process.runtime.jvm.buffer.count")
-        .setDescription("Total capacity of the buffers in this pool")
+        .setDescription("The number of buffers in the pool")
         .setUnit("buffers")
         .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getCount));
   }
