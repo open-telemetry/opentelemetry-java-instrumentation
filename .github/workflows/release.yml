@@ -35,7 +35,7 @@ jobs:
       - gradle-plugins
       - examples
     outputs:
-      version: ${{ steps.output-step.outputs.version }}
+      version: ${{ steps.create-github-release.outputs.version }}
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -162,7 +162,8 @@ jobs:
           .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION >> /tmp/release-notes.txt
           fi
 
-      - name: Create GitHub release
+      - id: create-github-release
+        name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -173,6 +174,8 @@ jobs:
                             --discussion-category announcements \
                             v$VERSION \
                             opentelemetry-javaagent.jar
+
+          echo "::set-output name=version::$VERSION"
 
       - uses: actions/checkout@v3
         with:
@@ -250,9 +253,6 @@ jobs:
                        --body "$body" \
                        --head $branch \
                        --base main
-
-      - id: output-step
-        run: echo "::set-output name=version::$VERSION"
 
   create-operator-pull-request:
     needs: release
