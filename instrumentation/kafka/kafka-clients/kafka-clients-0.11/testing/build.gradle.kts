@@ -10,9 +10,7 @@ dependencies {
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
 
   implementation("org.testcontainers:kafka")
+  implementation("org.testcontainers:junit-jupiter")
 
   runtimeOnly("org.apache.kafka:kafka_2.13:2.8.1")
-  implementation("com.salesforce.kafka.test:kafka-junit5:3.2.3") {
-    exclude(module = "zookeeper") // conflicts with zookeeper from kafka_2.x
-  }
 }

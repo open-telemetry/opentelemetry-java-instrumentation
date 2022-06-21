@@ -70,16 +70,7 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
    */
   static void resetForTest() {
     meter = null;
-    for (Iterator<Map.Entry<RegisteredInstrument, AutoCloseable>> it =
-            instrumentMap.entrySet().iterator();
-        it.hasNext(); ) {
-      try {
-        it.next().getValue().close();
-        it.remove();
-      } catch (Exception e) {
-        throw new IllegalStateException("Error occurred closing instrument", e);
-      }
-    }
+    closeAllInstruments();
   }
 
   /**
@@ -112,12 +103,12 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
             String.format(
                 "| %s | %s | %s | %s | %s | %s | %s |%n",
                 count,
-                group,
-                kafkaMetricId.getName(),
+                "`" + group + "`",
+                "`" + kafkaMetricId.getName() + "`",
                 String.join(",", kafkaMetricId.getAttributeKeys()),
-                descriptor.map(InstrumentDescriptor::getName).orElse(""),
+                descriptor.map(i -> "`" + i.getName() + "`").orElse(""),
                 descriptor.map(InstrumentDescriptor::getDescription).orElse(""),
-                descriptor.map(InstrumentDescriptor::getInstrumentType).orElse("")));
+                descriptor.map(i -> "`" + i.getInstrumentType() + "`").orElse("")));
         count++;
       }
     }
@@ -132,37 +123,35 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
   @Override
   public void metricChange(KafkaMetric metric) {
     KafkaMetricId kafkaMetricId = KafkaMetricId.create(metric);
-    seenMetrics.add(KafkaMetricId.create(metric));
+    seenMetrics.add(kafkaMetricId);
     Meter currentMeter = meter;
     if (currentMeter == null) {
-      logger.log(Level.FINEST, "Metric changed but meter not set: " + kafkaMetricId);
+      logger.log(Level.FINEST, "Metric changed but meter not set: {0}", kafkaMetricId);
       return;
     }
 
     InstrumentDescriptor instrumentDescriptor =
         KafkaMetricRegistry.getInstrumentDescriptor(kafkaMetricId);
     if (instrumentDescriptor == null) {
-      logger.log(Level.FINEST, "Metric changed but cannot map to instrument: " + kafkaMetricId);
+      logger.log(Level.FINEST, "Metric changed but cannot map to instrument: {0}", kafkaMetricId);
       return;
     }
 
-    AttributesBuilder attributesBuilder = Attributes.builder();
-    metric.metricName().tags().forEach(attributesBuilder::put);
     RegisteredInstrument registeredInstrument =
-        RegisteredInstrument.create(kafkaMetricId, attributesBuilder.build());
+        RegisteredInstrument.create(kafkaMetricId, toAttributes(metric));
 
     instrumentMap.compute(
         registeredInstrument,
         (registeredInstrument1, autoCloseable) -> {
           if (autoCloseable != null) {
-            logger.log(Level.FINEST, "Replacing instrument " + registeredInstrument1);
+            logger.log(Level.FINEST, "Replacing instrument {0}", registeredInstrument1);
             try {
               autoCloseable.close();
             } catch (Exception e) {
               logger.log(Level.WARNING, "An error occurred closing instrument", e);
             }
           } else {
-            logger.log(Level.FINEST, "Adding instrument " + registeredInstrument1);
+            logger.log(Level.FINEST, "Adding instrument {0}", registeredInstrument1);
           }
           return createObservable(
               currentMeter, registeredInstrument1, instrumentDescriptor, metric);
@@ -214,11 +203,34 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
     KafkaMetricId kafkaMetricId = KafkaMetricId.create(metric);
     seenMetrics.add(kafkaMetricId);
     logger.log(Level.FINEST, "Metric removed: " + kafkaMetricId);
-    instrumentMap.remove(RegisteredInstrument.create(kafkaMetricId, toAttributes(metric)));
+    AutoCloseable observable =
+        instrumentMap.remove(RegisteredInstrument.create(kafkaMetricId, toAttributes(metric)));
+    if (observable != null) {
+      closeInstrument(observable);
+    }
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    closeAllInstruments();
+  }
+
+  static void closeAllInstruments() {
+    for (Iterator<Map.Entry<RegisteredInstrument, AutoCloseable>> it =
+            instrumentMap.entrySet().iterator();
+        it.hasNext(); ) {
+      closeInstrument(it.next().getValue());
+      it.remove();
+    }
+  }
+
+  private static void closeInstrument(AutoCloseable observable) {
+    try {
+      observable.close();
+    } catch (Exception e) {
+      throw new IllegalStateException("Error occurred closing instrument", e);
+    }
+  }
 
   @Override
   public void configure(Map<String, ?> configs) {}

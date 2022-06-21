@@ -64,15 +64,13 @@ class KafkaMetricRegistry {
     if (!matchingGroup.isPresent()) {
       return null;
     }
-    String instrumentName = "kafka." + matchingGroup.get() + "." + kafkaMetricId.getName();
+    String instrumentName =
+        "kafka." + matchingGroup.get() + "." + kafkaMetricId.getName().replace("-", "_");
     String description =
         descriptionCache.computeIfAbsent(instrumentName, s -> kafkaMetricId.getDescription());
     String instrumentType =
-        measureableToInstrumentType.entrySet().stream()
-            .filter(entry -> entry.getKey().equals(kafkaMetricId.getMeasureable()))
-            .findFirst()
-            .map(Map.Entry::getValue)
-            .orElse(INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
+        measureableToInstrumentType.getOrDefault(
+            kafkaMetricId.getMeasureable(), INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
 
     switch (instrumentType) {
       case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE:
