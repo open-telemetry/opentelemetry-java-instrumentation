@@ -12,8 +12,6 @@ import com.google.auto.value.AutoValue;
 abstract class InstrumentDescriptor {
 
   static final String INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE = "DOUBLE_OBSERVABLE_GAUGE";
-  static final String INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER =
-      "DOUBLE_OBSERVABLE_UP_DOWN_COUNTER";
   static final String INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER = "DOUBLE_OBSERVABLE_COUNTER";
 
   abstract String getName();
@@ -32,8 +30,4 @@ abstract class InstrumentDescriptor {
         name, description, INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER);
   }
 
-  static InstrumentDescriptor createDoubleUpDownCounter(String name, String description) {
-    return new AutoValue_InstrumentDescriptor(
-        name, description, INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER);
-  }
 }

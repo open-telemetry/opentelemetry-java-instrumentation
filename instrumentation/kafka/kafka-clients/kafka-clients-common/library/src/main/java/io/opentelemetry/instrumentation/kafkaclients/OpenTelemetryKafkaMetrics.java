@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.kafkaclients;
 
 import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
 import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
-import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER;
 import static java.lang.System.lineSeparator;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
@@ -175,12 +174,6 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
       case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER:
         return meter
             .counterBuilder(instrumentDescriptor.getName())
-            .setDescription(instrumentDescriptor.getDescription())
-            .ofDoubles()
-            .buildWithCallback(callback);
-      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_UP_DOWN_COUNTER:
-        return meter
-            .upDownCounterBuilder(instrumentDescriptor.getName())
             .setDescription(instrumentDescriptor.getDescription())
             .ofDoubles()
             .buildWithCallback(callback);
