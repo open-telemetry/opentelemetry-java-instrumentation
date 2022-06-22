@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor
 import static java.lang.System.lineSeparator;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -104,7 +105,9 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
                 count,
                 "`" + group + "`",
                 "`" + kafkaMetricId.getName() + "`",
-                String.join(",", kafkaMetricId.getAttributeKeys()),
+                kafkaMetricId.getAttributeKeys().stream()
+                    .map(key -> "`" + key + "`")
+                    .collect(joining(",")),
                 descriptor.map(i -> "`" + i.getName() + "`").orElse(""),
                 descriptor.map(InstrumentDescriptor::getDescription).orElse(""),
                 descriptor.map(i -> "`" + i.getInstrumentType() + "`").orElse("")));
@@ -195,7 +198,7 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
   public void metricRemoval(KafkaMetric metric) {
     KafkaMetricId kafkaMetricId = KafkaMetricId.create(metric);
     seenMetrics.add(kafkaMetricId);
-    logger.log(Level.FINEST, "Metric removed: " + kafkaMetricId);
+    logger.log(Level.FINEST, "Metric removed: {0}", kafkaMetricId);
     AutoCloseable observable =
         instrumentMap.remove(RegisteredInstrument.create(kafkaMetricId, toAttributes(metric)));
     if (observable != null) {

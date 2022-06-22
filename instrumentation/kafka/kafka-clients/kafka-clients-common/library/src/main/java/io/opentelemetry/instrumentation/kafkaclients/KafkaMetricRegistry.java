@@ -27,8 +27,7 @@ class KafkaMetricRegistry {
   static {
     Map<String, String> classNameToType = new HashMap<>();
     classNameToType.put(
-        "org.apache.kafka.common.metrics.stats.Rate",
-        INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
+        "org.apache.kafka.common.metrics.stats.Rate", INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
     classNameToType.put(
         "org.apache.kafka.common.metrics.stats.Avg", INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
     classNameToType.put(

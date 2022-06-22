@@ -29,5 +29,4 @@ abstract class InstrumentDescriptor {
     return new AutoValue_InstrumentDescriptor(
         name, description, INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER);
   }
-
 }
