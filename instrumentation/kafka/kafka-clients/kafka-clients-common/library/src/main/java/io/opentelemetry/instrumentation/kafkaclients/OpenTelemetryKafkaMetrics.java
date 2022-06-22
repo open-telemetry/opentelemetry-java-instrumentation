@@ -5,26 +5,15 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
-import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
-import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
-import static java.lang.System.lineSeparator;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -49,12 +38,9 @@ import org.apache.kafka.common.metrics.MetricsReporter;
 public class OpenTelemetryKafkaMetrics implements MetricsReporter {
 
   private static final Logger logger = Logger.getLogger(OpenTelemetryKafkaMetrics.class.getName());
-  private static final Set<KafkaMetricId> seenMetrics = ConcurrentHashMap.newKeySet();
-
   @Nullable private static volatile Meter meter;
 
-  private static final Map<RegisteredInstrument, AutoCloseable> instrumentMap =
-      new ConcurrentHashMap<>();
+  private static final List<RegisteredObservable> registeredObservables = new ArrayList<>();
 
   /**
    * Setup OpenTelemetry. This should be called as early in the application lifecycle as possible.
@@ -73,48 +59,9 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
     closeAllInstruments();
   }
 
-  /**
-   * Print a table mapping kafka metrics to equivalent OpenTelemetry metrics, in markdown format.
-   */
-  static void printMappingTable() {
-    StringBuilder sb = new StringBuilder();
-    // Append table headers
-    sb.append(
-            "| # | Metric Group | Metric Name | Attribute Keys | Instrument Name | Instrument Description | Instrument Type |")
-        .append(lineSeparator())
-        .append(
-            "|---|--------------|-------------|----------------|-----------------|------------------------|-----------------|")
-        .append(lineSeparator());
-    Map<String, List<KafkaMetricId>> kafkaMetricsByGroup =
-        seenMetrics.stream().collect(groupingBy(KafkaMetricId::getGroup));
-    int count = 1;
-    // Iterate through groups in alpha order
-    for (String group : kafkaMetricsByGroup.keySet().stream().sorted().collect(toList())) {
-      List<KafkaMetricId> kafkaMetricIds =
-          kafkaMetricsByGroup.get(group).stream()
-              .sorted(comparing(KafkaMetricId::getName))
-              .collect(toList());
-      // Iterate through metrics in alpha order by name
-      for (KafkaMetricId kafkaMetricId : kafkaMetricIds) {
-        Optional<InstrumentDescriptor> descriptor =
-            Optional.ofNullable(KafkaMetricRegistry.getInstrumentDescriptor(kafkaMetricId));
-        // Append table row
-        sb.append(
-            String.format(
-                "| %s | %s | %s | %s | %s | %s | %s |%n",
-                count,
-                "`" + group + "`",
-                "`" + kafkaMetricId.getName() + "`",
-                kafkaMetricId.getAttributeKeys().stream()
-                    .map(key -> "`" + key + "`")
-                    .collect(joining(",")),
-                descriptor.map(i -> "`" + i.getName() + "`").orElse(""),
-                descriptor.map(InstrumentDescriptor::getDescription).orElse(""),
-                descriptor.map(i -> "`" + i.getInstrumentType() + "`").orElse("")));
-        count++;
-      }
-    }
-    logger.log(Level.INFO, "Mapping table" + System.lineSeparator() + sb);
+  // Visible for test
+  static List<RegisteredObservable> getRegisteredObservables() {
+    return registeredObservables;
   }
 
   @Override
@@ -123,86 +70,58 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
   }
 
   @Override
-  public void metricChange(KafkaMetric metric) {
+  public synchronized void metricChange(KafkaMetric metric) {
     KafkaMetricId kafkaMetricId = KafkaMetricId.create(metric);
-    seenMetrics.add(kafkaMetricId);
     Meter currentMeter = meter;
     if (currentMeter == null) {
       logger.log(Level.FINEST, "Metric changed but meter not set: {0}", kafkaMetricId);
       return;
     }
 
-    InstrumentDescriptor instrumentDescriptor =
-        KafkaMetricRegistry.getInstrumentDescriptor(kafkaMetricId);
-    if (instrumentDescriptor == null) {
+    RegisteredObservable registeredObservable =
+        KafkaMetricRegistry.getRegisteredObservable(currentMeter, kafkaMetricId, metric);
+    if (registeredObservable == null) {
       logger.log(Level.FINEST, "Metric changed but cannot map to instrument: {0}", kafkaMetricId);
       return;
     }
 
-    RegisteredInstrument registeredInstrument =
-        RegisteredInstrument.create(kafkaMetricId, toAttributes(metric));
+    InstrumentDescriptor instrumentDescriptor = registeredObservable.getInstrumentDescriptor();
+    Attributes attributes = registeredObservable.getAttributes();
+    Set<AttributeKey<?>> attributeKeys = attributes.asMap().keySet();
 
-    instrumentMap.compute(
-        registeredInstrument,
-        (registeredInstrument1, autoCloseable) -> {
-          if (autoCloseable != null) {
-            logger.log(Level.FINEST, "Replacing instrument {0}", registeredInstrument1);
-            try {
-              autoCloseable.close();
-            } catch (Exception e) {
-              logger.log(Level.WARNING, "An error occurred closing instrument", e);
-            }
-          } else {
-            logger.log(Level.FINEST, "Adding instrument {0}", registeredInstrument1);
-          }
-          return createObservable(
-              currentMeter, registeredInstrument1, instrumentDescriptor, metric);
-        });
-  }
-
-  private static AutoCloseable createObservable(
-      Meter meter,
-      RegisteredInstrument registeredInstrument,
-      InstrumentDescriptor instrumentDescriptor,
-      KafkaMetric kafkaMetric) {
-    Consumer<ObservableDoubleMeasurement> callback =
-        observableMeasurement ->
-            observableMeasurement.record(kafkaMetric.value(), registeredInstrument.getAttributes());
-    switch (instrumentDescriptor.getInstrumentType()) {
-      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE:
-        return meter
-            .gaugeBuilder(instrumentDescriptor.getName())
-            .setDescription(instrumentDescriptor.getDescription())
-            .buildWithCallback(callback);
-      case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER:
-        return meter
-            .counterBuilder(instrumentDescriptor.getName())
-            .setDescription(instrumentDescriptor.getDescription())
-            .ofDoubles()
-            .buildWithCallback(callback);
-      default: // Continue below to throw
+    for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
+      RegisteredObservable curRegisteredObservable = it.next();
+      Set<AttributeKey<?>> curAttributeKeys =
+          curRegisteredObservable.getAttributes().asMap().keySet();
+      if (curRegisteredObservable.equals(registeredObservable)) {
+        logger.log(Level.FINEST, "Replacing instrument: {0}", curRegisteredObservable);
+        closeInstrument(curRegisteredObservable.getObservable());
+        it.remove();
+      } else if (curRegisteredObservable.getInstrumentDescriptor().equals(instrumentDescriptor)
+          && attributeKeys.size() > curAttributeKeys.size()
+          && attributeKeys.containsAll(curAttributeKeys)) {
+        logger.log(
+            Level.FINEST,
+            "Replacing instrument with higher dimension version: {0}",
+            curRegisteredObservable);
+        closeInstrument(curRegisteredObservable.getObservable());
+        it.remove();
+      }
     }
-    // TODO: add support for other instrument types and value types as needed for new instruments
-    // registered in KafkaMetricRegistry.
-    // This should not happen.
-    throw new IllegalStateException("Unrecognized instrument type. This is a bug.");
-  }
 
-  private static Attributes toAttributes(KafkaMetric kafkaMetric) {
-    AttributesBuilder attributesBuilder = Attributes.builder();
-    kafkaMetric.metricName().tags().forEach(attributesBuilder::put);
-    return attributesBuilder.build();
+    registeredObservables.add(registeredObservable);
   }
 
   @Override
   public void metricRemoval(KafkaMetric metric) {
     KafkaMetricId kafkaMetricId = KafkaMetricId.create(metric);
-    seenMetrics.add(kafkaMetricId);
     logger.log(Level.FINEST, "Metric removed: {0}", kafkaMetricId);
-    AutoCloseable observable =
-        instrumentMap.remove(RegisteredInstrument.create(kafkaMetricId, toAttributes(metric)));
-    if (observable != null) {
-      closeInstrument(observable);
+    for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
+      RegisteredObservable current = it.next();
+      if (current.matches(metric)) {
+        closeInstrument(current.getObservable());
+        it.remove();
+      }
     }
   }
 
@@ -212,10 +131,8 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
   }
 
   static void closeAllInstruments() {
-    for (Iterator<Map.Entry<RegisteredInstrument, AutoCloseable>> it =
-            instrumentMap.entrySet().iterator();
-        it.hasNext(); ) {
-      closeInstrument(it.next().getValue());
+    for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
+      closeInstrument(it.next().getObservable());
       it.remove();
     }
   }

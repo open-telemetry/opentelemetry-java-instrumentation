@@ -5,31 +5,47 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
+import static java.lang.System.lineSeparator;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.PointData;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.metrics.KafkaMetric;
+import org.apache.kafka.common.metrics.MetricsReporter;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -41,24 +57,65 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 abstract class OpenTelemetryKafkaMetricsTest {
 
+  private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryKafkaMetricsTest.class);
+
   private static final List<String> TOPICS = Arrays.asList("foo", "bar", "baz", "qux");
   private static final Random RANDOM = new Random();
 
   @Container
   KafkaContainer kafka =
       new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
-          .withLogConsumer(
-              new Slf4jLogConsumer(LoggerFactory.getLogger(OpenTelemetryKafkaMetricsTest.class)))
+          .withLogConsumer(new Slf4jLogConsumer(logger))
           .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
           .withStartupTimeout(Duration.ofMinutes(1));
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @Test
-  void observeMetrics() {
+  private KafkaProducer<byte[], byte[]> producer;
+  private KafkaConsumer<byte[], byte[]> consumer;
+
+  @BeforeEach
+  void setup() {
     OpenTelemetryKafkaMetrics.setOpenTelemetry(testing.getOpenTelemetry());
 
+    String metricReporters =
+        OpenTelemetryKafkaMetrics.class.getName() + "," + TestMetricsReporter.class.getName();
+
+    Map<String, Object> producerConfig = new HashMap<>();
+    // Register OpenTelemetryKafkaMetrics as reporter
+    producerConfig.put(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG, metricReporters);
+    producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+    producerConfig.put(ProducerConfig.CLIENT_ID_CONFIG, "sample-client-id");
+    producerConfig.put(
+        ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+    producerConfig.put(
+        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+    producerConfig.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
+    producer = new KafkaProducer<>(producerConfig);
+
+    Map<String, Object> consumerConfig = new HashMap<>();
+    // Register OpenTelemetryKafkaMetrics as reporter
+    consumerConfig.put(ConsumerConfig.METRIC_REPORTER_CLASSES_CONFIG, metricReporters);
+    consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+    consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, "sample-group");
+    consumerConfig.put(
+        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
+    consumerConfig.put(
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
+    consumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 2);
+    consumer = new KafkaConsumer<>(consumerConfig);
+  }
+
+  @AfterEach
+  void tearDown() {
+    OpenTelemetryKafkaMetrics.resetForTest();
+    producer.close();
+    consumer.close();
+  }
+
+  @Test
+  void observeMetrics() {
     produceRecords();
     consumeRecords();
 
@@ -253,56 +310,129 @@ abstract class OpenTelemetryKafkaMetricsTest {
                 "kafka.producer.record_send_rate",
                 "kafka.producer.record_send_total"));
 
-    Set<String> metricNames = testing.metrics().stream().map(MetricData::getName).collect(toSet());
-
+    List<MetricData> metrics = testing.metrics();
+    Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
     assertThat(metricNames).containsAll(expectedMetricNames);
 
+    assertThat(metrics)
+        .allSatisfy(
+            metricData -> {
+              Set<String> expectedKeys =
+                  metricData.getData().getPoints().stream()
+                      .findFirst()
+                      .map(
+                          point ->
+                              point.getAttributes().asMap().keySet().stream()
+                                  .map(AttributeKey::getKey)
+                                  .collect(toSet()))
+                      .orElse(Collections.emptySet());
+              assertThat(metricData.getData().getPoints())
+                  .extracting(PointData::getAttributes)
+                  .extracting(
+                      attributes ->
+                          attributes.asMap().keySet().stream()
+                              .map(AttributeKey::getKey)
+                              .collect(toSet()))
+                  .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+            });
+
     // Print mapping table
-    OpenTelemetryKafkaMetrics.printMappingTable();
+    printMappingTable();
   }
 
   void produceRecords() {
-    Map<String, Object> config = new HashMap<>();
-    // Register OpenTelemetryKafkaMetrics as reporter
-    config.put(
-        ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG, OpenTelemetryKafkaMetrics.class.getName());
-    config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
-    config.put(ProducerConfig.CLIENT_ID_CONFIG, "sample-client-id");
-    config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
-    config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
-    config.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
-
-    try (KafkaProducer<byte[], byte[]> producer = new KafkaProducer<>(config)) {
-      for (int i = 0; i < 100; i++) {
-        producer.send(
-            new ProducerRecord<>(
-                TOPICS.get(RANDOM.nextInt(TOPICS.size())),
-                0,
-                System.currentTimeMillis(),
-                "key".getBytes(StandardCharsets.UTF_8),
-                "value".getBytes(StandardCharsets.UTF_8)));
-      }
+    for (int i = 0; i < 100; i++) {
+      producer.send(
+          new ProducerRecord<>(
+              TOPICS.get(RANDOM.nextInt(TOPICS.size())),
+              0,
+              System.currentTimeMillis(),
+              "key".getBytes(StandardCharsets.UTF_8),
+              "value".getBytes(StandardCharsets.UTF_8)));
     }
   }
 
   void consumeRecords() {
-    Map<String, Object> config = new HashMap<>();
-    // Register OpenTelemetryKafkaMetrics as reporter
-    config.put(
-        ConsumerConfig.METRIC_REPORTER_CLASSES_CONFIG, OpenTelemetryKafkaMetrics.class.getName());
-    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
-    config.put(ConsumerConfig.GROUP_ID_CONFIG, "sample-group");
-    config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
-    config.put(
-        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
-    config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 2);
+    consumer.subscribe(TOPICS);
+    Instant stopTime = Instant.now().plusSeconds(10);
+    while (Instant.now().isBefore(stopTime)) {
+      consumer.poll(1000);
+    }
+  }
 
-    try (KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(config)) {
-      consumer.subscribe(TOPICS);
-      Instant stopTime = Instant.now().plusSeconds(10);
-      while (Instant.now().isBefore(stopTime)) {
-        consumer.poll(1000);
+  /**
+   * Print a table mapping kafka metrics to equivalent OpenTelemetry metrics, in markdown format.
+   */
+  private static void printMappingTable() {
+    StringBuilder sb = new StringBuilder();
+    // Append table headers
+    sb.append(
+            "| # | Metric Group | Metric Name | Attribute Keys | Instrument Name | Instrument Description | Instrument Type |")
+        .append(lineSeparator())
+        .append(
+            "|---|--------------|-------------|----------------|-----------------|------------------------|-----------------|")
+        .append(lineSeparator());
+    Map<String, List<KafkaMetricId>> kafkaMetricsByGroup =
+        TestMetricsReporter.seenMetrics.keySet().stream()
+            .collect(groupingBy(KafkaMetricId::getGroup));
+    List<RegisteredObservable> registeredObservables =
+        OpenTelemetryKafkaMetrics.getRegisteredObservables();
+    int count = 1;
+    // Iterate through groups in alpha order
+    for (String group : kafkaMetricsByGroup.keySet().stream().sorted().collect(toList())) {
+      List<KafkaMetricId> kafkaMetricIds =
+          kafkaMetricsByGroup.get(group).stream()
+              .sorted(comparing(KafkaMetricId::getName))
+              .collect(toList());
+      // Iterate through metrics in alpha order by name
+      for (KafkaMetricId kafkaMetricId : kafkaMetricIds) {
+        KafkaMetric kafkaMetric =
+            Objects.requireNonNull(TestMetricsReporter.seenMetrics.get(kafkaMetricId));
+        Optional<InstrumentDescriptor> descriptor =
+            registeredObservables.stream()
+                .filter(registeredObservable -> registeredObservable.matches(kafkaMetric))
+                .findAny()
+                .map(RegisteredObservable::getInstrumentDescriptor);
+        // Append table row
+        sb.append(
+            String.format(
+                "| %s | %s | %s | %s | %s | %s | %s |%n",
+                count,
+                "`" + group + "`",
+                "`" + kafkaMetricId.getName() + "`",
+                kafkaMetricId.getAttributeKeys().stream()
+                    .map(key -> "`" + key + "`")
+                    .collect(joining(",")),
+                descriptor.map(i -> "`" + i.getName() + "`").orElse(""),
+                descriptor.map(InstrumentDescriptor::getDescription).orElse(""),
+                descriptor.map(i -> "`" + i.getInstrumentType() + "`").orElse("")));
+        count++;
       }
     }
+    logger.info("Mapping table" + System.lineSeparator() + sb);
+  }
+
+  public static class TestMetricsReporter implements MetricsReporter {
+
+    private static final Map<KafkaMetricId, KafkaMetric> seenMetrics = new ConcurrentHashMap<>();
+
+    @Override
+    public void init(List<KafkaMetric> list) {
+      list.forEach(this::metricChange);
+    }
+
+    @Override
+    public void metricChange(KafkaMetric kafkaMetric) {
+      seenMetrics.put(KafkaMetricId.create(kafkaMetric), kafkaMetric);
+    }
+
+    @Override
+    public void metricRemoval(KafkaMetric kafkaMetric) {}
+
+    @Override
+    public void close() {}
+
+    @Override
+    public void configure(Map<String, ?> map) {}
   }
 }
