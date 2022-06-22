@@ -18,7 +18,9 @@ import java.util.function.BiConsumer;
  */
 public interface ContextSpanProcessor extends ImplicitContextKeyed {
 
-  /** Wrap a {@link BiConsumer} so that it can be store in context as a span processing function. */
+  /**
+   * Wrap a {@link BiConsumer} so that it can be stored in context as a span processing function.
+   */
   static ContextSpanProcessor wrap(BiConsumer<Context, Span> processor) {
     return new ContextSpanProcessorImpl(processor);
   }
