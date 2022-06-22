@@ -7,10 +7,14 @@ plugins {
 group = "io.opentelemetry.javaagent.instrumentation"
 
 dependencies {
+  // this is the latest version that works with azure-core 1.14
+  // because newer versions use the new fluent ClientLogger.atWarning() from azure-core 1.24
+  //
+  // note:
   // to look at (potentially incompatible) differences in new versions of the injected artifact, run:
-  // git diff azure-core-tracing-opentelemetry_1.0.0-beta.25 azure-core-tracing-opentelemetry_1.0.0-beta.26
+  // git diff azure-core-tracing-opentelemetry_1.0.0-beta.23 azure-core-tracing-opentelemetry_1.0.0-beta.25
   //          -- sdk/core/azure-core-tracing-opentelemetry/src/main
-  implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.25")
+  implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.23")
 }
 
 tasks {
