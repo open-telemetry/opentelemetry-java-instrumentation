@@ -29,7 +29,8 @@ public class DemoAutoConfigurationCustomizerProvider
 
   @Override
   public void customize(AutoConfigurationCustomizer autoConfiguration) {
-    autoConfiguration.addTracerProviderCustomizer(this::configureSdkTracerProvider);
+    autoConfiguration.addTracerProviderCustomizer(this::configureSdkTracerProvider)
+        .addSamplerCustomizer((sampler, config) -> new DemoSampler(sampler));
   }
 
   private SdkTracerProviderBuilder configureSdkTracerProvider(
@@ -38,7 +39,6 @@ public class DemoAutoConfigurationCustomizerProvider
     return tracerProvider
         .setIdGenerator(new DemoIdGenerator())
         .setSpanLimits(SpanLimits.builder().setMaxNumberOfAttributes(1024).build())
-        .setSampler(new DemoSampler())
         .addSpanProcessor(new DemoSpanProcessor())
         .addSpanProcessor(SimpleSpanProcessor.create(new DemoSpanExporter()));
   }

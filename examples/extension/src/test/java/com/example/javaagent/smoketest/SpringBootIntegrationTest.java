@@ -73,7 +73,9 @@ class SpringBootIntegrationTest extends IntegrationTest {
     Assertions.assertEquals("Hi!", response.body().string());
     Assertions.assertEquals(1, countSpansByName(traces, "/greeting"));
     Assertions.assertEquals(0, countSpansByName(traces, "WebController.greeting"));
-    Assertions.assertEquals(1, countSpansByName(traces, "WebController.withSpan"));
+    // the @WithSpan span is not sampled because the default sampler doesn't capture broken traces,
+    // and the parent was explicitly dropped by the custom sampler
+    Assertions.assertEquals(0, countSpansByName(traces, "WebController.withSpan"));
     Assertions.assertEquals(2, countSpansByAttributeValue(traces, "custom", "demo"));
     Assertions.assertNotEquals(
         0, countResourcesByValue(traces, "telemetry.auto.version", currentAgentVersion));

@@ -24,6 +24,13 @@ import java.util.List;
  * @see DemoAutoConfigurationCustomizerProvider
  */
 public class DemoSampler implements Sampler {
+
+  private final Sampler delegate;
+
+  public DemoSampler(Sampler delegate) {
+    this.delegate = delegate;
+  }
+
   @Override
   public SamplingResult shouldSample(
       Context parentContext,
@@ -35,7 +42,7 @@ public class DemoSampler implements Sampler {
     if (spanKind == SpanKind.INTERNAL && name.contains("greeting")) {
       return SamplingResult.create(SamplingDecision.DROP);
     } else {
-      return SamplingResult.create(SamplingDecision.RECORD_AND_SAMPLE);
+      return delegate.shouldSample(parentContext, traceId, name, spanKind, attributes, parentLinks);
     }
   }
 
