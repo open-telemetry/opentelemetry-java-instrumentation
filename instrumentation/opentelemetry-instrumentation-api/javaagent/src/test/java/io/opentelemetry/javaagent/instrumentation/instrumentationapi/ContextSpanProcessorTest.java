@@ -7,9 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.ContextSpanProcessorUtil;
+import io.opentelemetry.instrumentation.api.instrumenter.ContextSpanProcessor;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -20,16 +21,26 @@ class ContextSpanProcessorTest {
 
   @Test
   void tesUpdateSpanName() {
-    Context context = Context.current();
-    context =
-        ContextSpanProcessorUtil.storeInContext(
-            context,
-            (context1, span) -> {
-              span.updateName("new span name");
-            });
+    Context context =
+        Context.current()
+            .with(ContextSpanProcessor.wrap((context1, span) -> span.updateName("new span name")));
 
     try (Scope scope = context.makeCurrent()) {
       testing.runWithSpan("old span name", () -> {});
+    }
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("new span name")));
+  }
+
+  @Test
+  void tesUpdateAgentSpanName() {
+    Context context =
+        Context.current()
+            .with(ContextSpanProcessor.wrap((context1, span) -> span.updateName("new span name")));
+
+    try (Scope scope = context.makeCurrent()) {
+      AgentSpanTesting.runWithAllSpanKeys("old span name", () -> {});
     }
 
     testing.waitAndAssertTraces(

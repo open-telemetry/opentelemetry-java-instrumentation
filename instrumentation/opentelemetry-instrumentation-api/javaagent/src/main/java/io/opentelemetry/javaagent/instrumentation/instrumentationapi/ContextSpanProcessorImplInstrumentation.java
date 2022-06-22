@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.ContextSpanProcessorUtil;
+import io.opentelemetry.instrumentation.api.internal.ContextSpanProcessorImpl;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -19,11 +19,12 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class ContextSpanProcessorUtilInstrumentation implements TypeInstrumentation {
+final class ContextSpanProcessorImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.instrumentation.api.util.ContextSpanProcessorUtil");
+    return named(
+        "application.io.opentelemetry.instrumentation.api.internal.ContextSpanProcessorImpl");
   }
 
   @Override
@@ -58,7 +59,7 @@ final class ContextSpanProcessorUtilInstrumentation implements TypeInstrumentati
       BiConsumer<io.opentelemetry.context.Context, io.opentelemetry.api.trace.Span> agentProcessor =
           ContextSpanProcessorWrapper.wrap(processor);
       io.opentelemetry.context.Context newAgentContext =
-          ContextSpanProcessorUtil.storeInContext(agentContext, agentProcessor);
+          ContextSpanProcessorImpl.storeInContext(agentContext, agentProcessor);
 
       newApplicationContext = AgentContextStorage.toApplicationContext(newAgentContext);
     }
@@ -79,7 +80,7 @@ final class ContextSpanProcessorUtilInstrumentation implements TypeInstrumentati
       io.opentelemetry.context.Context agentContext =
           AgentContextStorage.getAgentContext(applicationContext);
       BiConsumer<io.opentelemetry.context.Context, io.opentelemetry.api.trace.Span> agentProcessor =
-          ContextSpanProcessorUtil.fromContextOrNull(agentContext);
+          ContextSpanProcessorImpl.fromContextOrNull(agentContext);
       processor = ContextSpanProcessorWrapper.unwrap(agentProcessor);
     }
   }

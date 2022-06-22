@@ -31,6 +31,6 @@ public class InstrumentationApiInstrumentationModule extends InstrumentationModu
     return asList(
         new HttpRouteStateInstrumentation(),
         new SpanKeyInstrumentation(),
-        new ContextSpanProcessorUtilInstrumentation());
+        new ContextSpanProcessorImplInstrumentation());
   }
 }
