@@ -116,7 +116,9 @@ public class AgentInstaller {
     }
 
     if (autoConfiguredSdk != null) {
-      runBeforeAgentListeners(agentListeners, config, autoConfiguredSdk);
+      for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
+        agentListener.beforeAgent(autoConfiguredSdk);
+      }
     }
 
     AgentBuilder agentBuilder =
@@ -171,7 +173,7 @@ public class AgentInstaller {
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
     if (autoConfiguredSdk != null) {
-      runAfterAgentListeners(agentListeners, config, autoConfiguredSdk);
+      runAfterAgentListeners(agentListeners, autoConfiguredSdk);
     }
   }
 
@@ -195,20 +197,6 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
-  @SuppressWarnings("deprecation") // running both old and new listeners for now
-  private static void runBeforeAgentListeners(
-      Iterable<AgentListener> agentListeners,
-      Config config,
-      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-
-    for (AgentListener agentListener : agentListeners) {
-      agentListener.beforeAgent(config, autoConfiguredSdk);
-    }
-    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
-      agentListener.beforeAgent(config, autoConfiguredSdk);
-    }
-  }
-
   private static AgentBuilder configureIgnoredTypes(Config config, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
@@ -228,9 +216,7 @@ public class AgentInstaller {
   }
 
   private static void runAfterAgentListeners(
-      Iterable<AgentListener> agentListeners,
-      Config config,
-      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+      Iterable<AgentListener> agentListeners, AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     // java.util.logging.LogManager maintains a final static LogManager, which is created during
     // class initialization. Some AgentListener implementations may use JRE bootstrap classes
     // which touch this class (e.g. JFR classes or some MBeans).
@@ -254,7 +240,7 @@ public class AgentInstaller {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
       registerClassLoadCallback(
           "java.util.logging.LogManager",
-          new DelayedAfterAgentCallback(config, agentListeners, autoConfiguredSdk));
+          new DelayedAfterAgentCallback(agentListeners, autoConfiguredSdk));
     } else {
       if (javaBefore9) {
         // force LogManager to be initialized while we are single-threaded, because if we wait,
@@ -262,7 +248,7 @@ public class AgentInstaller {
         LogManager.getLogManager();
       }
       for (AgentListener agentListener : agentListeners) {
-        agentListener.afterAgent(config, autoConfiguredSdk);
+        agentListener.afterAgent(autoConfiguredSdk);
       }
     }
   }
@@ -371,16 +357,13 @@ public class AgentInstaller {
   }
 
   private static class DelayedAfterAgentCallback implements Runnable {
+
     private final Iterable<AgentListener> agentListeners;
-    private final Config config;
     private final AutoConfiguredOpenTelemetrySdk autoConfiguredSdk;
 
     private DelayedAfterAgentCallback(
-        Config config,
-        Iterable<AgentListener> agentListeners,
-        AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+        Iterable<AgentListener> agentListeners, AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
       this.agentListeners = agentListeners;
-      this.config = config;
       this.autoConfiguredSdk = autoConfiguredSdk;
     }
 
@@ -400,7 +383,7 @@ public class AgentInstaller {
     private void runAgentListeners() {
       for (AgentListener agentListener : agentListeners) {
         try {
-          agentListener.afterAgent(config, autoConfiguredSdk);
+          agentListener.afterAgent(autoConfiguredSdk);
         } catch (RuntimeException e) {
           logger.log(SEVERE, "Failed to execute " + agentListener.getClass().getName(), e);
         }
