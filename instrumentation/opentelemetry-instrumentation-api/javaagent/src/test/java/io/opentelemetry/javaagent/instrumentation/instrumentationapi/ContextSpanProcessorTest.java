@@ -20,7 +20,7 @@ class ContextSpanProcessorTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void tesUpdateSpanName() {
+  void testUpdateSpanName() {
     Context context =
         Context.current()
             .with(ContextSpanProcessor.wrap((context1, span) -> span.updateName("new span name")));
@@ -34,7 +34,7 @@ class ContextSpanProcessorTest {
   }
 
   @Test
-  void tesUpdateAgentSpanName() {
+  void testUpdateAgentSpanName() {
     Context context =
         Context.current()
             .with(ContextSpanProcessor.wrap((context1, span) -> span.updateName("new span name")));
