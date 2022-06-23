@@ -24,6 +24,9 @@ jobs:
         with:
           repository: opentelemetry-java-bot/opentelemetry-operator
           # this is the personal access token used for "git push" below
+          # note that the personal access token needs "workflow" (Update GitHub Action workflows)
+          # permission since if workflows have been updated upstream it will be updating the
+          # workflows of the origin repository when it pushes to origin below
           token: ${{ secrets.JAVA_BOT_TOKEN }}
 
       - name: Initialize pull request branch
