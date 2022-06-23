@@ -75,7 +75,7 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
   }
 
   @Override
-  public synchronized void metricChange(KafkaMetric metric) {
+  public void metricChange(KafkaMetric metric) {
     Meter currentMeter = meter;
     if (currentMeter == null) {
       logger.log(Level.FINEST, "Metric changed but meter not set: {0}", metric.metricName());
