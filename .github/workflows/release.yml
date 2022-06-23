@@ -262,4 +262,4 @@ jobs:
     with:
       javaagent-version: ${{ needs.release.outputs.version }}
     secrets:
-      JAVA_BOT_TOKEN: ${{ secrets.JAVA_BOT_TOKEN }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
