@@ -12,5 +12,8 @@ dependencies {
   implementation("org.testcontainers:kafka")
   implementation("org.testcontainers:junit-jupiter")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   runtimeOnly("org.apache.kafka:kafka_2.13:2.8.1")
 }

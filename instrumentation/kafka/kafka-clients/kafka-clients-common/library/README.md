@@ -70,22 +70,22 @@ collected.
 | 39 | `consumer-fetch-manager-metrics` | `fetch-latency-avg` | `client-id` | `kafka.consumer.fetch_latency_avg` | The average time taken for a fetch request. | `DOUBLE_OBSERVABLE_GAUGE` |
 | 40 | `consumer-fetch-manager-metrics` | `fetch-latency-max` | `client-id` | `kafka.consumer.fetch_latency_max` | The max time taken for any fetch request. | `DOUBLE_OBSERVABLE_GAUGE` |
 | 41 | `consumer-fetch-manager-metrics` | `fetch-rate` | `client-id` | `kafka.consumer.fetch_rate` | The number of fetch requests per second. | `DOUBLE_OBSERVABLE_GAUGE` |
-| 42 | `consumer-fetch-manager-metrics` | `fetch-size-avg` | `client-id`,`topic` | `kafka.consumer.fetch_size_avg` | The average number of bytes fetched per request | `DOUBLE_OBSERVABLE_GAUGE` |
-| 43 | `consumer-fetch-manager-metrics` | `fetch-size-avg` | `client-id` |  |  |  |
-| 44 | `consumer-fetch-manager-metrics` | `fetch-size-max` | `client-id`,`topic` | `kafka.consumer.fetch_size_max` | The maximum number of bytes fetched per request | `DOUBLE_OBSERVABLE_GAUGE` |
-| 45 | `consumer-fetch-manager-metrics` | `fetch-size-max` | `client-id` |  |  |  |
+| 42 | `consumer-fetch-manager-metrics` | `fetch-size-avg` | `client-id` |  |  |  |
+| 43 | `consumer-fetch-manager-metrics` | `fetch-size-avg` | `client-id`,`topic` | `kafka.consumer.fetch_size_avg` | The average number of bytes fetched per request | `DOUBLE_OBSERVABLE_GAUGE` |
+| 44 | `consumer-fetch-manager-metrics` | `fetch-size-max` | `client-id` |  |  |  |
+| 45 | `consumer-fetch-manager-metrics` | `fetch-size-max` | `client-id`,`topic` | `kafka.consumer.fetch_size_max` | The maximum number of bytes fetched per request | `DOUBLE_OBSERVABLE_GAUGE` |
 | 46 | `consumer-fetch-manager-metrics` | `fetch-throttle-time-avg` | `client-id` | `kafka.consumer.fetch_throttle_time_avg` | The average throttle time in ms | `DOUBLE_OBSERVABLE_GAUGE` |
 | 47 | `consumer-fetch-manager-metrics` | `fetch-throttle-time-max` | `client-id` | `kafka.consumer.fetch_throttle_time_max` | The maximum throttle time in ms | `DOUBLE_OBSERVABLE_GAUGE` |
 | 48 | `consumer-fetch-manager-metrics` | `fetch-total` | `client-id` | `kafka.consumer.fetch_total` | The total number of fetch requests. | `DOUBLE_OBSERVABLE_COUNTER` |
 | 49 | `consumer-fetch-manager-metrics` | `preferred-read-replica` | `client-id`,`topic`,`partition` |  |  |  |
-| 50 | `consumer-fetch-manager-metrics` | `records-consumed-rate` | `client-id`,`topic` | `kafka.consumer.records_consumed_rate` | The average number of records consumed per second | `DOUBLE_OBSERVABLE_GAUGE` |
-| 51 | `consumer-fetch-manager-metrics` | `records-consumed-rate` | `client-id` |  |  |  |
+| 50 | `consumer-fetch-manager-metrics` | `records-consumed-rate` | `client-id` |  |  |  |
+| 51 | `consumer-fetch-manager-metrics` | `records-consumed-rate` | `client-id`,`topic` | `kafka.consumer.records_consumed_rate` | The average number of records consumed per second | `DOUBLE_OBSERVABLE_GAUGE` |
 | 52 | `consumer-fetch-manager-metrics` | `records-consumed-total` | `client-id` |  |  |  |
 | 53 | `consumer-fetch-manager-metrics` | `records-consumed-total` | `client-id`,`topic` | `kafka.consumer.records_consumed_total` | The total number of records consumed | `DOUBLE_OBSERVABLE_COUNTER` |
 | 54 | `consumer-fetch-manager-metrics` | `records-lag` | `client-id`,`topic`,`partition` | `kafka.consumer.records_lag` | The latest lag of the partition | `DOUBLE_OBSERVABLE_GAUGE` |
 | 55 | `consumer-fetch-manager-metrics` | `records-lag-avg` | `client-id`,`topic`,`partition` | `kafka.consumer.records_lag_avg` | The average lag of the partition | `DOUBLE_OBSERVABLE_GAUGE` |
-| 56 | `consumer-fetch-manager-metrics` | `records-lag-max` | `client-id`,`topic`,`partition` | `kafka.consumer.records_lag_max` | The maximum lag in terms of number of records for any partition in this window | `DOUBLE_OBSERVABLE_GAUGE` |
-| 57 | `consumer-fetch-manager-metrics` | `records-lag-max` | `client-id` |  |  |  |
+| 56 | `consumer-fetch-manager-metrics` | `records-lag-max` | `client-id` |  |  |  |
+| 57 | `consumer-fetch-manager-metrics` | `records-lag-max` | `client-id`,`topic`,`partition` | `kafka.consumer.records_lag_max` | The maximum lag in terms of number of records for any partition in this window | `DOUBLE_OBSERVABLE_GAUGE` |
 | 58 | `consumer-fetch-manager-metrics` | `records-lead` | `client-id`,`topic`,`partition` | `kafka.consumer.records_lead` | The latest lead of the partition | `DOUBLE_OBSERVABLE_GAUGE` |
 | 59 | `consumer-fetch-manager-metrics` | `records-lead-avg` | `client-id`,`topic`,`partition` | `kafka.consumer.records_lead_avg` | The average lead of the partition | `DOUBLE_OBSERVABLE_GAUGE` |
 | 60 | `consumer-fetch-manager-metrics` | `records-lead-min` | `client-id` |  |  |  |

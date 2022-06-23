@@ -21,7 +21,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.metrics.KafkaMetric;
+import org.apache.kafka.common.metrics.Measurable;
 
 /** A registry mapping kafka metrics to corresponding OpenTelemetry metric definitions. */
 class KafkaMetricRegistry {
@@ -57,32 +59,42 @@ class KafkaMetricRegistry {
   }
 
   @Nullable
-  static RegisteredObservable getRegisteredObservable(
-      Meter meter, KafkaMetricId kafkaMetricId, KafkaMetric kafkaMetric) {
+  static RegisteredObservable getRegisteredObservable(Meter meter, KafkaMetric kafkaMetric) {
     // If metric is not a Measureable, we can't map it to an instrument
-    if (kafkaMetricId.getMeasureable() == null) {
+    Class<? extends Measurable> measurable = getMeasurable(kafkaMetric);
+    if (measurable == null) {
       return null;
     }
+    MetricName metricName = kafkaMetric.metricName();
     Optional<String> matchingGroup =
-        groups.stream().filter(group -> kafkaMetricId.getGroup().contains(group)).findFirst();
+        groups.stream().filter(group -> metricName.group().contains(group)).findFirst();
     // Only map metrics that have a matching group
     if (!matchingGroup.isPresent()) {
       return null;
     }
     String instrumentName =
-        "kafka." + matchingGroup.get() + "." + kafkaMetricId.getName().replace("-", "_");
+        "kafka." + matchingGroup.get() + "." + metricName.name().replace("-", "_");
     String instrumentDescription =
-        descriptionCache.computeIfAbsent(instrumentName, s -> kafkaMetricId.getDescription());
+        descriptionCache.computeIfAbsent(instrumentName, s -> metricName.description());
     String instrumentType =
         measureableToInstrumentType.getOrDefault(
-            kafkaMetricId.getMeasureable(), INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
+            measurable, INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
 
     InstrumentDescriptor instrumentDescriptor =
         toInstrumentDescriptor(instrumentType, instrumentName, instrumentDescription);
-    Attributes attributes = toAttributes(kafkaMetric);
+    Attributes attributes = toAttributes(metricName.tags());
     AutoCloseable observable =
         createObservable(meter, attributes, instrumentDescriptor, kafkaMetric);
-    return RegisteredObservable.create(kafkaMetricId, instrumentDescriptor, attributes, observable);
+    return RegisteredObservable.create(metricName, instrumentDescriptor, attributes, observable);
+  }
+
+  @Nullable
+  private static Class<? extends Measurable> getMeasurable(KafkaMetric kafkaMetric) {
+    try {
+      return kafkaMetric.measurable().getClass();
+    } catch (IllegalStateException e) {
+      return null;
+    }
   }
 
   private static InstrumentDescriptor toInstrumentDescriptor(
@@ -97,9 +109,9 @@ class KafkaMetricRegistry {
     throw new IllegalStateException("Unrecognized instrument type. This is a bug.");
   }
 
-  static Attributes toAttributes(KafkaMetric kafkaMetric) {
+  private static Attributes toAttributes(Map<String, String> tags) {
     AttributesBuilder attributesBuilder = Attributes.builder();
-    kafkaMetric.metricName().tags().forEach(attributesBuilder::put);
+    tags.forEach(attributesBuilder::put);
     return attributesBuilder.build();
   }
 

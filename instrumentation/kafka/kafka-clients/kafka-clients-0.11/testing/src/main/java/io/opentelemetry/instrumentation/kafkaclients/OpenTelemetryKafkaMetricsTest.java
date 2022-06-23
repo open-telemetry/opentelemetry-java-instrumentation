@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -27,16 +28,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.MetricsReporter;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -373,8 +373,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
             "|---|--------------|-------------|----------------|-----------------|------------------------|-----------------|")
         .append(lineSeparator());
     Map<String, List<KafkaMetricId>> kafkaMetricsByGroup =
-        TestMetricsReporter.seenMetrics.keySet().stream()
-            .collect(groupingBy(KafkaMetricId::getGroup));
+        TestMetricsReporter.seenMetrics.stream().collect(groupingBy(KafkaMetricId::getGroup));
     List<RegisteredObservable> registeredObservables =
         OpenTelemetryKafkaMetrics.getRegisteredObservables();
     int count = 1;
@@ -382,16 +381,20 @@ abstract class OpenTelemetryKafkaMetricsTest {
     for (String group : kafkaMetricsByGroup.keySet().stream().sorted().collect(toList())) {
       List<KafkaMetricId> kafkaMetricIds =
           kafkaMetricsByGroup.get(group).stream()
-              .sorted(comparing(KafkaMetricId::getName))
+              .sorted(
+                  comparing(KafkaMetricId::getName)
+                      .thenComparing(kafkaMetricId -> kafkaMetricId.getAttributeKeys().size()))
               .collect(toList());
       // Iterate through metrics in alpha order by name
       for (KafkaMetricId kafkaMetricId : kafkaMetricIds) {
-        KafkaMetric kafkaMetric =
-            Objects.requireNonNull(TestMetricsReporter.seenMetrics.get(kafkaMetricId));
+        // Find first (there may be multiple) registered instrument that matches the kafkaMetricId
         Optional<InstrumentDescriptor> descriptor =
             registeredObservables.stream()
-                .filter(registeredObservable -> registeredObservable.matches(kafkaMetric))
-                .findAny()
+                .filter(
+                    registeredObservable ->
+                        KafkaMetricId.create(registeredObservable.getKafkaMetricName())
+                            .equals(kafkaMetricId))
+                .findFirst()
                 .map(RegisteredObservable::getInstrumentDescriptor);
         // Append table row
         sb.append(
@@ -414,7 +417,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
 
   public static class TestMetricsReporter implements MetricsReporter {
 
-    private static final Map<KafkaMetricId, KafkaMetric> seenMetrics = new ConcurrentHashMap<>();
+    private static final Set<KafkaMetricId> seenMetrics = new HashSet<>();
 
     @Override
     public void init(List<KafkaMetric> list) {
@@ -423,7 +426,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
 
     @Override
     public void metricChange(KafkaMetric kafkaMetric) {
-      seenMetrics.put(KafkaMetricId.create(kafkaMetric), kafkaMetric);
+      seenMetrics.add(KafkaMetricId.create(kafkaMetric.metricName()));
     }
 
     @Override
@@ -434,5 +437,20 @@ abstract class OpenTelemetryKafkaMetricsTest {
 
     @Override
     public void configure(Map<String, ?> map) {}
+  }
+
+  @AutoValue
+  abstract static class KafkaMetricId {
+
+    abstract String getGroup();
+
+    abstract String getName();
+
+    abstract Set<String> getAttributeKeys();
+
+    static KafkaMetricId create(MetricName metricName) {
+      return new AutoValue_OpenTelemetryKafkaMetricsTest_KafkaMetricId(
+          metricName.group(), metricName.name(), metricName.tags().keySet());
+    }
   }
 }
