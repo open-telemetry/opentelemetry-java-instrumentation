@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.runtimemetrics.Threads;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.Locale;
 
 /** An {@link AgentListener} that enables runtime metrics during agent startup. */
 @AutoService(AgentListener.class)
@@ -25,8 +26,10 @@ public class RuntimeMetricsInstaller implements AgentListener {
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     ConfigProperties config = autoConfiguredSdk.getConfig();
 
-    boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
-    if (!config.getBoolean("otel.instrumentation.runtime-metrics.enabled", defaultEnabled)) {
+    boolean defaultEnabled =
+        config.getBoolean(normalize("otel.instrumentation.common.default-enabled"), true);
+    if (!config.getBoolean(
+        normalize("otel.instrumentation.runtime-metrics.enabled"), defaultEnabled)) {
       return;
     }
 
@@ -36,9 +39,13 @@ public class RuntimeMetricsInstaller implements AgentListener {
     Threads.registerObservers(GlobalOpenTelemetry.get());
 
     if (config.getBoolean(
-        "otel.instrumentation.runtime-metrics.experimental-metrics.enabled", false)) {
+        normalize("otel.instrumentation.runtime-metrics.experimental-metrics.enabled"), false)) {
       GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
       BufferPools.registerObservers(GlobalOpenTelemetry.get());
     }
+  }
+
+  private static String normalize(String key) {
+    return key.toLowerCase(Locale.ROOT).replace('-', '.');
   }
 }
