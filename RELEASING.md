@@ -51,3 +51,7 @@ and deadlocks.
   * Review and merge the pull request that it creates for updating the change log in main
     (note that if this is not a patch release then the change log on main may already be up-to-date,
     in which case no pull request will be created).
+
+## Credentials
+
+Same as the core repo, see [opentelemetry-java/RELEASING.md#credentials](https://github.com/open-telemetry/opentelemetry-java/blob/main/RELEASING.md#credentials).
