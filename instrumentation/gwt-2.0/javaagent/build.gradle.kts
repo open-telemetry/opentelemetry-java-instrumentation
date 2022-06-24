@@ -11,7 +11,7 @@ muzzle {
   }
   // GWT changed group name in 2.10.0
   pass {
-    group.set("org.gwptoject")
+    group.set("org.gwtproject")
     module.set("gwt-servlet")
     versions.set("[2.10.0,)")
     assertInverse.set(true)
