@@ -9,6 +9,13 @@ muzzle {
     versions.set("[2.0.0,)")
     assertInverse.set(true)
   }
+  // GWT changed group name in 2.10.0
+  pass {
+    group.set("org.gwptoject")
+    module.set("gwt-servlet")
+    versions.set("[2.10.0,)")
+    assertInverse.set(true)
+  }
 }
 
 sourceSets {
@@ -26,14 +33,16 @@ sourceSets {
 dependencies {
   // these are needed for compileGwt task
   if (findProperty("testLatestDeps") as Boolean) {
-    compileOnly("com.google.gwt:gwt-user:+")
-    compileOnly("com.google.gwt:gwt-dev:+")
+    compileOnly("org.gwtproject:gwt-user:+")
+    compileOnly("org.gwtproject:gwt-dev:+")
+    compileOnly("org.gwtproject:gwt-servlet:+")
+    testImplementation("org.gwtproject:gwt-servlet:+")
   } else {
     compileOnly("com.google.gwt:gwt-user:2.0.0")
     compileOnly("com.google.gwt:gwt-dev:2.0.0")
+    compileOnly("com.google.gwt:gwt-servlet:2.0.0")
+    testImplementation("com.google.gwt:gwt-servlet:2.0.0")
   }
-
-  library("com.google.gwt:gwt-servlet:2.0.0")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
