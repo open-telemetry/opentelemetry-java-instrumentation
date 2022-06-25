@@ -29,8 +29,7 @@ public class DemoAutoConfigurationCustomizerProvider
 
   @Override
   public void customize(AutoConfigurationCustomizer autoConfiguration) {
-    autoConfiguration.addTracerProviderCustomizer(this::configureSdkTracerProvider)
-        .addSamplerCustomizer((sampler, config) -> new DemoSampler(sampler));
+    autoConfiguration.addTracerProviderCustomizer(this::configureSdkTracerProvider);
   }
 
   private SdkTracerProviderBuilder configureSdkTracerProvider(

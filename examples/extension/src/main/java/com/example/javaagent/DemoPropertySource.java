@@ -25,6 +25,7 @@ public class DemoPropertySource implements ConfigPropertySource {
     properties.put("otel.exporter.otlp.endpoint", "http://backend:8080");
     properties.put("otel.exporter.otlp.insecure", "true");
     properties.put("otel.config.max.attrs", "16");
+    properties.put("otel.traces.sampler", "demo");
     return properties;
   }
 }
