@@ -38,7 +38,6 @@ public class DemoAutoConfigurationCustomizerProvider
     return tracerProvider
         .setIdGenerator(new DemoIdGenerator())
         .setSpanLimits(SpanLimits.builder().setMaxNumberOfAttributes(1024).build())
-        .setSampler(new DemoSampler())
         .addSpanProcessor(new DemoSpanProcessor())
         .addSpanProcessor(SimpleSpanProcessor.create(new DemoSpanExporter()));
   }
