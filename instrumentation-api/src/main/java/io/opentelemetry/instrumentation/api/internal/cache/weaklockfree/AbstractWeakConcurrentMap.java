@@ -57,7 +57,9 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
     this(new ConcurrentHashMap<>());
   }
 
-  /** @param target ConcurrentMap implementation that this class wraps. */
+  /**
+   * @param target ConcurrentMap implementation that this class wraps.
+   */
   protected AbstractWeakConcurrentMap(ConcurrentMap<WeakKey<K>, V> target) {
     this.target = target;
   }
