@@ -97,8 +97,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
                             .withPortBindings(
                                 new PortBinding(
                                     new Ports.Binding(null, null), ExposedPort.tcp(BACKEND_PORT)))),
-            containerId -> {
-            },
+            containerId -> {},
             new HttpWaiter(BACKEND_PORT, "/health", Duration.ofSeconds(60)),
             /* inspect= */ true,
             backendLogger);
@@ -321,9 +320,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     public final InspectContainerResponse inspectResponse;
 
     private Container(
-        String imageName,
-        String containerId,
-        InspectContainerResponse inspectResponse) {
+        String imageName, String containerId, InspectContainerResponse inspectResponse) {
       this.imageName = imageName;
       this.containerId = containerId;
       this.inspectResponse = inspectResponse;
