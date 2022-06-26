@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+@SuppressWarnings("unused")
 public class DeclaredFieldTestClass {
   public static class Advice {
     public void instrument() {

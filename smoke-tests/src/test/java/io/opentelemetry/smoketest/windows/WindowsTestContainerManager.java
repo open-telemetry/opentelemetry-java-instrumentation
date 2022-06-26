@@ -97,7 +97,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
                             .withPortBindings(
                                 new PortBinding(
                                     new Ports.Binding(null, null), ExposedPort.tcp(BACKEND_PORT)))),
-            containerId -> {},
+            containerId -> {
+            },
             new HttpWaiter(BACKEND_PORT, "/health", Duration.ofSeconds(60)),
             /* inspect= */ true,
             backendLogger);
@@ -244,7 +245,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     }
   }
 
-  private ContainerLogHandler consumeLogs(String containerId, Waiter waiter, Logger logger) {
+  private void registerLogListener(String containerId, Waiter waiter, Logger logger) {
     ContainerLogFrameConsumer consumer = new ContainerLogFrameConsumer();
     waiter.configureLogger(consumer);
 
@@ -257,7 +258,6 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
         .exec(consumer);
 
     consumer.addListener(new Slf4jDockerLogLineListener(logger));
-    return consumer;
   }
 
   private static int extractMappedPort(Container container, int internalPort) {
@@ -295,11 +295,11 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     prepareAction.accept(containerId);
 
     client.startContainerCmd(containerId).exec();
-    ContainerLogHandler logHandler = consumeLogs(containerId, waiter, logger);
+    registerLogListener(containerId, waiter, logger);
 
     InspectContainerResponse inspectResponse =
         inspect ? client.inspectContainerCmd(containerId).exec() : null;
-    Container container = new Container(imageName, containerId, logHandler, inspectResponse);
+    Container container = new Container(imageName, containerId, inspectResponse);
 
     waiter.waitFor(container);
     return container;
@@ -318,17 +318,14 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   private static class Container {
     public final String imageName;
     public final String containerId;
-    public final ContainerLogHandler logConsumer;
     public final InspectContainerResponse inspectResponse;
 
     private Container(
         String imageName,
         String containerId,
-        ContainerLogHandler logConsumer,
         InspectContainerResponse inspectResponse) {
       this.imageName = imageName;
       this.containerId = containerId;
-      this.logConsumer = logConsumer;
       this.inspectResponse = inspectResponse;
     }
   }

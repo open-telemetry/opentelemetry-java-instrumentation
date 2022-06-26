@@ -169,7 +169,7 @@ public class HelperInjector implements Transformer {
       ClassLoader classLoader,
       JavaModule module) {
     if (!helperClassNames.isEmpty()) {
-      injectHelperClasses(typeDescription, classLoader, module);
+      injectHelperClasses(typeDescription, classLoader);
     }
 
     if (classLoader != null && helpersSource != null && !helperResources.isEmpty()) {
@@ -226,8 +226,7 @@ public class HelperInjector implements Transformer {
         });
   }
 
-  private void injectHelperClasses(
-      TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
+  private void injectHelperClasses(TypeDescription typeDescription, ClassLoader classLoader) {
     classLoader = maskNullClassLoader(classLoader);
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
       logger.log(

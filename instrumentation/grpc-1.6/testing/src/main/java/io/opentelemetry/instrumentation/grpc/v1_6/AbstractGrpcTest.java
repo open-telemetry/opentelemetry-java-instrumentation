@@ -283,7 +283,8 @@ public abstract class AbstractGrpcTest {
                   Futures.transform(
                       client.sayHello(Helloworld.Request.newBuilder().setName("test").build()),
                       resp -> {
-                        testing().runWithSpan("child", () -> {});
+                        testing().runWithSpan("child", () -> {
+                        });
                         return resp;
                       },
                       MoreExecutors.directExecutor());
@@ -484,7 +485,8 @@ public abstract class AbstractGrpcTest {
 
                       @Override
                       public void onCompleted() {
-                        testing().runWithSpan("child", () -> {});
+                        testing().runWithSpan("child", () -> {
+                        });
                         latch.countDown();
                       }
                     }));
@@ -657,7 +659,7 @@ public abstract class AbstractGrpcTest {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
     assertThatThrownBy(
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("error").build()))
+        () -> client.sayHello(Helloworld.Request.newBuilder().setName("error").build()))
         .isInstanceOfSatisfying(
             StatusRuntimeException.class,
             t -> {
@@ -811,7 +813,7 @@ public abstract class AbstractGrpcTest {
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
     assertThatThrownBy(
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("error").build()))
+        () -> client.sayHello(Helloworld.Request.newBuilder().setName("error").build()))
         .isInstanceOfSatisfying(
             StatusRuntimeException.class,
             t -> {
@@ -986,24 +988,24 @@ public abstract class AbstractGrpcTest {
         };
     Server server =
         configureServer(
-                ServerBuilder.forPort(0)
-                    .addService(greeter)
-                    .intercept(
-                        new ServerInterceptor() {
-                          @Override
-                          public <REQ, RESP> ServerCall.Listener<REQ> interceptCall(
-                              ServerCall<REQ, RESP> call,
-                              Metadata headers,
-                              ServerCallHandler<REQ, RESP> next) {
-                            if (!Span.fromContext(io.opentelemetry.context.Context.current())
-                                .getSpanContext()
-                                .isValid()) {
-                              throw new AssertionError("span not attached in server interceptor");
-                            }
-                            Context ctx = Context.current().withValue(key, "meow");
-                            return Contexts.interceptCall(ctx, call, headers, next);
-                          }
-                        }))
+            ServerBuilder.forPort(0)
+                .addService(greeter)
+                .intercept(
+                    new ServerInterceptor() {
+                      @Override
+                      public <REQ, RESP> ServerCall.Listener<REQ> interceptCall(
+                          ServerCall<REQ, RESP> call,
+                          Metadata headers,
+                          ServerCallHandler<REQ, RESP> next) {
+                        if (!Span.fromContext(io.opentelemetry.context.Context.current())
+                            .getSpanContext()
+                            .isValid()) {
+                          throw new AssertionError("span not attached in server interceptor");
+                        }
+                        Context ctx = Context.current().withValue(key, "meow");
+                        return Contexts.interceptCall(ctx, call, headers, next);
+                      }
+                    }))
             .build()
             .start();
     ManagedChannel channel =
@@ -1192,7 +1194,6 @@ public abstract class AbstractGrpcTest {
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
 
     IllegalStateException thrown = new IllegalStateException("illegal");
-    AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
     testing()
@@ -1215,7 +1216,8 @@ public abstract class AbstractGrpcTest {
 
                       @Override
                       public void onCompleted() {
-                        testing().runWithSpan("child", () -> {});
+                        testing().runWithSpan("child", () -> {
+                        });
                         latch.countDown();
                       }
                     }));
@@ -1609,20 +1611,20 @@ public abstract class AbstractGrpcTest {
   void clientCallAfterServerCompleted() throws Exception {
     Server backend =
         configureServer(
-                ServerBuilder.forPort(0)
-                    .addService(
-                        new GreeterGrpc.GreeterImplBase() {
-                          @Override
-                          public void sayHello(
-                              Helloworld.Request request,
-                              StreamObserver<Helloworld.Response> responseObserver) {
-                            responseObserver.onNext(
-                                Helloworld.Response.newBuilder()
-                                    .setMessage(request.getName())
-                                    .build());
-                            responseObserver.onCompleted();
-                          }
-                        }))
+            ServerBuilder.forPort(0)
+                .addService(
+                    new GreeterGrpc.GreeterImplBase() {
+                      @Override
+                      public void sayHello(
+                          Helloworld.Request request,
+                          StreamObserver<Helloworld.Response> responseObserver) {
+                        responseObserver.onNext(
+                            Helloworld.Response.newBuilder()
+                                .setMessage(request.getName())
+                                .build());
+                        responseObserver.onCompleted();
+                      }
+                    }))
             .build()
             .start();
     ManagedChannel backendChannel = createChannel(backend);
@@ -1639,30 +1641,30 @@ public abstract class AbstractGrpcTest {
 
     Server frontend =
         configureServer(
-                ServerBuilder.forPort(0)
-                    .addService(
-                        new GreeterGrpc.GreeterImplBase() {
-                          @Override
-                          public void sayHello(
-                              Helloworld.Request request,
-                              StreamObserver<Helloworld.Response> responseObserver) {
-                            responseObserver.onNext(
-                                Helloworld.Response.newBuilder()
-                                    .setMessage(request.getName())
-                                    .build());
-                            responseObserver.onCompleted();
+            ServerBuilder.forPort(0)
+                .addService(
+                    new GreeterGrpc.GreeterImplBase() {
+                      @Override
+                      public void sayHello(
+                          Helloworld.Request request,
+                          StreamObserver<Helloworld.Response> responseObserver) {
+                        responseObserver.onNext(
+                            Helloworld.Response.newBuilder()
+                                .setMessage(request.getName())
+                                .build());
+                        responseObserver.onCompleted();
 
-                            executor.execute(
-                                () -> {
-                                  try {
-                                    backendStub.sayHello(request);
-                                  } catch (Throwable t) {
-                                    error.set(t);
-                                  }
-                                  clientCallDone.countDown();
-                                });
-                          }
-                        }))
+                        executor.execute(
+                            () -> {
+                              try {
+                                backendStub.sayHello(request);
+                              } catch (Throwable t) {
+                                error.set(t);
+                              }
+                              clientCallDone.countDown();
+                            });
+                      }
+                    }))
             .build()
             .start();
     ManagedChannel frontendChannel = createChannel(frontend);

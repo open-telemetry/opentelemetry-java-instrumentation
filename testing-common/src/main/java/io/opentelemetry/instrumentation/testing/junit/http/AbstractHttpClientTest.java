@@ -315,7 +315,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
     testing.waitAndAssertTraces(
         trace -> {
-          List<List<SpanData>> traces = testing.traces();
           trace.hasSpansSatisfyingExactly(
               span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));

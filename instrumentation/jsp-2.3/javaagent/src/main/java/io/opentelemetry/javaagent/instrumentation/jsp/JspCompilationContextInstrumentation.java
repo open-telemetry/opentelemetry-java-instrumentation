@@ -34,6 +34,7 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
         JspCompilationContextInstrumentation.class.getName() + "$JasperJspCompilationContext");
   }
 
+  @SuppressWarnings("unused")
   public static class JasperJspCompilationContext {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
