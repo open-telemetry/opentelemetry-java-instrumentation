@@ -108,7 +108,6 @@ tasks {
         disable("DoNotCallSuggester")
 
         if (name.contains("Jmh") || name.contains("Test")) {
-          disable("HashCodeToString")
           disable("MemberName")
         }
       }

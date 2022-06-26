@@ -52,7 +52,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "com.google.errorprone",
-    "2.12.1",
+    "2.14.0",
     listOf("error_prone_annotations", "error_prone_core", "error_prone_test_helpers")
   ),
   DependencySet(
