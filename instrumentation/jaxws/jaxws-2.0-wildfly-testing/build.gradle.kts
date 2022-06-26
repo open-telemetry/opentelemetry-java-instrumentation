@@ -22,7 +22,10 @@ dependencies {
 tasks {
   // extract wildfly dist, path is used from arquillian.xml
   val setupServer by registering(Copy::class) {
-    from(zipTree(testServer.singleFile))
+    inputs.files(testServer)
+    from({
+      zipTree(testServer.singleFile)
+    })
     into(file("build/server/"))
   }
 
