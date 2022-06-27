@@ -10,9 +10,10 @@ import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses.Helper;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings("ClassNamedLikeTypeParameter")
+@SuppressWarnings("unused")
 public class TestClasses {
 
+  @SuppressWarnings("ClassNamedLikeTypeParameter")
   public static class MethodBodyAdvice {
     @SuppressWarnings("ReturnValueIgnored")
     @Advice.OnMethodEnter
@@ -46,7 +47,7 @@ public class TestClasses {
         return s;
       }
 
-      @SuppressWarnings({"UnusedMethod", "MethodCanBeStatic"})
+      @SuppressWarnings("MethodCanBeStatic")
       private void privateStuff() {}
 
       protected void protectedMethod() {}

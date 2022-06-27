@@ -86,10 +86,6 @@ tasks {
         disable("JdkObsolete")
         disable("JavaUtilDate")
 
-        // Storing into a variable in onEnter triggers this unfortunately.
-        // TODO(anuraaga): Only disable for auto instrumentation project.
-        disable("UnusedVariable")
-
         // TODO(anuraaga): Remove this, we use this pattern in several tests and it will mean
         // some moving.
         disable("DefaultPackage")

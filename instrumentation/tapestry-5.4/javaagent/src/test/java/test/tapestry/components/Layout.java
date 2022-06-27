@@ -11,6 +11,7 @@ import org.apache.tapestry5.annotations.Parameter;
 import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
+@SuppressWarnings("unused")
 public class Layout {
   @Inject private ComponentResources resources;
 

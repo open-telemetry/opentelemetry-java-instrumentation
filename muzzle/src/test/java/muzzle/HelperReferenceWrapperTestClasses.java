@@ -5,7 +5,7 @@
 
 package muzzle;
 
-@SuppressWarnings({"UnusedMethod", "MethodCanBeStatic"})
+@SuppressWarnings("unused")
 public class HelperReferenceWrapperTestClasses {
   interface Interface1 {
     void foo();
@@ -21,6 +21,7 @@ public class HelperReferenceWrapperTestClasses {
 
     static void staticMethodsAreIgnored() {}
 
+    @SuppressWarnings("MethodCanBeStatic")
     private void privateMethodsToo() {}
   }
 }

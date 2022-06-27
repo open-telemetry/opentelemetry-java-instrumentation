@@ -1192,7 +1192,6 @@ public abstract class AbstractGrpcTest {
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
 
     IllegalStateException thrown = new IllegalStateException("illegal");
-    AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
     testing()

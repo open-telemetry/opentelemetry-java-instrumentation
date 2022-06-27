@@ -76,7 +76,6 @@ public enum JdbcConnectionUrlParser {
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       String serverName = "";
-      Integer port = null;
 
       int hostIndex = jdbcUrl.indexOf("jtds:sqlserver://");
       if (hostIndex < 0) {

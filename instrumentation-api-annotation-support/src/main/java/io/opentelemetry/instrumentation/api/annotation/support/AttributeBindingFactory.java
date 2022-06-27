@@ -134,11 +134,11 @@ class AttributeBindingFactory {
     }
     if (componentType == Integer.class) {
       AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
-      return mappedListBinding(Integer.class, key, Integer::longValue);
+      return mappedListBinding(key, Integer::longValue);
     }
     if (componentType == Float.class) {
       AttributeKey<List<Double>> key = AttributeKey.doubleArrayKey(name);
-      return mappedListBinding(Float.class, key, Float::doubleValue);
+      return mappedListBinding(key, Float::doubleValue);
     }
 
     return defaultListBinding(name);
@@ -308,7 +308,7 @@ class AttributeBindingFactory {
   }
 
   private static <T, U> AttributeBinding mappedListBinding(
-      Class<T> fromClass, AttributeKey<List<U>> key, Function<T, U> mapping) {
+      AttributeKey<List<U>> key, Function<T, U> mapping) {
     return (setter, arg) -> {
       @SuppressWarnings("unchecked")
       List<T> list = (List<T>) arg;
@@ -331,7 +331,7 @@ class AttributeBindingFactory {
 
   private static AttributeBinding defaultListBinding(String name) {
     AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
-    return mappedListBinding(Object.class, key, Object::toString);
+    return mappedListBinding(key, Object::toString);
   }
 
   private static AttributeBinding defaultBinding(String name) {
