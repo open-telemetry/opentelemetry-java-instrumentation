@@ -48,17 +48,21 @@ class HttpServerMetricsTest {
             .put("http.status_code", 200)
             .build();
 
-    Context parent =
-        Context.root()
-            .with(
-                Span.wrap(
-                    SpanContext.create(
-                        "ff01020304050600ff0a0b0c0d0e0f00",
-                        "090a0b0c0d0e0f00",
-                        TraceFlags.getSampled(),
-                        TraceState.getDefault())));
+    SpanContext spanContext1 =
+        SpanContext.create(
+            "ff01020304050600ff0a0b0c0d0e0f00",
+            "090a0b0c0d0e0f00",
+            TraceFlags.getSampled(),
+            TraceState.getDefault());
+    SpanContext spanContext2 =
+        SpanContext.create(
+            "123456789abcdef00000000000999999",
+            "abcde00000054321",
+            TraceFlags.getSampled(),
+            TraceState.getDefault());
 
-    Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
+    Context parent1 = Context.root().with(Span.wrap(spanContext1));
+    Context context1 = listener.onStart(parent1, requestAttributes, nanos(100));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -81,10 +85,11 @@ class HttpServerMetricsTest {
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))));
+                                                    .hasTraceId(spanContext1.getTraceId())
+                                                    .hasSpanId(spanContext1.getSpanId())))));
 
-    Context context2 = listener.onStart(Context.root(), requestAttributes, nanos(150));
+    Context parent2 = Context.root().with(Span.wrap(spanContext2));
+    Context context2 = listener.onStart(parent2, requestAttributes, nanos(150));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -92,7 +97,20 @@ class HttpServerMetricsTest {
                 assertThat(metric)
                     .hasName("http.server.active_requests")
                     .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(2)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.HTTP_HOST, "host"),
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId(spanContext2.getTraceId())
+                                                    .hasSpanId(spanContext2.getSpanId())))));
 
     listener.onEnd(context1, responseAttributes, nanos(250));
 
@@ -102,7 +120,20 @@ class HttpServerMetricsTest {
                 assertThat(metric)
                     .hasName("http.server.active_requests")
                     .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))),
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.HTTP_HOST, "host"),
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId(spanContext1.getTraceId())
+                                                    .hasSpanId(spanContext1.getSpanId())))),
             metric ->
                 assertThat(metric)
                     .hasName("http.server.duration")
@@ -122,8 +153,8 @@ class HttpServerMetricsTest {
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))));
+                                                    .hasTraceId(spanContext1.getTraceId())
+                                                    .hasSpanId(spanContext1.getSpanId())))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -140,7 +171,14 @@ class HttpServerMetricsTest {
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
-                                point -> point.hasSum(300 /* millis */))));
+                                point ->
+                                    point
+                                        .hasSum(300 /* millis */)
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId(spanContext2.getTraceId())
+                                                    .hasSpanId(spanContext2.getSpanId())))));
   }
 
   @Test
