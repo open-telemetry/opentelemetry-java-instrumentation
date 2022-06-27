@@ -24,8 +24,7 @@ public final class TomcatInstrumenterFactory {
   private TomcatInstrumenterFactory() {}
 
   public static <REQUEST, RESPONSE> Instrumenter<Request, Response> create(
-      String instrumentationName,
-      ServletAccessor<REQUEST, RESPONSE> accessor) {
+      String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
     TomcatHttpAttributesGetter httpAttributesGetter = new TomcatHttpAttributesGetter();
     TomcatNetAttributesGetter netAttributesGetter = new TomcatNetAttributesGetter();
 
