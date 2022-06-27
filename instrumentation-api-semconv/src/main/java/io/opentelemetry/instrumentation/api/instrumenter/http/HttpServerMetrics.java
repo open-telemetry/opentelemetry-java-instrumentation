@@ -82,7 +82,7 @@ public final class HttpServerMetrics implements OperationListener {
           context);
       return;
     }
-    activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()));
+    activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()), context);
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
         applyServerDurationView(state.startAttributes(), endAttributes),
