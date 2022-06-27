@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class ContextSpanProcessorInvoker {
+public final class ContextSpanProcessorInvoker {
   private static final Method onStartMethod = getMethod();
 
   private static Method getMethod() {
@@ -35,5 +35,7 @@ public class ContextSpanProcessorInvoker {
     } catch (Exception exception) {
       throw new IllegalStateException(exception);
     }
+
+    private ContextSpanProcessorInvoker() {}
   }
 }
