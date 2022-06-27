@@ -17,6 +17,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.security.Principal;
 import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
@@ -92,15 +94,11 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture servlet request parameters as span attributes when SERVER span is not create by servlet
+   * Capture servlet specific span attributes when SERVER span is not create by servlet
    * instrumentation.
-   *
-   * <p>When SERVER span is created by servlet instrumentation we register {@link
-   * ServletRequestParametersExtractor} as an attribute extractor. When SERVER span is not created
-   * by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
   public void captureServletAttributes(Context context, REQUEST request) {
-    if (parameterExtractor == null || !AppServerBridge.captureServletAttributes(context)) {
+    if (!AppServerBridge.captureServletAttributes(context)) {
       return;
     }
     Span serverSpan = LocalRootSpan.fromContextOrNull(context);
@@ -108,7 +106,42 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       return;
     }
 
+    captureRequestParameters(serverSpan, request);
+    captureEnduserId(serverSpan, request);
+  }
+
+  /**
+   * Capture servlet request parameters as span attributes when SERVER span is not create by servlet
+   * instrumentation.
+   *
+   * <p>When SERVER span is created by servlet instrumentation we register {@link
+   * ServletRequestParametersExtractor} as an attribute extractor. When SERVER span is not created
+   * by servlet instrumentation we call this method on exit from the last servlet or filter.
+   */
+  private void captureRequestParameters(Span serverSpan, REQUEST request) {
+    if (parameterExtractor == null) {
+      return;
+    }
+
     parameterExtractor.setAttributes(request, (key, value) -> serverSpan.setAttribute(key, value));
+  }
+
+  /**
+   * Capture {@link SemanticAttributes#ENDUSER_ID} as span attributes when SERVER span is not create
+   * by servlet instrumentation.
+   *
+   * <p>When SERVER span is created by servlet instrumentation we register {@link
+   * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
+   * created by servlet instrumentation we call this method on exit from the last servlet or filter.
+   */
+  private void captureEnduserId(Span serverSpan, REQUEST request) {
+    Principal principal = accessor.getRequestUserPrincipal(request);
+    if (principal != null) {
+      String name = principal.getName();
+      if (name != null) {
+        serverSpan.setAttribute(SemanticAttributes.ENDUSER_ID, name);
+      }
+    }
   }
 
   /*
