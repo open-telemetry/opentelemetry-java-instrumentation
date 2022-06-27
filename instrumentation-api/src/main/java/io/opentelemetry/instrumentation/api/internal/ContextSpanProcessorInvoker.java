@@ -35,7 +35,7 @@ public final class ContextSpanProcessorInvoker {
     } catch (Exception exception) {
       throw new IllegalStateException(exception);
     }
-
-    private ContextSpanProcessorInvoker() {}
   }
+
+  private ContextSpanProcessorInvoker() {}
 }
