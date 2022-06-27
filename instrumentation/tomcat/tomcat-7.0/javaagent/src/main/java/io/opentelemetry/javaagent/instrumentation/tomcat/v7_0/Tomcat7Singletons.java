@@ -18,8 +18,7 @@ import org.apache.coyote.Response;
 public final class Tomcat7Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-7.0";
   private static final Instrumenter<Request, Response> INSTRUMENTER =
-      TomcatInstrumenterFactory.create(
-          INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
+      TomcatInstrumenterFactory.create(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
   private static final TomcatHelper<HttpServletRequest, HttpServletResponse> HELPER =
       new TomcatHelper<>(
           INSTRUMENTER, Tomcat7ServletEntityProvider.INSTANCE, Servlet3Singletons.helper());
