@@ -10,13 +10,14 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
-import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import java.util.function.LongSupplier;
 
 /**
  * A helper class that models the <a
@@ -54,64 +55,53 @@ public final class DbConnectionPoolMetrics {
     idleConnectionsAttributes = attributes.toBuilder().put(CONNECTION_STATE, STATE_IDLE).build();
   }
 
-  public ObservableLongUpDownCounter usedConnections(LongSupplier usedConnectionsGetter) {
+  public ObservableLongMeasurement connections() {
     return meter
         .upDownCounterBuilder("db.client.connections.usage")
         .setUnit("connections")
         .setDescription(
             "The number of connections that are currently in state described by the state attribute.")
-        .buildWithCallback(
-            measurement ->
-                measurement.record(usedConnectionsGetter.getAsLong(), usedConnectionsAttributes));
+        .buildObserver();
   }
 
-  public ObservableLongUpDownCounter idleConnections(LongSupplier idleConnectionsGetter) {
-    return meter
-        .upDownCounterBuilder("db.client.connections.usage")
-        .setUnit("connections")
-        .setDescription(
-            "The number of connections that are currently in state described by the state attribute.")
-        .buildWithCallback(
-            measurement ->
-                measurement.record(idleConnectionsGetter.getAsLong(), idleConnectionsAttributes));
-  }
-
-  public ObservableLongUpDownCounter minIdleConnections(LongSupplier minIdleConnectionsGetter) {
+  public ObservableLongMeasurement minIdleConnections() {
     return meter
         .upDownCounterBuilder("db.client.connections.idle.min")
         .setUnit("connections")
         .setDescription("The minimum number of idle open connections allowed.")
-        .buildWithCallback(
-            measurement -> measurement.record(minIdleConnectionsGetter.getAsLong(), attributes));
+        .buildObserver();
   }
 
-  public ObservableLongUpDownCounter maxIdleConnections(LongSupplier maxIdleConnectionsGetter) {
+  public ObservableLongMeasurement maxIdleConnections() {
     return meter
         .upDownCounterBuilder("db.client.connections.idle.max")
         .setUnit("connections")
         .setDescription("The maximum number of idle open connections allowed.")
-        .buildWithCallback(
-            measurement -> measurement.record(maxIdleConnectionsGetter.getAsLong(), attributes));
+        .buildObserver();
   }
 
-  public ObservableLongUpDownCounter maxConnections(LongSupplier maxConnectionsGetter) {
+  public ObservableLongMeasurement maxConnections() {
     return meter
         .upDownCounterBuilder("db.client.connections.max")
         .setUnit("connections")
         .setDescription("The maximum number of open connections allowed.")
-        .buildWithCallback(
-            measurement -> measurement.record(maxConnectionsGetter.getAsLong(), attributes));
+        .buildObserver();
   }
 
-  public ObservableLongUpDownCounter pendingRequestsForConnection(
-      LongSupplier pendingRequestsGetter) {
+  public ObservableLongMeasurement pendingRequestsForConnection() {
     return meter
         .upDownCounterBuilder("db.client.connections.pending_requests")
         .setUnit("requests")
         .setDescription(
             "The number of pending requests for an open connection, cumulative for the entire pool.")
-        .buildWithCallback(
-            measurement -> measurement.record(pendingRequestsGetter.getAsLong(), attributes));
+        .buildObserver();
+  }
+
+  public BatchCallback batchCallback(
+      Runnable callback,
+      ObservableMeasurement observableMeasurement,
+      ObservableMeasurement... additionalMeasurements) {
+    return meter.batchCallback(callback, observableMeasurement, additionalMeasurements);
   }
 
   // TODO: should be a BoundLongCounter
@@ -151,8 +141,15 @@ public final class DbConnectionPoolMetrics {
         .build();
   }
 
-  // TODO: should be removed once bound instruments are back
   public Attributes getAttributes() {
     return attributes;
+  }
+
+  public Attributes getUsedConnectionsAttributes() {
+    return usedConnectionsAttributes;
+  }
+
+  public Attributes getIdleConnectionsAttributes() {
+    return idleConnectionsAttributes;
   }
 }

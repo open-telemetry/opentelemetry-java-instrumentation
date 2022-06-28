@@ -7,38 +7,42 @@ package io.opentelemetry.instrumentation.c3p0;
 
 import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.BatchCallback;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.metrics.db.DbConnectionPoolMetrics;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.LongSupplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class ConnectionPoolMetrics {
+
+  private static final Logger logger = Logger.getLogger(ConnectionPoolMetrics.class.getName());
+
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.c3p0-0.9";
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // PooledDataSource implements equals() & hashCode() in IdentityTokenResolvable,
   // that's why we wrap it with IdentityDataSourceKey that uses identity comparison instead
-  private static final Map<IdentityDataSourceKey, List<ObservableLongUpDownCounter>>
-      dataSourceMetrics = new ConcurrentHashMap<>();
+  private static final Map<IdentityDataSourceKey, BatchCallback> dataSourceMetrics =
+      new ConcurrentHashMap<>();
 
   public static void registerMetrics(OpenTelemetry openTelemetry, PooledDataSource dataSource) {
     dataSourceMetrics.compute(
         new IdentityDataSourceKey(dataSource),
-        (key, existingCounters) ->
-            ConnectionPoolMetrics.createMeters(openTelemetry, key, existingCounters));
+        (key, existingCallback) ->
+            ConnectionPoolMetrics.createMeters(openTelemetry, key, existingCallback));
   }
 
-  private static List<ObservableLongUpDownCounter> createMeters(
+  private static BatchCallback createMeters(
       OpenTelemetry openTelemetry,
       IdentityDataSourceKey key,
-      List<ObservableLongUpDownCounter> existingCounters) {
+      @Nullable BatchCallback existingCallback) {
     // remove old counters from the registry in case they were already there
-    removeMetersFromRegistry(existingCounters);
+    removeMetersFromRegistry(existingCallback);
 
     PooledDataSource dataSource = key.dataSource;
 
@@ -46,25 +50,38 @@ final class ConnectionPoolMetrics {
         DbConnectionPoolMetrics.create(
             openTelemetry, INSTRUMENTATION_NAME, dataSource.getDataSourceName());
 
-    return Arrays.asList(
-        metrics.usedConnections(wrapThrowingSupplier(dataSource::getNumBusyConnectionsDefaultUser)),
-        metrics.idleConnections(wrapThrowingSupplier(dataSource::getNumIdleConnectionsDefaultUser)),
-        metrics.pendingRequestsForConnection(
-            wrapThrowingSupplier(dataSource::getNumThreadsAwaitingCheckoutDefaultUser)));
+    ObservableLongMeasurement connections = metrics.connections();
+    ObservableLongMeasurement pendingRequestsForConnection = metrics.pendingRequestsForConnection();
+
+    Attributes attributes = metrics.getAttributes();
+    Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
+    Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
+
+    return metrics.batchCallback(
+        () -> {
+          try {
+            connections.record(
+                dataSource.getNumBusyConnectionsDefaultUser(), usedConnectionsAttributes);
+            connections.record(
+                dataSource.getNumIdleConnectionsDefaultUser(), idleConnectionsAttributes);
+            pendingRequestsForConnection.record(
+                dataSource.getNumThreadsAwaitingCheckoutDefaultUser(), attributes);
+          } catch (SQLException e) {
+            logger.log(Level.FINE, "Failed to get C3P0 datasource metric", e);
+          }
+        },
+        connections,
+        pendingRequestsForConnection);
   }
 
   public static void unregisterMetrics(PooledDataSource dataSource) {
-    List<ObservableLongUpDownCounter> meters =
-        dataSourceMetrics.remove(new IdentityDataSourceKey(dataSource));
-    removeMetersFromRegistry(meters);
+    BatchCallback callback = dataSourceMetrics.remove(new IdentityDataSourceKey(dataSource));
+    removeMetersFromRegistry(callback);
   }
 
-  private static void removeMetersFromRegistry(
-      @Nullable List<ObservableLongUpDownCounter> observableInstruments) {
-    if (observableInstruments != null) {
-      for (ObservableLongUpDownCounter observable : observableInstruments) {
-        observable.close();
-      }
+  private static void removeMetersFromRegistry(@Nullable BatchCallback callback) {
+    if (callback != null) {
+      callback.close();
     }
   }
 
@@ -101,21 +118,6 @@ final class ConnectionPoolMetrics {
     public String toString() {
       return dataSource.toString();
     }
-  }
-
-  static LongSupplier wrapThrowingSupplier(DataSourceIntSupplier supplier) {
-    return () -> {
-      try {
-        return supplier.getAsInt();
-      } catch (SQLException e) {
-        throw new IllegalStateException("Failed to get C3P0 datasource metric", e);
-      }
-    };
-  }
-
-  @FunctionalInterface
-  interface DataSourceIntSupplier {
-    int getAsInt() throws SQLException;
   }
 
   private ConnectionPoolMetrics() {}

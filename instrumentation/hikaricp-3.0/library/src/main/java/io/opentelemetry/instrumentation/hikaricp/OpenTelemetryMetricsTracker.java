@@ -7,10 +7,9 @@ package io.opentelemetry.instrumentation.hikaricp;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 final class OpenTelemetryMetricsTracker implements IMetricsTracker {
@@ -19,7 +18,7 @@ final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   private final IMetricsTracker userMetricsTracker;
 
-  private final List<ObservableLongUpDownCounter> observableInstruments;
+  private final BatchCallback callback;
   private final LongCounter timeouts;
   private final DoubleHistogram createTime;
   private final DoubleHistogram waitTime;
@@ -28,14 +27,14 @@ final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   OpenTelemetryMetricsTracker(
       IMetricsTracker userMetricsTracker,
-      List<ObservableLongUpDownCounter> observableInstruments,
+      BatchCallback callback,
       LongCounter timeouts,
       DoubleHistogram createTime,
       DoubleHistogram waitTime,
       DoubleHistogram useTime,
       Attributes attributes) {
     this.userMetricsTracker = userMetricsTracker;
-    this.observableInstruments = observableInstruments;
+    this.callback = callback;
     this.timeouts = timeouts;
     this.createTime = createTime;
     this.waitTime = waitTime;
@@ -70,9 +69,7 @@ final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   @Override
   public void close() {
-    for (ObservableLongUpDownCounter observable : observableInstruments) {
-      observable.close();
-    }
+    callback.close();
     userMetricsTracker.close();
   }
 }
