@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.metrics.Meter;
@@ -16,15 +17,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
 /**
  * A {@link MetricsReporter} which bridges Kafka metrics to OpenTelemetry metrics.
  *
- * <p>To use, configure OpenTelemetry instance via {@link #setOpenTelemetry(OpenTelemetry)}, and
- * include a reference to this class in kafka producer or consumer configuration, i.e.:
+ * <p>To use, configure {@link GlobalOpenTelemetry} instance via {@link
+ * GlobalOpenTelemetry#set(OpenTelemetry)}, and include a reference to this class in kafka producer
+ * or consumer configuration, i.e.:
  *
  * <pre>{@code
  * //    Map<String, Object> config = new HashMap<>();
@@ -38,20 +39,13 @@ import org.apache.kafka.common.metrics.MetricsReporter;
 public class OpenTelemetryKafkaMetrics implements MetricsReporter {
 
   private static final Logger logger = Logger.getLogger(OpenTelemetryKafkaMetrics.class.getName());
-  @Nullable private static volatile Meter meter;
+  private static volatile Meter meter =
+      GlobalOpenTelemetry.getMeter("io.opentelemetry.kafka-clients");
 
   private static final Object lock = new Object();
 
   @GuardedBy("lock")
   private static final List<RegisteredObservable> registeredObservables = new ArrayList<>();
-
-  /**
-   * Setup OpenTelemetry. This should be called as early in the application lifecycle as possible.
-   * Kafka metrics that are observed before this is called may not be bridged.
-   */
-  public static void setOpenTelemetry(OpenTelemetry openTelemetry) {
-    meter = openTelemetry.getMeter("io.opentelemetry.kafka-clients");
-  }
 
   /**
    * Reset for test by reseting the {@link #meter} to {@code null} and closing all registered
@@ -76,14 +70,8 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
 
   @Override
   public void metricChange(KafkaMetric metric) {
-    Meter currentMeter = meter;
-    if (currentMeter == null) {
-      logger.log(Level.FINEST, "Metric changed but meter not set: {0}", metric.metricName());
-      return;
-    }
-
     RegisteredObservable registeredObservable =
-        KafkaMetricRegistry.getRegisteredObservable(currentMeter, metric);
+        KafkaMetricRegistry.getRegisteredObservable(meter, metric);
     if (registeredObservable == null) {
       logger.log(
           Level.FINEST, "Metric changed but cannot map to instrument: {0}", metric.metricName());

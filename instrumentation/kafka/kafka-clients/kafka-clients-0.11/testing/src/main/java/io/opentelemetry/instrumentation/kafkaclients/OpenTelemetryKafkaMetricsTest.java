@@ -77,8 +77,6 @@ abstract class OpenTelemetryKafkaMetricsTest {
 
   @BeforeEach
   void setup() {
-    OpenTelemetryKafkaMetrics.setOpenTelemetry(testing.getOpenTelemetry());
-
     String metricReporters =
         OpenTelemetryKafkaMetrics.class.getName() + "," + TestMetricsReporter.class.getName();
 
@@ -367,16 +365,15 @@ abstract class OpenTelemetryKafkaMetricsTest {
     StringBuilder sb = new StringBuilder();
     // Append table headers
     sb.append(
-            "| # | Metric Group | Metric Name | Attribute Keys | Instrument Name | Instrument Description | Instrument Type |")
+            "| Metric Group | Metric Name | Attribute Keys | Instrument Name | Instrument Description | Instrument Type |")
         .append(lineSeparator())
         .append(
-            "|---|--------------|-------------|----------------|-----------------|------------------------|-----------------|")
+            "|--------------|-------------|----------------|-----------------|------------------------|-----------------|")
         .append(lineSeparator());
     Map<String, List<KafkaMetricId>> kafkaMetricsByGroup =
         TestMetricsReporter.seenMetrics.stream().collect(groupingBy(KafkaMetricId::getGroup));
     List<RegisteredObservable> registeredObservables =
         OpenTelemetryKafkaMetrics.getRegisteredObservables();
-    int count = 1;
     // Iterate through groups in alpha order
     for (String group : kafkaMetricsByGroup.keySet().stream().sorted().collect(toList())) {
       List<KafkaMetricId> kafkaMetricIds =
@@ -399,8 +396,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
         // Append table row
         sb.append(
             String.format(
-                "| %s | %s | %s | %s | %s | %s | %s |%n",
-                count,
+                "| %s | %s | %s | %s | %s | %s |%n",
                 "`" + group + "`",
                 "`" + kafkaMetricId.getName() + "`",
                 kafkaMetricId.getAttributeKeys().stream()
@@ -409,7 +405,6 @@ abstract class OpenTelemetryKafkaMetricsTest {
                 descriptor.map(i -> "`" + i.getName() + "`").orElse(""),
                 descriptor.map(InstrumentDescriptor::getDescription).orElse(""),
                 descriptor.map(i -> "`" + i.getInstrumentType() + "`").orElse("")));
-        count++;
       }
     }
     logger.info("Mapping table" + System.lineSeparator() + sb);
