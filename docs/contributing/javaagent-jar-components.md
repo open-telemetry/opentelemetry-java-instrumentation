@@ -14,9 +14,9 @@ This module consists of single class
 `io.opentelemetry.javaagent.OpenTelemetryAgent` which implements [Java
 instrumentation
 agent](https://docs.oracle.com/javase/7/docs/api/java/lang/instrument/package-summary.html).
-This class is loaded during application startup by application classloader.
+This class is loaded during application startup by application class loader.
 Its sole responsibility is to push agent's classes into JVM's bootstrap
-classloader and immediately delegate to
+class loader and immediately delegate to
 `io.opentelemetry.javaagent.bootstrap.AgentInitializer` (now in the bootstrap class loader)
 class from there.
 
@@ -32,7 +32,7 @@ loader but are not used directly by auto-instrumentation
 These modules contain support classes for actual instrumentations to be loaded
 later and separately. These classes should be available from all possible
 classloaders in the running application. For this reason the `javaagent` module puts
-all these classes into JVM's bootstrap classloader. For the same reason this
+all these classes into JVM's bootstrap class loader. For the same reason this
 module should be as small as possible and have as few dependencies as
 possible. Otherwise, there is a risk of accidentally exposing these classes to
 the actual application.
@@ -60,14 +60,14 @@ instance of `io.opentelemetry.javaagent.bootstrap.AgentClassLoader`, loads an
 `io.opentelemetry.javaagent.tooling.AgentInstaller` from that `AgentClassLoader`
 and then passes control on to the `AgentInstaller` (now in the
 `AgentClassLoader`). The `AgentInstaller` then installs all of the
-instrumentations with the help of ByteBuddy. Instead of using agent classloader all agent classes
-could be shaded and used from the bootstrap classloader. However, this opens de-serialization
+instrumentations with the help of ByteBuddy. Instead of using agent class loader all agent classes
+could be shaded and used from the bootstrap class loader. However, this opens de-serialization
 security vulnerability and in addition to that the shaded classes are harder to debug.
 
 The complicated process above ensures that the majority of
 auto-instrumentation agent's classes are totally isolated from application
-classes, and an instrumented class from arbitrary classloader in JVM can
-still access helper classes from bootstrap classloader.
+classes, and an instrumented class from arbitrary class loader in JVM can
+still access helper classes from bootstrap class loader.
 
 ### Agent jar structure
 
@@ -98,5 +98,5 @@ Available in the agent class loader:
 
 ![Agent initialization sequence](initialization-sequence.svg)
 [Image source](https://docs.google.com/drawings/d/1GHAcJ8AOaf_v2Ip82cQD9dN0mtvSk2C1B11KfwV2U8o)
-![Agent classloader state](classloader-state.svg)
+![Agent class loader state](class-loader-state.svg)
 [Image source](https://docs.google.com/drawings/d/1x_eiGRodZ715ai6gDMTkyPYU4_wQnEkS4LQKSasEJAk)
