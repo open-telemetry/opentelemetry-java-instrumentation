@@ -51,6 +51,7 @@ public class OshiMetricsInstaller implements AgentListener {
     }
   }
 
+  // TODO: remove after https://github.com/open-telemetry/opentelemetry-java/issues/4562 is fixed
   private static String normalize(String key) {
     return key.toLowerCase(Locale.ROOT).replace('-', '.');
   }
