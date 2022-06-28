@@ -36,7 +36,10 @@ public final class GrizzlySingletons {
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, request, attributes) ->
-                    new AppServerBridge.Builder().recordException().init(context))
+                    new AppServerBridge.Builder()
+                        .captureServletAttributes()
+                        .recordException()
+                        .init(context))
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) -> GrizzlyErrorHolder.init(context))
             .addContextCustomizer(HttpRouteHolder.get())
