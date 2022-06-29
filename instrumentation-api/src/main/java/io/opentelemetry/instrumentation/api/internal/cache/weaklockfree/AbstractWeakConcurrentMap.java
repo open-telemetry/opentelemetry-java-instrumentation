@@ -47,23 +47,10 @@ import javax.annotation.Nullable;
  * https://github.com/raphw/weak-lock-free/blob/ad0e5e0c04d4a31f9485bf12b89afbc9d75473b3/src/main/java/com/blogspot/mydailyjava/weaklockfree/WeakConcurrentMap.java
  */
 // Suppress warnings since this is vendored as-is.
-@SuppressWarnings({
-  "MissingSummary",
-  "EqualsBrokenForNull",
-  "FieldMissingNullable",
-  "ThreadPriorityCheck"
-})
+@SuppressWarnings({"MissingSummary", "EqualsBrokenForNull", "FieldMissingNullable"})
 abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<K, V>> {
 
   private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
-
-  static {
-    Thread thread = new Thread(AbstractWeakConcurrentMap::runCleanup, "weak-ref-cleaner");
-    thread.setPriority(Thread.MIN_PRIORITY);
-    thread.setDaemon(true);
-    thread.setContextClassLoader(null);
-    thread.start();
-  }
 
   final ConcurrentMap<WeakKey<K>, V> target;
   private final WeakReference<ConcurrentMap<WeakKey<K>, ?>> weakTarget;
@@ -267,7 +254,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
     return target.size();
   }
 
-  private static void runCleanup() {
+  static void runCleanup() {
     try {
       while (!Thread.interrupted()) {
         Reference<?> reference = REFERENCE_QUEUE.remove();

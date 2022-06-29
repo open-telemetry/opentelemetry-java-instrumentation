@@ -49,7 +49,6 @@ import javax.annotation.Nullable;
   "HashCodeToString",
   "MissingSummary",
   "UngroupedOverloads",
-  "ThreadPriorityCheck",
   "FieldMissingNullable"
 })
 public class WeakConcurrentMap<K, V>
