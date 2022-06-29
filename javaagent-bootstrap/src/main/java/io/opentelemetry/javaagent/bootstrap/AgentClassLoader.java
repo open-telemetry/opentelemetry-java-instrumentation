@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 /**
  * Classloader used to run the core agent.
  *
- * <p>It is built around the concept of a jar inside another jar. This classloader loads the files
+ * <p>It is built around the concept of a jar inside another jar. This class loader loads the files
  * of the internal jar to load classes and resources.
  */
 public class AgentClassLoader extends URLClassLoader {
@@ -324,7 +324,7 @@ public class AgentClassLoader extends URLClassLoader {
   }
 
   /**
-   * A stand-in for the bootstrap classloader. Used to look up bootstrap resources and resources
+   * A stand-in for the bootstrap class loader. Used to look up bootstrap resources and resources
    * appended by instrumentation.
    *
    * <p>This class is thread safe.

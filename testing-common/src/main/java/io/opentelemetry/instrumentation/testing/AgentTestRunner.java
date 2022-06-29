@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * An implementation of {@link InstrumentationTestRunner} that delegates most of its calls to the
  * OpenTelemetry Javaagent that this process runs with. It uses the {@link
  * AgentTestingExporterAccess} bridge class to retrieve exported traces and metrics data from the
- * agent classloader.
+ * agent class loader.
  */
 public final class AgentTestRunner extends InstrumentationTestRunner {
   static {

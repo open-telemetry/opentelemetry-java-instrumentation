@@ -246,7 +246,7 @@ public class AgentInstaller {
     // log manager being used.
     // Once we see the LogManager class loading, it's safe to run AgentListener#afterAgent() because
     // the application is already setting the global LogManager and AgentListener won't be able
-    // to touch it due to classloader locking.
+    // to touch it due to class loader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
         Config.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     boolean javaBefore9 = isJavaBefore9();
@@ -329,7 +329,7 @@ public class AgentInstaller {
       if (logger.isLoggable(FINE)) {
         logger.log(
             FINE,
-            "Failed to handle {0} for transformation on classloader {1}",
+            "Failed to handle {0} for transformation on class loader {1}",
             new Object[] {typeName, classLoader},
             throwable);
       }

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
 
-// Isolated test to use clean classloader because reactor instrumentation is applied on static
+// Isolated test to use clean class loader because reactor instrumentation is applied on static
 // initialization.
 class InitializationTest {
 

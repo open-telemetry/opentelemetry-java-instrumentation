@@ -27,7 +27,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.pool.TypePool;
 import org.objectweb.asm.Type;
 
-/** Matches a set of references against a classloader. */
+/** Matches a set of references against a class loader. */
 public final class ReferenceMatcher {
 
   private final Map<String, ClassRef> references;
@@ -95,7 +95,7 @@ public final class ReferenceMatcher {
   }
 
   /**
-   * Check a reference against a classloader's classpath.
+   * Check a reference against a class loader's classpath.
    *
    * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
    */

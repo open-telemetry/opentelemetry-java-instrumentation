@@ -16,7 +16,7 @@ import java.util.List;
  */
 public final class Constants {
 
-  /** packages which will be loaded on the bootstrap classloader. */
+  /** packages which will be loaded on the bootstrap class loader. */
   public static final List<String> BOOTSTRAP_PACKAGE_PREFIXES =
       Collections.unmodifiableList(
           Arrays.asList(

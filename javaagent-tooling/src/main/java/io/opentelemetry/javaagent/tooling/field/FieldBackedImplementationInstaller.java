@@ -116,22 +116,22 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   private AgentBuilder.Identified.Extendable injectHelpersIntoBootstrapClassloader(
       AgentBuilder.Identified.Extendable builder) {
     /*
-     * We inject into bootstrap classloader because field accessor interfaces are needed by virtual
-     * field implementations. Unfortunately this forces us to remove stored type checking because
-     * actual classes may not be available at this point.
+     * We inject into the bootstrap class loader because field accessor interfaces are needed by
+     * virtual field implementations. Unfortunately this forces us to remove stored type checking
+     * because actual classes may not be available at this point.
      */
     builder = builder.transform(fieldAccessorInterfacesInjector);
 
     /*
-     * We inject virtual field implementations into bootstrap classloader because same implementation
-     * may be used by different instrumentations and it has to use same static map in case of
-     * fallback to map-backed storage.
+     * We inject virtual field implementations into the bootstrap class loader because same
+     * implementation may be used by different instrumentations and it has to use same static map in
+     * case of fallback to map-backed storage.
      */
     builder = builder.transform(virtualFieldImplementationsInjector);
     return builder;
   }
 
-  /** Get transformer that forces helper injection onto bootstrap classloader. */
+  /** Get transformer that forces helper injection onto bootstrap class loader. */
   private AgentBuilder.Transformer bootstrapHelperInjector(
       Collection<DynamicType.Unloaded<?>> helpers) {
     // TODO: Better to pass through the context of the Instrumenter

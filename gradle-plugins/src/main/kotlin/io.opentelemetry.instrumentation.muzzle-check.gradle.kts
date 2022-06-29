@@ -198,7 +198,7 @@ fun createInstrumentationClassloader(): ClassLoader {
 }
 
 fun classpathLoader(classpath: FileCollection, parent: ClassLoader): ClassLoader {
-  logger.info("Adding to classloader:")
+  logger.info("Adding to class loader:")
   val urls: Array<URL> = StreamSupport.stream(classpath.spliterator(), false)
     .map {
       logger.info("--${it}")
@@ -294,7 +294,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
         if (thread.contextClassLoader === instrumentationCL
           || thread.contextClassLoader === userCL) {
           throw GradleException(
-            "Task ${taskName} has spawned a thread: ${thread} with classloader ${thread.contextClassLoader}. " +
+            "Task ${taskName} has spawned a thread: ${thread} with class loader ${thread.contextClassLoader}. " +
               "This will prevent GC of dynamic muzzle classes. Aborting muzzle run.")
         }
       }
@@ -306,7 +306,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
 }
 
 fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoader {
-  logger.info("Creating user classloader for muzzle check")
+  logger.info("Creating user class loader for muzzle check")
   val muzzleBootstrapShadowJar = shadowMuzzleBootstrap.get().archiveFile.get()
   return classpathLoader(muzzleTaskConfiguration + files(muzzleBootstrapShadowJar), ClassLoader.getPlatformClassLoader())
 }
