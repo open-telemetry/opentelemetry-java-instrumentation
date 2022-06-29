@@ -3,7 +3,7 @@ plugins {
   id("otel.protobuf-conventions")
 }
 
-val grpcVersion = "1.6.0"
+val grpcVersion = "1.42.1"
 
 dependencies {
   api(project(":testing-common"))
