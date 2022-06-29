@@ -20,22 +20,20 @@ subprojects {
 
   ext {
     versions = [
-      opentelemetry              : "1.12.0",
-      opentelemetryAlpha         : "1.12.0-alpha",
+      opentelemetry              : "1.15.0",
+      opentelemetryAlpha         : "1.15.0-alpha",
       opentelemetryJavaagent     : "1.16.0-SNAPSHOT",
       opentelemetryJavaagentAlpha: "1.16.0-alpha-SNAPSHOT",
-      bytebuddy                  : "1.10.18",
-      guava                      : "30.1-jre"
+      bytebuddy                  : "1.12.10",
+      autoservice                : "1.0.1"
     ]
 
     deps = [
       bytebuddy           : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
       autoservice         : [
-        "com.google.auto.service:auto-service:1.0-rc7",
-        "com.google.auto:auto-common:0.8",
-        "com.google.guava:guava:${versions.guava}",
-      ],
-      autoValueAnnotations: "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
+              "com.google.auto.service:auto-service:${versions.autoservice}",
+              "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
+      ]
     ]
   }
 
