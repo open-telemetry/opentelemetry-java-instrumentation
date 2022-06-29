@@ -47,11 +47,25 @@ import javax.annotation.Nullable;
  * https://github.com/raphw/weak-lock-free/blob/ad0e5e0c04d4a31f9485bf12b89afbc9d75473b3/src/main/java/com/blogspot/mydailyjava/weaklockfree/WeakConcurrentMap.java
  */
 // Suppress warnings since this is vendored as-is.
-@SuppressWarnings({"MissingSummary", "EqualsBrokenForNull", "FieldMissingNullable"})
-abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
-    implements Runnable, Iterable<Map.Entry<K, V>> {
+@SuppressWarnings({
+  "MissingSummary",
+  "EqualsBrokenForNull",
+  "FieldMissingNullable",
+  "ThreadPriorityCheck"
+})
+abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<K, V>> {
+
+  private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
+
+  static {
+    Thread thread = new Thread(AbstractWeakConcurrentMap::runCleanup, "weak-ref-cleaner");
+    thread.setPriority(Thread.MIN_PRIORITY);
+    thread.setDaemon(true);
+    thread.start();
+  }
 
   final ConcurrentMap<WeakKey<K>, V> target;
+  private final WeakReference<ConcurrentMap<WeakKey<K>, ?>> weakTarget;
 
   protected AbstractWeakConcurrentMap() {
     this(new ConcurrentHashMap<>());
@@ -62,6 +76,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
    */
   protected AbstractWeakConcurrentMap(ConcurrentMap<WeakKey<K>, V> target) {
     this.target = target;
+    this.weakTarget = new WeakReference<>(target);
   }
 
   /**
@@ -92,7 +107,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
     if (value == null) {
       value = defaultValue(key);
       if (value != null) {
-        V previousValue = target.putIfAbsent(new WeakKey<>(key, this), value);
+        V previousValue = target.putIfAbsent(new WeakKey<>(key, weakTarget), value);
         if (previousValue != null) {
           value = previousValue;
         }
@@ -142,7 +157,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
     if (key == null || value == null) {
       throw new NullPointerException();
     }
-    return target.put(new WeakKey<>(key, this), value);
+    return target.put(new WeakKey<>(key, weakTarget), value);
   }
 
   /**
@@ -161,7 +176,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
     } finally {
       resetLookupKey(lookupKey);
     }
-    return previous == null ? target.putIfAbsent(new WeakKey<>(key, this), value) : previous;
+    return previous == null ? target.putIfAbsent(new WeakKey<>(key, weakTarget), value) : previous;
   }
 
   public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
@@ -176,7 +191,8 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
       resetLookupKey(lookupKey);
     }
     return previous == null
-        ? target.computeIfAbsent(new WeakKey<>(key, this), ignored -> mappingFunction.apply(key))
+        ? target.computeIfAbsent(
+            new WeakKey<>(key, weakTarget), ignored -> mappingFunction.apply(key))
         : previous;
   }
 
@@ -189,7 +205,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
     if (key == null || value == null) {
       throw new NullPointerException();
     }
-    return target.putIfAbsent(new WeakKey<>(key, this), value);
+    return target.putIfAbsent(new WeakKey<>(key, weakTarget), value);
   }
 
   /**
@@ -226,10 +242,17 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
   }
 
   /** Cleans all unused references. */
-  public void expungeStaleEntries() {
+  public static void expungeStaleEntries() {
     Reference<?> reference;
-    while ((reference = poll()) != null) {
-      target.remove(reference);
+    while ((reference = REFERENCE_QUEUE.poll()) != null) {
+      removeWeakKey((WeakKey<?>) reference);
+    }
+  }
+
+  private static void removeWeakKey(WeakKey<?> weakKey) {
+    ConcurrentMap<?, ?> map = weakKey.ownerRef.get();
+    if (map != null) {
+      map.remove(weakKey);
     }
   }
 
@@ -243,11 +266,11 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
     return target.size();
   }
 
-  @Override
-  public void run() {
+  private static void runCleanup() {
     try {
       while (!Thread.interrupted()) {
-        target.remove(remove());
+        Reference<?> reference = REFERENCE_QUEUE.remove();
+        removeWeakKey((WeakKey<?>) reference);
       }
     } catch (InterruptedException ignored) {
       // do nothing
@@ -301,10 +324,12 @@ abstract class AbstractWeakConcurrentMap<K, V, L> extends ReferenceQueue<K>
   static final class WeakKey<K> extends WeakReference<K> {
 
     private final int hashCode;
+    private final WeakReference<ConcurrentMap<WeakKey<K>, ?>> ownerRef;
 
-    WeakKey(K key, ReferenceQueue<? super K> queue) {
-      super(key, queue);
+    WeakKey(K key, WeakReference<ConcurrentMap<WeakKey<K>, ?>> ownerRef) {
+      super(key, REFERENCE_QUEUE);
       hashCode = System.identityHashCode(key);
+      this.ownerRef = ownerRef;
     }
 
     @Override

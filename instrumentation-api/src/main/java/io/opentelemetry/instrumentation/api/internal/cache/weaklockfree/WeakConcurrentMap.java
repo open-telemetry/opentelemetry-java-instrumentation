@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -69,17 +68,10 @@ public class WeakConcurrentMap<K, V>
         }
       };
 
-  private static final AtomicLong ID = new AtomicLong();
-
-  private final Thread thread;
-
   private final boolean reuseKeys;
 
-  /**
-   * @param cleanerThread {@code true} if a thread should be started that removes stale entries.
-   */
-  public WeakConcurrentMap(boolean cleanerThread) {
-    this(cleanerThread, isPersistentClassLoader(LookupKey.class.getClassLoader()));
+  public WeakConcurrentMap() {
+    this(isPersistentClassLoader(LookupKey.class.getClassLoader()));
   }
 
   /**
@@ -105,37 +97,24 @@ public class WeakConcurrentMap<K, V>
   }
 
   /**
-   * @param cleanerThread {@code true} if a thread should be started that removes stale entries.
    * @param reuseKeys {@code true} if the lookup keys should be reused via a {@link ThreadLocal}.
    *     Note that setting this to {@code true} may result in class loader leaks. See {@link
    *     #isPersistentClassLoader(ClassLoader)} for more details.
    */
-  public WeakConcurrentMap(boolean cleanerThread, boolean reuseKeys) {
-    this(cleanerThread, reuseKeys, new ConcurrentHashMap<>());
+  public WeakConcurrentMap(boolean reuseKeys) {
+    this(reuseKeys, new ConcurrentHashMap<>());
   }
 
   /**
-   * @param cleanerThread {@code true} if a thread should be started that removes stale entries.
    * @param reuseKeys {@code true} if the lookup keys should be reused via a {@link ThreadLocal}.
    *     Note that setting this to {@code true} may result in class loader leaks. See {@link
    *     #isPersistentClassLoader(ClassLoader)} for more details.
    * @param target ConcurrentMap implementation that this class wraps.
    */
   public WeakConcurrentMap(
-      boolean cleanerThread,
-      boolean reuseKeys,
-      ConcurrentMap<AbstractWeakConcurrentMap.WeakKey<K>, V> target) {
+      boolean reuseKeys, ConcurrentMap<AbstractWeakConcurrentMap.WeakKey<K>, V> target) {
     super(target);
     this.reuseKeys = reuseKeys;
-    if (cleanerThread) {
-      thread = new Thread(this);
-      thread.setName("weak-ref-cleaner-" + ID.getAndIncrement());
-      thread.setPriority(Thread.MIN_PRIORITY);
-      thread.setDaemon(true);
-      thread.start();
-    } else {
-      thread = null;
-    }
   }
 
   @Override
@@ -153,13 +132,6 @@ public class WeakConcurrentMap<K, V>
   @Override
   protected void resetLookupKey(LookupKey<K> lookupKey) {
     lookupKey.reset();
-  }
-
-  /**
-   * @return The cleaner thread or {@code null} if no such thread was set.
-   */
-  public Thread getCleanerThread() {
-    return thread;
   }
 
   /*
@@ -209,10 +181,6 @@ public class WeakConcurrentMap<K, V>
    * at any time.
    */
   public static class WithInlinedExpunction<K, V> extends WeakConcurrentMap<K, V> {
-
-    public WithInlinedExpunction() {
-      super(false);
-    }
 
     @Override
     public V get(K key) {
