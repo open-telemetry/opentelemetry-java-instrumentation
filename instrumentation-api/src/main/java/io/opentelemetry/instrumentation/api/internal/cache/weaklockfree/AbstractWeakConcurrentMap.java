@@ -61,6 +61,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
     Thread thread = new Thread(AbstractWeakConcurrentMap::runCleanup, "weak-ref-cleaner");
     thread.setPriority(Thread.MIN_PRIORITY);
     thread.setDaemon(true);
+    thread.setContextClassLoader(null);
     thread.start();
   }
 
