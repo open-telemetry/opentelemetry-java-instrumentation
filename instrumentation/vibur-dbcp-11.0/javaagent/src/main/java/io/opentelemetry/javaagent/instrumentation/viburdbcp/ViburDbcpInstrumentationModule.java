@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.viburdbcp;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -23,10 +22,10 @@ public class ViburDbcpInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // ViburDBCPConfig was renamed in 10.0; this matcher excludes all versions < 10.0
+    // ViburDBCPConfig was renamed to ViburConfig in 10.0; this matcher excludes all versions < 10.0
     // in 11.0, the ViburDBCPDataSource#getPool() method signature was changed - this is detected by
     // muzzle
-    return not(hasClassesNamed("org.vibur.dbcp.ViburDBCPConfig"));
+    return hasClassesNamed("org.vibur.dbcp.ViburConfig");
   }
 
   @Override
