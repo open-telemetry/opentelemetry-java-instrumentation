@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -241,6 +242,12 @@ public class WeakConcurrentMap<K, V>
     public V putIfAbsent(K key, V value) {
       expungeStaleEntries();
       return super.putIfAbsent(key, value);
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+      expungeStaleEntries();
+      return super.computeIfAbsent(key, mappingFunction);
     }
 
     @Override
