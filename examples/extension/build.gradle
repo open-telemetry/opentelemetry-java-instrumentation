@@ -22,14 +22,14 @@ version '1.0'
 
 ext {
   versions = [
-    opentelemetry              : "1.12.0",
-    opentelemetryAlpha         : "1.12.0-alpha",
+    opentelemetry              : "1.15.0",
+    opentelemetryAlpha         : "1.15.0-alpha",
     opentelemetryJavaagent     : "1.16.0-SNAPSHOT",
     opentelemetryJavaagentAlpha: "1.16.0-alpha-SNAPSHOT",
   ]
 
   deps = [
-    autoservice: dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0')
+    autoservice: dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0.1')
   ]
 }
 
