@@ -86,7 +86,6 @@ val DEPENDENCIES = listOf(
   "com.uber.nullaway:nullaway:0.9.7",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
-  "commons-codec:commons-codec:1.15",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.4",
