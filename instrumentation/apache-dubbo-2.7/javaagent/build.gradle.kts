@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.apache.dubbo")
     module.set("dubbo")
-    versions.set("[2.7.0,3.0.0)")
+    versions.set("[2.7.0,)")
   }
 }
 
