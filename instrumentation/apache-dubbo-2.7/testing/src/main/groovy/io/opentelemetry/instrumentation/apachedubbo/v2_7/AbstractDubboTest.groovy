@@ -18,7 +18,6 @@ import org.apache.dubbo.config.ReferenceConfig
 import org.apache.dubbo.config.RegistryConfig
 import org.apache.dubbo.config.ServiceConfig
 import org.apache.dubbo.config.bootstrap.DubboBootstrap
-import org.apache.dubbo.config.utils.ReferenceConfigCache
 import org.apache.dubbo.rpc.service.GenericService
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -59,7 +58,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     def port = PortUtils.findOpenPort()
     protocolConfig.setPort(port)
 
-    DubboBootstrap bootstrap = DubboBootstrap.getInstance()
+    DubboBootstrap bootstrap = DubboBootstrap.newInstance()
     bootstrap.application(new ApplicationConfig("dubbo-test-provider"))
       .service(configureServer())
       .protocol(protocolConfig)
@@ -69,14 +68,14 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     consumerProtocolConfig.setRegister(false)
 
     def reference = configureClient(port)
-    DubboBootstrap consumerBootstrap = DubboBootstrap.getInstance()
+    DubboBootstrap consumerBootstrap = DubboBootstrap.newInstance()
     consumerBootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer"))
       .reference(reference)
       .protocol(consumerProtocolConfig)
       .start()
 
     when:
-    GenericService genericService = ReferenceConfigCache.getCache().get(reference) as GenericService
+    GenericService genericService = reference.get()
     def o = new Object[1]
     o[0] = "hello"
     def response = runWithSpan("parent") {
@@ -100,8 +99,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
             "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
+            "$SemanticAttributes.NET_PEER_PORT"  { it == null || it instanceof Long }
           }
         }
         span(2) {
@@ -130,7 +129,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     def port = PortUtils.findOpenPort()
     protocolConfig.setPort(port)
 
-    DubboBootstrap bootstrap = DubboBootstrap.getInstance()
+    DubboBootstrap bootstrap = DubboBootstrap.newInstance()
     bootstrap.application(new ApplicationConfig("dubbo-test-async-provider"))
       .service(configureServer())
       .protocol(protocolConfig)
@@ -140,14 +139,14 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     consumerProtocolConfig.setRegister(false)
 
     def reference = configureClient(port)
-    DubboBootstrap consumerBootstrap = DubboBootstrap.getInstance()
+    DubboBootstrap consumerBootstrap = DubboBootstrap.newInstance()
     consumerBootstrap.application(new ApplicationConfig("dubbo-demo-async-api-consumer"))
       .reference(reference)
       .protocol(consumerProtocolConfig)
       .start()
 
     when:
-    GenericService genericService = ReferenceConfigCache.getCache().get(reference) as GenericService
+    GenericService genericService = reference.get()
     def o = new Object[1]
     o[0] = "hello"
     def responseAsync = runWithSpan("parent") {
@@ -171,8 +170,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
             "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
             "$SemanticAttributes.RPC_METHOD" "\$invokeAsync"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
+            "$SemanticAttributes.NET_PEER_PORT"  { it == null || it instanceof Long }
           }
         }
         span(2) {
