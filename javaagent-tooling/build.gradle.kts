@@ -28,6 +28,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
   implementation("io.opentelemetry:opentelemetry-extension-noop-api")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-metric-incubator")
 
   // Exporters with dependencies
   implementation("io.opentelemetry:opentelemetry-exporter-jaeger")

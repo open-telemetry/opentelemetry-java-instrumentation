@@ -51,7 +51,7 @@ potentially cause linkage errors.
 
 ## Classloader separation
 
-See more detail about the class loader separation [here](./contributing/javaagent-jar-components.md).
+See more detail about the class loader separation [here](./contributing/javaagent-structure.md).
 
 The Java agent makes sure to include as little code as possible in the user app's class loader, and
 all code that is included is either unique to the agent itself or shaded in the agent build. This is

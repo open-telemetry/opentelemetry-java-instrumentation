@@ -328,7 +328,7 @@ code, see [this section](#writing-java-agent-unit-tests).
 ### Instrumenting code that is not available as a Maven dependency
 
 If an instrumented server or library jar isn't available in any public Maven repository you can
-create a module with stub classes that defines only the methods that you need to write the
+create a module with stub classes that define only the methods that you need to write the
 instrumentation. Methods in these stub classes can just `throw new UnsupportedOperationException()`;
 these classes are only used to compile the advice classes and won't be packaged into the agent.
 During runtime, real classes from instrumented server or library will be used.
@@ -349,6 +349,38 @@ compileOnly(project(":instrumentation:yarpc-1.0:compile-stub"))
 ```
 
 Now you can use your stub classes inside the javaagent instrumentation.
+
+### Coordinating different `InstrumentationModule`s
+
+When you need to share some classes between different `InstrumentationModule`s and communicate
+between different instrumentations (which might be injected/loaded into different class loaders),
+you can add instrumentation-specific bootstrap module that contains all the common classes.
+That way you can use these shared, globally available utilities to communicate between different
+instrumentation modules.
+
+Some examples of this include:
+* Application server instrumentations communicating with Servlet API instrumentations.
+* Different high-level Kafka consumer instrumentations suppressing the low-level `kafka-clients`
+  instrumentation.
+
+Create a module named `bootstrap` and add a `build.gradle.kts` file with the following content:
+
+```kotlin
+plugins {
+  id("otel.javaagent-bootstrap")
+}
+```
+
+In all `javaagent` modules that need to access the new shared module, add a `compileOnly`
+dependency:
+
+```kotlin
+compileOnly(project(":instrumentation:yarpc-1.0:bootstrap"))
+```
+
+All classes from the newly added bootstrap module will be loaded by the bootstrap module and
+globally available within the JVM. **IMPORTANT: Note that you _cannot_ use any third-party libraries
+here, including the instrumented library - you can only use JDK and OpenTelemetry API classes.**
 
 ## Writing Java agent unit tests
 
