@@ -10,11 +10,11 @@ import java.util.List;
 
 /**
  * {@link BootstrapPackagePrefixesHolder} is an utility class that holds package prefixes. The
- * classes from these packages are pushed to the bootstrap classloader.
+ * classes from these packages are pushed to the bootstrap class loader.
  *
- * <p>The prefixes are loaded by {@code AgentInstaller} and consumed by classloader instrumentation.
- * The instrumentation does not have access to the installer, therefore this utility class is used
- * to share package prefixes.
+ * <p>The prefixes are loaded by {@code AgentInstaller} and consumed by class loader
+ * instrumentation. The instrumentation does not have access to the installer, therefore this
+ * utility class is used to share package prefixes.
  */
 public final class BootstrapPackagePrefixesHolder {
 

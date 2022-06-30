@@ -18,7 +18,7 @@ public class Utils {
   private static final BootstrapClassLoaderProxy unitTestBootstrapProxy =
       new BootstrapClassLoaderProxy(null);
 
-  /** Return the classloader the core agent is running on. */
+  /** Return the class loader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
     return AgentInstaller.class.getClassLoader();
   }
@@ -27,7 +27,7 @@ public class Utils {
     return AgentInitializer.getExtensionsClassLoader();
   }
 
-  /** Return a classloader which can be used to look up bootstrap resources. */
+  /** Return a class loader which can be used to look up bootstrap resources. */
   public static BootstrapClassLoaderProxy getBootstrapProxy() {
     if (getAgentClassLoader() instanceof AgentClassLoader) {
       return ((AgentClassLoader) getAgentClassLoader()).getBootstrapProxy();

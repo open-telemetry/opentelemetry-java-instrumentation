@@ -13,7 +13,7 @@ import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
 
 class ResourceInjectionTest extends AgentInstrumentationSpecification {
 
-  def "resources injected to non-delegating classloader"() {
+  def "resources injected to non-delegating class loader"() {
     setup:
     String resourceName = 'test-resources/test-resource.txt'
     URL[] urls = [SystemUtils.getProtectionDomain().getCodeSource().getLocation()]

@@ -14,8 +14,8 @@ The only class that is loaded by the system class loader is the
 `io.opentelemetry.javaagent.OpenTelemetryAgent` class. This is the main class of the javaagent, it
 implements the
 [Java instrumentation agent specification](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/package-summary.html).
-This class is loaded during application startup by the system classloader. Its sole
-responsibility is to push the agent's classes into JVM's bootstrap classloader and immediately
+This class is loaded during application startup by the system class loader. Its sole
+responsibility is to push the agent's classes into JVM's bootstrap class loader and immediately
 delegate to the `io.opentelemetry.javaagent.bootstrap.AgentInitializer` class, living in the
 bootstrap class loader.
 
@@ -62,7 +62,7 @@ versions of some of our APIs (`opentelemetry-api`, `instrumentation-api`).
 
 ## Agent class loader
 
-The agent classloader contains almost everything else not mentioned before, including:
+The agent class loader contains almost everything else not mentioned before, including:
 
 * **The `javaagent-tooling` module**:
   this module picks up the initialization process started by `OpenTelemetryAgent`
@@ -108,5 +108,5 @@ the javaagent will apply shading dynamically in the runtime, when the extension 
 
 ## Class loader hierarchy graph
 
-![Agent classloader hierarchy](classloader-hierarchy.svg)
+![Agent class loader hierarchy](class-loader-hierarchy.svg)
 [Image source](https://docs.google.com/drawings/d/1DOftemu_96_0RggzOV3hFXejqeZWTmPBgbkaUhHw--g)

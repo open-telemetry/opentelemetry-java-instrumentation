@@ -49,7 +49,7 @@ final class FieldAccessorInterfacesGenerator {
   private DynamicType.Unloaded<?> makeFieldAccessorInterface(
       String typeName, String fieldTypeName) {
     // We are using Object class name instead of fieldTypeName here because this gets injected
-    // onto Bootstrap classloader where context class may be unavailable
+    // onto the bootstrap class loader where context class may be unavailable
     TypeDescription fieldTypeDesc = TypeDescription.OBJECT;
     return byteBuddy
         .makeInterface()

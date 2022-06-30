@@ -24,11 +24,11 @@ import java.util.jar.JarFile;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 
 /**
- * This class creates a classloader which encapsulates arbitrary extensions for Otel Java
+ * This class creates a class loader which encapsulates arbitrary extensions for Otel Java
  * instrumentation agent. Such extensions may include SDK components (exporters or propagators) and
  * additional instrumentations. They have to be isolated and shaded to reduce interference with the
  * user application and to make it compatible with shaded SDK used by the agent. Thus each extension
- * jar gets a separate classloader and all of them are aggregated with the help of {@link
+ * jar gets a separate class loader and all of them are aggregated with the help of {@link
  * MultipleParentClassLoader}.
  */
 // TODO find a way to initialize logging before using this class

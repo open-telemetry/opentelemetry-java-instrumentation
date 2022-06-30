@@ -385,7 +385,7 @@ here, including the instrumented library - you can only use JDK and OpenTelemetr
 ## Writing Java agent unit tests
 
 As mentioned before, tests in the `javaagent` module cannot access the javaagent instrumentation
-classes directly because of classloader separation - the javaagent classes are hidden and not
+classes directly because of class loader separation - the javaagent classes are hidden and not
 accessible from the instrumented application code.
 
 Ideally javaagent instrumentation is just a thin wrapper over library instrumentation, and so there

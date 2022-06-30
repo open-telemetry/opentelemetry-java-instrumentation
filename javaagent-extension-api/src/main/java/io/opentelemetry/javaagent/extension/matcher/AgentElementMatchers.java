@@ -81,7 +81,7 @@ public final class AgentElementMatchers {
   }
 
   /**
-   * Matches a classloader that contains all classes that are passed as the {@code classNames}
+   * Matches a class loader that contains all classes that are passed as the {@code classNames}
    * parameter. Does not match the bootstrap classpath. Don't use this matcher with classes expected
    * to be on the bootstrap.
    *

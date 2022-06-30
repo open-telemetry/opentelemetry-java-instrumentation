@@ -20,14 +20,14 @@ import java.util.concurrent.ConcurrentMap;
  * them as different keys then.
  *
  * <p>That is why this class exists and resides in a separate package. This package is treated in a
- * special way and is always loaded by bootstrap classloader. This makes sure that this class is
- * available to all tracers from every classloader.
+ * special way and is always loaded by bootstrap class loader. This makes sure that this class is
+ * available to all tracers from every class loader.
  *
- * <p>But at the same time, being loaded by bootstrap classloader, this class itself cannot initiate
- * the loading of {@code io.undertow.util.AttachmentKey} class. Class has to be loaded by <i>any</i>
- * classloader that has it, e.g. by the classloader of a Tracer that uses this key holder. After
- * that, <i>all</i> Tracers, loaded by all classloaders, will be able to use exactly the same sole
- * instance of the key.
+ * <p>But at the same time, being loaded by bootstrap class loader, this class itself cannot
+ * initiate the loading of {@code io.undertow.util.AttachmentKey} class. Class has to be loaded by
+ * <i>any</i> class loader that has it, e.g. by the class loader of a Tracer that uses this key
+ * holder. After that, <i>all</i> Tracers, loaded by all class loaders, will be able to use exactly
+ * the same sole instance of the key.
  */
 public final class KeyHolder {
   public static final ConcurrentMap<Class<?>, Object> contextKeys = new ConcurrentHashMap<>();

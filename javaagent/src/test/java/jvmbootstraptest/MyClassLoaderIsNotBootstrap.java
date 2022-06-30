@@ -9,7 +9,7 @@ public class MyClassLoaderIsNotBootstrap {
   public static void main(String[] args) {
     if (MyClassLoaderIsNotBootstrap.class.getClassLoader() == null) {
       throw new IllegalStateException(
-          "Application level class was loaded by bootstrap classloader");
+          "Application level class was loaded by the bootstrap class loader");
     }
   }
 }

@@ -16,10 +16,10 @@ provides.
   - Ability to disable individual instrumentation, or only enable certain ones.
 - Ability to load a custom exporter via an external JAR library
 - Isolation from application
-  - Separate Agent classloader with almost all agent-specific classes
-    - OpenTelemetry SDK initialized in Agent classloader
+  - Separate Agent class loader with almost all agent-specific classes
+    - OpenTelemetry SDK initialized in Agent class loader
   - Shading of instrumentation libraries when used in agent
-  - API bridge for application usage of API to access the Agent classloader's SDK
+  - API bridge for application usage of API to access the Agent class loader's SDK
     - API bridge not applied if user brings incompatible API version, preventing linkage errors (similar to safety mechanism below)
 - [Safety mechanisms](./safety-mechanisms.md) to prevent application linkage errors
   - Collect all references from instrumentation to library and only apply instrumentation if they exist in application

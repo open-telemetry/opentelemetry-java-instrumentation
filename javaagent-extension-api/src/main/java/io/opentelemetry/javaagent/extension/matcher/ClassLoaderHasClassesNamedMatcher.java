@@ -27,7 +27,7 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
   @Override
   public boolean matches(ClassLoader cl) {
     if (cl == null) {
-      // Can't match the bootstrap classloader.
+      // Can't match the bootstrap class loader.
       return false;
     }
     return cache.computeIfAbsent(cl, this::hasResources);

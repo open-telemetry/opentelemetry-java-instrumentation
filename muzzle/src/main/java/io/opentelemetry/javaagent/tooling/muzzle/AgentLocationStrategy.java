@@ -12,9 +12,9 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.utility.JavaModule;
 
 /**
- * Locate resources with the loading classloader. Because of a quirk with the way classes appended
- * to the bootstrap classpath work, we first check our bootstrap proxy. If the loading classloader
- * cannot find the desired resource, check up the classloader hierarchy until a resource is found.
+ * Locate resources with the loading class loader. Because of a quirk with the way classes appended
+ * to the bootstrap classpath work, we first check our bootstrap proxy. If the loading class loader
+ * cannot find the desired resource, check up the class loader hierarchy until a resource is found.
  */
 public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
 
