@@ -39,8 +39,7 @@ import org.apache.kafka.common.metrics.MetricsReporter;
 public class OpenTelemetryKafkaMetrics implements MetricsReporter {
 
   private static final Logger logger = Logger.getLogger(OpenTelemetryKafkaMetrics.class.getName());
-  private static volatile Meter meter =
-      GlobalOpenTelemetry.getMeter("io.opentelemetry.kafka-clients");
+  private static volatile Meter meter;
 
   private static final Object lock = new Object();
 
@@ -70,8 +69,14 @@ public class OpenTelemetryKafkaMetrics implements MetricsReporter {
 
   @Override
   public void metricChange(KafkaMetric metric) {
+    // Maybe initialize meter
+    Meter currentMeter = meter;
+    if (currentMeter == null) {
+      currentMeter = meter = GlobalOpenTelemetry.getMeter("io.opentelemetry.kafka-clients");
+    }
+
     RegisteredObservable registeredObservable =
-        KafkaMetricRegistry.getRegisteredObservable(meter, metric);
+        KafkaMetricRegistry.getRegisteredObservable(currentMeter, metric);
     if (registeredObservable == null) {
       logger.log(
           Level.FINEST, "Metric changed but cannot map to instrument: {0}", metric.metricName());
