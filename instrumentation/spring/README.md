@@ -54,7 +54,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 ```xml
 <dependency>
    <groupId>io.opentelemetry</groupId>
-   <artifactId>opentelemetry-exporters-logging</artifactId>
+   <artifactId>opentelemetry-exporter-logging</artifactId>
    <version>OPENTELEMETRY_VERSION</version>
 </dependency>
 ```
@@ -83,7 +83,7 @@ implementation("io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION")
 
 #### LoggingExporter
 ```gradle
-implementation("io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-exporter-logging:OPENTELEMETRY_VERSION")
 ```
 
 #### Jaeger Exporter

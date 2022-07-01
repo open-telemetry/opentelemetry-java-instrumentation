@@ -28,7 +28,7 @@ For Maven add to your `pom.xml`:
   <!-- provides opentelemetry-sdk -->
   <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporters-logging</artifactId>
+    <artifactId>opentelemetry-exporter-logging</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
@@ -47,7 +47,7 @@ For Gradle add to your dependencies:
 
 ```groovy
 implementation("io.opentelemetry.instrumentation:opentelemetry-spring-web-3.1:OPENTELEMETRY_VERSION")
-implementation("io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-exporter-logging:OPENTELEMETRY_VERSION")
 
 //this artifact should already be present in your application
 implementation("org.springframework:spring-web:SPRING_VERSION")

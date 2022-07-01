@@ -32,7 +32,7 @@ For Maven add to your `pom.xml`:
    <!-- provides opentelemetry-sdk artifact -->
    <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporters-logging</artifactId>
+    <artifactId>opentelemetry-exporter-logging</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
