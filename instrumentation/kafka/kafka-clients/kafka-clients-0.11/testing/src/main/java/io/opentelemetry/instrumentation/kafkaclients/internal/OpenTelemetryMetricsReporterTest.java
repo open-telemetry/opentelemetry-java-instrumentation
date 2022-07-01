@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients;
+package io.opentelemetry.instrumentation.kafkaclients.internal;
 
 import static java.lang.System.lineSeparator;
 import static java.util.Comparator.comparing;
@@ -12,9 +12,11 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.kafkaclients.OpenTelemetryKafkaMetrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -41,8 +44,9 @@ import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.MetricsReporter;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -50,39 +54,55 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @Testcontainers
-abstract class OpenTelemetryKafkaMetricsTest {
+public abstract class OpenTelemetryMetricsReporterTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(OpenTelemetryKafkaMetricsTest.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(OpenTelemetryMetricsReporterTest.class);
 
   private static final List<String> TOPICS = Arrays.asList("foo", "bar", "baz", "qux");
   private static final Random RANDOM = new Random();
 
-  @Container
-  KafkaContainer kafka =
-      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
-          .withLogConsumer(new Slf4jLogConsumer(logger))
-          .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
-          .withStartupTimeout(Duration.ofMinutes(1));
-
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  private KafkaProducer<byte[], byte[]> producer;
-  private KafkaConsumer<byte[], byte[]> consumer;
+  private static KafkaContainer kafka;
+  private static KafkaProducer<byte[], byte[]> producer;
+  private static KafkaConsumer<byte[], byte[]> consumer;
 
-  @BeforeEach
-  void setup() {
-    String metricReporters =
-        OpenTelemetryKafkaMetrics.class.getName() + "," + TestMetricsReporter.class.getName();
+  @BeforeAll
+  static void beforeAll() {
+    kafka =
+        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
+            .withLogConsumer(new Slf4jLogConsumer(logger))
+            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
+            .withStartupTimeout(Duration.ofMinutes(1));
+    kafka.start();
+    producer = new KafkaProducer<>(producerConfig());
+    consumer = new KafkaConsumer<>(consumerConfig());
+  }
 
+  @AfterAll
+  static void afterAll() {
+    kafka.stop();
+    producer.close();
+    consumer.close();
+  }
+
+  @AfterEach
+  void tearDown() {
+    OpenTelemetryMetricsReporter.resetForTest();
+  }
+
+  private static Map<String, Object> producerConfig() {
     Map<String, Object> producerConfig = new HashMap<>();
-    // Register OpenTelemetryKafkaMetrics as reporter
-    producerConfig.put(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG, metricReporters);
     producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
     producerConfig.put(ProducerConfig.CLIENT_ID_CONFIG, "sample-client-id");
     producerConfig.put(
@@ -90,11 +110,13 @@ abstract class OpenTelemetryKafkaMetricsTest {
     producerConfig.put(
         ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
     producerConfig.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
-    producer = new KafkaProducer<>(producerConfig);
+    producerConfig.putAll(
+        OpenTelemetryKafkaMetrics.getConfigProperties(testing.getOpenTelemetry()));
+    return producerConfig;
+  }
 
+  private static Map<String, Object> consumerConfig() {
     Map<String, Object> consumerConfig = new HashMap<>();
-    // Register OpenTelemetryKafkaMetrics as reporter
-    consumerConfig.put(ConsumerConfig.METRIC_REPORTER_CLASSES_CONFIG, metricReporters);
     consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
     consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, "sample-group");
     consumerConfig.put(
@@ -102,14 +124,56 @@ abstract class OpenTelemetryKafkaMetricsTest {
     consumerConfig.put(
         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
     consumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 2);
-    consumer = new KafkaConsumer<>(consumerConfig);
+    consumerConfig.putAll(
+        OpenTelemetryKafkaMetrics.getConfigProperties(testing.getOpenTelemetry()));
+    consumerConfig.merge(
+        CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
+        TestMetricsReporter.class.getName(),
+        (o, o2) -> o + "," + o2);
+    return consumerConfig;
   }
 
-  @AfterEach
-  void tearDown() {
-    OpenTelemetryKafkaMetrics.resetForTest();
-    producer.close();
-    consumer.close();
+  @Test
+  void badConfig() {
+    // Bad producer config
+    assertThatThrownBy(
+            () -> {
+              Map<String, Object> producerConfig = producerConfig();
+              producerConfig.remove(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE);
+              new KafkaProducer<>(producerConfig).close();
+            })
+        .hasRootCauseInstanceOf(IllegalStateException.class)
+        .hasRootCauseMessage("Missing required configuration property: opentelemetry.instance");
+    assertThatThrownBy(
+            () -> {
+              Map<String, Object> producerConfig = producerConfig();
+              producerConfig.put(
+                  OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, "foo");
+              new KafkaProducer<>(producerConfig).close();
+            })
+        .hasRootCauseInstanceOf(IllegalStateException.class)
+        .hasRootCauseMessage(
+            "Configuration property opentelemetry.instance is not instance of OpenTelemetry");
+
+    // Bad consumer config
+    assertThatThrownBy(
+            () -> {
+              Map<String, Object> consumerConfig = consumerConfig();
+              consumerConfig.remove(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE);
+              new KafkaConsumer<>(consumerConfig).close();
+            })
+        .hasRootCauseInstanceOf(IllegalStateException.class)
+        .hasRootCauseMessage("Missing required configuration property: opentelemetry.instance");
+    assertThatThrownBy(
+            () -> {
+              Map<String, Object> consumerConfig = consumerConfig();
+              consumerConfig.put(
+                  OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, "foo");
+              new KafkaConsumer<>(consumerConfig).close();
+            })
+        .hasRootCauseInstanceOf(IllegalStateException.class)
+        .hasRootCauseMessage(
+            "Configuration property opentelemetry.instance is not instance of OpenTelemetry");
   }
 
   @Test
@@ -338,7 +402,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
     printMappingTable();
   }
 
-  void produceRecords() {
+  private static void produceRecords() {
     for (int i = 0; i < 100; i++) {
       producer.send(
           new ProducerRecord<>(
@@ -350,7 +414,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
     }
   }
 
-  void consumeRecords() {
+  private static void consumeRecords() {
     consumer.subscribe(TOPICS);
     Instant stopTime = Instant.now().plusSeconds(10);
     while (Instant.now().isBefore(stopTime)) {
@@ -373,7 +437,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
     Map<String, List<KafkaMetricId>> kafkaMetricsByGroup =
         TestMetricsReporter.seenMetrics.stream().collect(groupingBy(KafkaMetricId::getGroup));
     List<RegisteredObservable> registeredObservables =
-        OpenTelemetryKafkaMetrics.getRegisteredObservables();
+        OpenTelemetryMetricsReporter.getRegisteredObservables();
     // Iterate through groups in alpha order
     for (String group : kafkaMetricsByGroup.keySet().stream().sorted().collect(toList())) {
       List<KafkaMetricId> kafkaMetricIds =
@@ -410,6 +474,10 @@ abstract class OpenTelemetryKafkaMetricsTest {
     logger.info("Mapping table" + System.lineSeparator() + sb);
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static class TestMetricsReporter implements MetricsReporter {
 
     private static final Set<KafkaMetricId> seenMetrics = new HashSet<>();
@@ -444,7 +512,7 @@ abstract class OpenTelemetryKafkaMetricsTest {
     abstract Set<String> getAttributeKeys();
 
     static KafkaMetricId create(MetricName metricName) {
-      return new AutoValue_OpenTelemetryKafkaMetricsTest_KafkaMetricId(
+      return new AutoValue_OpenTelemetryMetricsReporterTest_KafkaMetricId(
           metricName.group(), metricName.name(), metricName.tags().keySet());
     }
   }

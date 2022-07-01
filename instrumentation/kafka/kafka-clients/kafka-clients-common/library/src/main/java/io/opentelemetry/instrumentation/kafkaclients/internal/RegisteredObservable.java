@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients;
+package io.opentelemetry.instrumentation.kafkaclients.internal;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;

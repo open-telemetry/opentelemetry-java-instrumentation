@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients;
+package io.opentelemetry.instrumentation.kafkaclients.internal;
 
-import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
-import static io.opentelemetry.instrumentation.kafkaclients.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
+import static io.opentelemetry.instrumentation.kafkaclients.internal.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
+import static io.opentelemetry.instrumentation.kafkaclients.internal.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;

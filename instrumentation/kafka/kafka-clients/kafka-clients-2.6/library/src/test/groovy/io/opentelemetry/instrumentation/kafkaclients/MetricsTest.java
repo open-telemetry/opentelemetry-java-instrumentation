@@ -5,4 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
-public class MetricsTest extends OpenTelemetryKafkaMetricsTest {}
+import io.opentelemetry.instrumentation.kafkaclients.internal.OpenTelemetryMetricsReporterTest;
+
+public class MetricsTest extends OpenTelemetryMetricsReporterTest {}
