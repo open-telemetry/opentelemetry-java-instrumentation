@@ -20,7 +20,7 @@ public final class DubboNetServerAttributesGetter
   @Override
   @Nullable
   public InetSocketAddress getAddress(DubboRequest request) {
-    return request.context().getRemoteAddress();
+    return request.remoteAddress();
   }
 
   @Override

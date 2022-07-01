@@ -99,8 +99,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
             "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_PORT"  { it == null || it instanceof Long }
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" Long
           }
         }
         span(2) {
@@ -170,8 +170,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
             "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
             "$SemanticAttributes.RPC_METHOD" "\$invokeAsync"
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_PORT"  { it == null || it instanceof Long }
+            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.NET_PEER_PORT" Long
           }
         }
         span(2) {
