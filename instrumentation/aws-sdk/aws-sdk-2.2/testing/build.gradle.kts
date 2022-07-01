@@ -17,6 +17,9 @@ dependencies {
   api("software.amazon.awssdk:s3:2.2.0")
   api("software.amazon.awssdk:sqs:2.2.0")
 
+  // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
+  implementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
+
   implementation("com.google.guava:guava")
 
   implementation("org.apache.groovy:groovy")

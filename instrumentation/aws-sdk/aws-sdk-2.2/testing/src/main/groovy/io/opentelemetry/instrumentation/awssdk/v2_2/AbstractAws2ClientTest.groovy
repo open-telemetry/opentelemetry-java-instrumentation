@@ -57,6 +57,7 @@ import java.util.concurrent.Future
 
 import static com.google.common.collect.ImmutableMap.of
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
@@ -341,7 +342,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "$service.$operation"
-          kind CLIENT
+          kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
@@ -431,7 +432,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "$service.$operation"
-          kind CLIENT
+          kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
