@@ -29,6 +29,14 @@ public class DropwizardMetricsInstrumentationModule extends InstrumentationModul
   }
 
   @Override
+  public boolean defaultEnabled() {
+    // the Dropwizard metrics API does not have a concept of metric labels/tags/attributes, thus the
+    // data produced by this integration might be of very low quality, depending on how the API is
+    // used in the instrumented application
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new MetricRegistryInstrumentation(),
