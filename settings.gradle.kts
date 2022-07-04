@@ -201,6 +201,7 @@ include(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded
 include(":instrumentation:couchbase:couchbase-3.2:javaagent")
 include(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-common:testing")
+include(":instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent")
 include(":instrumentation:dropwizard:dropwizard-views-0.7:javaagent")
 include(":instrumentation:dropwizard:dropwizard-testing")
 include(":instrumentation:elasticsearch:elasticsearch-rest-common:javaagent")

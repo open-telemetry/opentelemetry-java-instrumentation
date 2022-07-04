@@ -214,11 +214,6 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("ch.qos.logback.classic.spi.LoggingEventVO");
 
     builder
-        .ignoreClass("com.codahale.metrics.")
-        // We instrument servlets
-        .allowClass("com.codahale.metrics.servlets.");
-
-    builder
         .ignoreClass("com.couchbase.client.deps.")
         // Couchbase library includes some packaged dependencies, unfortunately some of them are
         // instrumented by executors instrumentation
