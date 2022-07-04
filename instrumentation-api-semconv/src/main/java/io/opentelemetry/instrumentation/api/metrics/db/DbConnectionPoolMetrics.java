@@ -67,7 +67,7 @@ public final class DbConnectionPoolMetrics {
 
   public ObservableLongUpDownCounter idleConnections(LongSupplier idleConnectionsGetter) {
     return meter
-        .upDownCounterBuilder("db.client.connections.usage")
+        .upDownCounterBuilder("db.client.connections.idle")
         .setUnit("connections")
         .setDescription(
             "The number of connections that are currently in state described by the state attribute.")
