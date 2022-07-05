@@ -47,6 +47,10 @@ jobs:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-latest-cache-pnpm-modules
 
+      - name: Increase gradle daemon heap size
+        run: |
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx2g /" gradle.propertie
+
       - name: Test
         if: ${{ !inputs.skip }}
         uses: gradle/gradle-build-action@v2
