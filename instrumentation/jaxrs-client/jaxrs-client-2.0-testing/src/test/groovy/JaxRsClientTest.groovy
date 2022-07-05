@@ -110,7 +110,6 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
             "$SemanticAttributes.NET_PEER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 }
             "$SemanticAttributes.HTTP_URL" "${uri}"
             "$SemanticAttributes.HTTP_METHOD" method

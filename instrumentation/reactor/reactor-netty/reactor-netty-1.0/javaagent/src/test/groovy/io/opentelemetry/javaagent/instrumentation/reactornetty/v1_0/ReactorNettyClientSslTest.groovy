@@ -94,7 +94,6 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" server.httpsPort()
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
           }
         }
         span(4) {
@@ -108,7 +107,6 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" server.httpsPort()
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
           }
         }
       }
@@ -150,7 +148,6 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" server.httpsPort()
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
           }
         }
         span(2) {
@@ -171,7 +168,6 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" server.httpsPort()
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
           }
         }
         span(4) {
@@ -182,7 +178,6 @@ class ReactorNettyClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" server.httpsPort()
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
           }
         }
         span(5) {
