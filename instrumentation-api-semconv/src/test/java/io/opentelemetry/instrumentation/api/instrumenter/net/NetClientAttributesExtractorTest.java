@@ -74,8 +74,7 @@ class NetClientAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_PEER_PORT, 42L),
-            entry(SemanticAttributes.NET_PEER_IP, "4.3.2.1"));
+            entry(SemanticAttributes.NET_PEER_PORT, 42L));
   }
 
   @Test
@@ -108,8 +107,8 @@ class NetClientAttributesExtractorTest {
 
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NET_PEER_PORT, 42L),
-            entry(SemanticAttributes.NET_PEER_IP, "4.3.2.1"));
+            entry(SemanticAttributes.NET_PEER_NAME, "4.3.2.1"),
+            entry(SemanticAttributes.NET_PEER_PORT, 42L));
   }
 
   @Test

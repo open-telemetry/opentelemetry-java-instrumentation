@@ -106,7 +106,6 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
           }
         }
         span(3) {
@@ -120,7 +119,6 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
           }
         }
       }
@@ -174,7 +172,6 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
           }
         }
         span(3) {
@@ -185,7 +182,6 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
           }
         }
         span(4) {

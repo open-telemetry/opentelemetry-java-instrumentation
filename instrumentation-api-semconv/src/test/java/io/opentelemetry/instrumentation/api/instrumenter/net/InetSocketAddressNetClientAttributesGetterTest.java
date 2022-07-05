@@ -71,7 +71,6 @@ class InetSocketAddressNetClientAttributesGetterTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
-            entry(SemanticAttributes.NET_PEER_IP, response.getAddress().getHostAddress()),
             entry(SemanticAttributes.NET_PEER_NAME, "api.github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 456L));
   }

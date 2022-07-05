@@ -945,17 +945,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
               }
 
-              // TODO(anuraaga): Move to test knob rather than always treating as optional
-              if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_IP)) {
-                if (uri.getHost().equals("192.0.2.1")) {
-                  // NB(anuraaga): This branch seems to currently only be exercised on Java 15.
-                  // It would be good to understand how the JVM version is impacting this check.
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, "192.0.2.1");
-                } else {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, "127.0.0.1");
-                }
-              }
-
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_URL)) {
                 assertThat(attrs).containsEntry(SemanticAttributes.HTTP_URL, uri.toString());
               }
