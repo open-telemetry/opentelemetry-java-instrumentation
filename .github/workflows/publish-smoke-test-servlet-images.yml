@@ -59,7 +59,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           # only push cache for one matrix option per OS since github action cache space is limited
-          cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
+          cache-read-only: ${{ matrix.smoke-test-suite != 'tomcat' }}
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-2019'

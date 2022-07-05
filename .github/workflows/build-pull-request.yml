@@ -56,7 +56,7 @@ jobs:
   gradle-plugins:
     uses: ./.github/workflows/reusable-gradle-plugins.yml
     with:
-      no-build-cache: true
+      cache-read-only: true
 
   examples:
     uses: ./.github/workflows/reusable-examples.yml
