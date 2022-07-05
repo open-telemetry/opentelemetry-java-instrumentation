@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class HystrixSingletons {
 
@@ -21,7 +21,7 @@ public final class HystrixSingletons {
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HystrixRequest::spanName);
 
-    if (Config.get()
+    if (InstrumentationConfig.get()
         .getBoolean("otel.instrumentation.hystrix.experimental-span-attributes", false)) {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }

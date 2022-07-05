@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSin
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 
@@ -27,7 +27,8 @@ public class EndConnectAsyncBiFunction<T, U extends Throwable, R>
     implements BiFunction<T, Throwable, R> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get().getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private final Context context;
   private final RedisURI redisUri;

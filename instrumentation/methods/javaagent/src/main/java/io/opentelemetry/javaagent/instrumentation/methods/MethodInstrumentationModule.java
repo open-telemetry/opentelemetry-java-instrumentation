@@ -9,7 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
@@ -18,15 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * TraceConfig Instrumentation does not extend Default.
- *
- * <p>Instead it directly implements Instrumenter#instrument() and adds one default Instrumenter for
- * every configured class+method-list.
- *
- * <p>If this becomes a more common use case the building logic should be abstracted out into a
- * super class.
- */
 @AutoService(InstrumentationModule.class)
 public class MethodInstrumentationModule extends InstrumentationModule {
 
@@ -38,7 +29,8 @@ public class MethodInstrumentationModule extends InstrumentationModule {
     super("methods");
 
     Map<String, Set<String>> classMethodsToTrace =
-        MethodsConfigurationParser.parse(Config.get().getString(TRACE_METHODS_CONFIG));
+        MethodsConfigurationParser.parse(
+            InstrumentationConfig.get().getString(TRACE_METHODS_CONFIG));
 
     typeInstrumentations =
         classMethodsToTrace.entrySet().stream()

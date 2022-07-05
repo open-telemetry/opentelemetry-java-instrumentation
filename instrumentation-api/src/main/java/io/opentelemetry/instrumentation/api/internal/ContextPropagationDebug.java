@@ -10,7 +10,6 @@ import static java.util.logging.Level.SEVERE;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -33,13 +32,13 @@ public final class ContextPropagationDebug {
   private static final boolean FAIL_ON_CONTEXT_LEAK;
 
   static {
-    Config config = Config.get();
-    boolean agentDebugEnabled = config.getBoolean("otel.javaagent.debug", false);
+    boolean agentDebugEnabled = ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false);
 
     THREAD_PROPAGATION_DEBUGGER =
-        config.getBoolean(
+        ConfigPropertiesUtil.getBoolean(
             "otel.javaagent.experimental.thread-propagation-debugger.enabled", agentDebugEnabled);
-    FAIL_ON_CONTEXT_LEAK = config.getBoolean("otel.javaagent.testing.fail-on-context-leak", false);
+    FAIL_ON_CONTEXT_LEAK =
+        ConfigPropertiesUtil.getBoolean("otel.javaagent.testing.fail-on-context-leak", false);
   }
 
   // context to which debug locations were added

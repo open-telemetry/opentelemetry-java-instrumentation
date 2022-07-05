@@ -34,5 +34,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
   public void close() {}
 
   @Override
-  public void configure(Map<String, ?> configs) {}
+  public void configure(Map<String, ?> configs) {
+    // TODO: support experimental attributes config
+  }
 }

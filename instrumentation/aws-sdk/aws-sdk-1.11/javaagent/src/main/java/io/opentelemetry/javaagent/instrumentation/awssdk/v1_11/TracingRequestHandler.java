@@ -13,8 +13,8 @@ import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 /**
  * A {@link RequestHandler2} for use in the agent. Unlike library instrumentation, the agent will
@@ -35,7 +35,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   public static final RequestHandler2 tracingHandler =
       AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
-              Config.get()
+              InstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes", false))
           .build()
           .newRequestHandler();

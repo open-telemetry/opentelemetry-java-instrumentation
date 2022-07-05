@@ -19,8 +19,5 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }
 }

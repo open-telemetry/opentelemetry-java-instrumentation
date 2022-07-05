@@ -20,7 +20,10 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
 
   @Unroll
   def "test wrappers"() throws Exception {
-    KafkaTelemetry telemetry = KafkaTelemetry.create(getOpenTelemetry())
+    KafkaTelemetry telemetry = KafkaTelemetry.builder(getOpenTelemetry())
+    // TODO run tests both with and without experimental span attributes
+            .setCaptureExperimentalSpanAttributes(true)
+            .build()
 
     when:
     String greeting = "Hello Kafka!"
