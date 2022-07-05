@@ -49,7 +49,7 @@ jobs:
 
       - name: Increase gradle daemon heap size
         run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx2g /" gradle.propertie
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx2g /" gradle.properties
 
       - name: Test
         if: ${{ !inputs.skip }}
