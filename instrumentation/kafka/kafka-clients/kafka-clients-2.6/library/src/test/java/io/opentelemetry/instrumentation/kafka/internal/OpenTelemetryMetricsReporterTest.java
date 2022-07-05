@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients.internal;
+package io.opentelemetry.instrumentation.kafka.internal;
 
 import static java.lang.System.lineSeparator;
 import static java.util.Comparator.comparing;
@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.kafkaclients.OpenTelemetryKafkaMetrics;
+import io.opentelemetry.instrumentation.kafkaclients.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -57,12 +57,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 @Testcontainers
-public abstract class OpenTelemetryMetricsReporterTest {
+class OpenTelemetryMetricsReporterTest {
 
   private static final Logger logger =
       LoggerFactory.getLogger(OpenTelemetryMetricsReporterTest.class);
@@ -111,7 +107,11 @@ public abstract class OpenTelemetryMetricsReporterTest {
         ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
     producerConfig.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip");
     producerConfig.putAll(
-        OpenTelemetryKafkaMetrics.getConfigProperties(testing.getOpenTelemetry()));
+        KafkaTelemetry.create(testing.getOpenTelemetry()).metricConfigProperties());
+    producerConfig.merge(
+        CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
+        TestMetricsReporter.class.getName(),
+        (o, o2) -> o + "," + o2);
     return producerConfig;
   }
 
@@ -125,7 +125,7 @@ public abstract class OpenTelemetryMetricsReporterTest {
         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
     consumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 2);
     consumerConfig.putAll(
-        OpenTelemetryKafkaMetrics.getConfigProperties(testing.getOpenTelemetry()));
+        KafkaTelemetry.create(testing.getOpenTelemetry()).metricConfigProperties());
     consumerConfig.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         TestMetricsReporter.class.getName(),
@@ -418,7 +418,7 @@ public abstract class OpenTelemetryMetricsReporterTest {
     consumer.subscribe(TOPICS);
     Instant stopTime = Instant.now().plusSeconds(10);
     while (Instant.now().isBefore(stopTime)) {
-      consumer.poll(1000);
+      consumer.poll(Duration.ofSeconds(1));
     }
   }
 

@@ -3,23 +3,15 @@
 The Kafka client exposes metrics via `org.apache.kafka.common.metrics.MetricsReporter` interface.
 OpenTelemetry provides an implementation that bridges the metrics into OpenTelemetry.
 
-To use, configure `GlobalOpenTelemetry` with an OpenTelemetry instance
-via `GlobalOpenTelemetry#set(OpenTelemetry)`, and include a reference to this
-class in kafka producer or consumer configuration, i.e.:
-
-```java
-Map<String, Object> config = new HashMap<>();
-config.put(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG, OpenTelemetryKafkaMetrics.class.getName());
-config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getKafkaConnectString());
-...
-try (KafkaProducer<byte[], byte[]> producer = new KafkaProducer<>(config)) { ... }
-```
+To use, add merge the config properties
+from `KafkaTelemetry.create(OpenTelemetry).metricConfigProperties()`
+with the configuration used when creating your producer or consumer.
 
 Note: Kafka reports several metrics at multiple attribute granularities. For
 example, `records-consumed-total` is reported with attribute key `[client-id]`
 and `[client-id, topic]`. If you analyze the sum of records consumed, ignoring dimensions, backends
-are likely to double count. To alleviate this, `OpenTelemetryKafkaMetrics` detects this
-scenario and only records the most granular set of attributes available. In the case
+are likely to double count. The implementation detects this scenario and only records the most
+granular set of attributes available. In the case
 of `records-consumed-total`, it reports `[client-id, topic]` and ignores `[client-id]`.
 
 The following table shows the full set of metrics exposed by the kafka client, and the corresponding

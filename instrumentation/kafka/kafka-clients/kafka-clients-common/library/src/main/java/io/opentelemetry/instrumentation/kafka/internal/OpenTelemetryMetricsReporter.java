@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients.internal;
+package io.opentelemetry.instrumentation.kafka.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
-import io.opentelemetry.instrumentation.kafkaclients.OpenTelemetryKafkaMetrics;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,12 +22,16 @@ import org.apache.kafka.common.metrics.MetricsReporter;
 /**
  * A {@link MetricsReporter} which bridges Kafka metrics to OpenTelemetry metrics.
  *
- * <p>To configure, use {@link OpenTelemetryKafkaMetrics#getConfigProperties(OpenTelemetry)}.
+ * <p>To configure, use:
+ *
+ * <pre><{@code
+ * // KafkaTelemetry.KafkaTelemetry.create(OpenTelemetry).metricConfigProperties()
+ * }</pre>
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class OpenTelemetryMetricsReporter implements MetricsReporter {
+public final class OpenTelemetryMetricsReporter implements MetricsReporter {
 
   public static final String CONFIG_KEY_OPENTELEMETRY_INSTANCE = "opentelemetry.instance";
 

@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients.internal;
+package io.opentelemetry.instrumentation.kafka.internal;
 
-import static io.opentelemetry.instrumentation.kafkaclients.internal.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
-import static io.opentelemetry.instrumentation.kafkaclients.internal.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
+import static io.opentelemetry.instrumentation.kafka.internal.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
+import static io.opentelemetry.instrumentation.kafka.internal.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -26,7 +26,7 @@ import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.Measurable;
 
 /** A registry mapping kafka metrics to corresponding OpenTelemetry metric definitions. */
-class KafkaMetricRegistry {
+final class KafkaMetricRegistry {
 
   private static final Set<String> groups = new HashSet<>(Arrays.asList("consumer", "producer"));
   private static final Map<Class<?>, String> measureableToInstrumentType = new HashMap<>();
