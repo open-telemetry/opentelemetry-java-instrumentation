@@ -125,8 +125,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "ClusterHealthAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.host
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
@@ -242,8 +241,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.host
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "CreateIndexAction"
@@ -258,8 +256,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.host
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GetAction"
@@ -289,8 +286,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "IndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.host
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "IndexAction"
@@ -310,8 +306,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host == tcpPublishAddress.address ? null : tcpPublishAddress.address
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.host
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GetAction"
