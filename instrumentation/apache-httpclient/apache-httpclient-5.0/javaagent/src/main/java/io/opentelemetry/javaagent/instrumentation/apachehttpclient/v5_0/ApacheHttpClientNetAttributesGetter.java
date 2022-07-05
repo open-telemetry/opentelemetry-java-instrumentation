@@ -50,10 +50,4 @@ final class ApacheHttpClientNetAttributesGetter
         return null;
     }
   }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
 }

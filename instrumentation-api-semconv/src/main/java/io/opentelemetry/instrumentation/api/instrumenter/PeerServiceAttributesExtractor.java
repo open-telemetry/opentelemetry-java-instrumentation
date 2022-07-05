@@ -67,10 +67,6 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
     String peerName = attributesGetter.peerName(request, response);
     String peerService = mapToPeerService(peerName);
-    if (peerService == null) {
-      String peerIp = attributesGetter.peerIp(request, response);
-      peerService = mapToPeerService(peerIp);
-    }
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
     }

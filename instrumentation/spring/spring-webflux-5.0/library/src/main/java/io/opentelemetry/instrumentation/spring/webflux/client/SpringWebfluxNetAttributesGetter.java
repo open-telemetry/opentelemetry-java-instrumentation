@@ -29,10 +29,4 @@ final class SpringWebfluxNetAttributesGetter
   public Integer peerPort(ClientRequest request, @Nullable ClientResponse response) {
     return request.url().getPort();
   }
-
-  @Nullable
-  @Override
-  public String peerIp(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
 }

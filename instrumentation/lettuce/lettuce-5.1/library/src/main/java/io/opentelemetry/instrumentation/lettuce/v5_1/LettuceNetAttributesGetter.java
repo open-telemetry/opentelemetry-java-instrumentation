@@ -29,10 +29,4 @@ final class LettuceNetAttributesGetter
   public Integer peerPort(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
     return endpoint.port;
   }
-
-  @Nullable
-  @Override
-  public String peerIp(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
-    return endpoint.ip;
-  }
 }

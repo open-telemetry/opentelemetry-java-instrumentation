@@ -49,13 +49,7 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
 
-    String peerIp = getter.peerIp(request, response);
-    String peerName = getter.peerName(request, response);
-
-    if (peerName != null && !peerName.equals(peerIp)) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
-    }
-    internalSet(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
+    internalSet(attributes, SemanticAttributes.NET_PEER_NAME, getter.peerName(request, response));
 
     Integer peerPort = getter.peerPort(request, response);
     if (peerPort != null && peerPort > 0) {

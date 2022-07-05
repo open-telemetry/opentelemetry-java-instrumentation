@@ -41,14 +41,6 @@ class NetClientAttributesExtractorTest {
       }
       return null;
     }
-
-    @Override
-    public String peerIp(Map<String, String> request, Map<String, String> response) {
-      if (response != null) {
-        return response.get("peerIp");
-      }
-      return null;
-    }
   }
 
   @Test
@@ -58,12 +50,10 @@ class NetClientAttributesExtractorTest {
     request.put("transport", "TCP");
     request.put("peerName", "github.com");
     request.put("peerPort", "123");
-    request.put("peerIp", "1.2.3.4");
 
     Map<String, String> response = new HashMap<>();
     response.put("peerName", "opentelemetry.io");
     response.put("peerPort", "42");
-    response.put("peerIp", "4.3.2.1");
 
     TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
     NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
@@ -94,13 +84,11 @@ class NetClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("transport", "TCP");
     request.put("peerName", "1.2.3.4");
-    request.put("peerIp", "1.2.3.4");
     request.put("peerPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("peerName", "4.3.2.1");
     response.put("peerPort", "42");
-    response.put("peerIp", "4.3.2.1");
 
     TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
     NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =

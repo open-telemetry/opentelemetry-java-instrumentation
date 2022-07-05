@@ -25,7 +25,4 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   Integer peerPort(REQUEST request, @Nullable RESPONSE response);
-
-  @Nullable
-  String peerIp(REQUEST request, @Nullable RESPONSE response);
 }

@@ -28,10 +28,4 @@ final class SpringWebNetAttributesGetter
   public Integer peerPort(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
     return httpRequest.getURI().getPort();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
-    return null;
-  }
 }

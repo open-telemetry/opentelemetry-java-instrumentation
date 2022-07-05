@@ -35,13 +35,4 @@ final class ElasticsearchRestNetResponseAttributesGetter
     }
     return null;
   }
-
-  @Override
-  @Nullable
-  public String peerIp(ElasticsearchRestRequest request, @Nullable Response response) {
-    if (response != null && response.getHost().getAddress() != null) {
-      return response.getHost().getAddress().getHostAddress();
-    }
-    return null;
-  }
 }

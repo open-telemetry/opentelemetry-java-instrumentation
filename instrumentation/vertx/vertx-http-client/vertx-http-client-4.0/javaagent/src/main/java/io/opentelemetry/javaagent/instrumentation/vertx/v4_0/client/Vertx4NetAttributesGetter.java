@@ -29,10 +29,4 @@ final class Vertx4NetAttributesGetter
   public Integer peerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
     return request.getPort();
   }
-
-  @Nullable
-  @Override
-  public String peerIp(HttpClientRequest request, @Nullable HttpClientResponse response) {
-    return null;
-  }
 }

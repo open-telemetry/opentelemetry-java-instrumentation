@@ -21,18 +21,12 @@ public class RabbitChannelNetAttributesGetter
   @Override
   public String peerName(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     // not using InetAddress.getHostName() since that can trigger reverse name lookup
-    return null;
+    return channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
   }
 
   @Nullable
   @Override
   public Integer peerPort(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return channelAndMethod.getChannel().getConnection().getPort();
-  }
-
-  @Nullable
-  @Override
-  public String peerIp(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
-    return channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
   }
 }
