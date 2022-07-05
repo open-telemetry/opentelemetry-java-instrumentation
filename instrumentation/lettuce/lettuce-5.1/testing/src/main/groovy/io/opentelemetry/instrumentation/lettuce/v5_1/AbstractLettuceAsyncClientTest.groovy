@@ -162,7 +162,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
@@ -213,7 +212,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET TESTKEY"
@@ -288,7 +286,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET NON_EXISTENT_KEY"
@@ -352,7 +349,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
             "$SemanticAttributes.DB_SYSTEM" "redis"
@@ -419,7 +415,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "HMSET TESTHM firstname ? lastname ? age ?"
@@ -439,7 +434,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "HGETALL TESTHM"

@@ -78,7 +78,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
@@ -92,7 +91,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "GET foo"
@@ -118,7 +116,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "SET batch1 ?;SET batch2 ?"
@@ -142,7 +139,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "RPUSH list1 ?"
@@ -169,7 +165,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "EVAL $script 1 map1 ? ?"
@@ -183,7 +178,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "HGET map1 key1"
@@ -207,7 +201,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "SADD set1 ?"
@@ -235,7 +228,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "ZADD sort_set1 ? ? ? ? ? ?"
@@ -259,7 +251,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "INCR AtomicLong"
@@ -288,7 +279,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" { lockScriptPattern.matcher(it).matches() }
@@ -304,7 +294,6 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" { lockScriptPattern.matcher(it).matches() }

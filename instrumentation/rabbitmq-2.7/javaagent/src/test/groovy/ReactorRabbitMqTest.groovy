@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import reactor.rabbitmq.ExchangeSpecification
 import reactor.rabbitmq.RabbitFlux
 import reactor.rabbitmq.SenderOptions
-
-import static com.google.common.net.InetAddresses.isInetAddress
 
 class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements WithRabbitMqTrait {
 
@@ -39,8 +38,7 @@ class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements W
           name 'exchange.declare'
           kind SpanKind.CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it instanceof String }
-            "$SemanticAttributes.NET_PEER_IP" { isInetAddress(it as String) }
+            "$SemanticAttributes.NET_PEER_NAME" { it instanceof String }
             "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"

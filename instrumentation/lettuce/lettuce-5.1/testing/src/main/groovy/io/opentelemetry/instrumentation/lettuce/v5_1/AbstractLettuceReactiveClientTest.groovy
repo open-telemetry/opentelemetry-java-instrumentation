@@ -104,7 +104,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
@@ -142,7 +141,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET TESTKEY"
@@ -193,7 +191,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET NON_EXISTENT_KEY"
@@ -237,7 +234,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
             "$SemanticAttributes.DB_SYSTEM" "redis"
@@ -266,7 +262,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "COMMAND"
             "$SemanticAttributes.DB_SYSTEM" "redis"
@@ -314,7 +309,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET a ?"
@@ -333,7 +327,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET a"
@@ -372,7 +365,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET a ?"
@@ -391,7 +383,6 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET a"

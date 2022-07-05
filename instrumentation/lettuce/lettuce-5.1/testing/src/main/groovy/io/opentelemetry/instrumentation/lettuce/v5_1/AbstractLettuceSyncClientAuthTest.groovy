@@ -70,7 +70,6 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "AUTH ?"

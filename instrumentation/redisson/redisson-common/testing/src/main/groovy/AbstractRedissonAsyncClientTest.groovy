@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.Callable
-import java.util.concurrent.CompletionStage
-import java.util.concurrent.TimeUnit
 import org.redisson.Redisson
 import org.redisson.api.RBucket
 import org.redisson.api.RFuture
@@ -19,6 +17,10 @@ import org.redisson.config.Config
 import org.redisson.config.SingleServerConfig
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
+
+import java.util.concurrent.Callable
+import java.util.concurrent.CompletionStage
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
@@ -78,7 +80,6 @@ abstract class AbstractRedissonAsyncClientTest extends AgentInstrumentationSpeci
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
@@ -118,7 +119,6 @@ abstract class AbstractRedissonAsyncClientTest extends AgentInstrumentationSpeci
           childOf(span(0))
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "SADD set1 ?"
