@@ -34,13 +34,13 @@ import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
-import io.opentelemetry.javaagent.tooling.config.EmptyInstrumentationConfig;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -118,15 +118,11 @@ public class AgentInstaller {
       autoConfiguredSdk = installOpenTelemetrySdk(config);
     }
 
-    InstrumentationConfig instrumentationConfig =
-        autoConfiguredSdk == null
-            ? new EmptyInstrumentationConfig()
-            : new ConfigPropertiesBridge(autoConfiguredSdk.getConfig());
-    InstrumentationConfig.internalInitializeConfig(instrumentationConfig);
-
-    copyNecessaryConfigToSystemProperties(instrumentationConfig);
-
     if (autoConfiguredSdk != null) {
+      InstrumentationConfig.internalInitializeConfig(
+          new ConfigPropertiesBridge(autoConfiguredSdk.getConfig()));
+      copyNecessaryConfigToSystemProperties(autoConfiguredSdk.getConfig());
+
       for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
         agentListener.beforeAgent(autoConfiguredSdk);
       }
@@ -188,7 +184,7 @@ public class AgentInstaller {
     }
   }
 
-  private static void copyNecessaryConfigToSystemProperties(InstrumentationConfig config) {
+  private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
     String value = config.getString("otel.instrumentation.experimental.span-suppression-strategy");
     if (value != null) {
       System.setProperty("otel.instrumentation.experimental.span-suppression-strategy", value);

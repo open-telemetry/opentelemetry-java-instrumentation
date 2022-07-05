@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.config;
+package io.opentelemetry.javaagent.bootstrap.internal;
 
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public final class EmptyInstrumentationConfig extends InstrumentationConfig {
+final class EmptyInstrumentationConfig extends InstrumentationConfig {
 
   @Nullable
   @Override

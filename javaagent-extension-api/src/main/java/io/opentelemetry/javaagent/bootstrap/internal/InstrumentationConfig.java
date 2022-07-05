@@ -32,8 +32,10 @@ public abstract class InstrumentationConfig {
 
   private static final Logger logger = Logger.getLogger(InstrumentationConfig.class.getName());
 
+  private static final InstrumentationConfig DEFAULT = new EmptyInstrumentationConfig();
+
   // lazy initialized, so that javaagent can set it
-  private static volatile InstrumentationConfig instance = null;
+  private static volatile InstrumentationConfig instance = DEFAULT;
 
   /**
    * Sets the instrumentation configuration singleton. This method is only supposed to be called
@@ -44,7 +46,7 @@ public abstract class InstrumentationConfig {
    * at any time.
    */
   public static void internalInitializeConfig(InstrumentationConfig config) {
-    if (instance != null) {
+    if (instance != DEFAULT) {
       logger.warning("InstrumentationConfig#instance was already set earlier");
       return;
     }
