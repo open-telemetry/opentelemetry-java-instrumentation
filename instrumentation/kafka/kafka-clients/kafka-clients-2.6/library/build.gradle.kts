@@ -10,6 +10,10 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
 
   testImplementation("org.testcontainers:kafka")
+  testImplementation("org.testcontainers:junit-jupiter")
+
+  testCompileOnly("com.google.auto.value:auto-value-annotations")
+  testAnnotationProcessor("com.google.auto.value:auto-value")
 }
 
 tasks {
