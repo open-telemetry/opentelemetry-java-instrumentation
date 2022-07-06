@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
+package io.opentelemetry.instrumentation.spring.autoconfigure.metrics;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for {@link io.opentelemetry.exporter.logging.LoggingSpanExporter}. */
-@ConfigurationProperties(prefix = "otel.exporter.logging")
-public final class LoggingSpanExporterProperties {
+@ConfigurationProperties(prefix = "otel.springboot.micrometer")
+public class MicrometerShimProperties {
+
   private boolean enabled = true;
 
   public boolean isEnabled() {

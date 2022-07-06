@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
+import io.opentelemetry.exporter.logging.LoggingMetricExporter;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -21,14 +22,14 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(
     prefix = "otel.exporter.logging",
-    name = {"enabled", "traces.enabled"},
+    name = {"enabled", "metrics.enabled"},
     matchIfMissing = true)
-@ConditionalOnClass(LoggingSpanExporter.class)
-public class LoggingSpanExporterAutoConfiguration {
+@ConditionalOnClass(LoggingMetricExporter.class)
+public class LoggingMetricExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public LoggingSpanExporter otelLoggingSpanExporter() {
-    return LoggingSpanExporter.create();
+  public LoggingMetricExporter otelLoggingMetricExporter() {
+    return LoggingMetricExporter.create();
   }
 }
