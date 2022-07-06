@@ -52,7 +52,7 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
 
   def cleanupSpec() {
     server.stop().get(10, TimeUnit.SECONDS)
-    eventLoopGroup.shutdownGracefully().sync()
+    eventLoopGroup.shutdownGracefully()
   }
 
   def "should fail SSL handshake"() {
