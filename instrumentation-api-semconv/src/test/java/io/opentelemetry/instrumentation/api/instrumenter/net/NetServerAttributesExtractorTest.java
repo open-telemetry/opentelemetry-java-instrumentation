@@ -32,8 +32,8 @@ class NetServerAttributesExtractorTest {
     }
 
     @Override
-    public String peerIp(Map<String, String> request) {
-      return request.get("peerIp");
+    public String peerName(Map<String, String> request) {
+      return request.get("peerName");
     }
   }
 
@@ -44,12 +44,12 @@ class NetServerAttributesExtractorTest {
     request.put("transport", "TCP");
     request.put("peerName", "github.com");
     request.put("peerPort", "123");
-    request.put("peerIp", "1.2.3.4");
+    request.put("peerName", "1.2.3.4");
 
     Map<String, String> response = new HashMap<>();
     response.put("peerName", "opentelemetry.io");
     response.put("peerPort", "42");
-    response.put("peerIp", "4.3.2.1");
+    response.put("peerName", "4.3.2.1");
 
     NetServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         createTestExtractor();
@@ -68,7 +68,7 @@ class NetServerAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, "TCP"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L),
-            entry(SemanticAttributes.NET_PEER_IP, "1.2.3.4"));
+            entry(SemanticAttributes.NET_PEER_NAME, "1.2.3.4"));
 
     assertThat(endAttributes.build()).isEmpty();
   }
@@ -79,13 +79,13 @@ class NetServerAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("transport", "TCP");
     request.put("peerName", "1.2.3.4");
-    request.put("peerIp", "1.2.3.4");
+    request.put("peerName", "1.2.3.4");
     request.put("peerPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("peerName", "4.3.2.1");
     response.put("peerPort", "42");
-    response.put("peerIp", "4.3.2.1");
+    response.put("peerName", "4.3.2.1");
 
     NetServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         createTestExtractor();
@@ -104,7 +104,7 @@ class NetServerAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, "TCP"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L),
-            entry(SemanticAttributes.NET_PEER_IP, "1.2.3.4"));
+            entry(SemanticAttributes.NET_PEER_NAME, "1.2.3.4"));
 
     assertThat(endAttributes.build()).isEmpty();
   }

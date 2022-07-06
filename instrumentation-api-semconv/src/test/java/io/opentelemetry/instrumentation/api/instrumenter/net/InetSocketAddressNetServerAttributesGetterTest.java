@@ -65,7 +65,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
-            entry(SemanticAttributes.NET_PEER_IP, request.getAddress().getHostAddress()),
+            entry(SemanticAttributes.NET_PEER_NAME, request.getAddress().getHostAddress()),
             entry(SemanticAttributes.NET_PEER_PORT, 123L));
 
     assertThat(endAttributes.build()).isEmpty();

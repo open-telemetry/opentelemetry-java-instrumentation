@@ -37,9 +37,9 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request));
 
-    String peerIp = getter.peerIp(request);
+    String peerName = getter.peerName(request);
 
-    internalSet(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
+    internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
 
     Integer peerPort = getter.peerPort(request);
     if (peerPort != null && peerPort > 0) {

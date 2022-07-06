@@ -34,7 +34,7 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
 
   @Override
   @Nullable
-  public final String peerIp(REQUEST request) {
+  public final String peerName(REQUEST request) {
     InetSocketAddress address = getAddress(request);
     if (address == null) {
       return null;

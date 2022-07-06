@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import javax.annotation.Nullable;
 
 /**
- * An interface for getting server-based network attributes. It adapts a vendor-specific request
- * type into the 3 common attributes (transport, peerPort, peerIp).
+ * An interface for getting server-based network attributes. It adapts an instrumentation-specific
+ * request type into the 3 common attributes (transport, peerPort, peerName).
  *
  * <p>Instrumentation authors will create implementations of this interface for their specific
  * server library/framework. It will be used by the {@link NetServerAttributesExtractor} to obtain
@@ -24,5 +24,5 @@ public interface NetServerAttributesGetter<REQUEST> {
   Integer peerPort(REQUEST request);
 
   @Nullable
-  String peerIp(REQUEST request);
+  String peerName(REQUEST request);
 }
