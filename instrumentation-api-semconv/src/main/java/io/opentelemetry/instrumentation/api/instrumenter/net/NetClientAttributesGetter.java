@@ -27,5 +27,22 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   Integer peerPort(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  String peerIp(REQUEST request, @Nullable RESPONSE response);
+  default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
+  default Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
+  default String sockFamily(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
+  default String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
 }

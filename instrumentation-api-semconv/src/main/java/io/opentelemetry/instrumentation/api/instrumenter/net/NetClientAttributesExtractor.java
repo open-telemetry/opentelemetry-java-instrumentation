@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -49,17 +50,26 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
 
-    String peerIp = getter.peerIp(request, response);
     String peerName = getter.peerName(request, response);
-
-    if (peerName != null && !peerName.equals(peerIp)) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
-    }
-    internalSet(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
+    String sockPeerAddr = getter.sockPeerAddr(request, response);
 
     Integer peerPort = getter.peerPort(request, response);
-    if (peerPort != null && peerPort > 0) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+    Integer sockPeerPort = getter.sockPeerPort(request, response);
+
+    if (peerName != null && !peerName.equals(sockPeerAddr)) {
+      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
+      if (peerPort != null && peerPort > 0) {
+        internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+      }
+      internalSet(attributes, AttributeKey.stringKey("net.sock.peer.addr"), sockPeerAddr);
+      if (sockPeerPort != null && sockPeerPort > 0 && !sockPeerPort.equals(peerPort)) {
+        internalSet(attributes, AttributeKey.longKey("net.sock.peer.port"), (long) sockPeerPort);
+      }
+    } else {
+      internalSet(attributes, AttributeKey.stringKey("net.sock.peer.addr"), sockPeerAddr);
+      if (sockPeerPort != null && sockPeerPort > 0) {
+        internalSet(attributes, AttributeKey.longKey("net.sock.peer.port"), (long) sockPeerPort);
+      }
     }
   }
 }

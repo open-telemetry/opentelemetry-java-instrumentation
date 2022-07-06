@@ -44,7 +44,7 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
 
   @Override
   @Nullable
-  public final String peerIp(REQUEST request, @Nullable RESPONSE response) {
+  public final String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
@@ -54,5 +54,15 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
       return remoteAddress.getHostAddress();
     }
     return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
+    if (address == null) {
+      return null;
+    }
+    return address.getPort();
   }
 }
