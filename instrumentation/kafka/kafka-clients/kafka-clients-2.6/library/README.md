@@ -3,7 +3,7 @@
 The Kafka client exposes metrics via `org.apache.kafka.common.metrics.MetricsReporter` interface.
 OpenTelemetry provides an implementation that bridges the metrics into OpenTelemetry.
 
-To use, add merge the config properties
+To use, merge the config properties
 from `KafkaTelemetry.create(OpenTelemetry).metricConfigProperties()`
 with the configuration used when creating your producer or consumer.
 
