@@ -27,6 +27,7 @@ public final class ConfigInitializer {
   static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
   static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIGURATION_FILE";
 
+  @SuppressWarnings("deprecation") // loads the ConfigCustomizer SPI
   public static void initialize() {
     List<ConfigCustomizer> customizers = loadOrdered(ConfigCustomizer.class);
     Config config = create(loadSpiConfiguration(customizers), loadConfigurationFile());
@@ -47,7 +48,7 @@ public final class ConfigInitializer {
   }
 
   /** Retrieves all default configuration overloads using SPI and initializes Config. */
-  @SuppressWarnings("deprecation") // loads the old config SPI
+  @SuppressWarnings("deprecation") // loads the ConfigCustomizer SPI
   private static Properties loadSpiConfiguration(List<ConfigCustomizer> customizers) {
     Properties propertiesFromSpi = new Properties();
     for (io.opentelemetry.javaagent.extension.config.ConfigPropertySource propertySource :

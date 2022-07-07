@@ -6,17 +6,17 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 @AutoService(IgnoredTypesConfigurer.class)
 public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(Config config, IgnoredTypesBuilder builder) {
+  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
     configureIgnoredTypes(builder);
     configureIgnoredClassLoaders(builder);
     configureIgnoredTasks(builder);

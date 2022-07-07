@@ -8,6 +8,7 @@ group = "io.opentelemetry.javaagent"
 
 dependencies {
   api("io.opentelemetry:opentelemetry-sdk")
+  api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   api("net.bytebuddy:byte-buddy-dep")
 
   implementation(project(":instrumentation-api"))

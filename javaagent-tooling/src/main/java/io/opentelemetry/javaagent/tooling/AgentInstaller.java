@@ -118,10 +118,12 @@ public class AgentInstaller {
       autoConfiguredSdk = installOpenTelemetrySdk(config);
     }
 
+    ConfigProperties sdkConfig = EmptyConfigProperties.INSTANCE;
     if (autoConfiguredSdk != null) {
+      sdkConfig = autoConfiguredSdk.getConfig();
       InstrumentationConfig.internalInitializeConfig(
-          new ConfigPropertiesBridge(autoConfiguredSdk.getConfig()));
-      copyNecessaryConfigToSystemProperties(autoConfiguredSdk.getConfig());
+          new ConfigPropertiesBridge(sdkConfig));
+      copyNecessaryConfigToSystemProperties(sdkConfig);
 
       for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
         agentListener.beforeAgent(autoConfiguredSdk);
@@ -141,7 +143,7 @@ public class AgentInstaller {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }
 
-    agentBuilder = configureIgnoredTypes(config, agentBuilder);
+    agentBuilder = configureIgnoredTypes(sdkConfig, agentBuilder);
 
     if (AgentConfig.get().isDebugModeEnabled()) {
       agentBuilder =
@@ -211,7 +213,8 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
-  private static AgentBuilder configureIgnoredTypes(Config config, AgentBuilder agentBuilder) {
+  private static AgentBuilder configureIgnoredTypes(
+      ConfigProperties config, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
       configurer.configure(config, builder);

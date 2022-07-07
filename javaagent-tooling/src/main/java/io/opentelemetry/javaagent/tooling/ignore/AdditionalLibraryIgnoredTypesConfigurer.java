@@ -6,9 +6,10 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.Locale;
 
 /**
  * Additional global ignore settings that are used to reduce number of classes we try to apply
@@ -28,8 +29,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
       "otel.javaagent.testing.additional-library-ignores.enabled";
 
   @Override
-  public void configure(Config config, IgnoredTypesBuilder builder) {
-    if (config.getBoolean(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
+  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+    if (config.getBoolean(normalize(ADDITIONAL_LIBRARY_IGNORES_ENABLED), true)) {
       configure(builder);
     }
   }
@@ -274,5 +275,10 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     // kotlin, note we do not ignore kotlinx because we instrument coroutines code
     builder.ignoreClass("kotlin.").allowClass("kotlin.coroutines.jvm.internal.DebugProbesKt");
+  }
+
+  // TODO: remove after https://github.com/open-telemetry/opentelemetry-java/issues/4562 is fixed
+  private static String normalize(String key) {
+    return key.toLowerCase(Locale.ROOT).replace('-', '.');
   }
 }

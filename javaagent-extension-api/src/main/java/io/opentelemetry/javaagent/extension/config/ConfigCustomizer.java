@@ -16,7 +16,10 @@ import java.util.Map;
  *
  * <p>This is a service provider interface that requires implementations to be registered in a
  * provider-configuration file stored in the {@code META-INF/services} resource directory.
+ *
+ * @deprecated Use the {@link ConfigPropertySource} SPI instead.
  */
+@Deprecated
 public interface ConfigCustomizer extends Ordered {
 
   /**

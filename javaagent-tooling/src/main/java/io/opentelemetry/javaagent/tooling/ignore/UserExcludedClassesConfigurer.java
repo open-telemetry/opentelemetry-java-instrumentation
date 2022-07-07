@@ -8,10 +8,11 @@ package io.opentelemetry.javaagent.tooling.ignore;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
+import java.util.Locale;
 
 @AutoService(IgnoredTypesConfigurer.class)
 public class UserExcludedClassesConfigurer implements IgnoredTypesConfigurer {
@@ -20,8 +21,8 @@ public class UserExcludedClassesConfigurer implements IgnoredTypesConfigurer {
   static final String EXCLUDED_CLASSES_CONFIG = "otel.javaagent.exclude-classes";
 
   @Override
-  public void configure(Config config, IgnoredTypesBuilder builder) {
-    List<String> excludedClasses = config.getList(EXCLUDED_CLASSES_CONFIG, emptyList());
+  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+    List<String> excludedClasses = config.getList(normalize(EXCLUDED_CLASSES_CONFIG), emptyList());
     for (String excludedClass : excludedClasses) {
       excludedClass = excludedClass.trim();
       // remove the trailing *
@@ -30,5 +31,10 @@ public class UserExcludedClassesConfigurer implements IgnoredTypesConfigurer {
       }
       builder.ignoreClass(excludedClass);
     }
+  }
+
+  // TODO: remove after https://github.com/open-telemetry/opentelemetry-java/issues/4562 is fixed
+  private static String normalize(String key) {
+    return key.toLowerCase(Locale.ROOT).replace('-', '.');
   }
 }
