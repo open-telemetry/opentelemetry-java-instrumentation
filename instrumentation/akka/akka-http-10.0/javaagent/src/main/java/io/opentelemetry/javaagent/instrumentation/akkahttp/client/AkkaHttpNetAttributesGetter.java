@@ -27,10 +27,4 @@ class AkkaHttpNetAttributesGetter implements NetClientAttributesGetter<HttpReque
   public Integer peerPort(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return httpRequest.uri().authority().port();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
 }

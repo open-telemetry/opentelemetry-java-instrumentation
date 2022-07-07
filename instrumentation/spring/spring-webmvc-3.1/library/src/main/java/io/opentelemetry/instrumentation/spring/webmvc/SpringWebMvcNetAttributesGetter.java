@@ -18,13 +18,13 @@ final class SpringWebMvcNetAttributesGetter
   }
 
   @Override
-  public Integer peerPort(HttpServletRequest request) {
+  public Integer sockPeerPort(HttpServletRequest request) {
     return request.getRemotePort();
   }
 
   @Override
   @Nullable
-  public String peerIp(HttpServletRequest request) {
+  public String sockPeerAddr(HttpServletRequest request) {
     return request.getRemoteAddr();
   }
 }

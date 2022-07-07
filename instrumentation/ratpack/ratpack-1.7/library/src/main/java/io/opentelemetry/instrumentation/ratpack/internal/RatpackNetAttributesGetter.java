@@ -21,13 +21,13 @@ public final class RatpackNetAttributesGetter implements NetServerAttributesGett
   }
 
   @Override
-  public Integer peerPort(Request request) {
+  public Integer sockPeerPort(Request request) {
     return request.getRemoteAddress().getPort();
   }
 
   @Override
   @Nullable
-  public String peerIp(Request request) {
+  public String sockPeerAddr(Request request) {
     return null;
   }
 }

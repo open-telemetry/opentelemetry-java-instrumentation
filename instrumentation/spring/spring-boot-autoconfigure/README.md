@@ -230,8 +230,9 @@ The traces below were exported using Zipkin.
          "http.status_code":"200",
          "http.url":"/spring-webmvc/sample",
          "http.user_agent":"PostmanRuntime/7.26.2",
-         "net.peer.ip":"0:0:0:0:0:0:0:1",
-         "net.peer.port":"33916",
+         "net.sock.peer.addr":"0:0:0:0:0:0:0:1",
+         "net.sock.peer.port":"33916",
+         "net.sock.family":"inet6"
          "sampling.probability":"1.0"
       }
    }

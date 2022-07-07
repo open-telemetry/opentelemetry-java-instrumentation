@@ -25,10 +25,4 @@ final class JedisNetAttributesGetter implements NetClientAttributesGetter<JedisR
   public Integer peerPort(JedisRequest request, @Nullable Void unused) {
     return request.getConnection().getPort();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(JedisRequest request, @Nullable Void unused) {
-    return null;
-  }
 }

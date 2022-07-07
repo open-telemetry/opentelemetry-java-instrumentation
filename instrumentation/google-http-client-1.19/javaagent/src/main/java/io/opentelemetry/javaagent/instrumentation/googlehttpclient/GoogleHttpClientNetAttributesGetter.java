@@ -33,10 +33,4 @@ final class GoogleHttpClientNetAttributesGetter
     }
     return null;
   }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
 }

@@ -759,11 +759,11 @@ To generate a trace, run MainServiceApplication and TimeServiceApplication, and 
 SpanWrapper{
 delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=15b72a8e85c842c5}, 
 parentSpanId=SpanId{spanId=57f0106dd1121b54}, name=HTTP GET, kind=CLIENT, attributes={net.peer.name=AttributeValueString{stringValue=localhost},
-http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=8080}, 
+http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=8080}, 
 http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, 
 status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410457933181, 
 endEpochNanos=1598409410925420912}, resolvedLinks=[], resolvedEvents=[], attributes={net.peer.name=AttributeValueString{stringValue=localhost},
-http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=8080}, 
+http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=8080}, 
 http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, totalAttributeCount=5, 
 totalRecordedEvents=0, status=Status{canonicalCode=OK, description=null}, name=HTTP GET, endEpochNanos=1598409410925420912, hasEnded=true
 }
@@ -771,15 +771,15 @@ totalRecordedEvents=0, status=Status{canonicalCode=OK, description=null}, name=H
 SpanWrapper{
 delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=57f0106dd1121b54}, 
 parentSpanId=SpanId{spanId=0000000000000000}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, attributes={http.status_code=AttributeValueLong{longValue=200}, 
-sampling.probability=AttributeValueDouble{doubleValue=1.0}, net.peer.port=AttributeValueLong{longValue=57578}, 
+sampling.probability=AttributeValueDouble{doubleValue=1.0}, net.sock.peer.port=AttributeValueLong{longValue=57578},
 http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, http.flavor=AttributeValueString{stringValue=1.1},
-http.url=AttributeValueString{stringValue=/message}, net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, 
+http.url=AttributeValueString{stringValue=/message}, net.sock.peer.addr=AttributeValueString{stringValue=0:0:0:0:0:0:0:1},
 http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, 
 status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410399317331, endEpochNanos=1598409411045782693},
 resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200}, sampling.probability=AttributeValueDouble{doubleValue=1.0},
-net.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, 
+net.sock.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, 
 http.flavor=AttributeValueString{stringValue=1.1}, http.url=AttributeValueString{stringValue=/message},
-net.peer.ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, http.method=AttributeValueString{stringValue=GET}, 
+net.sock.peer.addr=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, http.method=AttributeValueString{stringValue=GET},
 http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, totalAttributeCount=9, totalRecordedEvents=0, 
 status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409411045782693, hasEnded=true
 }
@@ -801,15 +801,15 @@ status=Status{canonicalCode=OK, description=null}, name=time, endEpochNanos=1598
 SpanWrapper{
 delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=b4ae77c523215f9d}, 
 parentSpanId=SpanId{spanId=15b72a8e85c842c5}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, 
-attributes={http.status_code=AttributeValueLong{longValue=200}, net.peer.port=AttributeValueLong{longValue=40174}, 
+attributes={http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=40174}, 
 http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, http.flavor=AttributeValueString{stringValue=1.1},
-http.url=AttributeValueString{stringValue=/time}, net.peer.ip=AttributeValueString{stringValue=127.0.0.1}, 
+http.url=AttributeValueString{stringValue=/time}, net.sock.peer.addr=AttributeValueString{stringValue=127.0.0.1},
 http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, 
 status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410680549805, 
 endEpochNanos=1598409410921631068}, resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200},
-net.peer.port=AttributeValueLong{longValue=40174}, http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, 
+net.sock.peer.port=AttributeValueLong{longValue=40174}, http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, 
 http.flavor=AttributeValueString{stringValue=1.1}, http.url=AttributeValueString{stringValue=/time},
-net.peer.ip=AttributeValueString{stringValue=127.0.0.1}, http.method=AttributeValueString{stringValue=GET}, 
+net.sock.peer.addr=AttributeValueString{stringValue=127.0.0.1}, http.method=AttributeValueString{stringValue=GET}, 
 http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, totalAttributeCount=8, totalRecordedEvents=0, 
 status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409410921631068, hasEnded=true
 }
@@ -930,8 +930,8 @@ Shown below is the sample trace generated by `MainService` and `TimeService` usi
          "http.status_code":"200",
          "http.url":"/time",
          "http.user_agent":"Java/11.0.8",
-         "net.peer.ip":"127.0.0.1",
-         "net.peer.port":"40174"
+         "net.sock.peer.addr":"127.0.0.1",
+         "net.sock.peer.port":"40174"
       }
    },
    {
@@ -951,7 +951,7 @@ Shown below is the sample trace generated by `MainService` and `TimeService` usi
          "http.status_code":"200",
          "http.url":"http://localhost:8080/time",
          "net.peer.name":"localhost",
-         "net.peer.port":"8080"
+         "net.sock.peer.port":"8080"
       }
    },
    {
@@ -972,8 +972,9 @@ Shown below is the sample trace generated by `MainService` and `TimeService` usi
          "http.status_code":"200",
          "http.url":"/message",
          "http.user_agent":"PostmanRuntime/7.26.2",
-         "net.peer.ip":"0:0:0:0:0:0:0:1",
-         "net.peer.port":"57578",
+         "net.sock.peer.addr":"0:0:0:0:0:0:0:1",
+         "net.sock.peer.port":"57578",
+         "net.sock.family":"inet6"
          "sampling.probability":"1.0"
       }
    }
