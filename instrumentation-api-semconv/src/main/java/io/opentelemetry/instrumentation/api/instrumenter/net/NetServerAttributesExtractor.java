@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -37,13 +38,13 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request));
 
-    String peerName = getter.peerName(request);
+    String sockPeerAddr = getter.sockPeerAddr(request);
 
-    internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
+    internalSet(attributes, AttributeKey.stringKey("net.sock.peer.addr"), sockPeerAddr);
 
-    Integer peerPort = getter.peerPort(request);
-    if (peerPort != null && peerPort > 0) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+    Integer sockPeerPort = getter.sockPeerPort(request);
+    if (sockPeerPort != null && sockPeerPort > 0) {
+      internalSet(attributes, AttributeKey.longKey("net.sock.peer.port"), (long) sockPeerPort);
     }
   }
 
