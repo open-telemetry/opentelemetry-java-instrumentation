@@ -7,7 +7,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for {@link io.opentelemetry.exporter.logging.LoggingSpanExporter}. */
+/**
+ * Configuration for {@link io.opentelemetry.exporter.logging.LoggingSpanExporter} and {@link
+ * io.opentelemetry.exporter.logging.LoggingMetricExporter}.
+ */
 @ConfigurationProperties(prefix = "otel.exporter.logging")
 public final class LoggingExporterProperties {
 

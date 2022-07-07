@@ -10,7 +10,8 @@ import javax.annotation.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration for {@link io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter}.
+ * Configuration for {@link io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter} and {@link
+ * io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter}.
  *
  * <p>Get Exporter Service Name
  *
