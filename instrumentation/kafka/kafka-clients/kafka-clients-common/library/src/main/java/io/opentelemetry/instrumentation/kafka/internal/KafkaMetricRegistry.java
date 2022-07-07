@@ -121,7 +121,7 @@ final class KafkaMetricRegistry {
       InstrumentDescriptor instrumentDescriptor,
       KafkaMetric kafkaMetric) {
     Consumer<ObservableDoubleMeasurement> callback =
-        observableMeasurement -> observableMeasurement.record(kafkaMetric.value(), attributes);
+        observableMeasurement -> observableMeasurement.record(value(kafkaMetric), attributes);
     switch (instrumentDescriptor.getInstrumentType()) {
       case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE:
         return meter
@@ -139,6 +139,10 @@ final class KafkaMetricRegistry {
     // TODO: add support for other instrument types and value types as needed for new instruments.
     // This should not happen.
     throw new IllegalStateException("Unrecognized instrument type. This is a bug.");
+  }
+
+  private static double value(KafkaMetric kafkaMetric) {
+    return kafkaMetric.measurable().measure(kafkaMetric.config(), System.currentTimeMillis());
   }
 
   private KafkaMetricRegistry() {}

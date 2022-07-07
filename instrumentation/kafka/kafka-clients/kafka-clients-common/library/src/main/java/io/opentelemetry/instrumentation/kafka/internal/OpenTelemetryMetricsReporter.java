@@ -24,7 +24,7 @@ import org.apache.kafka.common.metrics.MetricsReporter;
  *
  * <p>To configure, use:
  *
- * <pre><{@code
+ * <pre>{@code
  * // KafkaTelemetry.KafkaTelemetry.create(OpenTelemetry).metricConfigProperties()
  * }</pre>
  *
