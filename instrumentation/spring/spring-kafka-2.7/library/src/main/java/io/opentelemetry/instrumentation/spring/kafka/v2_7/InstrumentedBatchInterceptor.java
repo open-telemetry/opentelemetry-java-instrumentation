@@ -3,30 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.kafka;
-
-import static io.opentelemetry.javaagent.instrumentation.spring.kafka.SpringKafkaSingletons.batchProcessInstrumenter;
+package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.springframework.kafka.listener.BatchInterceptor;
 
-public final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
+final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
 
-  private final VirtualField<ConsumerRecords<K, V>, Context> receiveContextField;
-  private final VirtualField<ConsumerRecords<K, V>, State<ConsumerRecords<K, V>>> stateField;
+  private static final VirtualField<ConsumerRecords<?, ?>, Context> receiveContextField =
+      VirtualField.find(ConsumerRecords.class, Context.class);
+  private static final VirtualField<ConsumerRecords<?, ?>, State<ConsumerRecords<?, ?>>>
+      stateField = VirtualField.find(ConsumerRecords.class, State.class);
+
+  private final Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter;
   @Nullable private final BatchInterceptor<K, V> decorated;
 
-  public InstrumentedBatchInterceptor(
-      VirtualField<ConsumerRecords<K, V>, Context> receiveContextField,
-      VirtualField<ConsumerRecords<K, V>, State<ConsumerRecords<K, V>>> stateField,
+  InstrumentedBatchInterceptor(
+      Instrumenter<ConsumerRecords<?, ?>, Void> batchProcessInstrumenter,
       @Nullable BatchInterceptor<K, V> decorated) {
-    this.receiveContextField = receiveContextField;
-    this.stateField = stateField;
+    this.batchProcessInstrumenter = batchProcessInstrumenter;
     this.decorated = decorated;
   }
 
@@ -34,8 +35,8 @@ public final class InstrumentedBatchInterceptor<K, V> implements BatchIntercepto
   public ConsumerRecords<K, V> intercept(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
     Context parentContext = getParentContext(records);
 
-    if (batchProcessInstrumenter().shouldStart(parentContext, records)) {
-      Context context = batchProcessInstrumenter().start(parentContext, records);
+    if (batchProcessInstrumenter.shouldStart(parentContext, records)) {
+      Context context = batchProcessInstrumenter.start(parentContext, records);
       Scope scope = context.makeCurrent();
       stateField.set(records, State.create(records, context, scope));
     }
@@ -67,11 +68,11 @@ public final class InstrumentedBatchInterceptor<K, V> implements BatchIntercepto
   }
 
   private void end(ConsumerRecords<K, V> records, @Nullable Throwable error) {
-    State<ConsumerRecords<K, V>> state = stateField.get(records);
+    State<ConsumerRecords<?, ?>> state = stateField.get(records);
     stateField.set(records, null);
     if (state != null) {
       state.scope().close();
-      batchProcessInstrumenter().end(state.context(), state.request(), null, error);
+      batchProcessInstrumenter.end(state.context(), state.request(), null, error);
     }
   }
 }
