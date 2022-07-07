@@ -19,7 +19,7 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-webmvc-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webflux-5.0:library"))
   implementation("io.opentelemetry:opentelemetry-micrometer1-shim") {
-    // just get the instrumentation, without the micrometer itself
+    // just get the instrumentation, without micrometer itself
     exclude("io.micrometer", "micrometer-core")
   }
 
