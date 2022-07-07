@@ -146,7 +146,7 @@ testing {
 
       implementation("org.objenesis:objenesis")
       implementation("org.spockframework:spock-core") {
-        with (this as ExternalDependency) {
+        with(this as ExternalDependency) {
           // exclude optional dependencies
           exclude(group = "cglib", module = "cglib-nodep")
           exclude(group = "net.bytebuddy", module = "byte-buddy")
@@ -157,7 +157,7 @@ testing {
         }
       }
       implementation("org.spockframework:spock-junit4") {
-        with (this as ExternalDependency) {
+        with(this as ExternalDependency) {
           // spock-core is already added as dependency
           // exclude it here to avoid pulling in optional dependencies
           exclude(group = "org.spockframework", module = "spock-core")
@@ -376,7 +376,7 @@ configurations.configureEach {
     dependencySubstitution {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")).using(project(":instrumentation-api-semconv"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")).using(project(":instrumentation-api-annotation-support"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")).using(project(":instrumentation-annotations-support"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")).using(project(":instrumentation-appender-api-internal"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))

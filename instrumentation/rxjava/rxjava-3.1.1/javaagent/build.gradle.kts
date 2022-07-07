@@ -13,7 +13,7 @@ muzzle {
 
 dependencies {
   library("io.reactivex.rxjava3:rxjava:3.1.1")
-  compileOnly(project(":instrumentation-api-annotation-support"))
+  compileOnly(project(":instrumentation-annotations-support"))
 
   implementation(project(":instrumentation:rxjava:rxjava-3.1.1:library"))
 

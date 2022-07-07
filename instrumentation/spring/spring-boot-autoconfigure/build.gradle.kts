@@ -9,7 +9,7 @@ val versions: Map<String, String> by project
 val springBootVersion = versions["org.springframework.boot"]
 
 dependencies {
-  implementation(project(":instrumentation-api-annotation-support"))
+  implementation(project(":instrumentation-annotations-support"))
 
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
@@ -58,7 +58,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-jaeger")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
-  testImplementation(project(":instrumentation-api-annotation-support"))
+  testImplementation(project(":instrumentation-annotations-support"))
 }
 
 tasks.compileTestJava {
