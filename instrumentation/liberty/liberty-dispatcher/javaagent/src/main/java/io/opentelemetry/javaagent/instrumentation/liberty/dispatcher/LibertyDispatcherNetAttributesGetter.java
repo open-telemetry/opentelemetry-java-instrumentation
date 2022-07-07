@@ -20,7 +20,7 @@ public class LibertyDispatcherNetAttributesGetter
   @Override
   @Nullable
   public Integer peerPort(LibertyRequest libertyRequest) {
-    return libertyRequest.getServerPort();
+    return libertyRequest.peerPort();
   }
 
   @Override
