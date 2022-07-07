@@ -72,15 +72,17 @@ class InetSocketAddressNetClientAttributesGetterTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
 
-    assertThat(endAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
-            entry(
-                AttributeKey.stringKey("net.sock.peer.addr"),
-                response.getAddress().getHostAddress()),
-            entry(AttributeKey.stringKey("net.sock.family"), ipv4 ? "inet" : "inet6"),
-            entry(SemanticAttributes.NET_PEER_NAME, "api.github.com"),
-            entry(SemanticAttributes.NET_PEER_PORT, 456L));
+    AttributesBuilder builder = Attributes.builder();
+    builder.put(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
+    builder.put(
+        AttributeKey.stringKey("net.sock.peer.addr"), response.getAddress().getHostAddress());
+    if (!ipv4) {
+      builder.put(AttributeKey.stringKey("net.sock.family"), "inet6");
+    }
+    builder.put(SemanticAttributes.NET_PEER_NAME, "api.github.com");
+    builder.put(SemanticAttributes.NET_PEER_PORT, 456L);
+
+    assertThat(endAttributes.build()).isEqualTo(builder.build());
   }
 
   @Test
