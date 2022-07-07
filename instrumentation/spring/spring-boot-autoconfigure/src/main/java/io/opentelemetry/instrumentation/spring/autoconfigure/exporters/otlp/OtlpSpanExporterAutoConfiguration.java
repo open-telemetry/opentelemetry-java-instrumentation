@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import java.time.Duration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,22 +24,35 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@EnableConfigurationProperties(OtlpGrpcSpanExporterProperties.class)
-@ConditionalOnProperty(prefix = "otel.exporter.otlp", name = "enabled", matchIfMissing = true)
+@EnableConfigurationProperties(OtlpExporterProperties.class)
+@ConditionalOnProperty(
+    prefix = "otel.exporter.otlp",
+    name = {"enabled", "traces.enabled"},
+    matchIfMissing = true)
 @ConditionalOnClass(OtlpGrpcSpanExporter.class)
-public class OtlpGrpcSpanExporterAutoConfiguration {
+public class OtlpSpanExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(OtlpGrpcSpanExporterProperties properties) {
-
+  public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(OtlpExporterProperties properties) {
     OtlpGrpcSpanExporterBuilder builder = OtlpGrpcSpanExporter.builder();
-    if (properties.getEndpoint() != null) {
-      builder.setEndpoint(properties.getEndpoint());
+
+    String endpoint = properties.getTraces().getEndpoint();
+    if (endpoint == null) {
+      endpoint = properties.getEndpoint();
     }
-    if (properties.getTimeout() != null) {
-      builder.setTimeout(properties.getTimeout());
+    if (endpoint != null) {
+      builder.setEndpoint(endpoint);
     }
+
+    Duration timeout = properties.getTraces().getTimeout();
+    if (timeout == null) {
+      timeout = properties.getTimeout();
+    }
+    if (timeout != null) {
+      builder.setTimeout(timeout);
+    }
+
     return builder.build();
   }
 }

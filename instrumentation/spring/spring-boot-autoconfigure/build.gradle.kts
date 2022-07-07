@@ -6,21 +6,27 @@ plugins {
 group = "io.opentelemetry.instrumentation"
 
 val versions: Map<String, String> by project
+val springBootVersion = versions["org.springframework.boot"]
 
 dependencies {
   implementation(project(":instrumentation-api-annotation-support"))
 
-  implementation("org.springframework.boot:spring-boot-autoconfigure:${versions["org.springframework.boot"]}")
-  annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:${versions["org.springframework.boot"]}")
+  implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+  annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   implementation("javax.validation:validation-api:2.0.1.Final")
 
   implementation(project(":instrumentation:spring:spring-web-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webmvc-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webflux-5.0:library"))
+  implementation("io.opentelemetry:opentelemetry-micrometer1-shim") {
+    // just get the instrumentation, without micrometer itself
+    exclude("io.micrometer", "micrometer-core")
+  }
 
-  compileOnly("org.springframework.boot:spring-boot-starter-aop:${versions["org.springframework.boot"]}")
-  compileOnly("org.springframework.boot:spring-boot-starter-web:${versions["org.springframework.boot"]}")
-  compileOnly("org.springframework.boot:spring-boot-starter-webflux:${versions["org.springframework.boot"]}")
+  compileOnly("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   compileOnly("io.opentelemetry:opentelemetry-extension-annotations")
@@ -32,10 +38,11 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-exporter-otlp")
   compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
 
-  testImplementation("org.springframework.boot:spring-boot-starter-aop:${versions["org.springframework.boot"]}")
-  testImplementation("org.springframework.boot:spring-boot-starter-webflux:${versions["org.springframework.boot"]}")
-  testImplementation("org.springframework.boot:spring-boot-starter-web:${versions["org.springframework.boot"]}")
-  testImplementation("org.springframework.boot:spring-boot-starter-test:${versions["org.springframework.boot"]}") {
+  testImplementation("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
+  testImplementation("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
+  testImplementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+  testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
 
