@@ -68,6 +68,18 @@ testing {
         compileOnly("com.google.code.findbugs:annotations")
       }
     }
+
+    val testMissingType by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":javaagent-tooling"))
+        implementation("net.bytebuddy:byte-buddy-dep")
+        compileOnly("com.google.guava:guava")
+
+        // Used by byte-buddy but not brought in as a transitive dependency.
+        compileOnly("com.google.code.findbugs:annotations")
+      }
+    }
   }
 }
 

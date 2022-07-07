@@ -31,6 +31,7 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
+import io.opentelemetry.javaagent.tooling.bytebuddy.SafeTypeStrategy;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
@@ -49,11 +50,13 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
+import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.utility.JavaModule;
 
 public class AgentInstaller {
@@ -122,8 +125,14 @@ public class AgentInstaller {
     }
 
     AgentBuilder agentBuilder =
-        new AgentBuilder.Default()
+        new AgentBuilder.Default(
+                // default method graph compiler inspects the class hierarchy, we don't need it, so
+                // we use a simpler and faster strategy instead
+                new ByteBuddy().with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE))
             .disableClassFormatChanges()
+            // disableClassFormatChanges sets type strategy to TypeStrategy.Default.REDEFINE_FROZEN
+            // we'll wrap it with our own strategy
+            .with(new SafeTypeStrategy(AgentBuilder.TypeStrategy.Default.REDEFINE_FROZEN))
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new RedefinitionDiscoveryStrategy())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
