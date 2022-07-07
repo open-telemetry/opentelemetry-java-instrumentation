@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.javaagent.runtimemetrics;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.runtimemetrics.BufferPools;
 import io.opentelemetry.instrumentation.runtimemetrics.Classes;
 import io.opentelemetry.instrumentation.runtimemetrics.Cpu;
@@ -15,32 +14,39 @@ import io.opentelemetry.instrumentation.runtimemetrics.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimemetrics.MemoryPools;
 import io.opentelemetry.instrumentation.runtimemetrics.Threads;
 import io.opentelemetry.javaagent.extension.AgentListener;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import java.util.Collections;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.Locale;
 
 /** An {@link AgentListener} that enables runtime metrics during agent startup. */
 @AutoService(AgentListener.class)
 public class RuntimeMetricsInstaller implements AgentListener {
 
-  private static final boolean DEFAULT_ENABLED =
-      Config.get().getBoolean("otel.instrumentation.common.default-enabled", true);
-
   @Override
-  public void afterAgent(Config config, AutoConfiguredOpenTelemetrySdk unused) {
-    if (new AgentConfig(config)
-        .isInstrumentationEnabled(Collections.singleton("runtime-metrics"), DEFAULT_ENABLED)) {
+  public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+    ConfigProperties config = autoConfiguredSdk.getConfig();
 
-      Classes.registerObservers(GlobalOpenTelemetry.get());
-      Cpu.registerObservers(GlobalOpenTelemetry.get());
-      MemoryPools.registerObservers(GlobalOpenTelemetry.get());
-      Threads.registerObservers(GlobalOpenTelemetry.get());
-
-      if (config.getBoolean(
-          "otel.instrumentation.runtime-metrics.experimental-metrics.enabled", false)) {
-        GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
-        BufferPools.registerObservers(GlobalOpenTelemetry.get());
-      }
+    boolean defaultEnabled =
+        config.getBoolean(normalize("otel.instrumentation.common.default-enabled"), true);
+    if (!config.getBoolean(
+        normalize("otel.instrumentation.runtime-metrics.enabled"), defaultEnabled)) {
+      return;
     }
+
+    Classes.registerObservers(GlobalOpenTelemetry.get());
+    Cpu.registerObservers(GlobalOpenTelemetry.get());
+    MemoryPools.registerObservers(GlobalOpenTelemetry.get());
+    Threads.registerObservers(GlobalOpenTelemetry.get());
+
+    if (config.getBoolean(
+        normalize("otel.instrumentation.runtime-metrics.experimental-metrics.enabled"), false)) {
+      GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
+      BufferPools.registerObservers(GlobalOpenTelemetry.get());
+    }
+  }
+
+  // TODO: remove after https://github.com/open-telemetry/opentelemetry-java/issues/4562 is fixed
+  private static String normalize(String key) {
+    return key.toLowerCase(Locale.ROOT).replace('-', '.');
   }
 }
