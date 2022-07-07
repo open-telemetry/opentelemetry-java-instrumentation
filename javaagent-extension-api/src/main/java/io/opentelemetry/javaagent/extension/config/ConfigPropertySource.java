@@ -23,8 +23,6 @@ public interface ConfigPropertySource extends Ordered {
    * Returns all properties whose default values are overridden by this property source. Key of the
    * map is the propertyName (same as system property name, e.g. {@code otel.traces.exporter}),
    * value is the property value.
-   *
-   * @deprecated Use {@link ConfigCustomizer#defaultProperties()} instead.
    */
   Map<String, String> getProperties();
 }
