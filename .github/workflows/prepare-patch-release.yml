@@ -43,8 +43,8 @@ jobs:
           date=$(date "+%Y-%m-%d")
           sed -Ei "s/^## Unreleased$/## Version $VERSION ($date)/" CHANGELOG.md
 
-      - name: Set git user
-        run: .github/scripts/set-git-user.sh
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Create pull request
         env:
