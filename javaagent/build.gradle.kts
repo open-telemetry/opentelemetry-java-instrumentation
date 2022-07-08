@@ -14,9 +14,9 @@ description = "OpenTelemetry Javaagent"
 group = "io.opentelemetry.javaagent"
 
 // this configuration collects libs that will be placed in the bootstrap classloader
-//这个配置用来收集存放在 bootstrap classloader 中的类库
+// 这个配置用来收集存放在 bootstrap classloader 中的类库
 val bootstrapLibs by configurations.creating {
-   isCanBeResolved = true
+  isCanBeResolved = true
   isCanBeConsumed = false
 }
 // this configuration collects only required instrumentations and agent machinery
@@ -42,7 +42,6 @@ listOf(baseJavaagentLibs, javaagentLibs).forEach {
     exclude("io.opentelemetry", "opentelemetry-api")
     exclude("io.opentelemetry", "opentelemetry-semconv")
   }
-
 }
 
 val licenseReportDependencies by configurations.creating {

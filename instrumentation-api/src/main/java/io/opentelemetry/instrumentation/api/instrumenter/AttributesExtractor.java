@@ -17,6 +17,10 @@ import javax.annotation.Nullable;
  * Throwable) on end} with both {@link REQUEST} and {@link RESPONSE} to allow populating attributes
  * at each stage of a request's lifecycle. It is best to populate as much as possible in {@link
  * #onStart(AttributesBuilder, Context, Object)} to have it available during sampling.
+ *
+ * 给定请求和响应的io.opentelemetry.api.common.Attributes的提取器。将在开始时仅调用REQUEST，并在结束时同时调用
+ * REQUEST和RESPONSE，以允许在请求生命周期的每个阶段填充属性。最好在onStart(AttributesBuilder, Context, Object)
+ * 中填充尽可能多的内容，以便在采样期间可用。
  */
 public interface AttributesExtractor<REQUEST, RESPONSE> {
 

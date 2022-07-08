@@ -18,14 +18,11 @@ plugins {
 
 dependencyResolutionManagement {
   repositories {
-    mavenCentral()
-    mavenLocal()
+   mavenLocal()
     maven {
       setUrl("https://maven.aliyun.com/repository/public/")
     }
-    maven {
-      setUrl("https://maven.aliyun.com/repository/spring/")
-    }
+    mavenCentral()
   }
 }
 

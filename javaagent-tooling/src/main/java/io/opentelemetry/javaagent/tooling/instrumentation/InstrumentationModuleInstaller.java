@@ -59,6 +59,7 @@ public final class InstrumentationModuleInstaller {
 
   AgentBuilder install(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
+    // 判断是否启用该 InstrumentationModule
     if (!AgentConfig.get()
         .isInstrumentationEnabled(
             instrumentationModule.instrumentationNames(), instrumentationModule.defaultEnabled())) {
@@ -66,10 +67,13 @@ public final class InstrumentationModuleInstaller {
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
     }
+    // get additionalHelperClassNames
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
+    // 类加载器资源注入帮助类
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
     instrumentationModule.registerHelperResources(helperResourceBuilder);
+    // get TypeInstrumentation
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
       if (!helperClassNames.isEmpty() || !helperResourceBuilder.getResources().isEmpty()) {
@@ -84,6 +88,7 @@ public final class InstrumentationModuleInstaller {
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
         instrumentationModule.classLoaderMatcher();
+    // 决定是否应用此工具的ByteBuddy匹配器。生成的ReferenceMatcher调用:如果发现与传递的classLoader不匹配，则跳过此检测。
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(

@@ -19,7 +19,7 @@
     </layout>
   </appender>
 
-  <root level="WARN">
+  <root level="INFO">
     <appender-ref ref="file"/>
   </root>
 
