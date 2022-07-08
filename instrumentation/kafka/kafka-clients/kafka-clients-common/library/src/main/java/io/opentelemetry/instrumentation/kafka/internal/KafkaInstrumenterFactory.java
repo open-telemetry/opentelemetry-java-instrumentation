@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.kafka.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -32,6 +31,7 @@ public final class KafkaInstrumenterFactory {
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
+  private boolean messagingReceiveInstrumentationEnabled = false;
 
   public KafkaInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -51,6 +51,12 @@ public final class KafkaInstrumenterFactory {
 
   public KafkaInstrumenterFactory setPropagationEnabled(boolean propagationEnabled) {
     this.propagationEnabled = propagationEnabled;
+    return this;
+  }
+
+  public KafkaInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
+      boolean messagingReceiveInstrumentationEnabled) {
+    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     return this;
   }
 
@@ -85,7 +91,7 @@ public final class KafkaInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .setErrorCauseExtractor(errorCauseExtractor)
-        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+        .setEnabled(messagingReceiveInstrumentationEnabled)
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -114,7 +120,7 @@ public final class KafkaInstrumenterFactory {
 
     if (!propagationEnabled) {
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
-    } else if (ExperimentalConfig.get().messagingReceiveInstrumentationEnabled()) {
+    } else if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           SpanLinksExtractor.extractFromRequest(
               openTelemetry.getPropagators().getTextMapPropagator(),

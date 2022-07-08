@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -30,7 +31,9 @@ public final class KafkaSingletons {
             .setCaptureExperimentalSpanAttributes(
                 InstrumentationConfig.get()
                     .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-            .setPropagationEnabled(PROPAGATION_ENABLED);
+            .setPropagationEnabled(PROPAGATION_ENABLED)
+            .setMessagingReceiveInstrumentationEnabled(
+                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
     PRODUCER_INSTRUMENTER = instrumenterFactory.createProducerInstrumenter();
     CONSUMER_RECEIVE_INSTRUMENTER = instrumenterFactory.createConsumerReceiveInstrumenter();
     CONSUMER_PROCESS_INSTRUMENTER = instrumenterFactory.createConsumerProcessInstrumenter();

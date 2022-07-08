@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -28,6 +29,8 @@ public final class SpringKafkaSingletons {
             .setPropagationEnabled(
                 InstrumentationConfig.get()
                     .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true))
+            .setMessagingReceiveInstrumentationEnabled(
+                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
             .setErrorCauseExtractor(SpringKafkaErrorCauseExtractor.INSTANCE);
     BATCH_PROCESS_INSTRUMENTER = factory.createBatchProcessInstrumenter();
     PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter();
