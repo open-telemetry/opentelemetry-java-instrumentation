@@ -10,7 +10,6 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -26,13 +25,6 @@ public final class KafkaConsumerExperimentalAttributesExtractor
   private static final AttributeKey<Long> KAFKA_OFFSET = longKey("kafka.offset");
   private static final AttributeKey<Long> KAFKA_RECORD_QUEUE_TIME_MS =
       longKey("kafka.record.queue_time_ms");
-
-  private static final boolean ENABLED =
-      Config.get().getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false);
-
-  public static boolean isEnabled() {
-    return ENABLED;
-  }
 
   @Override
   public void onStart(

@@ -8,15 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.spring.integration;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTelemetry;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 import org.springframework.messaging.support.ChannelInterceptor;
 
 public final class SpringIntegrationSingletons {
 
   private static final List<String> PATTERNS =
-      Config.get()
+      InstrumentationConfig.get()
           .getList(
               "otel.instrumentation.spring-integration.global-channel-interceptor-patterns",
               singletonList("*"));

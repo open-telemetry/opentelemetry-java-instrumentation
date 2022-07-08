@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,11 +35,7 @@ class SpanSuppressionStrategyTest {
   @ParameterizedTest
   @ArgumentsSource(ConfigArgs.class)
   void shouldParseConfig(String value, SpanSuppressionStrategy expectedStrategy) {
-    Config config =
-        Config.builder()
-            .addProperty("otel.instrumentation.experimental.span-suppression-strategy", value)
-            .build();
-    assertEquals(expectedStrategy, SpanSuppressionStrategy.fromConfig(config));
+    assertEquals(expectedStrategy, SpanSuppressionStrategy.fromConfig(value));
   }
 
   static final class ConfigArgs implements ArgumentsProvider {

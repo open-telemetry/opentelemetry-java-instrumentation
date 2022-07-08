@@ -26,18 +26,21 @@ import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
+import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -116,6 +119,10 @@ public class AgentInstaller {
     }
 
     if (autoConfiguredSdk != null) {
+      InstrumentationConfig.internalInitializeConfig(
+          new ConfigPropertiesBridge(autoConfiguredSdk.getConfig()));
+      copyNecessaryConfigToSystemProperties(autoConfiguredSdk.getConfig());
+
       for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
         agentListener.beforeAgent(autoConfiguredSdk);
       }
@@ -174,6 +181,13 @@ public class AgentInstaller {
 
     if (autoConfiguredSdk != null) {
       runAfterAgentListeners(agentListeners, autoConfiguredSdk);
+    }
+  }
+
+  private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
+    String value = config.getString("otel.instrumentation.experimental.span-suppression-strategy");
+    if (value != null) {
+      System.setProperty("otel.instrumentation.experimental.span-suppression-strategy", value);
     }
   }
 

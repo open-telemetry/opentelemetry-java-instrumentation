@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.config;
 
 import io.opentelemetry.instrumentation.api.internal.DeprecatedConfigPropertyWarning;
 
+// TODO: move to javaagent-extension-api internal package
 public final class ExperimentalConfig {
 
   private static final ExperimentalConfig instance = new ExperimentalConfig(Config.get());

@@ -30,6 +30,8 @@ public final class KafkaInstrumenterFactory {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
+  private boolean captureExperimentalSpanAttributes = false;
+  private boolean propagationEnabled = true;
 
   public KafkaInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -38,6 +40,17 @@ public final class KafkaInstrumenterFactory {
 
   public KafkaInstrumenterFactory setErrorCauseExtractor(ErrorCauseExtractor errorCauseExtractor) {
     this.errorCauseExtractor = errorCauseExtractor;
+    return this;
+  }
+
+  public KafkaInstrumenterFactory setCaptureExperimentalSpanAttributes(
+      boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    return this;
+  }
+
+  public KafkaInstrumenterFactory setPropagationEnabled(boolean propagationEnabled) {
+    this.propagationEnabled = propagationEnabled;
     return this;
   }
 
@@ -95,11 +108,11 @@ public final class KafkaInstrumenterFactory {
             .addAttributesExtractor(new KafkaConsumerAdditionalAttributesExtractor())
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor);
-    if (KafkaConsumerExperimentalAttributesExtractor.isEnabled()) {
+    if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new KafkaConsumerExperimentalAttributesExtractor());
     }
 
-    if (!KafkaPropagation.isPropagationEnabled()) {
+    if (!propagationEnabled) {
       return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else if (ExperimentalConfig.get().messagingReceiveInstrumentationEnabled()) {
       builder.addSpanLinksExtractor(

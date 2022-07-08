@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
  * runtime so retrieving the property once and storing its result in a static final field allows JIT
  * to do its magic and remove some code branches.
  */
+// TODO: deprecate
 @AutoValue
 public abstract class Config {
   private static final Logger logger = Logger.getLogger(Config.class.getName());
