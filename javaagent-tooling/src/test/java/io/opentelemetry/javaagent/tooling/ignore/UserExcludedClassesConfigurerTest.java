@@ -40,7 +40,9 @@ class UserExcludedClassesConfigurerTest {
   @Test
   void shouldIgnoreClassesAndPackages() {
     // given
-    when(config.getList(EXCLUDED_CLASSES_CONFIG, emptyList()))
+    // TODO: remove normalization after
+    // https://github.com/open-telemetry/opentelemetry-java/issues/4562 is fixed
+    when(config.getList(EXCLUDED_CLASSES_CONFIG.replace('-', '.'), emptyList()))
         .thenReturn(
             asList("com.example.IgnoredClass", "com.example.ignored.*", "com.another_ignore"));
 
