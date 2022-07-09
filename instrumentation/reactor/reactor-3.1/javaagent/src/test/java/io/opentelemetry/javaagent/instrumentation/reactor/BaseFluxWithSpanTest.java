@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.reactor;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.extension.annotations.WithSpan;
-import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractTraced;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
 import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
@@ -16,12 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
 
-class FluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, Flux<String>> {
-
-  @Override
-  protected AbstractTraced<Flux<String>, Flux<String>> newTraced() {
-    return new Traced();
-  }
+abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, Flux<String>> {
 
   @Override
   protected void complete(Flux<String> future, String value) {
@@ -65,7 +58,7 @@ class FluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, Flux<String>> 
               return Flux.just("Value");
             });
 
-    Flux<String> result = new TracedWithSpan().flux(flux);
+    Flux<String> result = newTracedWithSpan().flux(flux);
 
     StepVerifier.create(result).expectNext("Value").verifyComplete();
 
@@ -92,7 +85,7 @@ class FluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, Flux<String>> 
             "parent",
             () -> {
               Flux<String> result =
-                  new TracedWithSpan()
+                  newTracedWithSpan()
                       .flux(
                           Flux.defer(
                               () -> {
@@ -139,24 +132,5 @@ class FluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, Flux<String>> 
         .get();
   }
 
-  static class Traced extends AbstractTraced<Flux<String>, Flux<String>> {
-
-    @Override
-    @WithSpan
-    protected Flux<String> completable() {
-      return UnicastProcessor.create();
-    }
-
-    @Override
-    @WithSpan
-    protected Flux<String> alreadySucceeded() {
-      return Flux.just(SUCCESS_VALUE);
-    }
-
-    @Override
-    @WithSpan
-    protected Flux<String> alreadyFailed() {
-      return Flux.error(FAILURE);
-    }
-  }
+  abstract TracedWithSpan newTracedWithSpan();
 }
