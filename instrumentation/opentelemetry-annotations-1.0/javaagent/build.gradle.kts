@@ -15,7 +15,7 @@ muzzle {
 val versions: Map<String, String> by project
 
 dependencies {
-  compileOnly(project(":instrumentation-api-annotation-support"))
+  compileOnly(project(":instrumentation-annotations-support"))
 
   compileOnly(project(":javaagent-tooling"))
 
@@ -26,7 +26,7 @@ dependencies {
   compileOnly(project(":opentelemetry-ext-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
-  testImplementation(project(":instrumentation-api-annotation-support"))
+  testImplementation(project(":instrumentation-annotations-support"))
   testImplementation("net.bytebuddy:byte-buddy")
 }
 
