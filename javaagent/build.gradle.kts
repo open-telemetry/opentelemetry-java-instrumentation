@@ -64,7 +64,8 @@ dependencies {
 
   baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":muzzle"))
-  baseJavaagentLibs(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
+  // TODO (trask) replace with opentelemetry-instrumentation-annotations
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))

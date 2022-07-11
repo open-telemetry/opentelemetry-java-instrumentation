@@ -29,7 +29,7 @@ dependencies {
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
-  testImplementation(project(":instrumentation:opentelemetry-annotations-1.0:testing"))
+  testImplementation(project(":instrumentation-annotations-support-testing"))
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 
