@@ -43,7 +43,6 @@ public enum WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
   }
 
   @Override
-  @Nullable
   public String[] extract(Method method, Parameter[] parameters) {
     String[] attributeNames = new String[parameters.length];
     for (int i = 0; i < parameters.length; i++) {
