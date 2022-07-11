@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: opentelemetry-java-bot/opentelemetry-operator
+          repository: opentelemetrybot/opentelemetry-operator
           # this is the personal access token used for "git push" below
           token: ${{ secrets.BOT_TOKEN }}
 
@@ -40,10 +40,8 @@ jobs:
         run: |
           echo $VERSION > autoinstrumentation/java/version.txt
 
-      - name: Set git user
-        run: |
-          git config user.name opentelemetry-java-bot
-          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Create pull request against opentelemetry-operator
         env:
