@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.otelannotations;
+package io.opentelemetry.javaagent.instrumentation.extensionannotations;
 
 import java.lang.reflect.Method;
 

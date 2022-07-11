@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.otelannotations;
+package io.opentelemetry.javaagent.instrumentation.extensionannotations;
 
 import io.opentelemetry.instrumentation.api.annotation.support.AnnotationReflectionHelper;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
@@ -24,7 +24,7 @@ public enum WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
     ClassLoader classLoader = WithSpanParameterAttributeNamesExtractor.class.getClassLoader();
     spanAttributeAnnotation =
         AnnotationReflectionHelper.forNameOrNull(
-            classLoader, "io.opentelemetry.instrumentation.annotations.SpanAttribute");
+            classLoader, "io.opentelemetry.extension.annotations.SpanAttribute");
     if (spanAttributeAnnotation != null) {
       spanAttributeValueFunction = resolveSpanAttributeValue(spanAttributeAnnotation);
     } else {

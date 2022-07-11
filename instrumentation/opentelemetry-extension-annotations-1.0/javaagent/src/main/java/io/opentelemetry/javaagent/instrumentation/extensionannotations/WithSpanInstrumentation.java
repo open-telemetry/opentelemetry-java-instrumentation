@@ -3,10 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.otelannotations;
+package io.opentelemetry.javaagent.instrumentation.extensionannotations;
 
-import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanSingletons.instrumenterWithAttributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -123,7 +121,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       // to local variable so that there would be only one call to Class.getMethod.
       method = originMethod;
 
-      Instrumenter<Method, Object> instrumenter = instrumenter();
+      Instrumenter<Method, Object> instrumenter = WithSpanSingletons.instrumenter();
       Context current = Java8BytecodeBridge.currentContext();
 
       if (instrumenter.shouldStart(current, method)) {
@@ -145,7 +143,8 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       scope.close();
 
       AsyncOperationEndSupport<Method, Object> operationEndSupport =
-          AsyncOperationEndSupport.create(instrumenter(), Object.class, method.getReturnType());
+          AsyncOperationEndSupport.create(
+              WithSpanSingletons.instrumenter(), Object.class, method.getReturnType());
       returnValue = operationEndSupport.asyncEnd(context, method, returnValue, throwable);
     }
   }
@@ -166,7 +165,8 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       // to local variable so that there would be only one call to Class.getMethod.
       method = originMethod;
 
-      Instrumenter<MethodRequest, Object> instrumenter = instrumenterWithAttributes();
+      Instrumenter<MethodRequest, Object> instrumenter =
+          WithSpanSingletons.instrumenterWithAttributes();
       Context current = Java8BytecodeBridge.currentContext();
       request = new MethodRequest(method, args);
 
@@ -190,7 +190,9 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       scope.close();
       AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport =
           AsyncOperationEndSupport.create(
-              instrumenterWithAttributes(), Object.class, method.getReturnType());
+              WithSpanSingletons.instrumenterWithAttributes(),
+              Object.class,
+              method.getReturnType());
       returnValue = operationEndSupport.asyncEnd(context, request, returnValue, throwable);
     }
   }

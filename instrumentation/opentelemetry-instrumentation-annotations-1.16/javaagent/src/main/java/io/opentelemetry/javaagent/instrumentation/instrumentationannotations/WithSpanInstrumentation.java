@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.otelannotations;
+package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
-import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanSingletons.instrumenterWithAttributes;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.WithSpanSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.WithSpanSingletons.instrumenterWithAttributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
