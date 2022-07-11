@@ -22,7 +22,12 @@ public final class SpringIntegrationSingletons {
               singletonList("*"));
 
   private static final ChannelInterceptor INTERCEPTOR =
-      SpringIntegrationTelemetry.create(GlobalOpenTelemetry.get()).newChannelInterceptor();
+      SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
+          .setProducerSpanEnabled(
+              InstrumentationConfig.get()
+                  .getBoolean("otel.instrumentation.spring-integration.producer.enabled", false))
+          .build()
+          .newChannelInterceptor();
 
   public static String[] patterns() {
     return PATTERNS.toArray(new String[0]);

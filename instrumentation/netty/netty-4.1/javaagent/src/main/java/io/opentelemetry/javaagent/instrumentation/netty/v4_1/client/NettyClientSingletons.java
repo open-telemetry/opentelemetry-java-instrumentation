@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.AttributeKey;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedConfigPropertyWarning;
+import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigPropertyWarning;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyConnectionInstrumenter;
@@ -26,7 +26,7 @@ public final class NettyClientSingletons {
   private static final boolean sslTelemetryEnabled;
 
   static {
-    Config config = Config.get();
+    InstrumentationConfig config = InstrumentationConfig.get();
     DeprecatedConfigPropertyWarning.warnIfUsed(
         config,
         "otel.instrumentation.netty.always-create-connect-span",

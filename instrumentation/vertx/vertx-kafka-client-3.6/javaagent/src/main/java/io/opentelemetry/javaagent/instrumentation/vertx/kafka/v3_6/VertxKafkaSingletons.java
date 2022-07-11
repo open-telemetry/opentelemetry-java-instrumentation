@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -27,7 +28,9 @@ public final class VertxKafkaSingletons {
                     .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
             .setPropagationEnabled(
                 InstrumentationConfig.get()
-                    .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true));
+                    .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true))
+            .setMessagingReceiveInstrumentationEnabled(
+                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
     BATCH_PROCESS_INSTRUMENTER = factory.createBatchProcessInstrumenter();
     PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter();
   }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -23,6 +24,8 @@ public final class KafkaStreamsSingletons {
           .setPropagationEnabled(
               InstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true))
+          .setMessagingReceiveInstrumentationEnabled(
+              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .createConsumerProcessInstrumenter();
 
   public static Instrumenter<ConsumerRecord<?, ?>, Void> instrumenter() {

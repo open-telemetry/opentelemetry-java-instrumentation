@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.integration;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -22,6 +23,8 @@ public final class SpringIntegrationTelemetryBuilder {
   private final List<AttributesExtractor<MessageWithChannel, Void>> additionalAttributeExtractors =
       new ArrayList<>();
 
+  private boolean producerSpanEnabled = false;
+
   SpringIntegrationTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -33,6 +36,15 @@ public final class SpringIntegrationTelemetryBuilder {
   public SpringIntegrationTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<MessageWithChannel, Void> attributesExtractor) {
     additionalAttributeExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Sets whether additional {@link SpanKind#PRODUCER PRODUCER} span should be emitted by this
+   * instrumentation.
+   */
+  public SpringIntegrationTelemetryBuilder setProducerSpanEnabled(boolean producerSpanEnabled) {
+    this.producerSpanEnabled = producerSpanEnabled;
     return this;
   }
 
@@ -71,6 +83,9 @@ public final class SpringIntegrationTelemetryBuilder {
                     SpringMessagingAttributesGetter.INSTANCE, MessageOperation.SEND))
             .newInstrumenter(SpanKindExtractor.alwaysProducer());
     return new SpringIntegrationTelemetry(
-        openTelemetry.getPropagators(), consumerInstrumenter, producerInstrumenter);
+        openTelemetry.getPropagators(),
+        consumerInstrumenter,
+        producerInstrumenter,
+        producerSpanEnabled);
   }
 }
