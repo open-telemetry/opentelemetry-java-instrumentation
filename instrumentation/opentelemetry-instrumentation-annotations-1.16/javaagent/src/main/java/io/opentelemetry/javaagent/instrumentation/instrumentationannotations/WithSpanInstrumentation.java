@@ -103,7 +103,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
 
       Set<String> methodNames = entry.getValue();
       if (!methodNames.isEmpty()) {
-        matcher.and(namedOneOf(methodNames.toArray(new String[0])));
+        matcher = matcher.and(namedOneOf(methodNames.toArray(new String[0])));
       }
 
       result = result.or(matcher);
