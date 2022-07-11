@@ -27,7 +27,7 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
   buildWindows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: bash
