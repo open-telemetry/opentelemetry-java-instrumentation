@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.whereAny;
@@ -94,15 +95,15 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
             InstrumentationConfig.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> classMather =
+      ElementMatcher.Junction<ByteCodeElement> matcher =
           isDeclaredBy(ElementMatchers.named(className));
 
-      ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher = none();
-      for (String methodName : entry.getValue()) {
-        excludedMethodsMatcher = excludedMethodsMatcher.or(ElementMatchers.named(methodName));
+      Set<String> methodNames = entry.getValue();
+      if (!methodNames.isEmpty()) {
+        matcher.and(namedOneOf(methodNames.toArray(new String[0])));
       }
 
-      result = result.or(classMather.and(excludedMethodsMatcher));
+      result = result.or(matcher);
     }
 
     return result;
