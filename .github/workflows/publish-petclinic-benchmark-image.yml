@@ -25,9 +25,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create timestamp for docker image tag
+        run: echo "TS=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
       - name: Push to GitHub packages
         uses: docker/build-push-action@v3
         with:
           push: true
           file: benchmark-overhead/Dockerfile-petclinic-base
-          tags: ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:latest
+          tags: ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:${{ env.TS }}
