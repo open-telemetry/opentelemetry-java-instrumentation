@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -15,7 +14,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedConfigPropertyWarning;
+import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigPropertyWarning;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettyConnectionInstrumenter;
 import reactor.netty.http.client.HttpClientConfig;
@@ -28,7 +28,7 @@ public final class ReactorNettySingletons {
   private static final boolean connectionTelemetryEnabled;
 
   static {
-    Config config = Config.get();
+    InstrumentationConfig config = InstrumentationConfig.get();
     DeprecatedConfigPropertyWarning.warnIfUsed(
         config,
         "otel.instrumentation.reactor-netty.always-create-connect-span",

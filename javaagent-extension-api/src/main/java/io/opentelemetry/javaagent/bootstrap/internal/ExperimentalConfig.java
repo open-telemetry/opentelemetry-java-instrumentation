@@ -3,23 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.config;
+package io.opentelemetry.javaagent.bootstrap.internal;
 
-import io.opentelemetry.instrumentation.api.internal.DeprecatedConfigPropertyWarning;
-
-// TODO: move to javaagent-extension-api internal package
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class ExperimentalConfig {
 
-  private static final ExperimentalConfig instance = new ExperimentalConfig(Config.get());
+  private static final ExperimentalConfig instance =
+      new ExperimentalConfig(InstrumentationConfig.get());
 
-  private final Config config;
+  private final InstrumentationConfig config;
 
   /** Returns the global agent configuration. */
   public static ExperimentalConfig get() {
     return instance;
   }
 
-  public ExperimentalConfig(Config config) {
+  public ExperimentalConfig(InstrumentationConfig config) {
     this.config = config;
   }
 

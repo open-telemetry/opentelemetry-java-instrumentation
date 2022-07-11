@@ -10,7 +10,6 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -23,11 +22,6 @@ final class SpringWebfluxExperimentalAttributesExtractor
       stringKey("spring-webflux.event");
   private static final AttributeKey<String> SPRING_WEBFLUX_MESSAGE =
       stringKey("spring-webflux.message");
-
-  public static boolean enabled() {
-    return Config.get()
-        .getBoolean("otel.instrumentation.spring-webflux.experimental-span-attributes", false);
-  }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, ClientRequest request) {}

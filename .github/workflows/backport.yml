@@ -21,8 +21,8 @@ jobs:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
 
-      - name: Set git user
-        run: .github/scripts/set-git-user.sh
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Create pull request
         env:

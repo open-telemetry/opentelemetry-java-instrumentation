@@ -32,7 +32,7 @@ dependencies {
     isTransitive = false
   }
 
-  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:library"))
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
