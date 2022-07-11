@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import javax.annotation.Nullable;
@@ -33,15 +34,19 @@ public final class VertxClientInstrumenterFactory {
                 instrumentationName,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(HttpClientAttributesExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                HttpClientAttributesExtractor.builder(httpAttributesGetter)
+                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                    .build())
             .addOperationMetrics(HttpClientMetrics.get());
 
     if (netAttributesGetter != null) {
-      NetClientAttributesExtractor<HttpClientRequest, HttpClientResponse> netAttributesExtractor =
-          NetClientAttributesExtractor.create(netAttributesGetter);
       builder
-          .addAttributesExtractor(netAttributesExtractor)
-          .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter));
+          .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
+          .addAttributesExtractor(
+              PeerServiceAttributesExtractor.create(
+                  netAttributesGetter, CommonConfig.get().getPeerServiceMapping()));
     }
 
     return builder.newClientInstrumenter(new HttpRequestHeaderSetter());
