@@ -121,8 +121,7 @@ public class AgentInstaller {
     ConfigProperties sdkConfig = EmptyConfigProperties.INSTANCE;
     if (autoConfiguredSdk != null) {
       sdkConfig = autoConfiguredSdk.getConfig();
-      InstrumentationConfig.internalInitializeConfig(
-          new ConfigPropertiesBridge(sdkConfig));
+      InstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
       copyNecessaryConfigToSystemProperties(sdkConfig);
 
       for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
