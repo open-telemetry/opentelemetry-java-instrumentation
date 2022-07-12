@@ -82,6 +82,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   private static final class SqlClientSpanNameExtractor<REQUEST>
       extends DbClientSpanNameExtractor<REQUEST> {
 
+    // a dedicated sanitizer just for extracting the operation and table name
+    private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
+
     private final SqlClientAttributesGetter<REQUEST> getter;
 
     private SqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST> getter) {
@@ -91,8 +94,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     @Override
     public String extract(REQUEST request) {
       String dbName = getter.name(request);
-      SqlStatementInfo sanitizedStatement =
-          SqlStatementSanitizer.sanitize(getter.rawStatement(request));
+      SqlStatementInfo sanitizedStatement = sanitizer.sanitizeNew(getter.rawStatement(request));
       return computeSpanName(
           dbName, sanitizedStatement.getOperation(), sanitizedStatement.getTable());
     }

@@ -7,15 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.util.function.Function;
 
 public final class OperationNameUtil {
+
+  private static final SqlStatementSanitizer sanitizer =
+      SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
 
   public static String getOperationNameForQuery(String query) {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name
     String operation = "Hibernate Query";
-    SqlStatementInfo info = SqlStatementSanitizer.sanitize(query);
+    SqlStatementInfo info = sanitizer.sanitizeNew(query);
     if (info.getOperation() != null) {
       operation = info.getOperation();
       if (info.getTable() != null) {

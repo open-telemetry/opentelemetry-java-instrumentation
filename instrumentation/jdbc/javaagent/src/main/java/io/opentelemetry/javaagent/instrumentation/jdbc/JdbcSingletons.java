@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesGetter;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 
 public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
@@ -30,7 +31,11 @@ public final class JdbcSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(SqlClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(dbAttributesGetter)
+                    .setStatementTelemetryEnabled(
+                        CommonConfig.get().isStatementSanitizationEnabled())
+                    .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());

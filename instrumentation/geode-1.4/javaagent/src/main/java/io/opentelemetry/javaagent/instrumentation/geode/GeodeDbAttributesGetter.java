@@ -7,10 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest> {
+
+  private final SqlStatementSanitizer sanitizer =
+      SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
   public String system(GeodeRequest request) {
@@ -38,7 +42,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Nullable
   public String statement(GeodeRequest request) {
     // sanitized statement is cached
-    return SqlStatementSanitizer.sanitize(request.getQuery()).getFullStatement();
+    return sanitizer.sanitizeNew(request.getQuery()).getFullStatement();
   }
 
   @Override

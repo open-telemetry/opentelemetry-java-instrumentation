@@ -9,12 +9,16 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
 final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?, ?>> {
+
+  private final RedisCommandSanitizer sanitizer =
+      RedisCommandSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
   public String system(RedisCommand<?, ?, ?> request) {
@@ -46,7 +50,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
         request.getArgs() == null
             ? Collections.emptyList()
             : LettuceArgSplitter.splitArgs(request.getArgs().toCommandString());
-    return RedisCommandSanitizer.sanitize(command, args);
+    return sanitizer.sanitize(command, args);
   }
 
   @Override

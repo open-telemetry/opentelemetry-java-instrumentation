@@ -25,6 +25,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -34,6 +35,8 @@ import org.apache.camel.Exchange;
 
 class DbSpanDecorator extends BaseSpanDecorator {
 
+  private final SqlStatementSanitizer sanitizer =
+      SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
   private final String component;
   private final String system;
 
@@ -65,19 +68,19 @@ class DbSpanDecorator extends BaseSpanDecorator {
       case "cql":
         Object cqlObj = exchange.getIn().getHeader("CamelCqlQuery");
         if (cqlObj != null) {
-          return SqlStatementSanitizer.sanitize(cqlObj.toString()).getFullStatement();
+          return sanitizer.sanitizeNew(cqlObj.toString()).getFullStatement();
         }
         return null;
       case "jdbc":
         Object body = exchange.getIn().getBody();
         if (body instanceof String) {
-          return SqlStatementSanitizer.sanitize((String) body).getFullStatement();
+          return sanitizer.sanitizeNew((String) body).getFullStatement();
         }
         return null;
       case "sql":
         Object sqlquery = exchange.getIn().getHeader("CamelSqlQuery");
         if (sqlquery instanceof String) {
-          return SqlStatementSanitizer.sanitize((String) sqlquery).getFullStatement();
+          return sanitizer.sanitizeNew((String) sqlquery).getFullStatement();
         }
         return null;
       default:
