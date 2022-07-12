@@ -4,34 +4,30 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import listener.Config
+import listener.AnnotatedListenerConfig
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
 
 import javax.jms.ConnectionFactory
 
-import static Jms1Test.consumerSpan
-import static Jms1Test.producerSpan
-
-class SpringListenerJms1SuppressReceiveSpansTest extends AgentInstrumentationSpecification {
-
+class SpringListenerSuppressReceiveSpansTest extends AgentInstrumentationSpecification {
   def "receiving message in spring listener generates spans"() {
     setup:
-    def context = new AnnotationConfigApplicationContext(Config)
+    def context = new AnnotationConfigApplicationContext(AnnotatedListenerConfig)
     def factory = context.getBean(ConnectionFactory)
     def template = new JmsTemplate(factory)
 
-    template.convertAndSend("SpringListenerJms1", "a message")
+    template.convertAndSend("SpringListenerJms2", "a message")
 
     expect:
     assertTraces(1) {
       trace(0, 2) {
-        producerSpan(it, 0, "queue", "SpringListenerJms1")
-        consumerSpan(it, 1, "queue", "SpringListenerJms1", "", span(0), "process")
+        SpringListenerTest.producerSpan(it, 0, "queue", "SpringListenerJms2")
+        SpringListenerTest.consumerSpan(it, 1, "queue", "SpringListenerJms2", "", span(0), "process")
       }
     }
 
     cleanup:
-    context.stop()
+    context.close()
   }
 }

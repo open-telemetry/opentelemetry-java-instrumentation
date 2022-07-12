@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 @Component
 class TestListener {
 
-  @JmsListener(destination = "SpringListenerJms2", containerFactory = "containerFactory")
+  @JmsListener(destination = "SpringListenerJms2")
   void receiveMessage(String message) {
     println "received: " + message
   }
