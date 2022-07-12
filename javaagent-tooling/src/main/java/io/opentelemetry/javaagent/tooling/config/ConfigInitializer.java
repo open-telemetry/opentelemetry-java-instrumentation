@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static java.util.logging.Level.SEVERE;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.extension.config.ConfigCustomizer;
+import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -27,10 +27,12 @@ public final class ConfigInitializer {
   static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
   static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIGURATION_FILE";
 
+  @SuppressWarnings("deprecation") // loads the ConfigCustomizer SPI
   public static void initialize() {
-    List<ConfigCustomizer> customizers = loadOrdered(ConfigCustomizer.class);
+    List<io.opentelemetry.javaagent.extension.config.ConfigCustomizer> customizers =
+        loadOrdered(io.opentelemetry.javaagent.extension.config.ConfigCustomizer.class);
     Config config = create(loadSpiConfiguration(customizers), loadConfigurationFile());
-    for (ConfigCustomizer customizer : customizers) {
+    for (io.opentelemetry.javaagent.extension.config.ConfigCustomizer customizer : customizers) {
       config = customizer.customize(config);
     }
     Config.internalInitializeConfig(config);
@@ -47,14 +49,14 @@ public final class ConfigInitializer {
   }
 
   /** Retrieves all default configuration overloads using SPI and initializes Config. */
-  @SuppressWarnings("deprecation") // loads the old config SPI
-  private static Properties loadSpiConfiguration(List<ConfigCustomizer> customizers) {
+  @SuppressWarnings("deprecation") // loads the ConfigCustomizer SPI
+  private static Properties loadSpiConfiguration(
+      List<io.opentelemetry.javaagent.extension.config.ConfigCustomizer> customizers) {
     Properties propertiesFromSpi = new Properties();
-    for (io.opentelemetry.javaagent.extension.config.ConfigPropertySource propertySource :
-        loadOrdered(io.opentelemetry.javaagent.extension.config.ConfigPropertySource.class)) {
+    for (ConfigPropertySource propertySource : loadOrdered(ConfigPropertySource.class)) {
       propertiesFromSpi.putAll(propertySource.getProperties());
     }
-    for (ConfigCustomizer customizer : customizers) {
+    for (io.opentelemetry.javaagent.extension.config.ConfigCustomizer customizer : customizers) {
       propertiesFromSpi.putAll(customizer.defaultProperties());
     }
     return propertiesFromSpi;

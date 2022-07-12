@@ -19,7 +19,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.10.2"
+  id("com.gradle.enterprise") version "3.10.3"
   id("com.github.burrunan.s3-build-cache") version "1.3"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.7.2"
 }
@@ -98,6 +98,7 @@ include(":muzzle")
 // agent projects
 include(":opentelemetry-api-shaded-for-instrumenting")
 include(":opentelemetry-ext-annotations-shaded-for-instrumenting")
+include(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting")
 include(":opentelemetry-instrumentation-api-shaded-for-instrumenting")
 include(":javaagent-bootstrap")
 include(":javaagent-extension-api")
@@ -112,6 +113,7 @@ include(":instrumentation-appender-api-internal")
 include(":instrumentation-appender-sdk-internal")
 include(":instrumentation-annotations")
 include(":instrumentation-annotations-support")
+include(":instrumentation-annotations-support-testing")
 
 // misc
 include(":dependencyManagement")
@@ -350,11 +352,11 @@ include(":instrumentation:okhttp:okhttp-2.2:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:library")
 include(":instrumentation:okhttp:okhttp-3.0:testing")
-include(":instrumentation:opentelemetry-annotations-1.0:javaagent")
-include(":instrumentation:opentelemetry-annotations-1.0:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
+include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
+include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-api:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-api:testing")
 include(":instrumentation:oracle-ucp-11.2:javaagent")

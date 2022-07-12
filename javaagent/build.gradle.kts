@@ -36,6 +36,7 @@ bootstrapLibs.run {
   exclude("org.ow2.asm")
   exclude("io.opentelemetry", "opentelemetry-sdk")
   exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure")
+  exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
 }
 
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
@@ -64,7 +65,8 @@ dependencies {
 
   baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":muzzle"))
-  baseJavaagentLibs(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
+  // TODO (trask) replace with opentelemetry-instrumentation-annotations
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))

@@ -41,5 +41,5 @@ dependencies {
 
   // @WithSpan annotation is used to generate spans in ContextBridgeTest
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
-  testInstrumentation(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 }
