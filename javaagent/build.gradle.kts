@@ -36,6 +36,7 @@ bootstrapLibs.run {
   exclude("org.ow2.asm")
   exclude("io.opentelemetry", "opentelemetry-sdk")
   exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure")
+  exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
 }
 
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
