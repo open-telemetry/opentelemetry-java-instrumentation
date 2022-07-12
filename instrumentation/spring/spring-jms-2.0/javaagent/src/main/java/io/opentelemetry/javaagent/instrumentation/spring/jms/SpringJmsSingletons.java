@@ -10,6 +10,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.javaagent.instrumentation.jms.JmsMessageAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.jms.MessagePropertyGetter;
+import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
 
 public final class SpringJmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-jms-2.0";
@@ -18,7 +21,7 @@ public final class SpringJmsSingletons {
       buildListenerInstrumenter();
 
   private static Instrumenter<MessageWithDestination, Void> buildListenerInstrumenter() {
-    SpringJmsMessageAttributesGetter getter = SpringJmsMessageAttributesGetter.INSTANCE;
+    JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
     return Instrumenter.<MessageWithDestination, Void>builder(

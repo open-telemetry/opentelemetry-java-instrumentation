@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -20,6 +20,6 @@ public class SpringJmsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new SpringJmsMessageListenerInstrumentation());
+    return singletonList(new SpringJmsMessageListenerInstrumentation());
   }
 }

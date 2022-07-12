@@ -12,7 +12,8 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.jms.JMSException;
 
-enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWithDestination, Void> {
+public enum JmsMessageAttributesGetter
+    implements MessagingAttributesGetter<MessageWithDestination, Void> {
   INSTANCE;
 
   private static final Logger logger = Logger.getLogger(JmsMessageAttributesGetter.class.getName());

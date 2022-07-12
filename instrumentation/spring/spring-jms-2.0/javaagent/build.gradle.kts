@@ -33,6 +33,7 @@ tasks {
 val versions: Map<String, String> by project
 
 dependencies {
+  implementation(project(":instrumentation:jms-1.1:javaagent"))
   library("org.springframework:spring-jms:2.0")
   compileOnly("javax.jms:jms-api:1.1-rev-1")
 
