@@ -22,8 +22,7 @@ public interface AgentListener extends Ordered {
 
   /**
    * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed
-   * on an {@link Instrumentation}. Not called if noop api enabled via {@code
-   * otel.javaagent.experimental.use-noop-api}.
+   * on an {@link Instrumentation}.
    *
    * @deprecated Implement {{@link #afterAgent(AutoConfiguredOpenTelemetrySdk)}} instead.
    */
@@ -37,8 +36,7 @@ public interface AgentListener extends Ordered {
 
   /**
    * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed
-   * on an {@link Instrumentation}. Not called if noop api enabled via {@code
-   * otel.javaagent.experimental.use-noop-api}.
+   * on an {@link Instrumentation}.
    */
   default void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
     afterAgent(Config.get(), autoConfiguredOpenTelemetrySdk);
