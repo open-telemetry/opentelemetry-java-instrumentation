@@ -7,5 +7,5 @@ package io.opentelemetry.javaagent.benchmark.servlet;
 
 import org.openjdk.jmh.annotations.Fork;
 
-@Fork(jvmArgsAppend = "-Dotel.javaagent.experimental.use-noop-api=true")
-public class ServletWithNoopApiBenchmark extends ServletBenchmark {}
+@Fork(jvmArgsAppend = "-Dotel.experimental.sdk.enabled=false")
+public class ServletWithSdkDisabledBenchmark extends ServletBenchmark {}
