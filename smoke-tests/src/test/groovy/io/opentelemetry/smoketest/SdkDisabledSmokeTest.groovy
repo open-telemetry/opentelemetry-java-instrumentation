@@ -15,7 +15,7 @@ import java.util.jar.JarFile
 import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 
 @IgnoreIf({ useWindowsContainers() })
-class NoopApiSmokeTest extends SmokeTest {
+class SdkDisabledSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20211213.1570880324"
@@ -24,7 +24,7 @@ class NoopApiSmokeTest extends SmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_JAVAAGENT_EXPERIMENTAL_USE_NOOP_API": "true"
+      "OTEL_EXPERIMENTAL_SDK_ENABLED": "false"
     ]
   }
 

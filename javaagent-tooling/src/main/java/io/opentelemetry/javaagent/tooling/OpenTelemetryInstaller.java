@@ -27,8 +27,6 @@ public class OpenTelemetryInstaller {
    * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
   static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(Config config) {
-    System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
-
     AutoConfiguredOpenTelemetrySdkBuilder builder =
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal(true)
