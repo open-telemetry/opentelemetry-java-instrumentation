@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 public final class WithSpanSingletons {
   private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.opentelemetry-annotations-1.0";
+      "io.opentelemetry.opentelemetry-extension-annotations-1.0";
 
   private static final Logger logger = Logger.getLogger(WithSpanSingletons.class.getName());
   private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
