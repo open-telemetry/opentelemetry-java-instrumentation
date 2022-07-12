@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-latest
+          - windows-2019
           - ubuntu-latest
         smoke-test-suite:
           - jetty
@@ -38,14 +38,14 @@ jobs:
           - wildfly
           - other
         exclude:
-          - os: ${{ inputs.skip-windows && 'windows-latest' || '' }}
-          - os: windows-latest
+          - os: ${{ inputs.skip-windows && 'windows-2019' || '' }}
+          - os: windows-2019
             smoke-test-suite: websphere
       fail-fast: false
     steps:
       - name: Support long paths
         run: git config --system core.longpaths true
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
 
       - uses: actions/checkout@v3
 
