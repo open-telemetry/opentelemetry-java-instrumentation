@@ -15,6 +15,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
@@ -43,6 +44,12 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
   static class ThreadPoolExecutorTest extends ExecutorInstrumentationTest<ThreadPoolExecutor> {
     ThreadPoolExecutorTest() {
       super(new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<>(20)));
+    }
+  }
+
+  static class WorkStealingPoolTest extends ExecutorInstrumentationTest<ExecutorService> {
+    public WorkStealingPoolTest() {
+      super(Executors.newWorkStealingPool(2));
     }
   }
 
