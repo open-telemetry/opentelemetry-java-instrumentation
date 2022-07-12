@@ -15,6 +15,9 @@ import java.util.function.BiConsumer;
  * A span processing function that can be stored in context. When stored in context this function
  * will be applied to all spans create while the context is active. Processing function is called
  * synchronously on the execution thread, it should not throw or block the execution thread.
+ *
+ * <p><strong>NOTE:</strong> This API is <strong>EXPERIMENTAL</strong>, it may be removed or
+ * changed.
  */
 public interface ContextSpanProcessor extends ImplicitContextKeyed {
 
