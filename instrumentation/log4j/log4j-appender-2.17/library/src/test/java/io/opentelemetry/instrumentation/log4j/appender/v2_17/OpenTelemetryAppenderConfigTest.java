@@ -53,8 +53,11 @@ class OpenTelemetryAppenderConfigTest {
             .addLogProcessor(SimpleLogProcessor.create(logExporter))
             .build();
 
-    OpenTelemetryAppender.resetSdkLogEmitterProviderForTest();
+    OpenTelemetryAppender.resetForTest();
     OpenTelemetryAppender.setSdkLogEmitterProvider(logEmitterProvider);
+    // TODO run tests both with and without experimental log attributes
+    OpenTelemetryAppender.setCaptureMapMessageAttributes(true);
+    OpenTelemetryAppender.setCaptureAllContextDataAttributes(true);
   }
 
   @BeforeEach

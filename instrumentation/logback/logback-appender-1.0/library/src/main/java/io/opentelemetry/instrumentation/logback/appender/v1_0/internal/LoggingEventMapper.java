@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
-import static java.util.Collections.emptyList;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
@@ -17,7 +15,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -32,32 +29,19 @@ import java.util.concurrent.TimeUnit;
  */
 public final class LoggingEventMapper {
 
-  public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
-
-  private static final boolean captureExperimentalAttributes =
-      Config.get()
-          .getBoolean("otel.instrumentation.logback-appender.experimental-log-attributes", false);
-
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
+  private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
-
-  // cached as an optimization
   private final boolean captureAllMdcAttributes;
 
-  private LoggingEventMapper() {
-    this(
-        Config.get()
-            .getList(
-                "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-                emptyList()));
-  }
-
-  // visible for testing
-  LoggingEventMapper(List<String> captureMdcAttributes) {
+  public LoggingEventMapper(
+      boolean captureExperimentalAttributes,
+      List<String> captureMdcAttributes,
+      boolean captureAllMdcAttributes) {
+    this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
-    this.captureAllMdcAttributes =
-        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+    this.captureAllMdcAttributes = captureAllMdcAttributes;
   }
 
   public void emit(LogEmitterProvider logEmitterProvider, ILoggingEvent event) {

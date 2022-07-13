@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
@@ -13,9 +15,13 @@ import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMa
 import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.Filter;
@@ -26,6 +32,7 @@ import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.time.Instant;
+import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 @Plugin(
@@ -39,8 +46,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private static final LogEmitterProviderHolder logEmitterProviderHolder =
       new LogEmitterProviderHolder();
 
-  private static final LogEventMapper<ReadOnlyStringMap> mapper =
-      new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE);
+  private static volatile boolean captureExperimentalAttributes = false;
+  private static volatile boolean captureMapMessageAttributes = false;
+  private static volatile List<String> captureContextDataAttributes = emptyList();
+  private static volatile boolean captureAllContextDataAttributes = false;
+
+  private final Object mapperLock = new Object();
+  // lazy initialized
+  private volatile LogEventMapper<ReadOnlyStringMap> mapper;
 
   @PluginBuilderFactory
   public static <B extends Builder<B>> B builder() {
@@ -75,8 +88,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     LogBuilder builder =
         logEmitterProviderHolder.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
-    mapper.mapLogEvent(
-        builder, event.getMessage(), event.getLevel(), event.getThrown(), contextData);
+    mapper()
+        .mapLogEvent(builder, event.getMessage(), event.getLevel(), event.getThrown(), contextData);
 
     Instant timestamp = event.getInstant();
     if (timestamp != null) {
@@ -86,6 +99,26 @@ public class OpenTelemetryAppender extends AbstractAppender {
           TimeUnit.NANOSECONDS);
     }
     builder.emit();
+  }
+
+  private LogEventMapper<ReadOnlyStringMap> mapper() {
+    LogEventMapper<ReadOnlyStringMap> m = mapper;
+    if (m == null) {
+      synchronized (mapperLock) {
+        m = mapper;
+        if (m == null) {
+          mapper =
+              m =
+                  new LogEventMapper<>(
+                      ContextDataAccessorImpl.INSTANCE,
+                      captureExperimentalAttributes,
+                      captureMapMessageAttributes,
+                      captureContextDataAttributes,
+                      captureAllContextDataAttributes);
+        }
+      }
+    }
+    return m;
   }
 
   /**
@@ -100,9 +133,54 @@ public class OpenTelemetryAppender extends AbstractAppender {
   }
 
   /**
+   * Sets whether experimental attributes should be set to logs. These attributes may be changed or
+   * removed in the future, so only enable this if you know you do not require attributes filled by
+   * this instrumentation to be stable across versions.
+   */
+  public static void setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
+    OpenTelemetryAppender.captureExperimentalAttributes = captureExperimentalAttributes;
+  }
+
+  /** Sets whether log4j {@link MapMessage} attributes should be copied to logs. */
+  public static void setCaptureMapMessageAttributes(boolean captureMapMessageAttributes) {
+    OpenTelemetryAppender.captureMapMessageAttributes = captureMapMessageAttributes;
+  }
+
+  /** Configures the {@link ThreadContext} attributes that will be copied to logs. */
+  public static void setCapturedContextDataAttributes(
+      Collection<String> captureContextDataAttributes) {
+    OpenTelemetryAppender.captureContextDataAttributes =
+        new ArrayList<>(captureContextDataAttributes);
+  }
+
+  /**
+   * Sets whether all log4j {@link ThreadContext} attributes should be copied to logs. This setting
+   * overrides the attributes list set in {@link #setCapturedContextDataAttributes(Collection)}.
+   */
+  public static void setCaptureAllContextDataAttributes(boolean captureAllContextDataAttributes) {
+    OpenTelemetryAppender.captureAllContextDataAttributes = captureAllContextDataAttributes;
+  }
+
+  /**
+   * Unsets the global {@link LogEmitterProvider} and the appender configuration. This is only meant
+   * to be used from tests which need to reconfigure the appender.
+   */
+  public static void resetForTest() {
+    logEmitterProviderHolder.resetForTest();
+
+    captureExperimentalAttributes = false;
+    captureMapMessageAttributes = false;
+    captureContextDataAttributes = emptyList();
+    captureAllContextDataAttributes = false;
+  }
+
+  /**
    * Unsets the global {@link LogEmitterProvider}. This is only meant to be used from tests which
    * need to reconfigure {@link LogEmitterProvider}.
+   *
+   * @deprecated Use {@link #resetForTest()} instead.
    */
+  @Deprecated
   public static void resetSdkLogEmitterProviderForTest() {
     logEmitterProviderHolder.resetForTest();
   }

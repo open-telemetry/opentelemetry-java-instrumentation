@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0.LogbackSingletons.mapper;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
-import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -51,7 +51,7 @@ class LogbackInstrumentation implements TypeInstrumentation {
       // logging framework delegates to another
       callDepth = CallDepth.forClass(LogEmitterProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        LoggingEventMapper.INSTANCE.emit(AgentLogEmitterProvider.get(), event);
+        mapper().emit(AgentLogEmitterProvider.get(), event);
       }
     }
 
