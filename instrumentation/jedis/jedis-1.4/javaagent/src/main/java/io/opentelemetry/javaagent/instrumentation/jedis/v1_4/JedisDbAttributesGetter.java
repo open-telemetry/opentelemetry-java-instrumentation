@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest> {
 
-  private final RedisCommandSanitizer sanitizer =
+  private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
 
   @Override

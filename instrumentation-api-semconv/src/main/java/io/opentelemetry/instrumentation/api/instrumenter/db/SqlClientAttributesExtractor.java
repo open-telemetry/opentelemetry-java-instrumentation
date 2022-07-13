@@ -59,7 +59,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    SqlStatementInfo sanitizedStatement = sanitizer.sanitizeNew(getter.rawStatement(request));
+    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.rawStatement(request));
     internalSet(attributes, SemanticAttributes.DB_STATEMENT, sanitizedStatement.getFullStatement());
     internalSet(attributes, SemanticAttributes.DB_OPERATION, sanitizedStatement.getOperation());
     internalSet(attributes, dbTableAttribute, sanitizedStatement.getTable());

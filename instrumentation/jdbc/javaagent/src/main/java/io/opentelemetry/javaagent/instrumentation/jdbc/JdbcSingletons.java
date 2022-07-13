@@ -33,7 +33,7 @@ public final class JdbcSingletons {
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(dbAttributesGetter)
-                    .setStatementTelemetryEnabled(
+                    .setStatementSanitizationEnabled(
                         CommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))

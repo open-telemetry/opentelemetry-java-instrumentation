@@ -33,7 +33,7 @@ public final class CassandraSingletons {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
-                    .setStatementTelemetryEnabled(
+                    .setStatementSanitizationEnabled(
                         CommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(

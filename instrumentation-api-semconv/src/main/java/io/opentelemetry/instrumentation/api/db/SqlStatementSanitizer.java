@@ -32,11 +32,11 @@ public final class SqlStatementSanitizer {
     this.statementSanitizationEnabled = statementSanitizationEnabled;
   }
 
-  public SqlStatementInfo sanitizeNew(@Nullable String statement) {
-    return sanitizeNew(statement, SqlDialect.DEFAULT);
+  public SqlStatementInfo sanitize(@Nullable String statement) {
+    return sanitize(statement, SqlDialect.DEFAULT);
   }
 
-  public SqlStatementInfo sanitizeNew(@Nullable String statement, SqlDialect dialect) {
+  public SqlStatementInfo sanitize(@Nullable String statement, SqlDialect dialect) {
     if (!statementSanitizationEnabled || statement == null) {
       return SqlStatementInfo.create(statement, null, null);
     }

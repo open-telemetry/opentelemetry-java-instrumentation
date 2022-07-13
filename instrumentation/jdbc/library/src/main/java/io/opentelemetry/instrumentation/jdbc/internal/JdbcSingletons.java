@@ -33,7 +33,7 @@ public final class JdbcSingletons {
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(dbAttributesGetter)
-                    .setStatementTelemetryEnabled(
+                    .setStatementSanitizationEnabled(
                         ConfigPropertiesUtil.getBoolean(
                             "otel.instrumentation.common.db-statement-sanitizer.enabled", true))
                     .build())

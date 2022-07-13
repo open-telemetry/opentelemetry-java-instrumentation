@@ -23,7 +23,7 @@ public final class LettuceTelemetryBuilder {
    * LettuceTelemetry} should be sanitized. If set to {@code true}, all parameters that can
    * potentially contain sensitive information will be masked. Enabled by default.
    */
-  public LettuceTelemetryBuilder setStatementTelemetryEnabled(
+  public LettuceTelemetryBuilder setStatementSanitizationEnabled(
       boolean statementSanitizationEnabled) {
     this.statementSanitizationEnabled = statementSanitizationEnabled;
     return this;

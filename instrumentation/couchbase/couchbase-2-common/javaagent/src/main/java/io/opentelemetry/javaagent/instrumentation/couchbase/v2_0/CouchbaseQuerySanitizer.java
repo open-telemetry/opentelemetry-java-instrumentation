@@ -121,7 +121,7 @@ public final class CouchbaseQuerySanitizer {
   }
 
   private static SqlStatementInfo sanitizeString(String query) {
-    return sanitizer.sanitizeNew(query, SqlDialect.COUCHBASE);
+    return sanitizer.sanitize(query, SqlDialect.COUCHBASE);
   }
 
   private CouchbaseQuerySanitizer() {}

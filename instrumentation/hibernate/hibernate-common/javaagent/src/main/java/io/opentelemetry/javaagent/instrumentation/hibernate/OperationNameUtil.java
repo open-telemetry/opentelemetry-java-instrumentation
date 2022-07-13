@@ -19,7 +19,7 @@ public final class OperationNameUtil {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name
     String operation = "Hibernate Query";
-    SqlStatementInfo info = sanitizer.sanitizeNew(query);
+    SqlStatementInfo info = sanitizer.sanitize(query);
     if (info.getOperation() != null) {
       operation = info.getOperation();
       if (info.getTable() != null) {

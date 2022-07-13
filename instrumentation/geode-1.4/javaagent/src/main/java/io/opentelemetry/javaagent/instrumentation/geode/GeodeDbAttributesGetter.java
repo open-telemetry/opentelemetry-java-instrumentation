@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest> {
 
-  private final SqlStatementSanitizer sanitizer =
+  private static final SqlStatementSanitizer sanitizer =
       SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
@@ -42,7 +42,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Nullable
   public String statement(GeodeRequest request) {
     // sanitized statement is cached
-    return sanitizer.sanitizeNew(request.getQuery()).getFullStatement();
+    return sanitizer.sanitize(request.getQuery()).getFullStatement();
   }
 
   @Override

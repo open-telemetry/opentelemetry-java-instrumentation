@@ -41,7 +41,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * SqlClientAttributesExtractor} should be sanitized. If set to {@code true}, all parameters that
    * can potentially contain sensitive information will be masked. Enabled by default.
    */
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementTelemetryEnabled(
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
       boolean statementSanitizationEnabled) {
     this.statementSanitizationEnabled = statementSanitizationEnabled;
     return this;

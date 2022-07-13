@@ -35,8 +35,9 @@ import org.apache.camel.Exchange;
 
 class DbSpanDecorator extends BaseSpanDecorator {
 
-  private final SqlStatementSanitizer sanitizer =
+  private static final SqlStatementSanitizer sanitizer =
       SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+
   private final String component;
   private final String system;
 
@@ -68,19 +69,19 @@ class DbSpanDecorator extends BaseSpanDecorator {
       case "cql":
         Object cqlObj = exchange.getIn().getHeader("CamelCqlQuery");
         if (cqlObj != null) {
-          return sanitizer.sanitizeNew(cqlObj.toString()).getFullStatement();
+          return sanitizer.sanitize(cqlObj.toString()).getFullStatement();
         }
         return null;
       case "jdbc":
         Object body = exchange.getIn().getBody();
         if (body instanceof String) {
-          return sanitizer.sanitizeNew((String) body).getFullStatement();
+          return sanitizer.sanitize((String) body).getFullStatement();
         }
         return null;
       case "sql":
         Object sqlquery = exchange.getIn().getHeader("CamelSqlQuery");
         if (sqlquery instanceof String) {
-          return sanitizer.sanitizeNew((String) sqlquery).getFullStatement();
+          return sanitizer.sanitize((String) sqlquery).getFullStatement();
         }
         return null;
       default:
