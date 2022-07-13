@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -14,6 +15,8 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import java.io.IOException;
+import java.util.stream.Collectors;
 import javax.servlet.Servlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -39,7 +42,7 @@ public class Servlet3Advice {
       return;
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-
+    System.out.println("got to servlet instrumentation");
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
     callDepth.getAndIncrement();
 
@@ -50,6 +53,16 @@ public class Servlet3Advice {
     requestContext = new ServletRequestContext<>(httpServletRequest, servletOrFilter);
     if (attachedContext == null && helper().shouldStart(currentContext, requestContext)) {
       context = helper().start(currentContext, requestContext);
+      //TODO - add http payload instrumentation
+//      try {
+//        String requestData = httpServletRequest.getReader().lines().collect(Collectors.joining());
+//        System.out.println("requestData: " + requestData);
+//        Span span = Java8BytecodeBridge.spanFromContext(context);
+//        span.setAttribute("messaging.payload", requestData);
+//      } catch (IOException ex) {
+//        System.out.println("got exception while reading request body");
+//      }
+
       helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
 
       contextToUpdate = context;
