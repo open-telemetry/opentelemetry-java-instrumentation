@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.SpringJmsSingletons.listenerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -39,7 +40,10 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("onMessage").and(takesArguments(2)).and(isPublic()),
+        named("onMessage")
+            .and(isPublic())
+            .and(takesArguments(2))
+            .and(takesArgument(0, named("javax.jms.Message"))),
         SpringJmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
   }
 
