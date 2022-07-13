@@ -10,7 +10,6 @@ import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.reflect.Method;
-import java.util.Locale;
 
 /**
  * An {@link AgentListener} that enables oshi metrics during agent startup if oshi is present on the
@@ -23,9 +22,8 @@ public class OshiMetricsInstaller implements AgentListener {
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     ConfigProperties config = autoConfiguredSdk.getConfig();
 
-    boolean defaultEnabled =
-        config.getBoolean(normalize("otel.instrumentation.common.default-enabled"), true);
-    if (!config.getBoolean(normalize("otel.instrumentation.oshi.enabled"), defaultEnabled)) {
+    boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
+    if (!config.getBoolean("otel.instrumentation.oshi.enabled", defaultEnabled)) {
       return;
     }
 
@@ -49,10 +47,5 @@ public class OshiMetricsInstaller implements AgentListener {
       // renamed in oshi 6.0.0
       return oshiSystemInfoClass.getMethod("getCurrentPlatform");
     }
-  }
-
-  // TODO: remove after https://github.com/open-telemetry/opentelemetry-java/issues/4562 is fixed
-  private static String normalize(String key) {
-    return key.toLowerCase(Locale.ROOT).replace('-', '.');
   }
 }
