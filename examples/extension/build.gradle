@@ -22,8 +22,8 @@ version '1.0'
 
 ext {
   versions = [
-    opentelemetry              : "1.15.0",
-    opentelemetryAlpha         : "1.15.0-alpha",
+    opentelemetry              : "1.16.0",
+    opentelemetryAlpha         : "1.16.0-alpha",
     opentelemetryJavaagent     : "1.16.0-SNAPSHOT",
     opentelemetryJavaagentAlpha: "1.16.0-alpha-SNAPSHOT",
   ]
