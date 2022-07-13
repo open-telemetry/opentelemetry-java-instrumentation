@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class OkHttpIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // OkHttp connection pool lazily initializes a long running task to detect expired
     // connections and should not itself be instrumented.
     builder.ignoreTaskClass("com.squareup.okhttp.ConnectionPool$");

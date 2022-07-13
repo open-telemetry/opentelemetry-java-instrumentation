@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class ClassLoaderIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     builder.allowClass("jdk.internal.loader.BuiltinClassLoader");
     builder.allowClass("sun.misc.Launcher$AppClassLoader");
   }

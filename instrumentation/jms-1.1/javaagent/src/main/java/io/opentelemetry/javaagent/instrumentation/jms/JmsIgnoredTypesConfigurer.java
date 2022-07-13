@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class JmsIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // Avoid instrumenting internal OrderedExecutor worker class
     builder.ignoreTaskClass("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor$");
   }

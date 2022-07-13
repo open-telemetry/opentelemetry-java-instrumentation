@@ -23,20 +23,20 @@ public interface IgnoredTypesConfigurer extends Ordered {
    * Configure the passed {@code builder} and define which classes should be ignored when
    * instrumenting.
    *
-   * @deprecated Use {@link #configure(ConfigProperties, IgnoredTypesBuilder)} instead.
+   * @deprecated Use {@link #configure(IgnoredTypesBuilder, ConfigProperties)} instead.
    */
   @Deprecated
   default void configure(Config config, IgnoredTypesBuilder builder) {
     throw new UnsupportedOperationException(
         "This method is deprecated and will be removed in a future release;"
-            + " implement IgnoredTypesConfigurer#configure(ConfigProperties, IgnoredTypesBuilder) instead");
+            + " implement IgnoredTypesConfigurer#configure(IgnoredTypesBuilder, ConfigProperties) instead");
   }
 
   /**
    * Configure the passed {@code builder} and define which classes should be ignored when
    * instrumenting.
    */
-  default void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     configure(Config.get(), builder);
   }
 }

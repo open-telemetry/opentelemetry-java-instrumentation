@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class AkkaIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // This is a Mailbox created by akka.dispatch.Dispatcher#createMailbox. We must not add
     // a context to it as context should only be carried by individual envelopes in the queue
     // of this mailbox.

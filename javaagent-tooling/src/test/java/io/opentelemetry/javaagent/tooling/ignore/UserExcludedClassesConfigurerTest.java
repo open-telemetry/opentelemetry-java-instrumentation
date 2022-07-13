@@ -31,7 +31,7 @@ class UserExcludedClassesConfigurerTest {
   @Test
   void shouldAddNothingToBuilderWhenPropertyIsEmpty() {
     // when
-    underTest.configure(config, builder);
+    underTest.configure(builder, config);
 
     // then
     verifyNoInteractions(builder);
@@ -47,7 +47,7 @@ class UserExcludedClassesConfigurerTest {
             asList("com.example.IgnoredClass", "com.example.ignored.*", "com.another_ignore"));
 
     // when
-    underTest.configure(config, builder);
+    underTest.configure(builder, config);
 
     // then
     verify(builder).ignoreClass("com.example.IgnoredClass");

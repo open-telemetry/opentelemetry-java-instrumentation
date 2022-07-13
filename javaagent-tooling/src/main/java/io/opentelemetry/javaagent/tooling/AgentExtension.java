@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.javaagent.extension.Ordered;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 /**
@@ -25,7 +26,7 @@ public interface AgentExtension extends Ordered {
    * @return The customized agent. Note that this method MUST return a non-null {@link AgentBuilder}
    *     instance that contains all customizations defined in this extension.
    */
-  AgentBuilder extend(AgentBuilder agentBuilder);
+  AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config);
 
   /**
    * Returns the name of the extension. It does not have to be unique, but it should be
