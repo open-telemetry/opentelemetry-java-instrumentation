@@ -3,13 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.hornetq.api.core.TransportConfiguration
+import org.hornetq.api.core.client.HornetQClient
+import org.hornetq.api.jms.HornetQJMSClient
+import org.hornetq.api.jms.JMSFactoryType
+import org.hornetq.core.config.Configuration
+import org.hornetq.core.config.CoreQueueConfiguration
+import org.hornetq.core.config.impl.ConfigurationImpl
+import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
+import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
+import org.hornetq.core.server.HornetQServer
+import org.hornetq.core.server.HornetQServers
 import org.springframework.jms.core.JmsTemplate
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 
 import javax.jms.Connection
@@ -18,41 +25,62 @@ import javax.jms.TextMessage
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-import static Jms1Test.consumerSpan
-import static Jms1Test.producerSpan
+import static SpringListenerTest.consumerSpan
+import static SpringListenerTest.producerSpan
 
-class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
-  private static final Logger logger = LoggerFactory.getLogger("io.opentelemetry.SpringTemplateJms1Test")
-
-  private static final GenericContainer broker = new GenericContainer("rmohr/activemq:latest")
-    .withExposedPorts(61616, 8161)
-    .withLogConsumer(new Slf4jLogConsumer(logger))
-
+class SpringTemplateTest extends AgentInstrumentationSpecification {
+  @Shared
+  HornetQServer server
   @Shared
   String messageText = "a message"
   @Shared
   JmsTemplate template
   @Shared
   Session session
+  @Shared
+  Connection connection
 
   def setupSpec() {
-    broker.start()
-    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616))
-    // to avoid InvalidDestinationException in "send and receive message generates spans"
-    // see https://issues.apache.org/jira/browse/AMQ-6155
-    connectionFactory.setWatchTopicAdvisories(false)
-    Connection connection = connectionFactory.createConnection()
+    def tempDir = Files.createTempDir()
+    tempDir.deleteOnExit()
+
+    Configuration config = new ConfigurationImpl()
+    config.bindingsDirectory = tempDir.path
+    config.journalDirectory = tempDir.path
+    config.createBindingsDir = false
+    config.createJournalDir = false
+    config.securityEnabled = false
+    config.persistenceEnabled = false
+    config.setQueueConfigurations([new CoreQueueConfiguration("someQueue", "someQueue", null, true)])
+    config.setAcceptorConfigurations([new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
+
+    server = HornetQServers.newHornetQServer(config)
+    server.start()
+
+    def serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(InVMConnectorFactory.name))
+    def sf = serverLocator.createSessionFactory()
+    def clientSession = sf.createSession(false, false, false)
+    clientSession.createQueue("jms.queue.SpringTemplateJms2", "jms.queue.SpringTemplateJms2", true)
+    clientSession.close()
+    sf.close()
+    serverLocator.close()
+
+    def connectionFactory = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
+      new TransportConfiguration(InVMConnectorFactory.name))
+
+    connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+    session.run()
 
     template = new JmsTemplate(connectionFactory)
-    // Make this longer than timeout on testWriter.waitForTraces
-    // Otherwise caller might give up waiting before callee has a chance to respond.
-    template.receiveTimeout = TimeUnit.SECONDS.toMillis(21)
+    template.receiveTimeout = TimeUnit.SECONDS.toMillis(10)
   }
 
   def cleanupSpec() {
-    broker.stop()
+    session.close()
+    connection.close()
+    server.stop()
   }
 
   def "sending a message to #destinationName generates spans"() {
@@ -73,31 +101,27 @@ class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
 
     where:
     destination                               | destinationType | destinationName
-    session.createQueue("SpringTemplateJms1") | "queue"         | "SpringTemplateJms1"
+    session.createQueue("SpringTemplateJms2") | "queue"         | "SpringTemplateJms2"
   }
 
   def "send and receive message generates spans"() {
     setup:
     AtomicReference<String> msgId = new AtomicReference<>()
     Thread.start {
-      logger.info("calling receive")
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
       msgId.set(msg.getJMSMessageID())
 
-      logger.info("calling send")
+      // There's a chance this might be reported last, messing up the assertion.
       template.send(msg.getJMSReplyTo()) {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
     }
-    logger.info("calling sendAndReceive")
-    def receivedMessage = template.sendAndReceive(destination) {
+    TextMessage receivedMessage = template.sendAndReceive(destination) {
       session -> template.getMessageConverter().toMessage(messageText, session)
     }
-    logger.info("received message " + receivedMessage)
 
     expect:
-    receivedMessage != null
     receivedMessage.text == "responded!"
     assertTraces(4) {
       traces.sort(orderByRootSpanName(
@@ -116,13 +140,12 @@ class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
         consumerSpan(it, 0, "queue", "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
       }
       trace(3, 1) {
-        // receive doesn't propagate the trace, so this is a root
         producerSpan(it, 0, "queue", "(temporary)")
       }
     }
 
     where:
     destination                               | destinationType | destinationName
-    session.createQueue("SpringTemplateJms1") | "queue"         | "SpringTemplateJms1"
+    session.createQueue("SpringTemplateJms2") | "queue"         | "SpringTemplateJms2"
   }
 }
