@@ -7,7 +7,8 @@
         pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId: %X{trace_id} spanId: %X{span_id} flags: %X{trace_flags} - %msg%n"/>
     </Console>
     <ListAppender name="ListAppender"/>
-    <OpenTelemetry name="OpenTelemetryAppender"/>
+    <!-- TODO run tests both with and without experimental log attributes -->
+    <OpenTelemetry name="OpenTelemetryAppender" captureMapMessageAttributes="true" captureAllContextDataAttributes="true"/>
   </Appenders>
   <Loggers>
     <Logger name="TestLogger" level="All">

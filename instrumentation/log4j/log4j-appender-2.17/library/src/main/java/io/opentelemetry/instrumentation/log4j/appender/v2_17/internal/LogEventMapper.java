@@ -56,6 +56,20 @@ public final class LogEventMapper<T> {
     this.captureAllContextDataAttributes = captureAllContextDataAttributes;
   }
 
+  public LogEventMapper(
+      ContextDataAccessor<T> contextDataAccessor,
+      boolean captureExperimentalAttributes,
+      boolean captureMapMessageAttributes,
+      List<String> captureContextDataAttributes) {
+
+    this.contextDataAccessor = contextDataAccessor;
+    this.captureExperimentalAttributes = captureExperimentalAttributes;
+    this.captureMapMessageAttributes = captureMapMessageAttributes;
+    this.captureContextDataAttributes = captureContextDataAttributes;
+    this.captureAllContextDataAttributes =
+        captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
+  }
+
   /**
    * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
    *

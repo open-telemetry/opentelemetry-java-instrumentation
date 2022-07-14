@@ -38,16 +38,13 @@ public final class Log4jHelper {
         config.getList(
             "otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes",
             emptyList());
-    boolean captureAllContextDataAttributes =
-        captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
 
     mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
             captureMapMessageAttributes,
-            captureContextDataAttributes,
-            captureAllContextDataAttributes);
+            captureContextDataAttributes);
   }
 
   public static void capture(Logger logger, Level level, Message message, Throwable throwable) {
