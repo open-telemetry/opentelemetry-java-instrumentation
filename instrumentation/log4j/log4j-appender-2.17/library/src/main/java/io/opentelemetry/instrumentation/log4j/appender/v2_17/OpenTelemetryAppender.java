@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
@@ -111,12 +113,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
             captureMapMessageAttributes,
-            filterBlanksAndNulls(captureContextDataAttributes.split(",")));
+            splitAndFilterBlanksAndNulls(captureContextDataAttributes));
   }
 
-  // copied from SDK's DefaultConfigProperties
-  private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values)
+  private static List<String> splitAndFilterBlanksAndNulls(String value) {
+    if (value == null) {
+      return emptyList();
+    }
+    return Arrays.stream(value.split(","))
         .map(String::trim)
         .filter(s -> !s.isEmpty())
         .collect(Collectors.toList());
