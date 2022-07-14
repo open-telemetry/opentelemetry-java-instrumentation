@@ -36,12 +36,11 @@ public final class LoggingEventMapper {
   private final boolean captureAllMdcAttributes;
 
   public LoggingEventMapper(
-      boolean captureExperimentalAttributes,
-      List<String> captureMdcAttributes,
-      boolean captureAllMdcAttributes) {
+      boolean captureExperimentalAttributes, List<String> captureMdcAttributes) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
-    this.captureAllMdcAttributes = captureAllMdcAttributes;
+    this.captureAllMdcAttributes =
+        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
   public void emit(LogEmitterProvider logEmitterProvider, ILoggingEvent event) {
