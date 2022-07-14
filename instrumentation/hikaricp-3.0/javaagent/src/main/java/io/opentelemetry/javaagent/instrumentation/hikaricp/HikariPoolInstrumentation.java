@@ -44,8 +44,9 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
         throws Exception {
 
       if (existingMetricsTracker != null) {
-        // we call close on the existing metrics tracker so that our wrapper could unregister
-        // itself to avoid warnings about duplicate metrics
+        // we call close on the existing metrics tracker in case it's our wrapper, so that our wrapper
+        // will unregister itself and won't keep recording metrics which leads to warnings about
+        // duplicate metrics
         existingMetricsTracker.close();
       }
       userMetricsTracker = HikariSingletons.createMetricsTrackerFactory(userMetricsTracker);
