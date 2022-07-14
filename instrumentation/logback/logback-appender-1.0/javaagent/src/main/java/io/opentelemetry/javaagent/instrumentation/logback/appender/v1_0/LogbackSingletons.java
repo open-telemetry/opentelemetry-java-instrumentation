@@ -25,12 +25,8 @@ public class LogbackSingletons {
         config.getList(
             "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
             emptyList());
-    boolean captureAllMdcAttributes =
-        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
 
-    mapper =
-        new LoggingEventMapper(
-            captureExperimentalAttributes, captureMdcAttributes, captureAllMdcAttributes);
+    mapper = new LoggingEventMapper(captureExperimentalAttributes, captureMdcAttributes);
   }
 
   public static LoggingEventMapper mapper() {

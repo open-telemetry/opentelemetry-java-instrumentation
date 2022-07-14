@@ -22,7 +22,7 @@ class LoggingEventMapperTest {
   @Test
   void testDefault() {
     // given
-    LoggingEventMapper mapper = new LoggingEventMapper(false, emptyList(), false);
+    LoggingEventMapper mapper = new LoggingEventMapper(false, emptyList());
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -38,7 +38,7 @@ class LoggingEventMapperTest {
   @Test
   void testSome() {
     // given
-    LoggingEventMapper mapper = new LoggingEventMapper(false, singletonList("key2"), false);
+    LoggingEventMapper mapper = new LoggingEventMapper(false, singletonList("key2"));
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -55,7 +55,7 @@ class LoggingEventMapperTest {
   @Test
   void testAll() {
     // given
-    LoggingEventMapper mapper = new LoggingEventMapper(false, singletonList("key1"), true);
+    LoggingEventMapper mapper = new LoggingEventMapper(false, singletonList("*"));
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
