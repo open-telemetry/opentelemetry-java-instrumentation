@@ -39,7 +39,7 @@ public class Servlet3Advice {
       return;
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-
+    System.out.println("got to servlet instrumentation");
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
     callDepth.getAndIncrement();
 
@@ -50,6 +50,17 @@ public class Servlet3Advice {
     requestContext = new ServletRequestContext<>(httpServletRequest, servletOrFilter);
     if (attachedContext == null && helper().shouldStart(currentContext, requestContext)) {
       context = helper().start(currentContext, requestContext);
+      // TODO - add http payload instrumentation
+      //      try {
+      //        String requestData =
+      // httpServletRequest.getReader().lines().collect(Collectors.joining());
+      //        System.out.println("requestData: " + requestData);
+      //        Span span = Java8BytecodeBridge.spanFromContext(context);
+      //        span.setAttribute("messaging.payload", requestData);
+      //      } catch (IOException ex) {
+      //        System.out.println("got exception while reading request body");
+      //      }
+
       helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
 
       contextToUpdate = context;
