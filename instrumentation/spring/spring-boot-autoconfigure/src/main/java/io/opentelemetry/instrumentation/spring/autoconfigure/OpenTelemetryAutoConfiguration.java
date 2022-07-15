@@ -12,6 +12,11 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringRes
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
+import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
+import io.opentelemetry.sdk.metrics.export.PeriodicMetricReaderBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
@@ -36,7 +41,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
-@EnableConfigurationProperties(SamplerProperties.class)
+@EnableConfigurationProperties({MetricExportProperties.class, SamplerProperties.class})
 public class OpenTelemetryAutoConfiguration {
 
   @Configuration
@@ -63,6 +68,32 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public SdkMeterProvider sdkMeterProvider(
+        MetricExportProperties properties,
+        ObjectProvider<List<MetricExporter>> metricExportersProvider,
+        Resource otelResource) {
+
+      SdkMeterProviderBuilder meterProviderBuilder = SdkMeterProvider.builder();
+
+      metricExportersProvider.getIfAvailable(Collections::emptyList).stream()
+          .map(metricExporter -> createPeriodicMetricReader(properties, metricExporter))
+          .forEach(meterProviderBuilder::registerMetricReader);
+
+      return meterProviderBuilder.setResource(otelResource).build();
+    }
+
+    private static PeriodicMetricReader createPeriodicMetricReader(
+        MetricExportProperties properties, MetricExporter metricExporter) {
+      PeriodicMetricReaderBuilder metricReaderBuilder =
+          PeriodicMetricReader.builder(metricExporter);
+      if (properties.getInterval() != null) {
+        metricReaderBuilder.setInterval(properties.getInterval());
+      }
+      return metricReaderBuilder.build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public Resource otelResource(
         Environment env, ObjectProvider<List<ResourceProvider>> resourceProviders) {
       ConfigProperties config = new SpringResourceConfigProperties(env, new SpelExpressionParser());
@@ -76,12 +107,15 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     public OpenTelemetry openTelemetry(
-        ObjectProvider<ContextPropagators> propagatorsProvider, SdkTracerProvider tracerProvider) {
+        ObjectProvider<ContextPropagators> propagatorsProvider,
+        SdkTracerProvider tracerProvider,
+        SdkMeterProvider meterProvider) {
 
       ContextPropagators propagators = propagatorsProvider.getIfAvailable(ContextPropagators::noop);
 
       return OpenTelemetrySdk.builder()
           .setTracerProvider(tracerProvider)
+          .setMeterProvider(meterProvider)
           .setPropagators(propagators)
           .build();
     }

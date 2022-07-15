@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 /**
  * Additional global ignore settings that are used to reduce number of classes we try to apply
@@ -28,7 +28,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
       "otel.javaagent.testing.additional-library-ignores.enabled";
 
   @Override
-  public void configure(Config config, IgnoredTypesBuilder builder) {
+  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
     if (config.getBoolean(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
       configure(builder);
     }
@@ -212,11 +212,6 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("ch.qos.logback.classic.Logger")
         .allowClass("ch.qos.logback.classic.spi.LoggingEvent")
         .allowClass("ch.qos.logback.classic.spi.LoggingEventVO");
-
-    builder
-        .ignoreClass("com.codahale.metrics.")
-        // We instrument servlets
-        .allowClass("com.codahale.metrics.servlets.");
 
     builder
         .ignoreClass("com.couchbase.client.deps.")

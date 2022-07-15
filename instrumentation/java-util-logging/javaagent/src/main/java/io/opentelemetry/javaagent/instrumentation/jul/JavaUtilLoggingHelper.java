@@ -11,8 +11,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -26,7 +26,7 @@ public final class JavaUtilLoggingHelper {
   private static final Formatter FORMATTER = new AccessibleFormatter();
 
   private static final boolean captureExperimentalAttributes =
-      Config.get()
+      InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes", false);
 
   public static void capture(Logger logger, LogRecord logRecord) {

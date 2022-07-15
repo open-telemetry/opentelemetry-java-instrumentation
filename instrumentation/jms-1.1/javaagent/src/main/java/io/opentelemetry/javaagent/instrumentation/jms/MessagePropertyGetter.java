@@ -9,7 +9,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import javax.jms.JMSException;
 
-enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
+public enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
   INSTANCE;
 
   @Override

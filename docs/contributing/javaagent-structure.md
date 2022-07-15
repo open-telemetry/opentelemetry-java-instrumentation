@@ -35,7 +35,7 @@ The bootstrap class loader contains several modules:
   to all classloaders running within the instrumented application. The classes located in these
   modules are used by both javaagent and library instrumentations - they all must be usable even
   without the javaagent present.
-* **The `instrumentation-api-annotation-support` module**:
+* **The `instrumentation-annotations-support` module**:
   it contains classes that provide support for annotation-based auto-instrumentation, e.g.
   the `@WithSpan` annotation. This module is internal and its APIs are considered unstable.
 * **The `instrumentation-appender-api-internal` module**:

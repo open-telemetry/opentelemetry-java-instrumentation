@@ -36,6 +36,7 @@ bootstrapLibs.run {
   exclude("org.ow2.asm")
   exclude("io.opentelemetry", "opentelemetry-sdk")
   exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure")
+  exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
 }
 
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
@@ -54,7 +55,7 @@ val licenseReportDependencies by configurations.creating {
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   bootstrapLibs(project(":instrumentation-api-semconv"))
-  bootstrapLibs(project(":instrumentation-api-annotation-support"))
+  bootstrapLibs(project(":instrumentation-annotations-support"))
   bootstrapLibs(project(":instrumentation-appender-api-internal"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
@@ -64,7 +65,8 @@ dependencies {
 
   baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":muzzle"))
-  baseJavaagentLibs(project(":instrumentation:opentelemetry-annotations-1.0:javaagent"))
+  // TODO (trask) replace with opentelemetry-instrumentation-annotations
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
@@ -281,7 +283,7 @@ fun ShadowJar.excludeBootstrapClasses() {
   dependencies {
     exclude(project(":instrumentation-api"))
     exclude(project(":instrumentation-api-semconv"))
-    exclude(project(":instrumentation-api-annotation-support"))
+    exclude(project(":instrumentation-annotations-support"))
     exclude(project(":instrumentation-appender-api-internal"))
     exclude(project(":javaagent-bootstrap"))
   }

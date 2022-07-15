@@ -6,13 +6,15 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import static io.opentelemetry.javaagent.tooling.ignore.UserExcludedClassesConfigurer.EXCLUDED_CLASSES_CONFIG;
-import static java.util.Collections.singletonMap;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class UserExcludedClassesConfigurerTest {
+
+  @Mock ConfigProperties config;
   @Mock IgnoredTypesBuilder builder;
 
   IgnoredTypesConfigurer underTest = new UserExcludedClassesConfigurer();
@@ -27,7 +31,7 @@ class UserExcludedClassesConfigurerTest {
   @Test
   void shouldAddNothingToBuilderWhenPropertyIsEmpty() {
     // when
-    underTest.configure(Config.builder().build(), builder);
+    underTest.configure(config, builder);
 
     // then
     verifyNoInteractions(builder);
@@ -36,13 +40,9 @@ class UserExcludedClassesConfigurerTest {
   @Test
   void shouldIgnoreClassesAndPackages() {
     // given
-    Config config =
-        Config.builder()
-            .addProperties(
-                singletonMap(
-                    EXCLUDED_CLASSES_CONFIG,
-                    "com.example.IgnoredClass,com.example.ignored.*,com.another_ignore"))
-            .build();
+    when(config.getList(EXCLUDED_CLASSES_CONFIG, emptyList()))
+        .thenReturn(
+            asList("com.example.IgnoredClass", "com.example.ignored.*", "com.another_ignore"));
 
     // when
     underTest.configure(config, builder);

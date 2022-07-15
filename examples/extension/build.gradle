@@ -22,8 +22,8 @@ version '1.0'
 
 ext {
   versions = [
-    opentelemetry              : "1.15.0",
-    opentelemetryAlpha         : "1.15.0-alpha",
+    opentelemetry              : "1.16.0",
+    opentelemetryAlpha         : "1.16.0-alpha",
     opentelemetryJavaagent     : "1.16.0-SNAPSHOT",
     opentelemetryJavaagentAlpha: "1.16.0-alpha-SNAPSHOT",
   ]
@@ -106,7 +106,7 @@ dependencies {
   //TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
   add("codegen", "ch.qos.logback:logback-classic:1.2.3")
-  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support:${versions.opentelemetryJavaagentAlpha}")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
 }

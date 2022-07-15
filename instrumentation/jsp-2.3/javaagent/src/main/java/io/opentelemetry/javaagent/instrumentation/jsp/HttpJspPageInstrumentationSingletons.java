@@ -10,10 +10,10 @@ import static java.util.logging.Level.WARNING;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
@@ -24,7 +24,8 @@ import javax.servlet.jsp.HttpJspPage;
 
 public class HttpJspPageInstrumentationSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get().getBoolean("otel.instrumentation.jsp.experimental-span-attributes", false);
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.jsp.experimental-span-attributes", false);
 
   private static final Instrumenter<HttpServletRequest, Void> INSTRUMENTER;
 

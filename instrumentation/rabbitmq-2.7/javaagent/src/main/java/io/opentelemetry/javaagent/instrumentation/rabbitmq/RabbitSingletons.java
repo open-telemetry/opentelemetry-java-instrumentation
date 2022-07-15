@@ -10,19 +10,20 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RabbitSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get().getBoolean("otel.instrumentation.rabbitmq.experimental-span-attributes", false);
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.rabbitmq.experimental-span-attributes", false);
   private static final String instrumentationName = "io.opentelemetry.rabbitmq-2.7";
   private static final Instrumenter<ChannelAndMethod, Void> channelInstrumenter;
   private static final Instrumenter<ReceiveRequest, GetResponse> receiveInstrumenter;

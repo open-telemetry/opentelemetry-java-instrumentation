@@ -5,23 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor;
 
-import io.opentelemetry.extension.annotations.WithSpan;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class TracedWithSpan {
-  @WithSpan
-  public Mono<String> mono(Mono<String> mono) {
-    return mono;
-  }
+public interface TracedWithSpan {
+  Mono<String> mono(Mono<String> mono);
 
-  @WithSpan
-  public Mono<String> outer(Mono<String> inner) {
-    return mono(inner);
-  }
+  Mono<String> outer(Mono<String> inner);
 
-  @WithSpan
-  public Flux<String> flux(Flux<String> flux) {
-    return flux;
-  }
+  Flux<String> flux(Flux<String> flux);
 }

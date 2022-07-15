@@ -33,6 +33,8 @@ public final class SpringWebfluxTelemetryBuilder {
       httpAttributesExtractorBuilder =
           HttpClientAttributesExtractor.builder(SpringWebfluxHttpAttributesGetter.INSTANCE);
 
+  private boolean captureExperimentalSpanAttributes = false;
+
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -68,6 +70,17 @@ public final class SpringWebfluxTelemetryBuilder {
   }
 
   /**
+   * Sets whether experimental attributes should be set to spans. These attributes may be changed or
+   * removed in the future, so only enable this if you know you do not require attributes filled by
+   * this instrumentation to be stable across versions.
+   */
+  public SpringWebfluxTelemetryBuilder setCaptureExperimentalSpanAttributes(
+      boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    return this;
+  }
+
+  /**
    * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
    * SpringWebfluxTelemetryBuilder}.
    */
@@ -90,7 +103,7 @@ public final class SpringWebfluxTelemetryBuilder {
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
 
-    if (SpringWebfluxExperimentalAttributesExtractor.enabled()) {
+    if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new SpringWebfluxExperimentalAttributesExtractor());
     }
 

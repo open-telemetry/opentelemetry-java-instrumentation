@@ -39,8 +39,16 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) MetricsTrackerFactory userMetricsTracker) {
+        @Advice.Argument(value = 0, readOnly = false) MetricsTrackerFactory userMetricsTracker,
+        @Advice.FieldValue(value = "metricsTracker") AutoCloseable existingMetricsTracker)
+        throws Exception {
 
+      if (existingMetricsTracker != null) {
+        // we call close on the existing metrics tracker in case it's our wrapper, so that our
+        // wrapper will unregister itself and won't keep recording metrics which leads to warnings
+        // about duplicate metrics
+        existingMetricsTracker.close();
+      }
       userMetricsTracker = HikariSingletons.createMetricsTrackerFactory(userMetricsTracker);
     }
   }

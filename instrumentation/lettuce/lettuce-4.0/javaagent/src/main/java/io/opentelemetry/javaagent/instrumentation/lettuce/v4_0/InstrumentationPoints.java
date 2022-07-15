@@ -16,7 +16,7 @@ import com.lambdaworks.redis.protocol.ProtocolKeyword;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -24,7 +24,8 @@ import java.util.concurrent.CancellationException;
 public final class InstrumentationPoints {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get().getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 

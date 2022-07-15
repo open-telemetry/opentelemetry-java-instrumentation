@@ -13,7 +13,7 @@ dependencies {
   implementation(project(":javaagent-extension-api"))
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
-  implementation(project(":instrumentation-api-annotation-support"))
+  implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation-appender-api-internal"))
   implementation(project(":instrumentation-appender-sdk-internal"))
   implementation(project(":muzzle"))
@@ -27,7 +27,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
-  implementation("io.opentelemetry:opentelemetry-extension-noop-api")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-metric-incubator")
 
   // Exporters with dependencies

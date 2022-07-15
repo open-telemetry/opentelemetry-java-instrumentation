@@ -18,7 +18,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
   library("io.reactivex.rxjava2:rxjava:2.0.6")
-  compileOnly(project(":instrumentation-api-annotation-support"))
+  compileOnly(project(":instrumentation-annotations-support"))
 
   implementation(project(":instrumentation:rxjava:rxjava-2.0:library"))
 

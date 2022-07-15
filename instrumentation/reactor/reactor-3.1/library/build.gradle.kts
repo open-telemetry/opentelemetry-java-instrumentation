@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
   library("io.projectreactor:reactor-core:3.1.0.RELEASE")
-  implementation(project(":instrumentation-api-annotation-support"))
+  implementation(project(":instrumentation-annotations-support"))
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
 
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))

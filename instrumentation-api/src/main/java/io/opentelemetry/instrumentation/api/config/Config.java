@@ -16,16 +16,17 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
- * Represents the global agent configuration consisting of system properties, environment variables,
- * contents of the agent configuration file and properties defined by the {@code
- * ConfigPropertySource} SPI implementations.
+ * Represents the global instrumentation configuration consisting of system properties and
+ * environment variables; and, if using the OpenTelemetry javaagent, contents of the agent
+ * configuration file and properties defined by the {@code ContextCustomizer} SPI implementations.
  *
  * <p>In case any {@code get*()} method variant gets called for the same property more than once
  * (e.g. each time an advice class executes) it is suggested to cache the result instead of
- * repeatedly calling {@link Config}. Agent configuration does not change during the runtime so
- * retrieving the property once and storing its result in a static final field allows JIT to do its
- * magic and remove some code branches.
+ * repeatedly calling {@link Config}. The instrumentation configuration does not change during the
+ * runtime so retrieving the property once and storing its result in a static final field allows JIT
+ * to do its magic and remove some code branches.
  */
+// TODO: deprecate
 @AutoValue
 public abstract class Config {
   private static final Logger logger = Logger.getLogger(Config.class.getName());
@@ -47,8 +48,9 @@ public abstract class Config {
   Config() {}
 
   /**
-   * Sets the agent configuration singleton. This method is only supposed to be called once, during
-   * the agent initialization, just before {@link Config#get()} is used for the first time.
+   * Sets the instrumentation configuration singleton. This method is only supposed to be called
+   * once, during the javaagent initialization, just before {@link Config#get()} is used for the
+   * first time.
    *
    * <p>This method is internal and is hence not for public use. Its API is unstable and can change
    * at any time.
@@ -61,7 +63,7 @@ public abstract class Config {
     instance = requireNonNull(config);
   }
 
-  /** Returns the global agent configuration. */
+  /** Returns the global instrumentation configuration. */
   public static Config get() {
     if (instance == null) {
       // this should only happen in library instrumentation

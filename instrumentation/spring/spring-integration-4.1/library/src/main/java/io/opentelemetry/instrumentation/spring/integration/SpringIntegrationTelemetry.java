@@ -34,14 +34,17 @@ public final class SpringIntegrationTelemetry {
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
   private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
+  private final boolean producerSpanEnabled;
 
   SpringIntegrationTelemetry(
       ContextPropagators propagators,
       Instrumenter<MessageWithChannel, Void> consumerInstrumenter,
-      Instrumenter<MessageWithChannel, Void> producerInstrumenter) {
+      Instrumenter<MessageWithChannel, Void> producerInstrumenter,
+      boolean producerSpanEnabled) {
     this.propagators = propagators;
     this.consumerInstrumenter = consumerInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
+    this.producerSpanEnabled = producerSpanEnabled;
   }
 
   /**
@@ -54,6 +57,7 @@ public final class SpringIntegrationTelemetry {
    * @see org.springframework.integration.config.GlobalChannelInterceptor
    */
   public ChannelInterceptor newChannelInterceptor() {
-    return new TracingChannelInterceptor(propagators, consumerInstrumenter, producerInstrumenter);
+    return new TracingChannelInterceptor(
+        propagators, consumerInstrumenter, producerInstrumenter, producerSpanEnabled);
   }
 }

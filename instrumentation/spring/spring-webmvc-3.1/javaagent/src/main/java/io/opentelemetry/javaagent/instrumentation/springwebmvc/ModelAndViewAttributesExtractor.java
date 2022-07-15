@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.ClassNames;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import javax.annotation.Nullable;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
@@ -17,7 +17,7 @@ import org.springframework.web.servlet.View;
 public class ModelAndViewAttributesExtractor implements AttributesExtractor<ModelAndView, Void> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
+      InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.spring-webmvc.experimental-span-attributes", false);
 
   @Override

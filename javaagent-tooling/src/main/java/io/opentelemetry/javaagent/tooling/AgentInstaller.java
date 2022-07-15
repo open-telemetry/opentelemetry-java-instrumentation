@@ -13,11 +13,9 @@ import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
@@ -26,18 +24,21 @@ import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
+import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,7 +62,6 @@ public class AgentInstaller {
   private static final Logger logger = Logger.getLogger(AgentInstaller.class.getName());
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
@@ -107,16 +107,14 @@ public class AgentInstaller {
 
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
-    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = null;
-    if (config.getBoolean(JAVAAGENT_NOOP_CONFIG, false)) {
-      logger.info("Tracing and metrics are disabled because noop is enabled.");
-      GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
-    } else {
-      autoConfiguredSdk = installOpenTelemetrySdk(config);
-    }
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = installOpenTelemetrySdk(config);
 
-    if (autoConfiguredSdk != null) {
-      runBeforeAgentListeners(agentListeners, config, autoConfiguredSdk);
+    ConfigProperties sdkConfig = autoConfiguredSdk.getConfig();
+    InstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
+    copyNecessaryConfigToSystemProperties(sdkConfig);
+
+    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
+      agentListener.beforeAgent(autoConfiguredSdk);
     }
 
     AgentBuilder agentBuilder =
@@ -132,7 +130,7 @@ public class AgentInstaller {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }
 
-    agentBuilder = configureIgnoredTypes(config, agentBuilder);
+    agentBuilder = configureIgnoredTypes(sdkConfig, agentBuilder);
 
     if (AgentConfig.get().isDebugModeEnabled()) {
       agentBuilder =
@@ -170,8 +168,13 @@ public class AgentInstaller {
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
-    if (autoConfiguredSdk != null) {
-      runAfterAgentListeners(agentListeners, config, autoConfiguredSdk);
+    runAfterAgentListeners(agentListeners, autoConfiguredSdk);
+  }
+
+  private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
+    String value = config.getString("otel.instrumentation.experimental.span-suppression-strategy");
+    if (value != null) {
+      System.setProperty("otel.instrumentation.experimental.span-suppression-strategy", value);
     }
   }
 
@@ -195,21 +198,8 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
-  @SuppressWarnings("deprecation") // running both old and new listeners for now
-  private static void runBeforeAgentListeners(
-      Iterable<AgentListener> agentListeners,
-      Config config,
-      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-
-    for (AgentListener agentListener : agentListeners) {
-      agentListener.beforeAgent(config, autoConfiguredSdk);
-    }
-    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
-      agentListener.beforeAgent(config, autoConfiguredSdk);
-    }
-  }
-
-  private static AgentBuilder configureIgnoredTypes(Config config, AgentBuilder agentBuilder) {
+  private static AgentBuilder configureIgnoredTypes(
+      ConfigProperties config, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
       configurer.configure(config, builder);
@@ -228,9 +218,7 @@ public class AgentInstaller {
   }
 
   private static void runAfterAgentListeners(
-      Iterable<AgentListener> agentListeners,
-      Config config,
-      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+      Iterable<AgentListener> agentListeners, AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     // java.util.logging.LogManager maintains a final static LogManager, which is created during
     // class initialization. Some AgentListener implementations may use JRE bootstrap classes
     // which touch this class (e.g. JFR classes or some MBeans).
@@ -254,7 +242,7 @@ public class AgentInstaller {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
       registerClassLoadCallback(
           "java.util.logging.LogManager",
-          new DelayedAfterAgentCallback(config, agentListeners, autoConfiguredSdk));
+          new DelayedAfterAgentCallback(agentListeners, autoConfiguredSdk));
     } else {
       if (javaBefore9) {
         // force LogManager to be initialized while we are single-threaded, because if we wait,
@@ -262,7 +250,7 @@ public class AgentInstaller {
         LogManager.getLogManager();
       }
       for (AgentListener agentListener : agentListeners) {
-        agentListener.afterAgent(config, autoConfiguredSdk);
+        agentListener.afterAgent(autoConfiguredSdk);
       }
     }
   }
@@ -371,16 +359,13 @@ public class AgentInstaller {
   }
 
   private static class DelayedAfterAgentCallback implements Runnable {
+
     private final Iterable<AgentListener> agentListeners;
-    private final Config config;
     private final AutoConfiguredOpenTelemetrySdk autoConfiguredSdk;
 
     private DelayedAfterAgentCallback(
-        Config config,
-        Iterable<AgentListener> agentListeners,
-        AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+        Iterable<AgentListener> agentListeners, AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
       this.agentListeners = agentListeners;
-      this.config = config;
       this.autoConfiguredSdk = autoConfiguredSdk;
     }
 
@@ -400,7 +385,7 @@ public class AgentInstaller {
     private void runAgentListeners() {
       for (AgentListener agentListener : agentListeners) {
         try {
-          agentListener.afterAgent(config, autoConfiguredSdk);
+          agentListener.afterAgent(autoConfiguredSdk);
         } catch (RuntimeException e) {
           logger.log(SEVERE, "Failed to execute " + agentListener.getClass().getName(), e);
         }

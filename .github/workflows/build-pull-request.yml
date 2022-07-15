@@ -41,7 +41,7 @@ jobs:
     uses: ./.github/workflows/reusable-smoke-test.yml
     with:
       # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
-      skip-windows: true
+      skip-windows: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
       cache-read-only: true
 
   muzzle:

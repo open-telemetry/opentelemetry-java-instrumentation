@@ -87,8 +87,6 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
-            "kafka.offset" Long
-            "kafka.record.queue_time_ms" { it >= 0 }
           }
         }
       }

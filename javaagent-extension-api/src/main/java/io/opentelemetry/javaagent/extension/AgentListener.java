@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.extension;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -22,25 +21,24 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 public interface AgentListener extends Ordered {
 
   /**
-   * Runs before {@link AgentBuilder} construction, before any instrumentation is added. Not called
-   * if noop api enabled via {@code otel.javaagent.experimental.use-noop-api}.
+   * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed
+   * on an {@link Instrumentation}.
    *
-   * <p>Execute only minimal code because any classes loaded before the agent installation will have
-   * to be retransformed, which takes extra time, and more importantly means that fields can't be
-   * added to those classes - which causes {@link VirtualField} to fall back to the less performant
-   * cache-based implementation for those classes.
-   *
-   * @deprecated This method will be removed in the next release.
+   * @deprecated Implement {{@link #afterAgent(AutoConfiguredOpenTelemetrySdk)}} instead.
    */
   @Deprecated
-  default void beforeAgent(
-      Config config, AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {}
+  default void afterAgent(
+      Config config, AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in a future release;"
+            + " implement AgentListener#afterAgent(AutoConfiguredOpenTelemetrySdk) instead");
+  }
 
   /**
    * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed
-   * on an {@link Instrumentation}. Not called if noop api enabled via {@code
-   * otel.javaagent.experimental.use-noop-api}.
+   * on an {@link Instrumentation}.
    */
-  default void afterAgent(
-      Config config, AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {}
+  default void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+    afterAgent(Config.get(), autoConfiguredOpenTelemetrySdk);
+  }
 }

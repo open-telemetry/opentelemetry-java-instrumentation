@@ -23,6 +23,8 @@ public final class KafkaTelemetryBuilder {
       new ArrayList<>();
   private final List<AttributesExtractor<ConsumerRecord<?, ?>, Void>> consumerAttributesExtractors =
       new ArrayList<>();
+  private boolean captureExperimentalSpanAttributes = false;
+  private boolean propagationEnabled = true;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = Objects.requireNonNull(openTelemetry);
@@ -40,9 +42,31 @@ public final class KafkaTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Sets whether experimental attributes should be set to spans. These attributes may be changed or
+   * removed in the future, so only enable this if you know you do not require attributes filled by
+   * this instrumentation to be stable across versions.
+   */
+  public KafkaTelemetryBuilder setCaptureExperimentalSpanAttributes(
+      boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    return this;
+  }
+
+  /**
+   * Sets whether the producer context should be propagated from the producer span to the consumer
+   * span. Enabled by default.
+   */
+  public KafkaTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
+    this.propagationEnabled = propagationEnabled;
+    return this;
+  }
+
   public KafkaTelemetry build() {
     KafkaInstrumenterFactory instrumenterFactory =
-        new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME);
+        new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .setPropagationEnabled(propagationEnabled);
 
     return new KafkaTelemetry(
         openTelemetry,
