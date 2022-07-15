@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class CouchbaseSingletons {
@@ -33,7 +34,9 @@ public final class CouchbaseSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(DbClientAttributesExtractor.create(couchbaseAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(
+                PeerServiceAttributesExtractor.create(
+                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
                     CouchbaseRequestInfo.init(context, couchbaseRequest));

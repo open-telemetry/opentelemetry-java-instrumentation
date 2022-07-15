@@ -19,25 +19,33 @@ import javax.annotation.Nullable;
  * Extractor of the {@code peer.service} span attribute, described in <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes">the
  * specification</a>.
- *
- * <p>Peer service name mappings can be configured using the {@code
- * otel.instrumentation.common.peer-service-mapping} configuration property. The format used is a
- * comma-separated list of {@code host=name} pairs.
  */
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
   private static final Map<String, String> JAVAAGENT_PEER_SERVICE_MAPPING =
       Config.get().getMap("otel.instrumentation.common.peer-service-mapping", emptyMap());
 
-  private final Map<String, String> peerServiceMapping;
   private final NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
+  private final Map<String, String> peerServiceMapping;
 
   // visible for tests
   PeerServiceAttributesExtractor(
-      Map<String, String> peerServiceMapping,
-      NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    this.peerServiceMapping = peerServiceMapping;
+      NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      Map<String, String> peerServiceMapping) {
     this.attributesGetter = attributesGetter;
+    this.peerServiceMapping = peerServiceMapping;
+  }
+
+  /**
+   * Returns a new {@link PeerServiceAttributesExtractor} that will use the passed {@code
+   * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
+   *
+   * @deprecated Use {@link #create(NetClientAttributesGetter, Map)} instead.
+   */
+  @Deprecated
+  public static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
+      NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    return create(attributesGetter, JAVAAGENT_PEER_SERVICE_MAPPING);
   }
 
   /**
@@ -45,8 +53,9 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
    * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-      NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    return new PeerServiceAttributesExtractor<>(JAVAAGENT_PEER_SERVICE_MAPPING, attributesGetter);
+      NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      Map<String, String> peerServiceMapping) {
+    return new PeerServiceAttributesExtractor<>(attributesGetter, peerServiceMapping);
   }
 
   @Override

@@ -13,11 +13,9 @@ import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.extension.noopapi.NoopOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
@@ -64,7 +62,6 @@ public class AgentInstaller {
   private static final Logger logger = Logger.getLogger(AgentInstaller.class.getName());
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-  static final String JAVAAGENT_NOOP_CONFIG = "otel.javaagent.experimental.use-noop-api";
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
@@ -110,23 +107,14 @@ public class AgentInstaller {
 
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
-    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = null;
-    if (config.getBoolean(JAVAAGENT_NOOP_CONFIG, false)) {
-      logger.info("Tracing and metrics are disabled because noop is enabled.");
-      GlobalOpenTelemetry.set(NoopOpenTelemetry.getInstance());
-    } else {
-      autoConfiguredSdk = installOpenTelemetrySdk(config);
-    }
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = installOpenTelemetrySdk(config);
 
-    ConfigProperties sdkConfig = EmptyConfigProperties.INSTANCE;
-    if (autoConfiguredSdk != null) {
-      sdkConfig = autoConfiguredSdk.getConfig();
-      InstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
-      copyNecessaryConfigToSystemProperties(sdkConfig);
+    ConfigProperties sdkConfig = autoConfiguredSdk.getConfig();
+    InstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
+    copyNecessaryConfigToSystemProperties(sdkConfig);
 
-      for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
-        agentListener.beforeAgent(autoConfiguredSdk);
-      }
+    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
+      agentListener.beforeAgent(autoConfiguredSdk);
     }
 
     AgentBuilder agentBuilder =
@@ -180,9 +168,7 @@ public class AgentInstaller {
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
-    if (autoConfiguredSdk != null) {
-      runAfterAgentListeners(agentListeners, autoConfiguredSdk);
-    }
+    runAfterAgentListeners(agentListeners, autoConfiguredSdk);
   }
 
   private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {

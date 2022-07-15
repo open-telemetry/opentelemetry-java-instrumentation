@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.extension.noopapi.NoopOpenTelemetry
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider
 import spock.lang.Specification
@@ -29,7 +29,7 @@ class OpenTelemetryInstallerTest extends Specification {
 
     then:
     otelInstaller != null
-    GlobalOpenTelemetry.getTracerProvider() != NoopOpenTelemetry.getInstance().getTracerProvider()
+    GlobalOpenTelemetry.getTracerProvider() != OpenTelemetry.noop().getTracerProvider()
   }
 
 }

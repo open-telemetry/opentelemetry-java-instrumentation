@@ -37,7 +37,9 @@ public final class JdbcSingletons {
                         CommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(
+                PeerServiceAttributesExtractor.create(
+                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
