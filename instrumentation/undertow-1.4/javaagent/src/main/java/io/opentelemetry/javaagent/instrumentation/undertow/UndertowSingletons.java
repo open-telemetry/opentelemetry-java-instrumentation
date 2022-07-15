@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
 import io.undertow.server.HttpServerExchange;
@@ -32,7 +33,11 @@ public final class UndertowSingletons {
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
+            .addAttributesExtractor(
+                HttpServerAttributesExtractor.builder(httpAttributesGetter)
+                    .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
+                    .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .build())
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addContextCustomizer(HttpRouteHolder.get())
             .addContextCustomizer(

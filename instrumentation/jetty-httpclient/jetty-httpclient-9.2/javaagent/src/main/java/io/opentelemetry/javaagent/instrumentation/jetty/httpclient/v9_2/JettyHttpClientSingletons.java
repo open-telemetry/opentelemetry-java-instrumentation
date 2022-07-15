@@ -10,25 +10,25 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientNetAttributesGetter;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
 public class JettyHttpClientSingletons {
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER;
-
-  private JettyHttpClientSingletons() {}
-
-  static {
-    JettyClientInstrumenterBuilder builder =
-        new JettyClientInstrumenterBuilder(GlobalOpenTelemetry.get());
-
-    PeerServiceAttributesExtractor<Request, Response> peerServiceAttributesExtractor =
-        PeerServiceAttributesExtractor.create(new JettyHttpClientNetAttributesGetter());
-    INSTRUMENTER = builder.addAttributeExtractor(peerServiceAttributesExtractor).build();
-  }
+  private static final Instrumenter<Request, Response> INSTRUMENTER =
+      new JettyClientInstrumenterBuilder(GlobalOpenTelemetry.get())
+          .addAttributeExtractor(
+              PeerServiceAttributesExtractor.create(
+                  new JettyHttpClientNetAttributesGetter(),
+                  CommonConfig.get().getPeerServiceMapping()))
+          .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+          .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+          .build();
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;
   }
+
+  private JettyHttpClientSingletons() {}
 }

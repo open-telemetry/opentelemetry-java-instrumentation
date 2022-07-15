@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.client;
+package io.opentelemetry.instrumentation.spring.webflux.client.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -11,7 +11,11 @@ import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-final class SpringWebfluxNetAttributesGetter
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class SpringWebfluxNetAttributesGetter
     implements NetClientAttributesGetter<ClientRequest, ClientResponse> {
 
   @Override
