@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import org.elasticsearch.client.Response;
 
 public final class ElasticsearchRestInstrumenterFactory {
@@ -29,7 +30,9 @@ public final class ElasticsearchRestInstrumenterFactory {
             DbClientSpanNameExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-        .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(
+            PeerServiceAttributesExtractor.create(
+                netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
         .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

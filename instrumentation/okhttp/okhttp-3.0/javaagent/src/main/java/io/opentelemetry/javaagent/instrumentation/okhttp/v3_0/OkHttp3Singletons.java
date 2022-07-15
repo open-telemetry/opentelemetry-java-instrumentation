@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetry;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpNetAttributesGetter;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import okhttp3.Interceptor;
 
 /** Holder of singleton interceptors for adding to instrumented clients. */
@@ -18,7 +19,10 @@ public final class OkHttp3Singletons {
   public static final Interceptor TRACING_INTERCEPTOR =
       OkHttpTelemetry.builder(GlobalOpenTelemetry.get())
           .addAttributesExtractor(
-              PeerServiceAttributesExtractor.create(new OkHttpNetAttributesGetter()))
+              PeerServiceAttributesExtractor.create(
+                  new OkHttpNetAttributesGetter(), CommonConfig.get().getPeerServiceMapping()))
+          .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+          .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
           .build()
           .newInterceptor();
 
