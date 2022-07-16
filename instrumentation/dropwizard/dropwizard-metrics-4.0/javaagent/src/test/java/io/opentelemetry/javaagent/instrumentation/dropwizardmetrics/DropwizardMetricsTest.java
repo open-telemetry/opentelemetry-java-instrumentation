@@ -163,6 +163,7 @@ public class DropwizardMetricsTest {
   }
 
   @Test
+  @SuppressWarnings("PreferJavaTimeOverload")
   void timer() throws InterruptedException {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();
