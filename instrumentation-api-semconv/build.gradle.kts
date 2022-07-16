@@ -38,23 +38,4 @@ tasks {
   sourcesJar {
     dependsOn("generateJflex")
   }
-
-  val testStatementSanitizerConfig by registering(Test::class) {
-    filter {
-      includeTestsMatching("StatementSanitizationConfigTest")
-    }
-    include("**/StatementSanitizationConfigTest.*")
-    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=false")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("StatementSanitizationConfigTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
-  }
-
-  check {
-    dependsOn(testStatementSanitizerConfig)
-  }
 }

@@ -31,7 +31,11 @@ public final class JdbcSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(SqlClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(dbAttributesGetter)
+                    .setStatementSanitizationEnabled(
+                        CommonConfig.get().isStatementSanitizationEnabled())
+                    .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
