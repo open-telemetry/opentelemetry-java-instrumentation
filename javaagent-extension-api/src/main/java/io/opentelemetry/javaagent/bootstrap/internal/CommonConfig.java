@@ -28,6 +28,7 @@ public final class CommonConfig {
   private final List<String> clientResponseHeaders;
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
+  private final boolean statementSanitizationEnabled;
 
   CommonConfig(InstrumentationConfig config) {
     peerServiceMapping =
@@ -40,6 +41,8 @@ public final class CommonConfig {
         config.getList("otel.instrumentation.http.capture-headers.server.request", emptyList());
     serverResponseHeaders =
         config.getList("otel.instrumentation.http.capture-headers.server.response", emptyList());
+    statementSanitizationEnabled =
+        config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
   }
 
   public Map<String, String> getPeerServiceMapping() {
@@ -60,5 +63,9 @@ public final class CommonConfig {
 
   public List<String> getServerResponseHeaders() {
     return serverResponseHeaders;
+  }
+
+  public boolean isStatementSanitizationEnabled() {
+    return statementSanitizationEnabled;
   }
 }

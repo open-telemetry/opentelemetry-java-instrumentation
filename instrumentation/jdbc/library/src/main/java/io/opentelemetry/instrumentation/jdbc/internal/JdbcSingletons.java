@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -30,7 +31,12 @@ public final class JdbcSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(SqlClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(dbAttributesGetter)
+                    .setStatementSanitizationEnabled(
+                        ConfigPropertiesUtil.getBoolean(
+                            "otel.instrumentation.common.db-statement-sanitizer.enabled", true))
+                    .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }

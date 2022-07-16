@@ -40,8 +40,8 @@ final class OpenTelemetryTracing implements Tracing {
           NetClientAttributesExtractor.create(new LettuceNetAttributesGetter());
   private final TracerProvider tracerProvider;
 
-  OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer) {
-    this.tracerProvider = new OpenTelemetryTracerProvider(tracer);
+  OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
+    this.tracerProvider = new OpenTelemetryTracerProvider(tracer, sanitizer);
   }
 
   @Override
@@ -81,8 +81,9 @@ final class OpenTelemetryTracing implements Tracing {
 
     private final Tracer openTelemetryTracer;
 
-    OpenTelemetryTracerProvider(io.opentelemetry.api.trace.Tracer tracer) {
-      openTelemetryTracer = new OpenTelemetryTracer(tracer);
+    OpenTelemetryTracerProvider(
+        io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
+      openTelemetryTracer = new OpenTelemetryTracer(tracer, sanitizer);
     }
 
     @Override
@@ -126,9 +127,11 @@ final class OpenTelemetryTracing implements Tracing {
   private static class OpenTelemetryTracer extends Tracer {
 
     private final io.opentelemetry.api.trace.Tracer tracer;
+    private final RedisCommandSanitizer sanitizer;
 
-    OpenTelemetryTracer(io.opentelemetry.api.trace.Tracer tracer) {
+    OpenTelemetryTracer(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
       this.tracer = tracer;
+      this.sanitizer = sanitizer;
     }
 
     @Override
@@ -155,7 +158,7 @@ final class OpenTelemetryTracing implements Tracing {
               .setSpanKind(SpanKind.CLIENT)
               .setParent(context)
               .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystemValues.REDIS);
-      return new OpenTelemetrySpan(context, spanBuilder);
+      return new OpenTelemetrySpan(context, spanBuilder, sanitizer);
     }
   }
 
@@ -167,6 +170,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     private final Context context;
     private final SpanBuilder spanBuilder;
+    private final RedisCommandSanitizer sanitizer;
 
     @Nullable private String name;
     @Nullable private List<Object> events;
@@ -174,9 +178,10 @@ final class OpenTelemetryTracing implements Tracing {
     @Nullable private Span span;
     @Nullable private String args;
 
-    OpenTelemetrySpan(Context context, SpanBuilder spanBuilder) {
+    OpenTelemetrySpan(Context context, SpanBuilder spanBuilder, RedisCommandSanitizer sanitizer) {
       this.context = context;
       this.spanBuilder = spanBuilder;
+      this.sanitizer = sanitizer;
     }
 
     @Override
@@ -319,7 +324,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     private void finish(Span span) {
       if (name != null) {
-        String statement = RedisCommandSanitizer.sanitize(name, splitArgs(args));
+        String statement = sanitizer.sanitize(name, splitArgs(args));
         span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
       }
       span.end();
