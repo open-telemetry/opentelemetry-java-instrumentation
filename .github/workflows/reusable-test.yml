@@ -1,6 +1,7 @@
 name: Reusable - Test
 
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       cache-read-only:
