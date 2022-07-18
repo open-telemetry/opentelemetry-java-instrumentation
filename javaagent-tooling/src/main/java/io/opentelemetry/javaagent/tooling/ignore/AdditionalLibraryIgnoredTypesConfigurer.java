@@ -9,7 +9,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.util.Locale;
 
 /**
  * Additional global ignore settings that are used to reduce number of classes we try to apply
@@ -30,7 +29,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
   @Override
   public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
-    if (config.getBoolean(normalize(ADDITIONAL_LIBRARY_IGNORES_ENABLED), true)) {
+    if (config.getBoolean(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
       configure(builder);
     }
   }
@@ -215,11 +214,6 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("ch.qos.logback.classic.spi.LoggingEventVO");
 
     builder
-        .ignoreClass("com.codahale.metrics.")
-        // We instrument servlets
-        .allowClass("com.codahale.metrics.servlets.");
-
-    builder
         .ignoreClass("com.couchbase.client.deps.")
         // Couchbase library includes some packaged dependencies, unfortunately some of them are
         // instrumented by executors instrumentation
@@ -275,10 +269,5 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     // kotlin, note we do not ignore kotlinx because we instrument coroutines code
     builder.ignoreClass("kotlin.").allowClass("kotlin.coroutines.jvm.internal.DebugProbesKt");
-  }
-
-  // TODO: remove after https://github.com/open-telemetry/opentelemetry-java/issues/4562 is fixed
-  private static String normalize(String key) {
-    return key.toLowerCase(Locale.ROOT).replace('-', '.');
   }
 }

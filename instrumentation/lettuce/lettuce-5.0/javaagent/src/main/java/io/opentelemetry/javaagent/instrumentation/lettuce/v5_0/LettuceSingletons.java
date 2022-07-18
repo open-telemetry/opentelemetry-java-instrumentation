@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 
 public final class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
@@ -45,7 +46,8 @@ public final class LettuceSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
             .addAttributesExtractor(NetClientAttributesExtractor.create(connectNetAttributesGetter))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(connectNetAttributesGetter))
+                PeerServiceAttributesExtractor.create(
+                    connectNetAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }

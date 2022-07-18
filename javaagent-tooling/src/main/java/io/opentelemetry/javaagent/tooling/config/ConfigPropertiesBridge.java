@@ -10,7 +10,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -26,7 +25,7 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public String getString(String name) {
     try {
-      return configProperties.getString(normalize(name));
+      return configProperties.getString(name);
     } catch (ConfigurationException ignored) {
       return null;
     }
@@ -35,7 +34,7 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public String getString(String name, String defaultValue) {
     try {
-      return configProperties.getString(normalize(name), defaultValue);
+      return configProperties.getString(name, defaultValue);
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
@@ -44,7 +43,7 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public boolean getBoolean(String name, boolean defaultValue) {
     try {
-      return configProperties.getBoolean(normalize(name), defaultValue);
+      return configProperties.getBoolean(name, defaultValue);
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
@@ -53,7 +52,7 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public int getInt(String name, int defaultValue) {
     try {
-      return configProperties.getInt(normalize(name), defaultValue);
+      return configProperties.getInt(name, defaultValue);
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
@@ -62,7 +61,7 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public long getLong(String name, long defaultValue) {
     try {
-      return configProperties.getLong(normalize(name), defaultValue);
+      return configProperties.getLong(name, defaultValue);
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
@@ -71,7 +70,7 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public double getDouble(String name, double defaultValue) {
     try {
-      return configProperties.getDouble(normalize(name), defaultValue);
+      return configProperties.getDouble(name, defaultValue);
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
@@ -80,7 +79,7 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public Duration getDuration(String name, Duration defaultValue) {
     try {
-      return configProperties.getDuration(normalize(name), defaultValue);
+      return configProperties.getDuration(name, defaultValue);
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
@@ -89,7 +88,7 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public List<String> getList(String name, List<String> defaultValue) {
     try {
-      return configProperties.getList(normalize(name), defaultValue);
+      return configProperties.getList(name, defaultValue);
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
@@ -98,14 +97,9 @@ public final class ConfigPropertiesBridge extends InstrumentationConfig {
   @Override
   public Map<String, String> getMap(String name, Map<String, String> defaultValue) {
     try {
-      return configProperties.getMap(normalize(name), defaultValue);
+      return configProperties.getMap(name, defaultValue);
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
-  }
-
-  // TODO: remove after https://github.com/open-telemetry/opentelemetry-java/issues/4562 is fixed
-  private static String normalize(String key) {
-    return key.toLowerCase(Locale.ROOT).replace('-', '.');
   }
 }

@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.netty.common.HttpClientSpanKeyAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
@@ -40,10 +41,14 @@ public final class NettyClientSingletons {
                 HttpSpanNameExtractor.create(httpClientAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.create(httpClientAttributesGetter))
+                HttpClientAttributesExtractor.builder(httpClientAttributesGetter)
+                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                    .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(netClientAttributesGetter))
+                PeerServiceAttributesExtractor.create(
+                    netClientAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
@@ -59,7 +64,8 @@ public final class NettyClientSingletons {
             .addAttributesExtractor(nettyConnectAttributesExtractor)
             .addAttributesExtractor(HttpClientSpanKeyAttributesExtractor.INSTANCE)
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(nettyConnectAttributesGetter))
+                PeerServiceAttributesExtractor.create(
+                    nettyConnectAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

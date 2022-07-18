@@ -9,20 +9,38 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.testing.AbstractSpringKafkaTest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SpringKafkaTest extends AbstractSpringKafkaTest {
+
+  @RegisterExtension
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Override
+  protected InstrumentationExtension testing() {
+    return testing;
+  }
+
+  @Override
+  protected List<Class<?>> additionalSpringConfigs() {
+    return emptyList();
+  }
 
   @Test
   void shouldCreateSpansForSingleRecordProcess() {
