@@ -14,8 +14,8 @@ jobs:
   # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry
 
-  smoke-test:
-    uses: ./.github/workflows/reusable-smoke-test.yml
+#  smoke-test:
+#    uses: ./.github/workflows/reusable-smoke-test.yml
 
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,
@@ -31,7 +31,7 @@ jobs:
     needs:
       - assemble
       - test
-      - smoke-test
+#      - smoke-test
       - gradle-plugins
       - examples
     outputs:
