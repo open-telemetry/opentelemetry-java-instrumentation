@@ -24,7 +24,7 @@ import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 class LogEventMapperTest {
 
@@ -32,7 +32,7 @@ class LogEventMapperTest {
   void testDefault() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, emptyList());
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, false, emptyList());
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -49,7 +49,7 @@ class LogEventMapperTest {
   void testSome() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("key2"));
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, false, singletonList("key2"));
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -67,7 +67,7 @@ class LogEventMapperTest {
   void testAll() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("*"));
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, false, singletonList("*"));
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -87,7 +87,7 @@ class LogEventMapperTest {
   void testCaptureMapMessageDisabled() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, singletonList("*"));
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, false, singletonList("*"));
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
@@ -108,7 +108,7 @@ class LogEventMapperTest {
   void testCaptureMapMessageWithSpecialAttribute() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, true, singletonList("*"));
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
@@ -129,7 +129,7 @@ class LogEventMapperTest {
   void testCaptureMapMessageWithoutSpecialAttribute() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, true, singletonList("*"));
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
@@ -153,7 +153,7 @@ class LogEventMapperTest {
   void testCaptureStructuredDataMessage() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, true, singletonList("*"));
+        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, true, singletonList("*"));
 
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
     message.put("key1", "value1");
