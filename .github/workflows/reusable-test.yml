@@ -26,10 +26,8 @@ jobs:
         test-java-version:
           - 8
           - 11
-          - 17
         vm:
           - hotspot
-          - openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@v3

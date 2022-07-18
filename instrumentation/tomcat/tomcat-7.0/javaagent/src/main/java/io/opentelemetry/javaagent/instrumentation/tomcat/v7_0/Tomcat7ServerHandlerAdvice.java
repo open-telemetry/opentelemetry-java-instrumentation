@@ -7,9 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.v7_0.Tomcat7Singletons.helper;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -30,7 +34,17 @@ public class Tomcat7ServerHandlerAdvice {
     }
 
     context = helper().start(parentContext, request);
+    Span span = Java8BytecodeBridge.spanFromContext(context);
+    Enumeration<String> headerNames = request.getMimeHeaders().names();
+    Map<String, String> headers = new HashMap<>();
 
+    if (headerNames != null) {
+      while (headerNames.hasMoreElements()) {
+        String headerName = headerNames.nextElement();
+        headers.put(headerName, request.getHeader(headerName));
+      }
+    }
+    span.setAttribute("http.request.headers", String.valueOf(headers));
     scope = context.makeCurrent();
   }
 
