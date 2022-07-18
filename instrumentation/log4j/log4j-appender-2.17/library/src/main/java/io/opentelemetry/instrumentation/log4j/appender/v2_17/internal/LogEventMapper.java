@@ -46,20 +46,6 @@ public final class LogEventMapper<T> {
       ContextDataAccessor<T> contextDataAccessor,
       boolean captureExperimentalAttributes,
       boolean captureMapMessageAttributes,
-      List<String> captureContextDataAttributes,
-      boolean captureAllContextDataAttributes) {
-
-    this.contextDataAccessor = contextDataAccessor;
-    this.captureExperimentalAttributes = captureExperimentalAttributes;
-    this.captureMapMessageAttributes = captureMapMessageAttributes;
-    this.captureContextDataAttributes = captureContextDataAttributes;
-    this.captureAllContextDataAttributes = captureAllContextDataAttributes;
-  }
-
-  public LogEventMapper(
-      ContextDataAccessor<T> contextDataAccessor,
-      boolean captureExperimentalAttributes,
-      boolean captureMapMessageAttributes,
       List<String> captureContextDataAttributes) {
 
     this.contextDataAccessor = contextDataAccessor;
