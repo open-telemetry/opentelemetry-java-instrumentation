@@ -5,15 +5,12 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -33,44 +30,26 @@ public final class LogEventMapper<T> {
 
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
-  private static final boolean captureExperimentalAttributes =
-      Config.get()
-          .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
-
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
       Cache.bounded(100);
   private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
       Cache.bounded(100);
 
-  private final boolean captureMapMessageAttributes;
-
-  private final List<String> captureContextDataAttributes;
-
-  // cached as an optimization
-  private final boolean captureAllContextDataAttributes;
-
   private final ContextDataAccessor<T> contextDataAccessor;
 
-  public LogEventMapper(ContextDataAccessor<T> contextDataAccessor) {
-    this(
-        contextDataAccessor,
-        Config.get()
-            .getBoolean(
-                "otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes",
-                false),
-        Config.get()
-            .getList(
-                "otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes",
-                emptyList()));
-  }
+  private final boolean captureExperimentalAttributes;
+  private final boolean captureMapMessageAttributes;
+  private final List<String> captureContextDataAttributes;
+  private final boolean captureAllContextDataAttributes;
 
-  // visible for testing
-  LogEventMapper(
+  public LogEventMapper(
       ContextDataAccessor<T> contextDataAccessor,
+      boolean captureExperimentalAttributes,
       boolean captureMapMessageAttributes,
       List<String> captureContextDataAttributes) {
 
     this.contextDataAccessor = contextDataAccessor;
+    this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureAllContextDataAttributes =

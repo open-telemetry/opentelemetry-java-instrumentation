@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static java.util.Collections.emptyList;
+
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
@@ -12,17 +14,32 @@ import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.slf4j.MDC;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
   private static final LogEmitterProviderHolder logEmitterProviderHolder =
       new LogEmitterProviderHolder();
 
+  private volatile boolean captureExperimentalAttributes = false;
+  private volatile List<String> captureMdcAttributes = emptyList();
+
+  private volatile LoggingEventMapper mapper;
+
   public OpenTelemetryAppender() {}
 
   @Override
+  public void start() {
+    mapper = new LoggingEventMapper(captureExperimentalAttributes, captureMdcAttributes);
+    super.start();
+  }
+
+  @Override
   protected void append(ILoggingEvent event) {
-    LoggingEventMapper.INSTANCE.emit(logEmitterProviderHolder.get(), event);
+    mapper.emit(logEmitterProviderHolder.get(), event);
   }
 
   /**
@@ -37,10 +54,36 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
+   * Sets whether experimental attributes should be set to logs. These attributes may be changed or
+   * removed in the future, so only enable this if you know you do not require attributes filled by
+   * this instrumentation to be stable across versions.
+   */
+  public void setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
+    this.captureExperimentalAttributes = captureExperimentalAttributes;
+  }
+
+  /** Configures the {@link MDC} attributes that will be copied to logs. */
+  public void setCaptureMdcAttributes(String attributes) {
+    if (attributes != null) {
+      captureMdcAttributes = filterBlanksAndNulls(attributes.split(","));
+    } else {
+      captureMdcAttributes = emptyList();
+    }
+  }
+
+  /**
    * Unsets the global {@link LogEmitterProvider}. This is only meant to be used from tests which
    * need to reconfigure {@link LogEmitterProvider}.
    */
   public static void resetSdkLogEmitterProviderForTest() {
     logEmitterProviderHolder.resetForTest();
+  }
+
+  // copied from SDK's DefaultConfigProperties
+  private static List<String> filterBlanksAndNulls(String[] values) {
+    return Arrays.stream(values)
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.toList());
   }
 }
