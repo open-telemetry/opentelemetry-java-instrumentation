@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.db;
 
-import static io.opentelemetry.instrumentation.api.db.StatementSanitizationConfig.isStatementSanitizationEnabled;
 import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_STATEMENT_SANITIZER_CACHE_MISS;
 
 import com.google.auto.value.AutoValue;
@@ -23,12 +22,22 @@ public final class SqlStatementSanitizer {
   private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCache =
       Cache.bounded(1000);
 
-  public static SqlStatementInfo sanitize(@Nullable String statement) {
+  public static SqlStatementSanitizer create(boolean statementSanitizationEnabled) {
+    return new SqlStatementSanitizer(statementSanitizationEnabled);
+  }
+
+  private final boolean statementSanitizationEnabled;
+
+  private SqlStatementSanitizer(boolean statementSanitizationEnabled) {
+    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  }
+
+  public SqlStatementInfo sanitize(@Nullable String statement) {
     return sanitize(statement, SqlDialect.DEFAULT);
   }
 
-  public static SqlStatementInfo sanitize(@Nullable String statement, SqlDialect dialect) {
-    if (!isStatementSanitizationEnabled() || statement == null) {
+  public SqlStatementInfo sanitize(@Nullable String statement, SqlDialect dialect) {
+    if (!statementSanitizationEnabled || statement == null) {
       return SqlStatementInfo.create(statement, null, null);
     }
     return sqlToStatementInfoCache.computeIfAbsent(
@@ -50,6 +59,4 @@ public final class SqlStatementSanitizer {
 
     abstract SqlDialect getDialect();
   }
-
-  private SqlStatementSanitizer() {}
 }

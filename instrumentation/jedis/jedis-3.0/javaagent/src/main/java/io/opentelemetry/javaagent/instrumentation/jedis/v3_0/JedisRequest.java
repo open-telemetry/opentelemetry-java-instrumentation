@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import redis.clients.jedis.Connection;
@@ -15,6 +16,9 @@ import redis.clients.jedis.commands.ProtocolCommand;
 
 @AutoValue
 public abstract class JedisRequest {
+
+  private static final RedisCommandSanitizer sanitizer =
+      RedisCommandSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
 
   public static JedisRequest create(
       Connection connection, ProtocolCommand command, List<byte[]> args) {
@@ -39,6 +43,6 @@ public abstract class JedisRequest {
   }
 
   public String getStatement() {
-    return RedisCommandSanitizer.sanitize(getOperation(), getArgs());
+    return sanitizer.sanitize(getOperation(), getArgs());
   }
 }

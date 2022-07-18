@@ -8,10 +8,6 @@ package io.opentelemetry.instrumentation.api.db;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
 
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.CommandAndNumArgs;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.Eval;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.KeepAllArgs;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.MultiKeyValue;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -353,8 +349,18 @@ public final class RedisCommandSanitizer {
     SANITIZERS = unmodifiableMap(sanitizers);
   }
 
-  public static String sanitize(String command, List<?> args) {
-    if (!StatementSanitizationConfig.isStatementSanitizationEnabled()) {
+  public static RedisCommandSanitizer create(boolean statementSanitizationEnabled) {
+    return new RedisCommandSanitizer(statementSanitizationEnabled);
+  }
+
+  private final boolean statementSanitizationEnabled;
+
+  private RedisCommandSanitizer(boolean statementSanitizationEnabled) {
+    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  }
+
+  public String sanitize(String command, List<?> args) {
+    if (!statementSanitizationEnabled) {
       return KeepAllArgs.INSTANCE.sanitize(command, args);
     }
     return SANITIZERS
@@ -362,107 +368,105 @@ public final class RedisCommandSanitizer {
         .sanitize(command, args);
   }
 
-  public interface CommandSanitizer {
+  interface CommandSanitizer {
     String sanitize(String command, List<?> args);
+  }
 
-    static String argToString(Object arg) {
-      if (arg instanceof byte[]) {
-        return new String((byte[]) arg, StandardCharsets.UTF_8);
-      } else {
-        return String.valueOf(arg);
+  enum KeepAllArgs implements CommandSanitizer {
+    INSTANCE;
+
+    @Override
+    public String sanitize(String command, List<?> args) {
+      StringBuilder sanitized = new StringBuilder(command);
+      for (Object arg : args) {
+        sanitized.append(" ").append(argToString(arg));
       }
-    }
-
-    enum KeepAllArgs implements CommandSanitizer {
-      INSTANCE;
-
-      @Override
-      public String sanitize(String command, List<?> args) {
-        StringBuilder sanitized = new StringBuilder(command);
-        for (Object arg : args) {
-          sanitized.append(" ").append(argToString(arg));
-        }
-        return sanitized.toString();
-      }
-    }
-
-    // keeps only a chosen number of arguments
-    // example for num=2: CMD arg1 arg2 ? ?
-    class CommandAndNumArgs implements CommandSanitizer {
-      private final int numOfArgsToKeep;
-
-      public CommandAndNumArgs(int numOfArgsToKeep) {
-        this.numOfArgsToKeep = numOfArgsToKeep;
-      }
-
-      @Override
-      public String sanitize(String command, List<?> args) {
-        StringBuilder sanitized = new StringBuilder(command);
-        for (int i = 0; i < numOfArgsToKeep && i < args.size(); ++i) {
-          sanitized.append(" ").append(argToString(args.get(i)));
-        }
-        for (int i = numOfArgsToKeep; i < args.size(); ++i) {
-          sanitized.append(" ?");
-        }
-        return sanitized.toString();
-      }
-    }
-
-    // keeps only chosen number of arguments and then every second one
-    // example for num=2: CMD arg1 arg2 key1 ? key2 ?
-    class MultiKeyValue implements CommandSanitizer {
-      private final int numOfArgsBeforeKeyValue;
-
-      public MultiKeyValue(int numOfArgsBeforeKeyValue) {
-        this.numOfArgsBeforeKeyValue = numOfArgsBeforeKeyValue;
-      }
-
-      @Override
-      public String sanitize(String command, List<?> args) {
-        StringBuilder sanitized = new StringBuilder(command);
-        // append all "initial" arguments before key-value pairs start
-        for (int i = 0; i < numOfArgsBeforeKeyValue && i < args.size(); ++i) {
-          sanitized.append(" ").append(argToString(args.get(i)));
-        }
-
-        // loop over keys only
-        for (int i = numOfArgsBeforeKeyValue; i < args.size(); i += 2) {
-          sanitized.append(" ").append(argToString(args.get(i))).append(" ?");
-        }
-        return sanitized.toString();
-      }
-    }
-
-    enum Eval implements CommandSanitizer {
-      INSTANCE;
-
-      @Override
-      public String sanitize(String command, List<?> args) {
-        StringBuilder sanitized = new StringBuilder(command);
-
-        // get the number of keys passed from the command itself (second arg)
-        int numberOfKeys = 0;
-        if (args.size() > 2) {
-          try {
-            numberOfKeys = Integer.parseInt(argToString(args.get(1)));
-          } catch (NumberFormatException ignored) {
-            // Ignore
-          }
-        }
-
-        int i = 0;
-        // log the script, number of keys and all keys
-        for (; i < (numberOfKeys + 2) && i < args.size(); ++i) {
-          sanitized.append(" ").append(argToString(args.get(i)));
-        }
-        // mask the rest
-        for (; i < args.size(); ++i) {
-          sanitized.append(" ?");
-        }
-        return sanitized.toString();
-      }
+      return sanitized.toString();
     }
   }
 
-  private RedisCommandSanitizer() {}
+  // keeps only a chosen number of arguments
+  // example for num=2: CMD arg1 arg2 ? ?
+  static final class CommandAndNumArgs implements CommandSanitizer {
+    private final int numOfArgsToKeep;
+
+    CommandAndNumArgs(int numOfArgsToKeep) {
+      this.numOfArgsToKeep = numOfArgsToKeep;
+    }
+
+    @Override
+    public String sanitize(String command, List<?> args) {
+      StringBuilder sanitized = new StringBuilder(command);
+      for (int i = 0; i < numOfArgsToKeep && i < args.size(); ++i) {
+        sanitized.append(" ").append(argToString(args.get(i)));
+      }
+      for (int i = numOfArgsToKeep; i < args.size(); ++i) {
+        sanitized.append(" ?");
+      }
+      return sanitized.toString();
+    }
+  }
+
+  // keeps only chosen number of arguments and then every second one
+  // example for num=2: CMD arg1 arg2 key1 ? key2 ?
+  static final class MultiKeyValue implements CommandSanitizer {
+    private final int numOfArgsBeforeKeyValue;
+
+    MultiKeyValue(int numOfArgsBeforeKeyValue) {
+      this.numOfArgsBeforeKeyValue = numOfArgsBeforeKeyValue;
+    }
+
+    @Override
+    public String sanitize(String command, List<?> args) {
+      StringBuilder sanitized = new StringBuilder(command);
+      // append all "initial" arguments before key-value pairs start
+      for (int i = 0; i < numOfArgsBeforeKeyValue && i < args.size(); ++i) {
+        sanitized.append(" ").append(argToString(args.get(i)));
+      }
+
+      // loop over keys only
+      for (int i = numOfArgsBeforeKeyValue; i < args.size(); i += 2) {
+        sanitized.append(" ").append(argToString(args.get(i))).append(" ?");
+      }
+      return sanitized.toString();
+    }
+  }
+
+  enum Eval implements CommandSanitizer {
+    INSTANCE;
+
+    @Override
+    public String sanitize(String command, List<?> args) {
+      StringBuilder sanitized = new StringBuilder(command);
+
+      // get the number of keys passed from the command itself (second arg)
+      int numberOfKeys = 0;
+      if (args.size() > 2) {
+        try {
+          numberOfKeys = Integer.parseInt(argToString(args.get(1)));
+        } catch (NumberFormatException ignored) {
+          // Ignore
+        }
+      }
+
+      int i = 0;
+      // log the script, number of keys and all keys
+      for (; i < (numberOfKeys + 2) && i < args.size(); ++i) {
+        sanitized.append(" ").append(argToString(args.get(i)));
+      }
+      // mask the rest
+      for (; i < args.size(); ++i) {
+        sanitized.append(" ?");
+      }
+      return sanitized.toString();
+    }
+  }
+
+  static String argToString(Object arg) {
+    if (arg instanceof byte[]) {
+      return new String((byte[]) arg, StandardCharsets.UTF_8);
+    } else {
+      return String.valueOf(arg);
+    }
+  }
 }

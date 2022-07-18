@@ -5,14 +5,16 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static java.util.Collections.emptyList;
+
 import java.util.List;
 
 /** A builder of {@link HttpServerAttributesExtractor}. */
 public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final HttpServerAttributesGetter<REQUEST, RESPONSE> getter;
-  List<String> capturedRequestHeaders = CapturedHttpHeadersUtil.serverRequestHeaders;
-  List<String> capturedResponseHeaders = CapturedHttpHeadersUtil.serverResponseHeaders;
+  List<String> capturedRequestHeaders = emptyList();
+  List<String> capturedResponseHeaders = emptyList();
 
   HttpServerAttributesExtractorBuilder(HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;

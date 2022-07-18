@@ -34,7 +34,7 @@ class PeerServiceAttributesExtractorTest {
     Map<String, String> peerServiceMapping = singletonMap("1.2.3.4", "myService");
 
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(peerServiceMapping, netAttributesExtractor);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
     Context context = Context.root();
 
@@ -53,7 +53,7 @@ class PeerServiceAttributesExtractorTest {
     Map<String, String> peerServiceMapping = singletonMap("example.com", "myService");
 
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(peerServiceMapping, netAttributesExtractor);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
     given(netAttributesExtractor.peerName(any(), any())).willReturn("example2.com");
 
@@ -76,7 +76,7 @@ class PeerServiceAttributesExtractorTest {
     Map<String, String> peerServiceMapping = singletonMap("1.2.3.4", "myService");
 
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(peerServiceMapping, netAttributesExtractor);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
     given(netAttributesExtractor.peerIp(any(), any())).willReturn("1.2.3.5");
 
@@ -101,7 +101,7 @@ class PeerServiceAttributesExtractorTest {
     peerServiceMapping.put("1.2.3.4", "someOtherService");
 
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(peerServiceMapping, netAttributesExtractor);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
     given(netAttributesExtractor.peerName(any(), any())).willReturn("example.com");
 
@@ -127,7 +127,7 @@ class PeerServiceAttributesExtractorTest {
     peerServiceMapping.put("1.2.3.4", "someOtherService");
 
     PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(peerServiceMapping, netAttributesExtractor);
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
     given(netAttributesExtractor.peerName(any(), any())).willReturn("test.com");
     given(netAttributesExtractor.peerIp(any(), any())).willReturn("1.2.3.4");
