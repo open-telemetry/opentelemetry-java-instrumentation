@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.kafka;
+package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import org.springframework.kafka.listener.ListenerExecutionFailedException;

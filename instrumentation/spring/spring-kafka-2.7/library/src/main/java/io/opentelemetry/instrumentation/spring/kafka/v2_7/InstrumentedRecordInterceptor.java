@@ -3,30 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.kafka;
-
-import static io.opentelemetry.javaagent.instrumentation.spring.kafka.SpringKafkaSingletons.processInstrumenter;
+package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.listener.RecordInterceptor;
 
-public final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, V> {
+final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, V> {
 
-  private final VirtualField<ConsumerRecord<K, V>, Context> receiveContextField;
-  private final VirtualField<ConsumerRecord<K, V>, State<ConsumerRecord<K, V>>> stateField;
+  private static final VirtualField<ConsumerRecord<?, ?>, Context> receiveContextField =
+      VirtualField.find(ConsumerRecord.class, Context.class);
+  private static final VirtualField<ConsumerRecord<?, ?>, State<ConsumerRecord<?, ?>>> stateField =
+      VirtualField.find(ConsumerRecord.class, State.class);
+
+  private final Instrumenter<ConsumerRecord<?, ?>, Void> processInstrumenter;
   @Nullable private final RecordInterceptor<K, V> decorated;
 
-  public InstrumentedRecordInterceptor(
-      VirtualField<ConsumerRecord<K, V>, Context> receiveContextField,
-      VirtualField<ConsumerRecord<K, V>, State<ConsumerRecord<K, V>>> stateField,
+  InstrumentedRecordInterceptor(
+      Instrumenter<ConsumerRecord<?, ?>, Void> processInstrumenter,
       @Nullable RecordInterceptor<K, V> decorated) {
-    this.receiveContextField = receiveContextField;
-    this.stateField = stateField;
+    this.processInstrumenter = processInstrumenter;
     this.decorated = decorated;
   }
 
@@ -46,8 +47,8 @@ public final class InstrumentedRecordInterceptor<K, V> implements RecordIntercep
   private void start(ConsumerRecord<K, V> record) {
     Context parentContext = getParentContext(record);
 
-    if (processInstrumenter().shouldStart(parentContext, record)) {
-      Context context = processInstrumenter().start(parentContext, record);
+    if (processInstrumenter.shouldStart(parentContext, record)) {
+      Context context = processInstrumenter.start(parentContext, record);
       Scope scope = context.makeCurrent();
       stateField.set(record, State.create(record, context, scope));
     }
@@ -77,11 +78,11 @@ public final class InstrumentedRecordInterceptor<K, V> implements RecordIntercep
   }
 
   private void end(ConsumerRecord<K, V> record, @Nullable Throwable error) {
-    State<ConsumerRecord<K, V>> state = stateField.get(record);
+    State<ConsumerRecord<?, ?>> state = stateField.get(record);
     stateField.set(record, null);
     if (state != null) {
       state.scope().close();
-      processInstrumenter().end(state.context(), state.request(), null, error);
+      processInstrumenter.end(state.context(), state.request(), null, error);
     }
   }
 }
