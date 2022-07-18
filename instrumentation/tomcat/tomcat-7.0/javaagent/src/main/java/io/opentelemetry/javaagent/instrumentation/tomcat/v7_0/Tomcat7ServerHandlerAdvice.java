@@ -11,12 +11,12 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import net.bytebuddy.asm.Advice;
-import org.apache.coyote.Request;
-import org.apache.coyote.Response;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import net.bytebuddy.asm.Advice;
+import org.apache.coyote.Request;
+import org.apache.coyote.Response;
 
 @SuppressWarnings("unused")
 public class Tomcat7ServerHandlerAdvice {
