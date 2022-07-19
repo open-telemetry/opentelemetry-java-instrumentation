@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.16.0 (2022-07-19)
 
 ### Migration notes
 
