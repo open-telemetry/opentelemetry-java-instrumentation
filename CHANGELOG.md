@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.16.0 (2022-07-19)
+
 ### Migration notes
 
 - Config has been replaced by ConfigProperties in Javaagent extensions SPIs
