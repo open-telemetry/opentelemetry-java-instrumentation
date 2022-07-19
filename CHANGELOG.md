@@ -15,19 +15,23 @@
 
 ### 🌟 New javaagent instrumentation
 
-- Implement C3P0 connection pool metrics
+- C3P0 connection pool metrics
   ([#6174](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6174))
-- add runtime metrics for buffer pool
+- JVM buffer pool metrics
   ([#6177](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6177))
-- Add kafka client metrics
+- Kafka client metrics
   ([#6138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6138))
-- Add (more) Spring JMS support
-  ([#6308](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6308))
-- Add a dropwizard-metrics -> OTel metrics bridge
+- dropwizard-metrics to OpenTelemetry metrics bridge
   ([#6259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6259))
 
 ### 🌟 New library instrumentation
 
+- C3P0 connection pool metrics
+  ([#6174](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6174))
+- JVM buffer pool metrics
+  ([#6177](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6177))
+- Kafka client metrics
+  ([#6138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6138))
 - Add metrics & micrometer support to spring-boot-autoconfigure
   ([#6270](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6270))
 - Spring Kafka library instrumentation
@@ -47,6 +51,8 @@
   ([#6228](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6228))
 - Aws sdk2 sqs context propagation
   ([#6199](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6199))
+- More Spring JMS support
+  ([#6308](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6308))
 - Hikaricp: Avoid registering duplicate metrics
   ([#6325](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6325))
 
