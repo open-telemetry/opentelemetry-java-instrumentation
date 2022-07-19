@@ -2,6 +2,59 @@
 
 ## Unreleased
 
+### Migration notes
+
+- Config has been replaced by ConfigProperties in Javaagent extensions SPIs
+- The deprecated TimeExtractor has been removed
+- The `opentelemetry-instrumentation-api-annotation-support` artifact has been renamed to
+  `opentelemetry-instrumentation-annotation-support`
+- The `opentelemetry-annotations` instrumentation suppression key has been renamed to
+  `opentelemetry-extension-annotations`
+- The 'otel.javaagent.experimental.use-noop-api' flag has been removed, as this capability is now
+  available via the `otel.experimental.sdk.enabled` flag
+
+### 🌟 New javaagent instrumentation
+
+- Implement C3P0 connection pool metrics
+  ([#6174](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6174))
+- add runtime metrics for buffer pool
+  ([#6177](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6177))
+- Add kafka client metrics
+  ([#6138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6138))
+- Add (more) Spring JMS support
+  ([#6308](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6308))
+- Add a dropwizard-metrics -> OTel metrics bridge
+  ([#6259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6259))
+
+### 🌟 New library instrumentation
+
+- Add metrics & micrometer support to spring-boot-autoconfigure
+  ([#6270](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6270))
+- Spring Kafka library instrumentation
+  ([#6283](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6283))
+
+### 📈 Enhancements
+
+- Update GraphQL instrumentation to match spec
+  ([#6179](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6179))
+- Make rpc.grpc.status_code required
+  ([#6184](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6184))
+- Always pass Context when recording HttpServerMetrics
+  ([#6223](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6223))
+- Capture enduser.id in servlet instrumentation
+  ([#6225](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6225))
+- Support metric view configuration file in the Javaagent
+  ([#6228](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6228))
+- Aws sdk2 sqs context propagation
+  ([#6199](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6199))
+- Hikaricp: Avoid registering duplicate metrics
+  ([#6325](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6325))
+
+### 🛠️ Bug fixes
+
+- Fix liberty net.peer.port
+  ([#6274](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6274))
+
 ## Version 1.15.0 (2022-06-16)
 
 ### Migration notes
