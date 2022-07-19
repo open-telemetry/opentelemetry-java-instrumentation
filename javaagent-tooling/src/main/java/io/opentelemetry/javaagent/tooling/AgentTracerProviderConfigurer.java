@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLED_CONFIG;
+import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
@@ -42,12 +42,12 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
 
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
-    if (!Config.get().getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (!config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       return sdkTracerProviderBuilder;
     }
 
     // Register additional thread details logging span processor
-    if (Config.get().getBoolean(ADD_THREAD_DETAILS, true)) {
+    if (config.getBoolean(ADD_THREAD_DETAILS, true)) {
       sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
     }
     sdkTracerProviderBuilder.addSpanProcessor(new HeliosProcessor());
@@ -56,24 +56,23 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
     heliosRatioProperty.ifPresent(
         ratioProperty -> sdkTracerProviderBuilder.setSampler(new HeliosSampler(ratioProperty)));
 
-    maybeEnableLoggingExporter(sdkTracerProviderBuilder);
+    maybeEnableLoggingExporter(sdkTracerProviderBuilder, config);
 
     return sdkTracerProviderBuilder;
   }
 
-  private static void maybeEnableLoggingExporter(SdkTracerProviderBuilder builder) {
-    if (AgentConfig.get().isDebugModeEnabled()) {
+  private static void maybeEnableLoggingExporter(
+      SdkTracerProviderBuilder builder, ConfigProperties config) {
+    if (AgentConfig.isDebugModeEnabled(config)) {
       // don't install another instance if the user has already explicitly requested it.
-      if (loggingExporterIsNotAlreadyConfigured()) {
+      if (loggingExporterIsNotAlreadyConfigured(config)) {
         builder.addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()));
       }
     }
   }
 
-  private static boolean loggingExporterIsNotAlreadyConfigured() {
-    return !Config.get()
-        .getList("otel.traces.exporter", Collections.emptyList())
-        .contains("logging");
+  private static boolean loggingExporterIsNotAlreadyConfigured(ConfigProperties config) {
+    return !config.getList("otel.traces.exporter", emptyList()).contains("logging");
   }
 
   private static Optional<Double> getHeliosSamplingRationProperty() {

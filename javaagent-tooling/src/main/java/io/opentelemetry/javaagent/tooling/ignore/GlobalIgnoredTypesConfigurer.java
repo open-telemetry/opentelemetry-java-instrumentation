@@ -16,7 +16,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     configureIgnoredTypes(builder);
     configureIgnoredClassLoaders(builder);
     configureIgnoredTasks(builder);

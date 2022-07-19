@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class QuartzIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // Quartz executes jobs themselves in a synchronous way, there's no reason to propagate context
     // between its scheduler threads.
     builder.ignoreTaskClass("org.quartz");

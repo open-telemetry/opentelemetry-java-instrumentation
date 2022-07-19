@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.Ordered;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -82,9 +83,20 @@ public abstract class InstrumentationModule implements Ordered {
   /**
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
+   *
+   * @deprecated Use {@link #defaultEnabled(ConfigProperties)} instead.
    */
+  @Deprecated
   public boolean defaultEnabled() {
     return DEFAULT_ENABLED;
+  }
+
+  /**
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
+   */
+  public boolean defaultEnabled(ConfigProperties config) {
+    return defaultEnabled();
   }
 
   /**

@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class RxJava2IgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // ScheduledRunnable is a wrapper around a Runnable and doesn't itself need context.
     builder.ignoreTaskClass("io.reactivex.internal.schedulers.ScheduledRunnable");
   }

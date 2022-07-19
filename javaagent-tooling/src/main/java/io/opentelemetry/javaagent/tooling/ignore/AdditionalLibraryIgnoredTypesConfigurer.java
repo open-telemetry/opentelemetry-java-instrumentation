@@ -28,7 +28,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
       "otel.javaagent.testing.additional-library-ignores.enabled";
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     if (config.getBoolean(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
       configure(builder);
     }

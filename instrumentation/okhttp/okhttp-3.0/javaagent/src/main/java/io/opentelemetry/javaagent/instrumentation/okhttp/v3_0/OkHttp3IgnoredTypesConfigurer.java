@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class OkHttp3IgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // OkHttp task runner is a lazily-initialized shared pool of continuously running threads
     // similar to an event loop. The submitted tasks themselves should already be
     // instrumented to allow async propagation.

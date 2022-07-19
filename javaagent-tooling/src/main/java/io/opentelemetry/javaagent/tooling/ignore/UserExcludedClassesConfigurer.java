@@ -20,7 +20,7 @@ public class UserExcludedClassesConfigurer implements IgnoredTypesConfigurer {
   static final String EXCLUDED_CLASSES_CONFIG = "otel.javaagent.exclude-classes";
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     List<String> excludedClasses = config.getList(EXCLUDED_CLASSES_CONFIG, emptyList());
     for (String excludedClass : excludedClasses) {
       excludedClass = excludedClass.trim();

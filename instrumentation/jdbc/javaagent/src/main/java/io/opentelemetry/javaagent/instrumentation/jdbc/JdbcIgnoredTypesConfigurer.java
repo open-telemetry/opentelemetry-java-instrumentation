@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class JdbcIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5946
     builder.ignoreClass("org.jboss.jca.adapters.jdbc.");
   }
