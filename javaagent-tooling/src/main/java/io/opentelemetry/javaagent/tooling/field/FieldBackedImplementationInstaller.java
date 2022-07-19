@@ -11,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
@@ -62,7 +62,8 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
       TransformSafeLogger.getLogger(FieldBackedImplementationInstaller.class);
 
   private static final boolean FIELD_INJECTION_ENABLED =
-      Config.get().getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
+      InstrumentationConfig.get()
+          .getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
 
   private final Class<?> instrumenterClass;
   private final VirtualFieldMappings virtualFieldMappings;

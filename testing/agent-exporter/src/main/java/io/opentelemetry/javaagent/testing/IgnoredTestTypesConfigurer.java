@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class IgnoredTestTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // we don't want to instrument auto-generated mocks
     builder
         .ignoreClass("org.mockito")

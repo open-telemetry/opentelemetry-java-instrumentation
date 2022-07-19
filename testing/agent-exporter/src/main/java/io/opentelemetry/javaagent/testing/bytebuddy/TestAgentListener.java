@@ -57,7 +57,7 @@ public class TestAgentListener implements AgentBuilder.Listener {
           || configurer instanceof GlobalIgnoredTypesConfigurer) {
         continue;
       }
-      configurer.configure(EmptyConfigProperties.INSTANCE, builder);
+      configurer.configure(builder, EmptyConfigProperties.INSTANCE);
     }
     return builder.buildIgnoredTypesTrie();
   }

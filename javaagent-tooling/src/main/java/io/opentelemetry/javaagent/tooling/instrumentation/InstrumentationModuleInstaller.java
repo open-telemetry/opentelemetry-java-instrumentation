@@ -28,6 +28,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.List;
@@ -58,10 +59,13 @@ public final class InstrumentationModuleInstaller {
   }
 
   AgentBuilder install(
-      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
-    if (!AgentConfig.get()
-        .isInstrumentationEnabled(
-            instrumentationModule.instrumentationNames(), instrumentationModule.defaultEnabled())) {
+      InstrumentationModule instrumentationModule,
+      AgentBuilder parentAgentBuilder,
+      ConfigProperties config) {
+    if (!AgentConfig.isInstrumentationEnabled(
+        config,
+        instrumentationModule.instrumentationNames(),
+        instrumentationModule.defaultEnabled(config))) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;

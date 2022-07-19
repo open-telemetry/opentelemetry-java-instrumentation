@@ -13,7 +13,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 @AutoService(IgnoredTypesConfigurer.class)
 public class SpringRabbitIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
   @Override
-  public void configure(ConfigProperties config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     // contains a Runnable that servers as a worker that continuously reads messages from queue
     builder
         .ignoreClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$")

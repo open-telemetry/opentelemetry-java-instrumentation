@@ -34,7 +34,7 @@ public class IgnoredTypesMatcherBenchmark {
   static {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     new AdditionalLibraryIgnoredTypesConfigurer()
-        .configure(EmptyConfigProperties.INSTANCE, builder);
+        .configure(builder, EmptyConfigProperties.INSTANCE);
     ignoredTypesMatcher = new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie());
   }
 

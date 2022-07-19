@@ -132,7 +132,7 @@ public class AgentInstaller {
 
     agentBuilder = configureIgnoredTypes(sdkConfig, agentBuilder);
 
-    if (AgentConfig.get().isDebugModeEnabled()) {
+    if (AgentConfig.isDebugModeEnabled(sdkConfig)) {
       agentBuilder =
           agentBuilder
               .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
@@ -150,7 +150,7 @@ public class AgentInstaller {
             new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
       }
       try {
-        agentBuilder = agentExtension.extend(agentBuilder);
+        agentBuilder = agentExtension.extend(agentBuilder, sdkConfig);
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
         logger.log(
@@ -202,7 +202,7 @@ public class AgentInstaller {
       ConfigProperties config, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
-      configurer.configure(config, builder);
+      configurer.configure(builder, config);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
@@ -236,7 +236,7 @@ public class AgentInstaller {
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to class loader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
-        Config.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
+        autoConfiguredSdk.getConfig().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     boolean javaBefore9 = isJavaBefore9();
     if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
