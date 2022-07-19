@@ -94,7 +94,7 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           arguments: assemble publishToSonatype
           # gradle enterprise is used for the build cache
@@ -107,7 +107,7 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           build-root-directory: gradle-plugins
           arguments: build publishToSonatype

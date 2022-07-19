@@ -19,7 +19,7 @@ jobs:
           java-version: 17
 
       - name: Build Docker image
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           arguments: ":smoke-tests:images:fake-backend:jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain"
           cache-read-only: true
@@ -44,7 +44,7 @@ jobs:
           java-version: 17
 
       - name: Build Docker image
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           arguments: ":smoke-tests:images:fake-backend:windowsBackendImageBuild"
           cache-read-only: true

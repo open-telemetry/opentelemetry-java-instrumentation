@@ -21,7 +21,7 @@ jobs:
           rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
 
       - name: Run tests
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           arguments: test
           build-root-directory: benchmark-overhead

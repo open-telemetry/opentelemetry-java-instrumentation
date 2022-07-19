@@ -98,7 +98,7 @@ jobs:
           java-version: 17
 
       - name: Build and publish artifacts
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           arguments: assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
@@ -108,7 +108,7 @@ jobs:
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
 
       - name: Build and publish gradle plugins
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}

@@ -23,7 +23,7 @@ jobs:
           java-version: 11
 
       - name: Build
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           arguments: build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           build-root-directory: gradle-plugins

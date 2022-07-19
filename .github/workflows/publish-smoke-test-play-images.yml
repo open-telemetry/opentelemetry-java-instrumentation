@@ -42,7 +42,7 @@ jobs:
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Set up Gradle cache
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
 
         # Play doesn't support Java 16 (or 17) yet
         # https://github.com/playframework/playframework/pull/10819

@@ -61,7 +61,7 @@ jobs:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           arguments: check -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           # only push cache for one matrix option since github action cache space is limited

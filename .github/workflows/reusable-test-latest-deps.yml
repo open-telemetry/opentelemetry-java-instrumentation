@@ -53,7 +53,7 @@ jobs:
 
       - name: Test
         if: ${{ !inputs.skip }}
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}

@@ -28,7 +28,7 @@ jobs:
           java-version: 17
 
       - name: Run muzzle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@dd/cache-timeout
         with:
           arguments: ${{ matrix.task }}
           cache-read-only: ${{ inputs.cache-read-only }}
