@@ -258,6 +258,14 @@ jobs:
     needs: release
     uses: ./.github/workflows/reusable-create-operator-pull-request.yml
     with:
-      javaagent-version: ${{ needs.release.outputs.version }}
+      version: ${{ needs.release.outputs.version }}
+    secrets:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+
+  create-java-contrib-pull-request:
+    needs: release
+    uses: ./.github/workflows/reusable-create-java-contrib-pull-request.yml
+    with:
+      version: ${{ needs.release.outputs.version }}
     secrets:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
