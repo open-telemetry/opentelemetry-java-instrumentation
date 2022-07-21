@@ -50,8 +50,9 @@ jobs:
   gradle-plugins:
     uses: ./.github/workflows/reusable-gradle-plugins.yml
 
-  examples:
-    uses: ./.github/workflows/reusable-examples.yml
+  # removed this for now until we decide what to do with the extenstions
+  #  examples:
+  #    uses: ./.github/workflows/reusable-examples.yml
 
   markdown-link-check:
     # release branches are excluded to avoid unnecessary maintenance if external links break
@@ -65,51 +66,3 @@ jobs:
     # to the misspell dictionary
     if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-misspell-check.yml
-
-  publish-snapshots:
-    needs:
-      # intentionally not blocking snapshot publishing on test-latest-deps, muzzle,
-      # markdown-link-check, or misspell-check
-      - assemble
-      - test-java11
-      - smoke-test
-      - gradle-plugins
-      - examples
-    runs-on: ubuntu-latest
-    # skipping release branches because the versions in those branches are not snapshots
-    if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK for running Gradle
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Build and publish artifact snapshots
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: assemble publishToSonatype
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
-
-      - name: Build and publish gradle plugin snapshots
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/gradle-build-action@v2
-        with:
-          build-root-directory: gradle-plugins
-          arguments: build publishToSonatype
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
