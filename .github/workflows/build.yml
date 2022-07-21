@@ -71,7 +71,7 @@ jobs:
       # intentionally not blocking snapshot publishing on test-latest-deps, muzzle,
       # markdown-link-check, or misspell-check
       - assemble
-      - test
+      - test-java11
       - smoke-test
       - gradle-plugins
       - examples

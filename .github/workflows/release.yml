@@ -34,7 +34,8 @@ jobs:
   release:
     needs:
       - assemble
-      - test
+      - test-java8
+      - test-java11
       - smoke-test
       - gradle-plugins
 #      - examples
