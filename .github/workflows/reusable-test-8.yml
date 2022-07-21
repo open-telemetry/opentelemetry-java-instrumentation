@@ -25,7 +25,6 @@ jobs:
       matrix:
         test-java-version:
           - 8
-          - 11
         vm:
           - hotspot
       fail-fast: false

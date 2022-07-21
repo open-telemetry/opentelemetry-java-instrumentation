@@ -14,8 +14,8 @@ jobs:
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
-  test:
-    uses: ./.github/workflows/reusable-test.yml
+  test-java11:
+    uses: ./.github/workflows/reusable-test-11.yml
     with:
       no-build-cache: true
     secrets:
