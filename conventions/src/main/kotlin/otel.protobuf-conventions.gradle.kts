@@ -18,6 +18,10 @@ protobuf {
   plugins {
     id("grpc") {
       artifact = "io.grpc:protoc-gen-grpc-java:1.6.0"
+      if (osdetector.os == "osx") {
+        // Always use x86_64 version as ARM binary is not available
+        artifact += ":osx-x86_64"
+      }
     }
   }
   generateProtoTasks {
