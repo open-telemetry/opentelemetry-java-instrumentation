@@ -25,9 +25,13 @@ import javax.annotation.Nullable;
  * repeatedly calling {@link Config}. The instrumentation configuration does not change during the
  * runtime so retrieving the property once and storing its result in a static final field allows JIT
  * to do its magic and remove some code branches.
+ *
+ * @deprecated This class is deprecated and will be removed from instrumentation-api in the next
+ *     release. Please use programmatic configuration (e.g. builder methods) instead.
  */
-// TODO: deprecate
+@Deprecated
 @AutoValue
+@AutoValue.CopyAnnotations
 public abstract class Config {
   private static final Logger logger = Logger.getLogger(Config.class.getName());
 
