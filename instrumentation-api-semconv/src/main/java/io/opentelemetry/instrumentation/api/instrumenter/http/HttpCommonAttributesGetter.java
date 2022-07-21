@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /** An interface for getting HTTP attributes common to clients and servers. */
@@ -26,6 +28,11 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * returned instead.
    */
   List<String> requestHeader(REQUEST request, String name);
+
+  @Nullable
+  default Map<String, String> requestHeaders(REQUEST request, @Nullable RESPONSE response) {
+    return Collections.emptyMap();
+  }
 
   // Attributes which are not always available when the request is ready.
 
@@ -85,4 +92,9 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * returned instead.
    */
   List<String> responseHeader(REQUEST request, RESPONSE response, String name);
+
+  @Nullable
+  default Map<String, String> responseHeaders(REQUEST request, RESPONSE response) {
+    return Collections.emptyMap();
+  }
 }
