@@ -1177,8 +1177,8 @@ public abstract class AbstractGrpcTest {
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
           @Override
-          public void sayHello(
-              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
+          public void sayMultipleHello(
+              Helloworld.Request request, StreamObserver<Helloworld.Response> responseObserver) {
             // Send a response but don't complete so client can fail itself
             responseObserver.onNext(Helloworld.Response.getDefaultInstance());
           }
@@ -1198,7 +1198,7 @@ public abstract class AbstractGrpcTest {
         .runWithSpan(
             "parent",
             () ->
-                client.sayHello(
+                client.sayMultipleHello(
                     Helloworld.Request.newBuilder().setName("test").build(),
                     new StreamObserver<Helloworld.Response>() {
                       @Override
@@ -1229,14 +1229,14 @@ public abstract class AbstractGrpcTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("example.Greeter/SayHello")
+                        span.hasName("example.Greeter/SayMultipleHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
@@ -1270,13 +1270,13 @@ public abstract class AbstractGrpcTest {
                                   span.hasException(thrown);
                                 }),
                     span ->
-                        span.hasName("example.Greeter/SayHello")
+                        span.hasName("example.Greeter/SayMultipleHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
                                 equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
                                 // net.peer.name resolves to "127.0.0.1" on windows which is same as
                                 // net.peer.ip so then not captured
