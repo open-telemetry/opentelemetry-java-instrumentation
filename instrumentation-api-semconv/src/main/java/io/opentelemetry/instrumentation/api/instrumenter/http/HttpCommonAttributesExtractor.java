@@ -5,16 +5,23 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static java.util.logging.Level.FINE;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.lowercase;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -25,6 +32,13 @@ import javax.annotation.Nullable;
 abstract class HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, GETTER extends HttpCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
+
+  private static final Logger logger = Logger.getLogger(HttpCommonAttributesExtractor.class.getName());
+
+  public static final AttributeKey<String> HTTP_REQUEST_HEADERS = stringKey("http.request.headers");
+  public static final AttributeKey<String> HTTP_RESPONSE_HEADERS = stringKey("http.response.headers");
+
+  public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
   final GETTER getter;
   private final List<String> capturedRequestHeaders;
@@ -41,6 +55,7 @@ abstract class HttpCommonAttributesExtractor<
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
     internalSet(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
+    internalSet(attributes, HTTP_REQUEST_HEADERS, toJsonString(requestHeaders(request, null)));
 
     for (String name : capturedRequestHeaders) {
       List<String> values = getter.requestHeader(request, name);
@@ -80,6 +95,11 @@ abstract class HttpCommonAttributesExtractor<
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
           getter.responseContentLengthUncompressed(request, response));
+      internalSet(
+          attributes,
+          HTTP_RESPONSE_HEADERS,
+          toJsonString(responseHeaders(request, response))
+      );
 
       for (String name : capturedResponseHeaders) {
         List<String> values = getter.responseHeader(request, response, name);
@@ -91,6 +111,16 @@ abstract class HttpCommonAttributesExtractor<
   }
 
   @Nullable
+  Map<String, String> requestHeaders(REQUEST request,  @Nullable RESPONSE response) {
+    return getter.requestHeaders(request, response);
+  }
+
+  @Nullable
+  Map<String, String> responseHeaders(REQUEST request, @Nullable RESPONSE response) {
+    return getter.responseHeaders(request, response);
+  }
+
+  @Nullable
   private String userAgent(REQUEST request) {
     return firstHeaderValue(getter.requestHeader(request, "user-agent"));
   }
@@ -98,5 +128,14 @@ abstract class HttpCommonAttributesExtractor<
   @Nullable
   static String firstHeaderValue(List<String> values) {
     return values.isEmpty() ? null : values.get(0);
+  }
+
+  static String toJsonString(Map<String, String> m) {
+    try {
+      return JSON_MAPPER.writeValueAsString(m);
+    } catch (IOException e) {
+      logger.log(FINE, "Failed converting headers map to json string", e);
+      return "{}";
+    }
   }
 }
