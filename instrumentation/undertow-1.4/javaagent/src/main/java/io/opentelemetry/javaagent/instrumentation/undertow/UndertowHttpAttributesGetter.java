@@ -8,8 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
+import io.undertow.util.HttpString;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class UndertowHttpAttributesGetter
@@ -24,6 +28,30 @@ public class UndertowHttpAttributesGetter
   public List<String> requestHeader(HttpServerExchange exchange, String name) {
     HeaderValues values = exchange.getRequestHeaders().get(name);
     return values == null ? Collections.emptyList() : values;
+  }
+
+  private static String firstListValue(List<String> values) {
+    return values.isEmpty() ? "" : values.get(0);
+  }
+
+  @Override
+  public Map<String, String> requestHeaders(
+      HttpServerExchange exchange, HttpServerExchange unused) {
+    return exchange.getRequestHeaders().getHeaderNames().stream()
+        .map(HttpString::toString)
+        .collect(
+            Collectors.toMap(
+                Function.identity(), (h) -> firstListValue(requestHeader(exchange, h))));
+  }
+
+  @Override
+  public Map<String, String> responseHeaders(
+      HttpServerExchange unused, HttpServerExchange exchange) {
+    return exchange.getResponseHeaders().getHeaderNames().stream()
+        .map(HttpString::toString)
+        .collect(
+            Collectors.toMap(
+                Function.identity(), (h) -> firstListValue(responseHeader(exchange, exchange, h))));
   }
 
   @Override
