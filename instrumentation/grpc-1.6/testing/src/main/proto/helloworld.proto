@@ -6,6 +6,9 @@ service Greeter {
   rpc SayHello (Request) returns (Response) {
   }
 
+  rpc SayMultipleHello (Request) returns (stream Response) {
+  }
+
   rpc Conversation (stream Response) returns (stream Response) {
   }
 }
