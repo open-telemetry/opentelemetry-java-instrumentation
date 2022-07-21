@@ -156,6 +156,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
             "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "http.request.headers" { it != null }
+            "http.response.headers" { it != null }
           }
         }
         span(1) {
@@ -211,6 +213,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
             "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "http.request.headers" { it != null }
+            "http.response.headers" { it != null }
           }
         }
         span(1) {
