@@ -13,8 +13,8 @@ jobs:
     with:
       cache-read-only: true
 
-  test:
-    uses: ./.github/workflows/reusable-test.yml
+  test-java11:
+    uses: ./.github/workflows/reusable-test-11.yml
     with:
       cache-read-only: true
 
@@ -34,11 +34,11 @@ jobs:
   required-status-check:
     needs:
       - assemble
-      - test
+      - test-java11
     runs-on: ubuntu-latest
     if: always()
     steps:
       - if: |
           needs.assemble.result != 'success' ||
-          needs.test.result != 'success'
+          needs.test-java11.result != 'success'
         run: exit 1

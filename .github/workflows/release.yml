@@ -6,8 +6,11 @@ jobs:
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
 
-  test:
-    uses: ./.github/workflows/reusable-test.yml
+  test-java8:
+    uses: ./.github/workflows/reusable-test-8.yml
+
+  test-java11:
+    uses: ./.github/workflows/reusable-test-11.yml
 
 #   test-latest-deps is intentionally not included in the release workflows
 #   because any time a new library version is released to maven central
