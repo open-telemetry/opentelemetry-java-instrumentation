@@ -482,7 +482,8 @@ class InstrumenterTest {
         Instrumenter.builder(
             otelTesting.getOpenTelemetry(), "test-instrumentation", name -> "span");
 
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.buildInstrumenter();
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        builder.buildInstrumenter();
 
     Context context = instrumenter.start(Context.root(), Collections.emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();

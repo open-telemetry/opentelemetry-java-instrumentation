@@ -238,8 +238,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    */
   @Deprecated
   public Instrumenter<REQUEST, RESPONSE> newInstrumenter() {
-    return buildInstrumenter(InstrumenterConstructor.internal(),
-        SpanKindExtractor.alwaysInternal());
+    return buildInstrumenter(
+        InstrumenterConstructor.internal(), SpanKindExtractor.alwaysInternal());
   }
 
   /**
@@ -297,8 +297,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * spans and do no context propagation.
    */
   public Instrumenter<REQUEST, RESPONSE> buildInstrumenter() {
-    return buildInstrumenter(InstrumenterConstructor.internal(),
-        SpanKindExtractor.alwaysInternal());
+    return buildInstrumenter(
+        InstrumenterConstructor.internal(), SpanKindExtractor.alwaysInternal());
   }
 
   /**
