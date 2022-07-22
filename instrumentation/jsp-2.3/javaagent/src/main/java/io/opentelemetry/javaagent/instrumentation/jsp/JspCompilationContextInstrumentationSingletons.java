@@ -30,7 +30,7 @@ public class JspCompilationContextInstrumentationSingletons {
                 "io.opentelemetry.jsp-2.3",
                 JspCompilationContextInstrumentationSingletons::spanNameOnCompile)
             .addAttributesExtractor(new CompilationAttributesExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysInternal());
+            .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 
   public static String spanNameOnCompile(JspCompilationContext jspCompilationContext) {

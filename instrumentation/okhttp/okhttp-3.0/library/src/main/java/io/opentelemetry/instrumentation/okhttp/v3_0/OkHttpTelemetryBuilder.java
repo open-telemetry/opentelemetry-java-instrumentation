@@ -84,7 +84,7 @@ public final class OkHttpTelemetryBuilder {
             .addAttributesExtractor(NetClientAttributesExtractor.create(attributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
-            .newInstrumenter(alwaysClient());
+            .buildInstrumenter(alwaysClient());
     return new OkHttpTelemetry(instrumenter, openTelemetry.getPropagators());
   }
 }

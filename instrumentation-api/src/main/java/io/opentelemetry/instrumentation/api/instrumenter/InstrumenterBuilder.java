@@ -183,9 +183,83 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   /**
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#CLIENT client} spans
    * and inject context into requests.
+   *
+   * @deprecated Use {@link #buildClientInstrumenter(TextMapSetter)} instead.
    */
+  @Deprecated
   public Instrumenter<REQUEST, RESPONSE> newClientInstrumenter(TextMapSetter<REQUEST> setter) {
-    return newInstrumenter(
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingToDownstream(setter), SpanKindExtractor.alwaysClient());
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#SERVER server} spans
+   * and extract context from requests.
+   *
+   * @deprecated Use {@link #buildServerInstrumenter(TextMapGetter)} instead.
+   */
+  @Deprecated
+  public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingFromUpstream(getter), SpanKindExtractor.alwaysServer());
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#PRODUCER producer}
+   * spans and inject context into requests.
+   *
+   * @deprecated Use {@link #buildProducerInstrumenter(TextMapSetter)} instead.
+   */
+  @Deprecated
+  public Instrumenter<REQUEST, RESPONSE> newProducerInstrumenter(TextMapSetter<REQUEST> setter) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingToDownstream(setter),
+        SpanKindExtractor.alwaysProducer());
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#CONSUMER consumer}
+   * spans and extract context from requests.
+   *
+   * @deprecated Use {@link #buildConsumerInstrumenter(TextMapGetter)} instead.
+   */
+  @Deprecated
+  public Instrumenter<REQUEST, RESPONSE> newConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingFromUpstream(getter),
+        SpanKindExtractor.alwaysConsumer());
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#INTERNAL internal}
+   * spans and do no context propagation.
+   *
+   * @deprecated Use {@link #buildInstrumenter()} instead.
+   */
+  @Deprecated
+  public Instrumenter<REQUEST, RESPONSE> newInstrumenter() {
+    return buildInstrumenter(InstrumenterConstructor.internal(),
+        SpanKindExtractor.alwaysInternal());
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
+   * {@link SpanKindExtractor} and do no context propagation.
+   *
+   * @deprecated Use {@link #buildInstrumenter(SpanKindExtractor)} instead.
+   */
+  @Deprecated
+  public Instrumenter<REQUEST, RESPONSE> newInstrumenter(
+      SpanKindExtractor<? super REQUEST> spanKindExtractor) {
+    return buildInstrumenter(InstrumenterConstructor.internal(), spanKindExtractor);
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#CLIENT client} spans
+   * and inject context into requests.
+   */
+  public Instrumenter<REQUEST, RESPONSE> buildClientInstrumenter(TextMapSetter<REQUEST> setter) {
+    return buildInstrumenter(
         InstrumenterConstructor.propagatingToDownstream(setter), SpanKindExtractor.alwaysClient());
   }
 
@@ -193,8 +267,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#SERVER server} spans
    * and extract context from requests.
    */
-  public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
-    return newInstrumenter(
+  public Instrumenter<REQUEST, RESPONSE> buildServerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return buildInstrumenter(
         InstrumenterConstructor.propagatingFromUpstream(getter), SpanKindExtractor.alwaysServer());
   }
 
@@ -202,8 +276,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#PRODUCER producer}
    * spans and inject context into requests.
    */
-  public Instrumenter<REQUEST, RESPONSE> newProducerInstrumenter(TextMapSetter<REQUEST> setter) {
-    return newInstrumenter(
+  public Instrumenter<REQUEST, RESPONSE> buildProducerInstrumenter(TextMapSetter<REQUEST> setter) {
+    return buildInstrumenter(
         InstrumenterConstructor.propagatingToDownstream(setter),
         SpanKindExtractor.alwaysProducer());
   }
@@ -212,8 +286,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#CONSUMER consumer}
    * spans and extract context from requests.
    */
-  public Instrumenter<REQUEST, RESPONSE> newConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
-    return newInstrumenter(
+  public Instrumenter<REQUEST, RESPONSE> buildConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return buildInstrumenter(
         InstrumenterConstructor.propagatingFromUpstream(getter),
         SpanKindExtractor.alwaysConsumer());
   }
@@ -222,20 +296,21 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#INTERNAL internal}
    * spans and do no context propagation.
    */
-  public Instrumenter<REQUEST, RESPONSE> newInstrumenter() {
-    return newInstrumenter(InstrumenterConstructor.internal(), SpanKindExtractor.alwaysInternal());
+  public Instrumenter<REQUEST, RESPONSE> buildInstrumenter() {
+    return buildInstrumenter(InstrumenterConstructor.internal(),
+        SpanKindExtractor.alwaysInternal());
   }
 
   /**
    * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
    * {@link SpanKindExtractor} and do no context propagation.
    */
-  public Instrumenter<REQUEST, RESPONSE> newInstrumenter(
+  public Instrumenter<REQUEST, RESPONSE> buildInstrumenter(
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
-    return newInstrumenter(InstrumenterConstructor.internal(), spanKindExtractor);
+    return buildInstrumenter(InstrumenterConstructor.internal(), spanKindExtractor);
   }
 
-  private Instrumenter<REQUEST, RESPONSE> newInstrumenter(
+  private Instrumenter<REQUEST, RESPONSE> buildInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
     this.spanKindExtractor = spanKindExtractor;

@@ -25,7 +25,7 @@ public final class Play26Singletons {
   private static final Instrumenter<Void, Void> INSTRUMENTER =
       Instrumenter.<Void, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.play-mvc-2.6", s -> SPAN_NAME)
-          .newInstrumenter();
+          .buildInstrumenter();
 
   @Nullable private static final Method typedKeyGetUnderlying;
 

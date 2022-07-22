@@ -33,7 +33,7 @@ public final class ElasticsearchRestInstrumenterFactory {
         .addAttributesExtractor(
             PeerServiceAttributesExtractor.create(
                 netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-        .newInstrumenter(SpanKindExtractor.alwaysClient());
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private ElasticsearchRestInstrumenterFactory() {}

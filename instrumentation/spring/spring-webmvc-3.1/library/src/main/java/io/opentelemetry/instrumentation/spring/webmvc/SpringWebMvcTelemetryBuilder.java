@@ -87,7 +87,7 @@ public final class SpringWebMvcTelemetryBuilder {
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get())
-            .newServerInstrumenter(JavaxHttpServletRequestGetter.INSTANCE);
+            .buildServerInstrumenter(JavaxHttpServletRequestGetter.INSTANCE);
 
     return new SpringWebMvcTelemetry(instrumenter);
   }

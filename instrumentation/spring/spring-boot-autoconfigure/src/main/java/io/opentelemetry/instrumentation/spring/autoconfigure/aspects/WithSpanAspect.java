@@ -49,7 +49,7 @@ public class WithSpanAspect {
                     JoinPointRequest::method,
                     parameterAttributeNamesExtractor,
                     JoinPointRequest::args))
-            .newInstrumenter(WithSpanAspect::spanKind);
+            .buildInstrumenter(WithSpanAspect::spanKind);
   }
 
   private static String spanName(JoinPointRequest request) {

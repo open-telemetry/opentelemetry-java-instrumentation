@@ -109,7 +109,7 @@ class KtorServerTracing private constructor(
         addContextCustomizer(HttpRouteHolder.get())
       }
 
-      val instrumenter = instrumenterBuilder.newServerInstrumenter(ApplicationRequestGetter)
+      val instrumenter = instrumenterBuilder.buildServerInstrumenter(ApplicationRequestGetter)
 
       val feature = KtorServerTracing(instrumenter)
 

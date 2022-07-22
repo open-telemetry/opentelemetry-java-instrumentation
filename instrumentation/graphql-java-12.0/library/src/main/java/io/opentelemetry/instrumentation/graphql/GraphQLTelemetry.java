@@ -52,7 +52,7 @@ public final class GraphQLTelemetry {
                 });
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
 
-    this.instrumenter = builder.newInstrumenter();
+    this.instrumenter = builder.buildInstrumenter();
     this.sanitizeQuery = sanitizeQuery;
   }
 

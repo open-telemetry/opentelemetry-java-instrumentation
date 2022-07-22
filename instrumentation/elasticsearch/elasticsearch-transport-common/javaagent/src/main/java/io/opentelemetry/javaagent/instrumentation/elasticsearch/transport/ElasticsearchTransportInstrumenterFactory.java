@@ -40,7 +40,7 @@ public final class ElasticsearchTransportInstrumenterFactory {
       instrumenterBuilder.addAttributesExtractor(experimentalAttributesExtractor);
     }
 
-    return instrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysClient());
+    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private ElasticsearchTransportInstrumenterFactory() {}

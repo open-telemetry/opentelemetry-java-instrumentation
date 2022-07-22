@@ -22,7 +22,7 @@ public class ItemSingletons {
   private static final Instrumenter<String, Void> INSTRUMENTER =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), str -> str)
-          .newInstrumenter();
+          .buildInstrumenter();
 
   public static Instrumenter<String, Void> itemInstrumenter() {
     return INSTRUMENTER;

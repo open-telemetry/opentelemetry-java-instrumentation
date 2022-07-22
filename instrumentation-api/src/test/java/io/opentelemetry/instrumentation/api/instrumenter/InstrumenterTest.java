@@ -156,7 +156,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
             .addSpanLinksExtractor(new LinksExtractor())
-            .newServerInstrumenter(new MapGetter());
+            .buildServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
@@ -196,7 +196,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .newServerInstrumenter(new MapGetter());
+            .buildServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
@@ -217,7 +217,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .newServerInstrumenter(new MapGetter());
+            .buildServerInstrumenter(new MapGetter());
 
     Map<String, String> request = new HashMap<>(REQUEST);
     W3CTraceContextPropagator.getInstance()
@@ -258,7 +258,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
             .addSpanLinksExtractor(new LinksExtractor())
-            .newClientInstrumenter(Map::put);
+            .buildClientInstrumenter(Map::put);
 
     Map<String, String> request = new HashMap<>(REQUEST);
     Context context = instrumenter.start(Context.root(), request);
@@ -301,7 +301,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .newClientInstrumenter(Map::put);
+            .buildClientInstrumenter(Map::put);
 
     Map<String, String> request = new HashMap<>(REQUEST);
     Context context = instrumenter.start(Context.root(), request);
@@ -326,7 +326,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .newClientInstrumenter(Map::put);
+            .buildClientInstrumenter(Map::put);
 
     Context parent =
         Context.root()
@@ -383,7 +383,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addOperationListener(operationListener)
-            .newServerInstrumenter(new MapGetter());
+            .buildServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     instrumenter.end(context, REQUEST, RESPONSE, null);
@@ -415,7 +415,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addOperationMetrics(meter -> operationListener)
-            .newServerInstrumenter(new MapGetter());
+            .buildServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     instrumenter.end(context, REQUEST, RESPONSE, null);
@@ -432,7 +432,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
             .addSpanLinksExtractor(
                 (spanLinks, parentContext, request) -> spanLinks.addLink(SpanContext.getInvalid()))
-            .newInstrumenter();
+            .buildInstrumenter();
 
     // when
     Context context = instrumenter.start(Context.root(), "request");
@@ -456,7 +456,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
             .addContextCustomizer(
                 (context, request, attributes) -> context.with(testKey, "testVal"))
-            .newInstrumenter();
+            .buildInstrumenter();
 
     // when
     Context context = instrumenter.start(Context.root(), "request");
@@ -471,7 +471,7 @@ class InstrumenterTest {
         Instrumenter.<String, String>builder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
             .setEnabled(false)
-            .newInstrumenter();
+            .buildInstrumenter();
 
     assertThat(instrumenter.shouldStart(Context.root(), "request")).isFalse();
   }
@@ -482,7 +482,7 @@ class InstrumenterTest {
         Instrumenter.builder(
             otelTesting.getOpenTelemetry(), "test-instrumentation", name -> "span");
 
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.newInstrumenter();
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter = builder.buildInstrumenter();
 
     Context context = instrumenter.start(Context.root(), Collections.emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();
@@ -507,7 +507,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", name -> "span")
             .setInstrumentationVersion("1.0")
-            .newInstrumenter();
+            .buildInstrumenter();
 
     Context context = instrumenter.start(Context.root(), Collections.emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();
@@ -532,7 +532,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", name -> "span")
             .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
-            .newInstrumenter();
+            .buildInstrumenter();
 
     Context context = instrumenter.start(Context.root(), Collections.emptyMap());
     assertThat(Span.fromContext(context)).isNotNull();
@@ -564,7 +564,7 @@ class InstrumenterTest {
                 mockHttpClientAttributes,
                 mockNetClientAttributes,
                 mockDbClientAttributes)
-            .newInstrumenter();
+            .buildInstrumenter();
 
     Context context = instrumenter.start(Context.root(), REQUEST);
 

@@ -38,7 +38,7 @@ public final class CassandraSingletons {
                     .build())
             .addAttributesExtractor(
                 NetClientAttributesExtractor.create(new CassandraNetAttributesGetter()))
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {

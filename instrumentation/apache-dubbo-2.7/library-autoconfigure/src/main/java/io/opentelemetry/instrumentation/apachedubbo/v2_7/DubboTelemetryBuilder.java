@@ -82,7 +82,7 @@ public final class DubboTelemetryBuilder {
     }
 
     return new DubboTelemetry(
-        serverInstrumenterBuilder.newServerInstrumenter(DubboHeadersGetter.INSTANCE),
-        clientInstrumenterBuilder.newClientInstrumenter(DubboHeadersSetter.INSTANCE));
+        serverInstrumenterBuilder.buildServerInstrumenter(DubboHeadersGetter.INSTANCE),
+        clientInstrumenterBuilder.buildClientInstrumenter(DubboHeadersSetter.INSTANCE));
   }
 }

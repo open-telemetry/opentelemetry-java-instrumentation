@@ -55,7 +55,7 @@ public class RabbitSingletons {
                 RabbitChannelAttributesGetter.INSTANCE, MessageOperation.SEND))
         .addAttributesExtractor(
             NetClientAttributesExtractor.create(new RabbitChannelNetAttributesGetter()))
-        .newInstrumenter(
+        .buildInstrumenter(
             channelAndMethod ->
                 channelAndMethod.getMethod().equals("Channel.basicPublish") ? PRODUCER : CLIENT);
   }
@@ -73,7 +73,7 @@ public class RabbitSingletons {
     return Instrumenter.<ReceiveRequest, GetResponse>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ReceiveRequest::spanName)
         .addAttributesExtractors(extractors)
-        .newInstrumenter(SpanKindExtractor.alwaysClient());
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private static Instrumenter<DeliveryRequest, Void> createDeliverInstrumenter() {
@@ -89,6 +89,6 @@ public class RabbitSingletons {
     return Instrumenter.<DeliveryRequest, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, DeliveryRequest::spanName)
         .addAttributesExtractors(extractors)
-        .newConsumerInstrumenter(DeliveryRequestGetter.INSTANCE);
+        .buildConsumerInstrumenter(DeliveryRequestGetter.INSTANCE);
   }
 }

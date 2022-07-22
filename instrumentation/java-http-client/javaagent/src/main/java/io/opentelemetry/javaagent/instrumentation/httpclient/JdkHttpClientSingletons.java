@@ -44,7 +44,7 @@ public class JdkHttpClientSingletons {
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(SETTER);
+            .buildClientInstrumenter(SETTER);
   }
 
   public static Instrumenter<HttpRequest, HttpResponse<?>> instrumenter() {

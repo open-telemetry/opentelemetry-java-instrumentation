@@ -44,7 +44,7 @@ public final class HttpUrlConnectionSingletons {
                 (context, httpRequestPacket, startAttributes) ->
                     GetOutputStreamContext.init(context))
             .addOperationMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(RequestPropertySetter.INSTANCE);
+            .buildClientInstrumenter(RequestPropertySetter.INSTANCE);
   }
 
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {

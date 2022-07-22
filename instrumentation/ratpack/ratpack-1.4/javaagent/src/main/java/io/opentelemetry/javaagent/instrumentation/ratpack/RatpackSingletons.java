@@ -19,7 +19,7 @@ public final class RatpackSingletons {
   private static final Instrumenter<String, Void> INSTRUMENTER =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4", s -> s)
-          .newInstrumenter();
+          .buildInstrumenter();
 
   public static Instrumenter<String, Void> instrumenter() {
     return INSTRUMENTER;

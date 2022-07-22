@@ -44,9 +44,9 @@ class RocketMqInstrumenterFactory {
     }
 
     if (propagationEnabled) {
-      return instrumenterBuilder.newProducerInstrumenter(MapSetter.INSTANCE);
+      return instrumenterBuilder.buildProducerInstrumenter(MapSetter.INSTANCE);
     } else {
-      return instrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysProducer());
+      return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
     }
   }
 
@@ -66,7 +66,7 @@ class RocketMqInstrumenterFactory {
             openTelemetry, captureExperimentalSpanAttributes, propagationEnabled, false),
         createProcessInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes, propagationEnabled, true),
-        batchReceiveInstrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysConsumer()));
+        batchReceiveInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer()));
   }
 
   private static Instrumenter<MessageExt, Void> createProcessInstrumenter(
@@ -90,7 +90,7 @@ class RocketMqInstrumenterFactory {
     }
 
     if (!propagationEnabled) {
-      return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
+      return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
 
     if (batch) {
@@ -101,9 +101,9 @@ class RocketMqInstrumenterFactory {
 
       return builder
           .addSpanLinksExtractor(spanLinksExtractor)
-          .newInstrumenter(SpanKindExtractor.alwaysConsumer());
+          .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
-      return builder.newConsumerInstrumenter(TextMapExtractAdapter.INSTANCE);
+      return builder.buildConsumerInstrumenter(TextMapExtractAdapter.INSTANCE);
     }
   }
 

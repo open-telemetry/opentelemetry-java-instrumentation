@@ -15,7 +15,7 @@ public final class ResponseInstrumenterFactory {
   public static Instrumenter<ClassAndMethod, Void> createInstrumenter(String instrumentationName) {
     return Instrumenter.<ClassAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, SpanNames::fromMethod)
-        .newInstrumenter();
+        .buildInstrumenter();
   }
 
   private ResponseInstrumenterFactory() {}

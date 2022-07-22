@@ -46,7 +46,7 @@ public final class CouchbaseSingletons {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 
-    INSTRUMENTER = builder.newInstrumenter(SpanKindExtractor.alwaysClient());
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<CouchbaseRequestInfo, Void> instrumenter() {
