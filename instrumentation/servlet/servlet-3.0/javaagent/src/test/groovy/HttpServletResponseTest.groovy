@@ -5,6 +5,8 @@
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
 import javax.servlet.http.HttpServlet
 import spock.lang.Subject
 
@@ -66,18 +68,24 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
           name "TestResponse.sendError"
           childOf span(0)
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TestResponse.name
+            "$SemanticAttributes.CODE_FUNCTION" "sendError"
           }
         }
         span(2) {
           name "TestResponse.sendError"
           childOf span(0)
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TestResponse.name
+            "$SemanticAttributes.CODE_FUNCTION" "sendError"
           }
         }
         span(3) {
           name "TestResponse.sendRedirect"
           childOf span(0)
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TestResponse.name
+            "$SemanticAttributes.CODE_FUNCTION" "sendRedirect"
           }
         }
       }
