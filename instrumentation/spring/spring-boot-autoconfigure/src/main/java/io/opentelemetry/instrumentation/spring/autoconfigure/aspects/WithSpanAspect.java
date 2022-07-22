@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttribu
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.SpanNames;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -44,6 +45,8 @@ public class WithSpanAspect {
 
     instrumenter =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
+            .addAttributesExtractor(
+                CodeAttributesExtractor.create(JointPointCodeAttributesExtractor.INSTANCE))
             .addAttributesExtractor(
                 MethodSpanAttributesExtractor.newInstance(
                     JoinPointRequest::method,

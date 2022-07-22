@@ -5,6 +5,7 @@
 
 import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.test.annotation.TracedWithSpan
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.ClassFileVersion
@@ -40,6 +41,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "otel"
           }
         }
       }
@@ -57,6 +60,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "manualName"
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "namedOtel"
           }
         }
       }
@@ -75,6 +80,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind PRODUCER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "someKind"
           }
         }
       }
@@ -93,12 +100,16 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "server"
           }
         }
         span(1) {
           name "TracedWithSpan.otel"
           childOf span(0)
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "otel"
           }
         }
       }
@@ -127,6 +138,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completionStage"
           }
         }
       }
@@ -151,6 +164,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completionStage"
           }
         }
       }
@@ -173,6 +188,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completionStage"
           }
         }
       }
@@ -199,6 +216,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completionStage"
           }
         }
       }
@@ -217,6 +236,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completionStage"
           }
         }
       }
@@ -236,6 +257,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completableFuture"
           }
         }
       }
@@ -260,6 +283,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completableFuture"
           }
         }
       }
@@ -282,6 +307,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completableFuture"
           }
         }
       }
@@ -308,6 +335,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completableFuture"
           }
         }
       }
@@ -326,6 +355,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completableFuture"
           }
         }
       }
@@ -370,6 +401,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" "GeneratedJava6TestClass"
+            "$SemanticAttributes.CODE_FUNCTION" "run"
           }
         }
         span(1) {
@@ -395,6 +428,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "withSpanAttributes"
             "implicitName" "foo"
             "explicitName" "bar"
           }
