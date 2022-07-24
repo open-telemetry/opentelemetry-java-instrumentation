@@ -484,3 +484,9 @@ include(":instrumentation:wicket-8.0:javaagent")
 // benchmark
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
+include("instrumentation:pubsub-2.0")
+findProject(":instrumentation:pubsub-2.0")?.name = "pubsub-2.0"
+include("instrumentation:pubsub-2.0")
+findProject(":instrumentation:pubsub-2.0")?.name = "pubsub-2.0"
+include("instrumentation:pubsub-2.0:javaagent")
+findProject(":instrumentation:pubsub-2.0:javaagent")?.name = "javaagent"
