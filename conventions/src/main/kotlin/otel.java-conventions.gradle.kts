@@ -58,7 +58,7 @@ tasks.withType<JavaCompile>().configureEach {
           "-Xlint:-options",
 
           // Fail build on any warning
-          "-Werror"
+//          "-Werror"
         )
       )
     }
