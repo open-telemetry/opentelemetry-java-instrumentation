@@ -36,7 +36,7 @@ public class AkkaHttpServerSingletons {
                     .build())
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get())
-            .newServerInstrumenter(AkkaHttpServerHeaders.INSTANCE);
+            .buildServerInstrumenter(AkkaHttpServerHeaders.INSTANCE);
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {

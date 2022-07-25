@@ -29,7 +29,7 @@ public class AwsLambdaEventsInstrumenterFactory {
             .addAttributesExtractors(
                 new AwsLambdaFunctionAttributesExtractor(),
                 new ApiGatewayProxyAttributesExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysServer()));
+            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {

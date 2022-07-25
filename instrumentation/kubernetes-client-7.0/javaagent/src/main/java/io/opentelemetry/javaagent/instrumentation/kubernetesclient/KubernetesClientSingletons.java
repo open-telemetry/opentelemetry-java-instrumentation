@@ -54,7 +54,7 @@ public class KubernetesClientSingletons {
 
     // Initialize with .newInstrumenter(alwaysClient()) instead of .newClientInstrumenter(..)
     // because Request is immutable so context must be injected manually
-    INSTRUMENTER = instrumenterBuilder.newInstrumenter(alwaysClient());
+    INSTRUMENTER = instrumenterBuilder.buildInstrumenter(alwaysClient());
 
     CONTEXT_PROPAGATORS = GlobalOpenTelemetry.getPropagators();
   }

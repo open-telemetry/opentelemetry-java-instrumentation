@@ -40,7 +40,7 @@ public final class LibertyDispatcherSingletons {
             .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addContextCustomizer(HttpRouteHolder.get())
             .addOperationMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);
+            .buildServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);
   }
 
   public static Instrumenter<LibertyRequest, LibertyResponse> instrumenter() {

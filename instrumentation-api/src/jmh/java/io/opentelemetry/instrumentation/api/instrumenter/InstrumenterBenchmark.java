@@ -45,7 +45,7 @@ public class InstrumenterBenchmark {
               HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
               NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
-          .newInstrumenter();
+          .buildInstrumenter();
 
   @Benchmark
   public Context start() {

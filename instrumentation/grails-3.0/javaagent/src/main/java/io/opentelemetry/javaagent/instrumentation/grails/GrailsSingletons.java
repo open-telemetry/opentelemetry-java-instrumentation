@@ -19,7 +19,7 @@ public final class GrailsSingletons {
         Instrumenter.<HandlerData, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HandlerData::spanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<HandlerData, Void> instrumenter() {

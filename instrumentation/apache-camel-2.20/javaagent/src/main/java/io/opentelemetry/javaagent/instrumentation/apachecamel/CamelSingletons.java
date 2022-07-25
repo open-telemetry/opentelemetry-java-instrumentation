@@ -74,7 +74,7 @@ public final class CamelSingletons {
     builder.addAttributesExtractor(attributesExtractor);
     builder.setSpanStatusExtractor(spanStatusExtractor);
 
-    INSTRUMENTER = builder.newInstrumenter(request -> request.getSpanKind());
+    INSTRUMENTER = builder.buildInstrumenter(request -> request.getSpanKind());
   }
 
   public static Instrumenter<CamelRequest, Void> instrumenter() {

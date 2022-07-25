@@ -28,7 +28,7 @@ public final class SpringRabbitSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
-            .newConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
+            .buildConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
   }
 
   public static Instrumenter<Message, Void> instrumenter() {

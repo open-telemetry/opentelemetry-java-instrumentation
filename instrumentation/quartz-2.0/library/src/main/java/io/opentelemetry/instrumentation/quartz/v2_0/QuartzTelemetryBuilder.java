@@ -50,6 +50,6 @@ public final class QuartzTelemetryBuilder {
         CodeAttributesExtractor.create(new QuartzCodeAttributesGetter()));
     instrumenter.addAttributesExtractors(additionalExtractors);
 
-    return new QuartzTelemetry(new TracingJobListener(instrumenter.newInstrumenter()));
+    return new QuartzTelemetry(new TracingJobListener(instrumenter.buildInstrumenter()));
   }
 }

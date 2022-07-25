@@ -19,7 +19,7 @@ public class MetroSingletons {
         Instrumenter.<MetroRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, MetroRequest::spanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<MetroRequest, Void> instrumenter() {

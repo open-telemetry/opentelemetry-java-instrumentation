@@ -76,7 +76,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);
     }
-    return builder.newServerInstrumenter(new ServletRequestGetter<>(accessor));
+    return builder.buildServerInstrumenter(new ServletRequestGetter<>(accessor));
   }
 
   public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(

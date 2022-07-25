@@ -73,7 +73,7 @@ final class AwsSdkInstrumenterFactory {
             captureExperimentalSpanAttributes
                 ? extendedAttributesExtractors
                 : defaultAttributesExtractors)
-        .newInstrumenter(spanKindExtractor);
+        .buildInstrumenter(spanKindExtractor);
   }
 
   private static String spanName(ExecutionAttributes attributes) {

@@ -16,7 +16,7 @@ public class JobSingletons {
   private static final Instrumenter<JobExecution, Void> INSTRUMENTER =
       Instrumenter.<JobExecution, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), JobSingletons::extractSpanName)
-          .newInstrumenter();
+          .buildInstrumenter();
 
   private static String extractSpanName(JobExecution jobExecution) {
     return "BatchJob " + jobExecution.getJobInstance().getJobName();

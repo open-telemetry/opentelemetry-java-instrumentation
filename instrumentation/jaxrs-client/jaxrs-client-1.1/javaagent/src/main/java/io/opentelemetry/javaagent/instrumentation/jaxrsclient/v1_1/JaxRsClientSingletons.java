@@ -42,7 +42,7 @@ public class JaxRsClientSingletons {
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get())
-            .newClientInstrumenter(ClientRequestHeaderSetter.INSTANCE);
+            .buildClientInstrumenter(ClientRequestHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<ClientRequest, ClientResponse> instrumenter() {

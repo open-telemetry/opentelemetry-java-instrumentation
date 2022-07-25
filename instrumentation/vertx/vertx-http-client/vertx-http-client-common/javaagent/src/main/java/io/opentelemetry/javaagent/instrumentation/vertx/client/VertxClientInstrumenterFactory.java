@@ -49,7 +49,7 @@ public final class VertxClientInstrumenterFactory {
                   netAttributesGetter, CommonConfig.get().getPeerServiceMapping()));
     }
 
-    return builder.newClientInstrumenter(new HttpRequestHeaderSetter());
+    return builder.buildClientInstrumenter(new HttpRequestHeaderSetter());
   }
 
   private VertxClientInstrumenterFactory() {}

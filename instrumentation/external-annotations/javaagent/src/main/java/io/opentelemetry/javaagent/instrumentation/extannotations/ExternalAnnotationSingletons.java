@@ -26,7 +26,7 @@ public final class ExternalAnnotationSingletons {
                 "io.opentelemetry.external-annotations",
                 CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {

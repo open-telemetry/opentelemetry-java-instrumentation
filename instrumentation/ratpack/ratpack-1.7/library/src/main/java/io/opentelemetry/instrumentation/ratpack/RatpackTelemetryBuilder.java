@@ -118,7 +118,7 @@ public final class RatpackTelemetryBuilder {
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(RatpackGetter.INSTANCE);
+            .buildServerInstrumenter(RatpackGetter.INSTANCE);
 
     return new RatpackTelemetry(instrumenter, httpClientInstrumenter());
   }
@@ -134,6 +134,6 @@ public final class RatpackTelemetryBuilder {
         .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
         .addAttributesExtractors(additionalHttpClientExtractors)
         .addOperationMetrics(HttpServerMetrics.get())
-        .newClientInstrumenter(RequestHeaderSetter.INSTANCE);
+        .buildClientInstrumenter(RequestHeaderSetter.INSTANCE);
   }
 }

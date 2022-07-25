@@ -78,7 +78,7 @@ public final class KafkaInstrumenterFactory {
         .addAttributesExtractors(extractors)
         .addAttributesExtractor(new KafkaProducerAdditionalAttributesExtractor())
         .setErrorCauseExtractor(errorCauseExtractor)
-        .newInstrumenter(SpanKindExtractor.alwaysProducer());
+        .buildInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
   public Instrumenter<ConsumerRecords<?, ?>, Void> createConsumerReceiveInstrumenter() {
@@ -92,7 +92,7 @@ public final class KafkaInstrumenterFactory {
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .setErrorCauseExtractor(errorCauseExtractor)
         .setEnabled(messagingReceiveInstrumentationEnabled)
-        .newInstrumenter(SpanKindExtractor.alwaysConsumer());
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public Instrumenter<ConsumerRecord<?, ?>, Void> createConsumerProcessInstrumenter() {
@@ -119,15 +119,15 @@ public final class KafkaInstrumenterFactory {
     }
 
     if (!propagationEnabled) {
-      return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
+      return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           SpanLinksExtractor.extractFromRequest(
               openTelemetry.getPropagators().getTextMapPropagator(),
               KafkaConsumerRecordGetter.INSTANCE));
-      return builder.newInstrumenter(SpanKindExtractor.alwaysConsumer());
+      return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
-      return builder.newConsumerInstrumenter(KafkaConsumerRecordGetter.INSTANCE);
+      return builder.buildConsumerInstrumenter(KafkaConsumerRecordGetter.INSTANCE);
     }
   }
 
@@ -144,6 +144,6 @@ public final class KafkaInstrumenterFactory {
             new KafkaBatchProcessSpanLinksExtractor(
                 openTelemetry.getPropagators().getTextMapPropagator()))
         .setErrorCauseExtractor(errorCauseExtractor)
-        .newInstrumenter(SpanKindExtractor.alwaysConsumer());
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 }
