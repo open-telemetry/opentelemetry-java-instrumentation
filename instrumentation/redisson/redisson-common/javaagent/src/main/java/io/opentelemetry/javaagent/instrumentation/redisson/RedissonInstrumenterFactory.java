@@ -24,7 +24,7 @@ public final class RedissonInstrumenterFactory {
             DbClientSpanNameExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-        .newInstrumenter(SpanKindExtractor.alwaysClient());
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private RedissonInstrumenterFactory() {}

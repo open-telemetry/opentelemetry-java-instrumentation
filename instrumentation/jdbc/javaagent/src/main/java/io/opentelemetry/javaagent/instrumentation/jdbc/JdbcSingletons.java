@@ -40,7 +40,7 @@ public final class JdbcSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<DbRequest, Void> instrumenter() {

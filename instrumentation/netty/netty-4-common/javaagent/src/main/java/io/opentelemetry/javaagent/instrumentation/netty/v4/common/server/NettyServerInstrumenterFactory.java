@@ -40,7 +40,7 @@ public final class NettyServerInstrumenterFactory {
         .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer((context, request, attributes) -> NettyErrorHolder.init(context))
         .addContextCustomizer(HttpRouteHolder.get())
-        .newServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
+        .buildServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);
   }
 
   private NettyServerInstrumenterFactory() {}

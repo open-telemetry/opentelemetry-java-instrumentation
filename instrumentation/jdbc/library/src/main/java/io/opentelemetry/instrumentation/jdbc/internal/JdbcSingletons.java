@@ -38,7 +38,7 @@ public final class JdbcSingletons {
                             "otel.instrumentation.common.db-statement-sanitizer.enabled", true))
                     .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<DbRequest, Void> instrumenter() {

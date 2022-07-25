@@ -36,7 +36,7 @@ public final class WithSpanSingletons {
   private static Instrumenter<Method, Object> createInstrumenter() {
     return Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, WithSpanSingletons::spanNameFromMethod)
-        .newInstrumenter(WithSpanSingletons::spanKindFromMethod);
+        .buildInstrumenter(WithSpanSingletons::spanKindFromMethod);
   }
 
   private static Instrumenter<MethodRequest, Object> createInstrumenterWithAttributes() {
@@ -49,7 +49,7 @@ public final class WithSpanSingletons {
                 MethodRequest::method,
                 WithSpanParameterAttributeNamesExtractor.INSTANCE,
                 MethodRequest::args))
-        .newInstrumenter(WithSpanSingletons::spanKindFromMethodRequest);
+        .buildInstrumenter(WithSpanSingletons::spanKindFromMethodRequest);
   }
 
   private static SpanKind spanKindFromMethodRequest(MethodRequest request) {

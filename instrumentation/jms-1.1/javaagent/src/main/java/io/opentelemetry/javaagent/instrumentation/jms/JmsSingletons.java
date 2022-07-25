@@ -32,7 +32,7 @@ public final class JmsSingletons {
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
-        .newProducerInstrumenter(MessagePropertySetter.INSTANCE);
+        .buildProducerInstrumenter(MessagePropertySetter.INSTANCE);
   }
 
   private static Instrumenter<MessageWithDestination, Void> buildConsumerInstrumenter() {
@@ -46,7 +46,7 @@ public final class JmsSingletons {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
         .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-        .newInstrumenter(SpanKindExtractor.alwaysConsumer());
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<MessageWithDestination, Void> buildListenerInstrumenter() {
@@ -58,7 +58,7 @@ public final class JmsSingletons {
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
-        .newConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
+        .buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {

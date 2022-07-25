@@ -19,7 +19,7 @@ public class CxfSingletons {
         Instrumenter.<CxfRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, CxfRequest::spanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<CxfRequest, Void> instrumenter() {

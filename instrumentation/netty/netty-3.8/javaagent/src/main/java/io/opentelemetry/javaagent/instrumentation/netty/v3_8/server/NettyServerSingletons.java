@@ -43,7 +43,7 @@ final class NettyServerSingletons {
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .addContextCustomizer(HttpRouteHolder.get())
-            .newServerInstrumenter(NettyHeadersGetter.INSTANCE);
+            .buildServerInstrumenter(NettyHeadersGetter.INSTANCE);
   }
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {

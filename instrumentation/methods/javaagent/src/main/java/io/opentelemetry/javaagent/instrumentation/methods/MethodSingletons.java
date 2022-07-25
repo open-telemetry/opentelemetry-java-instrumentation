@@ -23,7 +23,7 @@ public final class MethodSingletons {
     INSTRUMENTER =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
-            .newInstrumenter(SpanKindExtractor.alwaysInternal());
+            .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {

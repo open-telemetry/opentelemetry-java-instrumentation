@@ -23,7 +23,7 @@ public final class SpringSchedulingSingletons {
                 "io.opentelemetry.spring-scheduling-3.1",
                 CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<Runnable, Void> instrumenter() {

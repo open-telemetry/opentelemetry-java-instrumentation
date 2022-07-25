@@ -106,7 +106,7 @@ public final class SpringWebfluxTelemetryBuilder {
 
     // headers are injected elsewhere; ClientRequest is immutable
     Instrumenter<ClientRequest, ClientResponse> instrumenter =
-        builder.newInstrumenter(alwaysClient());
+        builder.buildInstrumenter(alwaysClient());
 
     return new SpringWebfluxTelemetry(instrumenter, openTelemetry.getPropagators());
   }

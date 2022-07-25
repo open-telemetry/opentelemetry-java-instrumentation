@@ -25,7 +25,7 @@ public final class HibernateInstrumenterFactory {
       instrumenterBuilder.addAttributesExtractor(new HibernateExperimentalAttributesExtractor());
     }
 
-    return instrumenterBuilder.newInstrumenter();
+    return instrumenterBuilder.buildInstrumenter();
   }
 
   private HibernateInstrumenterFactory() {}

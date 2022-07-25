@@ -86,7 +86,7 @@ public final class ApacheHttpClientTelemetryBuilder {
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             // We manually inject because we need to inject internal requests for redirects.
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     return new ApacheHttpClientTelemetry(instrumenter, openTelemetry.getPropagators());
   }

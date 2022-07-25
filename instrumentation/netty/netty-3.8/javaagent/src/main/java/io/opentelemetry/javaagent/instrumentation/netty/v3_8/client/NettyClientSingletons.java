@@ -52,7 +52,7 @@ public final class NettyClientSingletons {
             .addOperationMetrics(HttpClientMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
-            .newClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
+            .buildClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
 
     NettyConnectNetAttributesGetter nettyConnectAttributesGetter =
         new NettyConnectNetAttributesGetter();
@@ -66,7 +66,7 @@ public final class NettyClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     nettyConnectAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {

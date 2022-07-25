@@ -31,7 +31,7 @@ public final class SpringRmiSingletons {
             INSTRUMENTATION_NAME,
             RpcSpanNameExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
-        .newInstrumenter(SpanKindExtractor.alwaysClient());
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private static Instrumenter<ClassAndMethod, Void> buildServerInstrumenter() {
@@ -42,7 +42,7 @@ public final class SpringRmiSingletons {
             INSTRUMENTATION_NAME,
             RpcSpanNameExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-        .newInstrumenter(SpanKindExtractor.alwaysServer());
+        .buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   public static Instrumenter<Method, Void> clientInstrumenter() {

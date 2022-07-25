@@ -38,7 +38,7 @@ public final class PlayWsClientInstrumenterFactory {
             PeerServiceAttributesExtractor.create(
                 netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
         .addOperationMetrics(HttpClientMetrics.get())
-        .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
+        .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
   private PlayWsClientInstrumenterFactory() {}

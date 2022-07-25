@@ -16,7 +16,7 @@ public class StepSingletons {
   private static final Instrumenter<StepExecution, Void> INSTRUMENTER =
       Instrumenter.<StepExecution, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), StepSingletons::spanName)
-          .newInstrumenter();
+          .buildInstrumenter();
 
   public static Instrumenter<StepExecution, Void> stepInstrumenter() {
     return INSTRUMENTER;

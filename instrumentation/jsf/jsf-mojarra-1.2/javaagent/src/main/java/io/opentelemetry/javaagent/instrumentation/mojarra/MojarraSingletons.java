@@ -22,7 +22,7 @@ public class MojarraSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
             .setErrorCauseExtractor(new JsfErrorCauseExtractor())
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<JsfRequest, Void> instrumenter() {

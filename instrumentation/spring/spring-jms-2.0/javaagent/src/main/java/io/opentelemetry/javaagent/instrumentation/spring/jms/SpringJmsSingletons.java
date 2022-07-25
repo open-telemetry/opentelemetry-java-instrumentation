@@ -29,7 +29,7 @@ public final class SpringJmsSingletons {
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
-        .newConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
+        .buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
   }
 
   public static Instrumenter<MessageWithDestination, Void> listenerInstrumenter() {

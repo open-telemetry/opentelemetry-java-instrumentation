@@ -68,7 +68,7 @@ final class AwsSdkInstrumenterFactory {
             captureExperimentalSpanAttributes
                 ? extendedAttributesExtractors
                 : defaultAttributesExtractors)
-        .newInstrumenter(kindExtractor);
+        .buildInstrumenter(kindExtractor);
   }
 
   private AwsSdkInstrumenterFactory() {}

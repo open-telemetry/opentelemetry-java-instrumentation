@@ -28,7 +28,7 @@ public class TapestrySingletons {
                   return ErrorCauseExtractor.jdk().extract(error);
                 })
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<TapestryRequest, Void> instrumenter() {
