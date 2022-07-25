@@ -3,41 +3,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  assemble:
-    uses: ./.github/workflows/reusable-assemble.yml
+#  assemble:
+#    uses: ./.github/workflows/reusable-assemble.yml
 
-  test-java8:
-    uses: ./.github/workflows/reusable-test-8.yml
-
-  test-java11:
-    uses: ./.github/workflows/reusable-test-11.yml
-
-#   test-latest-deps is intentionally not included in the release workflows
-#   because any time a new library version is released to maven central
-#   it can fail due to test code incompatibility with the new library version,
-#   or due to slight changes in emitted telemetry
-
-  smoke-test:
-    uses: ./.github/workflows/reusable-smoke-test.yml
-
-#   muzzle is intentionally not included in the release workflows
-#   because any time a new library version is released to maven central it can fail,
-#   and this is not a reason to hold up the release
-
-  gradle-plugins:
-    uses: ./.github/workflows/reusable-gradle-plugins.yml
+#  test-java8:
+#    uses: ./.github/workflows/reusable-test-8.yml
+#
+#  test-java11:
+#    uses: ./.github/workflows/reusable-test-11.yml
+#
+##   test-latest-deps is intentionally not included in the release workflows
+##   because any time a new library version is released to maven central
+##   it can fail due to test code incompatibility with the new library version,
+##   or due to slight changes in emitted telemetry
+#
+#  smoke-test:
+#    uses: ./.github/workflows/reusable-smoke-test.yml
+#
+##   muzzle is intentionally not included in the release workflows
+##   because any time a new library version is released to maven central it can fail,
+##   and this is not a reason to hold up the release
+#
+#  gradle-plugins:
+#    uses: ./.github/workflows/reusable-gradle-plugins.yml
 
 # removed this for now until we decide what to do with the extenstions
 #  examples:
 #    uses: ./.github/workflows/reusable-examples.yml
 
   release:
-    needs:
-      - assemble
-      - test-java8
-      - test-java11
-      - smoke-test
-      - gradle-plugins
+#    needs:
+#      - assemble
+#      - test-java8
+#      - test-java11
+#      - smoke-test
+#      - gradle-plugins
 #      - examples
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
@@ -48,6 +48,7 @@ jobs:
 
       - name: Set environment variables
         run: |
+          echo 1
           version=$(.github/scripts/get-version.sh)
           echo $version
           if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
