@@ -20,7 +20,7 @@ import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 // suppress duration unit check, e.g. ofMillis(5000) -> ofSeconds(5)
-@SuppressWarnings({"CanonicalDuration"})
+@SuppressWarnings({"CanonicalDuration", "deprecation"})
 class ConfigTest {
   @Test
   void shouldGetString() {

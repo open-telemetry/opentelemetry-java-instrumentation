@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 public final class InstrumentedTaskClasses {
 
-  private static final Logger logger = Logger.getLogger(Config.class.getName());
+  private static final Logger logger = Logger.getLogger(InstrumentedTaskClasses.class.getName());
 
   private static final String AGENT_CLASSLOADER_NAME =
       "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
