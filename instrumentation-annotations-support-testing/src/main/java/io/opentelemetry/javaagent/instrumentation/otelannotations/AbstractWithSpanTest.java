@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -42,7 +44,8 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
 
   @Test
   void success() {
-    T future = newTraced().completable();
+    AbstractTraced<T, U> traced = newTraced();
+    T future = traced.completable();
     complete(future, AbstractTraced.SUCCESS_VALUE);
 
     assertThat(getCompleted(future)).isEqualTo(AbstractTraced.SUCCESS_VALUE);
@@ -54,12 +57,15 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                     span.hasName("Traced.completable")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty())));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
+                            equalTo(CODE_FUNCTION, "completable"))));
   }
 
   @Test
   void failure() {
-    T future = newTraced().completable();
+    AbstractTraced<T, U> traced = newTraced();
+    T future = traced.completable();
     fail(future, AbstractTraced.FAILURE);
 
     Throwable thrown = catchThrowable(() -> getCompleted(future));
@@ -74,12 +80,15 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(AbstractTraced.FAILURE)
-                        .hasAttributes(Attributes.empty())));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
+                            equalTo(CODE_FUNCTION, "completable"))));
   }
 
   @Test
   void canceled() {
-    T future = newTraced().completable();
+    AbstractTraced<T, U> traced = newTraced();
+    T future = traced.completable();
     cancel(future);
 
     testing.waitAndAssertTraces(
@@ -89,13 +98,16 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                     span.hasName("Traced.completable")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(attributeEntry(canceledKey(), true))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
+                            equalTo(CODE_FUNCTION, "completable"),
+                            equalTo(booleanKey(canceledKey()), true))));
   }
 
   @Test
   void immediateSuccess() {
-    assertThat(getCompleted(newTraced().alreadySucceeded()))
-        .isEqualTo(AbstractTraced.SUCCESS_VALUE);
+    AbstractTraced<T, U> traced = newTraced();
+    assertThat(getCompleted(traced.alreadySucceeded())).isEqualTo(AbstractTraced.SUCCESS_VALUE);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -104,12 +116,15 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                     span.hasName("Traced.alreadySucceeded")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty())));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
+                            equalTo(CODE_FUNCTION, "alreadySucceeded"))));
   }
 
   @Test
   void immediateFailure() {
-    Throwable error = catchThrowable(() -> getCompleted(newTraced().alreadyFailed()));
+    AbstractTraced<T, U> traced = newTraced();
+    Throwable error = catchThrowable(() -> getCompleted(traced.alreadyFailed()));
     assertThat(unwrapError(error)).isEqualTo(AbstractTraced.FAILURE);
 
     testing.waitAndAssertTraces(
@@ -121,6 +136,8 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(AbstractTraced.FAILURE)
-                        .hasAttributes(Attributes.empty())));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
+                            equalTo(CODE_FUNCTION, "alreadyFailed"))));
   }
 }
