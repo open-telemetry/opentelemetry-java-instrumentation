@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
@@ -26,7 +25,9 @@ public class OpenTelemetryInstaller {
    *
    * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
-  static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(Config config) {
+  @SuppressWarnings("deprecation") // Config usage, to be removed
+  static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(
+      io.opentelemetry.instrumentation.api.config.Config config) {
     AutoConfiguredOpenTelemetrySdkBuilder builder =
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal(true)

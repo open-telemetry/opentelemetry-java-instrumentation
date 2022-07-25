@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.config;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static java.util.logging.Level.SEVERE;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+@SuppressWarnings("deprecation") // Config usage, to be removed
 public final class ConfigInitializer {
   private static final Logger logger = Logger.getLogger(ConfigInitializer.class.getName());
 
@@ -27,20 +27,21 @@ public final class ConfigInitializer {
   static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
   static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIGURATION_FILE";
 
-  @SuppressWarnings("deprecation") // loads the ConfigCustomizer SPI
   public static void initialize() {
     List<io.opentelemetry.javaagent.extension.config.ConfigCustomizer> customizers =
         loadOrdered(io.opentelemetry.javaagent.extension.config.ConfigCustomizer.class);
-    Config config = create(loadSpiConfiguration(customizers), loadConfigurationFile());
+    io.opentelemetry.instrumentation.api.config.Config config =
+        create(loadSpiConfiguration(customizers), loadConfigurationFile());
     for (io.opentelemetry.javaagent.extension.config.ConfigCustomizer customizer : customizers) {
       config = customizer.customize(config);
     }
-    Config.internalInitializeConfig(config);
+    io.opentelemetry.instrumentation.api.config.Config.internalInitializeConfig(config);
   }
 
   // visible for testing
-  static Config create(Properties spiConfiguration, Properties configurationFile) {
-    return Config.builder()
+  static io.opentelemetry.instrumentation.api.config.Config create(
+      Properties spiConfiguration, Properties configurationFile) {
+    return io.opentelemetry.instrumentation.api.config.Config.builder()
         .addProperties(spiConfiguration)
         .addProperties(configurationFile)
         .addEnvironmentVariables()

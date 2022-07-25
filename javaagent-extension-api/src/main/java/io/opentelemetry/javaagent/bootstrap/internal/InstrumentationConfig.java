@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.util.Objects.requireNonNull;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -21,9 +20,9 @@ import javax.annotation.Nullable;
  *
  * <p>In case any {@code get*()} method variant gets called for the same property more than once
  * (e.g. each time an advice class executes) it is suggested to cache the result instead of
- * repeatedly calling {@link Config}. Instrumentation configuration does not change during the
- * runtime so retrieving the property once and storing its result in a static final field allows JIT
- * to do its magic and remove some code branches.
+ * repeatedly calling {@link InstrumentationConfig}. Instrumentation configuration does not change
+ * during the runtime so retrieving the property once and storing its result in a static final field
+ * allows JIT to do its magic and remove some code branches.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
