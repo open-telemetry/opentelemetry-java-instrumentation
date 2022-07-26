@@ -49,7 +49,6 @@ jobs:
       - name: Set environment variables
         run: |
           version=$(.github/scripts/get-version.sh)
-          echo $version
           if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
@@ -68,7 +67,6 @@ jobs:
             fi
           else
             prior_version="$major.$minor.$((patch - 1))"
-            echo $prior_version
           fi
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
