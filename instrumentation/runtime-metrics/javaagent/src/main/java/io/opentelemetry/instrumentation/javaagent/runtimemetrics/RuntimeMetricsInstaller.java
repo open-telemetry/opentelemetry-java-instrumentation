@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.javaagent.runtimemetrics;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimemetrics.BufferPools;
 import io.opentelemetry.instrumentation.runtimemetrics.Classes;
 import io.opentelemetry.instrumentation.runtimemetrics.Cpu;
@@ -30,15 +31,17 @@ public class RuntimeMetricsInstaller implements AgentListener {
       return;
     }
 
-    Classes.registerObservers(GlobalOpenTelemetry.get());
-    Cpu.registerObservers(GlobalOpenTelemetry.get());
-    MemoryPools.registerObservers(GlobalOpenTelemetry.get());
-    Threads.registerObservers(GlobalOpenTelemetry.get());
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+
+    BufferPools.registerObservers(openTelemetry);
+    Classes.registerObservers(openTelemetry);
+    Cpu.registerObservers(openTelemetry);
+    MemoryPools.registerObservers(openTelemetry);
+    Threads.registerObservers(openTelemetry);
 
     if (config.getBoolean(
         "otel.instrumentation.runtime-metrics.experimental-metrics.enabled", false)) {
-      GarbageCollector.registerObservers(GlobalOpenTelemetry.get());
-      BufferPools.registerObservers(GlobalOpenTelemetry.get());
+      GarbageCollector.registerObservers(openTelemetry);
     }
   }
 }
