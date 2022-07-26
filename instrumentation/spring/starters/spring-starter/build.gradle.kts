@@ -15,5 +15,6 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-exporter-logging")
+  api("io.opentelemetry:opentelemetry-exporter-otlp")
   api("io.opentelemetry:opentelemetry-sdk")
 }

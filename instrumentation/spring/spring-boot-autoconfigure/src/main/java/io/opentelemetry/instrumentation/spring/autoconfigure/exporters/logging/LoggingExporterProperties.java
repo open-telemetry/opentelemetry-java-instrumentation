@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "otel.exporter.logging")
 public final class LoggingExporterProperties {
 
-  private boolean enabled = true;
+  private boolean enabled = false;
   private final SignalProperties traces = new SignalProperties();
   private final SignalProperties metrics = new SignalProperties();
 
@@ -36,7 +36,7 @@ public final class LoggingExporterProperties {
 
   public static class SignalProperties {
 
-    private boolean enabled = true;
+    private boolean enabled = false;
 
     public boolean isEnabled() {
       return enabled;
