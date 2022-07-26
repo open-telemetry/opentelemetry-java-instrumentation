@@ -42,7 +42,6 @@ public class PubsubSubscriberInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnterHandle(
         @Advice.Argument(value = 0, readOnly = false) PubsubMessage pubsubMessage) {
-      System.out.println("got here !");
       PubsubSingletons.buildAndFinishSpan(Context.current(), pubsubMessage);
     }
   }
