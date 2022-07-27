@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -34,8 +35,8 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
   }
 
   def "application propagates agent's context"() {
-    when:
-    new Runnable() {
+    given:
+    def runnable = new Runnable() {
       @WithSpan("test")
       @Override
       void run() {
@@ -49,7 +50,10 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
           }
         }
       }
-    }.run()
+    }
+
+    when:
+    runnable.run()
 
     then:
     assertTraces(1) {
@@ -58,6 +62,8 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
           name "test"
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" runnable.class.name
+            "$SemanticAttributes.CODE_FUNCTION" "run"
             "cat" "yes"
           }
         }
@@ -92,8 +98,8 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
   }
 
   def "application propagates agent's span"() {
-    when:
-    new Runnable() {
+    given:
+    def runnable = new Runnable() {
       @WithSpan("test")
       @Override
       void run() {
@@ -107,7 +113,10 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
           }
         }
       }
-    }.run()
+    }
+
+    when:
+    runnable.run()
 
     then:
     assertTraces(1) {
@@ -116,6 +125,8 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
           name "test"
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" runnable.class.name
+            "$SemanticAttributes.CODE_FUNCTION" "run"
             "cat" "yes"
           }
         }
