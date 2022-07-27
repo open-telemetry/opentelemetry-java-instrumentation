@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientDurationView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientDurationAndSizeView;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 
 import io.opentelemetry.api.common.Attributes;
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class TemporaryMetricsViewTest {
 
   @Test
-  void shouldApplyClientDurationView() {
+  void shouldApplyClientDurationAndSizeView() {
     Attributes startAttributes =
         Attributes.builder()
             .put(
@@ -38,7 +38,8 @@ class TemporaryMetricsViewTest {
             .put(SemanticAttributes.NET_PEER_PORT, 443)
             .build();
 
-    OpenTelemetryAssertions.assertThat(applyClientDurationView(startAttributes, endAttributes))
+    OpenTelemetryAssertions.assertThat(
+            applyClientDurationAndSizeView(startAttributes, endAttributes))
         .containsOnly(
             attributeEntry(SemanticAttributes.NET_PEER_NAME.getKey(), "somehost2"),
             attributeEntry(SemanticAttributes.NET_PEER_PORT.getKey(), 443),
@@ -47,7 +48,7 @@ class TemporaryMetricsViewTest {
   }
 
   @Test
-  void shouldApplyServerDurationView() {
+  void shouldApplyServerDurationAndSizeView() {
     Attributes startAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_METHOD, "GET")
@@ -73,7 +74,8 @@ class TemporaryMetricsViewTest {
             .put(SemanticAttributes.NET_PEER_PORT, 443)
             .build();
 
-    OpenTelemetryAssertions.assertThat(applyServerDurationView(startAttributes, endAttributes))
+    OpenTelemetryAssertions.assertThat(
+            applyServerDurationAndSizeView(startAttributes, endAttributes))
         .containsOnly(
             attributeEntry(SemanticAttributes.HTTP_SCHEME.getKey(), "https"),
             attributeEntry(SemanticAttributes.HTTP_HOST.getKey(), "somehost"),
