@@ -1,9 +1,9 @@
 name: Build (daily)
 
 on:
-  schedule:
-    # strange schedule to reduce the risk of DDOS GitHub infra
-    - cron: "24 3 * * *"
+#  schedule:
+#    # strange schedule to reduce the risk of DDOS GitHub infra
+#    - cron: "24 3 * * *"
   workflow_dispatch:
 
 jobs:
