@@ -14,8 +14,6 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.extension.annotations.SpanAttribute;
-import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -33,58 +31,45 @@ import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /** Spring AOP Test for {@link WithSpanAspect}. */
-public class WithSpanAspectTest {
+abstract class AbstractWithSpanAspectTest {
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  static class WithSpanTester {
-    @WithSpan
-    public String testWithSpan() {
-      return "Span with name testWithSpan was created";
-    }
-
-    @WithSpan("greatestSpanEver")
-    public String testWithSpanWithValue() {
-      return "Span with name greatestSpanEver was created";
-    }
-
-    @WithSpan
-    public String testWithSpanWithException() throws Exception {
-      throw new Exception("Test @WithSpan With Exception");
-    }
-
-    @WithSpan(kind = CLIENT)
-    public String testWithClientSpan() {
-      return "Span with name testWithClientSpan and SpanKind.CLIENT was created";
-    }
-
-    @WithSpan
-    public CompletionStage<String> testAsyncCompletionStage(CompletionStage<String> stage) {
-      return stage;
-    }
-
-    @WithSpan
-    public CompletableFuture<String> testAsyncCompletableFuture(CompletableFuture<String> stage) {
-      return stage;
-    }
-
-    @WithSpan
-    public String withSpanAttributes(
-        @SpanAttribute String discoveredName,
-        @SpanAttribute String implicitName,
-        @SpanAttribute("explicitName") String parameter,
-        @SpanAttribute("nullAttribute") String nullAttribute,
-        String notTraced) {
-
-      return "hello!";
-    }
-  }
-
   private WithSpanTester withSpanTester;
+  private String unproxiedTesterSimpleClassName;
+  private String unproxiedTesterClassName;
+
+  abstract WithSpanTester newWithSpanTester();
+
+  public interface WithSpanTester {
+    String testWithSpan();
+
+    String testWithSpanWithValue();
+
+    String testWithSpanWithException() throws Exception;
+
+    String testWithClientSpan();
+
+    CompletionStage<String> testAsyncCompletionStage(CompletionStage<String> stage);
+
+    CompletableFuture<String> testAsyncCompletableFuture(CompletableFuture<String> stage);
+
+    String withSpanAttributes(
+        String discoveredName,
+        String implicitName,
+        String parameter,
+        String nullAttribute,
+        String notTraced);
+  }
 
   @BeforeEach
   void setup() {
-    AspectJProxyFactory factory = new AspectJProxyFactory(new WithSpanTester());
+    WithSpanTester unproxiedTester = newWithSpanTester();
+    unproxiedTesterSimpleClassName = unproxiedTester.getClass().getSimpleName();
+    unproxiedTesterClassName = unproxiedTester.getClass().getName();
+
+    AspectJProxyFactory factory = new AspectJProxyFactory();
+    factory.setTarget(unproxiedTester);
     ParameterNameDiscoverer parameterNameDiscoverer =
         new ParameterNameDiscoverer() {
           @Override
@@ -106,7 +91,7 @@ public class WithSpanAspectTest {
 
   @Test
   @DisplayName("when method is annotated with @WithSpan should wrap method execution in a Span")
-  void withSpanWithDefaults() throws Throwable {
+  void withSpanWithDefaults() {
     // when
     testing.runWithSpan("parent", withSpanTester::testWithSpan);
 
@@ -118,18 +103,18 @@ public class WithSpanAspectTest {
                 trace.hasSpansSatisfyingExactly(
                     parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                     span ->
-                        span.hasName("WithSpanTester.testWithSpan")
+                        span.hasName(unproxiedTesterSimpleClassName + ".testWithSpan")
                             .hasKind(INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                 equalTo(CODE_FUNCTION, "testWithSpan"))));
   }
 
   @Test
   @DisplayName(
       "when @WithSpan value is set should wrap method execution in a Span with custom name")
-  void withSpanName() throws Throwable {
+  void withSpanName() {
     // when
     testing.runWithSpan("parent", () -> withSpanTester.testWithSpanWithValue());
 
@@ -145,14 +130,14 @@ public class WithSpanAspectTest {
                             .hasKind(INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                 equalTo(CODE_FUNCTION, "testWithSpanWithValue"))));
   }
 
   @Test
   @DisplayName(
       "when method is annotated with @WithSpan AND an exception is thrown span should record the exception")
-  void withSpanError() throws Throwable {
+  void withSpanError() {
     assertThatThrownBy(() -> withSpanTester.testWithSpanWithException())
         .isInstanceOf(Exception.class);
 
@@ -162,18 +147,18 @@ public class WithSpanAspectTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("WithSpanTester.testWithSpanWithException")
+                        span.hasName(unproxiedTesterSimpleClassName + ".testWithSpanWithException")
                             .hasKind(INTERNAL)
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                 equalTo(CODE_FUNCTION, "testWithSpanWithException"))));
   }
 
   @Test
   @DisplayName(
       "when method is annotated with @WithSpan(kind=CLIENT) should build span with the declared SpanKind")
-  void withSpanKind() throws Throwable {
+  void withSpanKind() {
     // when
     testing.runWithSpan("parent", () -> withSpanTester.testWithClientSpan());
 
@@ -185,17 +170,16 @@ public class WithSpanAspectTest {
                 trace.hasSpansSatisfyingExactly(
                     parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                     span ->
-                        span.hasName("WithSpanTester.testWithClientSpan")
+                        span.hasName(unproxiedTesterSimpleClassName + ".testWithClientSpan")
                             .hasKind(CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                 equalTo(CODE_FUNCTION, "testWithClientSpan"))));
   }
 
   @Test
-  @DisplayName("")
-  void withSpanAttributes() throws Throwable {
+  void withSpanAttributes() {
     // when
     testing.runWithSpan(
         "parent", () -> withSpanTester.withSpanAttributes("foo", "bar", "baz", null, "fizz"));
@@ -208,11 +192,11 @@ public class WithSpanAspectTest {
                 trace.hasSpansSatisfyingExactly(
                     parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                     span ->
-                        span.hasName("WithSpanTester.withSpanAttributes")
+                        span.hasName(unproxiedTesterSimpleClassName + ".withSpanAttributes")
                             .hasKind(INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                 equalTo(CODE_FUNCTION, "withSpanAttributes"),
                                 equalTo(stringKey("discoveredName"), "foo"),
                                 equalTo(stringKey("implicitName"), "bar"),
@@ -225,7 +209,7 @@ public class WithSpanAspectTest {
 
     @Test
     @DisplayName("should end Span on complete")
-    void onComplete() throws Throwable {
+    void onComplete() {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
@@ -250,17 +234,17 @@ public class WithSpanAspectTest {
                   trace.hasSpansSatisfyingExactly(
                       parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                       span ->
-                          span.hasName("WithSpanTester.testAsyncCompletionStage")
+                          span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
                               .hasKind(INTERNAL)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                  equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                   equalTo(CODE_FUNCTION, "testAsyncCompletionStage"))));
     }
 
     @Test
     @DisplayName("should end Span on completeException AND should record the exception")
-    void onCompleteExceptionally() throws Throwable {
+    void onCompleteExceptionally() {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
@@ -285,18 +269,18 @@ public class WithSpanAspectTest {
                   trace.hasSpansSatisfyingExactly(
                       parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                       span ->
-                          span.hasName("WithSpanTester.testAsyncCompletionStage")
+                          span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
                               .hasKind(INTERNAL)
                               .hasStatus(StatusData.error())
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                  equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                   equalTo(CODE_FUNCTION, "testAsyncCompletionStage"))));
     }
 
     @Test
     @DisplayName("should end Span on incompatible return value")
-    void onIncompatibleReturnValue() throws Throwable {
+    void onIncompatibleReturnValue() {
       // when
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletionStage(null));
 
@@ -308,11 +292,11 @@ public class WithSpanAspectTest {
                   trace.hasSpansSatisfyingExactly(
                       parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                       span ->
-                          span.hasName("WithSpanTester.testAsyncCompletionStage")
+                          span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
                               .hasKind(INTERNAL)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                  equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                   equalTo(CODE_FUNCTION, "testAsyncCompletionStage"))));
     }
   }
@@ -323,7 +307,7 @@ public class WithSpanAspectTest {
 
     @Test
     @DisplayName("should end Span on complete")
-    void onComplete() throws Throwable {
+    void onComplete() {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
@@ -348,17 +332,18 @@ public class WithSpanAspectTest {
                   trace.hasSpansSatisfyingExactly(
                       parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                       span ->
-                          span.hasName("WithSpanTester.testAsyncCompletableFuture")
+                          span.hasName(
+                                  unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
                               .hasKind(INTERNAL)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                  equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                   equalTo(CODE_FUNCTION, "testAsyncCompletableFuture"))));
     }
 
     @Test
     @DisplayName("should end Span on completeException AND should record the exception")
-    void onCompleteExceptionally() throws Throwable {
+    void onCompleteExceptionally() {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
@@ -383,18 +368,19 @@ public class WithSpanAspectTest {
                   trace.hasSpansSatisfyingExactly(
                       parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                       span ->
-                          span.hasName("WithSpanTester.testAsyncCompletableFuture")
+                          span.hasName(
+                                  unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
                               .hasKind(INTERNAL)
                               .hasStatus(StatusData.error())
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                  equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                   equalTo(CODE_FUNCTION, "testAsyncCompletableFuture"))));
     }
 
     @Test
     @DisplayName("should end the Span when already complete")
-    void onCompletedFuture() throws Throwable {
+    void onCompletedFuture() {
       CompletableFuture<String> future = CompletableFuture.completedFuture("Done");
 
       // when
@@ -408,17 +394,18 @@ public class WithSpanAspectTest {
                   trace.hasSpansSatisfyingExactly(
                       parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                       span ->
-                          span.hasName("WithSpanTester.testAsyncCompletableFuture")
+                          span.hasName(
+                                  unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
                               .hasKind(INTERNAL)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                  equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                   equalTo(CODE_FUNCTION, "testAsyncCompletableFuture"))));
     }
 
     @Test
     @DisplayName("should end the Span when already failed")
-    void onFailedFuture() throws Throwable {
+    void onFailedFuture() {
       CompletableFuture<String> future = new CompletableFuture<>();
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
 
@@ -433,18 +420,19 @@ public class WithSpanAspectTest {
                   trace.hasSpansSatisfyingExactly(
                       parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                       span ->
-                          span.hasName("WithSpanTester.testAsyncCompletableFuture")
+                          span.hasName(
+                                  unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
                               .hasKind(INTERNAL)
                               .hasStatus(StatusData.error())
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                  equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                   equalTo(CODE_FUNCTION, "testAsyncCompletableFuture"))));
     }
 
     @Test
     @DisplayName("should end Span on incompatible return value")
-    void onIncompatibleReturnValue() throws Throwable {
+    void onIncompatibleReturnValue() {
       // when
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(null));
 
@@ -456,11 +444,12 @@ public class WithSpanAspectTest {
                   trace.hasSpansSatisfyingExactly(
                       parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
                       span ->
-                          span.hasName("WithSpanTester.testAsyncCompletableFuture")
+                          span.hasName(
+                                  unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
                               .hasKind(INTERNAL)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CODE_NAMESPACE, WithSpanTester.class.getName()),
+                                  equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
                                   equalTo(CODE_FUNCTION, "testAsyncCompletableFuture"))));
     }
   }
