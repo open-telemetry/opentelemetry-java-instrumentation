@@ -39,6 +39,7 @@ class HttpServerMetricsTest {
             .put("http.scheme", "https")
             .put("net.host.name", "localhost")
             .put("net.host.port", 1234)
+            .put("http.request_content_length", 100)
             .build();
 
     Attributes responseAttributes =
@@ -46,6 +47,7 @@ class HttpServerMetricsTest {
             .put("http.flavor", "2.0")
             .put("http.server_name", "server")
             .put("http.status_code", 200)
+            .put("http.response_content_length", 200)
             .build();
 
     SpanContext spanContext1 =
@@ -154,7 +156,39 @@ class HttpServerMetricsTest {
                                             exemplar ->
                                                 exemplar
                                                     .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))));
+                                                    .hasSpanId(spanContext1.getSpanId())))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.request.size")
+                    .hasUnit("By")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(100 /* bytes */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
+                                            equalTo(SemanticAttributes.HTTP_HOST, "host"),
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0")))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.response.size")
+                    .hasUnit("By")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(200 /* bytes */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
+                                            equalTo(SemanticAttributes.HTTP_HOST, "host"),
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0")))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -178,7 +212,19 @@ class HttpServerMetricsTest {
                                             exemplar ->
                                                 exemplar
                                                     .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))));
+                                                    .hasSpanId(spanContext2.getSpanId())))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.request.size")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(point -> point.hasSum(200 /* bytes */))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.server.response.size")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(point -> point.hasSum(400 /* bytes */))));
   }
 
   @Test
