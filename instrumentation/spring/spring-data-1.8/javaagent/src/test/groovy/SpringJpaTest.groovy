@@ -63,6 +63,8 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.findAll"
           kind INTERNAL
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_FUNCTION" "findAll"
           }
         }
         span(1) { // select
@@ -95,6 +97,8 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.save"
           kind INTERNAL
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_FUNCTION" "save"
           }
         }
         def offset = 0
@@ -144,6 +148,8 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.save"
           kind INTERNAL
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_FUNCTION" "save"
           }
         }
         span(1) { // select
@@ -188,6 +194,8 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.findByLastName"
           kind INTERNAL
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_FUNCTION" "findByLastName"
           }
         }
         span(1) { // select
@@ -218,6 +226,8 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.delete"
           kind INTERNAL
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_FUNCTION" "delete"
           }
         }
         span(1) { // select
@@ -271,6 +281,8 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.findSpecialCustomers"
           kind INTERNAL
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_FUNCTION" "findSpecialCustomers"
           }
         }
         span(1) { // select

@@ -12,12 +12,14 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.MediaType
 import io.opentelemetry.testing.internal.armeria.common.QueryParams
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.security.web.util.OnCommittedResponseWrapper
 import org.springframework.web.servlet.view.RedirectView
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
@@ -193,11 +195,13 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    def responseSpanName = endpoint == NOT_FOUND ? "OnCommittedResponseWrapper.sendError" : "OnCommittedResponseWrapper.sendRedirect"
+    def methodName = endpoint == NOT_FOUND ? "sendError" : "sendRedirect"
     trace.span(index) {
-      name responseSpanName
+      name "OnCommittedResponseWrapper.$methodName"
       kind INTERNAL
       attributes {
+        "$SemanticAttributes.CODE_NAMESPACE" OnCommittedResponseWrapper.name
+        "$SemanticAttributes.CODE_FUNCTION" methodName
       }
     }
   }

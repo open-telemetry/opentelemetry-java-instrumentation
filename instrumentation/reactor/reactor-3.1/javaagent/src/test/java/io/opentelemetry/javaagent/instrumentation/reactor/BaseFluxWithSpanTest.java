@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_NAMESPACE;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
@@ -58,7 +62,8 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
               return Flux.just("Value");
             });
 
-    Flux<String> result = newTracedWithSpan().flux(flux);
+    TracedWithSpan traced = newTracedWithSpan();
+    Flux<String> result = traced.flux(flux);
 
     StepVerifier.create(result).expectNext("Value").verifyComplete();
 
@@ -70,7 +75,9 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                         span.hasName("TracedWithSpan.flux")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty()),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
+                                equalTo(CODE_FUNCTION, "flux")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
@@ -80,18 +87,19 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
 
   @Test
   void nestedFromCurrent() {
+    TracedWithSpan traced = newTracedWithSpan();
+
     testing()
         .runWithSpan(
             "parent",
             () -> {
               Flux<String> result =
-                  newTracedWithSpan()
-                      .flux(
-                          Flux.defer(
-                              () -> {
-                                testing().runWithSpan("inner-manual", () -> {});
-                                return Flux.just("Value");
-                              }));
+                  traced.flux(
+                      Flux.defer(
+                          () -> {
+                            testing().runWithSpan("inner-manual", () -> {});
+                            return Flux.just("Value");
+                          }));
 
               StepVerifier.create(result).expectNext("Value").verifyComplete();
             });
@@ -109,7 +117,9 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                         span.hasName("TracedWithSpan.flux")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributes(Attributes.empty()),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
+                                equalTo(CODE_FUNCTION, "flux")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)

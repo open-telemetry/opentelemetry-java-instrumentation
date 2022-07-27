@@ -6,8 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_NAMESPACE;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -33,7 +35,9 @@ class MethodTest {
                 span ->
                     span.hasName("ConfigTracedCallable.call")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttributes(Attributes.empty())));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, ConfigTracedCallable.class.getName()),
+                            equalTo(CODE_FUNCTION, "call"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {
@@ -62,7 +66,9 @@ class MethodTest {
                 span ->
                     span.hasName("ConfigTracedCompletableFuture.getResult")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttributes(Attributes.empty())));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, ConfigTracedCompletableFuture.class.getName()),
+                            equalTo(CODE_FUNCTION, "getResult"))));
   }
 
   static class ConfigTracedCompletableFuture {

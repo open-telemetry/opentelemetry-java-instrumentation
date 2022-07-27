@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.util;
 
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -26,7 +27,10 @@ public final class SpanNames {
   /**
    * This method is used to generate a span name based on a method. Anonymous classes are named
    * based on their parent.
+   *
+   * @deprecated Use {@link #fromMethod(Class, String)} instead.
    */
+  @Deprecated
   public static String fromMethod(Class<?> clazz, @Nullable Method method) {
     return fromMethod(clazz, method == null ? "<unknown>" : method.getName());
   }
@@ -34,7 +38,11 @@ public final class SpanNames {
   /**
    * This method is used to generate a span name based on a method. Anonymous classes are named
    * based on their parent.
+   *
+   * @deprecated Use {@link ClassAndMethod#codeAttributesGetter()} and {@link CodeSpanNameExtractor}
+   *     instead.
    */
+  @Deprecated
   public static String fromMethod(ClassAndMethod classAndMethod) {
     return fromMethod(classAndMethod.declaringClass(), classAndMethod.methodName());
   }

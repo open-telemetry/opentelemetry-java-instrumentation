@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.rxjava.v2_0.TracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
@@ -43,6 +44,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
       }
@@ -72,6 +75,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
       }
@@ -98,6 +103,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
       }
@@ -130,6 +137,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
       }
@@ -158,6 +167,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
             "rxjava.canceled" true
           }
         }
@@ -183,6 +194,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -206,6 +219,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -236,6 +251,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -262,6 +279,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -294,6 +313,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -322,6 +343,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
             "rxjava.canceled" true
           }
         }
@@ -347,6 +370,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
       }
@@ -377,6 +402,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
       }
@@ -403,6 +430,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
       }
@@ -435,6 +464,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
       }
@@ -463,6 +494,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "single"
             "rxjava.canceled" true
           }
         }
@@ -488,6 +521,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
       }
@@ -523,6 +558,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
       }
@@ -549,6 +586,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
       }
@@ -587,6 +626,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
       }
@@ -621,6 +662,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
             "rxjava.canceled" true
           }
         }
@@ -646,6 +689,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
           }
         }
       }
@@ -681,6 +726,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
           }
         }
       }
@@ -707,6 +754,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
           }
         }
       }
@@ -745,6 +794,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
           }
         }
       }
@@ -779,6 +830,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
             "rxjava.canceled" true
           }
         }
@@ -805,6 +858,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
       }
@@ -841,6 +896,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
       }
@@ -868,6 +925,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
       }
@@ -907,6 +966,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
       }
@@ -942,6 +1003,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
             "rxjava.canceled" true
           }
         }
@@ -972,6 +1035,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "publisher"
           }
         }
       }
@@ -1004,6 +1069,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "publisher"
           }
         }
       }
@@ -1032,6 +1099,8 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_FUNCTION" "publisher"
             "rxjava.canceled" true
           }
         }
