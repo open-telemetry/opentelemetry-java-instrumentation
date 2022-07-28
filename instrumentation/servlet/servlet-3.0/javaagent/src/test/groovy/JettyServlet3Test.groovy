@@ -18,6 +18,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML2
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
@@ -170,6 +172,8 @@ class JettyServlet3TestForward extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + HTML2.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
@@ -207,6 +211,8 @@ class JettyServlet3TestInclude extends JettyDispatchTest {
     super.setupServlets(context)
 
     addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + HTML2.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
     addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
@@ -232,7 +238,8 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
   @Override
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context)
-
+    addServlet(context, "/dispatch" + HTML.path, TestServlet3.DispatchImmediate)
+    addServlet(context, "/dispatch" + HTML2.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet3.DispatchImmediate)
     addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchImmediate)
@@ -260,7 +267,8 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
   @Override
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context)
-
+    addServlet(context, "/dispatch" + HTML.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + HTML2.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + QUERY_PARAM.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchAsync)

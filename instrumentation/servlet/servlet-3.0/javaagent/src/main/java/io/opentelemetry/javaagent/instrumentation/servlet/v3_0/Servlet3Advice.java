@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -13,7 +14,9 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.bootstrap.servlet.SnippetHolder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.SnippetInjectingResponseWrapper;
 import javax.servlet.Servlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -40,6 +43,10 @@ public class Servlet3Advice {
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
+    if (!SnippetHolder.getSnippet().isEmpty()
+        && !((HttpServletResponse) response).containsHeader(FAKE_SNIPPET_HEADER)) {
+      response = new SnippetInjectingResponseWrapper((HttpServletResponse) response);
+    }
     callDepth = CallDepth.forClass(AppServerBridge.getCallDepthKey());
     callDepth.getAndIncrement();
 

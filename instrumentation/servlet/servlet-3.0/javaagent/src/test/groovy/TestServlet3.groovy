@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+
 import javax.servlet.RequestDispatcher
 import javax.servlet.ServletException
 import javax.servlet.annotation.WebServlet
@@ -17,6 +18,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.HTML2
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
@@ -70,6 +73,24 @@ class TestServlet3 {
             break
           case EXCEPTION:
             throw new ServletException(endpoint.body)
+          case HTML:
+            resp.contentType = "text/html"
+            resp.status = endpoint.status
+            resp.setContentLength(endpoint.body.length())
+            resp.writer.print(endpoint.body)
+            break
+          case HTML2:
+            resp.contentType = "text/html"
+            resp.status = endpoint.status
+            try {
+              resp.setContentLengthLong(endpoint.body.length())
+            } catch (Exception e) {
+              // servlet 3.0
+              resp.setContentLength(endpoint.body.length())
+            }
+            byte[] body = endpoint.body.getBytes()
+            resp.getOutputStream().write(body, 0, body.length)
+            break
         }
       }
     }
@@ -141,6 +162,21 @@ class TestServlet3 {
                   writer.close()
                 }
                 throw new ServletException(endpoint.body)
+                break
+              case HTML:
+                resp.contentType = "text/html"
+                resp.status = endpoint.status
+                resp.writer.print(endpoint.body)
+                resp.setContentLength(endpoint.body.length())
+                context.complete()
+                break
+              case HTML2:
+                resp.contentType = "text/html"
+                resp.status = endpoint.status
+                resp.setContentLengthLong(endpoint.body.length())
+                resp.getOutputStream().print(endpoint.body)
+                context.complete()
+                break
             }
           }
         } finally {
@@ -197,6 +233,16 @@ class TestServlet3 {
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
               throw new ServletException(endpoint.body)
+            case HTML:
+              resp.status = endpoint.status
+              resp.contentType = "text/html"
+              resp.writer.print(endpoint.body)
+              break
+            case HTML2:
+              resp.contentType = "text/html"
+              resp.status = endpoint.status
+              resp.getOutputStream().print(endpoint.body)
+              break
           }
         }
       } finally {
