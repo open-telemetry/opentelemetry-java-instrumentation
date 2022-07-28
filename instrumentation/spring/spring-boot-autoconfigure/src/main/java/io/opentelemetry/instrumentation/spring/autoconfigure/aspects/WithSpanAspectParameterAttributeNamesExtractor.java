@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
-import io.opentelemetry.extension.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -34,13 +34,23 @@ class WithSpanAspectParameterAttributeNamesExtractor implements ParameterAttribu
 
   @Nullable
   private static String attributeName(Parameter parameter, String[] parameterNames, int index) {
+    io.opentelemetry.extension.annotations.SpanAttribute oldAnnotation =
+        parameter.getDeclaredAnnotation(io.opentelemetry.extension.annotations.SpanAttribute.class);
     SpanAttribute annotation = parameter.getDeclaredAnnotation(SpanAttribute.class);
-    if (annotation == null) {
+    if (oldAnnotation == null && annotation == null) {
       return null;
     }
-    String value = annotation.value();
-    if (!value.isEmpty()) {
-      return value;
+    if (annotation != null) {
+      String value = annotation.value();
+      if (!value.isEmpty()) {
+        return value;
+      }
+    }
+    if (oldAnnotation != null) {
+      String value = oldAnnotation.value();
+      if (!value.isEmpty()) {
+        return value;
+      }
     }
     if (parameterNames != null && index < parameterNames.length) {
       String parameterName = parameterNames[index];

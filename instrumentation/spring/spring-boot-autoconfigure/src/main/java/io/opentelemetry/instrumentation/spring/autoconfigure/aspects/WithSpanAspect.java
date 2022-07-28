@@ -6,29 +6,28 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.util.SpanNames;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /**
- * Uses Spring-AOP to wrap methods marked by {@link WithSpan} in a {@link
- * io.opentelemetry.api.trace.Span}.
+ * Uses Spring-AOP to wrap methods marked by {@link WithSpan} (or the deprecated {@link
+ * io.opentelemetry.extension.annotations.WithSpan}) in a {@link Span}.
  *
  * <p>Ensure methods annotated with {@link WithSpan} are implemented on beans managed by the Spring
  * container.
  *
- * <p>Note: This Aspect uses spring-aop to proxy beans. Therefore the {@link WithSpan} annotation
+ * <p>Note: This Aspect uses spring-aop to proxy beans. Therefore, the {@link WithSpan} annotation
  * can not be applied to constructors.
  */
 @Aspect
@@ -44,7 +43,7 @@ public class WithSpanAspect {
         new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer);
 
     instrumenter =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, JoinPointRequest::spanName)
             .addAttributesExtractor(
                 CodeAttributesExtractor.create(JointPointCodeAttributesExtractor.INSTANCE))
             .addAttributesExtractor(
@@ -52,23 +51,12 @@ public class WithSpanAspect {
                     JoinPointRequest::method,
                     parameterAttributeNamesExtractor,
                     JoinPointRequest::args))
-            .buildInstrumenter(WithSpanAspect::spanKind);
+            .buildInstrumenter(JoinPointRequest::spanKind);
   }
 
-  private static String spanName(JoinPointRequest request) {
-    WithSpan annotation = request.annotation();
-    String spanName = annotation.value();
-    if (spanName.isEmpty()) {
-      return SpanNames.fromMethod(request.method());
-    }
-    return spanName;
-  }
-
-  private static SpanKind spanKind(JoinPointRequest request) {
-    return request.annotation().kind();
-  }
-
-  @Around("@annotation(io.opentelemetry.extension.annotations.WithSpan)")
+  @Around(
+      "@annotation(io.opentelemetry.extension.annotations.WithSpan) || "
+          + "@annotation(io.opentelemetry.instrumentation.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
 
     JoinPointRequest request = new JoinPointRequest(pjp);
