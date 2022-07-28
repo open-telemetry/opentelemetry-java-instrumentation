@@ -9,12 +9,11 @@ val versions: Map<String, String> by project
 val springBootVersion = versions["org.springframework.boot"]
 
 dependencies {
-  implementation(project(":instrumentation-annotations-support"))
-
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   implementation("javax.validation:validation-api:2.0.1.Final")
 
+  implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
   implementation(project(":instrumentation:spring:spring-web-3.1:library"))
@@ -40,6 +39,7 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-exporter-jaeger")
   compileOnly("io.opentelemetry:opentelemetry-exporter-otlp")
   compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
+  compileOnly(project(":instrumentation-annotations"))
 
   testImplementation("org.springframework.kafka:spring-kafka:2.7.1")
   testImplementation("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
@@ -63,7 +63,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-jaeger")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
-  testImplementation(project(":instrumentation-annotations-support"))
+  testImplementation(project(":instrumentation-annotations"))
 }
 
 tasks.compileTestJava {
