@@ -15,11 +15,13 @@ public class Injection {
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, SnippetInjectingResponseWrapper wrapper) {
     InjectionState state = virtualField.get(servletOutputStream);
+    if (!wrapper.isContentTypeTextHtml()) {
+      virtualField.set(servletOutputStream, null);
+      return;
+    }
     if (state == null || state.getWrapper() != wrapper) {
       state = new InjectionState(wrapper);
-      if (wrapper.isContentTypeTextHtml()) {
-        virtualField.set(servletOutputStream, state);
-      }
+      virtualField.set(servletOutputStream, state);
     }
   }
 

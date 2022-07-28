@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import javax.annotation.Nullable;
 
 public class SnippetHolder {
 
@@ -21,12 +19,7 @@ public class SnippetHolder {
     return snippet;
   }
 
-  public static byte[] getSnippetBytes(@Nullable String encoding)
-      throws UnsupportedEncodingException {
-    if (encoding != null) {
-      return snippet.getBytes(encoding);
-    } else {
-      return snippet.getBytes(Charset.defaultCharset());
-    }
+  public static byte[] getSnippetBytes(String encoding) throws UnsupportedEncodingException {
+    return snippet.getBytes(encoding);
   }
 }

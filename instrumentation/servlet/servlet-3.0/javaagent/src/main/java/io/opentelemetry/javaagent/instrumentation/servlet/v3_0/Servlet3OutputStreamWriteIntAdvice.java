@@ -26,6 +26,6 @@ public class Servlet3OutputStreamWriteIntAdvice {
     // if handleWrite return true, then it means the injection has happened and the 'write'
     // manipulate is done. the function would return false then, meaning skip the original write
     // function
-    return !handleWrite(state, servletOutputStream, (byte) write);
+    return !handleWrite(state, servletOutputStream, write);
   }
 }

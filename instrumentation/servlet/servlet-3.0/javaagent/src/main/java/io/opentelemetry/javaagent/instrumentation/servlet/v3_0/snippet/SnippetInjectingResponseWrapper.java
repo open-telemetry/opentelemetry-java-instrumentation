@@ -21,13 +21,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper {
+  private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
   private static final String SNIPPET = SnippetHolder.getSnippet();
   private static final int SNIPPET_LENGTH = SNIPPET.length();
-
-  private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
-  private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
   @Nullable private static final MethodHandle setContentLengthLongHandler = getMethodHandle();
+
+  private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
   public SnippetInjectingResponseWrapper(HttpServletResponse response) {
     super(response);
