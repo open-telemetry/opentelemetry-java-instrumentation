@@ -37,12 +37,6 @@ final class PlayWsClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(Request request, Response response) {
     return response.getStatusCode();
   }
@@ -55,12 +49,6 @@ final class PlayWsClientHttpAttributesGetter
   @Override
   @Nullable
   public Long responseContentLength(Request request, Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
   }
 

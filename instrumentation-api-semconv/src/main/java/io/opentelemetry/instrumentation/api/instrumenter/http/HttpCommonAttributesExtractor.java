@@ -62,10 +62,6 @@ abstract class HttpCommonAttributesExtractor<
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
         getter.requestContentLength(request, response));
-    internalSet(
-        attributes,
-        SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED,
-        getter.requestContentLengthUncompressed(request, response));
 
     if (response != null) {
       Integer statusCode = getter.statusCode(request, response);
@@ -76,10 +72,6 @@ abstract class HttpCommonAttributesExtractor<
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
           getter.responseContentLength(request, response));
-      internalSet(
-          attributes,
-          SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
-          getter.responseContentLengthUncompressed(request, response));
 
       for (String name : capturedResponseHeaders) {
         List<String> values = getter.responseHeader(request, response, name);

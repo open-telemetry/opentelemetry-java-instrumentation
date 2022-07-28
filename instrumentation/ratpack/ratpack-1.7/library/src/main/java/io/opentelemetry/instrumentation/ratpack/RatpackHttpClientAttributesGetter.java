@@ -44,13 +44,6 @@ enum RatpackHttpClientAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLengthUncompressed(
-      RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
   @Override
   public Integer statusCode(RequestSpec requestSpec, HttpResponse httpResponse) {
     return httpResponse.getStatusCode();
@@ -59,13 +52,6 @@ enum RatpackHttpClientAttributesGetter
   @Nullable
   @Override
   public Long responseContentLength(RequestSpec requestSpec, HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLengthUncompressed(
-      RequestSpec requestSpec, HttpResponse httpResponse) {
     return null;
   }
 

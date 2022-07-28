@@ -34,13 +34,6 @@ final class NettyHttpServerAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(HttpRequestAndChannel requestAndChannel, HttpResponse response) {
     return response.getStatus().getCode();
   }
@@ -48,13 +41,6 @@ final class NettyHttpServerAttributesGetter
   @Override
   @Nullable
   public Long responseContentLength(
-      HttpRequestAndChannel requestAndChannel, HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
       HttpRequestAndChannel requestAndChannel, HttpResponse response) {
     return null;
   }
