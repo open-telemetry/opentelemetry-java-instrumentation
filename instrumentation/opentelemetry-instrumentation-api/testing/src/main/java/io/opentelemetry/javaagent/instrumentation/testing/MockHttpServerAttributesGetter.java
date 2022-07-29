@@ -35,12 +35,6 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
 
   @Nullable
   @Override
-  public Long requestContentLengthUncompressed(String s, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public Integer statusCode(String s, Void unused) {
     return null;
   }
@@ -48,12 +42,6 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
   @Nullable
   @Override
   public Long responseContentLength(String s, Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLengthUncompressed(String s, Void unused) {
     return null;
   }
 

@@ -62,14 +62,6 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public Long requestContentLengthUncompressed(
-      ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseContext) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(ServletRequestContext<REQUEST> requestContext) {
     String flavor = accessor.getRequestProtocol(requestContext.request());
     if (flavor != null) {
@@ -112,14 +104,6 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
         // ignore
       }
     }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      ServletRequestContext<REQUEST> requestContext,
-      ServletResponseContext<RESPONSE> responseContext) {
     return null;
   }
 

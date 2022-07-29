@@ -43,9 +43,14 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
    * {@code response} is {@code null} or not.
+   *
+   * @deprecated This method is deprecated and will be removed in the next release.
    */
+  @Deprecated
   @Nullable
-  Long requestContentLengthUncompressed(REQUEST request, @Nullable RESPONSE response);
+  default Long requestContentLengthUncompressed(REQUEST request, @Nullable RESPONSE response) {
+    throw new UnsupportedOperationException("This method is deprecated and will be removed");
+  }
 
   /**
    * Extracts the {@code http.status_code} span attribute.
@@ -70,9 +75,14 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
    * {@code response} is non-{@code null}.
+   *
+   * @deprecated This method is deprecated and will be removed in the next release.
    */
+  @Deprecated
   @Nullable
-  Long responseContentLengthUncompressed(REQUEST request, RESPONSE response);
+  default Long responseContentLengthUncompressed(REQUEST request, RESPONSE response) {
+    throw new UnsupportedOperationException("This method is deprecated and will be removed");
+  }
 
   /**
    * Extracts all values of header named {@code name} from the response, or an empty list if there

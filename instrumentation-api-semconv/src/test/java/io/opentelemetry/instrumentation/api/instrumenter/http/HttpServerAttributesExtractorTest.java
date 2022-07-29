@@ -65,13 +65,6 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public Long requestContentLengthUncompressed(
-        Map<String, String> request, Map<String, String> response) {
-      String value = request.get("requestContentLengthUncompressed");
-      return value == null ? null : Long.parseLong(value);
-    }
-
-    @Override
     public Integer statusCode(Map<String, String> request, Map<String, String> response) {
       String value = response.get("statusCode");
       return value == null ? null : Integer.parseInt(value);
@@ -85,13 +78,6 @@ class HttpServerAttributesExtractorTest {
     @Override
     public Long responseContentLength(Map<String, String> request, Map<String, String> response) {
       String value = response.get("responseContentLength");
-      return value == null ? null : Long.parseLong(value);
-    }
-
-    @Override
-    public Long responseContentLengthUncompressed(
-        Map<String, String> request, Map<String, String> response) {
-      String value = response.get("responseContentLengthUncompressed");
       return value == null ? null : Long.parseLong(value);
     }
 
@@ -111,7 +97,6 @@ class HttpServerAttributesExtractorTest {
     request.put("target", "/repositories/1");
     request.put("scheme", "http");
     request.put("requestContentLength", "10");
-    request.put("requestContentLengthUncompressed", "11");
     request.put("flavor", "http/2");
     request.put("route", "/repositories/{id}");
     request.put("serverName", "server");
@@ -123,7 +108,6 @@ class HttpServerAttributesExtractorTest {
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
     response.put("responseContentLength", "20");
-    response.put("responseContentLengthUncompressed", "21");
     response.put("header.custom-response-header", "654,321");
 
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
@@ -168,11 +152,9 @@ class HttpServerAttributesExtractorTest {
                 asList("123", "456")),
             entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
-            entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, 11L),
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),
-            entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, 21L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));

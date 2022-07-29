@@ -52,12 +52,6 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(Request request) {
     String flavor = request.protocol().toString();
     if (flavor != null) {
@@ -80,12 +74,6 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   public Long responseContentLength(Request request, Response response) {
     long contentLength = response.getContentLengthLong();
     return contentLength != -1 ? contentLength : null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(Request request, Response response) {
-    return null;
   }
 
   @Override

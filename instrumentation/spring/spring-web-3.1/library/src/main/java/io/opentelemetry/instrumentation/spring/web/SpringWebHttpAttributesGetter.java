@@ -44,13 +44,6 @@ enum SpringWebHttpAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
     return null;
   }
@@ -67,13 +60,6 @@ enum SpringWebHttpAttributesGetter
   @Override
   @Nullable
   public Long responseContentLength(
-      HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
     return null;
   }

@@ -61,13 +61,6 @@ enum SpringWebfluxHttpAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLengthUncompressed(
-      ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
   @Override
   public Integer statusCode(ClientRequest request, ClientResponse response) {
     if (RAW_STATUS_CODE != null) {
@@ -86,12 +79,6 @@ enum SpringWebfluxHttpAttributesGetter
   @Nullable
   @Override
   public Long responseContentLength(ClientRequest request, ClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLengthUncompressed(ClientRequest request, ClientResponse response) {
     return null;
   }
 
