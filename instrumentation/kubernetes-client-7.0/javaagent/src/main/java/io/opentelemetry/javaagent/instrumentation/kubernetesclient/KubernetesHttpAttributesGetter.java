@@ -38,13 +38,6 @@ class KubernetesHttpAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLengthUncompressed(
-      Request request, @Nullable ApiResponse<?> apiResponse) {
-    return null;
-  }
-
   @Override
   public String flavor(Request request, @Nullable ApiResponse<?> apiResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
@@ -58,12 +51,6 @@ class KubernetesHttpAttributesGetter
   @Nullable
   @Override
   public Long responseContentLength(Request request, ApiResponse<?> apiResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLengthUncompressed(Request request, ApiResponse<?> apiResponse) {
     return null;
   }
 

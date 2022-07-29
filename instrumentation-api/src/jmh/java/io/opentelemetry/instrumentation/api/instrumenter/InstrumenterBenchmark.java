@@ -86,12 +86,6 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    @Nullable
-    public Long requestContentLengthUncompressed(Void unused, @Nullable Void unused2) {
-      return null;
-    }
-
-    @Override
     public String flavor(Void unused, @Nullable Void unused2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
@@ -104,12 +98,6 @@ public class InstrumenterBenchmark {
     @Override
     public Long responseContentLength(Void unused, Void unused2) {
       return 100L;
-    }
-
-    @Override
-    @Nullable
-    public Long responseContentLengthUncompressed(Void unused, Void unused2) {
-      return null;
     }
 
     @Override

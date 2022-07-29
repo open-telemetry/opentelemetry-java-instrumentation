@@ -67,13 +67,6 @@ public class UndertowHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    return null;
-  }
-
-  @Override
   public String flavor(HttpServerExchange exchange) {
     String flavor = exchange.getProtocol().toString();
     // remove HTTP/ prefix to comply with semantic conventions
@@ -93,13 +86,6 @@ public class UndertowHttpAttributesGetter
   public Long responseContentLength(HttpServerExchange exchange, HttpServerExchange unused) {
     long responseContentLength = exchange.getResponseContentLength();
     return responseContentLength != -1 ? responseContentLength : null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      HttpServerExchange exchange, HttpServerExchange unused) {
-    return null;
   }
 
   @Override

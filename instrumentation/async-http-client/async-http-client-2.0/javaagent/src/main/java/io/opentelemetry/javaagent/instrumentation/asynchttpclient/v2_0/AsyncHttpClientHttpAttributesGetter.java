@@ -48,13 +48,6 @@ final class AsyncHttpClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      RequestContext requestContext, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(RequestContext requestContext, Response response) {
     return response.getStatusCode();
   }
@@ -75,12 +68,6 @@ final class AsyncHttpClientHttpAttributesGetter
         // ignore
       }
     }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(RequestContext requestContext, Response response) {
     return null;
   }
 
