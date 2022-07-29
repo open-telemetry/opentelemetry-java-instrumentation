@@ -5,7 +5,7 @@
 
 package io.opentelemetry.test.reactor.netty;
 
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import reactor.core.publisher.Mono;
 
 public class TracedWithSpan {

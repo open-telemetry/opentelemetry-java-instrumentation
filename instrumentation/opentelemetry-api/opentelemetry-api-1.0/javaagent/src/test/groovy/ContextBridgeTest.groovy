@@ -8,7 +8,7 @@ import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
-import io.opentelemetry.extension.annotations.WithSpan
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
