@@ -42,8 +42,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:jms-1.1:javaagent"))
 
-  testImplementation("org.springframework.boot:spring-boot-starter-activemq:${versions["org.springframework.boot"]}")
-  testImplementation("org.springframework.boot:spring-boot-starter-test:${versions["org.springframework.boot"]}") {
+  testImplementation("org.springframework.boot:spring-boot-starter-activemq:2.5.3")
+  testImplementation("org.springframework.boot:spring-boot-starter-test:2.5.3") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
 
