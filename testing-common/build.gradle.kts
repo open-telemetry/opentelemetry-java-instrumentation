@@ -57,7 +57,6 @@ dependencies {
   implementation("org.slf4j:log4j-over-slf4j")
   implementation("org.slf4j:jcl-over-slf4j")
   implementation("org.slf4j:jul-to-slf4j")
-  implementation("io.opentelemetry:opentelemetry-extension-annotations")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
 
   annotationProcessor("com.google.auto.service:auto-service")
