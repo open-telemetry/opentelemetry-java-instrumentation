@@ -106,32 +106,28 @@ public class PubsubSingletons {
   }
 
   public static Optional<Object> extractPubsubMessageAttributes(PubsubMessage pubsubMessage) {
-    try {
-      Field attributes = extractAttributeFromObject(pubsubMessage, ATTRIBUTES_FIELD_NAME);
-      if (attributes != null) {
-        Object attributesObject = attributes.get(pubsubMessage);
-        Field mapData = extractAttributeFromObject(attributesObject, MAP_DATA_FIELD_NAME);
-        if (mapData != null) {
-          Field delegate =
-              extractAttributeFromObject(mapData.get(attributesObject), DELEGATE_DATA_FIELD_NAME);
-          if (delegate != null) {
-            return (Optional<Object>) delegate.get(mapData.get(attributesObject));
-          }
+
+    Object attributesObject = extractAttributeFromObject(pubsubMessage, ATTRIBUTES_FIELD_NAME);
+    if (attributesObject != null) {
+      Object mapDataObject = extractAttributeFromObject(attributesObject, MAP_DATA_FIELD_NAME);
+      if (mapDataObject != null) {
+        Object delegate = extractAttributeFromObject(mapDataObject, DELEGATE_DATA_FIELD_NAME);
+        if (delegate != null) {
+          return (Optional<Object>) delegate;
         }
       }
-    } catch (Exception e) {
-      return Optional.empty();
     }
+
     return Optional.empty();
   }
 
-  private static Field extractAttributeFromObject(Object object, String fieldName) {
+  private static Object extractAttributeFromObject(Object object, String fieldName) {
     try {
       Class cls = object.getClass();
       Field field = cls.getDeclaredField(fieldName);
       field.setAccessible(true);
-      return field;
-    } catch (NoSuchFieldException e) {
+      return field.get(object);
+    } catch (Exception e) {
       System.out.println(
           "Got Exception while trying to extract attribute for object: "
               + object.getClass().getName()
