@@ -106,7 +106,6 @@ public class PubsubSingletons {
   }
 
   public static Optional<Object> extractPubsubMessageAttributes(PubsubMessage pubsubMessage) {
-
     Object attributesObject = extractAttributeFromObject(pubsubMessage, ATTRIBUTES_FIELD_NAME);
     if (attributesObject != null) {
       Object mapDataObject = extractAttributeFromObject(attributesObject, MAP_DATA_FIELD_NAME);
