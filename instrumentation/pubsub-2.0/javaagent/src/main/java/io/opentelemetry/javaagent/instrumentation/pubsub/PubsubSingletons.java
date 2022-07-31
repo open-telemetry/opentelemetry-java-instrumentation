@@ -13,12 +13,19 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class PubsubSingletons {
 
   private PubsubSingletons() {}
+
+  private static final String MESSAGE_PAYLOAD_ATTRIBUTE = "messaging.payload";
+  private static final String ATTRIBUTES_FIELD_NAME = "attributes_";
+  private static final String MAP_DATA_FIELD_NAME = "mapData";
+  private static final String DELEGATE_DATA_FIELD_NAME = "delegate";
 
   public static final String instrumentationName = "io.opentelemetry.pubsub-1.101.0";
 
@@ -75,7 +82,7 @@ public class PubsubSingletons {
 
     Context context = publisherInstrumenter().start(parentContext, pubsubMessage);
     Span span = Java8BytecodeBridge.spanFromContext(context);
-    span.setAttribute("messaging.payload", new String(pubsubMessage.getData().toByteArray()));
+    span.setAttribute(MESSAGE_PAYLOAD_ATTRIBUTE, new String(pubsubMessage.getData().toByteArray()));
     GlobalOpenTelemetry.get()
         .getPropagators()
         .getTextMapPropagator()
@@ -84,7 +91,6 @@ public class PubsubSingletons {
   }
 
   public static void buildAndFinishSpan(Context context, PubsubMessage pubsubMessage) {
-
     Context linkedContext =
         GlobalOpenTelemetry.get()
             .getPropagators()
@@ -97,5 +103,38 @@ public class PubsubSingletons {
     }
     Context current = subscriberInstrumenter.start(newContext, pubsubMessage);
     subscriberInstrumenter.end(current, pubsubMessage, null, null);
+  }
+
+  public static Optional<Object> extractPubsubMessageAttributes(PubsubMessage pubsubMessage) {
+    Object attributesObject = extractAttributeFromObject(pubsubMessage, ATTRIBUTES_FIELD_NAME);
+    if (attributesObject != null) {
+      Object mapDataObject = extractAttributeFromObject(attributesObject, MAP_DATA_FIELD_NAME);
+      if (mapDataObject != null) {
+        Object delegate = extractAttributeFromObject(mapDataObject, DELEGATE_DATA_FIELD_NAME);
+        if (delegate != null) {
+          return (Optional<Object>) delegate;
+        }
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  private static Object extractAttributeFromObject(Object object, String fieldName) {
+    try {
+      Class cls = object.getClass();
+      Field field = cls.getDeclaredField(fieldName);
+      field.setAccessible(true);
+      return field.get(object);
+    } catch (Exception e) {
+      System.out.println(
+          "Got Exception while trying to extract attribute for object: "
+              + object.getClass().getName()
+              + " for attribute: "
+              + fieldName
+              + " exception: "
+              + e);
+      return null;
+    }
   }
 }
