@@ -13,12 +13,19 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class PubsubSingletons {
 
   private PubsubSingletons() {}
+
+  private static final String MESSAGE_PAYLOAD_ATTRIBUTE = "messaging.payload";
+  private static final String ATTRIBUTES_FIELD_NAME = "attributes_";
+  private static final String MAP_DATA_FIELD_NAME = "mapData";
+  private static final String DELEGATE_DATA_FIELD_NAME = "delegate";
 
   public static final String instrumentationName = "io.opentelemetry.pubsub-1.101.0";
 
@@ -75,7 +82,7 @@ public class PubsubSingletons {
 
     Context context = publisherInstrumenter().start(parentContext, pubsubMessage);
     Span span = Java8BytecodeBridge.spanFromContext(context);
-    span.setAttribute("messaging.payload", new String(pubsubMessage.getData().toByteArray()));
+    span.setAttribute(MESSAGE_PAYLOAD_ATTRIBUTE, new String(pubsubMessage.getData().toByteArray()));
     GlobalOpenTelemetry.get()
         .getPropagators()
         .getTextMapPropagator()
@@ -84,7 +91,6 @@ public class PubsubSingletons {
   }
 
   public static void buildAndFinishSpan(Context context, PubsubMessage pubsubMessage) {
-
     Context linkedContext =
         GlobalOpenTelemetry.get()
             .getPropagators()
@@ -97,5 +103,26 @@ public class PubsubSingletons {
     }
     Context current = subscriberInstrumenter.start(newContext, pubsubMessage);
     subscriberInstrumenter.end(current, pubsubMessage, null, null);
+  }
+
+  public static Optional<Object> extractPubsubMessageAttributes(PubsubMessage pubsubMessage) {
+    try {
+      Class cls = pubsubMessage.getClass();
+      Field attributes = cls.getDeclaredField(ATTRIBUTES_FIELD_NAME);
+      attributes.setAccessible(true);
+      Class attributesClass = attributes.get(pubsubMessage).getClass();
+      Field mapData = attributesClass.getDeclaredField(MAP_DATA_FIELD_NAME);
+      mapData.setAccessible(true);
+      Class mapDataObj = mapData.get(attributes.get(pubsubMessage)).getClass();
+
+      Field delegateField = mapDataObj.getDeclaredField(DELEGATE_DATA_FIELD_NAME);
+      delegateField.setAccessible(true);
+      return (Optional<Object>) delegateField.get(mapData.get(attributes.get(pubsubMessage)));
+
+    } catch (Exception e) {
+      System.out.println("Got Exception while instrumenting pubsubMessage: " + e);
+
+    }
+    return Optional.empty();
   }
 }
