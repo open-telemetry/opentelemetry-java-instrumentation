@@ -17,11 +17,12 @@ val extraTag = findProperty("extraTag")
 // Dockerfile name, args key passes raw arguments to docker build
 val targets = mapOf(
   "jetty" to listOf(
-    ImageTarget(listOf("9.4.39"), listOf("hotspot"), listOf("8", "11", "17", "18"), mapOf("sourceVersion" to "9.4.39.v20210325")),
+    // TODO (trask) remove Java 18 test once Java 19 is GA
+    ImageTarget(listOf("9.4.39"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), mapOf("sourceVersion" to "9.4.39.v20210325")),
     ImageTarget(listOf("9.4.39"), listOf("openj9"), listOf("8", "11", "16"), mapOf("sourceVersion" to "9.4.39.v20210325")),
-    ImageTarget(listOf("10.0.7"), listOf("hotspot"), listOf("11", "17", "18"), mapOf("sourceVersion" to "10.0.7")),
+    ImageTarget(listOf("10.0.7"), listOf("hotspot"), listOf("11", "17", "18", "19"), mapOf("sourceVersion" to "10.0.7")),
     ImageTarget(listOf("10.0.7"), listOf("openj9"), listOf("11", "16"), mapOf("sourceVersion" to "10.0.7")),
-    ImageTarget(listOf("11.0.7"), listOf("hotspot"), listOf("11", "17", "18"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
+    ImageTarget(listOf("11.0.7"), listOf("hotspot"), listOf("11", "17", "18", "19"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
     ImageTarget(listOf("11.0.7"), listOf("openj9"), listOf("11", "16"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
   ),
   "liberty" to listOf(
@@ -36,20 +37,22 @@ val targets = mapOf(
     ImageTarget(listOf("5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
   ),
   "tomcat" to listOf(
+    // TODO (trask) remove Java 18 test once Java 19 is GA
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
-    ImageTarget(listOf("8.5.72"), listOf("hotspot"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "8")),
+    ImageTarget(listOf("8.5.72"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), mapOf("majorVersion" to "8")),
     ImageTarget(listOf("8.5.72"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "8")),
-    ImageTarget(listOf("9.0.54"), listOf("hotspot"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "9")),
+    ImageTarget(listOf("9.0.54"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), mapOf("majorVersion" to "9")),
     ImageTarget(listOf("9.0.54"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("10.0.12"), listOf("hotspot"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(listOf("10.0.12"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), mapOf("majorVersion" to "10"), "servlet-5.0"),
     ImageTarget(listOf("10.0.12"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "10"), "servlet-5.0"),
   ),
   "tomee" to listOf(
+    // TODO (trask) remove Java 18 test once Java 19 is GA
     ImageTarget(listOf("7.0.9"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("8.0.8"), listOf("hotspot"), listOf("8", "11", "17", "18")),
+    ImageTarget(listOf("8.0.8"), listOf("hotspot"), listOf("8", "11", "17", "18", "19")),
     ImageTarget(listOf("8.0.8"), listOf("openj9"), listOf("8", "11", "16")),
-    ImageTarget(listOf("9.0.0-M7"), listOf("hotspot"), listOf("8", "11", "17", "18"), war = "servlet-5.0"),
+    ImageTarget(listOf("9.0.0-M7"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), war = "servlet-5.0"),
     ImageTarget(listOf("9.0.0-M7"), listOf("openj9"), listOf("8", "11", "16"), war = "servlet-5.0"),
   ),
   "websphere" to listOf(
@@ -58,8 +61,9 @@ val targets = mapOf(
     ImageTarget(listOf("8.5.5.19", "9.0.5.9"), listOf("openj9"), listOf("8"), windows = false),
   ),
   "wildfly" to listOf(
+    // TODO (trask) remove Java 18 test once Java 19 is GA
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("hotspot"), listOf("8", "11", "17", "18")),
+    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("hotspot"), listOf("8", "11", "17", "18", "19")),
     ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("openj9"), listOf("8", "11", "16")),
   ),
 )
