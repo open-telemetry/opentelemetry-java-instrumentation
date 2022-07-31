@@ -107,22 +107,39 @@ public class PubsubSingletons {
 
   public static Optional<Object> extractPubsubMessageAttributes(PubsubMessage pubsubMessage) {
     try {
-      Class cls = pubsubMessage.getClass();
-      Field attributes = cls.getDeclaredField(ATTRIBUTES_FIELD_NAME);
-      attributes.setAccessible(true);
-      Class attributesClass = attributes.get(pubsubMessage).getClass();
-      Field mapData = attributesClass.getDeclaredField(MAP_DATA_FIELD_NAME);
-      mapData.setAccessible(true);
-      Class mapDataObj = mapData.get(attributes.get(pubsubMessage)).getClass();
-
-      Field delegateField = mapDataObj.getDeclaredField(DELEGATE_DATA_FIELD_NAME);
-      delegateField.setAccessible(true);
-      return (Optional<Object>) delegateField.get(mapData.get(attributes.get(pubsubMessage)));
-
+      Field attributes = extractAttributeFromObject(pubsubMessage, ATTRIBUTES_FIELD_NAME);
+      if (attributes != null) {
+        Object attributesObject = attributes.get(pubsubMessage);
+        Field mapData = extractAttributeFromObject(attributesObject, MAP_DATA_FIELD_NAME);
+        if (mapData != null) {
+          Field delegate =
+              extractAttributeFromObject(mapData.get(attributesObject), DELEGATE_DATA_FIELD_NAME);
+          if (delegate != null) {
+            return (Optional<Object>) delegate.get(mapData.get(attributesObject));
+          }
+        }
+      }
     } catch (Exception e) {
-      System.out.println("Got Exception while instrumenting pubsubMessage: " + e);
-
+      return Optional.empty();
     }
     return Optional.empty();
+  }
+
+  private static Field extractAttributeFromObject(Object object, String fieldName) {
+    try {
+      Class cls = object.getClass();
+      Field field = cls.getDeclaredField(fieldName);
+      field.setAccessible(true);
+      return field;
+    } catch (NoSuchFieldException e) {
+      System.out.println(
+          "Got Exception while trying to extract attribute for object: "
+              + object.getClass().getName()
+              + " for attribute: "
+              + fieldName
+              + " exception: "
+              + e);
+      return null;
+    }
   }
 }
