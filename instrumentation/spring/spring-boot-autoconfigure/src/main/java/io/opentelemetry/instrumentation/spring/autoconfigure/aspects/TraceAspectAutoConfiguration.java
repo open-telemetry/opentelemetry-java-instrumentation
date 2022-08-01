@@ -21,6 +21,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 @Configuration
 @EnableConfigurationProperties(TraceAspectProperties.class)
 @ConditionalOnProperty(prefix = "otel.springboot.aspects", name = "enabled", matchIfMissing = true)
+// TODO (trask) need to handle both WithSpan annotations here
 @ConditionalOnClass({Aspect.class, WithSpan.class})
 public class TraceAspectAutoConfiguration {
 

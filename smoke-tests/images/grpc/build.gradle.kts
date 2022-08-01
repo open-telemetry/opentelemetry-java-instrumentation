@@ -17,7 +17,7 @@ dependencies {
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
   implementation("io.opentelemetry.proto:opentelemetry-proto:0.16.0-alpha")
-  implementation("io.opentelemetry:opentelemetry-extension-annotations")
+  implementation(project(":instrumentation-annotations"))
   implementation("org.apache.logging.log4j:log4j-core")
 
   runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl")
@@ -25,7 +25,8 @@ dependencies {
 
 val targetJDK = project.findProperty("targetJDK") ?: "11"
 
-val tag = findProperty("tag") ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val tag = findProperty("tag")
+  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 jib {
   from.image = "openjdk:$targetJDK"

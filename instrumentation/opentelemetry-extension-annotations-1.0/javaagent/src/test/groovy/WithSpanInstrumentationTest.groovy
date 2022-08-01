@@ -25,7 +25,8 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 /**
- * This test verifies that auto instrumentation supports {@link io.opentelemetry.extension.annotations.WithSpan} contrib annotation.
+ * This test verifies that auto instrumentation supports the
+ * {@link io.opentelemetry.extension.annotations.WithSpan} annotation.
  */
 class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
 

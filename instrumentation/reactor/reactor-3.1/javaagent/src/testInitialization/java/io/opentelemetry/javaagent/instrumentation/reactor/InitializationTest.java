@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.reactor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
