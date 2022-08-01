@@ -7,16 +7,24 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.extension.annotations.SpanAttribute;
 import io.opentelemetry.extension.annotations.WithSpan;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import org.springframework.core.ParameterNameDiscoverer;
 
 class SdkExtensionWithSpanAspectTest extends AbstractWithSpanAspectTest {
 
   @Override
   WithSpanTester newWithSpanTester() {
     return new SdkExtensionWithSpanTester();
+  }
+
+  @Override
+  WithSpanAspect newWithSpanAspect(
+      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
+    return new SdkExtensionWithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }
 
   static class SdkExtensionWithSpanTester implements WithSpanTester {

@@ -29,7 +29,9 @@ public class TraceAspectAutoConfigurationTest {
         .withPropertyValues("otel.springboot.aspects.enabled=true")
         .run(
             context ->
-                assertThat(context.getBean("withSpanAspect", WithSpanAspect.class)).isNotNull());
+                assertThat(context)
+                    .hasBean("instrumentationWithSpanAspect")
+                    .hasBean("sdkExtensionWithSpanAspect"));
   }
 
   @Test
@@ -37,13 +39,20 @@ public class TraceAspectAutoConfigurationTest {
   void disabledProperty() {
     this.contextRunner
         .withPropertyValues("otel.springboot.aspects.enabled=false")
-        .run(context -> assertThat(context.containsBean("withSpanAspect")).isFalse());
+        .run(
+            context ->
+                assertThat(context)
+                    .doesNotHaveBean("instrumentationWithSpanAspect")
+                    .doesNotHaveBean("sdkExtensionWithSpanAspect"));
   }
 
   @Test
   @DisplayName("when aspects enabled property is MISSING should initialize WithSpanAspect bean")
   void noProperty() {
     this.contextRunner.run(
-        context -> assertThat(context.getBean("withSpanAspect", WithSpanAspect.class)).isNotNull());
+        context ->
+            assertThat(context)
+                .hasBean("instrumentationWithSpanAspect")
+                .hasBean("sdkExtensionWithSpanAspect"));
   }
 }
