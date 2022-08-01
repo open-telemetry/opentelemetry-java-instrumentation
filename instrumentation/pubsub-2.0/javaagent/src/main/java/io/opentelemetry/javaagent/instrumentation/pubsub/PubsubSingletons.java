@@ -105,14 +105,14 @@ public class PubsubSingletons {
     subscriberInstrumenter.end(current, pubsubMessage, null, null);
   }
 
-  public static Optional<Object> extractPubsubMessageAttributes(PubsubMessage pubsubMessage) {
+  public static Object extractPubsubMessageAttributes(PubsubMessage pubsubMessage) {
     Object attributesObject = extractAttributeFromObject(pubsubMessage, ATTRIBUTES_FIELD_NAME);
     if (attributesObject != null) {
       Object mapDataObject = extractAttributeFromObject(attributesObject, MAP_DATA_FIELD_NAME);
       if (mapDataObject != null) {
         Object delegate = extractAttributeFromObject(mapDataObject, DELEGATE_DATA_FIELD_NAME);
         if (delegate != null) {
-          return (Optional<Object>) delegate;
+          return delegate;
         }
       }
     }
