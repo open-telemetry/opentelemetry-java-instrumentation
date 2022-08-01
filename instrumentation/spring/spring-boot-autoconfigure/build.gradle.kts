@@ -24,7 +24,7 @@ dependencies {
     exclude("io.micrometer", "micrometer-core")
   }
 
-  compileOnly("org.springframework.kafka:spring-kafka:2.7.1")
+  compileOnly("org.springframework.kafka:spring-kafka:2.9.0")
   compileOnly("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   compileOnly("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   compileOnly("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
@@ -41,7 +41,7 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
   compileOnly(project(":instrumentation-annotations"))
 
-  testImplementation("org.springframework.kafka:spring-kafka:2.7.1")
+  testImplementation("org.springframework.kafka:spring-kafka:2.9.0")
   testImplementation("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   testImplementation("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")

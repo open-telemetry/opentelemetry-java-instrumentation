@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.rxjava.v2_0.TracedWithSpan
+import io.opentelemetry.instrumentation.rxjava.v2_0.AbstractTracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.reactivex.Completable
@@ -25,13 +25,15 @@ import org.reactivestreams.Subscription
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
-class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
+abstract class BaseRxJava2WithSpanTest extends AgentInstrumentationSpecification {
+
+  abstract AbstractTracedWithSpan newTraced()
 
   def "should capture span for already completed Completable"() {
     setup:
     def observer = new TestObserver()
     def source = Completable.complete()
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
     observer.assertComplete()
@@ -44,7 +46,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
@@ -56,7 +58,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = CompletableSubject.create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -75,7 +77,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
@@ -88,7 +90,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
     def source = Completable.error(error)
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -103,7 +105,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
@@ -116,7 +118,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def source = CompletableSubject.create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -137,7 +139,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
@@ -149,7 +151,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = CompletableSubject.create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -167,7 +169,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "completable"
             "rxjava.canceled" true
           }
@@ -180,7 +182,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def observer = new TestObserver()
     def source = Maybe.just("Value")
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertValue("Value")
@@ -194,7 +196,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
@@ -206,7 +208,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def observer = new TestObserver()
     def source = Maybe.<String> empty()
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertComplete()
@@ -219,7 +221,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
@@ -231,7 +233,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = MaybeSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -251,7 +253,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
@@ -264,7 +266,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
     def source = Maybe.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -279,7 +281,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
@@ -292,7 +294,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def source = MaybeSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -313,7 +315,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
@@ -325,7 +327,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = MaybeSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -343,7 +345,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "maybe"
             "rxjava.canceled" true
           }
@@ -356,7 +358,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def observer = new TestObserver()
     def source = Single.just("Value")
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
     observer.assertValue("Value")
@@ -370,7 +372,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
@@ -382,7 +384,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = SingleSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -402,7 +404,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
@@ -415,7 +417,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
     def source = Single.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -430,7 +432,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
@@ -443,7 +445,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def source = SingleSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -464,7 +466,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
@@ -476,7 +478,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = SingleSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -494,7 +496,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "single"
             "rxjava.canceled" true
           }
@@ -507,7 +509,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def observer = new TestObserver()
     def source = Observable.<String> just("Value")
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
     observer.assertValue("Value")
@@ -521,7 +523,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
@@ -533,7 +535,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = UnicastSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -558,7 +560,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
@@ -571,7 +573,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
     def source = Observable.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -586,7 +588,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
@@ -599,7 +601,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def source = UnicastSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -626,7 +628,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
@@ -638,7 +640,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = UnicastSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -662,7 +664,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "observable"
             "rxjava.canceled" true
           }
@@ -675,7 +677,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def observer = new TestSubscriber()
     def source = Flowable.<String> just("Value")
-    new TracedWithSpan()
+    newTraced()
       .flowable(source)
       .subscribe(observer)
     observer.assertValue("Value")
@@ -689,7 +691,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "flowable"
           }
         }
@@ -701,7 +703,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .flowable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -726,7 +728,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "flowable"
           }
         }
@@ -739,7 +741,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def observer = new TestSubscriber()
     def source = Flowable.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .flowable(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -754,7 +756,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "flowable"
           }
         }
@@ -767,7 +769,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .flowable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -794,7 +796,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "flowable"
           }
         }
@@ -806,7 +808,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .flowable(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -830,7 +832,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "flowable"
             "rxjava.canceled" true
           }
@@ -843,7 +845,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def observer = new TestSubscriber()
     def source = Flowable.<String> just("Value")
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
@@ -858,7 +860,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
@@ -870,7 +872,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
@@ -896,7 +898,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
@@ -909,7 +911,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def observer = new TestSubscriber()
     def source = Flowable.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
@@ -925,7 +927,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
@@ -938,7 +940,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
@@ -966,7 +968,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
@@ -978,7 +980,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
@@ -1003,7 +1005,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
             "rxjava.canceled" true
           }
@@ -1016,7 +1018,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = new CustomPublisher()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .publisher(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -1035,7 +1037,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "publisher"
           }
         }
@@ -1048,7 +1050,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     def error = new IllegalArgumentException("Boom")
     def source = new CustomPublisher()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .publisher(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -1069,7 +1071,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "publisher"
           }
         }
@@ -1081,7 +1083,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def source = new CustomPublisher()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .publisher(source)
       .subscribe(observer)
     observer.assertSubscribed()
@@ -1099,7 +1101,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           kind INTERNAL
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" TracedWithSpan.name
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
             "$SemanticAttributes.CODE_FUNCTION" "publisher"
             "rxjava.canceled" true
           }

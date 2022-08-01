@@ -81,13 +81,6 @@ final class ReactorNettyHttpClientAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLengthUncompressed(
-      HttpClientConfig request, @Nullable HttpClientResponse response) {
-    return null;
-  }
-
   @Override
   public Integer statusCode(HttpClientConfig request, HttpClientResponse response) {
     return response.status().code();
@@ -96,13 +89,6 @@ final class ReactorNettyHttpClientAttributesGetter
   @Nullable
   @Override
   public Long responseContentLength(HttpClientConfig request, HttpClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLengthUncompressed(
-      HttpClientConfig request, HttpClientResponse response) {
     return null;
   }
 

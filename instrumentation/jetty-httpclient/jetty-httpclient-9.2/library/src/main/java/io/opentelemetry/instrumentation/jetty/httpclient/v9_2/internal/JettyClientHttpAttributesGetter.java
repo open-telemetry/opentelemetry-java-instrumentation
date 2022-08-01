@@ -51,12 +51,6 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
   }
 
   @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
   public String flavor(Request request, @Nullable Response response) {
 
     if (response == null) {
@@ -95,12 +89,6 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
       respContentLength = getLongFromJettyHttpField(requestContentLengthField);
     }
     return respContentLength;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(Request request, Response response) {
-    return null;
   }
 
   @Override

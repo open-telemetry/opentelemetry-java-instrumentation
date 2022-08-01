@@ -38,13 +38,6 @@ final class GoogleHttpClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Override
   public String flavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
@@ -57,13 +50,6 @@ final class GoogleHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public Long responseContentLength(HttpRequest httpRequest, HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      HttpRequest httpRequest, HttpResponse httpResponse) {
     return null;
   }
 

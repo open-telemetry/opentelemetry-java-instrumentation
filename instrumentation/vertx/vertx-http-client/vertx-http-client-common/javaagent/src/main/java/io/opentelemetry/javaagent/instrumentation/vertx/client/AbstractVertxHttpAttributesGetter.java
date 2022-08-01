@@ -32,13 +32,6 @@ public abstract class AbstractVertxHttpAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLengthUncompressed(
-      HttpClientRequest request, @Nullable HttpClientResponse response) {
-    return null;
-  }
-
   @Override
   public Integer statusCode(HttpClientRequest request, HttpClientResponse response) {
     return response.statusCode();
@@ -47,13 +40,6 @@ public abstract class AbstractVertxHttpAttributesGetter
   @Nullable
   @Override
   public Long responseContentLength(HttpClientRequest request, HttpClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLengthUncompressed(
-      HttpClientRequest request, HttpClientResponse response) {
     return null;
   }
 

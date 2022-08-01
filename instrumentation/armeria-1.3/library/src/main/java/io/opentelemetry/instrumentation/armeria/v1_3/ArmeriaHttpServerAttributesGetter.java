@@ -52,13 +52,6 @@ enum ArmeriaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLengthUncompressed(
-      RequestContext ctx, @Nullable RequestLog requestLog) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public Integer statusCode(RequestContext ctx, RequestLog requestLog) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
@@ -80,12 +73,6 @@ enum ArmeriaHttpServerAttributesGetter
   @Override
   public Long responseContentLength(RequestContext ctx, RequestLog requestLog) {
     return requestLog.responseLength();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(RequestContext ctx, RequestLog requestLog) {
-    return null;
   }
 
   @Override

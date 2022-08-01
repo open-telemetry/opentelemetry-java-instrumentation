@@ -90,7 +90,7 @@ class KafkaIntegrationTest {
         () -> {
           kafkaTemplate.executeInTransaction(
               ops -> {
-                ops.send("testTopic", "10", "testSpan");
+                ops.usingCompletableFuture().send("testTopic", "10", "testSpan");
                 return 0;
               });
         });

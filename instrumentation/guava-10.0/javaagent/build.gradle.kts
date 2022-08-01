@@ -24,6 +24,9 @@ dependencies {
 
   implementation(project(":instrumentation:guava-10.0:library"))
 
+  testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
+
   testImplementation(project(":instrumentation-annotations-support-testing"))
+  testImplementation(project(":instrumentation-annotations"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }

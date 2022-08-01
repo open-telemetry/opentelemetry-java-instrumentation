@@ -45,12 +45,6 @@ final class ApacheHttpClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLengthUncompressed(HttpMethod request, @Nullable HttpMethod response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public Integer statusCode(HttpMethod request, HttpMethod response) {
     StatusLine statusLine = response.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();
@@ -70,12 +64,6 @@ final class ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public Long responseContentLength(HttpMethod request, HttpMethod response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(HttpMethod request, HttpMethod response) {
     return null;
   }
 

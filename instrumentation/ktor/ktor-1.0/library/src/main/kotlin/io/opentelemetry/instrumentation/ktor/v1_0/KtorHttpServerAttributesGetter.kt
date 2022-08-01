@@ -27,19 +27,11 @@ internal enum class KtorHttpServerAttributesGetter :
     return null
   }
 
-  override fun requestContentLengthUncompressed(request: ApplicationRequest, response: ApplicationResponse?): Long? {
-    return null
-  }
-
   override fun statusCode(request: ApplicationRequest, response: ApplicationResponse): Int? {
     return response.status()?.value
   }
 
   override fun responseContentLength(request: ApplicationRequest, response: ApplicationResponse): Long? {
-    return null
-  }
-
-  override fun responseContentLengthUncompressed(request: ApplicationRequest, response: ApplicationResponse): Long? {
     return null
   }
 
