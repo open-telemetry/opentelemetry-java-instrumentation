@@ -26,6 +26,15 @@ import javax.annotation.Nullable;
 public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
+  private static final AttributeKey<String> NET_SOCK_PEER_ADDR =
+      AttributeKey.stringKey("net.sock.peer.addr");
+  public static final AttributeKey<Long> NET_SOCK_PEER_PORT =
+      AttributeKey.longKey("net.sock.peer.port");
+  public static final AttributeKey<String> NET_SOCK_FAMILY =
+      AttributeKey.stringKey("net.sock.family");
+  public static final AttributeKey<String> NET_SOCK_PEER_NAME =
+      AttributeKey.stringKey("net.sock.peer.name");
+
   private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
 
   public static <REQUEST, RESPONSE> NetClientAttributesExtractor<REQUEST, RESPONSE> create(
@@ -61,21 +70,18 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
     String sockPeerAddr = getter.sockPeerAddr(request, response);
     if (sockPeerAddr != null && !sockPeerAddr.equals(peerName)) {
-      internalSet(attributes, AttributeKey.stringKey("net.sock.peer.addr"), sockPeerAddr);
+      internalSet(attributes, NET_SOCK_PEER_ADDR, sockPeerAddr);
 
       Integer sockPeerPort = getter.sockPeerPort(request, response);
-      if (sockPeerPort != null && !sockPeerPort.equals(peerPort)) {
-        internalSet(attributes, AttributeKey.longKey("net.sock.peer.port"), (long) sockPeerPort);
+      if (sockPeerPort != null && sockPeerPort > 0 && !sockPeerPort.equals(peerPort)) {
+        internalSet(attributes, NET_SOCK_PEER_PORT, (long) sockPeerPort);
       }
 
-      internalSet(
-          attributes,
-          AttributeKey.stringKey("net.sock.family"),
-          getter.sockFamily(request, response));
+      internalSet(attributes, NET_SOCK_FAMILY, getter.sockFamily(request, response));
 
       String sockPeerName = getter.sockPeerName(request, response);
       if (sockPeerName != null && !sockPeerName.equals(peerName)) {
-        internalSet(attributes, AttributeKey.stringKey("net.sock.peer.name"), sockPeerName);
+        internalSet(attributes, NET_SOCK_PEER_NAME, sockPeerName);
       }
     }
   }

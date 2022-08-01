@@ -20,9 +20,21 @@ public interface NetServerAttributesGetter<REQUEST> {
   @Nullable
   String transport(REQUEST request);
 
+  /**
+   * @deprecated implement {@link #sockPeerAddr(Object)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String peerIp(REQUEST request) {
+    return null;
+  }
+
   @Nullable
   Integer sockPeerPort(REQUEST request);
 
   @Nullable
-  String sockPeerAddr(REQUEST request);
+  default String sockPeerAddr(REQUEST request) {
+    // TODO (trask) remove default after removing peerIp() method
+    return peerIp(request);
+  }
 }

@@ -23,6 +23,10 @@ import javax.annotation.Nullable;
 public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
+  public static final AttributeKey<String> NET_SOCK_PEER_ADDR =
+      AttributeKey.stringKey("net.sock.peer.addr");
+  public static final AttributeKey<Long> NET_SOCK_PEER_PORT =
+      AttributeKey.longKey("net.sock.peer.port");
   private final NetServerAttributesGetter<REQUEST> getter;
 
   public static <REQUEST, RESPONSE> NetServerAttributesExtractor<REQUEST, RESPONSE> create(
@@ -40,11 +44,11 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
 
     String sockPeerAddr = getter.sockPeerAddr(request);
 
-    internalSet(attributes, AttributeKey.stringKey("net.sock.peer.addr"), sockPeerAddr);
+    internalSet(attributes, NET_SOCK_PEER_ADDR, sockPeerAddr);
 
     Integer sockPeerPort = getter.sockPeerPort(request);
     if (sockPeerPort != null && sockPeerPort > 0) {
-      internalSet(attributes, AttributeKey.longKey("net.sock.peer.port"), (long) sockPeerPort);
+      internalSet(attributes, NET_SOCK_PEER_PORT, (long) sockPeerPort);
     }
   }
 
