@@ -9,7 +9,7 @@ import java.io.UnsupportedEncodingException;
 
 public class SnippetHolder {
 
-  private static String snippet = "<script>Testing</script>";
+  private static String snippet = "";
 
   public static void setSnippet(String snippet) {
     SnippetHolder.snippet = snippet;
