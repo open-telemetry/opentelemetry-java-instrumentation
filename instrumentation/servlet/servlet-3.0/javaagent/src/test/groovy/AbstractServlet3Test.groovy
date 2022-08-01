@@ -122,7 +122,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
       "</body>\n" +
       "</html>"
     response.contentUtf8() == result
-    response.headers().contentLength() == result.length();
+    response.headers().contentLength() == result.length()
   }
 
   def "snippet injection with PrintWriter"() {
@@ -146,8 +146,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
       "</html>"
 
     response.contentUtf8() == result
-    response.headers().contentLength() == result.length();
+    response.headers().contentLength() == result.length()
   }
-
-
 }
