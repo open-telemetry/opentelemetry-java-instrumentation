@@ -27,7 +27,7 @@ dependencies {
   // see the comment in opentelemetry-api-1.0.gradle for more details
   compileOnly(project(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
-  testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
+  testImplementation(project(":instrumentation-annotations"))
   testImplementation(project(":instrumentation-annotations-support"))
   testImplementation("net.bytebuddy:byte-buddy")
 }

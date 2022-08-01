@@ -24,7 +24,7 @@ public enum WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
     ClassLoader classLoader = WithSpanParameterAttributeNamesExtractor.class.getClassLoader();
     spanAttributeAnnotation =
         AnnotationReflectionHelper.forNameOrNull(
-            classLoader, "io.opentelemetry.instrumentation.annotations.SpanAttribute");
+            classLoader, "application.io.opentelemetry.instrumentation.annotations.SpanAttribute");
     if (spanAttributeAnnotation != null) {
       spanAttributeValueFunction = resolveSpanAttributeValue(spanAttributeAnnotation);
     } else {
