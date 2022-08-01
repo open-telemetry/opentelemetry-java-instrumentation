@@ -51,8 +51,7 @@ dependencies {
   bootstrapLibs(project(":javaagent-bootstrap"))
 
   // extension-api contains both bootstrap packages and agent packages
-  bootstrapLibs(project(":javaagent-extension-api"))
-  baseJavaagentLibs(project(":javaagent-extension-api")) {
+  bootstrapLibs(project(":javaagent-extension-api")) {
     // exclude javaagent dependencies from the bootstrap classpath
     exclude("net.bytebuddy")
     exclude("org.ow2.asm")
@@ -60,6 +59,7 @@ dependencies {
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure")
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
   }
+  baseJavaagentLibs(project(":javaagent-extension-api"))
 
   baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":muzzle"))
