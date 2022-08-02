@@ -41,7 +41,7 @@ abstract class WildflySmokeTest extends AppServerTest {
   }
 }
 
-class WildflyJdk8SmokeTest extends WildflySmokeTest {
+abstract class WildflyJdk8SmokeTest extends WildflySmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     // https://github.com/openjdk/jdk8u/commit/d72d28967d732ba32e02178b828255378c5a8938
@@ -73,7 +73,7 @@ class Wildfly17Jdk17 extends WildflySmokeTest {
 
 // TODO (trask) remove Java 18 test once Java 19 is GA
 @AppServer(version = "17.0.1.Final", jdk = "18")
-class Wildfly17Jdk18 extends WildflySmokeTest {
+class Wildfly17Jdk18 extends WildflyJdk8SmokeTest {
 }
 
 @AppServer(version = "17.0.1.Final", jdk = "19")
@@ -94,7 +94,7 @@ class Wildfly21Jdk17 extends WildflySmokeTest {
 
 // TODO (trask) remove Java 18 test once Java 19 is GA
 @AppServer(version = "21.0.0.Final", jdk = "18")
-class Wildfly21Jdk18 extends WildflySmokeTest {
+class Wildfly21Jdk18 extends WildflyJdk8SmokeTest {
 }
 
 @AppServer(version = "21.0.0.Final", jdk = "19")
@@ -115,7 +115,7 @@ class Wildfly25Jdk17 extends WildflySmokeTest {
 
 // TODO (trask) remove Java 18 test once Java 19 is GA
 @AppServer(version = "25.0.1.Final", jdk = "18")
-class Wildfly25Jdk18 extends WildflySmokeTest {
+class Wildfly25Jdk18 extends WildflyJdk8SmokeTest {
 }
 
 @AppServer(version = "25.0.1.Final", jdk = "19")
