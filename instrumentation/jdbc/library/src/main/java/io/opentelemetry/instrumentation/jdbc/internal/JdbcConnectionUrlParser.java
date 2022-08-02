@@ -966,6 +966,8 @@ public enum JdbcConnectionUrlParser {
       case "microsoft":
       case "sqlserver": // Microsoft SQL Server
         return DbSystemValues.MSSQL;
+      case "sap": // SAP Hana
+        return DbSystemValues.HANADB;
       default:
         return DbSystemValues.OTHER_SQL; // Unknown DBMS
     }
