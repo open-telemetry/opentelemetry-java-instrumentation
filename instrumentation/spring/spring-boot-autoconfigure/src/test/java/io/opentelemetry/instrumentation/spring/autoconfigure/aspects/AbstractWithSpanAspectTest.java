@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -39,8 +40,6 @@ abstract class AbstractWithSpanAspectTest {
   private String unproxiedTesterSimpleClassName;
   private String unproxiedTesterClassName;
 
-  abstract WithSpanTester newWithSpanTester();
-
   public interface WithSpanTester {
     String testWithSpan();
 
@@ -61,6 +60,11 @@ abstract class AbstractWithSpanAspectTest {
         String nullAttribute,
         String notTraced);
   }
+
+  abstract WithSpanTester newWithSpanTester();
+
+  abstract WithSpanAspect newWithSpanAspect(
+      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer);
 
   @BeforeEach
   void setup() {
@@ -83,7 +87,7 @@ abstract class AbstractWithSpanAspectTest {
           }
         };
 
-    WithSpanAspect aspect = new WithSpanAspect(testing.getOpenTelemetry(), parameterNameDiscoverer);
+    WithSpanAspect aspect = newWithSpanAspect(testing.getOpenTelemetry(), parameterNameDiscoverer);
     factory.addAspect(aspect);
 
     withSpanTester = factory.getProxy();
