@@ -636,7 +636,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "testdb"
+            "$SemanticAttributes.DB_SYSTEM" "other_sql"
             "$SemanticAttributes.DB_STATEMENT" "testing ?"
             "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
@@ -677,7 +677,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "testdb"
+            "$SemanticAttributes.DB_SYSTEM" "other_sql"
             "$SemanticAttributes.DB_NAME" databaseName
             "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
             "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
@@ -783,7 +783,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "testdb"
+            "$SemanticAttributes.DB_SYSTEM" "other_sql"
             "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
             "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
             "$SemanticAttributes.DB_OPERATION" "SELECT"
