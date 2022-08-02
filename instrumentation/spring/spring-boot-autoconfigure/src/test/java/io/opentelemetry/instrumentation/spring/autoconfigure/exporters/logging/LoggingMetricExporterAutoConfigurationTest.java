@@ -60,9 +60,6 @@ class LoggingMetricExporterAutoConfigurationTest {
 
   @Test
   void noProperties() {
-    runner.run(
-        context ->
-            assertThat(context.getBean("otelLoggingMetricExporter", LoggingMetricExporter.class))
-                .isNotNull());
+    runner.run(context -> assertThat(context.containsBean("otelLoggingMetricExporter")).isFalse());
   }
 }
