@@ -19,35 +19,13 @@ final class JoinPointRequest {
   private final String spanName;
   private final SpanKind spanKind;
 
-  JoinPointRequest(JoinPoint joinPoint) {
-    this.joinPoint = joinPoint;
-    MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-    this.method = methodSignature.getMethod();
-
-    // in rare cases, when interface method does not have annotations but the implementation does,
-    // and the AspectJ factory is configured to proxy interfaces, this class will receive the
-    // abstract interface method (without annotations) instead of the implementation method (with
-    // annotations); these defaults prevent NPEs in this scenario
-    String spanName = "";
-    SpanKind spanKind = SpanKind.INTERNAL;
-
-    io.opentelemetry.extension.annotations.WithSpan oldAnnotation =
-        this.method.getDeclaredAnnotation(io.opentelemetry.extension.annotations.WithSpan.class);
-    if (oldAnnotation != null) {
-      spanName = oldAnnotation.value();
-      spanKind = oldAnnotation.kind();
-    }
-
-    WithSpan annotation = this.method.getDeclaredAnnotation(WithSpan.class);
-    if (annotation != null) {
-      spanName = annotation.value();
-      spanKind = annotation.kind();
-    }
-
+  private JoinPointRequest(JoinPoint joinPoint, Method method, String spanName, SpanKind spanKind) {
     if (spanName.isEmpty()) {
       spanName = SpanNames.fromMethod(method);
     }
 
+    this.joinPoint = joinPoint;
+    this.method = method;
     this.spanName = spanName;
     this.spanKind = spanKind;
   }
@@ -66,5 +44,49 @@ final class JoinPointRequest {
 
   Object[] args() {
     return joinPoint.getArgs();
+  }
+
+  interface Factory {
+
+    JoinPointRequest create(JoinPoint joinPoint);
+  }
+
+  static final class InstrumentationAnnotationFactory implements Factory {
+
+    @Override
+    public JoinPointRequest create(JoinPoint joinPoint) {
+      MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+      Method method = methodSignature.getMethod();
+
+      // in rare cases, when interface method does not have annotations but the implementation does,
+      // and the AspectJ factory is configured to proxy interfaces, this class will receive the
+      // abstract interface method (without annotations) instead of the implementation method (with
+      // annotations); these defaults prevent NPEs in this scenario
+      WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
+      String spanName = annotation != null ? annotation.value() : "";
+      SpanKind spanKind = annotation != null ? annotation.kind() : SpanKind.INTERNAL;
+
+      return new JoinPointRequest(joinPoint, method, spanName, spanKind);
+    }
+  }
+
+  static final class SdkExtensionAnnotationFactory implements Factory {
+
+    @Override
+    public JoinPointRequest create(JoinPoint joinPoint) {
+      MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+      Method method = methodSignature.getMethod();
+
+      // in rare cases, when interface method does not have annotations but the implementation does,
+      // and the AspectJ factory is configured to proxy interfaces, this class will receive the
+      // abstract interface method (without annotations) instead of the implementation method (with
+      // annotations); these defaults prevent NPEs in this scenario
+      io.opentelemetry.extension.annotations.WithSpan annotation =
+          method.getDeclaredAnnotation(io.opentelemetry.extension.annotations.WithSpan.class);
+      String spanName = annotation != null ? annotation.value() : "";
+      SpanKind spanKind = annotation != null ? annotation.kind() : SpanKind.INTERNAL;
+
+      return new JoinPointRequest(joinPoint, method, spanName, spanKind);
+    }
   }
 }

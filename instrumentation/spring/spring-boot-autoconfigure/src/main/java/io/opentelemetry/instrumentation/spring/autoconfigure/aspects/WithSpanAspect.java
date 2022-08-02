@@ -16,8 +16,6 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /**
@@ -30,17 +28,22 @@ import org.springframework.core.ParameterNameDiscoverer;
  * <p>Note: This Aspect uses spring-aop to proxy beans. Therefore, the {@link WithSpan} annotation
  * can not be applied to constructors.
  */
-@Aspect
-public class WithSpanAspect {
+abstract class WithSpanAspect {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-boot-autoconfigure";
 
   private final Instrumenter<JoinPointRequest, Object> instrumenter;
+  private final JoinPointRequest.Factory requestFactory;
 
-  public WithSpanAspect(
-      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
+  WithSpanAspect(
+      OpenTelemetry openTelemetry,
+      ParameterNameDiscoverer parameterNameDiscoverer,
+      JoinPointRequest.Factory requestFactory,
+      WithSpanAspectParameterAttributeNamesExtractor.SpanAttributeNameSupplier
+          spanAttributeNameSupplier) {
 
     ParameterAttributeNamesExtractor parameterAttributeNamesExtractor =
-        new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer);
+        new WithSpanAspectParameterAttributeNamesExtractor(
+            parameterNameDiscoverer, spanAttributeNameSupplier);
 
     instrumenter =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, JoinPointRequest::spanName)
@@ -52,14 +55,11 @@ public class WithSpanAspect {
                     parameterAttributeNamesExtractor,
                     JoinPointRequest::args))
             .buildInstrumenter(JoinPointRequest::spanKind);
+    this.requestFactory = requestFactory;
   }
 
-  @Around(
-      "@annotation(io.opentelemetry.extension.annotations.WithSpan) || "
-          + "@annotation(io.opentelemetry.instrumentation.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
-
-    JoinPointRequest request = new JoinPointRequest(pjp);
+    JoinPointRequest request = requestFactory.create(pjp);
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return pjp.proceed();
