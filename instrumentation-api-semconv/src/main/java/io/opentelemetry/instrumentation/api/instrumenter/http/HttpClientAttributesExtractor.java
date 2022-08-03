@@ -54,7 +54,15 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
-    internalSet(attributes, SemanticAttributes.HTTP_URL, getter.url(request));
+    internalSet(attributes, SemanticAttributes.HTTP_URL, stripSensitiveData(getter.url(request)));
+  }
+
+  private static String stripSensitiveData(String url) {
+    if (url.isEmpty() || url == null) {
+      return url;
+    }
+    // replace username & password
+    return url.replaceFirst("(?<=\\/\\/)(.+)(?=@)", "username:password");
   }
 
   @Override

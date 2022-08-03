@@ -141,6 +141,21 @@ class HttpClientAttributesExtractorTest {
   }
 
   @Test
+  public void stripBasicAuthTest() {
+    Map<String, String> request = new HashMap<>();
+    request.put("url", "https://user1:secret@github.com");
+
+    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter()).build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(SemanticAttributes.HTTP_URL, "https://username:password@github.com"));
+  }
+
+  @Test
   void invalidStatusCode() {
     Map<String, String> request = new HashMap<>();
 
