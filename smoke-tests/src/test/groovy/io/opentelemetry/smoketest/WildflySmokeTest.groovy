@@ -47,7 +47,8 @@ abstract class WildflyJdk8SmokeTest extends WildflySmokeTest {
     // https://github.com/openjdk/jdk8u/commit/d72d28967d732ba32e02178b828255378c5a8938
     // introduces a changes that causes wildfly to throw java.io.FileNotFoundException: Invalid file
     // path on windows
-    return Collections.singletonMap("JAVA_OPTS", "-Djdk.io.File.enableADS=true")
+    return Collections.singletonMap("JAVA_OPTS", "-Djdk.io.File.enableADS=true " +
+      "-Djava.net.preferIPv4Stack=true -Djava.awt.headless=true")
   }
 }
 
