@@ -42,9 +42,6 @@ abstract class HttpCommonAttributesExtractor<
     internalSet(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
     internalSet(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
 
-    internalSet(
-        attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestContentLength(request));
-
     for (String name : capturedRequestHeaders) {
       List<String> values = getter.requestHeader(request, name);
       if (!values.isEmpty()) {
@@ -60,6 +57,9 @@ abstract class HttpCommonAttributesExtractor<
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+
+    internalSet(
+        attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestContentLength(request));
 
     if (response != null) {
       Integer statusCode = getter.statusCode(request, response);

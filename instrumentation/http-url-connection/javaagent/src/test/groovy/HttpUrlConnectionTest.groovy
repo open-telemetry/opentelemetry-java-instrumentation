@@ -249,6 +249,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -314,6 +315,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
