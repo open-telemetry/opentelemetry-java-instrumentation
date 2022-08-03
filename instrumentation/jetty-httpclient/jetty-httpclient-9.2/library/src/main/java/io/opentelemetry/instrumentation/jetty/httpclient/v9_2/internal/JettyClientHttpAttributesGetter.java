@@ -17,7 +17,6 @@ import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpVersion;
 
 enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
@@ -41,13 +40,6 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
   @Override
   public List<String> requestHeader(Request request, String name) {
     return request.getHeaders().getValuesList(name);
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    HttpField requestContentLengthField = request.getHeaders().getField(HttpHeader.CONTENT_LENGTH);
-    return getLongFromJettyHttpField(requestContentLengthField);
   }
 
   @Override
@@ -77,18 +69,6 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
   @Override
   public Integer statusCode(Request request, Response response) {
     return response.getStatus();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(Request request, Response response) {
-    Long respContentLength = null;
-    if (response != null) {
-      HttpField requestContentLengthField =
-          response.getHeaders().getField(HttpHeader.CONTENT_LENGTH);
-      respContentLength = getLongFromJettyHttpField(requestContentLengthField);
-    }
-    return respContentLength;
   }
 
   @Override

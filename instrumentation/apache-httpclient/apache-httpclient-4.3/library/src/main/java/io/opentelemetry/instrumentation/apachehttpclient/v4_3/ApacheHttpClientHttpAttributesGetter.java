@@ -33,13 +33,6 @@ enum ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(ApacheHttpClientRequest request, HttpResponse response) {
     return response.getStatusLine().getStatusCode();
   }
@@ -48,12 +41,6 @@ enum ApacheHttpClientHttpAttributesGetter
   @Nullable
   public String flavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getFlavor();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(ApacheHttpClientRequest request, HttpResponse response) {
-    return null;
   }
 
   @Override

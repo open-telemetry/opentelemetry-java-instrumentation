@@ -25,13 +25,6 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLength(
-      LibertyRequest libertyRequest, @Nullable LibertyResponse libertyResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(LibertyRequest libertyRequest) {
     String flavor = libertyRequest.getProtocol();
     if (flavor != null) {
@@ -47,13 +40,6 @@ public class LibertyDispatcherHttpAttributesGetter
   @Nullable
   public Integer statusCode(LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
     return libertyResponse.getStatus();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(
-      LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
-    return null;
   }
 
   @Override

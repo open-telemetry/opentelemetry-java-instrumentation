@@ -43,12 +43,6 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    public Long requestContentLength(Map<String, String> request, Map<String, String> response) {
-      String value = request.get("requestContentLength");
-      return value == null ? null : Long.parseLong(value);
-    }
-
-    @Override
     public Integer statusCode(Map<String, String> request, Map<String, String> response) {
       return Integer.parseInt(response.get("statusCode"));
     }
@@ -56,12 +50,6 @@ class HttpClientAttributesExtractorTest {
     @Override
     public String flavor(Map<String, String> request, Map<String, String> response) {
       return request.get("flavor");
-    }
-
-    @Override
-    public Long responseContentLength(Map<String, String> request, Map<String, String> response) {
-      String value = response.get("responseContentLength");
-      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
@@ -77,14 +65,14 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
     request.put("url", "http://github.com");
-    request.put("requestContentLength", "10");
+    request.put("header.content-length", "10");
     request.put("flavor", "http/2");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
-    response.put("responseContentLength", "20");
+    response.put("header.content-length", "20");
     response.put("header.custom-response-header", "654,321");
 
     HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
@@ -100,6 +88,7 @@ class HttpClientAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_URL, "http://github.com"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
+            entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")));

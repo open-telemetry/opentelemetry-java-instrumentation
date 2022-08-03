@@ -14,14 +14,10 @@ import com.linecorp.armeria.common.HttpMethod;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.util.Exceptions;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,12 +100,6 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     // armeria requests can't be reused
     options.disableTestReusedRequest();
     options.enableTestReadTimeout();
-
-    Set<AttributeKey<?>> extra = new HashSet<>();
-    extra.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
-    extra.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
-    extra.addAll(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    options.setHttpAttributes(unused -> extra);
   }
 
   @Test

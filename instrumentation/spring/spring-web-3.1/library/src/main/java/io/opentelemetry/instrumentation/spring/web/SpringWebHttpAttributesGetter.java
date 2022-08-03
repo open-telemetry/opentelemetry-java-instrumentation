@@ -37,13 +37,6 @@ enum SpringWebHttpAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLength(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
     return null;
   }
@@ -55,13 +48,6 @@ enum SpringWebHttpAttributesGetter
     } catch (IOException e) {
       return HttpStatus.INTERNAL_SERVER_ERROR.value();
     }
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(
-      HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
-    return null;
   }
 
   @Override
