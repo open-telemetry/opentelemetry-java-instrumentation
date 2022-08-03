@@ -40,10 +40,27 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: assemble -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          arguments: assemble generateLicenseReport -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
+
+      - name: Check licenses
+        run: |
+          # add any untracked folders that may have been added by generateLicenseReport
+          git add licenses
+          # there's always going to one line difference due to the timestamp included in the report
+          if [[ $(git diff --cached --shortstat licenses) == " 1 file changed, 1 insertion(+), 1 deletion(-)" ]]
+          then
+            echo "Licenses are up-to-date."
+          else
+            echo "Licenses are not up-to-date, please run './gradlew generateLicenseReport' locally and commit."
+            echo
+            echo $(git diff --cached --stat licenses)
+            echo
+            echo $(git diff --cached licenses)
+            exit 1
+          fi
 
       - name: Upload deadlock detector artifacts if any
         if: always()
