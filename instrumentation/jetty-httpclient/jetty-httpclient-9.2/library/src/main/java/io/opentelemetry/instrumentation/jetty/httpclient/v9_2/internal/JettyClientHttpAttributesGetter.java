@@ -8,22 +8,16 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_0;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_2_0;
-import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpVersion;
 
 enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
   INSTANCE;
-
-  private static final Logger logger =
-      Logger.getLogger(JettyClientHttpAttributesGetter.class.getName());
 
   @Override
   @Nullable
@@ -74,20 +68,5 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
   @Override
   public List<String> responseHeader(Request request, Response response, String name) {
     return response.getHeaders().getValuesList(name);
-  }
-
-  private static Long getLongFromJettyHttpField(HttpField httpField) {
-    Long longFromField = null;
-    try {
-      longFromField = httpField != null ? Long.getLong(httpField.getValue()) : null;
-    } catch (NumberFormatException t) {
-      if (logger.isLoggable(FINE)) {
-        logger.log(
-            FINE,
-            "Value {0} is not valid number format for header field: {1}",
-            new Object[] {httpField.getValue(), httpField.getName()});
-      }
-    }
-    return longFromField;
   }
 }
