@@ -27,6 +27,10 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   private static final int SNIPPET_LENGTH = SNIPPET.length();
   @Nullable private static final MethodHandle setContentLengthLongHandler = getMethodHandle();
 
+  public long contentLength = 0;
+  public boolean injected = false;
+  public boolean addLengthAlready = false;
+
   private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
   public SnippetInjectingResponseWrapper(HttpServletResponse response) {
@@ -51,10 +55,19 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void setHeader(String name, String value) {
     if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
-      try {
-        value = Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value));
-      } catch (NumberFormatException ex) {
-        logger.log(FINE, "NumberFormatException", ex);
+      if (injected && !addLengthAlready) {
+        try {
+          value = Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value));
+          addLengthAlready = true;
+        } catch (NumberFormatException ex) {
+          logger.log(FINE, "NumberFormatException", ex);
+        }
+      } else {
+        try {
+          contentLength = Long.parseLong(Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value)));
+        } catch (NumberFormatException ex) {
+          logger.log(FINE, "NumberFormatException", ex);
+        }
       }
     }
     super.setHeader(name, value);
@@ -63,10 +76,19 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void addHeader(String name, String value) {
     if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
-      try {
-        value = Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value));
-      } catch (NumberFormatException ex) {
-        logger.log(FINE, "Invalid string format", ex);
+      if (injected && !addLengthAlready) {
+        try {
+          value = Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value));
+          addLengthAlready = true;
+        } catch (NumberFormatException ex) {
+          logger.log(FINE, "NumberFormatException", ex);
+        }
+      } else {
+        try {
+          contentLength = Long.parseLong(Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value)));
+        } catch (NumberFormatException ex) {
+          logger.log(FINE, "NumberFormatException", ex);
+        }
       }
     }
     super.addHeader(name, value);
@@ -75,7 +97,12 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void setIntHeader(String name, int value) {
     if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
-      value += SNIPPET_LENGTH;
+      if (injected && !addLengthAlready) {
+        value += SNIPPET_LENGTH;
+        addLengthAlready = true;
+      } else {
+        contentLength = value;
+      }
     }
     super.setIntHeader(name, value);
   }
@@ -83,15 +110,27 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void addIntHeader(String name, int value) {
     if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
-      value += SNIPPET_LENGTH;
+      if (injected && !addLengthAlready) {
+        value += SNIPPET_LENGTH;
+        addLengthAlready = true;
+      } else {
+        contentLength = value;
+      }
     }
     super.addIntHeader(name, value);
   }
 
   @Override
   public void setContentLength(int len) {
+    System.out.println(
+        "setContentLength" + len + "injected" + injected + "addLengthAlready" + addLengthAlready);
     if (isContentTypeTextHtml()) {
-      len += SNIPPET_LENGTH;
+      if (injected && !addLengthAlready) {
+        len += SNIPPET_LENGTH;
+        addLengthAlready = true;
+      } else {
+        contentLength = len;
+      }
     }
     super.setContentLength(len);
   }
@@ -111,23 +150,28 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     }
   }
 
-  public boolean isContentTypeTextHtml() {
-    String contentType = super.getContentType();
-    if (contentType == null) {
-      contentType = super.getHeader("content-type");
-    }
-    return contentType != null && contentType.startsWith("text/html");
-  }
-
   public void setContentLengthLong(long length) throws Throwable {
     if (isContentTypeTextHtml()) {
-      length += SNIPPET_LENGTH;
+      if (injected && !addLengthAlready) {
+        length += SNIPPET_LENGTH;
+        addLengthAlready = true;
+      } else {
+        contentLength = length;
+      }
     }
     if (setContentLengthLongHandler == null) {
       super.setContentLength((int) length);
     } else {
       setContentLengthLongHandler.invokeWithArguments(this, length);
     }
+  }
+
+  public boolean isContentTypeTextHtml() {
+    String contentType = super.getContentType();
+    if (contentType == null) {
+      contentType = super.getHeader("content-type");
+    }
+    return contentType != null && contentType.startsWith("text/html");
   }
 
   @Override
@@ -144,7 +188,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     }
     if (snippetInjectingPrintWriter == null) {
       snippetInjectingPrintWriter =
-          new SnippetInjectingPrintWriter(super.getWriter(), SNIPPET, super.getCharacterEncoding());
+          new SnippetInjectingPrintWriter(super.getWriter(), SNIPPET, this);
     }
     return snippetInjectingPrintWriter;
   }

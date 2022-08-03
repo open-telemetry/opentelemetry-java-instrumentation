@@ -173,7 +173,6 @@ class TestServlet3 {
               case HTML2:
                 resp.contentType = "text/html"
                 resp.status = endpoint.status
-                resp.setContentLengthLong(endpoint.body.length())
                 resp.getOutputStream().print(endpoint.body)
                 context.complete()
                 break
