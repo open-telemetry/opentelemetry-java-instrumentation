@@ -119,6 +119,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(2) {
@@ -140,6 +141,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(4) {
@@ -156,7 +158,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
     useCaches << [false, true]
   }
 
-  def "test broken API usage"() {
+  def "test broken API usage (#iteration)"() {
     setup:
     def url = resolveAddress("/success").toURL()
     HttpURLConnection connection = runWithSpan("someTrace") {
@@ -188,6 +190,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         serverSpan(it, 2, span(1))
@@ -246,6 +249,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(2) {
@@ -310,6 +314,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" STATUS
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(2) {
