@@ -16,7 +16,6 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 import java.nio.file.Files
-import java.time.Duration
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
@@ -145,15 +144,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
   }
 
   def "non-erroneous GET forward to plain HTML"() {
-//    setup:
-//    SnippetHolder.setSnippet("  ")
     when:
-    AggregatedHttpResponse res = client.prepare()
-      .writeTimeout(Duration.ofMinutes(2))
-      .responseTimeout(Duration.ofMinutes(2))
-      .get("/forwards/forwardToHtml.jsp")
-      .execute().aggregate().join()
-    //AggregatedHttpResponse res = client.get("/forwards/forwardToHtml.jsp").aggregate().join()
+    AggregatedHttpResponse res = client.get("/forwards/forwardToHtml.jsp").aggregate().join()
 
     then:
     assertTraces(1) {

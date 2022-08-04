@@ -22,7 +22,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
-  testImplementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   // using tomcat 7.0.37 because there seems to be some issues with Tomcat's jar scanning in versions < 7.0.37
   // https://stackoverflow.com/questions/23484098/org-apache-tomcat-util-bcel-classfile-classformatexception-invalid-byte-tag-in
