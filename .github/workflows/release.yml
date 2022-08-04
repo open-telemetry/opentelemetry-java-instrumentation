@@ -34,7 +34,8 @@ jobs:
   release:
     needs:
       - assemble
-      - test
+      - test-java8
+      - test-java11
       - smoke-test
       - gradle-plugins
 #      - examples
@@ -101,7 +102,6 @@ jobs:
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}-SNAPSHOT.jar opentelemetry-javaagent.jar
           gh release create --target $GITHUB_REF_NAME \
                             --title "Version $VERSION" \
-                            --notes-file /tmp/release-notes.txt \
                             v$VERSION \
                             opentelemetry-javaagent.jar
 

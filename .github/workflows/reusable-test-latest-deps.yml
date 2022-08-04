@@ -1,6 +1,7 @@
 name: Reusable - Test latest deps
 
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       skip:

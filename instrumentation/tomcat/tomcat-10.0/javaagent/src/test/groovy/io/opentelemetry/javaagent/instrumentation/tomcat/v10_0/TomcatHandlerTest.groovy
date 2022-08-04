@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0
 
-
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
 import org.apache.catalina.connector.Response
@@ -75,6 +76,20 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
 
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
+    SpanData span = trace.span(0)
+    String requestHeaders = ""
+    String responseHeaders = ""
+    for (Map.Entry<AttributeKey, Object> entry : span.getAttributes().asMap().entrySet()) {
+      if (entry.key.key == "http.request.headers") {
+        requestHeaders = entry.value
+      } else if (entry.key.key == "http.response.headers") {
+        responseHeaders = entry.value
+      }
+    }
+
+    assert requestHeaders.length() > 0
+    assert responseHeaders.length() > 0
+
     switch (endpoint) {
       case REDIRECT:
         redirectSpan(trace, index, parent)
