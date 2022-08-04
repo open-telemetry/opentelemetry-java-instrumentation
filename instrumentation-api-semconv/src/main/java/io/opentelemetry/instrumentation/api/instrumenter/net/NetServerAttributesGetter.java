@@ -20,7 +20,6 @@ public interface NetServerAttributesGetter<REQUEST> {
   @Nullable
   String transport(REQUEST request);
 
-
   /**
    * @deprecated implement {@link #sockPeerPort(Object)} instead.
    */
