@@ -64,8 +64,20 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
    * {@code response} is non-{@code null}.
    */
+  // TODO: deprecate this method and use the new one everywhere
   @Nullable
   Integer statusCode(REQUEST request, RESPONSE response);
+
+  /**
+   * Extracts the {@code http.status_code} span attribute.
+   *
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
+   * {@code response} is non-{@code null}.
+   */
+  @Nullable
+  default Integer statusCode(REQUEST request, RESPONSE response, @Nullable Throwable error) {
+    return statusCode(request, response);
+  }
 
   /**
    * Extracts the {@code http.response_content_length} span attribute.

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc;
+package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -36,7 +36,7 @@ public final class SpringWebMvcTelemetry {
   }
 
   /** Returns a new {@link Filter} that generates telemetry for received HTTP requests. */
-  public Filter newServletFilter() {
-    return new WebMvcTracingFilter(instrumenter);
+  public Filter createServletFilter() {
+    return new WebMvcTelemetryProducingFilter(instrumenter);
   }
 }

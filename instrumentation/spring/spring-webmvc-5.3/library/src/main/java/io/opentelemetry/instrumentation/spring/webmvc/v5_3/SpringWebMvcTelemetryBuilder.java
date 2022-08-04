@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc;
+package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -81,9 +81,8 @@ public final class SpringWebMvcTelemetryBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-            .addAttributesExtractor(new StatusCodeExtractor())
             .addAttributesExtractor(
-                NetServerAttributesExtractor.create(new SpringWebMvcNetAttributesGetter()))
+                NetServerAttributesExtractor.create(SpringWebMvcNetAttributesGetter.INSTANCE))
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get())

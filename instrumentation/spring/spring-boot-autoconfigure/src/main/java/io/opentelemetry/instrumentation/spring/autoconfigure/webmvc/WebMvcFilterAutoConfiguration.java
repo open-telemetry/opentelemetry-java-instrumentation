@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.webmvc.SpringWebMvcTelemetry;
+import io.opentelemetry.instrumentation.spring.webmvc.v5_3.SpringWebMvcTelemetry;
 import javax.servlet.Filter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -27,11 +27,6 @@ public class WebMvcFilterAutoConfiguration {
 
   @Bean
   public Filter otelWebMvcTracingFilter(OpenTelemetry openTelemetry) {
-    return SpringWebMvcTelemetry.create(openTelemetry).newServletFilter();
-  }
-
-  @Bean
-  Filter otelHttpRouteFilter() {
-    return new HttpRouteFilter();
+    return SpringWebMvcTelemetry.create(openTelemetry).createServletFilter();
   }
 }

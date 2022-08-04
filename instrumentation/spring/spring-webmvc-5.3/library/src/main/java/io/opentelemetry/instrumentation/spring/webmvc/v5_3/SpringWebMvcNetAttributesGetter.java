@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc;
+package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 
-final class SpringWebMvcNetAttributesGetter
-    implements NetServerAttributesGetter<HttpServletRequest> {
+enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpServletRequest> {
+  INSTANCE;
+
   @Override
   public String transport(HttpServletRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

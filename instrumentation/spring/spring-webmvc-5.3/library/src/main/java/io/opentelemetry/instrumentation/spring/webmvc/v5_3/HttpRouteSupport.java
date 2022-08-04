@@ -3,32 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
+package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
 import static java.util.Objects.requireNonNull;
 import static org.springframework.web.util.ServletRequestPathUtils.PATH_ATTRIBUTE;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.Ordered;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -38,15 +28,14 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.ServletRequestPathUtils;
 
-final class HttpRouteFilter implements Filter, Ordered {
+final class HttpRouteSupport {
 
   private final AtomicBoolean contextRefreshTriggerred = new AtomicBoolean();
   @Nullable private WeakReference<DispatcherServlet> dispatcherServlet;
   @Nullable private volatile List<HandlerMapping> handlerMappings;
   private volatile boolean parseRequestPath;
 
-  @Override
-  public void init(FilterConfig filterConfig) {
+  void onFilterInit(FilterConfig filterConfig) {
     WebApplicationContext context =
         WebApplicationContextUtils.getWebApplicationContext(filterConfig.getServletContext());
     if (!(context instanceof ConfigurableWebApplicationContext)) {
@@ -74,36 +63,7 @@ final class HttpRouteFilter implements Filter, Ordered {
     }
   }
 
-  @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
-      throws ServletException, IOException {
-
-    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
-      filterChain.doFilter(request, response);
-      return;
-    }
-
-    try {
-      filterChain.doFilter(request, response);
-    } finally {
-      if (hasMappings()) {
-        Context context = Context.current();
-        HttpRouteHolder.updateHttpRoute(
-            context, CONTROLLER, this::getHttpRoute, (HttpServletRequest) request);
-      }
-    }
-  }
-
-  @Override
-  public void destroy() {}
-
-  @Override
-  public int getOrder() {
-    // Run after the main instrumentation filter
-    return Ordered.HIGHEST_PRECEDENCE + 2;
-  }
-
-  private boolean hasMappings() {
+  boolean hasMappings() {
     if (contextRefreshTriggerred.compareAndSet(true, false)) {
       // reload the handler mappings only if the web app context was recently refreshed
       Optional.ofNullable(dispatcherServlet)
@@ -135,7 +95,7 @@ final class HttpRouteFilter implements Filter, Ordered {
   }
 
   @Nullable
-  private String getHttpRoute(Context context, HttpServletRequest request) {
+  String getHttpRoute(Context context, HttpServletRequest request) {
     boolean parsePath = this.parseRequestPath;
     Object previousValue = null;
     if (parsePath) {
