@@ -78,6 +78,8 @@ tasks {
         // We don't get much benefit from it anyways.
         disable("InlineMeSuggester")
 
+        disable("DoNotCallSuggester")
+
         // We have nullaway so don't need errorprone nullable checks which have more false positives.
         disable("FieldMissingNullable")
         disable("ParameterMissingNullable")
