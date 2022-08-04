@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -328,6 +329,24 @@ public abstract class AbstractHttpServerTest<SERVER> {
     assertThat(response.headers().get("X-Test-Response")).isEqualTo("test");
 
     assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS, response);
+  }
+
+  @Test
+  void captureBody() {
+    assumeTrue(options.testCaptureBody);
+
+    AggregatedHttpRequest request =
+            AggregatedHttpRequest.of(
+                    RequestHeaders.builder(HttpMethod.POST, resolveAddress(CAPTURE_BODY))
+                            .contentType(MediaType.JSON)
+                            .build(),
+                    HttpData.ofUtf8(CAPTURE_BODY.getBody()));
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(CAPTURE_BODY.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(CAPTURE_BODY.getBody());
+
+    assertTheTraces(1, null, null, "POST", CAPTURE_BODY, response);
   }
 
   @Test

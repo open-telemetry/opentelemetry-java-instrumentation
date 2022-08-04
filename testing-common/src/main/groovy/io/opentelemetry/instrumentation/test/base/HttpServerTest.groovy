@@ -120,6 +120,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
+  boolean testCapturedBody() {
+    false
+  }
+
   boolean testErrorBody() {
     true
   }
@@ -208,6 +212,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.testPathParam = testPathParam()
       options.testCaptureHttpHeaders = testCapturedHttpHeaders()
       options.testCaptureRequestParameters = testCapturedRequestParameters()
+      options.testCaptureBody = testCapturedBody()
     }
 
     // Override trace assertion method. We can call java assertions from groovy but not the other
@@ -297,6 +302,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     assumeTrue(testCapturedRequestParameters())
     expect:
     junitTest.captureRequestParameters()
+  }
+
+  def "test captured body"() {
+    assumeTrue(testCapturedBody())
+    expect:
+    junitTest.captureBody()
   }
 
   def "high concurrency test"() {

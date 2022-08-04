@@ -50,6 +50,7 @@ public final class HttpServerTestOptions {
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
+  boolean testCaptureBody = false;
 
   HttpServerTestOptions() {}
 
@@ -145,6 +146,11 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setTestCaptureRequestParameters(
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;
+    return this;
+  }
+
+  public HttpServerTestOptions setTestCaptureBody(boolean testCaptureBody) {
+    this.testCaptureBody = testCaptureBody;
     return this;
   }
 }
