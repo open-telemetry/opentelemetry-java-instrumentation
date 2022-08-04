@@ -64,7 +64,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -88,7 +88,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -112,7 +112,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -136,7 +136,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -160,7 +160,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -183,7 +183,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -206,7 +206,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -228,7 +228,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -256,7 +256,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -279,7 +279,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -302,7 +302,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -325,7 +325,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -348,7 +348,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -401,7 +401,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -424,7 +424,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -447,7 +447,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -469,7 +469,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -491,7 +491,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -514,7 +514,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -536,7 +536,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -559,7 +559,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -583,7 +583,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -606,7 +606,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -633,7 +633,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -657,7 +657,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -680,7 +680,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -703,7 +703,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -726,7 +726,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -749,7 +749,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.name" String
             "net.transport" IP_TCP
             "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
