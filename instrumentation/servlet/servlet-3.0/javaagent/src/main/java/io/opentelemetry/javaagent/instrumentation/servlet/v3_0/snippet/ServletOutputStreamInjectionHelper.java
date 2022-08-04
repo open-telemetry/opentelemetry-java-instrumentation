@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.javaagent.bootstrap.servlet.SnippetHolder;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.logging.Logger;
@@ -42,7 +42,7 @@ public class ServletOutputStreamInjectionHelper {
     state.setAlreadyInjected(); // set before write to avoid recursive loop
     out.write(original, off, i + 1);
     try {
-      byte[] snippetBytes = SnippetHolder.getSnippetBytes(state.getCharacterEncoding());
+      byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       if (state.getWrapper().isCommitted()) {
         // header already set and sent, stop inject
         return false;
@@ -71,7 +71,7 @@ public class ServletOutputStreamInjectionHelper {
     state.setAlreadyInjected(); // set before write to avoid recursive loop
     out.write(b);
     try {
-      byte[] snippetBytes = SnippetHolder.getSnippetBytes(state.getCharacterEncoding());
+      byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       if (state.getWrapper().isCommitted()) {
         // header already set and sent, stop inject
         return false;

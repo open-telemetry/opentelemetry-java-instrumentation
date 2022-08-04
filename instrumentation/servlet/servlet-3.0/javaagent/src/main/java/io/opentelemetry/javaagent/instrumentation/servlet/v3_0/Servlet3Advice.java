@@ -13,8 +13,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
-import io.opentelemetry.javaagent.bootstrap.servlet.SnippetHolder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.SnippetInjectingResponseWrapper;
 import javax.servlet.Servlet;
@@ -43,7 +43,7 @@ public class Servlet3Advice {
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    if (!SnippetHolder.getSnippet().isEmpty()
+    if (!ExperimentalSnippetHolder.getSnippet().isEmpty()
         && !((HttpServletResponse) response).containsHeader(FAKE_SNIPPET_HEADER)) {
       response = new SnippetInjectingResponseWrapper((HttpServletResponse) response);
     }

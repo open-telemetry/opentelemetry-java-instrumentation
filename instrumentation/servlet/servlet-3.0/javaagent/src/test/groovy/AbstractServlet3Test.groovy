@@ -7,7 +7,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.javaagent.bootstrap.servlet.SnippetHolder
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 
 import javax.servlet.Servlet
@@ -103,7 +103,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   def "snippet injection with ServletOutPutStream"() {
     setup:
-    SnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
     def request = request(HTML2, "GET")
     def response = client.execute(request).aggregate().join()
 
@@ -127,7 +127,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
 
   def "snippet injection with PrintWriter"() {
     setup:
-    SnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>")
     def request = request(HTML, "GET")
     def response = client.execute(request).aggregate().join()
 

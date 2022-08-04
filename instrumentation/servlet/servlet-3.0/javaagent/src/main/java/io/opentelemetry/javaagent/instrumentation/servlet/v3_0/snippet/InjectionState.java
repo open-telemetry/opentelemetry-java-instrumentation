@@ -20,11 +20,6 @@ public class InjectionState {
     this.characterEncoding = wrapper.getCharacterEncoding();
   }
 
-  public InjectionState(String characterEncoding) {
-    this.characterEncoding = characterEncoding;
-    this.wrapper = null;
-  }
-
   public int getHeadTagBytesSeen() {
     return headTagBytesSeen;
   }

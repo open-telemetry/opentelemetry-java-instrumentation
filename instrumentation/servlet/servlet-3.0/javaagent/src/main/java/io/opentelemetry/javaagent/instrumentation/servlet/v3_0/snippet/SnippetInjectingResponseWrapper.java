@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Injection.initializeInjectionStateIfNeeded;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.javaagent.bootstrap.servlet.SnippetHolder;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.invoke.MethodHandle;
@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper {
   private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
-  private static final String SNIPPET = SnippetHolder.getSnippet();
+  private static final String SNIPPET = ExperimentalSnippetHolder.getSnippet();
   private static final int SNIPPET_LENGTH = SNIPPET.length();
   @Nullable private static final MethodHandle setContentLengthLongHandler = getMethodHandle();
 
