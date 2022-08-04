@@ -15,7 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 class WebMvcHttpServerTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
-  protected static final String CONTEXT_PATH = "/test";
+  private static final String CONTEXT_PATH = "/test";
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
