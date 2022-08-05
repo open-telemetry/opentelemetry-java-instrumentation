@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
 public class InjectionState {
-  private static final int ALREADY_INJECTED_FAKE_VALUE = -1;
+  private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
   private static final int HEAD_TAG_LENGTH = "<head>".length();
   private final SnippetInjectingResponseWrapper wrapper;
   private int headTagBytesSeen = 0;
@@ -23,12 +23,12 @@ public class InjectionState {
     return wrapper.getCharacterEncoding();
   }
 
-  public void setAlreadyInjected() {
-    headTagBytesSeen = ALREADY_INJECTED_FAKE_VALUE;
+  public void setHeadTagWritten() {
+    headTagBytesSeen = HEAD_TAG_WRITTEN_FAKE_VALUE;
   }
 
-  public boolean isAlreadyInjected() {
-    return headTagBytesSeen == ALREADY_INJECTED_FAKE_VALUE;
+  public boolean isHeadTagWritten() {
+    return headTagBytesSeen == HEAD_TAG_WRITTEN_FAKE_VALUE;
   }
 
   /**
@@ -36,7 +36,7 @@ public class InjectionState {
    * inject. Otherwise, returns false.
    */
   public boolean processByte(int b) {
-    if (isAlreadyInjected()) {
+    if (isHeadTagWritten()) {
       return false;
     }
     if (inHeadTag(b)) {

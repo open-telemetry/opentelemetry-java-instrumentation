@@ -64,6 +64,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void setHeader(String name, String value) {
+    // checking content-type is just an optimization to avoid unnecessary parsing
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
         contentLength = Long.valueOf(value);
@@ -76,6 +77,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void addHeader(String name, String value) {
+    // checking content-type is just an optimization to avoid unnecessary parsing
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
         contentLength = Long.valueOf(value);
@@ -88,6 +90,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void setIntHeader(String name, int value) {
+    // checking content-type is just an optimization to avoid unnecessary parsing
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       contentLength = value;
     }
@@ -96,6 +99,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void addIntHeader(String name, int value) {
+    // checking content-type is just an optimization to avoid unnecessary parsing
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       contentLength = value;
     }
@@ -166,6 +170,9 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   }
 
   public boolean isNotSafeToInject() {
+    // if content-length was set and response was already committed (headers sent to the client),
+    // then not safe to inject because the content-length header cannot be updated to account for
+    // the snippet length
     return isCommitted() && (contentLength != UNSET);
   }
 }

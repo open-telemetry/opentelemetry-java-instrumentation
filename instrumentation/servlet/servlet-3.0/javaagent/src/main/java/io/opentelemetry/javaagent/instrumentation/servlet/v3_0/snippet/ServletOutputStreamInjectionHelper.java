@@ -25,56 +25,63 @@ public class ServletOutputStreamInjectionHelper {
   public static boolean handleWrite(
       byte[] original, int off, int length, InjectionState state, ServletOutputStream out)
       throws IOException {
-    if (state.isAlreadyInjected()) {
+    if (state.isHeadTagWritten()) {
       return false;
     }
     int i;
-    boolean shouldInject = false;
+    boolean endOfHeadTagFound = false;
     for (i = off; i < length && i - off < length; i++) {
       if (state.processByte(original[i])) {
-        shouldInject = true;
+        endOfHeadTagFound = true;
         break;
       }
     }
-    if (!shouldInject) {
+    if (!endOfHeadTagFound) {
       return false;
     }
-    state.setAlreadyInjected(); // set before write to avoid recursive loop
-    out.write(original, off, i + 1);
+    state.setHeadTagWritten(); // set before write to avoid recursive loop
     if (state.getWrapper().isNotSafeToInject()) {
       return false;
     }
+    byte[] snippetBytes;
     try {
-      byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
-      state.getWrapper().updateContentLengthIfPreviouslySet();
-      out.write(snippetBytes);
+      snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
       logger.log(FINE, "UnsupportedEncodingException", e);
+      return false;
     }
+    // updating Content-Length before any further writing in case that writing triggers a flush
+    state.getWrapper().updateContentLengthIfPreviouslySet();
+    out.write(original, off, i + 1);
+    out.write(snippetBytes);
     out.write(original, i + 1, length - i - 1);
     return true;
   }
 
   public static boolean handleWrite(InjectionState state, ServletOutputStream out, int b)
       throws IOException {
-    if (state.isAlreadyInjected()) {
+    if (state.isHeadTagWritten()) {
       return false;
     }
     if (!state.processByte(b)) {
       return false;
     }
-    state.setAlreadyInjected(); // set before write to avoid recursive loop
-    out.write(b);
+    state.setHeadTagWritten(); // set before write to avoid recursive loop
+
     if (state.getWrapper().isNotSafeToInject()) {
       return false;
     }
+    byte[] snippetBytes;
     try {
-      byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
-      state.getWrapper().updateContentLengthIfPreviouslySet();
-      out.write(snippetBytes);
+      snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
     } catch (UnsupportedEncodingException e) {
       logger.log(FINE, "UnsupportedEncodingException", e);
+      return false;
     }
+    state.getWrapper().updateContentLengthIfPreviouslySet();
+    out.write(b);
+
+    out.write(snippetBytes);
     return true;
   }
 }
