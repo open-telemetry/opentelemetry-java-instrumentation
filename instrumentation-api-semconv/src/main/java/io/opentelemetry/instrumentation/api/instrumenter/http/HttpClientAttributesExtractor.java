@@ -57,7 +57,8 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, SemanticAttributes.HTTP_URL, stripSensitiveData(getter.url(request)));
   }
 
-  private static String stripSensitiveData(String url) {
+  @Nullable
+  private static String stripSensitiveData(@Nullable String url) {
     if (url == null || url.isEmpty()) {
       return url;
     }
