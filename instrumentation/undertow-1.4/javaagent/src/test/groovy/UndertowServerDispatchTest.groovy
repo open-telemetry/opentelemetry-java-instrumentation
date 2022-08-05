@@ -101,7 +101,6 @@ class UndertowServerDispatchTest extends HttpServerTest<Undertow> implements Age
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)
     attributes
   }
 }

@@ -28,22 +28,9 @@ final class GrizzlyHttpAttributesGetter
     return value == null ? emptyList() : singletonList(value);
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLength(
-      HttpRequestPacket request, @Nullable HttpResponsePacket response) {
-    return null;
-  }
-
   @Override
   public Integer statusCode(HttpRequestPacket request, HttpResponsePacket response) {
     return response.getStatus();
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLength(HttpRequestPacket request, HttpResponsePacket response) {
-    return null;
   }
 
   @Override

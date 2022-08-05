@@ -49,12 +49,6 @@ class AkkaHttpServerAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long responseContentLength(HttpRequest request, HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Override
   public List<String> responseHeader(HttpRequest request, HttpResponse httpResponse, String name) {
     return AkkaHttpUtil.responseHeader(httpResponse, name);
   }

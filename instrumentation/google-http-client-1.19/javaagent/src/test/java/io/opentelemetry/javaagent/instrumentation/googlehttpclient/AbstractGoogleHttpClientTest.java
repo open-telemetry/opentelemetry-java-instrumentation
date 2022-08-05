@@ -98,7 +98,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                         .hasAttributesSatisfying(
                             attrs ->
                                 assertThat(attrs)
-                                    .hasSize(7)
+                                    .hasSize(8)
                                     .containsEntry(
                                         SemanticAttributes.NET_TRANSPORT,
                                         SemanticAttributes.NetTransportValues.IP_TCP)
@@ -109,6 +109,9 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                                     .containsEntry(SemanticAttributes.HTTP_URL, uri.toString())
                                     .containsEntry(SemanticAttributes.HTTP_METHOD, "GET")
                                     .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, 500)
+                                    .hasEntrySatisfying(
+                                        SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                        length -> assertThat(length).isPositive())
                                     .containsEntry(
                                         SemanticAttributes.HTTP_FLAVOR,
                                         SemanticAttributes.HttpFlavorValues.HTTP_1_1)),

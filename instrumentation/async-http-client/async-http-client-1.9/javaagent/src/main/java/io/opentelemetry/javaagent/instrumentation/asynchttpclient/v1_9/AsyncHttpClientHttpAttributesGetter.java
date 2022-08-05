@@ -32,12 +32,6 @@ final class AsyncHttpClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(Request request, Response response) {
     return response.getStatusCode();
   }
@@ -45,12 +39,6 @@ final class AsyncHttpClientHttpAttributesGetter
   @Override
   public String flavor(Request request, @Nullable Response response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(Request request, Response response) {
-    return null;
   }
 
   @Override
