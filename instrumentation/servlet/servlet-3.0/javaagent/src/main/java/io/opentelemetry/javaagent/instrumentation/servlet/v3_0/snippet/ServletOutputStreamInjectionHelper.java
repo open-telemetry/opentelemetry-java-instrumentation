@@ -44,13 +44,12 @@ public class ServletOutputStreamInjectionHelper {
     try {
       byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       if (state.getWrapper().isCommitted()) {
-        // header already set and sent, stop inject
+        // header already set and sent, don't inject
         return false;
       }
       out.write(snippetBytes);
-      state.getWrapper().injected = true;
       if (state.getWrapper().contentLengthWasSet()) {
-        // ContentLen already set, need to update it.
+        // Content-Length already set, need to update it.
         state.getWrapper().updateContentLength();
       }
     } catch (UnsupportedEncodingException e) {
@@ -73,13 +72,12 @@ public class ServletOutputStreamInjectionHelper {
     try {
       byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       if (state.getWrapper().isCommitted()) {
-        // header already set and sent, stop inject
+        // header already set and sent, don't inject
         return false;
       }
       out.write(snippetBytes);
-      state.getWrapper().injected = true;
       if (state.getWrapper().contentLengthWasSet()) {
-        // ContentLen already set, need to update it.
+        // Content-Length already set, need to update it.
         state.getWrapper().updateContentLength();
       }
     } catch (UnsupportedEncodingException e) {

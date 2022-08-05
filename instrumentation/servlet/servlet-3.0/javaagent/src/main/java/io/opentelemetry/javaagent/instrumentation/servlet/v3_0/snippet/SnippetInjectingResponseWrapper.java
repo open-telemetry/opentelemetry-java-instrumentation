@@ -20,6 +20,12 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
+/**
+ * Notes with contentLength: 1. Q: what is the timing that we would update the content length? 1.
+ * the injection happened 2. the content length was already set outside 2. Q: Why we would not add
+ * the content length after the injection if the content length was not set yet? A: The server may
+ * monitor the bytes that have written, and use the new length itself
+ */
 public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper {
   private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
@@ -27,18 +33,12 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   private static final int SNIPPET_LENGTH = SNIPPET.length();
   @Nullable private static final MethodHandle setContentLengthLongHandler = getMethodHandle();
 
-  private long contentLength = 0;
-  private boolean addLengthAlready = false;
-  public boolean injected = false;
+  private long contentLength = -1;
 
   private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
   public SnippetInjectingResponseWrapper(HttpServletResponse response) {
     super(response);
-  }
-
-  private boolean isTimeToAddLength() {
-    return injected && !addLengthAlready;
   }
 
   @Override
@@ -59,19 +59,10 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void setHeader(String name, String value) {
     if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
-      if (isTimeToAddLength()) {
-        try {
-          value = Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value));
-          addLengthAlready = true;
-        } catch (NumberFormatException ex) {
-          logger.log(FINE, "NumberFormatException", ex);
-        }
-      } else {
-        try {
-          contentLength = Long.parseLong(Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value)));
-        } catch (NumberFormatException ex) {
-          logger.log(FINE, "NumberFormatException", ex);
-        }
+      try {
+        contentLength = Long.valueOf(value);
+      } catch (NumberFormatException ex) {
+        logger.log(FINE, "NumberFormatException", ex);
       }
     }
     super.setHeader(name, value);
@@ -80,19 +71,10 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void addHeader(String name, String value) {
     if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
-      if (isTimeToAddLength()) {
-        try {
-          value = Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value));
-          addLengthAlready = true;
-        } catch (NumberFormatException ex) {
-          logger.log(FINE, "NumberFormatException", ex);
-        }
-      } else {
-        try {
-          contentLength = Long.parseLong(Integer.toString(SNIPPET_LENGTH + Integer.valueOf(value)));
-        } catch (NumberFormatException ex) {
-          logger.log(FINE, "NumberFormatException", ex);
-        }
+      try {
+        contentLength = Long.valueOf(value);
+      } catch (NumberFormatException ex) {
+        logger.log(FINE, "NumberFormatException", ex);
       }
     }
     super.addHeader(name, value);
@@ -101,12 +83,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void setIntHeader(String name, int value) {
     if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
-      if (isTimeToAddLength()) {
-        value += SNIPPET_LENGTH;
-        addLengthAlready = true;
-      } else {
-        contentLength = value;
-      }
+      contentLength = value;
     }
     super.setIntHeader(name, value);
   }
@@ -114,12 +91,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void addIntHeader(String name, int value) {
     if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
-      if (isTimeToAddLength()) {
-        value += SNIPPET_LENGTH;
-        addLengthAlready = true;
-      } else {
-        contentLength = value;
-      }
+      contentLength = value;
     }
     super.addIntHeader(name, value);
   }
@@ -127,12 +99,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   @Override
   public void setContentLength(int len) {
     if (isContentTypeTextHtml()) {
-      if (isTimeToAddLength()) {
-        len += SNIPPET_LENGTH;
-        addLengthAlready = true;
-      } else {
-        contentLength = len;
-      }
+      contentLength = len;
     }
     super.setContentLength(len);
   }
@@ -154,12 +121,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   public void setContentLengthLong(long length) throws Throwable {
     if (isContentTypeTextHtml()) {
-      if (isTimeToAddLength()) {
-        length += SNIPPET_LENGTH;
-        addLengthAlready = true;
-      } else {
-        contentLength = length;
-      }
+      contentLength = length;
     }
     if (setContentLengthLongHandler == null) {
       super.setContentLength((int) length);
@@ -196,10 +158,10 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   }
 
   public void updateContentLength() {
-    setContentLength((int) contentLength);
+    setContentLength((int) contentLength + SNIPPET_LENGTH);
   }
 
   public boolean contentLengthWasSet() {
-    return contentLength != 0;
+    return contentLength != -1;
   }
 }

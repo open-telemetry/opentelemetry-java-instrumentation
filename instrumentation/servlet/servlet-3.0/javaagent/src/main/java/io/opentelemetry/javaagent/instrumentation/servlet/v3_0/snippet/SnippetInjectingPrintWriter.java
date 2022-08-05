@@ -34,13 +34,12 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
       // write(int)
       state.setAlreadyInjected();
       if (state.getWrapper().isCommitted()) {
-        // header already set and sent
+        // header already set and sent, don't inject
         return;
       }
       super.write(snippet);
-      state.getWrapper().injected = true;
       if (state.getWrapper().contentLengthWasSet()) {
-        // ContentLen already set, need to update it.
+        // Content-Length already set, need to update it.
         state.getWrapper().updateContentLength();
       }
     }
