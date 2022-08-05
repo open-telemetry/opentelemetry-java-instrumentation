@@ -58,7 +58,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private static String stripSensitiveData(String url) {
-    if (url.isEmpty() || url == null) {
+    if (url == null || url.isEmpty()) {
       return url;
     }
     // replace username & password
