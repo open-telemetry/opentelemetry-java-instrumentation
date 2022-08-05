@@ -98,9 +98,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void setContentLength(int len) {
-    if (isContentTypeTextHtml()) {
-      contentLength = len;
-    }
+    contentLength = len;
     super.setContentLength(len);
   }
 
@@ -120,9 +118,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   }
 
   public void setContentLengthLong(long length) throws Throwable {
-    if (isContentTypeTextHtml()) {
-      contentLength = length;
-    }
+    contentLength = length;
     if (setContentLengthLongHandler == null) {
       super.setContentLength((int) length);
     } else {
@@ -157,8 +153,10 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
     return snippetInjectingPrintWriter;
   }
 
-  public void updateContentLength() {
-    setContentLength((int) contentLength + SNIPPET_LENGTH);
+  public void updateContentLengthIfPreviouslySet() {
+    if (contentLengthWasSet()) {
+      setContentLength((int) contentLength + SNIPPET_LENGTH);
+    }
   }
 
   public boolean contentLengthWasSet() {

@@ -43,15 +43,12 @@ public class ServletOutputStreamInjectionHelper {
     out.write(original, off, i + 1);
     try {
       byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
-      if (state.getWrapper().isCommitted()) {
-        // header already set and sent, don't inject
+      if (state.getWrapper().isCommitted() && state.getWrapper().contentLengthWasSet()) {
+        // content length already set and sent, don't inject
         return false;
       }
+      state.getWrapper().updateContentLengthIfPreviouslySet();
       out.write(snippetBytes);
-      if (state.getWrapper().contentLengthWasSet()) {
-        // Content-Length already set, need to update it.
-        state.getWrapper().updateContentLength();
-      }
     } catch (UnsupportedEncodingException e) {
       logger.log(FINE, "UnsupportedEncodingException", e);
     }
@@ -71,15 +68,12 @@ public class ServletOutputStreamInjectionHelper {
     out.write(b);
     try {
       byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
-      if (state.getWrapper().isCommitted()) {
-        // header already set and sent, don't inject
+      if (state.getWrapper().isCommitted() && state.getWrapper().contentLengthWasSet()) {
+        // content length already set and sent, don't inject
         return false;
       }
+      state.getWrapper().updateContentLengthIfPreviouslySet();
       out.write(snippetBytes);
-      if (state.getWrapper().contentLengthWasSet()) {
-        // Content-Length already set, need to update it.
-        state.getWrapper().updateContentLength();
-      }
     } catch (UnsupportedEncodingException e) {
       logger.log(FINE, "UnsupportedEncodingException", e);
     }
