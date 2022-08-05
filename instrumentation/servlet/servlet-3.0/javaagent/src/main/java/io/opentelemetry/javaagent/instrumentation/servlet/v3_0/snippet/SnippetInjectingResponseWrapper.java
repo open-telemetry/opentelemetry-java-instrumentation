@@ -31,9 +31,11 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
   private static final String SNIPPET = ExperimentalSnippetHolder.getSnippet();
   private static final int SNIPPET_LENGTH = SNIPPET.length();
+
+  private static final int NOT_SET = -1;
   @Nullable private static final MethodHandle setContentLengthLongHandler = getMethodHandle();
 
-  private long contentLength = -1;
+  private long contentLength = NOT_SET;
 
   private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
@@ -155,16 +157,12 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   }
 
   public void updateContentLengthIfPreviouslySet() {
-    if (contentLengthWasSet()) {
+    if (contentLength != NOT_SET) {
       setContentLength((int) contentLength + SNIPPET_LENGTH);
     }
   }
 
-  public boolean contentLengthWasSet() {
-    return contentLength != -1;
-  }
-
   public boolean isNotSafeToInject() {
-    return isCommitted() && contentLengthWasSet();
+    return isCommitted() && (contentLength != NOT_SET);
   }
 }
