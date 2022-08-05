@@ -58,7 +58,8 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void setHeader(String name, String value) {
-    if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
+    // checking content-type is just an optimization to avoid unnecessary parsing
+    if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
         contentLength = Long.valueOf(value);
       } catch (NumberFormatException ex) {
@@ -70,7 +71,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void addHeader(String name, String value) {
-    if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
+    if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
         contentLength = Long.valueOf(value);
       } catch (NumberFormatException ex) {
@@ -82,7 +83,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void setIntHeader(String name, int value) {
-    if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
+    if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       contentLength = value;
     }
     super.setIntHeader(name, value);
@@ -90,7 +91,7 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void addIntHeader(String name, int value) {
-    if (isContentTypeTextHtml() && "Content-Length".equalsIgnoreCase(name)) {
+    if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       contentLength = value;
     }
     super.addIntHeader(name, value);
@@ -161,5 +162,9 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   public boolean contentLengthWasSet() {
     return contentLength != -1;
+  }
+
+  public boolean isNotSafeToInject() {
+    return isCommitted() && contentLengthWasSet();
   }
 }

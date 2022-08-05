@@ -43,7 +43,7 @@ public class ServletOutputStreamInjectionHelper {
     out.write(original, off, i + 1);
     try {
       byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
-      if (state.getWrapper().isCommitted() && state.getWrapper().contentLengthWasSet()) {
+      if (state.getWrapper().isNotSafeToInject()) {
         // content length already set and sent, don't inject
         return false;
       }
@@ -68,7 +68,7 @@ public class ServletOutputStreamInjectionHelper {
     out.write(b);
     try {
       byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
-      if (state.getWrapper().isCommitted() && state.getWrapper().contentLengthWasSet()) {
+      if (state.getWrapper().isNotSafeToInject()) {
         // content length already set and sent, don't inject
         return false;
       }

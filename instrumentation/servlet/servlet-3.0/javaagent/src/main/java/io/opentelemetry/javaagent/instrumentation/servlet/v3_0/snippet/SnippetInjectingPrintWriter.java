@@ -33,7 +33,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
       // set before write to avoid recursive loop since super.write(String) may delegate back to
       // write(int)
       state.setAlreadyInjected();
-      if (state.getWrapper().isCommitted() && state.getWrapper().contentLengthWasSet()) {
+      if (state.getWrapper().isNotSafeToInject()) {
         // content length already set and sent, don't inject
         return;
       }
