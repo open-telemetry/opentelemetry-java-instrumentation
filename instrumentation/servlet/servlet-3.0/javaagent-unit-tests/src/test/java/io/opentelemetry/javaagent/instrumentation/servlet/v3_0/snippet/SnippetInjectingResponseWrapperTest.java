@@ -10,7 +10,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.javaagent.bootstrap.servlet.SnippetHolder;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -33,7 +33,7 @@ class SnippetInjectingResponseWrapperTest {
     when(response.containsHeader("content-type")).thenReturn(true);
     StringWriter writer = new StringWriter();
     when(response.getWriter()).thenReturn(new PrintWriter(writer));
-    SnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
     SnippetInjectingResponseWrapper responseWrapper = new SnippetInjectingResponseWrapper(response);
     responseWrapper.getWriter().write(original);
     responseWrapper.getWriter().flush();
@@ -58,7 +58,7 @@ class SnippetInjectingResponseWrapperTest {
 
     StringWriter writer = new StringWriter();
     when(response.getWriter()).thenReturn(new PrintWriter(writer));
-    SnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
     SnippetInjectingResponseWrapper responseWrapper = new SnippetInjectingResponseWrapper(response);
     responseWrapper.getWriter().write(original);
     responseWrapper.getWriter().flush();
@@ -84,7 +84,7 @@ class SnippetInjectingResponseWrapperTest {
     when(response.containsHeader("content-type")).thenReturn(true);
 
     when(response.getWriter()).thenReturn(new PrintWriter(writer, true));
-    SnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
 
     SnippetInjectingResponseWrapper responseWrapper = new SnippetInjectingResponseWrapper(response);
     responseWrapper.getWriter().write(original);
@@ -110,7 +110,7 @@ class SnippetInjectingResponseWrapperTest {
     StringWriter writer = new StringWriter();
     //    StringWriter correctWriter = new StringWriter();
     when(response.getWriter()).thenReturn(new PrintWriter(writer));
-    SnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
     SnippetInjectingResponseWrapper responseWrapper = new SnippetInjectingResponseWrapper(response);
     byte[] originalBytes = original.getBytes(Charset.defaultCharset().name());
     //    byte[] correctBytes = correct.getBytes(UTF_8);
@@ -142,7 +142,7 @@ class SnippetInjectingResponseWrapperTest {
 
     StringWriter writer = new StringWriter();
     when(response.getWriter()).thenReturn(new PrintWriter(writer));
-    SnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
     SnippetInjectingResponseWrapper responseWrapper = new SnippetInjectingResponseWrapper(response);
     char[] originalChars = original.toCharArray();
     responseWrapper.getWriter().write(originalChars, 0, originalChars.length);
@@ -171,7 +171,7 @@ class SnippetInjectingResponseWrapperTest {
 
     StringWriter writer = new StringWriter();
     when(response.getWriter()).thenReturn(new PrintWriter(writer));
-    SnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
     SnippetInjectingResponseWrapper responseWrapper = new SnippetInjectingResponseWrapper(response);
 
     responseWrapper

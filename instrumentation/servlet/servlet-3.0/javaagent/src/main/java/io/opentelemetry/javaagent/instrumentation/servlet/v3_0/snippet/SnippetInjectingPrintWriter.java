@@ -11,9 +11,10 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
   private final String snippet;
   private final InjectionState state;
 
-  public SnippetInjectingPrintWriter(PrintWriter writer, String snippet, String characterEncoding) {
+  public SnippetInjectingPrintWriter(
+      PrintWriter writer, String snippet, SnippetInjectingResponseWrapper wrapper) {
     super(writer);
-    state = new InjectionState(characterEncoding);
+    state = new InjectionState(wrapper);
     this.snippet = snippet;
   }
 
@@ -26,14 +27,20 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(int b) {
-    boolean shouldInject = state.processByte(b);
     super.write(b);
-    if (shouldInject) {
-      // set before write to avoid recursive loop since super.write(String) may delegate back to
-      // write(int)
-      state.setAlreadyInjected();
-      super.write(snippet);
+    if (state.isHeadTagWritten()) {
+      return;
     }
+    boolean endOfHeadTagFound = state.processByte(b);
+    if (!endOfHeadTagFound) {
+      return;
+    }
+    state.setHeadTagWritten(); // set before write to avoid recursive loop
+    if (state.getWrapper().isNotSafeToInject()) {
+      return;
+    }
+    state.getWrapper().updateContentLengthIfPreviouslySet();
+    super.write(snippet);
   }
 
   @Override

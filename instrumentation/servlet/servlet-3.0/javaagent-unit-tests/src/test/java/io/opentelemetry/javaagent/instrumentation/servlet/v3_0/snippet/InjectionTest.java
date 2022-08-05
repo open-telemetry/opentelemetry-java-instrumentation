@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.TestUtil.readFile;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import io.opentelemetry.javaagent.bootstrap.servlet.SnippetHolder;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -21,13 +23,16 @@ class InjectionTest {
   @Test
   void testInjectionForStringContainHeadTag() throws IOException {
     String testSnippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    SnippetHolder.setSnippet(testSnippet);
+    ExperimentalSnippetHolder.setSnippet(testSnippet);
     // read the originalFile
     String original = readFile("staticHtmlOrigin.html");
     // read the correct answer
     String correct = readFile("staticHtmlAfter.html");
     byte[] originalBytes = original.getBytes(StandardCharsets.UTF_8);
-    InjectionState obj = new InjectionState(StandardCharsets.UTF_8.name());
+    SnippetInjectingResponseWrapper response = mock(SnippetInjectingResponseWrapper.class);
+    when(response.isCommitted()).thenReturn(false);
+    when(response.getCharacterEncoding()).thenReturn(StandardCharsets.UTF_8.name());
+    InjectionState obj = new InjectionState(response);
 
     StringWriter writer = new StringWriter();
 
@@ -54,13 +59,16 @@ class InjectionTest {
   @Disabled
   void testInjectionForChinese() throws IOException {
     String testSnippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    SnippetHolder.setSnippet(testSnippet);
+    ExperimentalSnippetHolder.setSnippet(testSnippet);
     // read the originalFile
     String original = readFile("staticHtmlChineseOrigin.html");
     // read the correct answer
     String correct = readFile("staticHtmlChineseAfter.html");
     byte[] originalBytes = original.getBytes(StandardCharsets.UTF_8);
-    InjectionState obj = new InjectionState(StandardCharsets.UTF_8.name());
+    SnippetInjectingResponseWrapper response = mock(SnippetInjectingResponseWrapper.class);
+    when(response.isCommitted()).thenReturn(false);
+    when(response.getCharacterEncoding()).thenReturn(StandardCharsets.UTF_8.name());
+    InjectionState obj = new InjectionState(response);
 
     StringWriter writer = new StringWriter();
 
@@ -86,12 +94,15 @@ class InjectionTest {
   @Test
   void testInjectionForStringWithoutHeadTag() throws IOException {
     String testSnippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    SnippetHolder.setSnippet(testSnippet);
+    ExperimentalSnippetHolder.setSnippet(testSnippet);
     // read the originalFile
     String original = readFile("htmlWithoutHeadTag.html");
 
     byte[] originalBytes = original.getBytes(StandardCharsets.UTF_8);
-    InjectionState obj = new InjectionState(StandardCharsets.UTF_8.name());
+    SnippetInjectingResponseWrapper response = mock(SnippetInjectingResponseWrapper.class);
+    when(response.isCommitted()).thenReturn(false);
+    when(response.getCharacterEncoding()).thenReturn(StandardCharsets.UTF_8.name());
+    InjectionState obj = new InjectionState(response);
     StringWriter writer = new StringWriter();
 
     ServletOutputStream sp =
@@ -115,11 +126,14 @@ class InjectionTest {
   @Test
   void testHalfHeadTag() throws IOException {
     String testSnippet = "\n  <script type=\"text/javascript\"> Test </script>";
-    SnippetHolder.setSnippet(testSnippet);
+    ExperimentalSnippetHolder.setSnippet(testSnippet);
     // read the original string
     String originalFirstPart = "<!DOCTYPE html>\n" + "<html lang=\"en\">\n" + "<he";
     byte[] originalFirstPartBytes = originalFirstPart.getBytes(StandardCharsets.UTF_8);
-    InjectionState obj = new InjectionState(StandardCharsets.UTF_8.name());
+    SnippetInjectingResponseWrapper response = mock(SnippetInjectingResponseWrapper.class);
+    when(response.isCommitted()).thenReturn(false);
+    when(response.getCharacterEncoding()).thenReturn(StandardCharsets.UTF_8.name());
+    InjectionState obj = new InjectionState(response);
     StringWriter writer = new StringWriter();
 
     ServletOutputStream sp =
