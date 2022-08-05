@@ -42,11 +42,11 @@ public class ServletOutputStreamInjectionHelper {
     state.setAlreadyInjected(); // set before write to avoid recursive loop
     out.write(original, off, i + 1);
     try {
-      byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       if (state.getWrapper().isNotSafeToInject()) {
         // content length already set and sent, don't inject
         return false;
       }
+      byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       state.getWrapper().updateContentLengthIfPreviouslySet();
       out.write(snippetBytes);
     } catch (UnsupportedEncodingException e) {
@@ -67,11 +67,11 @@ public class ServletOutputStreamInjectionHelper {
     state.setAlreadyInjected(); // set before write to avoid recursive loop
     out.write(b);
     try {
-      byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       if (state.getWrapper().isNotSafeToInject()) {
         // content length already set and sent, don't inject
         return false;
       }
+      byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       state.getWrapper().updateContentLengthIfPreviouslySet();
       out.write(snippetBytes);
     } catch (UnsupportedEncodingException e) {
