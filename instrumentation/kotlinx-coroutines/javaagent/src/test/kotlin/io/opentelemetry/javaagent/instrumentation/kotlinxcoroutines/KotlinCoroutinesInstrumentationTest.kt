@@ -127,7 +127,7 @@ class KotlinCoroutinesInstrumentationTest {
             assertThat(it)
               .hasName("consume_2")
               .hasParent(trace.getSpan(0))
-          },
+          }
         )
       }
     )
@@ -160,7 +160,7 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("preLaunch")
               .hasParent(trace.getSpan(0))
-          },
+          }
         )
       }
     )
@@ -188,7 +188,7 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("nested")
               .hasParent(trace.getSpan(0))
-          },
+          }
         )
       }
     )
@@ -244,7 +244,7 @@ class KotlinCoroutinesInstrumentationTest {
           Consumer {
             assertThat(it).hasName("brokenPromise")
               .hasParent(trace.getSpan(0))
-          },
+          }
         )
       }
     )
@@ -300,7 +300,7 @@ class KotlinCoroutinesInstrumentationTest {
             assertThat(it)
               .hasName("timeout3")
               .hasParent(trace.getSpan(0))
-          },
+          }
         )
       }
     )
@@ -338,7 +338,7 @@ class KotlinCoroutinesInstrumentationTest {
             assertThat(it)
               .hasName("a2")
               .hasParent(trace.get(0))
-          },
+          }
         )
       }
       assertions.add { trace ->
@@ -352,7 +352,7 @@ class KotlinCoroutinesInstrumentationTest {
             assertThat(it)
               .hasName("b2")
               .hasParent(trace.get(0))
-          },
+          }
         )
       }
     }
@@ -382,7 +382,7 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child")
               .hasParent(trace.getSpan(0))
-          },
+          }
         )
       }
     )
@@ -417,7 +417,7 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child")
               .hasParent(trace.getSpan(0))
-          },
+          }
         )
       }
     )
@@ -454,7 +454,7 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child_2")
               .hasParent(trace.getSpan(0))
-          },
+          }
         )
       }
     )
@@ -526,7 +526,7 @@ class KotlinCoroutinesInstrumentationTest {
         arguments(DispatcherWrapper(Dispatchers.IO)),
         arguments(DispatcherWrapper(Dispatchers.Unconfined)),
         arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-        arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+        arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher()))
       )
   }
 
