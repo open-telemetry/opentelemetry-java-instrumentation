@@ -41,11 +41,10 @@ public class ServletOutputStreamInjectionHelper {
     }
     state.setAlreadyInjected(); // set before write to avoid recursive loop
     out.write(original, off, i + 1);
+    if (state.getWrapper().isNotSafeToInject()) {
+      return false;
+    }
     try {
-      if (state.getWrapper().isNotSafeToInject()) {
-        // content length already set and sent, don't inject
-        return false;
-      }
       byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       state.getWrapper().updateContentLengthIfPreviouslySet();
       out.write(snippetBytes);
@@ -66,11 +65,10 @@ public class ServletOutputStreamInjectionHelper {
     }
     state.setAlreadyInjected(); // set before write to avoid recursive loop
     out.write(b);
+    if (state.getWrapper().isNotSafeToInject()) {
+      return false;
+    }
     try {
-      if (state.getWrapper().isNotSafeToInject()) {
-        // content length already set and sent, don't inject
-        return false;
-      }
       byte[] snippetBytes = ExperimentalSnippetHolder.getSnippetBytes(state.getCharacterEncoding());
       state.getWrapper().updateContentLengthIfPreviouslySet();
       out.write(snippetBytes);

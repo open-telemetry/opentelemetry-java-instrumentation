@@ -34,7 +34,6 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
       // write(int)
       state.setAlreadyInjected();
       if (state.getWrapper().isNotSafeToInject()) {
-        // content length already set and sent, don't inject
         return;
       }
       state.getWrapper().updateContentLengthIfPreviouslySet();

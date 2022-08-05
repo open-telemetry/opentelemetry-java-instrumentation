@@ -21,10 +21,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 /**
- * Notes with contentLength: 1. Q: what is the timing that we would update the content length? 1.
- * the injection happened 2. the content length was already set outside 2. Q: Why we would not add
- * the content length after the injection if the content length was not set yet? A: The server may
- * monitor the bytes that have written, and use the new length itself
+ * Notes on Content-Length: the snippet length is only added to the content length when injection
+ * occurs and the content length was set previously.
+ *
+ * <p>If the Content-Length is set after snippet injection occurs (either for the first time or is
+ * set again for some reason),we intentionally do not add the snippet length, because the
+ * application server may be making that call at the end of a request when it sees the request has
+ * not been submitted, in which case it is likely using the real length of content that has been
+ * written, including the snippet length.
  */
 public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper {
   private static final Logger logger = Logger.getLogger(HttpServletResponseWrapper.class.getName());
@@ -32,10 +36,10 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   private static final String SNIPPET = ExperimentalSnippetHolder.getSnippet();
   private static final int SNIPPET_LENGTH = SNIPPET.length();
 
-  private static final int NOT_SET = -1;
+  private static final int UNSET = -1;
   @Nullable private static final MethodHandle setContentLengthLongHandler = getMethodHandle();
 
-  private long contentLength = NOT_SET;
+  private long contentLength = UNSET;
 
   private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
@@ -60,7 +64,6 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
 
   @Override
   public void setHeader(String name, String value) {
-    // checking content-type is just an optimization to avoid unnecessary parsing
     if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
       try {
         contentLength = Long.valueOf(value);
@@ -157,12 +160,12 @@ public class SnippetInjectingResponseWrapper extends HttpServletResponseWrapper 
   }
 
   public void updateContentLengthIfPreviouslySet() {
-    if (contentLength != NOT_SET) {
+    if (contentLength != UNSET) {
       setContentLength((int) contentLength + SNIPPET_LENGTH);
     }
   }
 
   public boolean isNotSafeToInject() {
-    return isCommitted() && (contentLength != NOT_SET);
+    return isCommitted() && (contentLength != UNSET);
   }
 }
