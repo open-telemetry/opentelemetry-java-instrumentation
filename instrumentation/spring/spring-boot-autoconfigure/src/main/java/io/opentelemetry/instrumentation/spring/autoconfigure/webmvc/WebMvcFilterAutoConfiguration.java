@@ -26,7 +26,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 public class WebMvcFilterAutoConfiguration {
 
   @Bean
-  public Filter otelWebMvcTracingFilter(OpenTelemetry openTelemetry) {
+  public Filter otelWebMvcInstrumentationFilter(OpenTelemetry openTelemetry) {
     return SpringWebMvcTelemetry.create(openTelemetry).createServletFilter();
   }
 }

@@ -154,7 +154,7 @@ Provides auto-configuration for the OpenTelemetry RestTemplate trace interceptor
 #### Spring Web MVC Auto Configuration
 
 This feature autoconfigures instrumentation for Spring WebMVC controllers by adding
-a [telemetry producing servlet `Filter`](../spring-webmvc-5.3/library/src/main/java/io/opentelemetry/instrumentation/spring/webmvc/WebMvcTracingFilter.java)
+a [telemetry producing servlet `Filter`](../spring-webmvc-5.3/library/src/main/java/io/opentelemetry/instrumentation/spring/webmvc/v5_3/WebMvcTelemetryProducingFilter.java)
 bean to the application context. This filter decorates the request execution with an OpenTelemetry
 server span, propagating the incoming tracing context if received in the HTTP request. Check
 out [`opentelemetry-spring-webmvc-5.3` instrumentation library](../spring-webmvc-5.3/library) to
