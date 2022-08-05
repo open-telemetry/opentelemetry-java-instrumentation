@@ -74,22 +74,9 @@ final class ReactorNettyHttpClientAttributesGetter
     return request.headers().getAll(name);
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLength(
-      HttpClientConfig request, @Nullable HttpClientResponse response) {
-    return null;
-  }
-
   @Override
   public Integer statusCode(HttpClientConfig request, HttpClientResponse response) {
     return response.status().code();
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLength(HttpClientConfig request, HttpClientResponse response) {
-    return null;
   }
 
   @Override

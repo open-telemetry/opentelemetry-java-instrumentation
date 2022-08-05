@@ -978,13 +978,13 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                           actual -> assertThat(actual).startsWith(userAgent));
                 }
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+              if (attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
                 assertThat(attrs)
                     .hasEntrySatisfying(
                         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
                         length -> assertThat(length).isNotNegative());
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+              if (attrs.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH) != null) {
                 assertThat(attrs)
                     .hasEntrySatisfying(
                         SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,

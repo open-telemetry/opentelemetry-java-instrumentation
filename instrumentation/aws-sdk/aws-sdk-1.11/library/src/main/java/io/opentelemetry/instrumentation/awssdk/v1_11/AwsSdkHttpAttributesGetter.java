@@ -40,20 +40,8 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(Request<?> request, @Nullable Response<?> response) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(Request<?> request, Response<?> response) {
     return response.getHttpResponse().getStatusCode();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(Request<?> request, Response<?> response) {
-    return null;
   }
 
   @Override

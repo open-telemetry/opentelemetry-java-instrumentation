@@ -59,9 +59,7 @@ abstract class HttpCommonAttributesExtractor<
       @Nullable Throwable error) {
 
     internalSet(
-        attributes,
-        SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-        getter.requestContentLength(request, response));
+        attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestContentLength(request));
 
     if (response != null) {
       Integer statusCode = getter.statusCode(request, response);
@@ -71,7 +69,7 @@ abstract class HttpCommonAttributesExtractor<
       internalSet(
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-          getter.responseContentLength(request, response));
+          responseContentLength(request, response));
 
       for (String name : capturedResponseHeaders) {
         List<String> values = getter.responseHeader(request, response, name);
@@ -88,7 +86,31 @@ abstract class HttpCommonAttributesExtractor<
   }
 
   @Nullable
+  private Long requestContentLength(REQUEST request) {
+    return parseNumber(firstHeaderValue(getter.requestHeader(request, "content-length")));
+  }
+
+  @Nullable
+  private Long responseContentLength(REQUEST request, RESPONSE response) {
+    return parseNumber(
+        firstHeaderValue(getter.responseHeader(request, response, "content-length")));
+  }
+
+  @Nullable
   static String firstHeaderValue(List<String> values) {
     return values.isEmpty() ? null : values.get(0);
+  }
+
+  @Nullable
+  private static Long parseNumber(@Nullable String number) {
+    if (number == null) {
+      return null;
+    }
+    try {
+      return Long.parseLong(number);
+    } catch (NumberFormatException e) {
+      // not a number
+      return null;
+    }
   }
 }

@@ -30,12 +30,6 @@ final class OkHttp2HttpAttributesGetter implements HttpClientAttributesGetter<Re
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(Request request, Response response) {
     return response.code();
   }
@@ -57,11 +51,6 @@ final class OkHttp2HttpAttributesGetter implements HttpClientAttributesGetter<Re
         return SemanticAttributes.HttpFlavorValues.SPDY;
     }
     return null;
-  }
-
-  @Override
-  public Long responseContentLength(Request request, Response response) {
-    return response.body().contentLength();
   }
 
   @Override

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
@@ -104,6 +105,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -127,6 +130,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -145,6 +150,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }
@@ -172,6 +179,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
       }

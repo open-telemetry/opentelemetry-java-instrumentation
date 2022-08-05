@@ -23,16 +23,8 @@ internal enum class KtorHttpServerAttributesGetter :
     return request.headers.getAll(name) ?: emptyList()
   }
 
-  override fun requestContentLength(request: ApplicationRequest, response: ApplicationResponse?): Long? {
-    return null
-  }
-
   override fun statusCode(request: ApplicationRequest, response: ApplicationResponse): Int? {
     return response.status()?.value
-  }
-
-  override fun responseContentLength(request: ApplicationRequest, response: ApplicationResponse): Long? {
-    return null
   }
 
   override fun responseHeader(request: ApplicationRequest, response: ApplicationResponse, name: String): List<String> {

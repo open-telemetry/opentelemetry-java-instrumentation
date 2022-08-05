@@ -38,21 +38,9 @@ enum RatpackHttpClientAttributesGetter
     return requestSpec.getHeaders().getAll(name);
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLength(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
   @Override
   public Integer statusCode(RequestSpec requestSpec, HttpResponse httpResponse) {
     return httpResponse.getStatusCode();
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLength(RequestSpec requestSpec, HttpResponse httpResponse) {
-    return null;
   }
 
   @Override
