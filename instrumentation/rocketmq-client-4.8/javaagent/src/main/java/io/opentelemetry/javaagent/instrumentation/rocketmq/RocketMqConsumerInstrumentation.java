@@ -31,13 +31,14 @@ public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
         RocketMqConsumerInstrumentation.class.getName() + "$AdviceStart");
   }
 
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class AdviceStart {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.FieldValue(
-                value = "defaultMQPushConsumerImpl",
-                declaringType = DefaultMQPushConsumer.class)
-            DefaultMQPushConsumerImpl defaultMqPushConsumerImpl) {
+            value = "defaultMQPushConsumerImpl",
+            declaringType = DefaultMQPushConsumer.class)
+        DefaultMQPushConsumerImpl defaultMqPushConsumerImpl) {
       defaultMqPushConsumerImpl.registerConsumeMessageHook(
           RocketMqClientHooks.CONSUME_MESSAGE_HOOK);
     }

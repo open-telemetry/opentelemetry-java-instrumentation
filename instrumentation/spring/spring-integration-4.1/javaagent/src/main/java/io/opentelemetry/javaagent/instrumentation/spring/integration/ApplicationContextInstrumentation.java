@@ -46,6 +46,7 @@ public class ApplicationContextInstrumentation implements TypeInstrumentation {
         ApplicationContextInstrumentation.class.getName() + "$PostProcessBeanFactoryAdvice");
   }
 
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class PostProcessBeanFactoryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {

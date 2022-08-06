@@ -30,6 +30,7 @@ public class HttpClientImplInstrumentation implements TypeInstrumentation {
         isConstructor(), HttpClientImplInstrumentation.class.getName() + "$AttachStateAdvice");
   }
 
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class AttachStateAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void attachHttpClientOptions(

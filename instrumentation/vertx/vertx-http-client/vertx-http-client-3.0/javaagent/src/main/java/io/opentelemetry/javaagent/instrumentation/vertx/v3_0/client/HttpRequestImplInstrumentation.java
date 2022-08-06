@@ -45,6 +45,7 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
         HttpRequestImplInstrumentation.class.getName() + "$Vertx37Advice");
   }
 
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class Vertx30Advice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void attachRequestInfo(
@@ -58,10 +59,11 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
           .set(
               request,
               VertxRequestInfo.create(
-                  httpClientOptions != null ? httpClientOptions.isSsl() : false, host, port));
+                  httpClientOptions != null && httpClientOptions.isSsl(), host, port));
     }
   }
 
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class Vertx34Advice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void attachRequestInfo(
@@ -74,6 +76,7 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class Vertx37Advice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void attachRequestInfo(
