@@ -9,8 +9,9 @@ import java.io.File;
 import javax.annotation.Nullable;
 
 // this is currently unused in this repository, but is available for use in distros
+
 /** This class serves as an "everywhere accessible" source of the agent jar file. */
-public class JavaagentFileHolder {
+public final class JavaagentFileHolder {
 
   @Nullable private static volatile File javaagentFile;
 
@@ -22,4 +23,6 @@ public class JavaagentFileHolder {
   public static void setJavaagentFile(File javaagentFile) {
     JavaagentFileHolder.javaagentFile = javaagentFile;
   }
+
+  private JavaagentFileHolder() {}
 }

@@ -89,9 +89,8 @@ tasks {
         // allow UPPERCASE type parameter names
         disable("TypeParameterNaming")
 
-        // Great check, but for bytecode manipulation it's too common to separate over
-        // onEnter / onExit
-        // TODO(anuraaga): Only disable for auto instrumentation project.
+        // In bytecode instrumentation it's very common to separate across onEnter / onExit
+        // TODO(anuraaga): Only disable for javaagent instrumentation modules.
         disable("MustBeClosedChecker")
 
         // Common to avoid an allocation. Revisit if it's worth opt-in suppressing instead of
@@ -105,10 +104,6 @@ tasks {
         // TODO(anuraaga): Remove this, we use this pattern in several tests and it will mean
         // some moving.
         disable("DefaultPackage")
-
-        // TODO(anuraaga): Remove this, all our advice classes miss constructors but probably should
-        // address this.
-        disable("PrivateConstructorForUtilityClass")
 
         // TODO(anuraaga): Remove this, probably after instrumenter API migration instead of dealing
         // with older APIs.
