@@ -10,7 +10,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
-import muzzle.TestClasses;
+import muzzle.TestClasses.MethodBodyAdvice;
 
 public class MuzzleWeakReferenceTestUtil {
 
@@ -21,7 +21,7 @@ public class MuzzleWeakReferenceTestUtil {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
     WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
     ReferenceCollector collector = new ReferenceCollector(className -> false);
-    collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.class.getName());
+    collector.collectReferencesFromAdvice(MethodBodyAdvice.class.getName());
     ReferenceMatcher refMatcher =
         new ReferenceMatcher(
             Collections.emptyList(), collector.getReferences(), className -> false);

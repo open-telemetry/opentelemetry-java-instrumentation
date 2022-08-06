@@ -28,6 +28,7 @@ import java.util.Map;
 import muzzle.TestClasses;
 import muzzle.TestClasses.HelperAdvice;
 import muzzle.TestClasses.LdcAdvice;
+import muzzle.TestClasses.MethodBodyAdvice;
 import muzzle.TestClasses.Nested;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ class ReferenceCollectorTest {
   public void methodBodyCreatesReferences() {
     ReferenceCollector collector = new ReferenceCollector((String s) -> false);
 
-    collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.class.getName());
+    collector.collectReferencesFromAdvice(MethodBodyAdvice.class.getName());
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 

@@ -50,7 +50,7 @@ class ReferenceMatcherTest extends Specification {
   def "match safe classpaths"() {
     setup:
     def collector = new ReferenceCollector({ false })
-    collector.collectReferencesFromAdvice(Nested.name)
+    collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.name)
     def refMatcher = createMatcher(collector.getReferences())
 
     expect:
