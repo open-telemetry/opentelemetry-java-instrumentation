@@ -1,3 +1,5 @@
 #!/bin/bash -e
 
-grep -ohr --include '*.java' \"otel.instrumentation.*\" instrumentation | sort -u
+grep -Pohr --include '*.java' --exclude-dir=test \"otel.instrumentation.[^\"]+\" \
+  | grep -v otel.instrumentation.internal \
+  | sort -u
