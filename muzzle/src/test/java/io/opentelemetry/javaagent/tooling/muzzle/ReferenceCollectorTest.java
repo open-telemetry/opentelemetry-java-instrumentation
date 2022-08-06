@@ -42,7 +42,7 @@ class ReferenceCollectorTest {
   public void methodBodyCreatesReferences() {
     ReferenceCollector collector = new ReferenceCollector((String s) -> false);
 
-    collector.collectReferencesFromAdvice(Nested.class.getName());
+    collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.class.getName());
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
@@ -131,23 +131,23 @@ class ReferenceCollectorTest {
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertThat(references).containsKey("muzzle.TestClasses$MethodBodyAdvice$SomeImplementation");
+    assertThat(references).containsKey("muzzle.TestClasses$Nested$SomeImplementation");
     assertMethod(
-        references.get("muzzle.TestClasses$MethodBodyAdvice$SomeImplementation"),
+        references.get("muzzle.TestClasses$Nested$SomeImplementation"),
         "someMethod",
         "()V",
         PROTECTED_OR_HIGHER,
         OwnershipFlag.NON_STATIC);
-    assertThat(references).containsKey("muzzle.TestClasses$MethodBodyAdvice$B");
+    assertThat(references).containsKey("muzzle.TestClasses$Nested$B");
     assertMethod(
-        references.get("muzzle.TestClasses$MethodBodyAdvice$B"),
+        references.get("muzzle.TestClasses$Nested$B"),
         "staticMethod",
         "()V",
         PROTECTED_OR_HIGHER,
         OwnershipFlag.STATIC);
-    assertThat(references).containsKey("muzzle.TestClasses$MethodBodyAdvice$A");
+    assertThat(references).containsKey("muzzle.TestClasses$Nested$A");
     assertMethod(
-        references.get("muzzle.TestClasses$MethodBodyAdvice$A"),
+        references.get("muzzle.TestClasses$Nested$A"),
         "<init>",
         "()V",
         PROTECTED_OR_HIGHER,

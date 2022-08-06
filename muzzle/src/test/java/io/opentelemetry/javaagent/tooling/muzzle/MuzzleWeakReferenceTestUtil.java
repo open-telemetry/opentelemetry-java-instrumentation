@@ -21,7 +21,7 @@ public class MuzzleWeakReferenceTestUtil {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
     WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
     ReferenceCollector collector = new ReferenceCollector(className -> false);
-    collector.collectReferencesFromAdvice(TestClasses.Nested.class.getName());
+    collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.class.getName());
     ReferenceMatcher refMatcher =
         new ReferenceMatcher(
             Collections.emptyList(), collector.getReferences(), className -> false);
