@@ -60,7 +60,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
-        GenericFutureListener<? extends Future<?>> listener) {
+            GenericFutureListener<? extends Future<?>> listener) {
       if (FutureListenerWrappers.shouldWrap(listener)) {
         listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
       }
@@ -73,7 +73,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
-        GenericFutureListener<? extends Future<?>>[] listeners) {
+            GenericFutureListener<? extends Future<?>>[] listeners) {
 
       Context context = Java8BytecodeBridge.currentContext();
       @SuppressWarnings({"unchecked", "rawtypes"})
@@ -94,7 +94,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
-        GenericFutureListener<? extends Future<?>> listener) {
+            GenericFutureListener<? extends Future<?>> listener) {
       listener = FutureListenerWrappers.getWrapper(listener);
     }
   }
@@ -105,7 +105,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
-        GenericFutureListener<? extends Future<?>>[] listeners) {
+            GenericFutureListener<? extends Future<?>>[] listeners) {
 
       @SuppressWarnings({"unchecked", "rawtypes"})
       GenericFutureListener<? extends Future<?>>[] wrappedListeners =

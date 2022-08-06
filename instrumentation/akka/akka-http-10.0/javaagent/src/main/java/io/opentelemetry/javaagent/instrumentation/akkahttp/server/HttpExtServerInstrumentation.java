@@ -47,7 +47,7 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)
-        Function1<HttpRequest, HttpResponse> handler) {
+            Function1<HttpRequest, HttpResponse> handler) {
       handler = new AkkaHttpServerInstrumentationModule.SyncWrapper(handler);
     }
   }
@@ -58,7 +58,7 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)
-        Function1<HttpRequest, Future<HttpResponse>> handler,
+            Function1<HttpRequest, Future<HttpResponse>> handler,
         @Advice.Argument(7) Materializer materializer) {
       handler =
           new AkkaHttpServerInstrumentationModule.AsyncWrapper(

@@ -82,7 +82,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
+            BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.PARENT);
@@ -96,7 +96,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
+            BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         // use client context after request is sent
@@ -111,7 +111,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
+            BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback =
@@ -126,7 +126,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
+            BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         // use client context just when response status & headers are received
@@ -141,7 +141,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
+            BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.PARENT);
@@ -155,7 +155,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
+            BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback =
@@ -170,9 +170,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
+            BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
         @Advice.Argument(value = 1, readOnly = false)
-        BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
+            BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
 
       if (DecoratorFunctions.shouldDecorate(requestCallback.getClass())) {
         requestCallback =

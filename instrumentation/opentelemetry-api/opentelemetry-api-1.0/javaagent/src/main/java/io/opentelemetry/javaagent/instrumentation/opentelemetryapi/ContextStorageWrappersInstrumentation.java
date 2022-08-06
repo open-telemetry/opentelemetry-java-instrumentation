@@ -44,7 +44,7 @@ public class ContextStorageWrappersInstrumentation implements TypeInstrumentatio
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false)
-        List<Function<? super ContextStorage, ? extends ContextStorage>> wrappers) {
+            List<Function<? super ContextStorage, ? extends ContextStorage>> wrappers) {
       wrappers = new ArrayList<>(wrappers);
       wrappers.add(AgentContextStorage.wrap());
     }

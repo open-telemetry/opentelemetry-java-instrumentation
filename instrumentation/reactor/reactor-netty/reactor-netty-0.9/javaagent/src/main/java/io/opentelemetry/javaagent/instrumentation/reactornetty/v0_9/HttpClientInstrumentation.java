@@ -97,7 +97,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
+            BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback = new DecoratorFunctions.OnRequestDecorator(callback);
       }
@@ -110,7 +110,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
+            BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback = new DecoratorFunctions.OnRequestErrorDecorator(callback);
       }
@@ -123,7 +123,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientResponse, ? super Connection> callback,
+            BiConsumer<? super HttpClientResponse, ? super Connection> callback,
         @Advice.Origin("#m") String methodName) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         boolean forceParentContext = methodName.equals("doAfterResponse");
@@ -138,7 +138,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
+            BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback = new DecoratorFunctions.OnResponseErrorDecorator(callback);
       }
@@ -151,9 +151,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
+            BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
         @Advice.Argument(value = 1, readOnly = false)
-        BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
+            BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
       if (DecoratorFunctions.shouldDecorate(requestCallback.getClass())) {
         requestCallback = new DecoratorFunctions.OnRequestErrorDecorator(requestCallback);
       }

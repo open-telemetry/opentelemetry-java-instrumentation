@@ -107,8 +107,7 @@ public class TestClasses {
   }
 
   public static class InvokeDynamicAdvice {
-    public static Nested.SomeInterface invokeDynamicMethod(
-        Nested.SomeImplementation a) {
+    public static Nested.SomeInterface invokeDynamicMethod(Nested.SomeImplementation a) {
       Runnable staticMethod = Nested.B::staticMethod;
       Runnable constructorMethod = Nested.A::new;
       return a::someMethod;

@@ -23,8 +23,7 @@ public final class TwilioSingletons {
 
   static {
     InstrumenterBuilder<String, Object> instrumenterBuilder =
-        Instrumenter.builder(
-            GlobalOpenTelemetry.get(), "io.opentelemetry.twilio-6.6", str -> str);
+        Instrumenter.builder(GlobalOpenTelemetry.get(), "io.opentelemetry.twilio-6.6", str -> str);
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       instrumenterBuilder.addAttributesExtractor(new TwilioExperimentalAttributesExtractor());

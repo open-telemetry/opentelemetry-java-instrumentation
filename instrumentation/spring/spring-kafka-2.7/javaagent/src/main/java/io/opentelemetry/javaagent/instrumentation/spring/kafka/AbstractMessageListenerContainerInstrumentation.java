@@ -55,10 +55,10 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
 
       if (interceptor == null
           || !interceptor
-          .getClass()
-          .getName()
-          .equals(
-              "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedBatchInterceptor")) {
+              .getClass()
+              .getName()
+              .equals(
+                  "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedBatchInterceptor")) {
         interceptor = telemetry().createBatchInterceptor(interceptor);
       }
     }
@@ -73,10 +73,10 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
 
       if (interceptor == null
           || !interceptor
-          .getClass()
-          .getName()
-          .equals(
-              "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
+              .getClass()
+              .getName()
+              .equals(
+                  "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
         interceptor = telemetry().createRecordInterceptor(interceptor);
       }
     }

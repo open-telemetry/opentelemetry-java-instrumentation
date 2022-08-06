@@ -61,7 +61,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false)
-        application.io.opentelemetry.api.OpenTelemetry openTelemetry) {
+            application.io.opentelemetry.api.OpenTelemetry openTelemetry) {
       openTelemetry = ApplicationOpenTelemetry.INSTANCE;
     }
   }

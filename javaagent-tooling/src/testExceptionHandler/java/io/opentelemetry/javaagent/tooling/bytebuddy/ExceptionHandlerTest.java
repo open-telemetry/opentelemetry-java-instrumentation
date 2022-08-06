@@ -111,10 +111,10 @@ class ExceptionHandlerTest {
   @Test
   void exceptionHandlerSetsCorrectStackSize() {
     assertThatCode(
-        () -> {
-          SomeClass.smallStack();
-          SomeClass.largeStack();
-        })
+            () -> {
+              SomeClass.smallStack();
+              SomeClass.largeStack();
+            })
         .doesNotThrowAnyException();
   }
 

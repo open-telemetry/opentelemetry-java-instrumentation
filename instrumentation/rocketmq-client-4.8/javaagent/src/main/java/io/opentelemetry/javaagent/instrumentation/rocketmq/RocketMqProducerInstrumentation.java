@@ -36,7 +36,7 @@ public class RocketMqProducerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.FieldValue(value = "defaultMQProducerImpl", declaringType = DefaultMQProducer.class)
-        DefaultMQProducerImpl defaultMqProducerImpl) {
+            DefaultMQProducerImpl defaultMqProducerImpl) {
       defaultMqProducerImpl.registerSendMessageHook(RocketMqClientHooks.SEND_MESSAGE_HOOK);
     }
   }

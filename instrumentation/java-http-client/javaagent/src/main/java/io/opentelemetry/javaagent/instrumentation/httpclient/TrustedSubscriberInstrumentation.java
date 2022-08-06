@@ -36,7 +36,7 @@ public class TrustedSubscriberInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false)
-        HttpResponse.BodySubscriber<?> bodySubscriber) {
+            HttpResponse.BodySubscriber<?> bodySubscriber) {
       if (bodySubscriber instanceof BodySubscriberWrapper) {
         bodySubscriber = ((BodySubscriberWrapper<?>) bodySubscriber).getDelegate();
       }

@@ -48,9 +48,9 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
     // just an optimization to exclude common class loaders that are known to delegate to the
     // bootstrap loader (or happen to _be_ the bootstrap loader)
     return not(namedOneOf(
-        "java.lang.ClassLoader",
-        "com.ibm.oti.vm.BootstrapClassLoader",
-        "io.opentelemetry.javaagent.bootstrap.AgentClassLoader"))
+            "java.lang.ClassLoader",
+            "com.ibm.oti.vm.BootstrapClassLoader",
+            "io.opentelemetry.javaagent.bootstrap.AgentClassLoader"))
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 

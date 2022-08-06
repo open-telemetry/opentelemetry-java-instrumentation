@@ -59,7 +59,7 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelRequest") ElasticTransportRequest transportRequest,
         @Advice.Argument(value = 2, readOnly = false)
-        ActionListener<ActionResponse> actionListener) {
+            ActionListener<ActionResponse> actionListener) {
 
       transportRequest = ElasticTransportRequest.create(action, actionRequest);
       Context parentContext = currentContext();

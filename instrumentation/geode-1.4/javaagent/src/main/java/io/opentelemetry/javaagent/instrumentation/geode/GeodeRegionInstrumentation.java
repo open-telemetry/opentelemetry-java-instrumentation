@@ -41,14 +41,14 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(
                 namedOneOf(
-                    "clear",
-                    "create",
-                    "destroy",
-                    "entrySet",
-                    "get",
-                    "getAll",
-                    "invalidate",
-                    "replace")
+                        "clear",
+                        "create",
+                        "destroy",
+                        "entrySet",
+                        "get",
+                        "getAll",
+                        "invalidate",
+                        "replace")
                     .or(nameStartsWith("contains"))
                     .or(nameStartsWith("keySet"))
                     .or(nameStartsWith("put"))

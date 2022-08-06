@@ -6,8 +6,7 @@
 public class TestLambda {
 
   static Runnable makeRunnable() {
-    return () -> {
-    };
+    return () -> {};
   }
 
   private TestLambda() {}

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.HttpClientRequestTracingHandler;
@@ -31,22 +36,18 @@ public final class ChannelPipelineUtil {
           HttpServerRequestTracingHandler.class.getName(), new HttpServerRequestTracingHandler());
     } else if (handler instanceof HttpResponseEncoder) {
       pipeline.addLast(
-          HttpServerResponseTracingHandler.class.getName(),
-          new HttpServerResponseTracingHandler());
+          HttpServerResponseTracingHandler.class.getName(), new HttpServerResponseTracingHandler());
     } else
-      // Client pipeline handlers
-      if (handler instanceof HttpClientCodec) {
-        pipeline.addLast(HttpClientTracingHandler.class.getName(),
-            new HttpClientTracingHandler());
-      } else if (handler instanceof HttpRequestEncoder) {
-        pipeline.addLast(
-            HttpClientRequestTracingHandler.class.getName(),
-            new HttpClientRequestTracingHandler());
-      } else if (handler instanceof HttpResponseDecoder) {
-        pipeline.addLast(
-            HttpClientResponseTracingHandler.class.getName(),
-            new HttpClientResponseTracingHandler());
-      }
+    // Client pipeline handlers
+    if (handler instanceof HttpClientCodec) {
+      pipeline.addLast(HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
+    } else if (handler instanceof HttpRequestEncoder) {
+      pipeline.addLast(
+          HttpClientRequestTracingHandler.class.getName(), new HttpClientRequestTracingHandler());
+    } else if (handler instanceof HttpResponseDecoder) {
+      pipeline.addLast(
+          HttpClientResponseTracingHandler.class.getName(), new HttpClientResponseTracingHandler());
+    }
   }
 
   private ChannelPipelineUtil() {}

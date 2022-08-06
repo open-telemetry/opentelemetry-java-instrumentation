@@ -128,8 +128,8 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
         @Advice.Argument(0)
-        BiFunction<? super HttpClientResponse, ? super ByteBufFlux, ? extends Publisher<T>>
-            receiveFunction,
+            BiFunction<? super HttpClientResponse, ? super ByteBufFlux, ? extends Publisher<T>>
+                receiveFunction,
         @Advice.Return(readOnly = false) Flux<?> returnValue) {
 
       try {
@@ -166,8 +166,8 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
         @Advice.Argument(0)
-        BiFunction<? super HttpClientResponse, ? super Connection, ? extends Publisher<T>>
-            receiveFunction,
+            BiFunction<? super HttpClientResponse, ? super Connection, ? extends Publisher<T>>
+                receiveFunction,
         @Advice.Return(readOnly = false) Flux<?> returnValue) {
 
       try {
@@ -239,8 +239,8 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
         @Advice.Argument(0)
-        BiFunction<? super HttpClientResponse, ? super ByteBufMono, ? extends Mono<T>>
-            receiveFunction,
+            BiFunction<? super HttpClientResponse, ? super ByteBufMono, ? extends Mono<T>>
+                receiveFunction,
         @Advice.Return(readOnly = false) Mono<?> returnValue) {
 
       try {

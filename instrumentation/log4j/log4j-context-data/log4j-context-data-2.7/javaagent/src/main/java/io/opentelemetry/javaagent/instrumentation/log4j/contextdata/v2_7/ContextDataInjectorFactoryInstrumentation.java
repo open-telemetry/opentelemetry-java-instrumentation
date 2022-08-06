@@ -42,7 +42,7 @@ public class ContextDataInjectorFactoryInstrumentation implements TypeInstrument
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false)
-        ContextDataInjector injector) {
+            ContextDataInjector injector) {
       injector = new SpanDecoratingContextDataInjector(injector);
     }
   }

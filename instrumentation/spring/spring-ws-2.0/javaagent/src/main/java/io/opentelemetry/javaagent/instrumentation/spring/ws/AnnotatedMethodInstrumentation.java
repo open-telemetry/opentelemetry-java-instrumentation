@@ -26,9 +26,9 @@ import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
   private static final String[] ANNOTATION_CLASSES =
       new String[] {
-          "org.springframework.ws.server.endpoint.annotation.PayloadRoot",
-          "org.springframework.ws.soap.server.endpoint.annotation.SoapAction",
-          "org.springframework.ws.soap.addressing.server.annotation.Action"
+        "org.springframework.ws.server.endpoint.annotation.PayloadRoot",
+        "org.springframework.ws.soap.server.endpoint.annotation.SoapAction",
+        "org.springframework.ws.soap.addressing.server.annotation.Action"
       };
 
   @Override
