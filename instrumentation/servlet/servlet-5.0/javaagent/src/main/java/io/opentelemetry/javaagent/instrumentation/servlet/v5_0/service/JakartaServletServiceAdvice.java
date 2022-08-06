@@ -23,7 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
 public class JakartaServletServiceAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

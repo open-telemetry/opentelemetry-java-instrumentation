@@ -15,7 +15,7 @@ import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
 public class AsyncDispatchAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

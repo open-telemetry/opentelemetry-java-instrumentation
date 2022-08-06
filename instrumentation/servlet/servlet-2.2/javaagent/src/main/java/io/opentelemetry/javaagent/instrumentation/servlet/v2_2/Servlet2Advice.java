@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
 public class Servlet2Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

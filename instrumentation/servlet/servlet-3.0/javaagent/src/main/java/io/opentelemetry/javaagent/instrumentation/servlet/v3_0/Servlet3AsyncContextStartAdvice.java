@@ -12,7 +12,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
 public class Servlet3AsyncContextStartAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

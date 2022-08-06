@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpSe
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
 public class Servlet3ResponseSendAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
