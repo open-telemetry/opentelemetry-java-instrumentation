@@ -36,7 +36,7 @@ public class HttpJspPageInstrumentationSingletons {
                 "io.opentelemetry.jsp-2.3",
                 HttpJspPageInstrumentationSingletons::spanNameOnRender)
             .addAttributesExtractor(new RenderAttributesExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysInternal());
+            .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 
   private static String spanNameOnRender(HttpServletRequest req) {

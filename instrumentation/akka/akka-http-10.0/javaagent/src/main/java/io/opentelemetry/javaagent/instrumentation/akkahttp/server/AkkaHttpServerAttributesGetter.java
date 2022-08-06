@@ -27,33 +27,8 @@ class AkkaHttpServerAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(HttpRequest request, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpRequest request, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(HttpRequest request, HttpResponse httpResponse) {
     return httpResponse.status().intValue();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(HttpRequest request, HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(HttpRequest request, HttpResponse httpResponse) {
-    return null;
   }
 
   @Override

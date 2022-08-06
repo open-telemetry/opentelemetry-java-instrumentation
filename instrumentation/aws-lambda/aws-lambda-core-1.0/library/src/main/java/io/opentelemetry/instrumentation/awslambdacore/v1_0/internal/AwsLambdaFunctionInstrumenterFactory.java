@@ -24,7 +24,7 @@ public class AwsLambdaFunctionInstrumenterFactory {
                 "io.opentelemetry.aws-lambda-core-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)
             .addAttributesExtractors(new AwsLambdaFunctionAttributesExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysServer()));
+            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {

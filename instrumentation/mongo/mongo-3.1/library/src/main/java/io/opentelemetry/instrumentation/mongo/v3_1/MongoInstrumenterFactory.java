@@ -33,6 +33,6 @@ class MongoInstrumenterFactory {
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(netAttributesExtractor)
         .addAttributesExtractor(attributesExtractor)
-        .newInstrumenter(SpanKindExtractor.alwaysClient());
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

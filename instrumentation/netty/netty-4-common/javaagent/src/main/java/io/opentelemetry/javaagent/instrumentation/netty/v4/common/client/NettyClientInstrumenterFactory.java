@@ -55,7 +55,7 @@ public final class NettyClientInstrumenterFactory {
             PeerServiceAttributesExtractor.create(
                 netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
         .addOperationMetrics(HttpClientMetrics.get())
-        .newClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
+        .buildClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
@@ -80,7 +80,7 @@ public final class NettyClientInstrumenterFactory {
     }
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =
-        instrumenterBuilder.newInstrumenter(
+        instrumenterBuilder.buildInstrumenter(
             connectionTelemetryEnabled
                 ? SpanKindExtractor.alwaysInternal()
                 : SpanKindExtractor.alwaysClient());
@@ -99,7 +99,7 @@ public final class NettyClientInstrumenterFactory {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .newInstrumenter(
+            .buildInstrumenter(
                 sslTelemetryEnabled
                     ? SpanKindExtractor.alwaysInternal()
                     : SpanKindExtractor.alwaysClient());

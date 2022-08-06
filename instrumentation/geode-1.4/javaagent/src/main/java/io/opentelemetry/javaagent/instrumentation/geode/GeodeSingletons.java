@@ -25,7 +25,7 @@ public final class GeodeSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<GeodeRequest, Void> instrumenter() {

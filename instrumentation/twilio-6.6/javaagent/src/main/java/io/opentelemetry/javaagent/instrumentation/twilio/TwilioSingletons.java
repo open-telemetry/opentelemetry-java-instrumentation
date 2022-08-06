@@ -30,7 +30,7 @@ public class TwilioSingletons {
       instrumenterBuilder.addAttributesExtractor(new TwilioExperimentalAttributesExtractor());
     }
 
-    INSTRUMENTER = instrumenterBuilder.newInstrumenter(alwaysClient());
+    INSTRUMENTER = instrumenterBuilder.buildInstrumenter(alwaysClient());
   }
 
   public static Instrumenter<String, Object> instrumenter() {

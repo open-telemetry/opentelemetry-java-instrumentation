@@ -25,7 +25,7 @@ public final class AgentSpanTestingInstrumenter {
       Instrumenter.<String, Void>builder(GlobalOpenTelemetry.get(), "test", request -> request)
           .addContextCustomizer(
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
-          .newInstrumenter(SpanKindExtractor.alwaysInternal());
+          .buildInstrumenter(SpanKindExtractor.alwaysInternal());
 
   private static final Instrumenter<String, Void> HTTP_SERVER_INSTRUMENTER =
       Instrumenter.<String, Void>builder(GlobalOpenTelemetry.get(), "test", request -> request)
@@ -34,7 +34,7 @@ public final class AgentSpanTestingInstrumenter {
           .addContextCustomizer(HttpRouteHolder.get())
           .addContextCustomizer(
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
-          .newInstrumenter(SpanKindExtractor.alwaysServer());
+          .buildInstrumenter(SpanKindExtractor.alwaysServer());
 
   public static Context startHttpServerSpan(String name) {
     Context context = HTTP_SERVER_INSTRUMENTER.start(Context.current(), name);

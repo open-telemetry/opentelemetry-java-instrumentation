@@ -46,7 +46,12 @@ final class TracingServerInterceptor implements ServerInterceptor {
             call.getMethodDescriptor(),
             headers,
             call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
-    Context context = instrumenter.start(Context.current(), request);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      return next.startCall(call, headers);
+    }
+
+    Context context = instrumenter.start(parentContext, request);
 
     try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCall<>(call, context, request).start(headers, next);

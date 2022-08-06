@@ -155,10 +155,10 @@ public final class GrpcTelemetryBuilder {
     }
 
     return new GrpcTelemetry(
-        serverInstrumenterBuilder.newServerInstrumenter(GrpcRequestGetter.INSTANCE),
+        serverInstrumenterBuilder.buildServerInstrumenter(GrpcRequestGetter.INSTANCE),
         // gRPC client interceptors require two phases, one to set up request and one to execute.
         // So we go ahead and inject manually in this instrumentation.
-        clientInstrumenterBuilder.newInstrumenter(SpanKindExtractor.alwaysClient()),
+        clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient()),
         openTelemetry.getPropagators(),
         captureExperimentalSpanAttributes);
   }

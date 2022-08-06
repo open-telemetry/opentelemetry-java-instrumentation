@@ -68,14 +68,16 @@ final class TemporaryMetricsView {
     return view;
   }
 
-  static Attributes applyClientDurationView(Attributes startAttributes, Attributes endAttributes) {
+  static Attributes applyClientDurationAndSizeView(
+      Attributes startAttributes, Attributes endAttributes) {
     AttributesBuilder filtered = Attributes.builder();
     applyView(filtered, startAttributes, durationClientView);
     applyView(filtered, endAttributes, durationClientView);
     return filtered.build();
   }
 
-  static Attributes applyServerDurationView(Attributes startAttributes, Attributes endAttributes) {
+  static Attributes applyServerDurationAndSizeView(
+      Attributes startAttributes, Attributes endAttributes) {
     AttributesBuilder filtered = Attributes.builder();
     applyView(filtered, startAttributes, durationServerView);
     applyView(filtered, endAttributes, durationServerView);

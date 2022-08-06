@@ -41,6 +41,7 @@ class HttpClientMetricsTest {
             .put("net.peer.name", "localhost")
             .put("net.peer.ip", "0.0.0.0")
             .put("net.peer.port", 1234)
+            .put("http.request_content_length", 100)
             .build();
 
     Attributes responseAttributes =
@@ -48,6 +49,7 @@ class HttpClientMetricsTest {
             .put("http.flavor", "2.0")
             .put("http.server_name", "server")
             .put("http.status_code", 200)
+            .put("http.response_content_length", 200)
             .build();
 
     Context parent =
@@ -92,7 +94,39 @@ class HttpClientMetricsTest {
                                             exemplar ->
                                                 exemplar
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))));
+                                                    .hasSpanId("090a0b0c0d0e0f00")))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.client.request.size")
+                    .hasUnit("By")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(100 /* bytes */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200)))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.client.response.size")
+                    .hasUnit("By")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(200 /* bytes */)
+                                        .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                            equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200)))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -103,8 +137,19 @@ class HttpClientMetricsTest {
                     .hasName("http.client.duration")
                     .hasHistogramSatisfying(
                         histogram ->
-                            histogram.hasPointsSatisfying(
-                                point -> point.hasSum(300 /* millis */))));
+                            histogram.hasPointsSatisfying(point -> point.hasSum(300 /* millis */))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.client.request.size")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(point -> point.hasSum(200 /* bytes */))),
+            metric ->
+                assertThat(metric)
+                    .hasName("http.client.response.size")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(point -> point.hasSum(400 /* bytes */))));
   }
 
   private static long nanos(int millis) {

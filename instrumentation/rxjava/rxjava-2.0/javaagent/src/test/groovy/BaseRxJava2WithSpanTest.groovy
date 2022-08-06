@@ -3,22 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.rxjava.v3.common
-
-
+import io.opentelemetry.instrumentation.rxjava.v2_0.AbstractTracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.reactivex.rxjava3.core.Completable
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.core.Maybe
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.observers.TestObserver
-import io.reactivex.rxjava3.processors.UnicastProcessor
-import io.reactivex.rxjava3.subjects.CompletableSubject
-import io.reactivex.rxjava3.subjects.MaybeSubject
-import io.reactivex.rxjava3.subjects.SingleSubject
-import io.reactivex.rxjava3.subjects.UnicastSubject
-import io.reactivex.rxjava3.subscribers.TestSubscriber
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.reactivex.Completable
+import io.reactivex.Flowable
+import io.reactivex.Maybe
+import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.observers.TestObserver
+import io.reactivex.processors.UnicastProcessor
+import io.reactivex.subjects.CompletableSubject
+import io.reactivex.subjects.MaybeSubject
+import io.reactivex.subjects.SingleSubject
+import io.reactivex.subjects.UnicastSubject
+import io.reactivex.subscribers.TestSubscriber
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
@@ -26,13 +25,15 @@ import org.reactivestreams.Subscription
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
-class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
+abstract class BaseRxJava2WithSpanTest extends AgentInstrumentationSpecification {
+
+  abstract AbstractTracedWithSpan newTraced()
 
   def "should capture span for already completed Completable"() {
     setup:
     def observer = new TestObserver()
     def source = Completable.complete()
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
     observer.assertComplete()
@@ -45,6 +46,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
       }
@@ -55,9 +58,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = CompletableSubject.create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -73,6 +77,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
       }
@@ -84,7 +90,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
     def source = Completable.error(error)
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -99,6 +105,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
       }
@@ -110,9 +118,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def source = CompletableSubject.create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -130,6 +139,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
           }
         }
       }
@@ -140,15 +151,16 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = CompletableSubject.create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .completable(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
     assertTraces(0) {}
 
-    observer.dispose()
+    observer.cancel()
 
     assertTraces(1) {
       trace(0, 1) {
@@ -157,6 +169,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "completable"
             "rxjava.canceled" true
           }
         }
@@ -168,7 +182,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def observer = new TestObserver()
     def source = Maybe.just("Value")
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertValue("Value")
@@ -182,6 +196,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -192,7 +208,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def observer = new TestObserver()
     def source = Maybe.<String> empty()
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertComplete()
@@ -205,6 +221,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -215,9 +233,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = MaybeSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -234,6 +253,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -245,7 +266,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
     def source = Maybe.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -260,6 +281,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -271,9 +294,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def source = MaybeSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -291,6 +315,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
           }
         }
       }
@@ -301,15 +327,16 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = MaybeSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .maybe(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
     assertTraces(0) {}
 
-    observer.dispose()
+    observer.cancel()
 
     assertTraces(1) {
       trace(0, 1) {
@@ -318,6 +345,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "maybe"
             "rxjava.canceled" true
           }
         }
@@ -329,7 +358,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def observer = new TestObserver()
     def source = Single.just("Value")
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
     observer.assertValue("Value")
@@ -343,6 +372,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
       }
@@ -353,9 +384,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = SingleSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -372,6 +404,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
       }
@@ -383,7 +417,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
     def source = Single.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -398,6 +432,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
       }
@@ -409,9 +445,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def source = SingleSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -429,6 +466,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "single"
           }
         }
       }
@@ -439,15 +478,16 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = SingleSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .single(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
     assertTraces(0) {}
 
-    observer.dispose()
+    observer.cancel()
 
     assertTraces(1) {
       trace(0, 1) {
@@ -456,6 +496,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "single"
             "rxjava.canceled" true
           }
         }
@@ -467,7 +509,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def observer = new TestObserver()
     def source = Observable.<String> just("Value")
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
     observer.assertValue("Value")
@@ -481,6 +523,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
       }
@@ -491,9 +535,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = UnicastSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -515,6 +560,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
       }
@@ -526,7 +573,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
     def source = Observable.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
     observer.assertError(error)
@@ -541,6 +588,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
       }
@@ -552,9 +601,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def source = UnicastSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -578,6 +628,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
           }
         }
       }
@@ -588,9 +640,178 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = UnicastSubject.<String> create()
     def observer = new TestObserver()
-    new TracedWithSpan()
+    newTraced()
       .observable(source)
       .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onNext("Value")
+    observer.assertValue("Value")
+
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    observer.cancel()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.observable"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "observable"
+            "rxjava.canceled" true
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for already completed Flowable"() {
+    setup:
+    def observer = new TestSubscriber()
+    def source = Flowable.<String> just("Value")
+    newTraced()
+      .flowable(source)
+      .subscribe(observer)
+    observer.assertValue("Value")
+    observer.assertComplete()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.flowable"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for eventually completed Flowable"() {
+    setup:
+    def source = UnicastProcessor.<String> create()
+    def observer = new TestSubscriber()
+    newTraced()
+      .flowable(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onNext("Value")
+    observer.assertValue("Value")
+
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onComplete()
+    observer.assertComplete()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.flowable"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for already errored Flowable"() {
+    setup:
+    def error = new IllegalArgumentException("Boom")
+    def observer = new TestSubscriber()
+    def source = Flowable.<String> error(error)
+    newTraced()
+      .flowable(source)
+      .subscribe(observer)
+    observer.assertError(error)
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.flowable"
+          kind INTERNAL
+          hasNoParent()
+          status ERROR
+          errorEvent(IllegalArgumentException, "Boom")
+          attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for eventually errored Flowable"() {
+    setup:
+    def error = new IllegalArgumentException("Boom")
+    def source = UnicastProcessor.<String> create()
+    def observer = new TestSubscriber()
+    newTraced()
+      .flowable(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onNext("Value")
+    observer.assertValue("Value")
+
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onError(error)
+    observer.assertError(error)
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.flowable"
+          kind INTERNAL
+          hasNoParent()
+          status ERROR
+          errorEvent(IllegalArgumentException, "Boom")
+          attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for canceled Flowable"() {
+    setup:
+    def source = UnicastProcessor.<String> create()
+    def observer = new TestSubscriber()
+    newTraced()
+      .flowable(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -607,165 +828,12 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "TracedWithSpan.observable"
-          kind INTERNAL
-          hasNoParent()
-          attributes {
-            "rxjava.canceled" true
-          }
-        }
-      }
-    }
-  }
-
-  def "should capture span for already completed Flowable"() {
-    setup:
-    def observer = new TestSubscriber()
-    def source = Flowable.<String> just("Value")
-    new TracedWithSpan()
-      .flowable(source)
-      .subscribe(observer)
-    observer.assertValue("Value")
-    observer.assertComplete()
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
           name "TracedWithSpan.flowable"
           kind INTERNAL
           hasNoParent()
           attributes {
-          }
-        }
-      }
-    }
-  }
-
-  def "should capture span for eventually completed Flowable"() {
-    setup:
-    def source = UnicastProcessor.<String> create()
-    def observer = new TestSubscriber()
-    new TracedWithSpan()
-      .flowable(source)
-      .subscribe(observer)
-
-    expect:
-    Thread.sleep(500) // sleep a bit just to make sure no span is captured
-    assertTraces(0) {}
-
-    source.onNext("Value")
-    observer.assertValue("Value")
-
-    Thread.sleep(500) // sleep a bit just to make sure no span is captured
-    assertTraces(0) {}
-
-    source.onComplete()
-    observer.assertComplete()
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "TracedWithSpan.flowable"
-          kind INTERNAL
-          hasNoParent()
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
-  def "should capture span for already errored Flowable"() {
-    setup:
-    def error = new IllegalArgumentException("Boom")
-    def observer = new TestSubscriber()
-    def source = Flowable.<String> error(error)
-    new TracedWithSpan()
-      .flowable(source)
-      .subscribe(observer)
-    observer.assertError(error)
-
-    expect:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "TracedWithSpan.flowable"
-          kind INTERNAL
-          hasNoParent()
-          status ERROR
-          errorEvent(IllegalArgumentException, "Boom")
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
-  def "should capture span for eventually errored Flowable"() {
-    setup:
-    def error = new IllegalArgumentException("Boom")
-    def source = UnicastProcessor.<String> create()
-    def observer = new TestSubscriber()
-    new TracedWithSpan()
-      .flowable(source)
-      .subscribe(observer)
-
-    expect:
-    Thread.sleep(500) // sleep a bit just to make sure no span is captured
-    assertTraces(0) {}
-
-    source.onNext("Value")
-    observer.assertValue("Value")
-
-    Thread.sleep(500) // sleep a bit just to make sure no span is captured
-    assertTraces(0) {}
-
-    source.onError(error)
-    observer.assertError(error)
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "TracedWithSpan.flowable"
-          kind INTERNAL
-          hasNoParent()
-          status ERROR
-          errorEvent(IllegalArgumentException, "Boom")
-          attributes {
-          }
-        }
-      }
-    }
-  }
-
-  def "should capture span for canceled Flowable"() {
-    setup:
-    def source = UnicastProcessor.<String> create()
-    def observer = new TestSubscriber()
-    new TracedWithSpan()
-      .flowable(source)
-      .subscribe(observer)
-
-    expect:
-    Thread.sleep(500) // sleep a bit just to make sure no span is captured
-    assertTraces(0) {}
-
-    source.onNext("Value")
-    observer.assertValue("Value")
-
-    Thread.sleep(500) // sleep a bit just to make sure no span is captured
-    assertTraces(0) {}
-
-    observer.cancel()
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "TracedWithSpan.flowable"
-          kind INTERNAL
-          hasNoParent()
-          attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "flowable"
             "rxjava.canceled" true
           }
         }
@@ -777,7 +845,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def observer = new TestSubscriber()
     def source = Flowable.<String> just("Value")
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
@@ -792,6 +860,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
       }
@@ -802,10 +872,11 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -827,6 +898,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
       }
@@ -838,7 +911,7 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def observer = new TestSubscriber()
     def source = Flowable.<String> error(error)
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
@@ -854,6 +927,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
       }
@@ -865,10 +940,11 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -892,6 +968,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
           }
         }
       }
@@ -902,10 +980,11 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .parallelFlowable(source.parallel())
       .sequential()
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -926,6 +1005,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "parallelFlowable"
             "rxjava.canceled" true
           }
         }
@@ -937,9 +1018,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = new CustomPublisher()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .publisher(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -955,6 +1037,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "publisher"
           }
         }
       }
@@ -966,9 +1050,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     def error = new IllegalArgumentException("Boom")
     def source = new CustomPublisher()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .publisher(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -986,6 +1071,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "publisher"
           }
         }
       }
@@ -996,9 +1083,10 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
     setup:
     def source = new CustomPublisher()
     def observer = new TestSubscriber()
-    new TracedWithSpan()
+    newTraced()
       .publisher(source)
       .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
@@ -1013,6 +1101,8 @@ class AbstractRxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpe
           kind INTERNAL
           hasNoParent()
           attributes {
+            "$SemanticAttributes.CODE_NAMESPACE" { it.endsWith(".TracedWithSpan") }
+            "$SemanticAttributes.CODE_FUNCTION" "publisher"
             "rxjava.canceled" true
           }
         }

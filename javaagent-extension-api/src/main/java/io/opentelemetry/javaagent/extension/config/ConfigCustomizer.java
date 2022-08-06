@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension.config;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.Ordered;
 import java.util.Collections;
 import java.util.Map;
@@ -35,7 +34,8 @@ public interface ConfigCustomizer extends Ordered {
   }
 
   /** Allows to change the javaagent configuration just before it is first used. */
-  default Config customize(Config config) {
+  default io.opentelemetry.instrumentation.api.config.Config customize(
+      io.opentelemetry.instrumentation.api.config.Config config) {
     return config;
   }
 }

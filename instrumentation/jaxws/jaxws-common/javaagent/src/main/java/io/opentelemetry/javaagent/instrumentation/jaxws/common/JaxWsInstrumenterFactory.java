@@ -22,7 +22,7 @@ public final class JaxWsInstrumenterFactory {
             CodeSpanNameExtractor.create(codeAttributesGetter))
         .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
         .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-        .newInstrumenter();
+        .buildInstrumenter();
   }
 
   private JaxWsInstrumenterFactory() {}

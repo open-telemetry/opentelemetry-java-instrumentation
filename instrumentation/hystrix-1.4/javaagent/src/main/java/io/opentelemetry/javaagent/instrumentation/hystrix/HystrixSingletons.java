@@ -26,7 +26,7 @@ public final class HystrixSingletons {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 
-    INSTRUMENTER = builder.newInstrumenter();
+    INSTRUMENTER = builder.buildInstrumenter();
   }
 
   public static Instrumenter<HystrixRequest, Void> instrumenter() {

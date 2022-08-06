@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.Ordered;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Collections;
@@ -31,8 +30,11 @@ import net.bytebuddy.matcher.ElementMatcher;
  * java.util.ServiceLoader} for more details.
  */
 public abstract class InstrumentationModule implements Ordered {
+
+  @SuppressWarnings("deprecation") // Config usage, to be removed
   private static final boolean DEFAULT_ENABLED =
-      Config.get().getBoolean("otel.instrumentation.common.default-enabled", true);
+      io.opentelemetry.instrumentation.api.config.Config.get()
+          .getBoolean("otel.instrumentation.common.default-enabled", true);
 
   private final Set<String> instrumentationNames;
 

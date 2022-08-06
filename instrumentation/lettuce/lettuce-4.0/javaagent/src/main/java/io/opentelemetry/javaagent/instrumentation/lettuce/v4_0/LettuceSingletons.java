@@ -36,7 +36,7 @@ public final class LettuceSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     LettuceConnectNetAttributesGetter netAttributesGetter = new LettuceConnectNetAttributesGetter();
 
@@ -48,7 +48,7 @@ public final class LettuceSingletons {
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter() {

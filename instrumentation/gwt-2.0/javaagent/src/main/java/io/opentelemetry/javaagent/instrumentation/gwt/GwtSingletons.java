@@ -31,7 +31,7 @@ public final class GwtSingletons {
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             // TODO(anuraaga): This should be a server span, but we currently have no way to merge
             // with the HTTP instrumentation's server span.
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<Method, Void> instrumenter() {

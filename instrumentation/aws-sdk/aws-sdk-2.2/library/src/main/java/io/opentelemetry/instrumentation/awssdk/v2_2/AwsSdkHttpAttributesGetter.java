@@ -47,36 +47,8 @@ class AwsSdkHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(
-      ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(ExecutionAttributes request, SdkHttpResponse response) {
     return response.statusCode();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(
-      ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
   }
 
   @Override

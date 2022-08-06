@@ -59,18 +59,6 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
 
   @Override
   @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(Request request) {
     String version = (String) request.getAttributes().get("org.restlet.http.version");
     switch (version) {
@@ -95,18 +83,6 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   @Override
   public Integer statusCode(Request request, Response response) {
     return response.getStatus().getCode();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(Request request, Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(Request request, Response response) {
-    return null;
   }
 
   @Override

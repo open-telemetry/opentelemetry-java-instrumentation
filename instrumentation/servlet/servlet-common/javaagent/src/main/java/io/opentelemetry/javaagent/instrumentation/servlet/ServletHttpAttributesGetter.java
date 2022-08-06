@@ -50,26 +50,6 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public Long requestContentLength(
-      ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseContext) {
-    int contentLength = accessor.getRequestContentLength(requestContext.request());
-    if (contentLength > -1) {
-      return (long) contentLength;
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      ServletRequestContext<REQUEST> requestContext,
-      @Nullable ServletResponseContext<RESPONSE> responseContext) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(ServletRequestContext<REQUEST> requestContext) {
     String flavor = accessor.getRequestProtocol(requestContext.request());
     if (flavor != null) {
@@ -97,30 +77,6 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
       return 500;
     }
     return accessor.getResponseStatus(response);
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(
-      ServletRequestContext<REQUEST> requestContext,
-      ServletResponseContext<RESPONSE> responseContext) {
-    String contentLength = accessor.getResponseHeader(responseContext.response(), "Content-Length");
-    if (contentLength != null) {
-      try {
-        return Long.valueOf(contentLength);
-      } catch (NumberFormatException ignored) {
-        // ignore
-      }
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      ServletRequestContext<REQUEST> requestContext,
-      ServletResponseContext<RESPONSE> responseContext) {
-    return null;
   }
 
   @Override

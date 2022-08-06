@@ -32,7 +32,7 @@ public class ChunkSingletons {
       instrumenterBuilder.addSpanLinksExtractor(ChunkSingletons::extractSpanLinks);
     }
 
-    INSTRUMENTER = instrumenterBuilder.newInstrumenter();
+    INSTRUMENTER = instrumenterBuilder.buildInstrumenter();
   }
 
   public static Instrumenter<ChunkContextAndBuilder, Void> chunkInstrumenter() {

@@ -52,7 +52,7 @@ public final class UndertowSingletons {
                       .init(context);
                 })
             .addOperationMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(UndertowExchangeGetter.INSTANCE);
+            .buildServerInstrumenter(UndertowExchangeGetter.INSTANCE);
   }
 
   private static final UndertowHelper HELPER = new UndertowHelper(INSTRUMENTER);

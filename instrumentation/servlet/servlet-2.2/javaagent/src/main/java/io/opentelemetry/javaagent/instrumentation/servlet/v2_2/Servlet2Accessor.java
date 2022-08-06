@@ -36,11 +36,6 @@ public class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse> 
   }
 
   @Override
-  public String getResponseHeader(HttpServletResponse httpServletResponse, String name) {
-    return null;
-  }
-
-  @Override
   public List<String> getResponseHeaderValues(
       HttpServletResponse httpServletResponse, String name) {
     return Collections.emptyList();

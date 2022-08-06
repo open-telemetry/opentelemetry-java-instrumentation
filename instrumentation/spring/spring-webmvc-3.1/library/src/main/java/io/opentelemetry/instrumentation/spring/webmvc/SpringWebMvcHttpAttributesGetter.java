@@ -33,20 +33,6 @@ enum SpringWebMvcHttpAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLength(
-      HttpServletRequest request, @Nullable HttpServletResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpServletRequest request, @Nullable HttpServletResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(HttpServletRequest request) {
     return request.getProtocol();
   }
@@ -55,19 +41,6 @@ enum SpringWebMvcHttpAttributesGetter
   @Nullable
   public Integer statusCode(HttpServletRequest request, HttpServletResponse response) {
     // set in StatusCodeExtractor
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(HttpServletRequest request, HttpServletResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      HttpServletRequest request, HttpServletResponse response) {
     return null;
   }
 

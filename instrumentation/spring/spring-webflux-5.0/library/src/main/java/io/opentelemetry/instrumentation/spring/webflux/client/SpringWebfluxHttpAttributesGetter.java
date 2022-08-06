@@ -55,19 +55,6 @@ enum SpringWebfluxHttpAttributesGetter
     return request.headers().getOrDefault(name, emptyList());
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLength(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long requestContentLengthUncompressed(
-      ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
   @Override
   public Integer statusCode(ClientRequest request, ClientResponse response) {
     if (RAW_STATUS_CODE != null) {
@@ -81,18 +68,6 @@ enum SpringWebfluxHttpAttributesGetter
     // prior to webflux 5.1, the best we can get is HttpStatus enum, which only covers standard
     // status codes
     return response.statusCode().value();
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLength(ClientRequest request, ClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLengthUncompressed(ClientRequest request, ClientResponse response) {
-    return null;
   }
 
   @Override

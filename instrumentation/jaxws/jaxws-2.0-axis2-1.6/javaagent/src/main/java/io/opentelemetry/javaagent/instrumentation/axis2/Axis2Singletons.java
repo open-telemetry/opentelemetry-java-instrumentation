@@ -19,7 +19,7 @@ public class Axis2Singletons {
         Instrumenter.<Axis2Request, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, Axis2Request::spanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<Axis2Request, Void> instrumenter() {

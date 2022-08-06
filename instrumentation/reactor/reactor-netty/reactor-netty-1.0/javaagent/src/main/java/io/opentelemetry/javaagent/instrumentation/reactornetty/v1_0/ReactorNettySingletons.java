@@ -68,7 +68,7 @@ public final class ReactorNettySingletons {
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get())
             // headers are injected in ResponseReceiverInstrumenter
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(INSTRUMENTATION_NAME, connectionTelemetryEnabled, false);

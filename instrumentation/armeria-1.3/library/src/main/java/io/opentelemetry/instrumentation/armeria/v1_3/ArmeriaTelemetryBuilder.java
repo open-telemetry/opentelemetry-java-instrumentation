@@ -186,7 +186,7 @@ public final class ArmeriaTelemetryBuilder {
     }
 
     return new ArmeriaTelemetry(
-        clientInstrumenterBuilder.newClientInstrumenter(ClientRequestContextSetter.INSTANCE),
-        serverInstrumenterBuilder.newServerInstrumenter(RequestContextGetter.INSTANCE));
+        clientInstrumenterBuilder.buildClientInstrumenter(ClientRequestContextSetter.INSTANCE),
+        serverInstrumenterBuilder.buildServerInstrumenter(RequestContextGetter.INSTANCE));
   }
 }

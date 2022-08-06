@@ -24,7 +24,7 @@ public class AwsLambdaSqsInstrumenterFactory {
             AwsLambdaSqsInstrumenterFactory::spanName)
         .addAttributesExtractors(new SqsEventAttributesExtractor())
         .addSpanLinksExtractor(new SqsEventSpanLinksExtractor())
-        .newInstrumenter(SpanKindExtractor.alwaysConsumer());
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public static Instrumenter<SQSMessage, Void> forMessage(OpenTelemetry openTelemetry) {
@@ -34,7 +34,7 @@ public class AwsLambdaSqsInstrumenterFactory {
             message -> message.getEventSource() + " process")
         .addAttributesExtractors(new SqsMessageAttributesExtractor())
         .addSpanLinksExtractor(new SqsMessageSpanLinksExtractor())
-        .newInstrumenter(SpanKindExtractor.alwaysConsumer());
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static String spanName(SQSEvent event) {

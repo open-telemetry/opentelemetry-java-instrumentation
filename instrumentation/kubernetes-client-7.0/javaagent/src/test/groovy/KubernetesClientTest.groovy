@@ -202,6 +202,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
         "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
+        "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
         "kubernetes-client.namespace" "namespace"
         "kubernetes-client.name" "name"
       }

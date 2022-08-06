@@ -38,7 +38,7 @@ public class VaadinSingletons {
                 CodeSpanNameExtractor.create(clientCallableAttributesGetter))
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .addAttributesExtractor(CodeAttributesExtractor.create(clientCallableAttributesGetter))
-            .newInstrumenter();
+            .buildInstrumenter();
 
     REQUEST_HANDLER_INSTRUMENTER =
         Instrumenter.<VaadinHandlerRequest, Void>builder(
@@ -48,13 +48,13 @@ public class VaadinSingletons {
             .addContextCustomizer(
                 (context, vaadinHandlerRequest, startAttributes) ->
                     context.with(REQUEST_HANDLER_CONTEXT_KEY, Boolean.TRUE))
-            .newInstrumenter();
+            .buildInstrumenter();
 
     RPC_INSTRUMENTER =
         Instrumenter.<VaadinRpcRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinSingletons::rpcSpanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
 
     SERVICE_INSTRUMENTER =
         Instrumenter.<VaadinServiceRequest, Void>builder(
@@ -64,7 +64,7 @@ public class VaadinSingletons {
             .addContextCustomizer(
                 (context, vaadinServiceRequest, startAttributes) ->
                     context.with(SERVICE_CONTEXT_KEY, new VaadinServiceContext()))
-            .newInstrumenter();
+            .buildInstrumenter();
 
     HELPER = new VaadinHelper(REQUEST_HANDLER_INSTRUMENTER, SERVICE_INSTRUMENTER);
   }

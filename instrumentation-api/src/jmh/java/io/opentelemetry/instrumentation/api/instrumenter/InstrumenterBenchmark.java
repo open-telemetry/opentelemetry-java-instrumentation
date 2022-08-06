@@ -45,7 +45,7 @@ public class InstrumenterBenchmark {
               HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
               NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
-          .newInstrumenter();
+          .buildInstrumenter();
 
   @Benchmark
   public Context start() {
@@ -81,17 +81,6 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public Long requestContentLength(Void unused, @Nullable Void unused2) {
-      return 100L;
-    }
-
-    @Override
-    @Nullable
-    public Long requestContentLengthUncompressed(Void unused, @Nullable Void unused2) {
-      return null;
-    }
-
-    @Override
     public String flavor(Void unused, @Nullable Void unused2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
@@ -99,17 +88,6 @@ public class InstrumenterBenchmark {
     @Override
     public Integer statusCode(Void unused, Void unused2) {
       return 200;
-    }
-
-    @Override
-    public Long responseContentLength(Void unused, Void unused2) {
-      return 100L;
-    }
-
-    @Override
-    @Nullable
-    public Long responseContentLengthUncompressed(Void unused, Void unused2) {
-      return null;
     }
 
     @Override

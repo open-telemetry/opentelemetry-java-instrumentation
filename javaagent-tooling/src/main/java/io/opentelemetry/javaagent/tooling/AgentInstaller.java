@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
@@ -78,7 +77,9 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
-  public static void installBytebuddyAgent(Instrumentation inst, Config config) {
+  @SuppressWarnings("deprecation") // Config usage, to be removed
+  public static void installBytebuddyAgent(
+      Instrumentation inst, io.opentelemetry.instrumentation.api.config.Config config) {
     addByteBuddyRawSetting();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
@@ -97,15 +98,17 @@ public class AgentInstaller {
     }
   }
 
+  @SuppressWarnings("deprecation") // Config usage, to be removed
   private static void installBytebuddyAgent(
-      Instrumentation inst, Config config, Iterable<AgentListener> agentListeners) {
+      Instrumentation inst,
+      io.opentelemetry.instrumentation.api.config.Config config,
+      Iterable<AgentListener> agentListeners) {
 
     WeakRefAsyncOperationEndStrategies.initialize();
 
     EmbeddedInstrumentationProperties.setPropertiesLoader(
         AgentInitializer.getExtensionsClassLoader());
 
-    setBootstrapPackages(config);
     setDefineClassHandler();
 
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
@@ -115,6 +118,8 @@ public class AgentInstaller {
     ConfigProperties sdkConfig = autoConfiguredSdk.getConfig();
     InstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
     copyNecessaryConfigToSystemProperties(sdkConfig);
+
+    setBootstrapPackages(sdkConfig);
 
     for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
       agentListener.beforeAgent(autoConfiguredSdk);
@@ -195,10 +200,10 @@ public class AgentInstaller {
     }
   }
 
-  private static void setBootstrapPackages(Config config) {
+  private static void setBootstrapPackages(ConfigProperties config) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
     for (BootstrapPackagesConfigurer configurer : load(BootstrapPackagesConfigurer.class)) {
-      configurer.configure(config, builder);
+      configurer.configure(builder, config);
     }
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(builder.build());
   }

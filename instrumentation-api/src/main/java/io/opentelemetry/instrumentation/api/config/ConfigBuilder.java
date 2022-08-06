@@ -11,7 +11,12 @@ import java.util.Map;
 import java.util.Properties;
 import javax.annotation.Nullable;
 
-/** A builder of a {@link Config}. */
+/**
+ * A builder of a {@link Config}.
+ *
+ * @deprecated This class is deprecated and will be removed together with {@link Config}.
+ */
+@Deprecated
 public final class ConfigBuilder {
 
   private final Map<String, String> allProperties;

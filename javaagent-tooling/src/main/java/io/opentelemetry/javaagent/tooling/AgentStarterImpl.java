@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
@@ -72,6 +71,7 @@ public class AgentStarterImpl implements AgentStarter {
     }
   }
 
+  @SuppressWarnings("deprecation") // Config usage, to be removed
   private void internalStart() {
     Iterator<LoggingCustomizer> loggingCustomizers =
         ServiceLoader.load(LoggingCustomizer.class).iterator();
@@ -86,7 +86,8 @@ public class AgentStarterImpl implements AgentStarter {
     try {
       loggingCustomizer.init();
       ConfigInitializer.initialize();
-      AgentInstaller.installBytebuddyAgent(instrumentation, Config.get());
+      AgentInstaller.installBytebuddyAgent(
+          instrumentation, io.opentelemetry.instrumentation.api.config.Config.get());
     } catch (Throwable t) {
       // this is logged below and not rethrown to avoid logging it twice
       startupError = t;

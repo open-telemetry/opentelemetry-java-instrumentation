@@ -34,19 +34,6 @@ class HttpUrlHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(HttpURLConnection connection, @Nullable Integer statusCode) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpURLConnection connection, @Nullable Integer response) {
-    return null;
-  }
-
-  @Override
   public String flavor(HttpURLConnection connection, @Nullable Integer statusCode) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
@@ -54,18 +41,6 @@ class HttpUrlHttpAttributesGetter
   @Override
   public Integer statusCode(HttpURLConnection connection, Integer statusCode) {
     return statusCode;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(HttpURLConnection connection, Integer statusCode) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(HttpURLConnection connection, Integer statusCode) {
-    return null;
   }
 
   @Override

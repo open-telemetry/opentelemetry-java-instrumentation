@@ -23,7 +23,7 @@ class HttpRouteHolderTest {
     Instrumenter<String, Void> instrumenter =
         Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "test", s -> s)
             .addContextCustomizer(HttpRouteHolder.get())
-            .newInstrumenter();
+            .buildInstrumenter();
 
     Context context = instrumenter.start(Context.root(), "test");
 
