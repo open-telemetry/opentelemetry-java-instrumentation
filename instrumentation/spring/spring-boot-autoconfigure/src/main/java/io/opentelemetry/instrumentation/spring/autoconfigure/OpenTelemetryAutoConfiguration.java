@@ -44,6 +44,8 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 @EnableConfigurationProperties({MetricExportProperties.class, SamplerProperties.class})
 public class OpenTelemetryAutoConfiguration {
 
+  public OpenTelemetryAutoConfiguration() {}
+
   @Configuration
   @ConditionalOnMissingBean(OpenTelemetry.class)
   public static class OpenTelemetryBeanConfig {
@@ -120,6 +122,4 @@ public class OpenTelemetryAutoConfiguration {
           .build();
     }
   }
-
-  private OpenTelemetryAutoConfiguration() {}
 }
