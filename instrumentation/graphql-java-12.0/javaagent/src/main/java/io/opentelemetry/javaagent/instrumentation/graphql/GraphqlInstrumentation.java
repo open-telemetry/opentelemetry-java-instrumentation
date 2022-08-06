@@ -32,7 +32,7 @@ public class GraphqlInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$AddInstrumentationAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class AddInstrumentationAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return(readOnly = false) Instrumentation instrumentation) {

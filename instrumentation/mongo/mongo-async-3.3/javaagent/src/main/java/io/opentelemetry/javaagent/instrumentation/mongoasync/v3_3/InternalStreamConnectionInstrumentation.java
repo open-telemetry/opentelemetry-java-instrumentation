@@ -43,7 +43,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
         this.getClass().getName() + "$SingleResultCallbackArg2Advice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SingleResultCallbackArg0Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -53,7 +53,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SingleResultCallbackArg1Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -63,7 +63,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SingleResultCallbackArg2Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

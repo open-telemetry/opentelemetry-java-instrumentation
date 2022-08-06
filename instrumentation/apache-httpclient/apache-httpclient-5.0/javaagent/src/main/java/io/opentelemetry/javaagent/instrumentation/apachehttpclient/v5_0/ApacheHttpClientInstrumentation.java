@@ -121,7 +121,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -154,7 +154,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -194,7 +194,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RequestWithContextAndHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -234,7 +234,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RequestWithHostAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -270,7 +270,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RequestWithHostAndHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -315,7 +315,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RequestWithHostAndContextAndHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -33,7 +33,7 @@ public class SessionBuilderInstrumentation implements TypeInstrumentation {
         SessionBuilderInstrumentation.class.getName() + "$BuildAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class BuildAdvice {
 
     /**

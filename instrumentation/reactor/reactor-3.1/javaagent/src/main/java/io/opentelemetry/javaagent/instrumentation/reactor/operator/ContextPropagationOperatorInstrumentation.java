@@ -61,7 +61,7 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
         ContextPropagationOperatorInstrumentation.class.getName() + "$RunWithAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class StoreAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnDefaultValue.class)
     public static boolean methodEnter() {
@@ -79,7 +79,7 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
     public static boolean methodEnter() {
@@ -102,7 +102,7 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RunWithAdvice {
     @Advice.OnMethodEnter
     public static void methodEnter(

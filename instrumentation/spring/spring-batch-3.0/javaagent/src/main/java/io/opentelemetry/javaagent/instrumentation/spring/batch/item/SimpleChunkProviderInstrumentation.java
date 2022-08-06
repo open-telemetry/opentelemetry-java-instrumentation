@@ -38,7 +38,7 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ReadAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ReadAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

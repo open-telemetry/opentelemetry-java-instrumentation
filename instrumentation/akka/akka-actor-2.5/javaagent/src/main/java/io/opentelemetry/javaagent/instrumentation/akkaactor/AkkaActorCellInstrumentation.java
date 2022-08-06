@@ -37,7 +37,7 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
         AkkaActorCellInstrumentation.class.getName() + "$SystemInvokeAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class InvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -55,7 +55,7 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SystemInvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

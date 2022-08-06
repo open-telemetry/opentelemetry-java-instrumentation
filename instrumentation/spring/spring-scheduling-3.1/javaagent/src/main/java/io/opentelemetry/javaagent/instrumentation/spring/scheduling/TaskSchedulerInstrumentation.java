@@ -29,7 +29,7 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ScheduleMethodAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ScheduleMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

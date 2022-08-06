@@ -33,7 +33,7 @@ public class UiInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SetCurrentAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SetCurrentAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

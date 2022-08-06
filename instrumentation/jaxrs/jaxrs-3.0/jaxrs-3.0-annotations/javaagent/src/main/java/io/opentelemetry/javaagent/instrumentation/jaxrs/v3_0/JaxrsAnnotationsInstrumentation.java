@@ -68,7 +68,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         JaxrsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

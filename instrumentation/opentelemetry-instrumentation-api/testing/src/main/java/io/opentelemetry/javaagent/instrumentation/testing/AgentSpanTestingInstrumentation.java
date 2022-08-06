@@ -30,7 +30,7 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
         named("runWithAllSpanKeys"), this.getClass().getName() + "$RunWithAllSpanKeysAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RunWithHttpServerSpanAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -52,7 +52,7 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RunWithAllSpanKeysAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

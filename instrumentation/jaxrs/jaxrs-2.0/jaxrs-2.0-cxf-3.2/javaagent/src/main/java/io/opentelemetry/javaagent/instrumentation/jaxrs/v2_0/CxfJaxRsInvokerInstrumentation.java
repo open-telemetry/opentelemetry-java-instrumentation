@@ -34,7 +34,7 @@ public class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
         CxfJaxRsInvokerInstrumentation.class.getName() + "$InvokeAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class InvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

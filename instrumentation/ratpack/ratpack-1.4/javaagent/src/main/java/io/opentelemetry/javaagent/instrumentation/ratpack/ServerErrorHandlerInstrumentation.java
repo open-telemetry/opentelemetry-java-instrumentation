@@ -41,7 +41,7 @@ public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
         ServerErrorHandlerInstrumentation.class.getName() + "$ErrorAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ErrorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

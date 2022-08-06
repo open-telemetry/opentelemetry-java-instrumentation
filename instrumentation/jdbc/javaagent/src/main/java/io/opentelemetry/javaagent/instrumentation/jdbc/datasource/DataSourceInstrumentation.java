@@ -31,7 +31,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         named("getConnection"), DataSourceInstrumentation.class.getName() + "$GetConnectionAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -37,7 +37,7 @@ public class UnicastRefInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$InvokeAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class InvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

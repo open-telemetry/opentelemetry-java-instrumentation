@@ -41,7 +41,7 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
             + "$WrapCompletableFutureAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class WrapSubscriberAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

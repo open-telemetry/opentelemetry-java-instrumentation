@@ -45,7 +45,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$PollAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class PollAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Timer onEnter() {

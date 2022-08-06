@@ -30,7 +30,7 @@ public class ArmeriaServerBuilderInstrumentation implements TypeInstrumentation 
         ArmeriaServerBuilderInstrumentation.class.getName() + "$BuildAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class BuildAdvice {
 
     @Advice.OnMethodEnter

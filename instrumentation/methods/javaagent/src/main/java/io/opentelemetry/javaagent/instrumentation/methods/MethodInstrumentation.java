@@ -51,7 +51,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
         MethodInstrumentation.class.getName() + "$MethodAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class MethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

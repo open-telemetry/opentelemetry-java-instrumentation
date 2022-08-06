@@ -29,7 +29,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
         named("testMethod2"), TestTypeInstrumentation.class.getName() + "$TestAdvice2");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class TestAdvice {
 
     @Advice.OnMethodExit
@@ -40,7 +40,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class TestAdvice2 {
 
     @Advice.OnMethodExit

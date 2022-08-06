@@ -39,7 +39,7 @@ public class CouchbaseClusterInstrumentation implements TypeInstrumentation {
         CouchbaseClusterInstrumentation.class.getName() + "$CouchbaseClientAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CouchbaseClientAdvice {
 
     @Advice.OnMethodEnter

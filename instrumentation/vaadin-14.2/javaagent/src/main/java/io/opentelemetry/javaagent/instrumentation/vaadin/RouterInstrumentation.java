@@ -36,7 +36,7 @@ public class RouterInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$NavigateAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class NavigateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

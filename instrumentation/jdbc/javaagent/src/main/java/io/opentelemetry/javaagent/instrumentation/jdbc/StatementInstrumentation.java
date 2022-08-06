@@ -44,7 +44,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
         StatementInstrumentation.class.getName() + "$StatementAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class StatementAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

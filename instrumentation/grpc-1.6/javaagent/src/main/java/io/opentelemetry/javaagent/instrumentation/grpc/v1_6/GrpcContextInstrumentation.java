@@ -33,7 +33,7 @@ public class GrpcContextInstrumentation implements TypeInstrumentation {
         GrpcContextInstrumentation.class.getName() + "$ContextBridgeAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ContextBridgeAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)

@@ -40,7 +40,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
         named("useMultipleFields"), this.getClass().getName() + "$UseMultipleFieldsAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class MarkInstrumentedAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.Return(readOnly = false) boolean isInstrumented) {
@@ -48,7 +48,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class StoreAndIncrementApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(
@@ -67,7 +67,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(
@@ -79,7 +79,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class PutApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz, @Advice.Argument(0) int value) {
@@ -91,7 +91,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RemoveApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz) {
@@ -101,7 +101,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class UseMultipleFieldsAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz) {

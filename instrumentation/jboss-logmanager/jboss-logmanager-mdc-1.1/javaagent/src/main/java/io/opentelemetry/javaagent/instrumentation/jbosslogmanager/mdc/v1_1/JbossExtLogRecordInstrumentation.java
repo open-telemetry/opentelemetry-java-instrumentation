@@ -49,7 +49,7 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         JbossExtLogRecordInstrumentation.class.getName() + "$GetMdcCopyAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetMdcAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

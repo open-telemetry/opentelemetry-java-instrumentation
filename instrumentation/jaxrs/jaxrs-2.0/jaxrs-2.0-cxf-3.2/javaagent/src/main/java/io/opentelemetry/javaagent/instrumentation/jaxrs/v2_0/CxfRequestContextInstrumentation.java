@@ -54,7 +54,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
         CxfRequestContextInstrumentation.class.getName() + "$ContainerRequestContextAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ContainerRequestContextAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -42,7 +42,7 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         CouchbaseBucketInstrumentation.class.getName() + "$CouchbaseClientQueryAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CouchbaseClientAdvice {
 
     @Advice.OnMethodEnter
@@ -67,7 +67,7 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CouchbaseClientQueryAdvice {
 
     @Advice.OnMethodEnter

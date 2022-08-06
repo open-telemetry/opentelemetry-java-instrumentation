@@ -34,7 +34,7 @@ public class RunnableInstrumentation implements TypeInstrumentation {
         RunnableInstrumentation.class.getName() + "$RunnableAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RunnableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

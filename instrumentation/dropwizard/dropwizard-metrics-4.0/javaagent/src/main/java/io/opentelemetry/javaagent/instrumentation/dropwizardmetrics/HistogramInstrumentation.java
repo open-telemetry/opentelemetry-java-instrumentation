@@ -30,7 +30,7 @@ public class HistogramInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$UpdateAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class UpdateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

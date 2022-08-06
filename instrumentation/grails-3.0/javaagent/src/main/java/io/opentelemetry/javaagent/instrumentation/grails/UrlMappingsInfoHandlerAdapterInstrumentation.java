@@ -39,7 +39,7 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
         UrlMappingsInfoHandlerAdapterInstrumentation.class.getName() + "$ServerSpanNameAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ServerSpanNameAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

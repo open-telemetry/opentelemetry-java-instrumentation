@@ -54,7 +54,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
    * This advice creates a filter that has reference to the handlerMappings from DispatcherServlet
    * which allows the mappings to be evaluated outside of regular request processing.
    */
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HandlerMappingAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -71,7 +71,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

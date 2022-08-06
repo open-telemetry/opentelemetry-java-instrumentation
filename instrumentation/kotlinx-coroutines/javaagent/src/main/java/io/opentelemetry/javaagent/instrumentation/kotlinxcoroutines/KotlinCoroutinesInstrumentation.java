@@ -29,7 +29,7 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ContextAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ContextAdvice {
 
     @Advice.OnMethodEnter

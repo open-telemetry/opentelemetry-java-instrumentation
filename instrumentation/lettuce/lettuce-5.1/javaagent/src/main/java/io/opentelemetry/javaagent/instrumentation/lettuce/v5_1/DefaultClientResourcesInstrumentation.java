@@ -30,7 +30,7 @@ public class DefaultClientResourcesInstrumentation implements TypeInstrumentatio
         this.getClass().getName() + "$BuilderAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class BuilderAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

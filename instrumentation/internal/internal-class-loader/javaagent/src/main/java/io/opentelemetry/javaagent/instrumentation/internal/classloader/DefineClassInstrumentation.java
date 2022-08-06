@@ -39,7 +39,7 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
         DefineClassInstrumentation.class.getName() + "$DefineClassAdvice2");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DefineClassAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DefineClassContext onEnter(
@@ -58,7 +58,7 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DefineClassAdvice2 {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DefineClassContext onEnter(

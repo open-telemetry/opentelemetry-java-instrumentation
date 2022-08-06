@@ -50,7 +50,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         LettuceReactiveCommandsInstrumentation.class.getName() + "$CreateFluxAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CreateMonoAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -76,7 +76,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CreateFluxAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

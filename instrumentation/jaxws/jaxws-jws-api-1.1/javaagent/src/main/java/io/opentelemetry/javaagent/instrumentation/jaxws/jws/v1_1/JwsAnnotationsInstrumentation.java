@@ -56,7 +56,7 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
         JwsAnnotationsInstrumentation.class.getName() + "$JwsAnnotationsAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class JwsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

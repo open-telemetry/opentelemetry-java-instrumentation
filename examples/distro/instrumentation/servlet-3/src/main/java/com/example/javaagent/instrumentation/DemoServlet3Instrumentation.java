@@ -36,7 +36,7 @@ public class DemoServlet3Instrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$DemoServlet3Advice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DemoServlet3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

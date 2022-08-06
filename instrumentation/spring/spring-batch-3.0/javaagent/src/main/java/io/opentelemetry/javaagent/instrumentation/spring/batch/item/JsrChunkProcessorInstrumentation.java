@@ -44,7 +44,7 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$PersistAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ProvideAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -82,7 +82,7 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class TransformAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -120,7 +120,7 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class PersistAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

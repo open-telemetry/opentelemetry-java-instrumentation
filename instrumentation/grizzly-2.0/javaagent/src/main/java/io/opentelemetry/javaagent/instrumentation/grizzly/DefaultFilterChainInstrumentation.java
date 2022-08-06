@@ -39,7 +39,7 @@ public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
         DefaultFilterChainInstrumentation.class.getName() + "$NotifyFailureAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class NotifyFailureAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

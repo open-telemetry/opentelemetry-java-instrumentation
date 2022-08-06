@@ -46,7 +46,7 @@ public class AwsHttpClientInstrumentation implements TypeInstrumentation {
         AwsHttpClientInstrumentation.class.getName() + "$HttpClientAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HttpClientAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

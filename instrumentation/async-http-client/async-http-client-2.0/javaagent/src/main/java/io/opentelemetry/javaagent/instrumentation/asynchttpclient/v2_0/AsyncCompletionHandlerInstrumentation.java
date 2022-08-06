@@ -47,7 +47,7 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
         this.getClass().getName() + "$OnThrowableAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class OnCompletedAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -73,7 +73,7 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class OnThrowableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

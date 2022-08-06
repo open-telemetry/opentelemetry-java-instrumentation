@@ -44,7 +44,7 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
         HttpJspPageInstrumentation.class.getName() + "$HttpJspPageAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HttpJspPageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

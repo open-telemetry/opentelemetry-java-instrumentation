@@ -34,7 +34,7 @@ public class ConnectionManagerInstrumentation implements TypeInstrumentation {
         ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg3Advice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetConnectionArg2Advice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
@@ -43,7 +43,7 @@ public class ConnectionManagerInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetConnectionArg3Advice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(

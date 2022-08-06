@@ -40,7 +40,7 @@ public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
         DefaultExecStarterInstrumentation.class.getName() + "$StartAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class WrapActionAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapAction(@Advice.Argument(value = 0, readOnly = false) Action<?> action) {
@@ -48,7 +48,7 @@ public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class StartAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.Argument(value = 0, readOnly = false) Action<?> action) {

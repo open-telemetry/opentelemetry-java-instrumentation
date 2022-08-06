@@ -39,7 +39,7 @@ public class LoggerInstrumentation implements TypeInstrumentation {
         LoggerInstrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CallAppendersAdvice {
 
     @Advice.OnMethodEnter

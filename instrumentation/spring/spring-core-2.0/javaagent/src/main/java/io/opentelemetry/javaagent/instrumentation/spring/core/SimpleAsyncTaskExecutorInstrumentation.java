@@ -40,7 +40,7 @@ public class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentati
         getClass().getName() + "$ExecuteAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -47,7 +47,7 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
         this.getClass().getName() + "$SendResponseAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SendResponseAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

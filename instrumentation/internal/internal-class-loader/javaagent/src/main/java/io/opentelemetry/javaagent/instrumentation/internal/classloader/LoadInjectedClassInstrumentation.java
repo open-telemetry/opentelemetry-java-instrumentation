@@ -50,7 +50,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
         LoadInjectedClassInstrumentation.class.getName() + "$LoadClassAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class LoadClassAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)

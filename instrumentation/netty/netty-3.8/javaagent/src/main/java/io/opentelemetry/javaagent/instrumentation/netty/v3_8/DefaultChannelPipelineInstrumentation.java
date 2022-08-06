@@ -33,7 +33,7 @@ public class DefaultChannelPipelineInstrumentation implements TypeInstrumentatio
         DefaultChannelPipelineInstrumentation.class.getName() + "$NotifyHandlerExceptionAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class NotifyHandlerExceptionAdvice {
 
     @Advice.OnMethodEnter

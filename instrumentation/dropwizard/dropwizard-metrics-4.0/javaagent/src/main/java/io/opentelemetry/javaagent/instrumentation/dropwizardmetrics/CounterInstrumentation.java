@@ -31,7 +31,7 @@ public class CounterInstrumentation implements TypeInstrumentation {
         named("dec").and(takesArguments(long.class)), this.getClass().getName() + "$DecAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class IncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -40,7 +40,7 @@ public class CounterInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DecAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

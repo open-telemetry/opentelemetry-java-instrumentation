@@ -30,7 +30,7 @@ public class AutoConfigurationImportSelectorInstrumentation implements TypeInstr
         getClass().getName() + "$GetCandidateConfigurationsAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetCandidateConfigurationsAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

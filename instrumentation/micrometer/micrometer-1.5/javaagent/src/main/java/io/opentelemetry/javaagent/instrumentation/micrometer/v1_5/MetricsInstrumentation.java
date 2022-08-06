@@ -28,7 +28,7 @@ public class MetricsInstrumentation implements TypeInstrumentation {
         isTypeInitializer(), this.getClass().getName() + "$StaticInitializerAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class StaticInitializerAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit() {

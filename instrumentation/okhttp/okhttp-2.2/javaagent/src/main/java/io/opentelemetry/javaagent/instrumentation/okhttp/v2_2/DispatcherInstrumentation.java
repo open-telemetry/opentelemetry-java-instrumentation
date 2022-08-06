@@ -32,7 +32,7 @@ public class DispatcherInstrumentation implements TypeInstrumentation {
         DispatcherInstrumentation.class.getName() + "$AttachStateAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class AttachStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

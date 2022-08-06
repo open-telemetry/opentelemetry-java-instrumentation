@@ -38,7 +38,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
         getClass().getName() + "$InvokeListenerAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class InvokeListenerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

@@ -36,7 +36,7 @@ public class StepBuilderHelperInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$EnhanceAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class EnhanceAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

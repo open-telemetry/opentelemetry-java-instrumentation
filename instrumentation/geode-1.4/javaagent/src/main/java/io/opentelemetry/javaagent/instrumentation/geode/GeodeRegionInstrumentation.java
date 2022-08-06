@@ -41,14 +41,14 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(
                 namedOneOf(
-                        "clear",
-                        "create",
-                        "destroy",
-                        "entrySet",
-                        "get",
-                        "getAll",
-                        "invalidate",
-                        "replace")
+                    "clear",
+                    "create",
+                    "destroy",
+                    "entrySet",
+                    "get",
+                    "getAll",
+                    "invalidate",
+                    "replace")
                     .or(nameStartsWith("contains"))
                     .or(nameStartsWith("keySet"))
                     .or(nameStartsWith("put"))
@@ -61,7 +61,7 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$QueryAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SimpleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -97,7 +97,7 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class QueryAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

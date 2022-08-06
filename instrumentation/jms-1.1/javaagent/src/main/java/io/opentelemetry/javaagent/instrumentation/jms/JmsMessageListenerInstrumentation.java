@@ -41,7 +41,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         JmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class MessageListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

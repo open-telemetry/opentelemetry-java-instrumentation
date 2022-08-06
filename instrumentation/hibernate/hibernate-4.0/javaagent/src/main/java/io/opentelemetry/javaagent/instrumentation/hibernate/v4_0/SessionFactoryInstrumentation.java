@@ -45,7 +45,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
         SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SessionFactoryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

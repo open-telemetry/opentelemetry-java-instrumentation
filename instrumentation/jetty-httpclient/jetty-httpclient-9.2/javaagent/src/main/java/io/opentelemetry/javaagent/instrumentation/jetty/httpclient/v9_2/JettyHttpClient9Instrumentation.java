@@ -40,7 +40,7 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
         JettyHttpClient9Instrumentation.class.getName() + "$JettyHttpClient9Advice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class JettyHttpClient9Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

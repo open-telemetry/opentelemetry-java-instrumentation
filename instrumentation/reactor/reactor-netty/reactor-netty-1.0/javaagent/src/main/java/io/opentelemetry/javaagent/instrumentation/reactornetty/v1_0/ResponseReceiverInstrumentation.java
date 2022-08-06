@@ -70,7 +70,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ResponseSingleAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ResponseMonoAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -105,7 +105,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ResponseFluxAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -128,8 +128,8 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
         @Advice.Argument(0)
-            BiFunction<? super HttpClientResponse, ? super ByteBufFlux, ? extends Publisher<T>>
-                receiveFunction,
+        BiFunction<? super HttpClientResponse, ? super ByteBufFlux, ? extends Publisher<T>>
+            receiveFunction,
         @Advice.Return(readOnly = false) Flux<?> returnValue) {
 
       try {
@@ -143,7 +143,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ResponseConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -166,8 +166,8 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
         @Advice.Argument(0)
-            BiFunction<? super HttpClientResponse, ? super Connection, ? extends Publisher<T>>
-                receiveFunction,
+        BiFunction<? super HttpClientResponse, ? super Connection, ? extends Publisher<T>>
+            receiveFunction,
         @Advice.Return(readOnly = false) Flux<?> returnValue) {
 
       try {
@@ -181,7 +181,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ResponseContentAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -216,7 +216,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ResponseSingleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -239,8 +239,8 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Enter HttpClient.ResponseReceiver<T> modifiedReceiver,
         @Advice.Argument(0)
-            BiFunction<? super HttpClientResponse, ? super ByteBufMono, ? extends Mono<T>>
-                receiveFunction,
+        BiFunction<? super HttpClientResponse, ? super ByteBufMono, ? extends Mono<T>>
+            receiveFunction,
         @Advice.Return(readOnly = false) Mono<?> returnValue) {
 
       try {

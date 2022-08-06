@@ -42,7 +42,7 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
             + "$InvokeExceptionCaughtAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class InvokeExceptionCaughtAdvice {
 
     @Advice.OnMethodEnter

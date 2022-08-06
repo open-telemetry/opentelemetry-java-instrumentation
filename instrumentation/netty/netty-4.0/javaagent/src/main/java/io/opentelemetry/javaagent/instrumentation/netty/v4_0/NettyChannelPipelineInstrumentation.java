@@ -51,7 +51,7 @@ public class NettyChannelPipelineInstrumentation
    * handlers. If those handlers are later removed, we may want to remove our handlers. That is not
    * currently implemented.
    */
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter

@@ -46,7 +46,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
         this.getClass().getName() + "$GetRecordInterceptorAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetBatchInterceptorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -55,16 +55,16 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
 
       if (interceptor == null
           || !interceptor
-              .getClass()
-              .getName()
-              .equals(
-                  "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedBatchInterceptor")) {
+          .getClass()
+          .getName()
+          .equals(
+              "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedBatchInterceptor")) {
         interceptor = telemetry().createBatchInterceptor(interceptor);
       }
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetRecordInterceptorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -73,10 +73,10 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
 
       if (interceptor == null
           || !interceptor
-              .getClass()
-              .getName()
-              .equals(
-                  "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
+          .getClass()
+          .getName()
+          .equals(
+              "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
         interceptor = telemetry().createRecordInterceptor(interceptor);
       }
     }

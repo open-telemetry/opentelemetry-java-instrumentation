@@ -44,7 +44,7 @@ public class JedisInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$JedisMethodAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class JedisMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

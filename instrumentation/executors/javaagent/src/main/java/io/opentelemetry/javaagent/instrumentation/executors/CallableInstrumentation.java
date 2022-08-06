@@ -35,7 +35,7 @@ public class CallableInstrumentation implements TypeInstrumentation {
         CallableInstrumentation.class.getName() + "$CallableAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CallableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

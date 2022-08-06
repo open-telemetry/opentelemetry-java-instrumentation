@@ -37,7 +37,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
         BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ConnectAdvice {
     @Advice.OnMethodEnter
     public static void startConnect(

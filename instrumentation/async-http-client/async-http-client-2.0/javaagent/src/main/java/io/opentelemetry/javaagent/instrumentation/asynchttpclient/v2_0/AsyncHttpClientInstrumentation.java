@@ -40,7 +40,7 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ExecuteRequestAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ExecuteRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

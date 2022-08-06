@@ -60,7 +60,7 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
   }
 
   /** Advice for instrumenting Twilio service classes. */
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class TwilioClientAdvice {
 
     /** Method entry instrumentation. */

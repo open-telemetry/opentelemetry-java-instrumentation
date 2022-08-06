@@ -44,7 +44,7 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
         WebServiceProviderInstrumentation.class.getName() + "$InvokeAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class InvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

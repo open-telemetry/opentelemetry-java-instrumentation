@@ -35,7 +35,7 @@ class DataSourceProxyInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$CloseAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CreatePoolAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This DataSourceProxy dataSource) {
@@ -43,7 +43,7 @@ class DataSourceProxyInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CloseAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This DataSourceProxy dataSource) {

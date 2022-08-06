@@ -38,13 +38,13 @@ public class ContextStorageWrappersInstrumentation implements TypeInstrumentatio
         ContextStorageWrappersInstrumentation.class.getName() + "$AddWrapperAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class AddWrapperAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false)
-            List<Function<? super ContextStorage, ? extends ContextStorage>> wrappers) {
+        List<Function<? super ContextStorage, ? extends ContextStorage>> wrappers) {
       wrappers = new ArrayList<>(wrappers);
       wrappers.add(AgentContextStorage.wrap());
     }

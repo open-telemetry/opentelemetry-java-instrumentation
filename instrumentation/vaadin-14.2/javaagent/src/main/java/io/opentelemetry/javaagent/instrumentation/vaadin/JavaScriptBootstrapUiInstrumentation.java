@@ -29,7 +29,7 @@ public class JavaScriptBootstrapUiInstrumentation implements TypeInstrumentation
         named("connectClient"), this.getClass().getName() + "$ConnectClientAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ConnectClientAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

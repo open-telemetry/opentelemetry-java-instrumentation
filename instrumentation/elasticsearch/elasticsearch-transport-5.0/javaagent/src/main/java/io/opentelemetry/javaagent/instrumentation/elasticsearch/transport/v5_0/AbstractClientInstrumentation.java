@@ -44,7 +44,7 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ExecuteAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -55,7 +55,7 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelRequest") ElasticTransportRequest transportRequest,
         @Advice.Argument(value = 2, readOnly = false)
-            ActionListener<ActionResponse> actionListener) {
+        ActionListener<ActionResponse> actionListener) {
 
       transportRequest = ElasticTransportRequest.create(action, actionRequest);
       Context parentContext = currentContext();

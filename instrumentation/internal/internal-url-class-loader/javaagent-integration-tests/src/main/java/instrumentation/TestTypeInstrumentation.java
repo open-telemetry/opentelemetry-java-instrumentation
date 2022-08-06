@@ -31,7 +31,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
         named("getHostName"), TestTypeInstrumentation.class.getName() + "$GetHostNameAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class GetHostNameAdvice {
 
     @Advice.OnMethodExit

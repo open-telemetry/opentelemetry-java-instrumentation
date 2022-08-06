@@ -41,7 +41,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ServerHandleAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ServerHandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -34,7 +34,7 @@ public class KafkaConsumerRecordsImplInstrumentation implements TypeInstrumentat
         this.getClass().getName() + "$RecordAtAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RecordAtAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

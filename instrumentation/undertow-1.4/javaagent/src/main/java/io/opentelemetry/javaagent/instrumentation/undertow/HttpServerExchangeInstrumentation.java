@@ -34,7 +34,7 @@ public class HttpServerExchangeInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$DispatchAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

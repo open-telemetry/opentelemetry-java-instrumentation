@@ -41,7 +41,7 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
         this.getClass().getName() + "$ExecuteAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

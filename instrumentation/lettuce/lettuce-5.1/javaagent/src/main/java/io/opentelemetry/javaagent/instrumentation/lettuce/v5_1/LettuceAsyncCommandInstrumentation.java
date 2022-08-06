@@ -35,7 +35,7 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
         LettuceAsyncCommandInstrumentation.class.getName() + "$RestoreContextAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SaveContextAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -45,7 +45,7 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RestoreContextAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -58,7 +58,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
         TransportConnectorInstrumentation.class.getName() + "$ConnectNewAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ResolveAndConnectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -74,7 +74,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ConnectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -117,7 +117,7 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ConnectNewAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

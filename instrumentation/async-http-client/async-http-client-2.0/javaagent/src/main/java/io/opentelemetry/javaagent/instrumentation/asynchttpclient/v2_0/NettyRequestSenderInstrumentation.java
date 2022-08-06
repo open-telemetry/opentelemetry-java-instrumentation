@@ -54,7 +54,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
         NettyRequestSenderInstrumentation.class.getName() + "$RememberNettyRequestAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class AttachContextAdvice {
 
     @Advice.OnMethodEnter
@@ -64,7 +64,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class MountContextAdvice {
 
     @Advice.OnMethodEnter
@@ -82,7 +82,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RememberNettyRequestAdvice {
 
     @Advice.OnMethodExit

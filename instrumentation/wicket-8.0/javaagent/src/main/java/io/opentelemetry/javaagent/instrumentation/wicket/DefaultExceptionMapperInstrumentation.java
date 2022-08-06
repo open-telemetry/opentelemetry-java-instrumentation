@@ -33,7 +33,7 @@ public class DefaultExceptionMapperInstrumentation implements TypeInstrumentatio
         DefaultExceptionMapperInstrumentation.class.getName() + "$ExceptionAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ExceptionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -44,7 +44,7 @@ public class DefaultExceptionMapperInstrumentation implements TypeInstrumentatio
         Throwable throwable = exception;
         while (throwable.getCause() != null
             && (throwable instanceof WicketRuntimeException
-                || throwable instanceof InvocationTargetException)) {
+            || throwable instanceof InvocationTargetException)) {
           throwable = throwable.getCause();
         }
         // as we don't create a span for wicket we record exception on server span

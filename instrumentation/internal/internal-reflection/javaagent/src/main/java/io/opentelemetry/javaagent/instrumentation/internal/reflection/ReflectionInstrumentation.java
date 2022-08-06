@@ -50,7 +50,7 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
         ReflectionInstrumentation.class.getName() + "$FilterMethodsAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class FilterFieldsAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void filter(
@@ -60,7 +60,7 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class FilterMethodsAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void filter(

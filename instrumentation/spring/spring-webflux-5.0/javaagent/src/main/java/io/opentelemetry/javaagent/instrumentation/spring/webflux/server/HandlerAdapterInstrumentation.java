@@ -53,7 +53,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

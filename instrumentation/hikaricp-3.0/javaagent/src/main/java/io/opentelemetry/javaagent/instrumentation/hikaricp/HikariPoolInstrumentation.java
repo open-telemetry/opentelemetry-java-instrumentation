@@ -34,7 +34,7 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SetMetricsTrackerFactoryAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

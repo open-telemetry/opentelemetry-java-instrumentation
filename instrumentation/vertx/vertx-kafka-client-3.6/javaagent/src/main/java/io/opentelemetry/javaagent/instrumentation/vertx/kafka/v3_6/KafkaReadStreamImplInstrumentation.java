@@ -45,7 +45,7 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
         named("run").and(isPrivate()), this.getClass().getName() + "$RunAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -58,7 +58,7 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class BatchHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -72,7 +72,7 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RunAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

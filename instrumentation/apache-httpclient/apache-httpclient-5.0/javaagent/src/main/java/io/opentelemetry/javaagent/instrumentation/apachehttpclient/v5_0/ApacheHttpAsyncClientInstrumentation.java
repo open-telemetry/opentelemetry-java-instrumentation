@@ -61,7 +61,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ClientAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -29,7 +29,7 @@ public class AbstractBootstrapInstrumentation implements TypeInstrumentation {
         AbstractBootstrapInstrumentation.class.getName() + "$DisablePropagationAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DisablePropagationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter() {

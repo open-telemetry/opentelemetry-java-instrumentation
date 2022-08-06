@@ -43,7 +43,7 @@ public class RecordDeserializerInstrumentation implements TypeInstrumentation {
         RecordDeserializerInstrumentation.class.getName() + "$DeserializeAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DeserializeAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

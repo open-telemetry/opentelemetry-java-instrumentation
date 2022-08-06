@@ -37,7 +37,7 @@ public class RouteInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RouteBeforeHandleAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class RouteBeforeHandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

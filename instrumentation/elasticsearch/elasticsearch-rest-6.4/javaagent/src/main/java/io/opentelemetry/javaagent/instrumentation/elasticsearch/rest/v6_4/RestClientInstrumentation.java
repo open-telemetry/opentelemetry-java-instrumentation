@@ -41,7 +41,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class PerformRequestAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

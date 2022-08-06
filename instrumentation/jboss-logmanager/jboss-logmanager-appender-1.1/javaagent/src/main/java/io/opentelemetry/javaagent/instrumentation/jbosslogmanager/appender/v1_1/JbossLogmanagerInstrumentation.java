@@ -38,7 +38,7 @@ public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
         JbossLogmanagerInstrumentation.class.getName() + "$CallLogRawAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CallLogRawAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(

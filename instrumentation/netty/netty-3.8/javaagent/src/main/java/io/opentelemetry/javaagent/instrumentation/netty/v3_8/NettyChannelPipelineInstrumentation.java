@@ -77,21 +77,23 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
             HttpServerResponseTracingHandler.class.getName(),
             new HttpServerResponseTracingHandler());
       } else
-      // Client pipeline handlers
-      if (handler instanceof HttpClientCodec) {
-        pipeline.addLast(HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
-      } else if (handler instanceof HttpRequestEncoder) {
-        pipeline.addLast(
-            HttpClientRequestTracingHandler.class.getName(), new HttpClientRequestTracingHandler());
-      } else if (handler instanceof HttpResponseDecoder) {
-        pipeline.addLast(
-            HttpClientResponseTracingHandler.class.getName(),
-            new HttpClientResponseTracingHandler());
-      }
+        // Client pipeline handlers
+        if (handler instanceof HttpClientCodec) {
+          pipeline.addLast(HttpClientTracingHandler.class.getName(),
+              new HttpClientTracingHandler());
+        } else if (handler instanceof HttpRequestEncoder) {
+          pipeline.addLast(
+              HttpClientRequestTracingHandler.class.getName(),
+              new HttpClientRequestTracingHandler());
+        } else if (handler instanceof HttpResponseDecoder) {
+          pipeline.addLast(
+              HttpClientResponseTracingHandler.class.getName(),
+              new HttpClientResponseTracingHandler());
+        }
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ChannelPipelineAdd2ArgsAdvice {
 
     @Advice.OnMethodEnter
@@ -122,7 +124,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ChannelPipelineAdd3ArgsAdvice {
 
     @Advice.OnMethodEnter

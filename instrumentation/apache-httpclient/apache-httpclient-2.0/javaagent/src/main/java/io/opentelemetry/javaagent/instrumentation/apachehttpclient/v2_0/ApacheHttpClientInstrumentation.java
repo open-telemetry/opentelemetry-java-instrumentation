@@ -44,7 +44,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ExecuteMethodAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ExecuteMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

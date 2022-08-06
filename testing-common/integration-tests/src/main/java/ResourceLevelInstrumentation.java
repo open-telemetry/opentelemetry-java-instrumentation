@@ -23,7 +23,7 @@ public class ResourceLevelInstrumentation implements TypeInstrumentation {
         named("toString"), this.getClass().getName() + "$ToStringAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ToStringAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     static void toStringReplace(@Advice.Return(readOnly = false) String ret) {

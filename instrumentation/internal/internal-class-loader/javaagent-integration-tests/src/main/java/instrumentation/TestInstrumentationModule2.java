@@ -54,7 +54,7 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class TestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static String onEnter() {

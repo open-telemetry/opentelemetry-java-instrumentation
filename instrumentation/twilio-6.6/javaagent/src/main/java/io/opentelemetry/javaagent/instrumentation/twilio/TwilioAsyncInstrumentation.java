@@ -68,7 +68,7 @@ public class TwilioAsyncInstrumentation implements TypeInstrumentation {
   }
 
   /** Advice for instrumenting Twilio service classes. */
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class TwilioClientAsyncAdvice {
 
     /** Method entry instrumentation. */

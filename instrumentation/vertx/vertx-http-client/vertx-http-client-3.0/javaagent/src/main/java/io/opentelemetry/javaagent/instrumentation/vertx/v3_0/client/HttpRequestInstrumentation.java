@@ -80,7 +80,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         HttpRequestInstrumentation.class.getName() + "$ExceptionHandlerAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class EndRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -122,7 +122,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HandleExceptionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -150,7 +150,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HandleResponseAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -178,7 +178,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class MountContextAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -200,7 +200,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ExceptionHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

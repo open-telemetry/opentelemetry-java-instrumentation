@@ -41,7 +41,7 @@ public class PartitionGroupInstrumentation implements TypeInstrumentation {
         PartitionGroupInstrumentation.class.getName() + "$NextRecordAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class NextRecordAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

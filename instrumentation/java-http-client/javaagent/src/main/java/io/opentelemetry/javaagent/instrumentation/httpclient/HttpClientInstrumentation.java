@@ -62,7 +62,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -95,7 +95,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SendAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

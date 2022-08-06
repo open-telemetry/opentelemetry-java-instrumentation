@@ -34,7 +34,7 @@ public class FinatraExceptionManagerInstrumentation implements TypeInstrumentati
         this.getClass().getName() + "$HandleExceptionAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HandleExceptionAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -40,7 +40,7 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$PublicMethodAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class PublicMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

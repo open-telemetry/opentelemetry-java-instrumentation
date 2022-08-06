@@ -56,7 +56,7 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
         ConsumerRecordsInstrumentation.class.getName() + "$IteratorAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class IterableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -73,7 +73,7 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ListAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -90,7 +90,7 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class IteratorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

@@ -38,7 +38,7 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
         LettuceAsyncCommandsInstrumentation.class.getName() + "$DispatchAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

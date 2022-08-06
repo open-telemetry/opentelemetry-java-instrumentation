@@ -51,7 +51,7 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
         AkkaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ForkJoinTaskAdvice {
 
     /**

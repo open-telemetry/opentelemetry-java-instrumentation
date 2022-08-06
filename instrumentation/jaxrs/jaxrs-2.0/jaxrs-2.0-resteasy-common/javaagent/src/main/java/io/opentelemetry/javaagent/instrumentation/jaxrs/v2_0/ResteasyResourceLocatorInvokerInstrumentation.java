@@ -37,7 +37,7 @@ public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstru
             + "$InvokeOnTargetObjectAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class InvokeOnTargetObjectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

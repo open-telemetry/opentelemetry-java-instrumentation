@@ -31,7 +31,7 @@ public class ServerRegistryInstrumentation implements TypeInstrumentation {
         ServerRegistryInstrumentation.class.getName() + "$BuildAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class BuildAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

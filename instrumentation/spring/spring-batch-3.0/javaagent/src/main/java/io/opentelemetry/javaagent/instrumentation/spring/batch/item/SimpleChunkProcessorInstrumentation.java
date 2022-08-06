@@ -42,7 +42,7 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
         this.getClass().getName() + "$WriteAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ProcessAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -81,7 +81,7 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class WriteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

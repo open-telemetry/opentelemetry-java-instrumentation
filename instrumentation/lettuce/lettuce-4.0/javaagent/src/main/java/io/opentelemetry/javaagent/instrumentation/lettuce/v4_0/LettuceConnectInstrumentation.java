@@ -33,7 +33,7 @@ public class LettuceConnectInstrumentation implements TypeInstrumentation {
         LettuceConnectInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ConnectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

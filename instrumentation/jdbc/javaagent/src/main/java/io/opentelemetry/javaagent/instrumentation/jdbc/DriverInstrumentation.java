@@ -45,7 +45,7 @@ public class DriverInstrumentation implements TypeInstrumentation {
         DriverInstrumentation.class.getName() + "$DriverAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class DriverAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

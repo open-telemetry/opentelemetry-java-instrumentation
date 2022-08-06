@@ -35,7 +35,7 @@ public class QuartzInstrumentation implements TypeInstrumentation {
         isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ConstructorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

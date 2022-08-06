@@ -51,7 +51,7 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
         CouchbaseNetworkInstrumentation.class.getName() + "$CouchbaseNetworkAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CouchbaseNetworkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

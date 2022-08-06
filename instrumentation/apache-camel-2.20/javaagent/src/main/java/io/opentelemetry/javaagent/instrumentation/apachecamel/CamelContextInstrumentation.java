@@ -36,7 +36,7 @@ public class CamelContextInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$StartAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class StartAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

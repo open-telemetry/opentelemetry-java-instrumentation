@@ -53,7 +53,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
         this.getClass().getName() + "$HandlePageRenderAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HandleComponentEventAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -66,7 +66,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class HandlePageRenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -38,7 +38,7 @@ public class CategoryInstrumentation implements TypeInstrumentation {
         CategoryInstrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CallAppendersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

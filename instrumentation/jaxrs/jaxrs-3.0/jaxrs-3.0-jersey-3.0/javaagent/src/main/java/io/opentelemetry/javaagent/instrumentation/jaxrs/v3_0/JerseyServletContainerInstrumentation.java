@@ -37,7 +37,7 @@ public class JerseyServletContainerInstrumentation implements TypeInstrumentatio
         JerseyServletContainerInstrumentation.class.getName() + "$ServiceAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class ServiceAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

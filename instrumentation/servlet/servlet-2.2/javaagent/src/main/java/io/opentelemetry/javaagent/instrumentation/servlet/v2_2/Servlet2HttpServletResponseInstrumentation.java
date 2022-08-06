@@ -58,7 +58,7 @@ public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumen
             + "$Servlet2ResponseRedirectAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class Servlet2ResponseRedirectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -67,7 +67,7 @@ public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumen
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class Servlet2ResponseStatusAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

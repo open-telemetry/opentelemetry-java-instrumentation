@@ -44,7 +44,7 @@ public class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
         AkkaForkJoinPoolInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SetAkkaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

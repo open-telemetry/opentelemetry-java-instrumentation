@@ -40,7 +40,7 @@ class LogbackInstrumentation implements TypeInstrumentation {
         LogbackInstrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CallAppendersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

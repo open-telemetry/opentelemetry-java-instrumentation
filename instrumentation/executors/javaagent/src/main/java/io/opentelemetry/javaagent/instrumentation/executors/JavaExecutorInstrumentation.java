@@ -73,7 +73,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SetExecuteRunnableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -95,7 +95,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SetJavaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -117,7 +117,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SetSubmitRunnableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -146,7 +146,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SetCallableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -175,7 +175,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     }
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class SetCallableStateForCallableCollectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

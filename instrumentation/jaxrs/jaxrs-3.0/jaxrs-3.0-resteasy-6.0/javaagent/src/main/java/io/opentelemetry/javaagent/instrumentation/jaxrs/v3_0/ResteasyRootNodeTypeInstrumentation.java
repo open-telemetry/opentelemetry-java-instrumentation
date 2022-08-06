@@ -41,7 +41,7 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
         ResteasyRootNodeTypeInstrumentation.class.getName() + "$AddInvokerAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class AddInvokerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

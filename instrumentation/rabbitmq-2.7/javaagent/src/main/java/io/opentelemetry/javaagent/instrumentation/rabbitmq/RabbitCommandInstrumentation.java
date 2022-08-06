@@ -43,7 +43,7 @@ public class RabbitCommandInstrumentation implements TypeInstrumentation {
     public static final ThreadLocal<Context> CURRENT_RABBIT_CONTEXT = new ThreadLocal<>();
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
   public static class CommandConstructorAdvice {
 
     @Advice.OnMethodExit
