@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.testing;
 
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 
-public class AgentSpanTesting {
+public final class AgentSpanTesting {
 
   /**
    * Runs the provided {@code runnable} inside the scope of an SERVER span with name {@code
@@ -24,4 +24,6 @@ public class AgentSpanTesting {
   public static void runWithAllSpanKeys(String spanName, Runnable runnable) {
     runnable.run();
   }
+
+  private AgentSpanTesting() {}
 }

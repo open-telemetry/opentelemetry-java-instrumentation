@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.util.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
-public class TwilioSingletons {
+public final class TwilioSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       InstrumentationConfig.get()
@@ -23,7 +23,7 @@ public class TwilioSingletons {
 
   static {
     InstrumenterBuilder<String, Object> instrumenterBuilder =
-        Instrumenter.<String, Object>builder(
+        Instrumenter.builder(
             GlobalOpenTelemetry.get(), "io.opentelemetry.twilio-6.6", str -> str);
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
@@ -41,4 +41,6 @@ public class TwilioSingletons {
   public static String spanName(Object serviceExecutor, String methodName) {
     return SpanNames.fromMethod(serviceExecutor.getClass(), methodName);
   }
+
+  private TwilioSingletons() {}
 }

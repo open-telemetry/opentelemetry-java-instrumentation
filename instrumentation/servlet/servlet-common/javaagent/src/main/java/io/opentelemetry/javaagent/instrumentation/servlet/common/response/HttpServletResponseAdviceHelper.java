@@ -65,4 +65,6 @@ public class HttpServletResponseAdviceHelper {
       instrumenter.end(context, request, null, throwable);
     }
   }
+
+  private HttpServletResponseAdviceHelper() {}
 }

@@ -38,11 +38,11 @@ public class UrlClassLoaderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, URL.class))
             .and(isProtected())
             .and(not(isStatic())),
-        UrlClassLoaderInstrumentation.class.getName() + "$InvalidateClassLoaderMatcher");
+        UrlClassLoaderInstrumentation.class.getName() + "$AddUrlAdvice");
   }
 
-  @SuppressWarnings("unused")
-  public static class InvalidateClassLoaderMatcher {
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  public static class AddUrlAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This URLClassLoader loader) {
       ClassLoaderMatcherCacheHolder.invalidateAllCachesForClassLoader(loader);

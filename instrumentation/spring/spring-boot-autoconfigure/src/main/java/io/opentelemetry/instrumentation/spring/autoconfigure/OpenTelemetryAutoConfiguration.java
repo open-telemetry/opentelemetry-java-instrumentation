@@ -120,4 +120,6 @@ public class OpenTelemetryAutoConfiguration {
           .build();
     }
   }
+
+  private OpenTelemetryAutoConfiguration() {}
 }

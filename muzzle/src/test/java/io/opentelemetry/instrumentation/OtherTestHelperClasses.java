@@ -8,7 +8,8 @@ package io.opentelemetry.instrumentation;
 import muzzle.TestClasses;
 
 public class OtherTestHelperClasses {
-  public static class Foo implements TestClasses.MethodBodyAdvice.SomeInterface {
+
+  public static class Foo implements TestClasses.Nested.SomeInterface {
     @Override
     public void someMethod() {}
   }
@@ -30,4 +31,6 @@ public class OtherTestHelperClasses {
 
     abstract int getAnswer();
   }
+
+  private OtherTestHelperClasses() {}
 }

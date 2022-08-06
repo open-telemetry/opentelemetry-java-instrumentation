@@ -31,11 +31,11 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("compile").and(takesArguments(0)).and(isPublic()),
-        JspCompilationContextInstrumentation.class.getName() + "$JasperJspCompilationContext");
+        JspCompilationContextInstrumentation.class.getName() + "$CompileAdvice");
   }
 
-  @SuppressWarnings("unused")
-  public static class JasperJspCompilationContext {
+  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  public static class CompileAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

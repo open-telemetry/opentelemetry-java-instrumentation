@@ -20,7 +20,8 @@ import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RabbitSingletons {
+public final class RabbitSingletons {
+
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.rabbitmq.experimental-span-attributes", false);
@@ -91,4 +92,6 @@ public class RabbitSingletons {
         .addAttributesExtractors(extractors)
         .buildConsumerInstrumenter(DeliveryRequestGetter.INSTANCE);
   }
+
+  private RabbitSingletons() {}
 }

@@ -66,4 +66,6 @@ public class JavaInterfaces {
       // do nothing
     }
   }
+
+  private JavaInterfaces() {}
 }
