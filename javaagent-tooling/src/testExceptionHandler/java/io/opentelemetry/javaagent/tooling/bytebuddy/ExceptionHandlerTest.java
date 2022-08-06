@@ -111,14 +111,15 @@ class ExceptionHandlerTest {
   @Test
   void exceptionHandlerSetsCorrectStackSize() {
     assertThatCode(
-            () -> {
-              SomeClass.smallStack();
-              SomeClass.largeStack();
-            })
+        () -> {
+          SomeClass.smallStack();
+          SomeClass.largeStack();
+        })
         .doesNotThrowAnyException();
   }
 
   public static class SomeClass {
+
     public static boolean isInstrumented() {
       return false;
     }
@@ -136,5 +137,7 @@ class ExceptionHandlerTest {
       Object o = new Object();
       System.out.println("large stack: " + l + ' ' + i + ' ' + d + ' ' + o);
     }
+
+    private SomeClass() {}
   }
 }
