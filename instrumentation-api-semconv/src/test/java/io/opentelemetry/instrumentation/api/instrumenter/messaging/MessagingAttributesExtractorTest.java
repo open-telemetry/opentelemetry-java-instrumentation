@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import javax.annotation.Nullable;
 
 @SuppressWarnings("deprecation") // operationName
 class MessagingAttributesExtractorTest {
@@ -174,12 +173,6 @@ class MessagingAttributesExtractorTest {
     @Override
     public String messageId(Map<String, String> request, String response) {
       return response;
-    }
-
-    @Nullable
-    @Override
-    public String messagePayload(Map<String, String> stringStringMap) {
-      return null;
     }
   }
 }

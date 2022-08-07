@@ -88,10 +88,4 @@ public enum KafkaReceiveAttributesGetter
   public String messageId(ConsumerRecords<?, ?> consumerRecords, @Nullable Void unused) {
     return null;
   }
-
-  @Nullable
-  @Override
-  public String messagePayload(ConsumerRecords<?, ?> consumerRecords) {
-    return null;
-  }
 }

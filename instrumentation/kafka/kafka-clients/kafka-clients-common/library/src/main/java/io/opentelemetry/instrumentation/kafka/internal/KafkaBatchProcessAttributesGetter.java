@@ -82,10 +82,4 @@ enum KafkaBatchProcessAttributesGetter
   public String messageId(ConsumerRecords<?, ?> records, @Nullable Void unused) {
     return null;
   }
-
-  @Nullable
-  @Override
-  public String messagePayload(ConsumerRecords<?, ?> consumerRecords) {
-    return null;
-  }
 }

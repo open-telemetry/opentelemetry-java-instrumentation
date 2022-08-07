@@ -30,6 +30,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   static final String TEMP_DESTINATION_NAME = "(temporary)";
+  static final long HS_MAX_PAYLOAD_SIZE = 65536;
+
+  public static final AttributeKey<String> MESSAGING_PAYLOAD =
+      AttributeKey.stringKey("messaging.payload");
 
   /**
    * Creates the messaging attributes extractor for the given {@link MessageOperation operation}.
@@ -81,7 +85,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     }
 
     String messagePayload = getter.messagePayload(request);
-    internalSet(attributes, AttributeKey.stringKey("messaging.payload"), messagePayload);
+    if (messagePayload != null && messagePayload.length() <= HS_MAX_PAYLOAD_SIZE) {
+      internalSet(attributes, MESSAGING_PAYLOAD, messagePayload);
+    }
   }
 
   @Override

@@ -105,6 +105,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
+            "messaging.payload" String
           }
         }
         span(1) {
@@ -122,6 +123,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
+            "messaging.payload" String
           }
         }
         span(2) {
@@ -161,6 +163,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
+            "messaging.payload" String
           }
         }
         span(2) {
@@ -178,6 +181,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
+            "messaging.payload" String
           }
         }
         span(3) {
@@ -238,6 +242,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
+            "messaging.payload" String
           }
         }
       }
@@ -265,6 +270,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
+            "messaging.payload" String
           }
           childOf span(0)
           hasLink producerSpan
@@ -283,6 +289,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
+            "messaging.payload" String
           }
           childOf span(0)
           hasLink producerSpan
