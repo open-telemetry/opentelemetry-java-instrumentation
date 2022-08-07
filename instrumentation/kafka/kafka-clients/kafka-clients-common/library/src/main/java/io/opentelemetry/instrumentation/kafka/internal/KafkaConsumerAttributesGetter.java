@@ -78,4 +78,10 @@ public enum KafkaConsumerAttributesGetter
   public String messageId(ConsumerRecord<?, ?> consumerRecord, @Nullable Void unused) {
     return null;
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(ConsumerRecord<?, ?> consumerRecord) {
+    return String.valueOf(consumerRecord.value());
+  }
 }

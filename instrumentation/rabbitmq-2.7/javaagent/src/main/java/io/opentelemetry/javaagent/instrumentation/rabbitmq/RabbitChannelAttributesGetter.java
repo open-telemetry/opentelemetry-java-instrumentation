@@ -74,4 +74,10 @@ enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelA
   public String messageId(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return null;
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(ChannelAndMethod channelAndMethod) {
+    return null;
+  }
 }

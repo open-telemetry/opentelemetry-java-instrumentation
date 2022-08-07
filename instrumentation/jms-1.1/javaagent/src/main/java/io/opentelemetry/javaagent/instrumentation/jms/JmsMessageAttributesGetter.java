@@ -90,4 +90,10 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
       return null;
     }
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(MessageWithDestination messageWithDestination) {
+    return null;
+  }
 }

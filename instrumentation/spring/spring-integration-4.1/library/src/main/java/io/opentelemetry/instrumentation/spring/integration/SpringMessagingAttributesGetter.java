@@ -77,4 +77,10 @@ enum SpringMessagingAttributesGetter
   public String messageId(MessageWithChannel messageWithChannel, @Nullable Void unused) {
     return null;
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(MessageWithChannel messageWithChannel) {
+    return null;
+  }
 }

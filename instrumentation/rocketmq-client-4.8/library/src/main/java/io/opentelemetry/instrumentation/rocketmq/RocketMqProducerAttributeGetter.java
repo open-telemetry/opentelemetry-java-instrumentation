@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
+import java.nio.charset.StandardCharsets;
 
 enum RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {
@@ -79,5 +80,21 @@ enum RocketMqProducerAttributeGetter
   public String messageId(SendMessageContext request, @Nullable Void unused) {
     SendResult sendResult = request.getSendResult();
     return sendResult == null ? null : sendResult.getMsgId();
+  }
+
+  @Nullable
+  @Override
+  public String messagePayload(SendMessageContext sendMessageContext) {
+    Message message = sendMessageContext.getMessage();
+    if (message == null) {
+      return null;
+    }
+
+    byte[] body = message.getBody();
+    if (body == null) {
+      return null;
+    }
+
+    return new String(body, StandardCharsets.UTF_8);
   }
 }

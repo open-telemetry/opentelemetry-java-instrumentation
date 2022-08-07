@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.instrumenter.messaging.Messag
 import static io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation.RECEIVE;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -78,6 +79,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     if (operation == RECEIVE || operation == PROCESS) {
       internalSet(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
     }
+
+    String messagePayload = getter.messagePayload(request);
+    internalSet(attributes, AttributeKey.stringKey("messaging.payload"), messagePayload);
   }
 
   @Override

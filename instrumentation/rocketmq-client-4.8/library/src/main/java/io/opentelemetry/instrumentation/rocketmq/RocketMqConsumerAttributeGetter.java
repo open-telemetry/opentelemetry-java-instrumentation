@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttr
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
+import java.nio.charset.StandardCharsets;
 
 enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<MessageExt, Void> {
   INSTANCE;
@@ -74,5 +75,11 @@ enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<Messag
   @Override
   public String messageId(MessageExt request, @Nullable Void unused) {
     return request.getMsgId();
+  }
+
+  @Nullable
+  @Override
+  public String messagePayload(MessageExt messageExt) {
+    return new String(messageExt.getBody(), StandardCharsets.UTF_8);
   }
 }

@@ -84,4 +84,10 @@ enum RabbitReceiveAttributesGetter
   public String messageId(ReceiveRequest request, @Nullable GetResponse response) {
     return null;
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(ReceiveRequest receiveRequest) {
+    return null;
+  }
 }

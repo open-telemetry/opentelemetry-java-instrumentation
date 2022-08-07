@@ -85,4 +85,10 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
   public String messageId(DeliveryRequest request, @Nullable Void unused) {
     return null;
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(DeliveryRequest deliveryRequest) {
+    return null;
+  }
 }

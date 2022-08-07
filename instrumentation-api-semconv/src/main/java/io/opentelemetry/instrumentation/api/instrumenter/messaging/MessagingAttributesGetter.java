@@ -47,4 +47,7 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   String messageId(REQUEST request, @Nullable RESPONSE response);
+
+  @Nullable
+  String messagePayload(REQUEST request);
 }
