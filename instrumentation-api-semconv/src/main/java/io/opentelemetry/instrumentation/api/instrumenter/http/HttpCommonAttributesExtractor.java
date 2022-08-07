@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.http.SemanticAttributes.HTTP_REQUEST_HEADERS;
+import static io.opentelemetry.instrumentation.api.instrumenter.http.SemanticAttributes.HTTP_RESPONSE_HEADERS;
 import static java.util.logging.Level.FINE;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.lowercase;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -34,9 +34,6 @@ abstract class HttpCommonAttributesExtractor<
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(HttpCommonAttributesExtractor.class.getName());
-
-  public static final AttributeKey<String> HTTP_REQUEST_HEADERS = stringKey("http.request.headers");
-  public static final AttributeKey<String> HTTP_RESPONSE_HEADERS = stringKey("http.response.headers");
 
   public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
