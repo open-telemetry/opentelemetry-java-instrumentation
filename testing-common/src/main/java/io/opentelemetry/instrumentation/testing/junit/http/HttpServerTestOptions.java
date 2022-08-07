@@ -49,6 +49,7 @@ public final class HttpServerTestOptions {
   boolean testNotFound = true;
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
+  boolean testCaptureHttpHeadersAsJson = false;
   boolean testCaptureRequestParameters = false;
   boolean testCaptureBody = false;
 
@@ -140,6 +141,12 @@ public final class HttpServerTestOptions {
 
   public HttpServerTestOptions setTestCaptureHttpHeaders(boolean testCaptureHttpHeaders) {
     this.testCaptureHttpHeaders = testCaptureHttpHeaders;
+    return this;
+  }
+
+  public HttpServerTestOptions setTestCaptureHttpHeadersAsJson(
+      boolean testCaptureHttpHeadersAsJson) {
+    this.testCaptureHttpHeadersAsJson = testCaptureHttpHeadersAsJson;
     return this;
   }
 

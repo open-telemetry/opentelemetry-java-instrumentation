@@ -116,6 +116,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
+  boolean testCapturedHttpHeadersAsJson() {
+    false
+  }
+
   boolean testCapturedRequestParameters() {
     false
   }
@@ -211,6 +215,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.testNotFound = testNotFound()
       options.testPathParam = testPathParam()
       options.testCaptureHttpHeaders = testCapturedHttpHeaders()
+      options.testCaptureHttpHeadersAsJson = testCapturedHttpHeadersAsJson()
       options.testCaptureRequestParameters = testCapturedRequestParameters()
       options.testCaptureBody = testCapturedBody()
     }
