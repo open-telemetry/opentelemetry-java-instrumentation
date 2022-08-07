@@ -21,7 +21,9 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 }
