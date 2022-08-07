@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.SemanticAttributes;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import java.util.Enumeration;
@@ -73,12 +74,12 @@ public class TomcatHelper<REQUEST, RESPONSE> {
 
   public void attachRequestHeadersToSpan(Request request, Span span) {
     Map<String, String> requestHeaders = this.extractRequestHeaders(request);
-    span.setAttribute("http.request.headers", String.valueOf(requestHeaders));
+    span.setAttribute(SemanticAttributes.HTTP_REQUEST_HEADERS, String.valueOf(requestHeaders));
   }
 
   public void attachResponseHeadersToSpan(Response response, Span span) {
     Map<String, String> responseHeaders = this.extractResponseHeaders(response);
-    span.setAttribute("http.response.headers", String.valueOf(responseHeaders));
+    span.setAttribute(SemanticAttributes.HTTP_RESPONSE_HEADERS, String.valueOf(responseHeaders));
   }
 
   private Map<String, String> extractRequestHeaders(Request request) {
