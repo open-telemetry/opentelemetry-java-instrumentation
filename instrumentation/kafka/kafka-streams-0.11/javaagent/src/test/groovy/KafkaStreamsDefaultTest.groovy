@@ -100,6 +100,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PENDING
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "messaging.payload" String
           }
         }
 
@@ -134,6 +135,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "kafka.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
             "asdf" "testing"
+            "messaging.payload" String
           }
         }
         // kafka-clients PRODUCER
@@ -145,6 +147,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" STREAM_PROCESSED
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "messaging.payload" String
           }
         }
 
@@ -179,6 +182,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "kafka.offset" 0
             "kafka.record.queue_time_ms" { it >= 0 }
             "testing" 123
+            "messaging.payload" String
           }
         }
       }
