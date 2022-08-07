@@ -37,14 +37,10 @@ jobs:
       - name: Update version
         env:
           VERSION: ${{ inputs.version }}
-        run: |
-          sed -i "s/^val otelVersion = .*/val otelVersion = \"$VERSION\"/" dependencyManagement/build.gradle.kts
+        run: ./.github/scripts/update-sdk-version.sh $VERSION
 
       - name: Use CLA approved github bot
-        run: |
-          # cannot run the use-cla-approved-github-bot.sh script here since in a different repo
-          git config user.name opentelemetrybot
-          git config user.email 107717825+opentelemetrybot@users.noreply.github.com
+        run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Create pull request against opentelemetry-java-contrib
         env:
