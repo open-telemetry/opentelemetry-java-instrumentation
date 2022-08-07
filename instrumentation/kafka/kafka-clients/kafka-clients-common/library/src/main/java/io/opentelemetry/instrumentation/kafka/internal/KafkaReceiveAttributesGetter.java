@@ -101,4 +101,10 @@ public enum KafkaReceiveAttributesGetter
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))
         .collect(Collectors.toList());
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(ConsumerRecords<?, ?> consumerRecords) {
+    return null;
+  }
 }

@@ -88,4 +88,10 @@ enum SpringMessagingAttributesGetter
     }
     return Collections.emptyList();
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(MessageWithChannel messageWithChannel) {
+    return null;
+  }
 }
