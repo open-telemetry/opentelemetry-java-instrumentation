@@ -16,17 +16,6 @@ muzzle {
   }
 }
 
-repositories {
-  mavenCentral()
-  maven {
-    setUrl("https://repo.grails.org/artifactory/core")
-    mavenContent {
-      releasesOnly()
-    }
-  }
-  mavenLocal()
-}
-
 // first version where our tests work
 val grailsVersion = "3.0.6"
 val springBootVersion = "1.2.5.RELEASE"
