@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
-import java.nio.charset.StandardCharsets;
 
 enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Message, Void> {
   INSTANCE;
@@ -73,11 +72,5 @@ enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Me
   @Nullable
   public String messageId(Message message, @Nullable Void unused) {
     return message.getMessageProperties().getMessageId();
-  }
-
-  @Nullable
-  @Override
-  public String messagePayload(Message message) {
-    return new String(message.getBody(), StandardCharsets.UTF_8);
   }
 }
