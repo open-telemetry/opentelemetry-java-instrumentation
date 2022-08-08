@@ -6,7 +6,10 @@
 package io.opentelemetry.instrumentation.akkaactor
 
 import io.opentelemetry.api.common.Attributes
-import io.opentelemetry.instrumentation.testing.junit.{AgentInstrumentationExtension, InstrumentationExtension}
+import io.opentelemetry.instrumentation.testing.junit.{
+  AgentInstrumentationExtension,
+  InstrumentationExtension
+}
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
