@@ -303,6 +303,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     junitTest.captureHttpHeaders()
   }
 
+  def "test captured HTTP headers as Json"() {
+    assumeTrue(testCapturedHttpHeadersAsJson())
+    expect:
+    junitTest.captureHttpHeadersAsJson()
+  }
+
   def "test captured request parameters"() {
     assumeTrue(testCapturedRequestParameters())
     expect:
