@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -20,6 +21,7 @@ import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -69,7 +71,10 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              AttributeKey.stringKey("messaging.payload"),
+                              AbstractAssert::isNotNull)));
 
           producer.set(trace.getSpan(1));
         },
@@ -103,7 +108,10 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                             satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
-                                AbstractLongAssert::isNotNegative)),
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                AttributeKey.stringKey("messaging.payload"),
+                                AbstractAssert::isNotNull)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
@@ -134,7 +142,10 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              AttributeKey.stringKey("messaging.payload"),
+                              AbstractAssert::isNotNull)));
 
           producer.set(trace.getSpan(1));
         },
@@ -170,7 +181,10 @@ class SingleRecordVertxKafkaTest extends AbstractVertxKafkaTest {
                             satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
-                                AbstractLongAssert::isNotNegative)),
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                AttributeKey.stringKey("messaging.payload"),
+                                AbstractAssert::isNotNull)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 }

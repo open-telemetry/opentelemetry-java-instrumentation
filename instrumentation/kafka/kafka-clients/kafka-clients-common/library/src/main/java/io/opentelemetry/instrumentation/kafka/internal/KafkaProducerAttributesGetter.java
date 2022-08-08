@@ -79,4 +79,10 @@ public enum KafkaProducerAttributesGetter
   public String messageId(ProducerRecord<?, ?> producerRecord, @Nullable Void unused) {
     return null;
   }
+
+  @Nullable
+  @Override
+  public String messagePayload(ProducerRecord<?, ?> producerRecord) {
+    return String.valueOf(producerRecord.value());
+  }
 }
