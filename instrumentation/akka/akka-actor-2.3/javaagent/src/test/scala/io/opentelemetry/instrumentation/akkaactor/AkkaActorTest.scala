@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.akkaactor
 
-import collection.JavaConverters._
 import io.opentelemetry.api.common.Attributes
-import io.opentelemetry.instrumentation.testing.junit.{
-  AgentInstrumentationExtension,
-  InstrumentationExtension
-}
+import io.opentelemetry.instrumentation.testing.junit.{AgentInstrumentationExtension, InstrumentationExtension}
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -18,7 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 import java.util.function.Consumer
-import scala.compat.java8.FunctionConverters._
+import scala.collection.JavaConverters._
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AkkaActorTest {

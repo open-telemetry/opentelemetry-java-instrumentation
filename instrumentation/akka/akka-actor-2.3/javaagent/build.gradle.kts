@@ -7,25 +7,28 @@ muzzle {
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.11")
-    versions.set("[2.5.0,)")
+    versions.set("[2.3,)")
+    assertInverse.set(true)
   }
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.12")
-    versions.set("[2.5.0,)")
+    versions.set("[2.3,)")
+    assertInverse.set(true)
   }
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.13")
-    versions.set("(,)")
+    versions.set("[2.3,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
-  compileOnly("com.typesafe.akka:akka-actor_2.11:2.5.0")
-  testImplementation("com.typesafe.akka:akka-actor_2.11:2.5.0")
+  compileOnly("com.typesafe.akka:akka-actor_2.11:2.3.2") // first version in maven central
+  testImplementation("com.typesafe.akka:akka-actor_2.11:2.3.2") // first version in maven central
 
   latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:+")
 }
