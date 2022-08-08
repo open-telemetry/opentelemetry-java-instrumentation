@@ -7,7 +7,8 @@ muzzle {
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.11")
-    versions.set("[2.5.0,)")
+    versions.set("[2.5,)")
+    assertInverse.set(true)
   }
 }
 
