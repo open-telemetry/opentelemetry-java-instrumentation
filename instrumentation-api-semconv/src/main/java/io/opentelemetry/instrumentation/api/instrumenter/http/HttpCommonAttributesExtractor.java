@@ -52,7 +52,11 @@ abstract class HttpCommonAttributesExtractor<
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.HTTP_METHOD, getter.method(request));
     internalSet(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
-    internalSet(attributes, HTTP_REQUEST_HEADERS, toJsonString(requestHeaders(request, null)));
+
+    Map<String, String> reqHeaders = requestHeaders(request, null);
+    if (!reqHeaders.isEmpty()) {
+      internalSet(attributes, HTTP_REQUEST_HEADERS, toJsonString(reqHeaders));
+    }
 
     for (String name : capturedRequestHeaders) {
       List<String> values = getter.requestHeader(request, name);
@@ -92,11 +96,15 @@ abstract class HttpCommonAttributesExtractor<
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
           getter.responseContentLengthUncompressed(request, response));
-      internalSet(
-          attributes,
-          HTTP_RESPONSE_HEADERS,
-          toJsonString(responseHeaders(request, response))
-      );
+
+      Map<String, String> resHeaders = responseHeaders(request, response);
+      if (!resHeaders.isEmpty()) {
+        internalSet(
+            attributes,
+            HTTP_RESPONSE_HEADERS,
+            toJsonString(resHeaders)
+        );
+      }
 
       for (String name : capturedResponseHeaders) {
         List<String> values = getter.responseHeader(request, response, name);
@@ -107,12 +115,10 @@ abstract class HttpCommonAttributesExtractor<
     }
   }
 
-  @Nullable
   Map<String, String> requestHeaders(REQUEST request,  @Nullable RESPONSE response) {
     return getter.requestHeaders(request, response);
   }
 
-  @Nullable
   Map<String, String> responseHeaders(REQUEST request, @Nullable RESPONSE response) {
     return getter.responseHeaders(request, response);
   }
