@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -71,7 +72,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                          satisfies(AttributeKey.stringKey("messaging.payload"), AbstractAssert::isNotNull)));
+                          satisfies(
+                              AttributeKey.stringKey("messaging.payload"),
+                              AbstractAssert::isNotNull)));
 
           producer.set(trace.getSpan(1));
         },
@@ -105,7 +108,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
-                                AbstractLongAssert::isNotNegative)),
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(stringKey("messaging.payload"), AbstractAssert::isNotNull)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
@@ -136,7 +140,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                          satisfies(AttributeKey.stringKey("messaging.payload"),
+                          satisfies(
+                              AttributeKey.stringKey("messaging.payload"),
                               AbstractAssert::isNotNull)));
 
           producer.set(trace.getSpan(1));
@@ -173,7 +178,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
-                                AbstractLongAssert::isNotNegative)),
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(stringKey("messaging.payload"), AbstractAssert::isNotNull)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
@@ -200,7 +206,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                          satisfies(AttributeKey.stringKey("messaging.payload"), AbstractAssert::isNotNull)),
+                          satisfies(
+                              AttributeKey.stringKey("messaging.payload"),
+                              AbstractAssert::isNotNull)),
               span ->
                   span.hasName("testBatchTopic send")
                       .hasKind(SpanKind.PRODUCER)
@@ -209,7 +217,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                          satisfies(AttributeKey.stringKey("messaging.payload"), AbstractAssert::isNotNull)));
+                          satisfies(
+                              AttributeKey.stringKey("messaging.payload"),
+                              AbstractAssert::isNotNull)));
 
           producer1.set(trace.getSpan(1));
           producer2.set(trace.getSpan(2));
@@ -236,8 +246,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                            satisfies(AttributeKey.stringKey("messaging.payload"), AbstractAssert::isNotNull)),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process")),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
@@ -268,7 +277,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                          satisfies(AttributeKey.stringKey("messaging.payload"), AbstractAssert::isNotNull)));
+                          satisfies(
+                              AttributeKey.stringKey("messaging.payload"),
+                              AbstractAssert::isNotNull)));
 
           producer.set(trace.getSpan(1));
         },
@@ -294,8 +305,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                            satisfies(AttributeKey.stringKey("messaging.payload"), AbstractAssert::isNotNull)),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process")),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 }

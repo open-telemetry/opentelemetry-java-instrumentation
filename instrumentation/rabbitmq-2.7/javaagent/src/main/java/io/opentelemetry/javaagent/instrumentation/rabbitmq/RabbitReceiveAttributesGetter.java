@@ -115,10 +115,4 @@ enum RabbitReceiveAttributesGetter
     }
     return Collections.emptyList();
   }
-
-  @Nullable
-  @Override
-  public String messagePayload(ReceiveRequest receiveRequest) {
-    return null;
-  }
 }
