@@ -38,6 +38,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -151,6 +152,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         if (body != null) {
           span.setAttribute(
               SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length);
+          span.setAttribute("messaging.payload", new String(body, StandardCharsets.UTF_8));
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
