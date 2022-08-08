@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
-import java.nio.charset.StandardCharsets;
 
 enum RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {
