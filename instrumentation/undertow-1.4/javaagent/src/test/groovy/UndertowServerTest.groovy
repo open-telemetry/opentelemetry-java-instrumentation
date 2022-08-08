@@ -30,6 +30,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTrait {
 
   @Override
+  boolean testCapturedHttpHeadersAsJson() {
+    return true
+  }
+
+  @Override
   Undertow startServer(int port) {
     Undertow server = Undertow.builder()
       .addHttpListener(port, "localhost")
