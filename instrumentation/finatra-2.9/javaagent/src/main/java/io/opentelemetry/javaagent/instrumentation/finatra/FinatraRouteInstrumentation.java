@@ -5,12 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraSingletons.updateServerSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -29,15 +26,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import scala.Some;
 
 public class FinatraRouteInstrumentation implements TypeInstrumentation {
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.twitter.finatra.http.internal.routing.Route");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return nameStartsWith("com.twitter.finatra.")
-        .and(extendsClass(named("com.twitter.finatra.http.internal.routing.Route")));
+    return named("com.twitter.finatra.http.internal.routing.Route");
   }
 
   @Override
