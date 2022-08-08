@@ -50,10 +50,6 @@ jobs:
   gradle-plugins:
     uses: ./.github/workflows/reusable-gradle-plugins.yml
 
-  # removed this for now until we decide what to do with the extenstions
-  #  examples:
-  #    uses: ./.github/workflows/reusable-examples.yml
-
   markdown-link-check:
     # release branches are excluded to avoid unnecessary maintenance if external links break
     # (and also because the README.md javaagent download link has to be updated on release branches
