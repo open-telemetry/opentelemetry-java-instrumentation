@@ -39,7 +39,7 @@ public class ClientHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handle")
-            .and(takesArgument(0, extendsClass(named("com.sun.jersey.api.client.ClientRequest"))))
+            .and(takesArgument(0, named("com.sun.jersey.api.client.ClientRequest")))
             .and(returns(extendsClass(named("com.sun.jersey.api.client.ClientResponse")))),
         this.getClass().getName() + "$HandleAdvice");
   }
