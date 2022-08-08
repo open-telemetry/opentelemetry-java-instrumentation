@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.apache.commons")
     module.set("commons-dbcp2")
-    versions.set("[2.0,)")
+    versions.set("[2,)")
     assertInverse.set(true)
   }
 }
