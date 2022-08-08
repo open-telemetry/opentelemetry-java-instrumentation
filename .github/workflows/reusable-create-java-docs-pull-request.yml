@@ -1,0 +1,66 @@
+name: Reusable - Create Java docs pull request
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+    secrets:
+      BOT_TOKEN:
+        required: true
+  # to help with partial release build failures
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: true
+
+jobs:
+  create-java-docs-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: opentelemetrybot/opentelemetry-java-docs
+          # this is the personal access token used for "git push" below
+          token: ${{ secrets.BOT_TOKEN }}
+
+      - name: Initialize pull request branch
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git remote add upstream https://github.com/open-telemetry/opentelemetry-java-docs.git
+          git fetch upstream
+          git checkout -b update-opentelemetry-sdk-to-${VERSION} upstream/main
+
+      - name: Update version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: ./.github/scripts/update-sdk-version.sh $VERSION
+
+      - name: Use CLA approved github bot
+        run: |
+          # cannot run the use-cla-approved-github-bot.sh script here since in a different repo
+          git config user.name opentelemetrybot
+          git config user.email 107717825+opentelemetrybot@users.noreply.github.com
+
+      - name: Create pull request against opentelemetry-java-docs
+        env:
+          # this is the personal access token used for "gh pr create" below
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          message="Update the SDK version to $VERSION"
+          body="Update the SDK version to \`$VERSION\`."
+
+          # gh pr create doesn't have a way to explicitly specify different head and base
+          # repositories currently, but it will implicitly pick up the head from a different
+          # repository if you set up a tracking branch
+
+          git commit -a -m "$message"
+          git push --set-upstream origin HEAD:update-opentelemetry-sdk-to-${VERSION}
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --repo open-telemetry/opentelemetry-java-docs \
+                       --base main
