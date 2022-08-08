@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.couchbase.client")
     module.set("java-client")
-    versions.set("[2.6.0,3)")
+    versions.set("[2,3)")
     // these versions were released as ".bundle" instead of ".jar"
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
