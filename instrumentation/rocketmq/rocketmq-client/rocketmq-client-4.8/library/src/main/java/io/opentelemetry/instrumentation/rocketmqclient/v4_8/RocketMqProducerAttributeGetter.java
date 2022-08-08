@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
-import java.nio.charset.StandardCharsets;
 
 enum RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {

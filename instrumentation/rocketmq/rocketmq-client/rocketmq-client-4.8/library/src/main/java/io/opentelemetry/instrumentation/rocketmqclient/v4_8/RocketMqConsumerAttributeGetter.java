@@ -12,7 +12,6 @@ import java.util.List;
 import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
-import java.nio.charset.StandardCharsets;
 
 enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<MessageExt, Void> {
   INSTANCE;
