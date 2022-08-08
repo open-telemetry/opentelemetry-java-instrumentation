@@ -132,6 +132,12 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     and:
     assertTraces(1) {
+      def httpSpan = testRunner().getExportedSpans()[1]
+      def requestBody = (String) httpSpan.attributes.asMap().find {
+        e -> e.key.key == "http.request.body"
+      }.value
+      assert requestBody.startsWith("username=test&password=")
+
       trace(0, 2) {
         serverSpan(it, 0, null, null, "POST", response.contentUtf8().length(), LOGIN)
         redirectSpan(it, 1, span(0))

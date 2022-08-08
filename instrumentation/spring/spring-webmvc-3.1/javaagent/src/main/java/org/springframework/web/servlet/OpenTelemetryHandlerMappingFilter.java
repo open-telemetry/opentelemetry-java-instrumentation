@@ -7,6 +7,7 @@ package org.springframework.web.servlet;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
@@ -15,7 +16,10 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -82,10 +86,45 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     } finally {
       if (handlerMappings != null) {
         Context context = Context.current();
+        Span span = Span.fromContext(context);
+        Object internalRequest = extractAttr(request, "request");
+        if (internalRequest != null) {
+          byte[] postData = (byte[]) extractAttr(internalRequest, "postData");
+          if (postData != null) {
+            String post = new String(rtrim(postData), StandardCharsets.UTF_8);
+            span.setAttribute("http.request.body", post);
+          }
+        }
         HttpRouteHolder.updateHttpRoute(
             context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
       }
     }
+  }
+
+  private static Object extractAttr(Object object, String attrName) {
+    try {
+      Class clz = object.getClass();
+      Field field = clz.getDeclaredField(attrName);
+      field.setAccessible(true);
+      return field.get(object);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      return null;
+    }
+  }
+
+  private static byte[] rtrim(byte[] array) {
+    int notZeroLen = array.length;
+    for (int i = array.length - 1; i >= 0; --i, notZeroLen--) {
+      if (array[i] != 0) {
+        break;
+      }
+    }
+
+    if (notZeroLen != array.length) {
+      array = Arrays.copyOf(array, notZeroLen);
+    }
+
+    return array;
   }
 
   @Override
