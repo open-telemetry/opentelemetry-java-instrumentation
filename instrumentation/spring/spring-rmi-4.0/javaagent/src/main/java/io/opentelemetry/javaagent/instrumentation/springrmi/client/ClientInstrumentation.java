@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.springrmi.client;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.springrmi.SpringRmiSingletons.clientInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,14 +22,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.aopalliance.intercept.MethodInvocation;
 
 public class ClientInstrumentation implements TypeInstrumentation {
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.springframework.remoting.rmi.RmiClientInterceptor");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("org.springframework.remoting.rmi.RmiClientInterceptor"));
+    return named("org.springframework.remoting.rmi.RmiClientInterceptor");
   }
 
   @Override
