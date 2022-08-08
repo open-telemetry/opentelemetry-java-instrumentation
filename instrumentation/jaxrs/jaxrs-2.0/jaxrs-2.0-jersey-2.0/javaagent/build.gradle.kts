@@ -37,10 +37,10 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
-  latestDepTestLibrary("org.glassfish.jersey.core:jersey-server:2.+")
-  latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+")
-  latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+")
-  latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+")
+  latestDepTestLibrary("org.glassfish.jersey.core:jersey-server:2.+") // see jaxrs-3.0-jersey-3.0 module
+  latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+") // see jaxrs-3.0-jersey-3.0 module
+  latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+") // see jaxrs-3.0-jersey-3.0 module
+  latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+") // see jaxrs-3.0-jersey-3.0 module
 }
 
 if (!(findProperty("testLatestDeps") as Boolean)) {

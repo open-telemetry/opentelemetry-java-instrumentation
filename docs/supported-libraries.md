@@ -60,7 +60,7 @@ These are the supported libraries and frameworks:
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                         | 1.6+                          |
 | [Guava ListenableFuture](https://guava.dev/releases/snapshot/api/docs/com/google/common/util/concurrent/ListenableFuture.html)    | 10.0+                         |
 | [GWT](http://www.gwtproject.org/)                                                                                                 | 2.0+                          |
-| [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                           | 3.3+                          |
+| [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                           | 3.3+ (not including 6.x yet)  |
 | [HikariCP](https://github.com/brettwooldridge/HikariCP)                                                                           | 3.0+                          |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                 | Java 8+                       |
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                     | 1.4+                          |

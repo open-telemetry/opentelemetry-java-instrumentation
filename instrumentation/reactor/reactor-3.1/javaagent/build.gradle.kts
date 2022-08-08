@@ -35,9 +35,6 @@ dependencies {
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
   testImplementation(project(":instrumentation-annotations"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
-
-  // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
-  latestDepTestLibrary("io.micrometer:micrometer-core:1.+")
 }
 
 testing {
