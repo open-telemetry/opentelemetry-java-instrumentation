@@ -6,7 +6,8 @@ muzzle {
   pass {
     group.set("org.apache.dubbo")
     module.set("dubbo")
-    versions.set("[2.7.0,)")
+    versions.set("[2.7,)")
+    assertInverse.set(true)
   }
 }
 

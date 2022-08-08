@@ -6,7 +6,8 @@ muzzle {
   pass {
     group.set("org.apache.camel")
     module.set("camel-core")
-    versions.set("[2.20.1,3)")
+    versions.set("[2.20,3)")
+    assertInverse.set(true)
   }
 }
 
