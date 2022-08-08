@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AkkaActorInstrumentationModule extends InstrumentationModule {
   public AkkaActorInstrumentationModule() {
-    super("akka-actor", "akka-actor-2.5");
+    super("akka-actor", "akka-actor-2.3");
   }
 
   @Override
