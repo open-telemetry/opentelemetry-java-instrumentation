@@ -29,7 +29,4 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
-
-  latestDepTestLibrary("org.restlet:org.restlet:1.1.+")
-  latestDepTestLibrary("com.noelios.restlet:com.noelios.restlet:1.1.+")
 }
