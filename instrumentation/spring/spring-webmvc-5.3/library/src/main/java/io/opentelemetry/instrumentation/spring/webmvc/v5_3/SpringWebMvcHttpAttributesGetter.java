@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc;
+package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
@@ -34,14 +34,40 @@ enum SpringWebMvcHttpAttributesGetter
   @Override
   @Nullable
   public String flavor(HttpServletRequest request) {
-    return request.getProtocol();
+    String flavor = request.getProtocol();
+    if (flavor == null) {
+      return null;
+    }
+    if (flavor.startsWith("HTTP/")) {
+      flavor = flavor.substring("HTTP/".length());
+    }
+    return flavor;
+  }
+
+  @Nullable
+  @Override
+  public Integer statusCode(HttpServletRequest request, HttpServletResponse httpServletResponse) {
+    // this method is never used
+    return null;
   }
 
   @Override
-  @Nullable
-  public Integer statusCode(HttpServletRequest request, HttpServletResponse response) {
-    // set in StatusCodeExtractor
-    return null;
+  public Integer statusCode(
+      HttpServletRequest request, HttpServletResponse response, @Nullable Throwable error) {
+
+    int statusCode;
+    // if response is not committed and there is a throwable set status to 500 /
+    // INTERNAL_SERVER_ERROR, due to servlet spec
+    // https://javaee.github.io/servlet-spec/downloads/servlet-4.0/servlet-4_0_FINAL.pdf:
+    // "If a servlet generates an error that is not handled by the error page mechanism as
+    // described above, the container must ensure to send a response with status 500."
+    if (!response.isCommitted() && error != null) {
+      statusCode = 500;
+    } else {
+      statusCode = response.getStatus();
+    }
+
+    return statusCode;
   }
 
   @Override
