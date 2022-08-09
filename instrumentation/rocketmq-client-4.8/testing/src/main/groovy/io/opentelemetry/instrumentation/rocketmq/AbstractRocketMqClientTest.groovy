@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rocketmq
 import base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
