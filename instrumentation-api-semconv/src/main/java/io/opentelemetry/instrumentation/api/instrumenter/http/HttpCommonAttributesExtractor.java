@@ -62,10 +62,11 @@ abstract class HttpCommonAttributesExtractor<
         attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestContentLength(request));
 
     if (response != null) {
-      Integer statusCode = getter.statusCode(request, response);
+      Integer statusCode = getter.statusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
         internalSet(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
       }
+
       internalSet(
           attributes,
           SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc;
+package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;

@@ -17,7 +17,7 @@ dependencies {
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
   implementation(project(":instrumentation:spring:spring-web-3.1:library"))
-  implementation(project(":instrumentation:spring:spring-webmvc-3.1:library"))
+  implementation(project(":instrumentation:spring:spring-webmvc-5.3:library"))
   implementation(project(":instrumentation:spring:spring-webflux-5.0:library"))
   implementation("io.opentelemetry:opentelemetry-micrometer1-shim") {
     // just get the instrumentation, without micrometer itself
