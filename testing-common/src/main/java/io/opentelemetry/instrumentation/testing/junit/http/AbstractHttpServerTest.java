@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS_AS_JSON;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -331,6 +333,40 @@ public abstract class AbstractHttpServerTest<SERVER> {
   }
 
   @Test
+  void captureHttpHeadersAsJson() {
+    assumeTrue(options.testCaptureHttpHeadersAsJson);
+
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            request(CAPTURE_HEADERS_AS_JSON, "GET").headers().toBuilder().build());
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(CAPTURE_HEADERS_AS_JSON.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(CAPTURE_HEADERS_AS_JSON.getBody());
+    assertThat(response.headers()).isNotEmpty();
+
+    assertTheTraces(1, null, null, "GET", CAPTURE_HEADERS_AS_JSON, response);
+  }
+
+  @Test
+  void captureBody() {
+    assumeTrue(options.testCaptureBody);
+
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            RequestHeaders.builder(HttpMethod.POST, resolveAddress(CAPTURE_BODY))
+                .contentType(MediaType.JSON)
+                .build(),
+            HttpData.ofUtf8(CAPTURE_BODY.getBody()));
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(CAPTURE_BODY.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(CAPTURE_BODY.getBody());
+
+    assertTheTraces(1, null, null, "POST", CAPTURE_BODY, response);
+  }
+
+  @Test
   void captureRequestParameters() {
     assumeTrue(options.testCaptureRequestParameters);
 
@@ -627,10 +663,21 @@ public abstract class AbstractHttpServerTest<SERVER> {
             assertThat(attrs)
                 .containsEntry("http.response.header.x_test_response", new String[] {"test"});
           }
+
+          if (endpoint == CAPTURE_HEADERS_AS_JSON) {
+            assertThat(attrs).containsKey("http.request.headers");
+            assertThat(attrs).containsKey("http.response.headers");
+          }
+
           if (endpoint == CAPTURE_PARAMETERS) {
             assertThat(attrs)
                 .containsEntry(
                     "servlet.request.parameter.test_parameter", new String[] {"test value õäöü"});
+          }
+
+          if (endpoint == CAPTURE_BODY) {
+            assertThat(attrs).containsEntry("http.request.body", CAPTURE_BODY.body);
+            assertThat(attrs).containsEntry("http.response.body", CAPTURE_BODY.body);
           }
         });
 

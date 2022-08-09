@@ -116,7 +116,15 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
+  boolean testCapturedHttpHeadersAsJson() {
+    false
+  }
+
   boolean testCapturedRequestParameters() {
+    false
+  }
+
+  boolean testCapturedBody() {
     false
   }
 
@@ -207,7 +215,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.testNotFound = testNotFound()
       options.testPathParam = testPathParam()
       options.testCaptureHttpHeaders = testCapturedHttpHeaders()
+      options.testCaptureHttpHeadersAsJson = testCapturedHttpHeadersAsJson()
       options.testCaptureRequestParameters = testCapturedRequestParameters()
+      options.testCaptureBody = testCapturedBody()
     }
 
     // Override trace assertion method. We can call java assertions from groovy but not the other
@@ -293,10 +303,22 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     junitTest.captureHttpHeaders()
   }
 
+  def "test captured HTTP headers as Json"() {
+    assumeTrue(testCapturedHttpHeadersAsJson())
+    expect:
+    junitTest.captureHttpHeadersAsJson()
+  }
+
   def "test captured request parameters"() {
     assumeTrue(testCapturedRequestParameters())
     expect:
     junitTest.captureRequestParameters()
+  }
+
+  def "test captured body"() {
+    assumeTrue(testCapturedBody())
+    expect:
+    junitTest.captureBody()
   }
 
   def "high concurrency test"() {

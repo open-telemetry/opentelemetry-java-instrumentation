@@ -14,6 +14,8 @@ muzzle {
 dependencies {
   library("io.undertow:undertow-core:2.0.0.Final")
 
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.9.10")
+
   bootstrap(project(":instrumentation:executors:bootstrap"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
   bootstrap(project(":instrumentation:undertow-1.4:bootstrap"))

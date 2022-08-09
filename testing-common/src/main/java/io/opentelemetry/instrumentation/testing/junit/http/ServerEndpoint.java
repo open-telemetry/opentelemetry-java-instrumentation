@@ -19,7 +19,9 @@ public enum ServerEndpoint {
   EXCEPTION("exception", 500, "controller exception"),
   NOT_FOUND("notFound", 404, "not found"),
   CAPTURE_HEADERS("captureHeaders", 200, "headers captured"),
+  CAPTURE_HEADERS_AS_JSON("captureHeadersAsJson", 200, "headers json captured"),
   CAPTURE_PARAMETERS("captureParameters", 200, "parameters captured"),
+  CAPTURE_BODY("captureBody", 200, "body captured"),
 
   // TODO: add tests for the following cases:
   QUERY_PARAM("query?some=query", 200, "some=query"),

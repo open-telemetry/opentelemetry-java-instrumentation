@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS_AS_JSON;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
@@ -143,6 +144,22 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
                                 HttpHeaderNames.CONTENT_TYPE,
                                 MediaType.PLAIN_TEXT_UTF_8),
                             HttpData.ofUtf8(CAPTURE_HEADERS.getBody()))));
+
+    sb.service(
+        CAPTURE_HEADERS_AS_JSON.getPath(),
+        (ctx, req) ->
+            testing()
+                .runWithSpan(
+                    "controller",
+                    () ->
+                        HttpResponse.of(
+                            ResponseHeaders.of(
+                                HttpStatus.valueOf(CAPTURE_HEADERS_AS_JSON.getStatus()),
+                                "X-Test-Response",
+                                req.headers().get("X-Test-Request"),
+                                HttpHeaderNames.CONTENT_TYPE,
+                                MediaType.PLAIN_TEXT_UTF_8),
+                            HttpData.ofUtf8(CAPTURE_HEADERS_AS_JSON.getBody()))));
 
     // Make sure user decorators see spans.
     sb.decorator(
