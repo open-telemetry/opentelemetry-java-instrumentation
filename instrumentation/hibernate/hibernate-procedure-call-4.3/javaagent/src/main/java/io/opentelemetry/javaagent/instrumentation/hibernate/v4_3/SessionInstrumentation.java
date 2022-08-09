@@ -41,7 +41,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$GetProcedureCallAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetProcedureCallAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

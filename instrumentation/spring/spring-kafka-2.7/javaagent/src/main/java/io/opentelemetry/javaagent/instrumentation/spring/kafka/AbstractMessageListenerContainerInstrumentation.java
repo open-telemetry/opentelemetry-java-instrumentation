@@ -46,7 +46,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
         this.getClass().getName() + "$GetRecordInterceptorAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetBatchInterceptorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -64,7 +64,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetRecordInterceptorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

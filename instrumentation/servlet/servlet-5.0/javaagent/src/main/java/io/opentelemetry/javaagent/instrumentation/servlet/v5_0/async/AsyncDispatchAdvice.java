@@ -15,7 +15,7 @@ import jakarta.servlet.AsyncContext;
 import jakarta.servlet.ServletRequest;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class AsyncDispatchAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

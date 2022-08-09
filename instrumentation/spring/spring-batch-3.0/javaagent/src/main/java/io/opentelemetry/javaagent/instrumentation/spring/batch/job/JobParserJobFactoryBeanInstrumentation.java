@@ -41,7 +41,7 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
         this.getClass().getName() + "$SetListenersAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class InitAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -52,7 +52,7 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SetListenersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

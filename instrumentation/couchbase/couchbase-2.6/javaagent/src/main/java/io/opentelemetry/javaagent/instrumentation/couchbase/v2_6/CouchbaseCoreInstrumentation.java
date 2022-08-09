@@ -38,7 +38,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
         CouchbaseCoreInstrumentation.class.getName() + "$CouchbaseCoreAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CouchbaseCoreAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

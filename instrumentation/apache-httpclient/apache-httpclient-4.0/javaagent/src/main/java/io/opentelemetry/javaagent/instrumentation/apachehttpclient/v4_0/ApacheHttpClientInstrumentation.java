@@ -123,7 +123,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RequestWithHandlerAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class UriRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -161,7 +161,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class UriRequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -207,7 +207,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -245,7 +245,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

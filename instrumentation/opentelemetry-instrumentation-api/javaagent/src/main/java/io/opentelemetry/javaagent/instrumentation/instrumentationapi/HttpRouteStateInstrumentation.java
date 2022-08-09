@@ -33,7 +33,7 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$UpdateAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class UpdateAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

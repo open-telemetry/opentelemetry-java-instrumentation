@@ -46,7 +46,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
         QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class QueryMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

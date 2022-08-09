@@ -34,7 +34,7 @@ public class HooksInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ResetOnEachOperatorAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ResetOnEachOperatorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

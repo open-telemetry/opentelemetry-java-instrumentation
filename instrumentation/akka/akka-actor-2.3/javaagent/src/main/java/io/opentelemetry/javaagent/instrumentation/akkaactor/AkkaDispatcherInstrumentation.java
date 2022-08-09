@@ -36,7 +36,7 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
         AkkaDispatcherInstrumentation.class.getName() + "$DispatchEnvelopeAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class DispatchEnvelopeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

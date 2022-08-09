@@ -43,7 +43,7 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleRequestAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

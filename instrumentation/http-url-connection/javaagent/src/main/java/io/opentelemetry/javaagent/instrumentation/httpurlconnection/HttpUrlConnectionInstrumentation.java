@@ -52,7 +52,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$GetResponseCodeAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class HttpUrlConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -150,7 +150,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetResponseCodeAdvice {
 
     @Advice.OnMethodExit

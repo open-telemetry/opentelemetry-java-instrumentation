@@ -58,7 +58,7 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
    * This advice is responsible for setting additional span parameters for routes implemented with
    * functional interface.
    */
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RouteAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

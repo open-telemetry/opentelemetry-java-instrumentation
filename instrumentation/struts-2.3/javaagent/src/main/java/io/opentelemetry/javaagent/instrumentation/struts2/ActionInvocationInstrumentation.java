@@ -43,7 +43,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$InvokeActionOnlyAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class InvokeActionOnlyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

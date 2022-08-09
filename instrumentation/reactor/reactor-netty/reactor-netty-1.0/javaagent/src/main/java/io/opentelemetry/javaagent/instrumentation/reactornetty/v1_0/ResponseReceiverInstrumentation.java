@@ -70,7 +70,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ResponseSingleAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ResponseMonoAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -105,7 +105,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ResponseFluxAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -143,7 +143,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ResponseConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -181,7 +181,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ResponseContentAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
@@ -216,7 +216,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ResponseSingleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)

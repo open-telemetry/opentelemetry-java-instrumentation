@@ -29,7 +29,7 @@ public class MeterInstrumentation implements TypeInstrumentation {
         named("mark").and(takesArguments(long.class)), this.getClass().getName() + "$MarkAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class MarkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

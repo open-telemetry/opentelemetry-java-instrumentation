@@ -42,7 +42,7 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
         AkkaDefaultSystemMessageQueueInstrumentation.class.getName() + "$DispatchSystemAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class DispatchSystemAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

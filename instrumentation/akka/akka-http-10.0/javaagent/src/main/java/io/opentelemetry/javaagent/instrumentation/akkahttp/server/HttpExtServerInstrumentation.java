@@ -41,7 +41,7 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$AkkaHttpAsyncAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AkkaHttpSyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -52,7 +52,7 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AkkaHttpAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

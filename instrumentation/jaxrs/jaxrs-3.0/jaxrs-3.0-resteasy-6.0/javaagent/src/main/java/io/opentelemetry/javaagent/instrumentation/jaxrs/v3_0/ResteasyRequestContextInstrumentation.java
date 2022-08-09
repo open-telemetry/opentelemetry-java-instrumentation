@@ -31,7 +31,7 @@ public class ResteasyRequestContextInstrumentation extends AbstractRequestContex
     return getClass().getName() + "$ContainerRequestContextAdvice";
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

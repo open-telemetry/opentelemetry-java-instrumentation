@@ -27,7 +27,7 @@ public class StreamThreadInstrumentation implements TypeInstrumentation {
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RunLoopAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static boolean onEnter() {

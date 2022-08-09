@@ -41,7 +41,7 @@ public class UniversalConnectionPoolInstrumentation implements TypeInstrumentati
         named("stop").and(takesArguments(0)), this.getClass().getName() + "$StopAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class StartAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -50,7 +50,7 @@ public class UniversalConnectionPoolInstrumentation implements TypeInstrumentati
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class StopAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)

@@ -38,7 +38,7 @@ public class ContextInstrumentation implements TypeInstrumentation {
         ContextInstrumentation.class.getName() + "$WrapRootAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class WrapRootAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

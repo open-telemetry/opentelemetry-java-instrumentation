@@ -32,7 +32,7 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$NewSessionAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class NewSessionAdvice {
 
     /**

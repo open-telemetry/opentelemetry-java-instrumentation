@@ -52,7 +52,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetMdcAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

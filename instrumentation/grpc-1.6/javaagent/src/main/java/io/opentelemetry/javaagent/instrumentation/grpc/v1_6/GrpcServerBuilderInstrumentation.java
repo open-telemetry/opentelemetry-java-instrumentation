@@ -40,7 +40,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
         GrpcServerBuilderInstrumentation.class.getName() + "$BuildAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

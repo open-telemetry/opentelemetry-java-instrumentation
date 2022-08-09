@@ -88,7 +88,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   }
 
   // TODO Why do we start span here and not in ChannelPublishAdvice below?
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ChannelMethodAdvice {
 
     @Advice.OnMethodEnter
@@ -134,7 +134,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ChannelPublishAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -185,7 +185,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ChannelGetAdvice {
 
     @Advice.OnMethodEnter
@@ -228,7 +228,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ChannelConsumeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

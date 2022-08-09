@@ -28,7 +28,7 @@ public class OkHttp3Instrumentation implements TypeInstrumentation {
         isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

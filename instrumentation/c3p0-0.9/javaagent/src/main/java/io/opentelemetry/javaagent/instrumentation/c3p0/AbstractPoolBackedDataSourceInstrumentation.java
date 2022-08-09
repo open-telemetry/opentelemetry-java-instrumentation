@@ -29,7 +29,7 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
     transformer.applyAdviceToMethod(named("close"), this.getClass().getName() + "$CloseAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ResetPoolManagerAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -38,7 +38,7 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CloseAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)

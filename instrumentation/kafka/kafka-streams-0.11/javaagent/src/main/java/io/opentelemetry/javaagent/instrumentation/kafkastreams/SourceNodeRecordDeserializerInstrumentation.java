@@ -40,7 +40,7 @@ public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrume
         SourceNodeRecordDeserializerInstrumentation.class.getName() + "$SaveHeadersAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SaveHeadersAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

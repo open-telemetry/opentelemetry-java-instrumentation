@@ -11,7 +11,7 @@ import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class Servlet3FilterInitAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

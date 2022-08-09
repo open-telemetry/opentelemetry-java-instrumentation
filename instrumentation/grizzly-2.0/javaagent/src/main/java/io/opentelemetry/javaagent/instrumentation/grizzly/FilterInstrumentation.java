@@ -48,7 +48,7 @@ public class FilterInstrumentation implements TypeInstrumentation {
         FilterInstrumentation.class.getName() + "$HandleReadAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class HandleReadAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

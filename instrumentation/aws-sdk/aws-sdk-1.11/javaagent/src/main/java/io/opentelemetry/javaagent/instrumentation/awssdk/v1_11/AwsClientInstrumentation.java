@@ -35,7 +35,7 @@ public class AwsClientInstrumentation implements TypeInstrumentation {
         isConstructor(), AwsClientInstrumentation.class.getName() + "$AwsClientAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AwsClientAdvice {
 
     // Since we're instrumenting the constructor, we can't add onThrowable.

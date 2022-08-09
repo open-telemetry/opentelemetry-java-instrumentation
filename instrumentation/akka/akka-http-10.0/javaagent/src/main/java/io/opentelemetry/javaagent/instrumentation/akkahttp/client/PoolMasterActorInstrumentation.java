@@ -30,7 +30,7 @@ public class PoolMasterActorInstrumentation implements TypeInstrumentation {
         ClearContextAdvice.class.getName());
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ClearContextAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

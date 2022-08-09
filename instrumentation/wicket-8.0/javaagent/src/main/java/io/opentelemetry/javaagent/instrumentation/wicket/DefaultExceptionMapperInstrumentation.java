@@ -33,7 +33,7 @@ public class DefaultExceptionMapperInstrumentation implements TypeInstrumentatio
         DefaultExceptionMapperInstrumentation.class.getName() + "$ExceptionAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ExceptionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

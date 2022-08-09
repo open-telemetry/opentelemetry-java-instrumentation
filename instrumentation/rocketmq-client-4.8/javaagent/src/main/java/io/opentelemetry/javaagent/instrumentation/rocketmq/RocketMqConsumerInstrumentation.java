@@ -31,7 +31,7 @@ public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
         RocketMqConsumerInstrumentation.class.getName() + "$AdviceStart");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AdviceStart {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

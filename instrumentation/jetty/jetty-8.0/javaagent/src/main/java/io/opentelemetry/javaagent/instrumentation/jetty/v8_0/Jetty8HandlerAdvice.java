@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class Jetty8HandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -40,7 +40,7 @@ public class ComponentPageElementImplInstrumentation implements TypeInstrumentat
         this.getClass().getName() + "$EventAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class EventAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

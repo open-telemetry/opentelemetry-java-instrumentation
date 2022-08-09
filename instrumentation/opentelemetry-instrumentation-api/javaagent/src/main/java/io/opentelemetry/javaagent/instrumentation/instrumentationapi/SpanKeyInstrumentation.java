@@ -39,7 +39,7 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$FromContextOrNullAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class StoreInContextAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
     public static Object onEnter() {
@@ -74,7 +74,7 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class FromContextOrNullAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
     public static Object onEnter() {

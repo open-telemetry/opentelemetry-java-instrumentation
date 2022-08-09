@@ -41,7 +41,7 @@ public class UrlClassLoaderInstrumentation implements TypeInstrumentation {
         UrlClassLoaderInstrumentation.class.getName() + "$AddUrlAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AddUrlAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This URLClassLoader loader) {

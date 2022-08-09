@@ -37,7 +37,7 @@ public class JobBuilderHelperInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$EnhanceAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class EnhanceAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

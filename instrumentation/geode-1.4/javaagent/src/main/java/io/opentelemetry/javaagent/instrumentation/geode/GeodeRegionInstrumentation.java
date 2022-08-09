@@ -61,7 +61,7 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$QueryAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SimpleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -97,7 +97,7 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class QueryAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

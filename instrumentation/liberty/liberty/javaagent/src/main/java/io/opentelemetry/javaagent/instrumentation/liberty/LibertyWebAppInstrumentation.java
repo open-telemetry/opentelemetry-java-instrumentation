@@ -45,7 +45,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$IsForbiddenAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -98,7 +98,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class IsForbiddenAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

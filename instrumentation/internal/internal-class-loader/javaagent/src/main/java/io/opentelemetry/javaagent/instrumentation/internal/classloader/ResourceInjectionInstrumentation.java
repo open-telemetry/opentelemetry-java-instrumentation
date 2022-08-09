@@ -49,7 +49,7 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
         ResourceInjectionInstrumentation.class.getName() + "$GetResourcesAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetResourceAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -65,7 +65,7 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetResourcesAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

@@ -31,7 +31,7 @@ public class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation 
         CouchbaseEnvironmentInstrumentation.class.getName() + "$ConstructorAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

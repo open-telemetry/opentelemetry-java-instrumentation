@@ -109,7 +109,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     return result;
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class WithSpanAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -150,7 +150,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class WithSpanAttributesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

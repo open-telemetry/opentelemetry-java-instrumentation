@@ -42,7 +42,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
         ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class PrepareAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

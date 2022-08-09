@@ -50,7 +50,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$EncodeResponseForFailureAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class InvokeAndEncodeResponseAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -77,7 +77,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class EncodeResponseForFailureAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

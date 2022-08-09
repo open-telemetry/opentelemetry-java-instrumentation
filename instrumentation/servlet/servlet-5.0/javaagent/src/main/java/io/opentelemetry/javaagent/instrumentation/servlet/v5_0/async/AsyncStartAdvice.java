@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class AsyncStartAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

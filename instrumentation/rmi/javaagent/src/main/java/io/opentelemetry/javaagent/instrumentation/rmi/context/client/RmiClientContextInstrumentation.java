@@ -90,7 +90,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
         });
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class StreamRemoteCallConstructorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

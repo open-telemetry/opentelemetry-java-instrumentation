@@ -39,7 +39,7 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
         DefaultGrailsControllerClassInstrumentation.class.getName() + "$ControllerAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ControllerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

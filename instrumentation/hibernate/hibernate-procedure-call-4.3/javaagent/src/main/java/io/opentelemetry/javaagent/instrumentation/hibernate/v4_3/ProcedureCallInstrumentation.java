@@ -44,7 +44,7 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
         ProcedureCallInstrumentation.class.getName() + "$ProcedureCallMethodAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ProcedureCallMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -33,7 +33,7 @@ public class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrum
         ResteasyResourceMethodInvokerInstrumentation.class.getName() + "$InvokeOnTargetAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class InvokeOnTargetAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

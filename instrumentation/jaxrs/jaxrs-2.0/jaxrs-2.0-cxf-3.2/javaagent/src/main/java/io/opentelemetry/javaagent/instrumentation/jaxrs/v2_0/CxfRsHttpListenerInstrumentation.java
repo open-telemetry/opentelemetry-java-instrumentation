@@ -33,7 +33,7 @@ public class CxfRsHttpListenerInstrumentation implements TypeInstrumentation {
         CxfRsHttpListenerInstrumentation.class.getName() + "$InvokeAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class InvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

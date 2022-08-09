@@ -33,7 +33,7 @@ public class StreamTaskInstrumentation implements TypeInstrumentation {
 
   // the method decorated by this advice calls PartitionGroup.nextRecord(), which triggers
   // PartitionGroupInstrumentation that actually starts the span
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ProcessAdvice {
 
     @Advice.OnMethodEnter

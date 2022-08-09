@@ -61,7 +61,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$AddAfterAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RemoveAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -77,7 +77,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RemoveByNameAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -98,7 +98,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RemoveByClassAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -120,7 +120,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RemoveFirstAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -136,7 +136,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RemoveLastAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -157,7 +157,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AddAfterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

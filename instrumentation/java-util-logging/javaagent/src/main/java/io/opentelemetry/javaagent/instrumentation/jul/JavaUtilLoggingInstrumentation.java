@@ -40,7 +40,7 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
         JavaUtilLoggingInstrumentation.class.getName() + "$LogAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class LogAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

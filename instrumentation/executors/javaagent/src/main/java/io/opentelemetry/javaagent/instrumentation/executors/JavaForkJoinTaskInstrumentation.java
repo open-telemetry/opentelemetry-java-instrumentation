@@ -50,7 +50,7 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         JavaForkJoinTaskInstrumentation.class.getName() + "$ForkAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ForkJoinTaskAdvice {
 
     /**
@@ -101,7 +101,7 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ForkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -49,7 +49,7 @@ public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
         JaxrsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseCancelAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AsyncResponseAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -66,7 +66,7 @@ public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AsyncResponseThrowableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -84,7 +84,7 @@ public class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AsyncResponseCancelAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

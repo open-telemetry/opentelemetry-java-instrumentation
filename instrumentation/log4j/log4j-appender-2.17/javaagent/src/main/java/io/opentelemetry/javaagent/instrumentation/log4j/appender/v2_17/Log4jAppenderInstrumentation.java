@@ -53,7 +53,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
         Log4jAppenderInstrumentation.class.getName() + "$LogAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class LogAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

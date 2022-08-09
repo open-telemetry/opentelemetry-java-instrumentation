@@ -32,7 +32,7 @@ public class Resteasy30ServletContainerDispatcherInstrumentation implements Type
         Resteasy30ServletContainerDispatcherInstrumentation.class.getName() + "$ServiceAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ServiceAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

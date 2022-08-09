@@ -38,7 +38,7 @@ public class JbossLoggerInstrumentation implements TypeInstrumentation {
         JbossLoggerInstrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

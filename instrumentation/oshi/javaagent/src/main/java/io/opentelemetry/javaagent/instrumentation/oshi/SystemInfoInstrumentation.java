@@ -38,7 +38,7 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$GetCurrentPlatformEnumAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetCurrentPlatformEnumAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

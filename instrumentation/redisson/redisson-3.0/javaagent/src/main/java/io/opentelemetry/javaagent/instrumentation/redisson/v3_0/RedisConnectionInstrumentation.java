@@ -35,7 +35,7 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
         isMethod().and(named("send")), this.getClass().getName() + "$SendAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

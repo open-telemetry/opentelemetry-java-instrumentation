@@ -33,7 +33,7 @@ public class DefaultExecutionInstrumentation implements TypeInstrumentation {
         DefaultExecutionInstrumentation.class.getName() + "$DelimitAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class DelimitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

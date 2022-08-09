@@ -51,7 +51,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SyncOperationAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AsyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -81,7 +81,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AsyncGetAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -110,7 +110,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AsyncBulkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -139,7 +139,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

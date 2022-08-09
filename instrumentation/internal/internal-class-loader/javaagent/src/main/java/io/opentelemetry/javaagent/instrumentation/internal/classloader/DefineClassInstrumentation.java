@@ -36,10 +36,10 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("defineClass")
             .and(takesArguments(String.class, ByteBuffer.class, ProtectionDomain.class)),
-        DefineClassInstrumentation.class.getName() + "$DefineClassAdvice2");
+        DefineClassInstrumentation.class.getName() + "$DefineClassWithThreeArgsAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class DefineClassAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DefineClassContext onEnter(
@@ -58,8 +58,8 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
-  public static class DefineClassAdvice2 {
+  @SuppressWarnings("unused")
+  public static class DefineClassWithThreeArgsAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DefineClassContext onEnter(
         @Advice.This ClassLoader classLoader,

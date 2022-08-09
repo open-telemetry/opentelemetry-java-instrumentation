@@ -28,7 +28,7 @@ public class InvocationListenerRegistryTypeInstrumentation implements TypeInstru
         InvocationListenerRegistryTypeInstrumentation.class.getName() + "$ClassInitializerAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ClassInitializerAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

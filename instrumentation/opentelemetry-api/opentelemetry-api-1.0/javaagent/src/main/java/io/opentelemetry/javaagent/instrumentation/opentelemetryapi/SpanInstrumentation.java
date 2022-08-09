@@ -31,7 +31,7 @@ public class SpanInstrumentation implements TypeInstrumentation {
         SpanInstrumentation.class.getName() + "$CreateAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CreateAdvice {
 
     // We replace the return value completely so don't need to call the method.

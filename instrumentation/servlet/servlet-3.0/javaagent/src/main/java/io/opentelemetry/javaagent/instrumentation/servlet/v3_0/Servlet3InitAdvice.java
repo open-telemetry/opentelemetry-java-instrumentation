@@ -11,7 +11,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class Servlet3InitAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

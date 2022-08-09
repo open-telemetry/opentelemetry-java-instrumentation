@@ -37,7 +37,7 @@ public class ClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$InvokeMethodAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -52,7 +52,7 @@ public class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
         ScalaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ForkJoinTaskAdvice {
 
     /**

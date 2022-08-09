@@ -32,7 +32,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
     return getClass().getName() + "$ContainerRequestContextAdvice";
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

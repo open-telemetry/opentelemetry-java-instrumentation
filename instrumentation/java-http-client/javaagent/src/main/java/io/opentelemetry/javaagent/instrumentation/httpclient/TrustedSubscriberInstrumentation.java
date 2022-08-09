@@ -30,7 +30,7 @@ public class TrustedSubscriberInstrumentation implements TypeInstrumentation {
         TrustedSubscriberInstrumentation.class.getName() + "$NeedsExecutorAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class NeedsExecutorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

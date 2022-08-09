@@ -47,7 +47,7 @@ public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ConstructorWithConsumerAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ConstructorWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -58,7 +58,7 @@ public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ConstructorWithConsumerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

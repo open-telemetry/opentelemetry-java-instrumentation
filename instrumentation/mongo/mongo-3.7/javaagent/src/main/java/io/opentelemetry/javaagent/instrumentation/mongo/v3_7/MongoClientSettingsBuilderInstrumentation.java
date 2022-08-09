@@ -41,7 +41,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
         this.getClass().getName() + "$AddCommandListenerAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AddCommandListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

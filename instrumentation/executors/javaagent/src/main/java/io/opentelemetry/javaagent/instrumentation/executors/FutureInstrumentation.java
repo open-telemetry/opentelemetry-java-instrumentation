@@ -94,7 +94,7 @@ public class FutureInstrumentation implements TypeInstrumentation {
         FutureInstrumentation.class.getName() + "$CanceledFutureAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CanceledFutureAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

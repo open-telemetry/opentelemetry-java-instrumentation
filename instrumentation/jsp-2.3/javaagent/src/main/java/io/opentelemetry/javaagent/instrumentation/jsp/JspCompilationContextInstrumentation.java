@@ -34,7 +34,7 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
         JspCompilationContextInstrumentation.class.getName() + "$CompileAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CompileAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

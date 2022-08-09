@@ -50,7 +50,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
         OpenTelemetryInstrumentation.class.getName() + "$ResetForTestAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class GetAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
@@ -66,7 +66,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SetAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -81,7 +81,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ResetForTestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

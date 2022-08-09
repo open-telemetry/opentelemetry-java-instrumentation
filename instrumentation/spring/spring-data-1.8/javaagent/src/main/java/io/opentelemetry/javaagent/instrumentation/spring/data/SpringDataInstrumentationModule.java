@@ -57,7 +57,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RepositoryFactorySupportAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

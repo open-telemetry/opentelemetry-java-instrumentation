@@ -32,7 +32,7 @@ public class RedisCommandDataInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class WrapCompletableFutureAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

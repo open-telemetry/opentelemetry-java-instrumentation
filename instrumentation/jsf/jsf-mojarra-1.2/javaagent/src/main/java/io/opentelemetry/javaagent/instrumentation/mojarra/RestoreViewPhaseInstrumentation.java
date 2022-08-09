@@ -31,7 +31,7 @@ public class RestoreViewPhaseInstrumentation implements TypeInstrumentation {
         RestoreViewPhaseInstrumentation.class.getName() + "$ExecuteAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

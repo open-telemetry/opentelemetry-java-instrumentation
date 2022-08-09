@@ -43,7 +43,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
         ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class OperationCompleteAdvice {
 
     @Advice.OnMethodEnter

@@ -31,7 +31,7 @@ public class AsyncWorkManagerInstrumentation implements TypeInstrumentation {
         AsyncWorkManagerInstrumentation.class.getName() + "$DisablePropagationAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class DisablePropagationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter() {

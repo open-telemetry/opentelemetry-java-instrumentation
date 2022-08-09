@@ -41,7 +41,7 @@ public class RequestExecutorInstrumentation implements TypeInstrumentation {
         RequestExecutorInstrumentation.class.getName() + "$RequestExecutorAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RequestExecutorAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

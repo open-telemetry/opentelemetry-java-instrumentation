@@ -29,7 +29,7 @@ public class MetricRegistryInstrumentation implements TypeInstrumentation {
         isDefaultConstructor(), this.getClass().getName() + "$ConstructorAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

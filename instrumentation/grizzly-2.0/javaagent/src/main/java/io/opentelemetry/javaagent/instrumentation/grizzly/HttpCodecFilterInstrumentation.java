@@ -43,7 +43,7 @@ public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
         HttpCodecFilterInstrumentation.class.getName() + "$HandleReadAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class HandleReadAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

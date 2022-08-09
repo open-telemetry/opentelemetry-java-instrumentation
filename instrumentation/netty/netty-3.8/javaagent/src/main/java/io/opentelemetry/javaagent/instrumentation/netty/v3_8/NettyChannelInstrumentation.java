@@ -52,7 +52,7 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         NettyChannelInstrumentation.class.getName() + "$ChannelConnectAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ChannelConnectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

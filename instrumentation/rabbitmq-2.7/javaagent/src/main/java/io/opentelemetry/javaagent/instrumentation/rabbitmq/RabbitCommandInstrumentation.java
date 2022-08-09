@@ -46,7 +46,7 @@ public class RabbitCommandInstrumentation implements TypeInstrumentation {
     private SpanHolder() {}
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CommandConstructorAdvice {
 
     @Advice.OnMethodExit

@@ -28,7 +28,7 @@ public class HandlerPublisherInstrumentation implements TypeInstrumentation {
         HandlerPublisherInstrumentation.class.getName() + "$WrapSubscriberAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class WrapSubscriberAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -38,7 +38,7 @@ public class ContextStorageWrappersInstrumentation implements TypeInstrumentatio
         ContextStorageWrappersInstrumentation.class.getName() + "$AddWrapperAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AddWrapperAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

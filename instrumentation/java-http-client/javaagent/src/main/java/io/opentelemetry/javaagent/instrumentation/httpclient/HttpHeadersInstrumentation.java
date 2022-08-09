@@ -34,7 +34,7 @@ public class HttpHeadersInstrumentation implements TypeInstrumentation {
         HttpHeadersInstrumentation.class.getName() + "$HeadersAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class HeadersAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

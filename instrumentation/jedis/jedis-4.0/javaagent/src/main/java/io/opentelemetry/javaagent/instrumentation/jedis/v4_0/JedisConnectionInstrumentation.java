@@ -50,7 +50,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SendCommandAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SendCommandAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -88,7 +88,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SendCommand2Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

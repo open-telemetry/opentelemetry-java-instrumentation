@@ -45,7 +45,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         PreparedStatementInstrumentation.class.getName() + "$PreparedStatementAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class PreparedStatementAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

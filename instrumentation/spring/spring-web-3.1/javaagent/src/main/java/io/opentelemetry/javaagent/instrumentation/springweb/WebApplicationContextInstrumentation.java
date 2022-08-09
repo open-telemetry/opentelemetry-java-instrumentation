@@ -54,7 +54,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
         WebApplicationContextInstrumentation.class.getName() + "$FilterInjectingAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class FilterInjectingAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

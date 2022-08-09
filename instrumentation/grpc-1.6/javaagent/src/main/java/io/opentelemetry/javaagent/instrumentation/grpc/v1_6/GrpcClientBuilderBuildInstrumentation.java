@@ -40,7 +40,7 @@ public class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentatio
         GrpcClientBuilderBuildInstrumentation.class.getName() + "$AddInterceptorAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AddInterceptorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

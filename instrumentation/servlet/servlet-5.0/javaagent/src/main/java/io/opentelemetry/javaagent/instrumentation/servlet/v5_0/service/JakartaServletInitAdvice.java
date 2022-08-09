@@ -11,7 +11,7 @@ import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletConfig;
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class JakartaServletInitAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

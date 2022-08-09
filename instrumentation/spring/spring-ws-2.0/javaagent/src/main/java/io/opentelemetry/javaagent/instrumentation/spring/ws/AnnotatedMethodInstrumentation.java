@@ -48,7 +48,7 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
         AnnotatedMethodInstrumentation.class.getName() + "$AnnotatedMethodAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AnnotatedMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

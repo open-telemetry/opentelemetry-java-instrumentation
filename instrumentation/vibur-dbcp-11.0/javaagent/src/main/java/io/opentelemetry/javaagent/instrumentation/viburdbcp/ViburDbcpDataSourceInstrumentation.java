@@ -31,7 +31,7 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
         named("close").and(takesArguments(0)), this.getClass().getName() + "$CloseAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class StartAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -40,7 +40,7 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CloseAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)

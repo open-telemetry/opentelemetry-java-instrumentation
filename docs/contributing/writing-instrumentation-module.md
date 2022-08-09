@@ -251,7 +251,7 @@ Unfortunately many standard practices do not apply to advice classes:
 Consider the following example:
 
 ```java
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public static class MethodAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(/* ... */) {

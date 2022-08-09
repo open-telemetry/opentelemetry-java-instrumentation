@@ -32,7 +32,7 @@ public class JaxWsServerFactoryBeanInstrumentation implements TypeInstrumentatio
         JaxWsServerFactoryBeanInstrumentation.class.getName() + "$CreateAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CreateAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

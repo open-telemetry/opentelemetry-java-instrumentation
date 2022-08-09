@@ -51,7 +51,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
         BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -62,7 +62,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class SetResolverAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -72,7 +72,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ConnectAdvice {
     @Advice.OnMethodEnter
     public static void startConnect(

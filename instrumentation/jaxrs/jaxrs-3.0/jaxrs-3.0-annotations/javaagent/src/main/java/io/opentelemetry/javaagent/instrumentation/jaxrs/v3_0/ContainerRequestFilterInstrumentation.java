@@ -47,7 +47,7 @@ public class ContainerRequestFilterInstrumentation implements TypeInstrumentatio
         ContainerRequestFilterInstrumentation.class.getName() + "$RequestFilterAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class RequestFilterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

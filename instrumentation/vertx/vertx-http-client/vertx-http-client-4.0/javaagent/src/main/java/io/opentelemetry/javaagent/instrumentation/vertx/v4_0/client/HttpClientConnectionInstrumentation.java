@@ -37,7 +37,7 @@ public class HttpClientConnectionInstrumentation implements TypeInstrumentation 
         HttpClientConnectionInstrumentation.class.getName() + "$CreateStreamAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class CreateStreamAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(

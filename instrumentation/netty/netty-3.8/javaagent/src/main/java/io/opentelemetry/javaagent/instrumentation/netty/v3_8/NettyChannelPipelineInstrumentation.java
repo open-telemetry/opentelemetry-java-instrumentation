@@ -47,7 +47,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAdd3ArgsAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ChannelPipelineAdd2ArgsAdvice {
 
     @Advice.OnMethodEnter
@@ -78,7 +78,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ChannelPipelineAdd3ArgsAdvice {
 
     @Advice.OnMethodEnter

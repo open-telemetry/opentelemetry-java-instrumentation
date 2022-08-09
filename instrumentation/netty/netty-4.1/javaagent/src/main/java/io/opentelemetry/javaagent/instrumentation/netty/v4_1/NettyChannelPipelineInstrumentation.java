@@ -53,7 +53,7 @@ public class NettyChannelPipelineInstrumentation
    * handlers. If those handlers are later removed, we also remove our handlers. Support for
    * replacing handlers and removeFirst/removeLast is currently not implemented.
    */
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter

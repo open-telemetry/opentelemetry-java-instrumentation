@@ -35,7 +35,7 @@ public class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
         OkHttp3DispatcherInstrumentation.class.getName() + "$AttachStateAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class AttachStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

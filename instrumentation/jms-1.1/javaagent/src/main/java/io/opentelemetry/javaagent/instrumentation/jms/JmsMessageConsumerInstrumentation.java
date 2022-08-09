@@ -44,7 +44,7 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
         JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class ConsumerAdvice {
 
     @Advice.OnMethodEnter

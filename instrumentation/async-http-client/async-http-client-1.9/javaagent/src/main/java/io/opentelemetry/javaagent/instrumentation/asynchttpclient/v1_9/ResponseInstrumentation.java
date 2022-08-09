@@ -47,7 +47,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$OnThrowableAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class OnCompletedAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -73,7 +73,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class OnThrowableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

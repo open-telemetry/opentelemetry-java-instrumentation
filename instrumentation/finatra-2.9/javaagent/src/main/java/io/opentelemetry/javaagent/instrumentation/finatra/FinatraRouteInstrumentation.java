@@ -42,7 +42,7 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleMatchAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class HandleMatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

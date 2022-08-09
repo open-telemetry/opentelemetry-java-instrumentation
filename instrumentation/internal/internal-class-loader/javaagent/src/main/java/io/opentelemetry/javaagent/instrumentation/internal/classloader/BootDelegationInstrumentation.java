@@ -100,7 +100,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
     private Holder() {}
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class LoadClassAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)

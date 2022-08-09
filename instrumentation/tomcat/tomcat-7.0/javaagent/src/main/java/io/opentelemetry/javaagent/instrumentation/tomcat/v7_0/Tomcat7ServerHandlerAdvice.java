@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class Tomcat7ServerHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

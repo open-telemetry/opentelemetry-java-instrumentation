@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling.bytebuddy;
 
 import net.bytebuddy.asm.Advice;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class BadAdvice {
 
   @Advice.OnMethodExit(suppress = Throwable.class)

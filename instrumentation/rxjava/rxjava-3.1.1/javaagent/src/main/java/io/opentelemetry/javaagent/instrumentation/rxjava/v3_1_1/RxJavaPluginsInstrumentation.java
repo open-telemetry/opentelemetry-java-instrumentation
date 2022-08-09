@@ -27,7 +27,7 @@ public class RxJavaPluginsInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(isMethod(), this.getClass().getName() + "$MethodAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class MethodAdvice {
 
     // TODO(anuraaga): Replace with adding a type initializer to RxJavaPlugins

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-@SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings("unused")
 public class DeclaredFieldTestClass {
 
   public static class Advice {

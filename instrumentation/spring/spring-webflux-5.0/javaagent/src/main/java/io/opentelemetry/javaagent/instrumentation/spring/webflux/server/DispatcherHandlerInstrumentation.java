@@ -37,7 +37,7 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class HandleAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

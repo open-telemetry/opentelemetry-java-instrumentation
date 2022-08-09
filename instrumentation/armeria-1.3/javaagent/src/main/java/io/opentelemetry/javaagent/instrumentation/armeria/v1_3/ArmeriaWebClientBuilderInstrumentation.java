@@ -30,7 +30,7 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
         ArmeriaWebClientBuilderInstrumentation.class.getName() + "$BuildAdvice");
   }
 
-  @SuppressWarnings({"PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
 
     @Advice.OnMethodEnter
