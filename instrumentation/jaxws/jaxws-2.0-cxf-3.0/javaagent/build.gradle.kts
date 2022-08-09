@@ -37,3 +37,9 @@ dependencies {
   testImplementation("javax.annotation:javax.annotation-api:1.2")
   testImplementation("com.sun.xml.messaging.saaj:saaj-impl:1.5.2")
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}

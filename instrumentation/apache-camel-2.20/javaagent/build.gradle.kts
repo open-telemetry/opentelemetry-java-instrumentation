@@ -67,5 +67,9 @@ tasks {
 
     // TODO: fix camel instrumentation so that it uses semantic attributes extractors
     jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=span-kind")
+
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 }

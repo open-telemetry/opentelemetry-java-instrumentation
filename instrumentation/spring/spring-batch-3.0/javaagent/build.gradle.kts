@@ -55,3 +55,9 @@ tasks {
     jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
   }
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}
