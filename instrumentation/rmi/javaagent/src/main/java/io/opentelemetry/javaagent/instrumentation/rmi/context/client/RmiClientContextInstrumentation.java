@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context.client;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -54,7 +53,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("sun.rmi.transport.StreamRemoteCall"));
+    return named("sun.rmi.transport.StreamRemoteCall");
   }
 
   @Override
