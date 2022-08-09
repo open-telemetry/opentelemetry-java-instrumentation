@@ -105,6 +105,9 @@ tasks {
         // some moving.
         disable("DefaultPackage")
 
+        // we use modified OtelPrivateConstructorForUtilityClass which ignores *Advice classes
+        disable("PrivateConstructorForUtilityClass")
+
         // TODO(anuraaga): Remove this, probably after instrumenter API migration instead of dealing
         // with older APIs.
         disable("InconsistentOverloads")
