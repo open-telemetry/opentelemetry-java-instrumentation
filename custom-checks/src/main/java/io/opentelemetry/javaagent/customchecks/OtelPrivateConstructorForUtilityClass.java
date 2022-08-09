@@ -18,14 +18,16 @@ import com.sun.source.tree.ClassTree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-    summary = "Classes which are not intended to be instantiated should be made non-instantiable with a private constructor. This includes utility classes (classes with only static members), and the main class.",
-    severity = WARNING
-)
-public class OtelPrivateConstructorForUtilityClass extends BugChecker implements BugChecker.ClassTreeMatcher {
+    summary =
+        "Classes which are not intended to be instantiated should be made non-instantiable with a private constructor. This includes utility classes (classes with only static members), and the main class.",
+    severity = WARNING)
+public class OtelPrivateConstructorForUtilityClass extends BugChecker
+    implements BugChecker.ClassTreeMatcher {
 
   private static final long serialVersionUID = 1L;
 
-  private final PrivateConstructorForUtilityClass delegate = new PrivateConstructorForUtilityClass();
+  private final PrivateConstructorForUtilityClass delegate =
+      new PrivateConstructorForUtilityClass();
 
   @Override
   public Description matchClass(ClassTree tree, VisitorState state) {
