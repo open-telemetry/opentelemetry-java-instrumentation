@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.v7_0.Tomcat7Singletons.helper;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -31,9 +30,6 @@ public class Tomcat7ServerHandlerAdvice {
     }
 
     context = helper().start(parentContext, request);
-    Span span = Java8BytecodeBridge.spanFromContext(context);
-    helper().attachRequestHeadersToSpan(request, span);
-    helper().attachResponseHeadersToSpan(response, span);
     scope = context.makeCurrent();
   }
 

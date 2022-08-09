@@ -7,7 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -103,5 +106,36 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   @Nullable
   public String serverName(Request request) {
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String requestHeaders(Request request, @Nullable Response response) {
+    Enumeration<String> requestHeaderNames = request.getMimeHeaders().names();
+    Map<String, String> requestHeaders = new HashMap<>();
+
+    if (requestHeaderNames != null) {
+      while (requestHeaderNames.hasMoreElements()) {
+        String headerName = requestHeaderNames.nextElement();
+        requestHeaders.put(headerName, request.getHeader(headerName));
+      }
+    }
+
+    return String.valueOf(requestHeaders);
+  }
+
+  @Nullable
+  @Override
+  public String responseHeaders(Request request, Response response) {
+    Map<String, String> responseHeaders = new HashMap<>();
+    Enumeration<String> responseHeaderNames = response.getMimeHeaders().names();
+    if (responseHeaderNames != null) {
+      while (responseHeaderNames.hasMoreElements()) {
+        String headerName = responseHeaderNames.nextElement();
+        responseHeaders.put(headerName, response.getMimeHeaders().getHeader(headerName));
+      }
+    }
+
+    return String.valueOf(responseHeaders);
   }
 }
