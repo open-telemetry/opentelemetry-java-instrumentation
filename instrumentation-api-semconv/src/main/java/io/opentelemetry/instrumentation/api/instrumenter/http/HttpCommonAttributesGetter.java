@@ -7,9 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /** An interface for getting HTTP attributes common to clients and servers. */

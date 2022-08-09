@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.lowercase;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
@@ -104,7 +103,7 @@ abstract class HttpCommonAttributesExtractor<
   }
 
   @Nullable
-  private String requestHeaders(REQUEST request,  @Nullable RESPONSE response) {
+  private String requestHeaders(REQUEST request, @Nullable RESPONSE response) {
     return getter.requestHeaders(request, response);
   }
 
@@ -122,6 +121,4 @@ abstract class HttpCommonAttributesExtractor<
   static String firstHeaderValue(List<String> values) {
     return values.isEmpty() ? null : values.get(0);
   }
-
-
 }

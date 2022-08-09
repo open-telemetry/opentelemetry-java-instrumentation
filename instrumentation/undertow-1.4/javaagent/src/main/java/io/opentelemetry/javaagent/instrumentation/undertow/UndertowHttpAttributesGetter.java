@@ -24,7 +24,8 @@ import javax.annotation.Nullable;
 public class UndertowHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServerExchange, HttpServerExchange> {
 
-  private static final Logger logger = Logger.getLogger(UndertowHttpAttributesGetter.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(UndertowHttpAttributesGetter.class.getName());
   public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
   @Override
@@ -47,22 +48,22 @@ public class UndertowHttpAttributesGetter
   public String requestHeaders(HttpServerExchange exchange, HttpServerExchange unused) {
     return toJsonString(
         exchange.getRequestHeaders().getHeaderNames().stream()
-        .map(HttpString::toString)
-        .collect(
-            Collectors.toMap(
-                Function.identity(), (h) -> firstListValue(requestHeader(exchange, h)))));
+            .map(HttpString::toString)
+            .collect(
+                Collectors.toMap(
+                    Function.identity(), (h) -> firstListValue(requestHeader(exchange, h)))));
   }
 
   @Override
   @Nullable
-  public String responseHeaders(
-      HttpServerExchange unused, HttpServerExchange exchange) {
+  public String responseHeaders(HttpServerExchange unused, HttpServerExchange exchange) {
     return toJsonString(
         exchange.getResponseHeaders().getHeaderNames().stream()
-        .map(HttpString::toString)
-        .collect(
-            Collectors.toMap(
-                Function.identity(), (h) -> firstListValue(responseHeader(exchange, exchange, h)))));
+            .map(HttpString::toString)
+            .collect(
+                Collectors.toMap(
+                    Function.identity(),
+                    (h) -> firstListValue(responseHeader(exchange, exchange, h)))));
   }
 
   @Override
