@@ -29,8 +29,9 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    */
   List<String> requestHeader(REQUEST request, String name);
 
-  default Map<String, String> requestHeaders(REQUEST request, @Nullable RESPONSE response) {
-    return Collections.emptyMap();
+  @Nullable
+  default String requestHeaders(REQUEST request, @Nullable RESPONSE response) {
+    return null;
   }
 
   // Attributes which are not always available when the request is ready.
@@ -92,7 +93,8 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    */
   List<String> responseHeader(REQUEST request, RESPONSE response, String name);
 
-  default Map<String, String> responseHeaders(REQUEST request, RESPONSE response) {
-    return Collections.emptyMap();
+  @Nullable
+  default String responseHeaders(REQUEST request, RESPONSE response) {
+    return null;
   }
 }
