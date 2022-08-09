@@ -27,7 +27,7 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
         none(), OpenTelemetryInstrumentation.class.getName() + "$InitAdvice");
   }
 
-  @SuppressWarnings({"ReturnValueIgnored", "PrivateConstructorForUtilityClass", "unused"})
+  @SuppressWarnings({"ReturnValueIgnored", "unused"})
   public static class InitAdvice {
     @Advice.OnMethodEnter
     public static void init() {

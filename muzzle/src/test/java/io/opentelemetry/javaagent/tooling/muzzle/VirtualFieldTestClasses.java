@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
-@SuppressWarnings({"ReturnValueIgnored", "PrivateConstructorForUtilityClass", "unused"})
+@SuppressWarnings({"ReturnValueIgnored", "unused"})
 public class VirtualFieldTestClasses {
 
   public static class ValidAdvice {
