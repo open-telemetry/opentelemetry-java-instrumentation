@@ -6,24 +6,27 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.webmvc.SpringWebMvcTelemetry;
+import io.opentelemetry.instrumentation.spring.webmvc.v5_3.SpringWebMvcTelemetry;
 import javax.servlet.Filter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.DispatcherServlet;
 
 /** Configures {@link SpringWebMvcTelemetry} for tracing. */
 @Configuration
 @EnableConfigurationProperties(WebMvcProperties.class)
 @ConditionalOnProperty(prefix = "otel.springboot.web", name = "enabled", matchIfMissing = true)
-@ConditionalOnClass(OncePerRequestFilter.class)
+@ConditionalOnClass({OncePerRequestFilter.class, DispatcherServlet.class})
+@ConditionalOnBean(OpenTelemetry.class)
 public class WebMvcFilterAutoConfiguration {
 
   @Bean
-  public Filter otelWebMvcTracingFilter(OpenTelemetry openTelemetry) {
-    return SpringWebMvcTelemetry.create(openTelemetry).newServletFilter();
+  public Filter otelWebMvcInstrumentationFilter(OpenTelemetry openTelemetry) {
+    return SpringWebMvcTelemetry.create(openTelemetry).createServletFilter();
   }
 }
