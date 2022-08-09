@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -79,5 +80,21 @@ enum RocketMqProducerAttributeGetter
   public String messageId(SendMessageContext request, @Nullable Void unused) {
     SendResult sendResult = request.getSendResult();
     return sendResult == null ? null : sendResult.getMsgId();
+  }
+
+  @Nullable
+  @Override
+  public String messagePayload(SendMessageContext sendMessageContext) {
+    Message message = sendMessageContext.getMessage();
+    if (message == null) {
+      return null;
+    }
+
+    byte[] body = message.getBody();
+    if (body == null) {
+      return null;
+    }
+
+    return new String(body, StandardCharsets.UTF_8);
   }
 }

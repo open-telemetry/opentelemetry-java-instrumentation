@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 
 enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<DeliveryRequest, Void> {
@@ -83,6 +84,17 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
   @Nullable
   @Override
   public String messageId(DeliveryRequest request, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String messagePayload(DeliveryRequest request) {
+    byte[] body = request.getBody();
+    if (body != null) {
+      return new String(body, StandardCharsets.UTF_8);
+    }
+
     return null;
   }
 }

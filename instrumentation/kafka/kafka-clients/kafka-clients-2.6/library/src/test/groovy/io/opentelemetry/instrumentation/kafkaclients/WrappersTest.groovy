@@ -65,6 +65,7 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "messaging.payload" String
           }
         }
         span(2) {
@@ -80,6 +81,7 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
+            "messaging.payload" String
           }
         }
         span(3) {

@@ -364,16 +364,19 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
             }
             "rabbitmq.delivery_mode" { it == null || it == 2 }
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "messaging.payload" String
             break
           case "basic.get":
             "rabbitmq.command" "basic.get"
             //TODO why this queue name is not a destination for semantic convention
             "rabbitmq.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" { it == null || it instanceof Long }
+            "messaging.payload" { it == null || it instanceof String }
             break
           case "basic.deliver":
             "rabbitmq.command" "basic.deliver"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "messaging.payload" String
             break
           default:
             "rabbitmq.command" { it == null || it == resource }

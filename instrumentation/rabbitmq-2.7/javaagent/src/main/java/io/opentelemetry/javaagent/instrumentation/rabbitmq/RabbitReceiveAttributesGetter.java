@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 
 enum RabbitReceiveAttributesGetter
@@ -82,6 +83,22 @@ enum RabbitReceiveAttributesGetter
   @Nullable
   @Override
   public String messageId(ReceiveRequest request, @Nullable GetResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String messagePayload(ReceiveRequest receiveRequest) {
+    GetResponse response = receiveRequest.getResponse();
+    if (response == null) {
+      return null;
+    }
+
+    byte[] body = receiveRequest.getResponse().getBody();
+    if (body != null) {
+      return new String(body, StandardCharsets.UTF_8);
+    }
+
     return null;
   }
 }
