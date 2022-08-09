@@ -9,7 +9,6 @@ import static java.util.Objects.requireNonNull;
 import static org.springframework.web.util.ServletRequestPathUtils.PATH_ATTRIBUTE;
 
 import io.opentelemetry.context.Context;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +29,8 @@ import org.springframework.web.util.ServletRequestPathUtils;
 
 final class HttpRouteSupport {
 
-  private final AtomicBoolean contextRefreshTriggerred = new AtomicBoolean();
-  @Nullable private WeakReference<DispatcherServlet> dispatcherServlet;
+  private final AtomicBoolean contextRefreshTriggered = new AtomicBoolean();
+  @Nullable private volatile DispatcherServlet dispatcherServlet;
   @Nullable private volatile List<HandlerMapping> handlerMappings;
   private volatile boolean parseRequestPath;
 
@@ -44,7 +43,7 @@ final class HttpRouteSupport {
 
     DispatcherServlet servlet = context.getBeanProvider(DispatcherServlet.class).getIfAvailable();
     if (servlet != null) {
-      dispatcherServlet = new WeakReference<>(servlet);
+      dispatcherServlet = servlet;
 
       ((ConfigurableWebApplicationContext) context)
           .addApplicationListener(new WebContextRefreshListener());
@@ -59,15 +58,14 @@ final class HttpRouteSupport {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-      contextRefreshTriggerred.set(true);
+      contextRefreshTriggered.set(true);
     }
   }
 
   boolean hasMappings() {
-    if (contextRefreshTriggerred.compareAndSet(true, false)) {
+    if (contextRefreshTriggered.compareAndSet(true, false)) {
       // reload the handler mappings only if the web app context was recently refreshed
       Optional.ofNullable(dispatcherServlet)
-          .map(WeakReference::get)
           .map(DispatcherServlet::getHandlerMappings)
           .ifPresent(this::setHandlerMappings);
     }
