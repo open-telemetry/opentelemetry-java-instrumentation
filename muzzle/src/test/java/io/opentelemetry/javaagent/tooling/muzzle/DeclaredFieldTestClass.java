@@ -26,4 +26,6 @@ public class DeclaredFieldTestClass {
   public static class LibraryBaseClass {
     protected Object superField;
   }
+
+  private DeclaredFieldTestClass() {}
 }

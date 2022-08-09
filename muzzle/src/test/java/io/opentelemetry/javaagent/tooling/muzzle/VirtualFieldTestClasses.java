@@ -72,4 +72,6 @@ public class VirtualFieldTestClasses {
   public static class Key2 {}
 
   public static class State {}
+
+  private VirtualFieldTestClasses() {}
 }

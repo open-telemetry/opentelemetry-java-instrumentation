@@ -87,6 +87,8 @@ public class TestClasses {
     }
 
     public interface AnotherInterface extends SomeInterface {}
+
+    private Nested() {}
   }
 
   public abstract static class BaseClassWithConstructor {
@@ -131,4 +133,6 @@ public class TestClasses {
       new ExternalHelper().instrument();
     }
   }
+
+  private TestClasses() {}
 }

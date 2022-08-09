@@ -28,11 +28,11 @@ public class RocketMqProducerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(named("start")).and(takesArguments(0)),
-        RocketMqProducerInstrumentation.class.getName() + "$AdviceStart");
+        RocketMqProducerInstrumentation.class.getName() + "$StartAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class AdviceStart {
+  public static class StartAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.FieldValue(value = "defaultMQProducerImpl", declaringType = DefaultMQProducer.class)
