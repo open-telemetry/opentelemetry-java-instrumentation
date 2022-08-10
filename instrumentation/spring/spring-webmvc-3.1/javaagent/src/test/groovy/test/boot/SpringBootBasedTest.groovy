@@ -26,11 +26,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext> implements AgentTestTrait {
-
-  public static final String TEST_REQUEST_HEADER = "X-Test-Request";
 
   @Override
   ConfigurableApplicationContext startServer(int port) {
