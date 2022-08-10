@@ -56,7 +56,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "messaging.payload" String
+            "messaging.payload" greeting
           }
         }
         span(2) {
@@ -72,7 +72,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
-            "messaging.payload" String
+            "messaging.payload" greeting
           }
         }
         span(3) {
@@ -168,7 +168,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
-            "messaging.payload" String
+            "messaging.payload" greeting
           }
         }
         span(1) {
@@ -184,7 +184,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
-            "messaging.payload" String
+            "messaging.payload" greeting
           }
         }
       }

@@ -74,7 +74,7 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "messaging.payload" String
+            "messaging.payload" greeting
           }
         }
         span(2) {
@@ -88,7 +88,7 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
-            "messaging.payload" String
+            "messaging.payload" greeting
           }
         }
       }
