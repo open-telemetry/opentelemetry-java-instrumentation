@@ -21,5 +21,6 @@ dependencies {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
   }
 }
