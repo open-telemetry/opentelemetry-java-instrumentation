@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafka.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -83,6 +84,10 @@ public enum KafkaProducerAttributesGetter
   @Nullable
   @Override
   public String messagePayload(ProducerRecord<?, ?> producerRecord) {
+    if (producerRecord.value() instanceof byte[]) {
+      return new String((byte[]) producerRecord.value(), StandardCharsets.UTF_8);
+    }
+
     return String.valueOf(producerRecord.value());
   }
 }
