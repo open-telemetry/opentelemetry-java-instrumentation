@@ -14,3 +14,9 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry:opentelemetry-extension-aws")
 }
+
+tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
+  }
+}

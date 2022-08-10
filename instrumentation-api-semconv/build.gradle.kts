@@ -51,6 +51,7 @@ tasks {
     filter {
       excludeTestsMatching("StatementSanitizationConfigTest")
     }
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
   }
 
   check {
