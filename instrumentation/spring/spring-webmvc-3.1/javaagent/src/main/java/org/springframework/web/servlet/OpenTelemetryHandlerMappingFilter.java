@@ -84,7 +84,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-    ContentCachingResponseWrapper wrapper = new ContentCachingResponseWrapper((HttpServletResponse) response);
+    ContentCachingResponseWrapper wrapper =
+        new ContentCachingResponseWrapper((HttpServletResponse) response);
 
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       filterChain.doFilter(request, response);
@@ -105,7 +106,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
             span.setAttribute("http.request.body", post);
           }
         }
-        span.setAttribute("http.response.body", new String(wrapper.getContentAsByteArray(), "utf-8"));
+        span.setAttribute(
+            "http.response.body", new String(wrapper.getContentAsByteArray(), "utf-8"));
         wrapper.copyBodyToResponse();
         HttpRouteHolder.updateHttpRoute(
             context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
