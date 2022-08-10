@@ -114,6 +114,35 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     }
   }
 
+  def "test payload extraction"() {
+    setup:
+    def authProvider = server.getBean(SavingAuthenticationProvider)
+    def body = "abcd=1234"
+    def request = AggregatedHttpRequest.of(
+      request(PATH_PARAM, "POST").headers().toBuilder().contentType(MediaType.FORM_DATA).build(),
+      HttpData.ofUtf8(body))
+
+    when:
+    authProvider.latestAuthentications.clear()
+    def response = client.execute(request).aggregate().join()
+
+    then:
+    response.status().code() == 200
+    def respBody = response.contentUtf8()
+    assert respBody == PATH_PARAM.body
+
+    and:
+    def httpSpan = testRunner().getExportedSpans()[2]
+    def requestBody = (String) httpSpan.attributes.asMap().find {
+      e -> e.key.key == "http.request.body"
+    }.value
+    assert requestBody.equals(body)
+    def responseBody = (String) httpSpan.attributes.asMap().find {
+      e -> e.key.key == "http.response.body"
+    }.value
+    assert responseBody.equals(respBody)
+  }
+
   def "test character encoding of #testPassword"() {
     setup:
     def authProvider = server.getBean(SavingAuthenticationProvider)
