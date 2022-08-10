@@ -16,3 +16,9 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 }
+
+tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
+  }
+}
