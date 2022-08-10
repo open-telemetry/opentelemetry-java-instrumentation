@@ -83,6 +83,9 @@ public class MethodCacheTest {
   }
 
   static class TestClass {
+
     public static void method() {}
+
+    private TestClass() {}
   }
 }

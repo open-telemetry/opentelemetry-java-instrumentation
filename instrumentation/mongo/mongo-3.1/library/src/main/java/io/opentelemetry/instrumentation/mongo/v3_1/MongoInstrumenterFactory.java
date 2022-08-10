@@ -35,4 +35,6 @@ class MongoInstrumenterFactory {
         .addAttributesExtractor(attributesExtractor)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
+
+  private MongoInstrumenterFactory() {}
 }

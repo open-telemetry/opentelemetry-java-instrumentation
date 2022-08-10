@@ -22,7 +22,7 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.util.Arrays;
 
-public class OpenTelemetryInstaller {
+public final class OpenTelemetryInstaller {
 
   /**
    * Install the {@link OpenTelemetrySdk} using autoconfigure, and return the {@link
@@ -89,4 +89,6 @@ public class OpenTelemetryInstaller {
       }
     }
   }
+
+  private OpenTelemetryInstaller() {}
 }

@@ -10,9 +10,9 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
-import muzzle.TestClasses;
+import muzzle.TestClasses.MethodBodyAdvice;
 
-public class MuzzleWeakReferenceTest {
+public class MuzzleWeakReferenceTestUtil {
 
   // Spock holds strong references to all local variables. For weak reference testing we must create
   // our strong references away from Spock in this java class.
@@ -21,7 +21,7 @@ public class MuzzleWeakReferenceTest {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
     WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
     ReferenceCollector collector = new ReferenceCollector(className -> false);
-    collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.class.getName());
+    collector.collectReferencesFromAdvice(MethodBodyAdvice.class.getName());
     ReferenceMatcher refMatcher =
         new ReferenceMatcher(
             Collections.emptyList(), collector.getReferences(), className -> false);
@@ -30,4 +30,6 @@ public class MuzzleWeakReferenceTest {
     GcUtils.awaitGc(clRef);
     return clRef.get() == null;
   }
+
+  private MuzzleWeakReferenceTestUtil() {}
 }

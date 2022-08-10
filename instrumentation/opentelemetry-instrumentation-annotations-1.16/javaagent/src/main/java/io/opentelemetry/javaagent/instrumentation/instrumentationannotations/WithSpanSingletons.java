@@ -18,6 +18,7 @@ import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
 public final class WithSpanSingletons {
+
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-instrumentation-annotations-1.16";
 
@@ -90,4 +91,6 @@ public final class WithSpanSingletons {
     }
     return spanName;
   }
+
+  private WithSpanSingletons() {}
 }

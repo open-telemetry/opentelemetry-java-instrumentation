@@ -10,6 +10,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class TestHelperClasses {
+
   public static class Helper extends HelperSuperClass implements HelperInterface {
 
     @Override
@@ -59,4 +60,6 @@ public class TestHelperClasses {
       return 12345;
     }
   }
+
+  private TestHelperClasses() {}
 }

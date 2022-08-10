@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-public class AdviceUtils {
+public final class AdviceUtils {
 
   public static final String ON_SPAN_END = AdviceUtils.class.getName() + ".Context";
 
@@ -53,4 +53,6 @@ public class AdviceUtils {
   interface OnSpanEnd {
     void end(Throwable throwable);
   }
+
+  private AdviceUtils() {}
 }

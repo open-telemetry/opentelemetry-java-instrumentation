@@ -9,4 +9,6 @@ public class JavaLambdaMaker {
   public static Runnable lambda(Runnable runnable) {
     return runnable::run;
   }
+
+  private JavaLambdaMaker() {}
 }

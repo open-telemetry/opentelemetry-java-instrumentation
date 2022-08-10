@@ -261,4 +261,6 @@ public class IntegrationTestUtils {
       }
     }
   }
+
+  private IntegrationTestUtils() {}
 }

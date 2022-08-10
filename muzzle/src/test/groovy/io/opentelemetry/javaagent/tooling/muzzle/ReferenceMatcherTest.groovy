@@ -15,7 +15,7 @@ import io.opentelemetry.test.AnotherTestInterface
 import io.opentelemetry.test.TestAbstractSuperClass
 import io.opentelemetry.test.TestInterface
 import muzzle.TestClasses
-import muzzle.TestClasses.MethodBodyAdvice
+import muzzle.TestClasses.Nested
 import org.objectweb.asm.Type
 import spock.lang.Shared
 import spock.lang.Specification
@@ -35,22 +35,22 @@ class ReferenceMatcherTest extends Specification {
   static final TEST_EXTERNAL_INSTRUMENTATION_PACKAGE = "com.external.otel.instrumentation"
 
   @Shared
-  ClassLoader safeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(MethodBodyAdvice.A,
-    MethodBodyAdvice.B,
-    MethodBodyAdvice.SomeInterface,
-    MethodBodyAdvice.SomeImplementation)] as URL[],
+  ClassLoader safeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(Nested.A,
+    Nested.B,
+    Nested.SomeInterface,
+    Nested.SomeImplementation)] as URL[],
     (ClassLoader) null)
 
   @Shared
-  ClassLoader unsafeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(MethodBodyAdvice.A,
-    MethodBodyAdvice.SomeInterface,
-    MethodBodyAdvice.SomeImplementation)] as URL[],
+  ClassLoader unsafeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(Nested.A,
+    Nested.SomeInterface,
+    Nested.SomeImplementation)] as URL[],
     (ClassLoader) null)
 
   def "match safe classpaths"() {
     setup:
     def collector = new ReferenceCollector({ false })
-    collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
+    collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.name)
     def refMatcher = createMatcher(collector.getReferences())
 
     expect:
@@ -60,7 +60,7 @@ class ReferenceMatcherTest extends Specification {
 
   def "matching does not hold a strong reference to classloaders"() {
     expect:
-    MuzzleWeakReferenceTest.classLoaderRefIsGarbageCollected()
+    MuzzleWeakReferenceTestUtil.classLoaderRefIsGarbageCollected()
   }
 
   private static class CountingClassLoader extends URLClassLoader {
@@ -80,14 +80,14 @@ class ReferenceMatcherTest extends Specification {
   def "muzzle type pool caches"() {
     setup:
     def cl = new CountingClassLoader(
-      [ClasspathUtils.createJarWithClasses(MethodBodyAdvice.A,
-        MethodBodyAdvice.B,
-        MethodBodyAdvice.SomeInterface,
-        MethodBodyAdvice.SomeImplementation)] as URL[],
+      [ClasspathUtils.createJarWithClasses(Nested.A,
+        Nested.B,
+        Nested.SomeInterface,
+        Nested.SomeImplementation)] as URL[],
       (ClassLoader) null)
 
     def collector = new ReferenceCollector({ false })
-    collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
+    collector.collectReferencesFromAdvice(Nested.name)
 
     def refMatcher1 = createMatcher(collector.getReferences())
     def refMatcher2 = createMatcher(collector.getReferences())
@@ -113,9 +113,9 @@ class ReferenceMatcherTest extends Specification {
     getMismatchClassSet(mismatches) == expectedMismatches as Set
 
     where:
-    referenceName           | referenceFlag | classToCheck       | expectedMismatches
-    MethodBodyAdvice.B.name | NON_INTERFACE | MethodBodyAdvice.B | []
-    MethodBodyAdvice.B.name | INTERFACE     | MethodBodyAdvice.B | [Mismatch.MissingFlag]
+    referenceName | referenceFlag | classToCheck | expectedMismatches
+    Nested.B.name | NON_INTERFACE | Nested.B     | []
+    Nested.B.name | INTERFACE     | Nested.B     | [Mismatch.MissingFlag]
   }
 
   def "method match #methodTestDesc"() {
@@ -133,14 +133,14 @@ class ReferenceMatcherTest extends Specification {
     getMismatchClassSet(mismatches) == expectedMismatches as Set
 
     where:
-    methodName      | methodDesc                               | methodFlags           | classToCheck                   | expectedMismatches       | methodTestDesc
-    "method"        | "(Ljava/lang/String;)Ljava/lang/String;" | []                    | MethodBodyAdvice.B             | []                       | "match method declared in class"
-    "hashCode"      | "()I"                                    | []                    | MethodBodyAdvice.B             | []                       | "match method declared in superclass"
-    "someMethod"    | "()V"                                    | []                    | MethodBodyAdvice.SomeInterface | []                       | "match method declared in interface"
-    "privateStuff"  | "()V"                                    | [PRIVATE_OR_HIGHER]   | MethodBodyAdvice.B             | []                       | "match private method"
-    "privateStuff"  | "()V"                                    | [PROTECTED_OR_HIGHER] | MethodBodyAdvice.B2            | [Mismatch.MissingFlag]   | "fail match private in supertype"
-    "staticMethod"  | "()V"                                    | [NON_STATIC]          | MethodBodyAdvice.B             | [Mismatch.MissingFlag]   | "static method mismatch"
-    "missingMethod" | "()V"                                    | []                    | MethodBodyAdvice.B             | [Mismatch.MissingMethod] | "missing method mismatch"
+    methodName      | methodDesc                               | methodFlags           | classToCheck         | expectedMismatches       | methodTestDesc
+    "method"        | "(Ljava/lang/String;)Ljava/lang/String;" | []                    | Nested.B             | []                       | "match method declared in class"
+    "hashCode"      | "()I"                                    | []                    | Nested.B             | []                       | "match method declared in superclass"
+    "someMethod"    | "()V"                                    | []                    | Nested.SomeInterface | []                       | "match method declared in interface"
+    "privateStuff"  | "()V"                                    | [PRIVATE_OR_HIGHER]   | Nested.B             | []                       | "match private method"
+    "privateStuff"  | "()V"                                    | [PROTECTED_OR_HIGHER] | Nested.B2            | [Mismatch.MissingFlag]   | "fail match private in supertype"
+    "staticMethod"  | "()V"                                    | [NON_STATIC]          | Nested.B             | [Mismatch.MissingFlag]   | "static method mismatch"
+    "missingMethod" | "()V"                                    | []                    | Nested.B             | [Mismatch.MissingMethod] | "missing method mismatch"
   }
 
   def "field match #fieldTestDesc"() {
@@ -157,15 +157,15 @@ class ReferenceMatcherTest extends Specification {
     getMismatchClassSet(mismatches) == expectedMismatches as Set
 
     where:
-    fieldName        | fieldType                                        | fieldFlags                    | classToCheck                | expectedMismatches      | fieldTestDesc
-    "missingField"   | "Ljava/lang/String;"                             | []                            | MethodBodyAdvice.A          | [Mismatch.MissingField] | "mismatch missing field"
-    "privateField"   | "Ljava/lang/String;"                             | []                            | MethodBodyAdvice.A          | [Mismatch.MissingField] | "mismatch field type signature"
-    "privateField"   | "Ljava/lang/Object;"                             | [PRIVATE_OR_HIGHER]           | MethodBodyAdvice.A          | []                      | "match private field"
-    "privateField"   | "Ljava/lang/Object;"                             | [PROTECTED_OR_HIGHER]         | MethodBodyAdvice.A2         | [Mismatch.MissingFlag]  | "mismatch private field in supertype"
-    "protectedField" | "Ljava/lang/Object;"                             | [STATIC]                      | MethodBodyAdvice.A          | [Mismatch.MissingFlag]  | "mismatch static field"
-    "staticB"        | Type.getType(MethodBodyAdvice.B).getDescriptor() | [STATIC, PROTECTED_OR_HIGHER] | MethodBodyAdvice.A          | []                      | "match static field"
-    "number"         | "I"                                              | [PACKAGE_OR_HIGHER]           | MethodBodyAdvice.Primitives | []                      | "match primitive int"
-    "flag"           | "Z"                                              | [PACKAGE_OR_HIGHER]           | MethodBodyAdvice.Primitives | []                      | "match primitive boolean"
+    fieldName        | fieldType                              | fieldFlags                    | classToCheck      | expectedMismatches      | fieldTestDesc
+    "missingField"   | "Ljava/lang/String;"                   | []                            | Nested.A          | [Mismatch.MissingField] | "mismatch missing field"
+    "privateField"   | "Ljava/lang/String;"                   | []                            | Nested.A          | [Mismatch.MissingField] | "mismatch field type signature"
+    "privateField"   | "Ljava/lang/Object;"                   | [PRIVATE_OR_HIGHER]           | Nested.A          | []                      | "match private field"
+    "privateField"   | "Ljava/lang/Object;"                   | [PROTECTED_OR_HIGHER]         | Nested.A2         | [Mismatch.MissingFlag]  | "mismatch private field in supertype"
+    "protectedField" | "Ljava/lang/Object;"                   | [STATIC]                      | Nested.A          | [Mismatch.MissingFlag]  | "mismatch static field"
+    "staticB"        | Type.getType(Nested.B).getDescriptor() | [STATIC, PROTECTED_OR_HIGHER] | Nested.A          | []                      | "match static field"
+    "number"         | "I"                                    | [PACKAGE_OR_HIGHER]           | Nested.Primitives | []                      | "match primitive int"
+    "flag"           | "Z"                                    | [PACKAGE_OR_HIGHER]           | Nested.Primitives | []                      | "match primitive boolean"
   }
 
   def "should not check abstract #desc helper classes"() {

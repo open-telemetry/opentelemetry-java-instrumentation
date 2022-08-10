@@ -39,8 +39,11 @@ public class RabbitCommandInstrumentation implements TypeInstrumentation {
         RabbitCommandInstrumentation.class.getName() + "$CommandConstructorAdvice");
   }
 
-  public static class SpanHolder {
+  public static final class SpanHolder {
+
     public static final ThreadLocal<Context> CURRENT_RABBIT_CONTEXT = new ThreadLocal<>();
+
+    private SpanHolder() {}
   }
 
   @SuppressWarnings("unused")

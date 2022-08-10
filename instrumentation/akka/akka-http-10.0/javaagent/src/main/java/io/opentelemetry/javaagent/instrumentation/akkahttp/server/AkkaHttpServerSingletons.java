@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 
-public class AkkaHttpServerSingletons {
+public final class AkkaHttpServerSingletons {
 
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
@@ -46,4 +46,6 @@ public class AkkaHttpServerSingletons {
   public static HttpResponse errorResponse() {
     return (HttpResponse) HttpResponse.create().withStatus(500);
   }
+
+  private AkkaHttpServerSingletons() {}
 }
