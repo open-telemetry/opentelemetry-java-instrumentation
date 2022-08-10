@@ -1,13 +1,17 @@
 # OpenTelemetry Spring Auto-Configuration
 
-Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1), [spring-webmvc](../spring-webmvc-3.1), and [spring-webflux](../spring-webflux-5.0). Leverages Spring Aspect Oriented Programming, dependency injection, and bean post-processing to trace spring applications. To include all features listed below use the [opentelemetry-spring-starter](../starters/spring-starter/README.md).
+Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1/library)
+, [spring-webmvc](../spring-webmvc-5.3/library), and [spring-webflux](../spring-webflux-5.0/library)
+. Leverages Spring Aspect Oriented Programming, dependency injection, and bean post-processing to
+trace spring applications. To include all features listed below use
+the [opentelemetry-spring-boot-starter](../starters/spring-boot-starter/README.md).
 
 ## Quickstart
 
 ### Add these dependencies to your project.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.17.0`
+ - Minimum version: `1.17.0`
 
 
 For Maven add to your `pom.xml`:
@@ -17,7 +21,7 @@ For Maven add to your `pom.xml`:
   <!-- opentelemetry -->
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-spring-boot-autoconfigure</artifactId>
+    <artifactId>opentelemetry-spring-boot</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
@@ -43,7 +47,7 @@ For Gradle add to your dependencies:
 
 ```groovy
 //opentelemetry spring auto-configuration
-implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-autoconfigure:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot:OPENTELEMETRY_VERSION")
 //opentelemetry
 implementation("io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION")
 //opentelemetry exporter
