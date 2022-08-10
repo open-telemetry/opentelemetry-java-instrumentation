@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributes
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 
 public final class LibertyDispatcherSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.liberty-dispatcher";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.liberty-dispatcher-20.0";
 
   private static final Instrumenter<LibertyRequest, LibertyResponse> INSTRUMENTER;
 
