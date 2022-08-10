@@ -8,10 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.http.MimeHeaders;
 
 public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
@@ -103,5 +107,22 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   @Nullable
   public String serverName(Request request) {
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String requestHeaders(Request request, @Nullable Response response) {
+    return String.valueOf(mimeHeadersToMap(request.getMimeHeaders()));
+  }
+
+  @Nullable
+  @Override
+  public String responseHeaders(Request request, Response response) {
+    return String.valueOf(mimeHeadersToMap(response.getMimeHeaders()));
+  }
+
+  private Map<String, String> mimeHeadersToMap(MimeHeaders headers) {
+    return Collections.list(headers.names()).stream()
+        .collect(Collectors.toMap(Function.identity(), headers::getHeader));
   }
 }

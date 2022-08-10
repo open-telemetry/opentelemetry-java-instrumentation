@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.kafka.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import java.nio.charset.StandardCharsets;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -85,7 +85,7 @@ public enum KafkaProducerAttributesGetter
   @Override
   public String messagePayload(ProducerRecord<?, ?> producerRecord) {
     if (producerRecord.value() instanceof byte[]) {
-      return new String((byte []) producerRecord.value(), StandardCharsets.UTF_8);
+      return new String((byte[]) producerRecord.value(), StandardCharsets.UTF_8);
     }
 
     return String.valueOf(producerRecord.value());

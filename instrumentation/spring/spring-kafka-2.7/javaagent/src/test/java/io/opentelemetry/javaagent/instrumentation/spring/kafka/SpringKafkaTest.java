@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
