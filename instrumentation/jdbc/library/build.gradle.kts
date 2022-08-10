@@ -41,4 +41,8 @@ tasks {
     into("build/extracted/shadow-bootstrap")
     include("io/opentelemetry/javaagent/bootstrap/**")
   }
+
+  test {
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
+  }
 }
