@@ -332,7 +332,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       this.content.reset();
     }
 
-    /** Return the status code as specifed on the response. */
+    /** Return the status code as specified on the response. */
     public int getStatusCode() {
       return this.statusCode;
     }
