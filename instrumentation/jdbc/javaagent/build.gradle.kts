@@ -48,4 +48,5 @@ sourceSets {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
 }

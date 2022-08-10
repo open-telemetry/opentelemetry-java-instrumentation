@@ -26,6 +26,7 @@ dependencies {
 tasks {
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
 }
