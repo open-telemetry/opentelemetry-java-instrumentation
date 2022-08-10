@@ -4,7 +4,10 @@
  */
 
 public class TestLambda {
+
   static Runnable makeRunnable() {
     return () -> {};
   }
+
+  private TestLambda() {}
 }

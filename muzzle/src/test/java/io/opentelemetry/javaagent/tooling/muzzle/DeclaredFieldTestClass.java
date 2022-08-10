@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 @SuppressWarnings("unused")
 public class DeclaredFieldTestClass {
+
   public static class Advice {
     public void instrument() {
       new Helper().foo();
@@ -25,4 +26,6 @@ public class DeclaredFieldTestClass {
   public static class LibraryBaseClass {
     protected Object superField;
   }
+
+  private DeclaredFieldTestClass() {}
 }

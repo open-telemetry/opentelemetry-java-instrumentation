@@ -92,4 +92,6 @@ public final class CompositeTextMapPropagatorFactory {
   private static boolean isOnClasspath(String clazz) {
     return ClassUtils.isPresent(clazz, null);
   }
+
+  private CompositeTextMapPropagatorFactory() {}
 }

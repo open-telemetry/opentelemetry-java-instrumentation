@@ -72,6 +72,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
   }
 
   public static class Holder {
+
     public static final List<String> bootstrapPackagesPrefixes = findBootstrapPackagePrefixes();
 
     /**
@@ -95,6 +96,8 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
         return Constants.BOOTSTRAP_PACKAGE_PREFIXES;
       }
     }
+
+    private Holder() {}
   }
 
   @SuppressWarnings("unused")

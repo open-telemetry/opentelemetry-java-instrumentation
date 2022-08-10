@@ -9,6 +9,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 public class AgentLoadedChecker {
+
   public static void main(String[] args) throws ClassNotFoundException {
     // Empty class loader that delegates to bootstrap
     URLClassLoader emptyClassLoader = new URLClassLoader(new URL[] {}, null);
@@ -20,4 +21,6 @@ public class AgentLoadedChecker {
           "Agent loaded into class loader other than bootstrap: " + agentClass.getClassLoader());
     }
   }
+
+  private AgentLoadedChecker() {}
 }

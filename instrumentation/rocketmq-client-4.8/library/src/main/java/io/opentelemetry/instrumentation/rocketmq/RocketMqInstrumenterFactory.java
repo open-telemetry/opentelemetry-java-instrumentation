@@ -110,4 +110,6 @@ class RocketMqInstrumenterFactory {
   private static String spanNameOnReceive(Void unused) {
     return "multiple_sources receive";
   }
+
+  private RocketMqInstrumenterFactory() {}
 }

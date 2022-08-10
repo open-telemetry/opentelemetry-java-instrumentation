@@ -112,4 +112,6 @@ final class MetricsView {
               }
             });
   }
+
+  private MetricsView() {}
 }

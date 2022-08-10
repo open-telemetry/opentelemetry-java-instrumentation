@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEv
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 
-public class LogbackSingletons {
+public final class LogbackSingletons {
 
   private static final LoggingEventMapper mapper;
 
@@ -32,4 +32,6 @@ public class LogbackSingletons {
   public static LoggingEventMapper mapper() {
     return mapper;
   }
+
+  private LogbackSingletons() {}
 }

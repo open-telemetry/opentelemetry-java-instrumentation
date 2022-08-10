@@ -21,7 +21,7 @@ import org.restlet.Response;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class RestletInstrumenterFactory {
+public final class RestletInstrumenterFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.restlet-2.0";
 
@@ -42,4 +42,6 @@ public class RestletInstrumenterFactory {
         .addOperationMetrics(HttpServerMetrics.get())
         .buildServerInstrumenter(new RestletHeadersGetter());
   }
+
+  private RestletInstrumenterFactory() {}
 }
