@@ -26,9 +26,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
 
 class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext> implements AgentTestTrait {
+
+  public static final String TEST_REQUEST_HEADER = "X-Test-Request";
 
   @Override
   ConfigurableApplicationContext startServer(int port) {
@@ -105,6 +107,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     and:
     assertTraces(1) {
+      def httpSpan = testRunner().getExportedSpans()[1]
       trace(0, 3) {
         serverSpan(it, 0, null, null, "GET", null, AUTH_ERROR)
         sendErrorSpan(it, 1, span(0))
@@ -137,6 +140,10 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         e -> e.key.key == "http.request.body"
       }.value
       assert requestBody.startsWith("username=test&password=")
+      def responseBody = (String) httpSpan.attributes.asMap().find {
+        e -> e.key.key == "http.response.body"
+      }.value
+      assert requestBody.startsWith("")
 
       trace(0, 2) {
         serverSpan(it, 0, null, null, "POST", response.contentUtf8().length(), LOGIN)
