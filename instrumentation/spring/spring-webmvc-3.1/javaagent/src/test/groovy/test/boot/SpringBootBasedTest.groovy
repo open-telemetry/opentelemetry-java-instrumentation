@@ -105,7 +105,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     and:
     assertTraces(1) {
-      def httpSpan = testRunner().getExportedSpans()[1]
       trace(0, 3) {
         serverSpan(it, 0, null, null, "GET", null, AUTH_ERROR)
         sendErrorSpan(it, 1, span(0))
@@ -170,7 +169,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       def responseBody = (String) httpSpan.attributes.asMap().find {
         e -> e.key.key == "http.response.body"
       }.value
-      assert requestBody.startsWith("")
+      assert responseBody.equals("")
 
       trace(0, 2) {
         serverSpan(it, 0, null, null, "POST", response.contentUtf8().length(), LOGIN)
