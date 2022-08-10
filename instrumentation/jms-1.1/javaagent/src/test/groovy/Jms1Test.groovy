@@ -267,7 +267,39 @@ class Jms1Test extends AgentInstrumentationSpecification {
     session.createTemporaryTopic()   | "topic"         | "(temporary)"
   }
 
-  static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {
+  def "capture message header as span attribute"() {
+    setup:
+    def destinationName = "someQueue"
+    def destinationType = "queue"
+    def destination = session.createQueue(destinationName)
+    def producer = session.createProducer(destination)
+    def consumer = session.createConsumer(destination)
+
+    def message = session.createTextMessage(messageText)
+    message.setStringProperty("test-message-header", "test")
+    message.setIntProperty("test-message-int-header", 1234)
+    producer.send(message)
+
+    TextMessage receivedMessage = consumer.receive()
+    String messageId = receivedMessage.getJMSMessageID()
+
+    expect:
+    receivedMessage.text == messageText
+    assertTraces(2) {
+      trace(0, 1) {
+        producerSpan(it, 0, destinationType, destinationName, true)
+      }
+      trace(1, 1) {
+        consumerSpan(it, 0, destinationType, destinationName, messageId, null, "receive", true)
+      }
+    }
+
+    cleanup:
+    producer.close()
+    consumer.close()
+  }
+
+  static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " send"
       kind PRODUCER
@@ -280,6 +312,10 @@ class Jms1Test extends AgentInstrumentationSpecification {
           "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        if (testHeaders) {
+          "messaging.header.test_message_header" { it == ["test"] }
+          "messaging.header.test_message_int_header" { it == ["1234"] }
+        }
       }
     }
   }
@@ -287,7 +323,7 @@ class Jms1Test extends AgentInstrumentationSpecification {
   // passing messageId = null will verify message.id is not captured,
   // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
   // any other value for messageId will verify that message.id is captured and has that same value
-  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, String operation) {
+  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, String operation, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " " + operation
       kind CONSUMER
@@ -307,6 +343,10 @@ class Jms1Test extends AgentInstrumentationSpecification {
         }
         if (destinationName == "(temporary)") {
           "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
+        }
+        if (testHeaders) {
+          "messaging.header.test_message_header" { it == ["test"] }
+          "messaging.header.test_message_int_header" { it == ["1234"] }
         }
       }
     }

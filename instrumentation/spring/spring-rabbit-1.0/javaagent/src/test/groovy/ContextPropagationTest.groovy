@@ -7,7 +7,10 @@ import com.rabbitmq.client.ConnectionFactory
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.springframework.amqp.AmqpException
 import org.springframework.amqp.core.AmqpTemplate
+import org.springframework.amqp.core.Message
+import org.springframework.amqp.core.MessagePostProcessor
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.boot.SpringApplication
@@ -20,6 +23,7 @@ import org.testcontainers.containers.wait.strategy.Wait
 import spock.lang.Shared
 
 import java.time.Duration
+import spock.lang.Unroll
 
 import static com.google.common.net.InetAddresses.isInetAddress
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
@@ -62,15 +66,27 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     applicationContext?.close()
   }
 
-  def "should propagate context to consumer"() {
+  @Unroll
+  def "should propagate context to consumer, test headers: #testHeaders"() {
     given:
     def connection = connectionFactory.newConnection()
     def channel = connection.createChannel()
 
     when:
     runWithSpan("parent") {
-      applicationContext.getBean(AmqpTemplate)
-        .convertAndSend(ConsumerConfig.TEST_QUEUE, "test")
+      if (testHeaders) {
+        applicationContext.getBean(AmqpTemplate)
+          .convertAndSend(ConsumerConfig.TEST_QUEUE, (Object) "test", new MessagePostProcessor() {
+            @Override
+            Message postProcessMessage(Message message) throws AmqpException {
+              message.getMessageProperties().setHeader("test-message-header", "test")
+              return message
+            }
+          })
+      } else {
+        applicationContext.getBean(AmqpTemplate)
+          .convertAndSend(ConsumerConfig.TEST_QUEUE, "test")
+      }
     }
 
     then:
@@ -94,6 +110,9 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
+            if (testHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue immediately after receiving
@@ -110,6 +129,9 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
+            if (testHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         span(3) {
@@ -123,6 +145,9 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            if (testHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         span(4) {
@@ -150,6 +175,9 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
     cleanup:
     channel?.close()
     connection?.close()
+
+    where:
+    testHeaders << [false, true]
   }
 
   @SpringBootConfiguration

@@ -46,7 +46,7 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
     config << [AnnotatedListenerConfig, ManualListenerConfig]
   }
 
-  static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {
+  static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " send"
       kind PRODUCER
@@ -59,6 +59,10 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
           "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        if (testHeaders) {
+          "messaging.header.test_message_header" { it == ["test"] }
+          "messaging.header.test_message_int_header" { it == ["1234"] }
+        }
       }
     }
   }
@@ -66,7 +70,7 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
   // passing messageId = null will verify message.id is not captured,
   // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
   // any other value for messageId will verify that message.id is captured and has that same value
-  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, String operation) {
+  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, String operation, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " " + operation
       kind CONSUMER
@@ -86,6 +90,10 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
         }
         if (destinationName == "(temporary)") {
           "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
+        }
+        if (testHeaders) {
+          "messaging.header.test_message_header" { it == ["test"] }
+          "messaging.header.test_message_int_header" { it == ["1234"] }
         }
       }
     }

@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
@@ -74,5 +76,14 @@ enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<Messag
   @Override
   public String messageId(MessageExt request, @Nullable Void unused) {
     return request.getMsgId();
+  }
+
+  @Override
+  public List<String> header(MessageExt request, String name) {
+    String value = request.getProperties().get(name);
+    if (value != null) {
+      return Collections.singletonList(value);
+    }
+    return Collections.emptyList();
   }
 }

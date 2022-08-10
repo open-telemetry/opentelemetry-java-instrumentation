@@ -5,13 +5,17 @@
 
 package io.opentelemetry.instrumentation.rocketmq;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.List;
 
 /** A builder of {@link RocketMqTelemetry}. */
 public final class RocketMqTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
+  private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes;
   private boolean propagationEnabled = true;
 
@@ -40,11 +44,21 @@ public final class RocketMqTelemetryBuilder {
   }
 
   /**
+   * Configures the messaging headers that will be captured as span attributes.
+   *
+   * @param capturedHeaders A list of messaging header names.
+   */
+  public RocketMqTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
+    this.capturedHeaders = capturedHeaders;
+    return this;
+  }
+
+  /**
    * Returns a new {@link RocketMqTelemetry} with the settings of this {@link
    * RocketMqTelemetryBuilder}.
    */
   public RocketMqTelemetry build() {
     return new RocketMqTelemetry(
-        openTelemetry, captureExperimentalSpanAttributes, propagationEnabled);
+        openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, propagationEnabled);
   }
 }

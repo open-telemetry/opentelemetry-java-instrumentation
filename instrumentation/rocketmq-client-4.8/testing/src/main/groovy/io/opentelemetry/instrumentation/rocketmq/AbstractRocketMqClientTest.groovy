@@ -295,4 +295,64 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
       }
     }
   }
+
+  def "capture message header as span attributes"() {
+    when:
+    runWithSpan("parent") {
+      def msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
+      msg.putUserProperty("test-message-header", "test")
+      SendResult sendResult = producer.send(msg)
+      assert sendResult.sendStatus == SendStatus.SEND_OK
+    }
+    // waiting longer than assertTraces below does on its own because of CI flakiness
+    tracingMessageListener.waitForMessages()
+
+    then:
+    assertTraces(1) {
+      trace(0, 4) {
+        span(0) {
+          name "parent"
+          kind INTERNAL
+        }
+        span(1) {
+          name sharedTopic + " send"
+          kind PRODUCER
+          childOf span(0)
+          attributes {
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "messaging.rocketmq.tags" "TagA"
+            "messaging.rocketmq.broker_address" String
+            "messaging.rocketmq.send_result" "SEND_OK"
+            "messaging.header.test_message_header" { it == ["test"] }
+          }
+        }
+        span(2) {
+          name sharedTopic + " process"
+          kind CONSUMER
+          childOf span(1)
+          attributes {
+            "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
+            "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
+            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "messaging.rocketmq.tags" "TagA"
+            "messaging.rocketmq.broker_address" String
+            "messaging.rocketmq.queue_id" Long
+            "messaging.rocketmq.queue_offset" Long
+            "messaging.header.test_message_header" { it == ["test"] }
+          }
+        }
+        span(3) {
+          name "messageListener"
+          kind INTERNAL
+          childOf span(2)
+        }
+      }
+    }
+  }
 }
