@@ -22,6 +22,10 @@ tasks {
   }
 }
 
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
+}
+
 // The first Vert.x version that uses rx-java 2
 val vertxVersion = "3.5.0"
 

@@ -12,3 +12,9 @@ dependencies {
 
   compileOnly("org.redisson:redisson:3.0.0")
 }
+
+tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
+  }
+}

@@ -23,6 +23,10 @@ tasks {
   }
 }
 
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
+}
+
 dependencies {
   compileOnly("io.vertx:vertx-web:3.0.0")
 

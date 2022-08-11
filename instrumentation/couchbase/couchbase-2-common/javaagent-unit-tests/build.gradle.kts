@@ -10,3 +10,9 @@ dependencies {
   testImplementation(project(":instrumentation:couchbase:couchbase-2-common:javaagent"))
   testImplementation("com.couchbase.client:java-client:2.5.0")
 }
+
+tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
+  }
+}

@@ -46,4 +46,5 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
 }

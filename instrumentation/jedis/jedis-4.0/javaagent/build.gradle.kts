@@ -28,6 +28,7 @@ tasks {
   test {
     // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
+    jvmArgs("-Dotel.instrumentation.common.db-statement-sanitizer.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
   }
 }
