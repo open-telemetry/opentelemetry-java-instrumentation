@@ -117,7 +117,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       }
     }
     byte[] responseContentAsByteArray = wrapper.getContentAsByteArray();
-    if ( responseContentAsByteArray != null && responseContentAsByteArray.length > 0) {
+    if (responseContentAsByteArray != null && responseContentAsByteArray.length > 0) {
       span.setAttribute("http.response.body", new String(wrapper.getContentAsByteArray(), UTF_8));
       wrapper.copyBodyToResponse();
     }
