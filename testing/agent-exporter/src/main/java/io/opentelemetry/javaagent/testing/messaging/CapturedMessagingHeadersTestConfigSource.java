@@ -18,6 +18,9 @@ public class CapturedMessagingHeadersTestConfigSource implements ConfigPropertyS
     Map<String, String> testConfig = new HashMap<>();
     testConfig.put(
         "otel.instrumentation.messaging.experimental.capture-headers",
+        // most tests use "test-message-header", "test_message_header" is used for JMS2 because
+        // '-' is not allowed in a JMS property name. JMS property name should be a valid java
+        // identifier.
         "test-message-header, test-message-int-header, test_message_header, test_message_int_header");
     return testConfig;
   }
