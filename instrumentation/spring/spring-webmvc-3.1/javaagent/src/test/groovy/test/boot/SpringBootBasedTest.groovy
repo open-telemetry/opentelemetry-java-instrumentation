@@ -166,10 +166,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         e -> e.key.key == "http.request.body"
       }.value
       assert requestBody.startsWith("username=test&password=")
-      def responseBody = (String) httpSpan.attributes.asMap().find {
-        e -> e.key.key == "http.response.body"
-      }.value
-      assert responseBody.equals("")
+      def responseBodyKey = (Boolean) httpSpan.attributes.asMap().containsKey("http.response.body")
+      assert !responseBodyKey
 
       trace(0, 2) {
         serverSpan(it, 0, null, null, "POST", response.contentUtf8().length(), LOGIN)
