@@ -84,34 +84,42 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-    ContentCachingResponseWrapper wrapper =
-        new ContentCachingResponseWrapper((HttpServletResponse) response);
-
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       filterChain.doFilter(request, response);
       return;
     }
 
+    ContentCachingResponseWrapper responseWrapper =
+        new ContentCachingResponseWrapper((HttpServletResponse) response);
+
     try {
-      filterChain.doFilter(request, wrapper);
+      filterChain.doFilter(request, responseWrapper);
     } finally {
       if (handlerMappings != null) {
         Context context = Context.current();
-        Span span = Span.fromContext(context);
-        Object internalRequest = extractAttr(request, "request");
-        if (internalRequest != null) {
-          byte[] postData = (byte[]) extractAttr(internalRequest, "postData");
-          if (postData != null) {
-            String post = new String(rtrim(postData), UTF_8);
-            span.setAttribute("http.request.body", post);
-          }
-        }
-        span.setAttribute(
-            "http.response.body", new String(wrapper.getContentAsByteArray(), "utf-8"));
-        wrapper.copyBodyToResponse();
+        setAttributes(request, responseWrapper, context);
         HttpRouteHolder.updateHttpRoute(
             context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
       }
+    }
+  }
+
+  private void setAttributes(
+      ServletRequest request, ContentCachingResponseWrapper wrapper, Context context)
+      throws IOException {
+    Span span = Span.fromContext(context);
+    Object internalRequest = extractAttr(request, "request");
+    if (internalRequest != null) {
+      byte[] postData = (byte[]) extractAttr(internalRequest, "postData");
+      if (postData != null) {
+        String post = new String(rtrim(postData), UTF_8);
+        span.setAttribute("http.request.body", post);
+      }
+    }
+    byte[] responseContentAsByteArray = wrapper.getContentAsByteArray();
+    if (responseContentAsByteArray != null && responseContentAsByteArray.length > 0) {
+      span.setAttribute("http.response.body", new String(wrapper.getContentAsByteArray(), UTF_8));
+      wrapper.copyBodyToResponse();
     }
   }
 
@@ -254,7 +262,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     }
   }
 
-  public class ContentCachingResponseWrapper extends HttpServletResponseWrapper {
+  private class ContentCachingResponseWrapper extends HttpServletResponseWrapper {
 
     private final ByteArrayOutputStream content = new ByteArrayOutputStream(1024);
 
