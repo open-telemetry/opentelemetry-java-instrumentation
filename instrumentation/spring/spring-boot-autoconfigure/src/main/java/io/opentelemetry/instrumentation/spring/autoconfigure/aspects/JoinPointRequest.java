@@ -73,6 +73,7 @@ final class JoinPointRequest {
   static final class SdkExtensionAnnotationFactory implements Factory {
 
     @Override
+    @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
     public JoinPointRequest create(JoinPoint joinPoint) {
       MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
       Method method = methodSignature.getMethod();

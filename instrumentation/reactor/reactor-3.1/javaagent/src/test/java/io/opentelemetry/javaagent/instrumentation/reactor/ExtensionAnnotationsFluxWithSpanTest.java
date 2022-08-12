@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor;
 
-import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractTraced;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.UnicastProcessor;
 
+@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 class ExtensionAnnotationsFluxWithSpanTest extends BaseFluxWithSpanTest {
 
   @Override
@@ -25,19 +25,19 @@ class ExtensionAnnotationsFluxWithSpanTest extends BaseFluxWithSpanTest {
   static class Traced extends AbstractTraced<Flux<String>, Flux<String>> {
 
     @Override
-    @WithSpan
+    @io.opentelemetry.extension.annotations.WithSpan
     protected Flux<String> completable() {
       return UnicastProcessor.create();
     }
 
     @Override
-    @WithSpan
+    @io.opentelemetry.extension.annotations.WithSpan
     protected Flux<String> alreadySucceeded() {
       return Flux.just(SUCCESS_VALUE);
     }
 
     @Override
-    @WithSpan
+    @io.opentelemetry.extension.annotations.WithSpan
     protected Flux<String> alreadyFailed() {
       return Flux.error(FAILURE);
     }

@@ -38,6 +38,7 @@ public class TraceAspectAutoConfiguration {
   }
 
   @Bean
+  @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
   @ConditionalOnClass(io.opentelemetry.extension.annotations.WithSpan.class)
   public WithSpanAspect sdkExtensionWithSpanAspect(
       OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {

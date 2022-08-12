@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.extensionannotations;
 
 import static java.util.logging.Level.FINE;
 
-import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
@@ -17,6 +16,7 @@ import io.opentelemetry.instrumentation.api.util.SpanNames;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
+@SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
 public final class WithSpanSingletons {
 
   private static final String INSTRUMENTATION_NAME =
@@ -62,7 +62,9 @@ public final class WithSpanSingletons {
   }
 
   private static SpanKind spanKindFromMethod(Method method) {
-    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
+    application.io.opentelemetry.extension.annotations.WithSpan annotation =
+        method.getDeclaredAnnotation(
+            application.io.opentelemetry.extension.annotations.WithSpan.class);
     if (annotation == null) {
       return SpanKind.INTERNAL;
     }
@@ -84,7 +86,9 @@ public final class WithSpanSingletons {
   }
 
   private static String spanNameFromMethod(Method method) {
-    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
+    application.io.opentelemetry.extension.annotations.WithSpan annotation =
+        method.getDeclaredAnnotation(
+            application.io.opentelemetry.extension.annotations.WithSpan.class);
     String spanName = annotation.value();
     if (spanName.isEmpty()) {
       spanName = SpanNames.fromMethod(method);
