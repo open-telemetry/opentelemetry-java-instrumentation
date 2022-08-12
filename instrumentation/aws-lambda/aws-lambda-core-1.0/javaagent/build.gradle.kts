@@ -21,3 +21,10 @@ dependencies {
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing"))
   testInstrumentation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:javaagent"))
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}
