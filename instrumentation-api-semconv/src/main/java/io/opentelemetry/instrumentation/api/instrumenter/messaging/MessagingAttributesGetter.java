@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -47,6 +49,17 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   String messageId(REQUEST request, @Nullable RESPONSE response);
+
+  /**
+   * Extracts all values of header named {@code name} from the request, or an empty list if there
+   * were none.
+   *
+   * <p>Implementations of this method <b>must not</b> return a null value; an empty list should be
+   * returned instead.
+   */
+  default List<String> header(REQUEST request, String name) {
+    return Collections.emptyList();
+  }
 
   @Nullable
   default String messagePayload(REQUEST request) {

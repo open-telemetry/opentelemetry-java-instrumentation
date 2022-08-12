@@ -18,6 +18,7 @@ public final class KafkaStreamsSingletons {
 
   private static final Instrumenter<ConsumerRecord<?, ?>, Void> INSTRUMENTER =
       new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
+          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
               InstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))

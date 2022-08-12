@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients
 
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.nio.charset.StandardCharsets
 import org.apache.kafka.clients.producer.ProducerRecord
 
 import java.time.Duration
@@ -18,11 +19,15 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
-  def "test kafka produce and consume"() {
+  def "test kafka produce and consume, test headers: #testHeaders"() {
     when:
     String greeting = "Hello Kafka!"
     runWithSpan("parent") {
-      producer.send(new ProducerRecord(SHARED_TOPIC, greeting)) { meta, ex ->
+      def producerRecord = new ProducerRecord(SHARED_TOPIC, greeting)
+      if (testHeaders) {
+        producerRecord.headers().add("test-message-header", "test".getBytes(StandardCharsets.UTF_8))
+      }
+      producer.send(producerRecord) { meta, ex ->
         if (ex == null) {
           runWithSpan("producer callback") {}
         } else {
@@ -63,6 +68,9 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            if (testHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
             "messaging.payload" greeting
           }
         }
@@ -84,6 +92,9 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            if (testHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
           }
         }
         span(1) {
@@ -100,6 +111,9 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
             "kafka.offset" Long
             "kafka.record.queue_time_ms" { it >= 0 }
+            if (testHeaders) {
+              "messaging.header.test_message_header" { it == ["test"] }
+            }
             "messaging.payload" greeting
           }
         }
@@ -109,6 +123,9 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         }
       }
     }
+
+    where:
+    testHeaders << [false, true]
   }
 
   def "test pass through tombstone"() {

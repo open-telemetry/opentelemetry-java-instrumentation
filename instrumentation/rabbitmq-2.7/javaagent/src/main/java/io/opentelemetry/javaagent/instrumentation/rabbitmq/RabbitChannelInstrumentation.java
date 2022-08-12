@@ -114,6 +114,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
       context = channelInstrumenter().start(parentContext, request);
       CURRENT_RABBIT_CONTEXT.set(context);
+      helper().setChannelAndMethod(context, request);
       scope = context.makeCurrent();
     }
 
@@ -159,7 +160,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         if (props == null) {
           props = MessageProperties.MINIMAL_BASIC;
         }
-        helper().onProps(span, props);
+        helper().onProps(context, span, props);
 
         // We need to copy the BasicProperties and provide a header map we can modify
         Map<String, Object> headers = props.getHeaders();

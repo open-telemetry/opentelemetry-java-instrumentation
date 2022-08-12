@@ -10,12 +10,15 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +32,8 @@ public final class RabbitSingletons {
   private static final Instrumenter<ChannelAndMethod, Void> channelInstrumenter;
   private static final Instrumenter<ReceiveRequest, GetResponse> receiveInstrumenter;
   private static final Instrumenter<DeliveryRequest, Void> deliverInstrumenter;
+  static final ContextKey<RabbitChannelAndMethodHolder> CHANNEL_AND_METHOD_CONTEXT_KEY =
+      ContextKey.named("opentelemetry-rabbitmq-channel-and-method-context-key");
 
   static {
     channelInstrumenter = createChannelInstrumenter();
@@ -52,10 +57,13 @@ public final class RabbitSingletons {
     return Instrumenter.<ChannelAndMethod, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractor(
-            MessagingAttributesExtractor.create(
+            buildMessagingAttributesExtractor(
                 RabbitChannelAttributesGetter.INSTANCE, MessageOperation.SEND))
         .addAttributesExtractor(
             NetClientAttributesExtractor.create(new RabbitChannelNetAttributesGetter()))
+        .addContextCustomizer(
+            (context, request, startAttributes) ->
+                context.with(CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()))
         .buildInstrumenter(
             channelAndMethod ->
                 channelAndMethod.getMethod().equals("Channel.basicPublish") ? PRODUCER : CLIENT);
@@ -64,7 +72,7 @@ public final class RabbitSingletons {
   private static Instrumenter<ReceiveRequest, GetResponse> createReceiveInstrumenter() {
     List<AttributesExtractor<ReceiveRequest, GetResponse>> extractors = new ArrayList<>();
     extractors.add(
-        MessagingAttributesExtractor.create(
+        buildMessagingAttributesExtractor(
             RabbitReceiveAttributesGetter.INSTANCE, MessageOperation.RECEIVE));
     extractors.add(NetClientAttributesExtractor.create(new RabbitReceiveNetAttributesGetter()));
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
@@ -80,7 +88,7 @@ public final class RabbitSingletons {
   private static Instrumenter<DeliveryRequest, Void> createDeliverInstrumenter() {
     List<AttributesExtractor<DeliveryRequest, Void>> extractors = new ArrayList<>();
     extractors.add(
-        MessagingAttributesExtractor.create(
+        buildMessagingAttributesExtractor(
             RabbitDeliveryAttributesGetter.INSTANCE, MessageOperation.PROCESS));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
@@ -91,6 +99,13 @@ public final class RabbitSingletons {
             GlobalOpenTelemetry.get(), instrumentationName, DeliveryRequest::spanName)
         .addAttributesExtractors(extractors)
         .buildConsumerInstrumenter(DeliveryRequestGetter.INSTANCE);
+  }
+
+  private static <T, V> MessagingAttributesExtractor<T, V> buildMessagingAttributesExtractor(
+      MessagingAttributesGetter<T, V> getter, MessageOperation operation) {
+    return MessagingAttributesExtractor.builder(getter, operation)
+        .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+        .build();
   }
 
   private RabbitSingletons() {}
