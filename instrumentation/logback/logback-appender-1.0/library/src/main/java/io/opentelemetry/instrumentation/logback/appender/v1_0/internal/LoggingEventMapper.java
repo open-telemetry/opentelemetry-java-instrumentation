@@ -55,7 +55,8 @@ public final class LoggingEventMapper {
   }
 
   /**
-   * Map the {@link ILoggingEvent} data model onto the {@link LogRecordBuilder}. Unmapped fields include:
+   * Map the {@link ILoggingEvent} data model onto the {@link LogRecordBuilder}. Unmapped fields
+   * include:
    *
    * <ul>
    *   <li>Thread name - {@link ILoggingEvent#getThreadName()}

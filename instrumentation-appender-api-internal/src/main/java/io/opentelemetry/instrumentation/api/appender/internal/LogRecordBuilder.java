@@ -13,8 +13,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Used to construct and emit logs from a {@link LogEmitter}.
  *
- * <p>Obtain a {@link LogRecordBuilder} via {@link LogEmitter#logBuilder()}, add properties using the
- * setters, and emit the log by calling {@link #emit()}.
+ * <p>Obtain a {@link LogRecordBuilder} via {@link LogEmitter#logBuilder()}, add properties using
+ * the setters, and emit the log by calling {@link #emit()}.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.

@@ -47,7 +47,8 @@ public final class JavaUtilLoggingHelper {
   }
 
   /**
-   * Map the {@link LogRecord} data model onto the {@link LogRecordBuilder}. Unmapped fields include:
+   * Map the {@link LogRecord} data model onto the {@link LogRecordBuilder}. Unmapped fields
+   * include:
    *
    * <ul>
    *   <li>Fully qualified class name - {@link LogRecord#getSourceClassName()}
