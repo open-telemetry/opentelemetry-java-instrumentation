@@ -38,7 +38,8 @@ public class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
-  public Integer statusCode(LibertyRequest libertyRequest, LibertyResponse libertyResponse) {
+  public Integer statusCode(
+      LibertyRequest libertyRequest, LibertyResponse libertyResponse, @Nullable Throwable error) {
     return libertyResponse.getStatus();
   }
 
