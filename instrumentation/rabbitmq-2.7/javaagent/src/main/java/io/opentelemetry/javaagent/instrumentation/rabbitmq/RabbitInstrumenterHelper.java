@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitSingletons.CHANNEL_AND_METHOD_CONTEXT_KEY;
+
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Command;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -41,12 +43,17 @@ public class RabbitInstrumenterHelper {
     }
   }
 
-  public void onProps(Span span, AMQP.BasicProperties props) {
+  public void onProps(Context context, Span span, AMQP.BasicProperties props) {
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       Integer deliveryMode = props.getDeliveryMode();
       if (deliveryMode != null) {
         span.setAttribute("rabbitmq.delivery_mode", deliveryMode);
       }
+    }
+    RabbitChannelAndMethodHolder channelContext = context.get(CHANNEL_AND_METHOD_CONTEXT_KEY);
+    ChannelAndMethod channelAndMethod = channelContext.getChannelAndMethod();
+    if (channelAndMethod != null) {
+      channelAndMethod.setHeaders(props.getHeaders());
     }
   }
 
@@ -67,5 +74,12 @@ public class RabbitInstrumenterHelper {
 
   public void inject(Context context, Map<String, Object> headers, MapSetter setter) {
     GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, setter);
+  }
+
+  public void setChannelAndMethod(Context context, ChannelAndMethod channelAndMethod) {
+    RabbitChannelAndMethodHolder holder = context.get(CHANNEL_AND_METHOD_CONTEXT_KEY);
+    if (holder != null) {
+      holder.setChannelAndMethod(channelAndMethod);
+    }
   }
 }

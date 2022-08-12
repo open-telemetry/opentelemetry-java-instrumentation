@@ -65,27 +65,28 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       if (consumerReceiveInstrumenter().shouldStart(parentContext, records)) {
-        Context context =
-            InstrumenterUtil.startAndEnd(
-                consumerReceiveInstrumenter(),
-                parentContext,
-                records,
-                null,
-                error,
-                timer.startTime(),
-                timer.now());
-
-        // we're storing the context of the receive span so that process spans can use it as parent
-        // context even though the span has ended
-        // this is the suggested behavior according to the spec batch receive scenario:
-        // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
-        VirtualField<ConsumerRecords<?, ?>, Context> consumerRecordsContext =
-            VirtualField.find(ConsumerRecords.class, Context.class);
-        consumerRecordsContext.set(records, context);
-
         // disable process tracing and store the receive span for each individual record too
         boolean previousValue = KafkaClientsConsumerProcessTracing.setEnabled(false);
         try {
+          Context context =
+              InstrumenterUtil.startAndEnd(
+                  consumerReceiveInstrumenter(),
+                  parentContext,
+                  records,
+                  null,
+                  error,
+                  timer.startTime(),
+                  timer.now());
+
+          // we're storing the context of the receive span so that process spans can use it as
+          // parent
+          // context even though the span has ended
+          // this is the suggested behavior according to the spec batch receive scenario:
+          // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
+          VirtualField<ConsumerRecords<?, ?>, Context> consumerRecordsContext =
+              VirtualField.find(ConsumerRecords.class, Context.class);
+          consumerRecordsContext.set(records, context);
+
           VirtualField<ConsumerRecord<?, ?>, Context> consumerRecordContext =
               VirtualField.find(ConsumerRecord.class, Context.class);
           for (ConsumerRecord<?, ?> record : records) {
