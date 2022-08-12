@@ -32,8 +32,7 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
   @Override
   public void onComplete(RESPONSE response) {
     if (responseHandled.compareAndSet(false, true)) {
-      ServletResponseContext<RESPONSE> responseContext =
-          new ServletResponseContext<>(response, null);
+      ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
       Throwable throwable = servletHelper.getAsyncException(requestContext.request());
       instrumenter.end(context, requestContext, responseContext, throwable);
     }
@@ -43,8 +42,7 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
   public void onTimeout(long timeout) {
     if (responseHandled.compareAndSet(false, true)) {
       RESPONSE response = servletHelper.getAsyncListenerResponse(requestContext.request());
-      ServletResponseContext<RESPONSE> responseContext =
-          new ServletResponseContext<>(response, null);
+      ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
       responseContext.setTimeout(timeout);
       Throwable throwable = servletHelper.getAsyncException(requestContext.request());
       instrumenter.end(context, requestContext, responseContext, throwable);
@@ -54,8 +52,7 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
   @Override
   public void onError(Throwable throwable, RESPONSE response) {
     if (responseHandled.compareAndSet(false, true)) {
-      ServletResponseContext<RESPONSE> responseContext =
-          new ServletResponseContext<>(response, throwable);
+      ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
       instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }

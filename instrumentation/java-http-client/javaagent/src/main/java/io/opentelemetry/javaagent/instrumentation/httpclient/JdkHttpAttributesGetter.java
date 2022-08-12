@@ -31,7 +31,8 @@ class JdkHttpAttributesGetter implements HttpClientAttributesGetter<HttpRequest,
   }
 
   @Override
-  public Integer statusCode(HttpRequest httpRequest, HttpResponse<?> httpResponse) {
+  public Integer statusCode(
+      HttpRequest httpRequest, HttpResponse<?> httpResponse, @Nullable Throwable error) {
     return httpResponse.statusCode();
   }
 

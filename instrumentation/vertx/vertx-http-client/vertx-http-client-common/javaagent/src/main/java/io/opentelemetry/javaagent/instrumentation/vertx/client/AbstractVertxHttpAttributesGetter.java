@@ -26,7 +26,8 @@ public abstract class AbstractVertxHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpClientRequest request, HttpClientResponse response) {
+  public Integer statusCode(
+      HttpClientRequest request, HttpClientResponse response, @Nullable Throwable error) {
     return response.statusCode();
   }
 

@@ -36,7 +36,8 @@ class AkkaHttpClientAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpRequest httpRequest, HttpResponse httpResponse) {
+  public Integer statusCode(
+      HttpRequest httpRequest, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.status().intValue();
   }
 

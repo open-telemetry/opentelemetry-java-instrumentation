@@ -29,7 +29,8 @@ final class GrizzlyHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpRequestPacket request, HttpResponsePacket response) {
+  public Integer statusCode(
+      HttpRequestPacket request, HttpResponsePacket response, @Nullable Throwable error) {
     return response.getStatus();
   }
 

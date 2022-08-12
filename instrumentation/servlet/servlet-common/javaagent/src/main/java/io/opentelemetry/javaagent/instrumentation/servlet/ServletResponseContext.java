@@ -7,22 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 public class ServletResponseContext<T> {
   private final T response;
-  private final Throwable error;
   // used for servlet 2.2 where request status can't be extracted from HttpServletResponse
   private Integer status;
   private Long timeout;
 
-  public ServletResponseContext(T response, Throwable error) {
+  public ServletResponseContext(T response) {
     this.response = response;
-    this.error = error;
   }
 
   public T response() {
     return response;
-  }
-
-  public Throwable error() {
-    return error;
   }
 
   public void setStatus(int status) {

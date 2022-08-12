@@ -39,7 +39,7 @@ final class ApacheHttpClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public Integer statusCode(HttpMethod request, HttpMethod response) {
+  public Integer statusCode(HttpMethod request, HttpMethod response, @Nullable Throwable error) {
     StatusLine statusLine = response.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();
   }
