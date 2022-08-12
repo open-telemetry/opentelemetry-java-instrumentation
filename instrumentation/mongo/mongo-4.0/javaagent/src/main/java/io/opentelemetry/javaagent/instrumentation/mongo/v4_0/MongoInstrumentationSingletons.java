@@ -14,5 +14,9 @@ public final class MongoInstrumentationSingletons {
   public static final CommandListener LISTENER =
       MongoTelemetry.create(GlobalOpenTelemetry.get()).newCommandListener();
 
+  public static boolean isTracingListener(CommandListener listener) {
+    return listener.getClass().getName().equals(LISTENER.getClass().getName());
+  }
+
   private MongoInstrumentationSingletons() {}
 }
