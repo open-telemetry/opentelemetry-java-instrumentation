@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.test.annotation.TracedWithSpan
@@ -28,6 +27,7 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
  * This test verifies that auto instrumentation supports the
  * {@link io.opentelemetry.extension.annotations.WithSpan} annotation.
  */
+@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "should derive automatic name"() {
@@ -385,7 +385,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       }
     }))
       .visit(new MemberAttributeExtension.ForMethod()
-        .annotateMethod(AnnotationDescription.Builder.ofType(WithSpan).build())
+        .annotateMethod(AnnotationDescription.Builder.ofType(io.opentelemetry.extension.annotations.WithSpan).build())
         .on(ElementMatchers.named("run")))
       .make()
       .load(getClass().getClassLoader())

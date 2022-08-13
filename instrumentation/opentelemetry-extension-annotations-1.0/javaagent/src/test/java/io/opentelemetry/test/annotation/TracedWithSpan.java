@@ -6,54 +6,53 @@
 package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.extension.annotations.SpanAttribute;
-import io.opentelemetry.extension.annotations.WithSpan;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 public class TracedWithSpan {
 
-  @WithSpan
+  @io.opentelemetry.extension.annotations.WithSpan
   public String otel() {
     return "hello!";
   }
 
-  @WithSpan("manualName")
+  @io.opentelemetry.extension.annotations.WithSpan("manualName")
   public String namedOtel() {
     return "hello!";
   }
 
-  @WithSpan
+  @io.opentelemetry.extension.annotations.WithSpan
   public String ignored() {
     return "hello!";
   }
 
-  @WithSpan(kind = SpanKind.PRODUCER)
+  @io.opentelemetry.extension.annotations.WithSpan(kind = SpanKind.PRODUCER)
   public String someKind() {
     return "hello!";
   }
 
-  @WithSpan(kind = SpanKind.SERVER)
+  @io.opentelemetry.extension.annotations.WithSpan(kind = SpanKind.SERVER)
   public String server() {
     return otel();
   }
 
-  @WithSpan
+  @io.opentelemetry.extension.annotations.WithSpan
   public String withSpanAttributes(
-      @SpanAttribute String implicitName,
-      @SpanAttribute("explicitName") String parameter,
-      @SpanAttribute("nullAttribute") String nullAttribute,
+      @io.opentelemetry.extension.annotations.SpanAttribute String implicitName,
+      @io.opentelemetry.extension.annotations.SpanAttribute("explicitName") String parameter,
+      @io.opentelemetry.extension.annotations.SpanAttribute("nullAttribute") String nullAttribute,
       String notTraced) {
 
     return "hello!";
   }
 
-  @WithSpan
+  @io.opentelemetry.extension.annotations.WithSpan
   public CompletionStage<String> completionStage(CompletableFuture<String> future) {
     return future;
   }
 
-  @WithSpan
+  @io.opentelemetry.extension.annotations.WithSpan
   public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
     return future;
   }
