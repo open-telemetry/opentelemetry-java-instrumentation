@@ -10,42 +10,42 @@ import io.opentelemetry.context.Context;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-final class NoopLogBuilder implements LogBuilder {
+final class NoopLogRecordBuilder implements LogRecordBuilder {
 
-  static final LogBuilder INSTANCE = new NoopLogBuilder();
+  static final LogRecordBuilder INSTANCE = new NoopLogRecordBuilder();
 
   @Override
-  public LogBuilder setEpoch(long timestamp, TimeUnit unit) {
+  public LogRecordBuilder setEpoch(long timestamp, TimeUnit unit) {
     return this;
   }
 
   @Override
-  public LogBuilder setEpoch(Instant instant) {
+  public LogRecordBuilder setEpoch(Instant instant) {
     return this;
   }
 
   @Override
-  public LogBuilder setContext(Context context) {
+  public LogRecordBuilder setContext(Context context) {
     return this;
   }
 
   @Override
-  public LogBuilder setSeverity(Severity severity) {
+  public LogRecordBuilder setSeverity(Severity severity) {
     return this;
   }
 
   @Override
-  public LogBuilder setSeverityText(String severityText) {
+  public LogRecordBuilder setSeverityText(String severityText) {
     return this;
   }
 
   @Override
-  public LogBuilder setBody(String body) {
+  public LogRecordBuilder setBody(String body) {
     return this;
   }
 
   @Override
-  public LogBuilder setAttributes(Attributes attributes) {
+  public LogRecordBuilder setAllAttributes(Attributes attributes) {
     return this;
   }
 

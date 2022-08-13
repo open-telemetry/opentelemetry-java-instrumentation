@@ -7,58 +7,58 @@ package io.opentelemetry.instrumentation.sdk.appender.internal;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogRecordBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-final class DelegatingLogBuilder implements LogBuilder {
+final class DelegatingLogRecordBuilder implements LogRecordBuilder {
 
-  private final io.opentelemetry.sdk.logs.LogBuilder delegate;
+  private final io.opentelemetry.sdk.logs.LogRecordBuilder delegate;
 
-  DelegatingLogBuilder(io.opentelemetry.sdk.logs.LogBuilder delegate) {
+  DelegatingLogRecordBuilder(io.opentelemetry.sdk.logs.LogRecordBuilder delegate) {
     this.delegate = delegate;
   }
 
   @Override
-  public LogBuilder setEpoch(long timestamp, TimeUnit unit) {
+  public LogRecordBuilder setEpoch(long timestamp, TimeUnit unit) {
     delegate.setEpoch(timestamp, unit);
     return this;
   }
 
   @Override
-  public LogBuilder setEpoch(Instant instant) {
+  public LogRecordBuilder setEpoch(Instant instant) {
     delegate.setEpoch(instant);
     return this;
   }
 
   @Override
-  public LogBuilder setContext(Context context) {
+  public LogRecordBuilder setContext(Context context) {
     delegate.setContext(context);
     return this;
   }
 
   @Override
-  public LogBuilder setSeverity(Severity severity) {
+  public LogRecordBuilder setSeverity(Severity severity) {
     delegate.setSeverity(io.opentelemetry.sdk.logs.data.Severity.valueOf(severity.name()));
     return this;
   }
 
   @Override
-  public LogBuilder setSeverityText(String severityText) {
+  public LogRecordBuilder setSeverityText(String severityText) {
     delegate.setSeverityText(severityText);
     return this;
   }
 
   @Override
-  public LogBuilder setBody(String body) {
+  public LogRecordBuilder setBody(String body) {
     delegate.setBody(body);
     return this;
   }
 
   @Override
-  public LogBuilder setAttributes(Attributes attributes) {
-    delegate.setAttributes(attributes);
+  public LogRecordBuilder setAllAttributes(Attributes attributes) {
+    delegate.setAllAttributes(attributes);
     return this;
   }
 
