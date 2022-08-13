@@ -59,7 +59,8 @@ final class NettyHttpClientAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpRequestAndChannel requestAndChannel, HttpResponse response) {
+  public Integer statusCode(
+      HttpRequestAndChannel requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().code();
   }
 

@@ -44,13 +44,6 @@ enum SpringWebMvcHttpAttributesGetter
     return flavor;
   }
 
-  @Nullable
-  @Override
-  public Integer statusCode(HttpServletRequest request, HttpServletResponse httpServletResponse) {
-    // this method is never used
-    return null;
-  }
-
   @Override
   public Integer statusCode(
       HttpServletRequest request, HttpServletResponse response, @Nullable Throwable error) {

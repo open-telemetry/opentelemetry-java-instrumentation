@@ -42,7 +42,8 @@ enum SpringWebHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
+  public Integer statusCode(
+      HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, @Nullable Throwable error) {
     try {
       return clientHttpResponse.getStatusCode().value();
     } catch (IOException e) {
