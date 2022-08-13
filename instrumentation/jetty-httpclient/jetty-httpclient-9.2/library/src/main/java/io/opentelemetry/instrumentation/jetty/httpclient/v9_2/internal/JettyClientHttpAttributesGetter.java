@@ -61,7 +61,7 @@ enum JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Reque
   }
 
   @Override
-  public Integer statusCode(Request request, Response response) {
+  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatus();
   }
 

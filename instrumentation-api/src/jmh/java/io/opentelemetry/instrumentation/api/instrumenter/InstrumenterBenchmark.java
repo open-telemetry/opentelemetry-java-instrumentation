@@ -86,7 +86,7 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public Integer statusCode(Void unused, Void unused2) {
+    public Integer statusCode(Void unused, Void unused2, @Nullable Throwable error) {
       return 200;
     }
 

@@ -30,7 +30,8 @@ final class AsyncHttpClientHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(RequestContext requestContext, Response response) {
+  public Integer statusCode(
+      RequestContext requestContext, Response response, @Nullable Throwable error) {
     return response.getStatusCode();
   }
 

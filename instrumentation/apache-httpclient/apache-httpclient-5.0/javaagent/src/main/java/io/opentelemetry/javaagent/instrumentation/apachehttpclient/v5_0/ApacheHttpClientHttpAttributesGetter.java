@@ -69,7 +69,7 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpRequest request, HttpResponse response) {
+  public Integer statusCode(HttpRequest request, HttpResponse response, @Nullable Throwable error) {
     return response.getCode();
   }
 

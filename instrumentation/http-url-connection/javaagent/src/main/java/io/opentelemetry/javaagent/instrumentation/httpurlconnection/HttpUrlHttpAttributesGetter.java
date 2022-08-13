@@ -39,7 +39,8 @@ class HttpUrlHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpURLConnection connection, Integer statusCode) {
+  public Integer statusCode(
+      HttpURLConnection connection, Integer statusCode, @Nullable Throwable error) {
     return statusCode;
   }
 

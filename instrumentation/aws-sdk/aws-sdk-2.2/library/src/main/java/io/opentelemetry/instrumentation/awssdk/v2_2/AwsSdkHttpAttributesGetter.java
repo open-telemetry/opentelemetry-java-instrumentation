@@ -47,7 +47,8 @@ class AwsSdkHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(ExecutionAttributes request, SdkHttpResponse response) {
+  public Integer statusCode(
+      ExecutionAttributes request, SdkHttpResponse response, @Nullable Throwable error) {
     return response.statusCode();
   }
 

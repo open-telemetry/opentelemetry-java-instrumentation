@@ -38,7 +38,8 @@ class KubernetesHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(Request request, ApiResponse<?> apiResponse) {
+  public Integer statusCode(
+      Request request, ApiResponse<?> apiResponse, @Nullable Throwable error) {
     return apiResponse.getStatusCode();
   }
 

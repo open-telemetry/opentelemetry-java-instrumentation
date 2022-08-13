@@ -40,7 +40,7 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
   }
 
   @Override
-  public Integer statusCode(Request<?> request, Response<?> response) {
+  public Integer statusCode(Request<?> request, Response<?> response, @Nullable Throwable error) {
     return response.getHttpResponse().getStatusCode();
   }
 

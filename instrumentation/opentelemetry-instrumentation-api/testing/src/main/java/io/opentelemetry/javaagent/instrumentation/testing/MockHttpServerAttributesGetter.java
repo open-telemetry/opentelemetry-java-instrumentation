@@ -29,7 +29,7 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
 
   @Nullable
   @Override
-  public Integer statusCode(String s, Void unused) {
+  public Integer statusCode(String s, Void unused, @Nullable Throwable error) {
     return null;
   }
 

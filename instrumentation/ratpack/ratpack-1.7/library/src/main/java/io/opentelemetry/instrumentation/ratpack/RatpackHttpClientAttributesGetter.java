@@ -39,7 +39,8 @@ enum RatpackHttpClientAttributesGetter
   }
 
   @Override
-  public Integer statusCode(RequestSpec requestSpec, HttpResponse httpResponse) {
+  public Integer statusCode(
+      RequestSpec requestSpec, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatusCode();
   }
 
