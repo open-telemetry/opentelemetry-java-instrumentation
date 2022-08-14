@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.TELEMETRY_SDK_NAME;
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.TELEMETRY_SDK_VERSION;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -12,9 +15,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.TELEMETRY_SDK_NAME;
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.TELEMETRY_SDK_VERSION;
 
 @AutoService(ResourceProvider.class)
 public class AutoResourceProvider implements ResourceProvider {
@@ -30,8 +30,6 @@ public class AutoResourceProvider implements ResourceProvider {
     attributesBuilder.put(TELEMETRY_SDK_VERSION, TELEMETRY_SDK_NAME_VALUE);
     attributesBuilder.put(TELEMETRY_AUTO_VERSION, AgentVersion.VERSION);
     Attributes attributes = attributesBuilder.build();
-    return AgentVersion.VERSION == null
-        ? Resource.empty()
-        : Resource.create(attributes);
+    return AgentVersion.VERSION == null ? Resource.empty() : Resource.create(attributes);
   }
 }
