@@ -5,6 +5,7 @@
 
 package test.boot
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -162,6 +163,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     and:
     assertTraces(1) {
       def httpSpan = testRunner().getExportedSpans()[1]
+      assert httpSpan.resource.getAttribute(AttributeKey.stringKey("telemetry.sdk.name")).equalsIgnoreCase("helios-opentelemetry-javaagent")
       def requestBody = (String) httpSpan.attributes.asMap().find {
         e -> e.key.key == "http.request.body"
       }.value
