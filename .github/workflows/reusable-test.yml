@@ -41,6 +41,9 @@ jobs:
           distribution: ${{ matrix.vm == 'hotspot' && 'temurin' || 'adopt-openj9'}}
           java-version: ${{ matrix.test-java-version }}
 
+      - name: Print out `java -version`
+        run: java -version
+
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@v3
         with:

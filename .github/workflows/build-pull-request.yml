@@ -16,6 +16,7 @@ jobs:
   test:
     uses: ./.github/workflows/reusable-test.yml
     with:
+      no-build-cache: true
       cache-read-only: true
 
   test-latest-deps:
