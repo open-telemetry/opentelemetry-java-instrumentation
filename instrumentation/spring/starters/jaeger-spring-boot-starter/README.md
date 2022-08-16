@@ -17,7 +17,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-jaeger-exporter-starter</artifactId>
+    <artifactId>opentelemetry-jaeger-spring-boot-starter</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
@@ -27,7 +27,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 #### Gradle
 
 ```groovy
-implementation("io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-exporter-starter:OPENTELEMETRY_VERSION")
 ```
 
 ### Starter Guide
