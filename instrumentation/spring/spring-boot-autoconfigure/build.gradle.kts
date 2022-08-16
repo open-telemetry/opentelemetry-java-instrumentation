@@ -3,6 +3,8 @@ plugins {
   id("otel.publish-conventions")
 }
 
+// Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration.custom-starter
+base.archivesName.set("opentelemetry-spring-boot")
 group = "io.opentelemetry.instrumentation"
 
 val versions: Map<String, String> by project

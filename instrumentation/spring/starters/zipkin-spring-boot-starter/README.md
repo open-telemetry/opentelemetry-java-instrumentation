@@ -19,7 +19,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-zipkin-exporter-starter</artifactId>
+    <artifactId>opentelemetry-zipkin-spring-boot-starter</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
@@ -29,7 +29,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 #### Gradle
 
 ```groovy
-implementation("io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-starter:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-zipkin-spring-boot-starter:OPENTELEMETRY_VERSION")
 ```
 
 ### Starter Guide
