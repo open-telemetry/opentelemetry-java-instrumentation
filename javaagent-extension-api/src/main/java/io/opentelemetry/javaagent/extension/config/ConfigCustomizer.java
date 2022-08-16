@@ -6,8 +6,12 @@
 package io.opentelemetry.javaagent.extension.config;
 
 import io.opentelemetry.javaagent.extension.Ordered;
+import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
+import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 /**
  * A service provider that allows to override default OTel javaagent configuration, and customize
@@ -16,7 +20,7 @@ import java.util.Map;
  * <p>This is a service provider interface that requires implementations to be registered in a
  * provider-configuration file stored in the {@code META-INF/services} resource directory.
  *
- * @deprecated Use the {@link ConfigPropertySource} SPI instead.
+ * @deprecated Use the {@link AutoConfigurationCustomizerProvider} to modify the SDK config instead.
  */
 @Deprecated
 public interface ConfigCustomizer extends Ordered {
@@ -28,12 +32,22 @@ public interface ConfigCustomizer extends Ordered {
    *
    * <p>Key of the map is the propertyName (same as system property name, e.g. {@code
    * otel.traces.exporter}), value is the property value.
+   *
+   * @deprecated Use the {@link AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}
+   *     instead.
    */
+  @Deprecated
   default Map<String, String> defaultProperties() {
     return Collections.emptyMap();
   }
 
-  /** Allows to change the javaagent configuration just before it is first used. */
+  /**
+   * Allows to change the javaagent configuration just before it is first used.
+   *
+   * @deprecated Use the {@link AutoConfigurationCustomizer#addPropagatorCustomizer(BiFunction)}
+   *     instead.
+   */
+  @Deprecated
   default io.opentelemetry.instrumentation.api.config.Config customize(
       io.opentelemetry.instrumentation.api.config.Config config) {
     return config;

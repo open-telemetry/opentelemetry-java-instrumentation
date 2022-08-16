@@ -6,15 +6,22 @@
 package io.opentelemetry.javaagent.testing.messaging;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
+import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
+import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import java.util.HashMap;
 import java.util.Map;
 
-@AutoService(ConfigPropertySource.class)
-public class CapturedMessagingHeadersTestConfigSource implements ConfigPropertySource {
+@AutoService(AutoConfigurationCustomizerProvider.class)
+public class CapturedMessagingHeadersTestConfigSupplier
+    implements AutoConfigurationCustomizerProvider {
 
   @Override
-  public Map<String, String> getProperties() {
+  public void customize(AutoConfigurationCustomizer autoConfiguration) {
+    autoConfiguration.addPropertiesSupplier(
+        CapturedMessagingHeadersTestConfigSupplier::getTestProperties);
+  }
+
+  private static Map<String, String> getTestProperties() {
     Map<String, String> testConfig = new HashMap<>();
     testConfig.put(
         "otel.instrumentation.messaging.experimental.capture-headers",

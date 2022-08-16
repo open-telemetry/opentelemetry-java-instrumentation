@@ -6,15 +6,21 @@
 package io.opentelemetry.javaagent.testing.http;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
+import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
+import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import java.util.HashMap;
 import java.util.Map;
 
-@AutoService(ConfigPropertySource.class)
-public class CapturedHttpHeadersTestConfigSource implements ConfigPropertySource {
+@AutoService(AutoConfigurationCustomizerProvider.class)
+public class CapturedHttpHeadersTestConfigSupplier implements AutoConfigurationCustomizerProvider {
 
   @Override
-  public Map<String, String> getProperties() {
+  public void customize(AutoConfigurationCustomizer autoConfiguration) {
+    autoConfiguration.addPropertiesSupplier(
+        CapturedHttpHeadersTestConfigSupplier::getTestProperties);
+  }
+
+  private static Map<String, String> getTestProperties() {
     Map<String, String> testConfig = new HashMap<>();
     testConfig.put("otel.instrumentation.http.capture-headers.client.request", "X-Test-Request");
     testConfig.put("otel.instrumentation.http.capture-headers.client.response", "X-Test-Response");
