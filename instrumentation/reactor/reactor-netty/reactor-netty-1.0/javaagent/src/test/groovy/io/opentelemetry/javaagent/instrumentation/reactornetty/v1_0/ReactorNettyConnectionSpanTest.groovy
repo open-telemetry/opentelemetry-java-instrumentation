@@ -71,6 +71,7 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
             "$SemanticAttributes.HTTP_URL" uri
             "$SemanticAttributes.HTTP_FLAVOR" HTTP_1_1
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
             "net.sock.peer.addr" "127.0.0.1"

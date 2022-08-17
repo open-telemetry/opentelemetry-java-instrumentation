@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
+import java.util.List;
 
 /** A builder of {@link SpringKafkaTelemetry}. */
 public final class SpringKafkaTelemetryBuilder {
@@ -14,12 +17,18 @@ public final class SpringKafkaTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-kafka-2.7";
 
   private final OpenTelemetry openTelemetry;
+  private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
 
   SpringKafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  public SpringKafkaTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
+    this.capturedHeaders = capturedHeaders;
+    return this;
   }
 
   public SpringKafkaTelemetryBuilder setCaptureExperimentalSpanAttributes(
@@ -46,6 +55,7 @@ public final class SpringKafkaTelemetryBuilder {
   public SpringKafkaTelemetry build() {
     KafkaInstrumenterFactory factory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
+            .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .setPropagationEnabled(propagationEnabled)
             .setMessagingReceiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled)

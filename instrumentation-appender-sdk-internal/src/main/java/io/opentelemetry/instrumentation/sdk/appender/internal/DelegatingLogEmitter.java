@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.sdk.appender.internal;
 
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitter;
+import io.opentelemetry.instrumentation.api.appender.internal.LogRecordBuilder;
 
 final class DelegatingLogEmitter implements LogEmitter {
 
@@ -17,7 +17,7 @@ final class DelegatingLogEmitter implements LogEmitter {
   }
 
   @Override
-  public LogBuilder logBuilder() {
-    return new DelegatingLogBuilder(delegate.logBuilder());
+  public LogRecordBuilder logBuilder() {
+    return new DelegatingLogRecordBuilder(delegate.logRecordBuilder());
   }
 }

@@ -37,3 +37,9 @@ dependencies {
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing"))
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}

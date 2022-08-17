@@ -11,7 +11,9 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-val otelVersion = "1.16.0"
+// this line is managed by .github/scripts/update-sdk-version.sh
+val otelVersion = "1.17.0"
+
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and groovy jars

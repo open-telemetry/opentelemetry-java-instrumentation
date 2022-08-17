@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class HttpServerAttributesExtractorTest {
@@ -59,13 +60,8 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public Long requestContentLength(Map<String, String> request, Map<String, String> response) {
-      String value = request.get("requestContentLength");
-      return value == null ? null : Long.parseLong(value);
-    }
-
-    @Override
-    public Integer statusCode(Map<String, String> request, Map<String, String> response) {
+    public Integer statusCode(
+        Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       String value = response.get("statusCode");
       return value == null ? null : Integer.parseInt(value);
     }
@@ -73,12 +69,6 @@ class HttpServerAttributesExtractorTest {
     @Override
     public String flavor(Map<String, String> request) {
       return request.get("flavor");
-    }
-
-    @Override
-    public Long responseContentLength(Map<String, String> request, Map<String, String> response) {
-      String value = response.get("responseContentLength");
-      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
@@ -96,7 +86,7 @@ class HttpServerAttributesExtractorTest {
     request.put("url", "http://github.com");
     request.put("target", "/repositories/1");
     request.put("scheme", "http");
-    request.put("requestContentLength", "10");
+    request.put("header.content-length", "10");
     request.put("flavor", "http/2");
     request.put("route", "/repositories/{id}");
     request.put("serverName", "server");
@@ -107,7 +97,7 @@ class HttpServerAttributesExtractorTest {
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
-    response.put("responseContentLength", "20");
+    response.put("header.content-length", "20");
     response.put("header.custom-response-header", "654,321");
 
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
@@ -147,11 +137,11 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
             entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
+            entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
             entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
-            entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),

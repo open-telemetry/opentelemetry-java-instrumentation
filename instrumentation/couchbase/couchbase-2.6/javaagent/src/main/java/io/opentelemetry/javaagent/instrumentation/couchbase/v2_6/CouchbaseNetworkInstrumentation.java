@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -26,15 +23,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.couchbase.client.core.endpoint.AbstractGenericHandler");
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // Exact class because private fields are used
-    return nameStartsWith("com.couchbase.client.")
-        .and(extendsClass(named("com.couchbase.client.core.endpoint.AbstractGenericHandler")));
+    return named("com.couchbase.client.core.endpoint.AbstractGenericHandler");
   }
 
   @Override

@@ -56,12 +56,6 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
 
   @Override
   @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(Request request) {
     switch (request.getProtocol()) {
       case "HTTP/1.0":
@@ -83,14 +77,8 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  public Integer statusCode(Request request, Response response) {
+  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatus().getCode();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(Request request, Response response) {
-    return null;
   }
 
   @Override

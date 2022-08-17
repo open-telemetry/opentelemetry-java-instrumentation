@@ -16,6 +16,8 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
@@ -272,6 +274,44 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
     }
   }
 
+  def "capture message header as span attributes"() {
+    setup:
+    String queueName = channel.queueDeclare().getQueue()
+    def properties = new AMQP.BasicProperties.Builder().headers(["test-message-header": "test"]).build()
+    channel.basicPublish("", queueName, properties, "Hello, world!".getBytes())
+
+    def latch = new CountDownLatch(1)
+    def deliveries = []
+
+    Consumer callback = new DefaultConsumer(channel) {
+      @Override
+      void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties props, byte[] body) throws IOException {
+        deliveries << new String(body)
+        latch.countDown()
+      }
+    }
+
+    channel.basicConsume(queueName, callback)
+    latch.await(10, TimeUnit.SECONDS)
+    expect:
+    deliveries[0] == "Hello, world!"
+
+    and:
+    assertTraces(3) {
+      traces.subList(1, 3).sort(orderByRootSpanKind(PRODUCER, CLIENT))
+      trace(0, 1) {
+        rabbitSpan(it, 0, null, null, null, "queue.declare")
+      }
+      trace(1, 2) {
+        rabbitSpan(it, 0, "<default>", null, "send", "<default>", true)
+        rabbitSpan(it, 1, "<default>", null, "process", "<generated>", span(0), null, null, null, false, true)
+      }
+      trace(2, 1) {
+        rabbitSpan(it, 0, null, null, null, "basic.consume")
+      }
+    }
+  }
+
   def rabbitSpan(
     TraceAssert trace,
     String exchange,
@@ -282,7 +322,7 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
     Object linkSpan = null,
     Throwable exception = null,
     String errorMsg = null,
-    Boolean expectTimestamp = false
+    boolean expectTimestamp = false
   ) {
     rabbitSpan(trace, 0, exchange, routingKey, operation, resource, parentSpan, linkSpan, exception, errorMsg, expectTimestamp)
   }
@@ -294,11 +334,24 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
     String routingKey,
     String operation,
     String resource,
+    boolean testHeaders
+  ) {
+    rabbitSpan(trace, index, exchange, routingKey, operation, resource, null, null, null, null, false, testHeaders)
+  }
+
+    def rabbitSpan(
+    TraceAssert trace,
+    int index,
+    String exchange,
+    String routingKey,
+    String operation,
+    String resource,
     Object parentSpan = null,
     Object linkSpan = null,
     Throwable exception = null,
     String errorMsg = null,
-    Boolean expectTimestamp = false
+    boolean expectTimestamp = false,
+    boolean testHeaders = false
   ) {
 
     def spanName = resource
@@ -359,6 +412,9 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
         }
         if (expectTimestamp) {
           "rabbitmq.record.queue_time_ms" { it instanceof Long && it >= 0 }
+        }
+        if (testHeaders) {
+          "messaging.header.test_message_header" { it == ["test"] }
         }
 
         switch (trace.span(index).attributes.get(AttributeKey.stringKey("rabbitmq.command"))) {

@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesGetter;
@@ -34,7 +35,9 @@ public final class JdbcSingletons {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(dbAttributesGetter)
                     .setStatementSanitizationEnabled(
-                        CommonConfig.get().isStatementSanitizationEnabled())
+                        ConfigPropertiesUtil.getBoolean(
+                            "otel.instrumentation.jdbc.statement-sanitizer.enabled",
+                            CommonConfig.get().isStatementSanitizationEnabled()))
                     .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(

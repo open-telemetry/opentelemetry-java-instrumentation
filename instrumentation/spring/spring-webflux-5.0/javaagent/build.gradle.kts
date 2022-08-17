@@ -62,6 +62,9 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }

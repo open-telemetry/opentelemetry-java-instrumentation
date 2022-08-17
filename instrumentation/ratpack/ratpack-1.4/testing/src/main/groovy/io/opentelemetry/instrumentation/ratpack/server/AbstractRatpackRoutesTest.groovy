@@ -107,6 +107,7 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_HOST" "localhost:${app.bindPort}"
             "$SemanticAttributes.HTTP_TARGET" "/$path"
             "$SemanticAttributes.HTTP_ROUTE" "/$route"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         if (hasHandlerSpan()) {

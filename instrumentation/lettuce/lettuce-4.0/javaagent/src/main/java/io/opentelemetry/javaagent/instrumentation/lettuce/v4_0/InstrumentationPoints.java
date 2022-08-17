@@ -75,4 +75,6 @@ public final class InstrumentationPoints {
   private static boolean isNonInstrumentingKeyword(ProtocolKeyword keyword) {
     return keyword == SEGFAULT;
   }
+
+  private InstrumentationPoints() {}
 }

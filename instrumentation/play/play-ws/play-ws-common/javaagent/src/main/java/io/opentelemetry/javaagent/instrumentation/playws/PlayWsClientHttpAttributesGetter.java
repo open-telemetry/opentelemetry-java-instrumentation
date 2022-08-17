@@ -31,25 +31,13 @@ final class PlayWsClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  public Integer statusCode(Request request, Response response) {
+  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatusCode();
   }
 
   @Override
   public String flavor(Request request, @Nullable Response response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(Request request, Response response) {
-    return null;
   }
 
   @Override

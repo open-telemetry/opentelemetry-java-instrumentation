@@ -36,20 +36,9 @@ class AkkaHttpClientAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Override
-  public Integer statusCode(HttpRequest httpRequest, HttpResponse httpResponse) {
+  public Integer statusCode(
+      HttpRequest httpRequest, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.status().intValue();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(HttpRequest httpRequest, HttpResponse httpResponse) {
-    return null;
   }
 
   @Override

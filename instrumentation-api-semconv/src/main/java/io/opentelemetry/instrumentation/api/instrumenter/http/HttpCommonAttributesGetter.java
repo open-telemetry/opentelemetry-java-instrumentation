@@ -34,9 +34,15 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
    * {@code response} is {@code null} or not.
+   *
+   * @deprecated Request content length is now being calculated based on the request headers. This
+   *     method is deprecated and will be removed in the next release.
    */
+  @Deprecated
   @Nullable
-  Long requestContentLength(REQUEST request, @Nullable RESPONSE response);
+  default Long requestContentLength(REQUEST request, @Nullable RESPONSE response) {
+    throw new UnsupportedOperationException("This method is deprecated and will be removed");
+  }
 
   /**
    * Extracts the {@code http.request_content_length_uncompressed} span attribute.
@@ -57,18 +63,40 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
    * {@code response} is non-{@code null}.
+   *
+   * @deprecated This method is deprecated and will be removed in the next release.
+   */
+  @Deprecated
+  @Nullable
+  default Integer statusCode(REQUEST request, RESPONSE response) {
+    throw new UnsupportedOperationException("This method is deprecated and will be removed");
+  }
+
+  /**
+   * Extracts the {@code http.status_code} span attribute.
+   *
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
+   * {@code response} is non-{@code null}.
    */
   @Nullable
-  Integer statusCode(REQUEST request, RESPONSE response);
+  default Integer statusCode(REQUEST request, RESPONSE response, @Nullable Throwable error) {
+    return statusCode(request, response);
+  }
 
   /**
    * Extracts the {@code http.response_content_length} span attribute.
    *
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
    * {@code response} is non-{@code null}.
+   *
+   * @deprecated Request content length is now being calculated based on the request headers. This
+   *     method is deprecated and will be removed in the next release.
    */
+  @Deprecated
   @Nullable
-  Long responseContentLength(REQUEST request, RESPONSE response);
+  default Long responseContentLength(REQUEST request, RESPONSE response) {
+    throw new UnsupportedOperationException("This method is deprecated and will be removed");
+  }
 
   /**
    * Extracts the {@code http.response_content_length_uncompressed} span attribute.

@@ -20,7 +20,7 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
   }
 
   override fun sockPeerAddr(request: ApplicationRequest): String? {
-    var remote = request.local.remoteHost
+    val remote = request.local.remoteHost
     if (remote != null && "unknown" != remote && isIpAddress(remote)) {
       return remote
     }

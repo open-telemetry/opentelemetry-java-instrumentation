@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LettuceInstrumentationUtil {
+public final class LettuceInstrumentationUtil {
 
   private static final Set<String> nonInstrumentingCommands =
       Collections.unmodifiableSet(
@@ -46,4 +46,6 @@ public class LettuceInstrumentationUtil {
     }
     return commandName;
   }
+
+  private LettuceInstrumentationUtil() {}
 }

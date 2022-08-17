@@ -32,26 +32,15 @@ class KubernetesHttpAttributesGetter
     return request.headers(name);
   }
 
-  @Nullable
-  @Override
-  public Long requestContentLength(Request request, @Nullable ApiResponse<?> apiResponse) {
-    return null;
-  }
-
   @Override
   public String flavor(Request request, @Nullable ApiResponse<?> apiResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public Integer statusCode(Request request, ApiResponse<?> apiResponse) {
+  public Integer statusCode(
+      Request request, ApiResponse<?> apiResponse, @Nullable Throwable error) {
     return apiResponse.getStatusCode();
-  }
-
-  @Nullable
-  @Override
-  public Long responseContentLength(Request request, ApiResponse<?> apiResponse) {
-    return null;
   }
 
   @Override

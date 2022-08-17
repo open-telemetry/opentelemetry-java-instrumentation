@@ -31,12 +31,6 @@ enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request, Respo
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   @Nullable
   public String flavor(Request request, @Nullable Response response) {
@@ -59,14 +53,8 @@ enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request, Respo
   }
 
   @Override
-  public Integer statusCode(Request request, Response response) {
+  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
     return response.code();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(Request request, Response response) {
-    return null;
   }
 
   @Override

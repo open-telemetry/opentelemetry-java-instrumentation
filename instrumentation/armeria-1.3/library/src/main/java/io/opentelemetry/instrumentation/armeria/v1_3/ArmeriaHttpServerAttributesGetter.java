@@ -43,16 +43,7 @@ enum ArmeriaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLength(RequestContext ctx, @Nullable RequestLog requestLog) {
-    if (requestLog == null) {
-      return null;
-    }
-    return requestLog.requestLength();
-  }
-
-  @Override
-  @Nullable
-  public Integer statusCode(RequestContext ctx, RequestLog requestLog) {
+  public Integer statusCode(RequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
       return status.code();
@@ -68,11 +59,6 @@ enum ArmeriaHttpServerAttributesGetter
     } else {
       return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
     }
-  }
-
-  @Override
-  public Long responseContentLength(RequestContext ctx, RequestLog requestLog) {
-    return requestLog.responseLength();
   }
 
   @Override

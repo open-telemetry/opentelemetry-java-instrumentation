@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.kafkaclients;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
@@ -23,6 +25,7 @@ public final class KafkaTelemetryBuilder {
       new ArrayList<>();
   private final List<AttributesExtractor<ConsumerRecord<?, ?>, Void>> consumerAttributesExtractors =
       new ArrayList<>();
+  private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
 
@@ -39,6 +42,16 @@ public final class KafkaTelemetryBuilder {
   public KafkaTelemetryBuilder addConsumerAttributesExtractors(
       AttributesExtractor<ConsumerRecord<?, ?>, Void> extractor) {
     consumerAttributesExtractors.add(extractor);
+    return this;
+  }
+
+  /**
+   * Configures the messaging headers that will be captured as span attributes.
+   *
+   * @param capturedHeaders A list of messaging header names.
+   */
+  public KafkaTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
+    this.capturedHeaders = capturedHeaders;
     return this;
   }
 
@@ -65,6 +78,7 @@ public final class KafkaTelemetryBuilder {
   public KafkaTelemetry build() {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
+            .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .setPropagationEnabled(propagationEnabled);
 

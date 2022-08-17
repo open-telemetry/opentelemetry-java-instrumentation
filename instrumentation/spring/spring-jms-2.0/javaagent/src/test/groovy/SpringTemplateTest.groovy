@@ -5,6 +5,8 @@
 
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import javax.jms.JMSException
+import javax.jms.Message
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -17,6 +19,7 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
 import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.springframework.jms.core.JmsTemplate
+import org.springframework.jms.core.MessagePostProcessor
 import spock.lang.Shared
 
 import javax.jms.Connection
@@ -141,6 +144,34 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
       }
       trace(3, 1) {
         producerSpan(it, 0, "queue", "(temporary)")
+      }
+    }
+
+    where:
+    destination                               | destinationType | destinationName
+    session.createQueue("SpringTemplateJms2") | "queue"         | "SpringTemplateJms2"
+  }
+
+  def "capture message header as span attribute"() {
+    setup:
+    template.convertAndSend(destination, messageText, new MessagePostProcessor() {
+      @Override
+      Message postProcessMessage(Message message) throws JMSException {
+        message.setStringProperty("test_message_header", "test")
+        message.setIntProperty("test_message_int_header", 1234)
+        return message
+      }
+    })
+    TextMessage receivedMessage = template.receive(destination)
+
+    expect:
+    receivedMessage.text == messageText
+    assertTraces(2) {
+      trace(0, 1) {
+        producerSpan(it, 0, destinationType, destinationName, true)
+      }
+      trace(1, 1) {
+        consumerSpan(it, 0, destinationType, destinationName, receivedMessage.getJMSMessageID(), null, "receive", true)
       }
     }
 

@@ -560,8 +560,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
                             .isInstanceOf(Long.class)
                             .isNotEqualTo(Long.valueOf(port)));
           }
-          if (httpAttributes.contains(AttributeKey.stringKey("net.sock.peer.addr"))
-              || attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
+          if (httpAttributes.contains(AttributeKey.stringKey("net.sock.peer.addr"))) {
             assertThat(attrs)
                 .containsEntry(
                     AttributeKey.stringKey("net.sock.peer.addr"),
@@ -597,19 +596,17 @@ public abstract class AbstractHttpServerTest<SERVER> {
                         + (endpoint == QUERY_PARAM ? "?" + endpoint.body : ""));
           }
 
-          if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)
-              || attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
+          if (attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
                     SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-                    entry -> assertThat(entry).isInstanceOf(Long.class));
+                    entry -> assertThat(entry).isNotNegative());
           }
-          if (httpAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)
-              || attrs.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH) != null) {
+          if (attrs.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
                     SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                    entry -> assertThat(entry).isInstanceOf(Long.class));
+                    entry -> assertThat(entry).isNotNegative());
           }
           if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
             assertThat(attrs)
@@ -617,10 +614,8 @@ public abstract class AbstractHttpServerTest<SERVER> {
                     SemanticAttributes.HTTP_SERVER_NAME,
                     entry -> assertThat(entry).isInstanceOf(String.class));
           }
-          if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-            if (expectedRoute != null) {
-              assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
-            }
+          if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE) && expectedRoute != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
           }
 
           if (endpoint == CAPTURE_HEADERS) {

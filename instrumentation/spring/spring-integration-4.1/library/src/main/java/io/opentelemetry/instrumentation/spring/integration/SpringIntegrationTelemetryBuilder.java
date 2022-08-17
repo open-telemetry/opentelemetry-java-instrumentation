@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.integration;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -12,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +26,7 @@ public final class SpringIntegrationTelemetryBuilder {
   private final List<AttributesExtractor<MessageWithChannel, Void>> additionalAttributeExtractors =
       new ArrayList<>();
 
+  private List<String> capturedHeaders = emptyList();
   private boolean producerSpanEnabled = false;
 
   SpringIntegrationTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -36,6 +40,16 @@ public final class SpringIntegrationTelemetryBuilder {
   public SpringIntegrationTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<MessageWithChannel, Void> attributesExtractor) {
     additionalAttributeExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Configures the messaging headers that will be captured as span attributes.
+   *
+   * @param capturedHeaders A list of messaging header names.
+   */
+  public SpringIntegrationTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
+    this.capturedHeaders = capturedHeaders;
     return this;
   }
 
@@ -68,8 +82,10 @@ public final class SpringIntegrationTelemetryBuilder {
                 SpringIntegrationTelemetryBuilder::consumerSpanName)
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
-                MessagingAttributesExtractor.create(
-                    SpringMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS))
+                buildMessagingAttributesExtractor(
+                    SpringMessagingAttributesGetter.INSTANCE,
+                    MessageOperation.PROCESS,
+                    capturedHeaders))
             .buildConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
 
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
@@ -79,13 +95,25 @@ public final class SpringIntegrationTelemetryBuilder {
                 SpringIntegrationTelemetryBuilder::producerSpanName)
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
-                MessagingAttributesExtractor.create(
-                    SpringMessagingAttributesGetter.INSTANCE, MessageOperation.SEND))
+                buildMessagingAttributesExtractor(
+                    SpringMessagingAttributesGetter.INSTANCE,
+                    MessageOperation.SEND,
+                    capturedHeaders))
             .buildInstrumenter(SpanKindExtractor.alwaysProducer());
     return new SpringIntegrationTelemetry(
         openTelemetry.getPropagators(),
         consumerInstrumenter,
         producerInstrumenter,
         producerSpanEnabled);
+  }
+
+  private static MessagingAttributesExtractor<MessageWithChannel, Void>
+      buildMessagingAttributesExtractor(
+          MessagingAttributesGetter<MessageWithChannel, Void> getter,
+          MessageOperation operation,
+          List<String> capturedHeaders) {
+    return MessagingAttributesExtractor.builder(getter, operation)
+        .setCapturedHeaders(capturedHeaders)
+        .build();
   }
 }

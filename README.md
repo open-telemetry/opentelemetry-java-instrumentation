@@ -144,7 +144,8 @@ Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/org
 
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
-- [John Watson](https://github.com/jkwatson), Splunk
+- [Jack Berg](https://github.com/jack-berg), New Relic
+- [John Watson](https://github.com/jkwatson), Verta.ai
 - [Pavol Loffay](https://github.com/pavolloffay), Traceable.ai
 
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):

@@ -35,11 +35,11 @@ dependencies {
 
   testImplementation("org.testcontainers:couchbase")
 
-  latestDepTestLibrary("com.couchbase.client:java-client:3.1.5")
+  latestDepTestLibrary("com.couchbase.client:java-client:3.1.5") // see couchbase-3.1.6 module
 }
 
 tasks {
   test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }

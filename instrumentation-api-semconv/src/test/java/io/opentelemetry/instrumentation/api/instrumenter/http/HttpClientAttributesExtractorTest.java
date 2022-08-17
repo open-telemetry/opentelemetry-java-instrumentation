@@ -19,6 +19,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class HttpClientAttributesExtractorTest {
@@ -43,25 +44,14 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    public Long requestContentLength(Map<String, String> request, Map<String, String> response) {
-      String value = request.get("requestContentLength");
-      return value == null ? null : Long.parseLong(value);
-    }
-
-    @Override
-    public Integer statusCode(Map<String, String> request, Map<String, String> response) {
+    public Integer statusCode(
+        Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       return Integer.parseInt(response.get("statusCode"));
     }
 
     @Override
     public String flavor(Map<String, String> request, Map<String, String> response) {
       return request.get("flavor");
-    }
-
-    @Override
-    public Long responseContentLength(Map<String, String> request, Map<String, String> response) {
-      String value = response.get("responseContentLength");
-      return value == null ? null : Long.parseLong(value);
     }
 
     @Override
@@ -77,14 +67,14 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("method", "POST");
     request.put("url", "http://github.com");
-    request.put("requestContentLength", "10");
+    request.put("header.content-length", "10");
     request.put("flavor", "http/2");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.custom-request-header", "123,456");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "202");
-    response.put("responseContentLength", "20");
+    response.put("header.content-length", "20");
     response.put("header.custom-response-header", "654,321");
 
     HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =

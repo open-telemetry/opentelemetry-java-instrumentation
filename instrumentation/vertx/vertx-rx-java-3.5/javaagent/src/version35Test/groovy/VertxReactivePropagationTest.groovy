@@ -74,6 +74,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(1) {
@@ -164,6 +165,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.HTTP_FLAVOR" "1.1"
               "$SemanticAttributes.HTTP_USER_AGENT" String
               "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
+              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId
             }
           }

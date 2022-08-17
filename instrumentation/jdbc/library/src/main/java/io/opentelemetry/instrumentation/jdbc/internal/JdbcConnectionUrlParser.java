@@ -789,6 +789,35 @@ public enum JdbcConnectionUrlParser {
       }
       return builder.name(instance);
     }
+  },
+
+  DATADIRECT("datadirect", "tibcosoftware") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      int typeEndIndex = jdbcUrl.indexOf(':');
+      int subtypeEndIndex = jdbcUrl.indexOf(':', typeEndIndex + 1);
+
+      if (subtypeEndIndex == -1) {
+        return builder;
+      }
+
+      String subtype = jdbcUrl.substring(typeEndIndex + 1, subtypeEndIndex);
+      builder.subtype(subtype);
+
+      if (subtype.equals("sqlserver")) {
+        builder.system(DbSystemValues.MSSQL);
+      } else if (subtype.equals("oracle")) {
+        builder.system(DbSystemValues.ORACLE);
+      } else if (subtype.equals("mysql")) {
+        builder.system(DbSystemValues.MYSQL);
+      } else if (subtype.equals("postgresql")) {
+        builder.system(DbSystemValues.POSTGRESQL);
+      } else if (subtype.equals("db2")) {
+        builder.system(DbSystemValues.DB2);
+      }
+
+      return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
+    }
   };
 
   private static final Logger logger = Logger.getLogger(JdbcConnectionUrlParser.class.getName());
