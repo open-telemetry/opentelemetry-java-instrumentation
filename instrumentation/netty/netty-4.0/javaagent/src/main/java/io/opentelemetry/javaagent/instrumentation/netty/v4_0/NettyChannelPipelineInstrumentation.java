@@ -95,7 +95,7 @@ public class NettyChannelPipelineInstrumentation
         // the SslHandler lives in the netty-handler module, using class name comparison to avoid
         // adding a dependency
       } else if (handler.getClass().getName().equals("io.netty.handler.ssl.SslHandler")) {
-        ourHandler = new NettySslInstrumentationHandler(sslInstrumenter());
+        ourHandler = new NettySslInstrumentationHandler(sslInstrumenter(), handler);
       }
 
       if (ourHandler != null) {
