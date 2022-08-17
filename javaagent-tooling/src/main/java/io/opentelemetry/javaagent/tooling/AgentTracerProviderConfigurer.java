@@ -38,6 +38,13 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
     if (Config.get().getBoolean(ADD_THREAD_DETAILS, true)) {
       sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
     }
+    sdkTracerProviderBuilder.addSpanProcessor(new HeliosProcessor());
+
+    String heliosRatioProperty = getHeliosSamplingRationProperty();
+    if (heliosRatioProperty != null) {
+      sdkTracerProviderBuilder.setSampler(
+          new HeliosSampler(Double.parseDouble(heliosRatioProperty)));
+    }
 
     maybeEnableLoggingExporter(sdkTracerProviderBuilder);
 
@@ -57,5 +64,28 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
     return !Config.get()
         .getList("otel.traces.exporter", Collections.emptyList())
         .contains("logging");
+  }
+
+  private static String getHeliosSamplingRationProperty() {
+    String ratio = System.getenv(String.valueOf(RatioProperty.HS_SAMPLING_RATIO));
+    if (ratio == null) {
+      ratio = System.getProperty(RatioProperty.HS_SAMPLING_RATIO.propertyName());
+    }
+
+    return ratio;
+  }
+
+  private enum RatioProperty {
+    HS_SAMPLING_RATIO("hs.sampling.ratio");
+
+    private final String propertyName;
+
+    RatioProperty(String propertyName) {
+      this.propertyName = propertyName;
+    }
+
+    private String propertyName() {
+      return propertyName;
+    }
   }
 }

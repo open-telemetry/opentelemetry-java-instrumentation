@@ -60,6 +60,11 @@ final class DefaultLoggingCustomizer implements LoggingCustomizer {
   private static boolean isDebugMode() {
     String tracerDebugLevelSysprop = "otel.javaagent.debug";
     String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
+    String heliosDebugProp = System.getenv("HS_DEBUG");
+
+    if (heliosDebugProp != null) {
+      return Boolean.parseBoolean(heliosDebugProp);
+    }
 
     if (tracerDebugLevelProp != null) {
       return Boolean.parseBoolean(tracerDebugLevelProp);
