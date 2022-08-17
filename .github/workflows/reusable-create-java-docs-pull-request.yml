@@ -51,9 +51,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
           VERSION: ${{ inputs.version }}
         run: |
-          message="Update the SDK version to $VERSION"
+          message="Update the SDK and instrumentation versions to $VERSION"
           body=$(cat << EOF
-          Update the SDK version to \`$VERSION\`.
+          Update the SDK and instrumentation versions to \`$VERSION\`.
           
           Note: you will likely need to re-run the checks on this PR in an hour or so, once the
           updated dependencies are visible in maven central.
