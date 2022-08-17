@@ -2,6 +2,85 @@
 
 ## Unreleased
 
+### Migration notes
+
+- @WithSpan
+
+- Rename `newInstrumenter()` into `buildInstrumenter()`
+  ([#6363](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6363))
+- Deprecate Config
+  ([#6360](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6360))
+- Deprecate uncompressed content length HTTP attributes
+  ([#6383](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6383))
+- Ktor 2.0 instrumentation name changed from `io.opentelemetry.ktor-1.0` to
+  `io.opentelemetry.ktor-2.0`
+  ([#6452](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6452))
+- Update instrumentation name
+  ([#6450](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6450))
+- Liberty instrumentation names changed from `io.opentelemetry.liberty` and
+  `io.opentelemetry.liberty-dispatcher` to `io.opentelemetry.liberty-20.0` and
+  `io.opentelemetry.liberty-dispatcher-20.0`
+  ([#6456](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6456))
+
+### 🌟 New javaagent instrumentation
+
+
+### 🌟 New library instrumentation
+
+
+### 📈 Enhancements
+
+- Move buffer pool metrics out of the experimental block
+  ([#6370](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6370))
+- Add code attributes to several instrumentations
+  ([#6365](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6365))
+- Add http.client|server.request|response.size metrics
+  ([#6376](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6376))
+- Add Kafka instrumentation to the Spring Boot starter
+  ([#6371](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6371))
+- Extract HTTP request & response content length from headers
+  ([#6415](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6415))
+- Support DataDirect and Tibco Jdbc URLs
+  ([#6420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6420))
+- Set http.route in spring-autoconfigure webmvc instrumentation
+  ([#6414](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6414))
+
+### 🛠️ Bug fixes
+
+- Fix duplicate spans for Quarkus gRPC server
+  ([#6356](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6356))
+- Replace tracing kafka wrappers with jdk proxies
+  ([#6457](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6457))
+
+### 🧰 Tooling
+
+- Grizzly: capture all matching request & response headers
+  ([#6463](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6463))
+- Capture messaging header value as span attribute
+  ([#6454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6454))
+- Update gradle to 7.5.1
+  ([#6359](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6359))
+- Mongodb: avoid duplicate tracing
+  ([#6465](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6465))
+- Update SDK to 1.17.0
+  ([#6467](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6467))
+- Deprecate the 2-arg variant of HttpCommonAttributesGeter#statusCode()
+  ([#6466](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6466))
+- Bump com.gradle.common-custom-user-data-gradle-plugin
+  ([#6473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6473))
+- Bump com.gradle.enterprise from 3.10.3 to 3.11.1
+  ([#6474](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6474))
+- Tweak naming of spring autoconfigure and starter modules
+  ([#6453](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6453))
+- Disable crashing tests on openj9 18
+  ([#6481](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6481))
+- JDBC-specific sanitizer property
+  ([#6472](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6472))
+- Fix the build
+  ([#6482](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6482))
+- Add comment to generated PRs
+  ([#6468](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6468))
+
 ## Version 1.16.0 (2022-07-19)
 
 ### Migration notes
