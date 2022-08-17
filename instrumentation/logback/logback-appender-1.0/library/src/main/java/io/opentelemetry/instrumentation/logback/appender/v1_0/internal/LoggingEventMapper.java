@@ -12,8 +12,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
+import io.opentelemetry.instrumentation.api.appender.internal.LogRecordBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -48,14 +48,15 @@ public final class LoggingEventMapper {
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
-    LogBuilder builder =
+    LogRecordBuilder builder =
         logEmitterProvider.logEmitterBuilder(instrumentationName).build().logBuilder();
     mapLoggingEvent(builder, event);
     builder.emit();
   }
 
   /**
-   * Map the {@link ILoggingEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
+   * Map the {@link ILoggingEvent} data model onto the {@link LogRecordBuilder}. Unmapped fields
+   * include:
    *
    * <ul>
    *   <li>Thread name - {@link ILoggingEvent#getThreadName()}
@@ -63,7 +64,7 @@ public final class LoggingEventMapper {
    *   <li>Mapped diagnostic context - {@link ILoggingEvent#getMDCPropertyMap()}
    * </ul>
    */
-  private void mapLoggingEvent(LogBuilder builder, ILoggingEvent loggingEvent) {
+  private void mapLoggingEvent(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     // message
     String message = loggingEvent.getFormattedMessage();
     if (message != null) {
@@ -103,7 +104,7 @@ public final class LoggingEventMapper {
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
     }
 
-    builder.setAttributes(attributes.build());
+    builder.setAllAttributes(attributes.build());
 
     // span context
     builder.setContext(Context.current());

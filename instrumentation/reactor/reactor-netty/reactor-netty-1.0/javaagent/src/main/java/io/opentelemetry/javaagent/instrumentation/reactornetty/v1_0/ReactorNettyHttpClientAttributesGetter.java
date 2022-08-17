@@ -75,7 +75,8 @@ final class ReactorNettyHttpClientAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpClientConfig request, HttpClientResponse response) {
+  public Integer statusCode(
+      HttpClientConfig request, HttpClientResponse response, @Nullable Throwable error) {
     return response.status().code();
   }
 

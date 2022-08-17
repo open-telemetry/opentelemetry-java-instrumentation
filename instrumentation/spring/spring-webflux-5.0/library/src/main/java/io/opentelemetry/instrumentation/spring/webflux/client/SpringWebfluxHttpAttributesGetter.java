@@ -56,7 +56,8 @@ enum SpringWebfluxHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(ClientRequest request, ClientResponse response) {
+  public Integer statusCode(
+      ClientRequest request, ClientResponse response, @Nullable Throwable error) {
     if (RAW_STATUS_CODE != null) {
       // rawStatusCode() method was introduced in webflux 5.1
       try {

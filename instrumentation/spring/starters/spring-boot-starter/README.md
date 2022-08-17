@@ -20,7 +20,7 @@ Add the following dependencies to your `pom.xml` file:
 
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-spring-starter</artifactId>
+    <artifactId>opentelemetry-spring-boot-starter</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 
@@ -31,7 +31,7 @@ Add the following dependencies to your `pom.xml` file:
 Add the following dependencies to your gradle.build file:
 
 ```groovy
-implementation("io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter:OPENTELEMETRY_VERSION")
 ```
 
 ### Starter Guide

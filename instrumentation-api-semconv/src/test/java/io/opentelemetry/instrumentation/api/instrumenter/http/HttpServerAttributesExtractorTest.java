@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class HttpServerAttributesExtractorTest {
@@ -59,7 +60,8 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public Integer statusCode(Map<String, String> request, Map<String, String> response) {
+    public Integer statusCode(
+        Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       String value = response.get("statusCode");
       return value == null ? null : Integer.parseInt(value);
     }

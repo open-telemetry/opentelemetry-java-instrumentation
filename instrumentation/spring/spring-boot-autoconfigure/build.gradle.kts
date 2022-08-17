@@ -3,6 +3,8 @@ plugins {
   id("otel.publish-conventions")
 }
 
+// Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration.custom-starter
+base.archivesName.set("opentelemetry-spring-boot")
 group = "io.opentelemetry.instrumentation"
 
 val versions: Map<String, String> by project
@@ -74,4 +76,11 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+  // disable tests on openj9 18 because they often crash JIT compiler
+  val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
+  val testOnOpenJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" } ?: false
+  if (testOnOpenJ9 && testJavaVersion?.majorVersion == "18") {
+    enabled = false
+  }
 }

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_17;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
@@ -52,7 +52,7 @@ public final class Log4jHelper {
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
-    LogBuilder builder =
+    LogRecordBuilder builder =
         AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     Map<String, String> contextData = ThreadContext.getImmutableContext();
     mapper.mapLogEvent(builder, message, level, throwable, contextData);

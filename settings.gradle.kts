@@ -19,9 +19,9 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.10.3"
+  id("com.gradle.enterprise") version "3.11.1"
   id("com.github.burrunan.s3-build-cache") version "1.3"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.7.2"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.0"
 }
 
 dependencyResolutionManagement {
@@ -445,9 +445,9 @@ include(":instrumentation:spring:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux-5.0:library")
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
 include(":instrumentation:spring:spring-boot-autoconfigure")
-include(":instrumentation:spring:starters:spring-starter")
-include(":instrumentation:spring:starters:jaeger-exporter-starter")
-include(":instrumentation:spring:starters:zipkin-exporter-starter")
+include(":instrumentation:spring:starters:spring-boot-starter")
+include(":instrumentation:spring:starters:jaeger-spring-boot-starter")
+include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
 include(":instrumentation:struts-2.3:javaagent")
 include(":instrumentation:tapestry-5.4:javaagent")

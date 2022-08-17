@@ -10,7 +10,7 @@ final class NoopLogEmitter implements LogEmitter {
   static final LogEmitter INSTANCE = new NoopLogEmitter();
 
   @Override
-  public LogBuilder logBuilder() {
-    return NoopLogBuilder.INSTANCE;
+  public LogRecordBuilder logBuilder() {
+    return NoopLogRecordBuilder.INSTANCE;
   }
 }

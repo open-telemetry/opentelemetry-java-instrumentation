@@ -19,6 +19,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class HttpClientAttributesExtractorTest {
@@ -43,7 +44,8 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    public Integer statusCode(Map<String, String> request, Map<String, String> response) {
+    public Integer statusCode(
+        Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       return Integer.parseInt(response.get("statusCode"));
     }
 

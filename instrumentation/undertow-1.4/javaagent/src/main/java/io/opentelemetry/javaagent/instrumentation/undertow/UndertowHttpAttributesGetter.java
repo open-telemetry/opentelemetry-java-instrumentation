@@ -37,7 +37,8 @@ public class UndertowHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpServerExchange exchange, HttpServerExchange unused) {
+  public Integer statusCode(
+      HttpServerExchange exchange, HttpServerExchange unused, @Nullable Throwable error) {
     return exchange.getStatusCode();
   }
 
