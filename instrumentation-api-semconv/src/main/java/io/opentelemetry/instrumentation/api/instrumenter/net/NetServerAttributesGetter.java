@@ -21,6 +21,8 @@ public interface NetServerAttributesGetter<REQUEST> {
   String transport(REQUEST request);
 
   /**
+   * Returns the peerPort.
+   *
    * @deprecated implement {@link #sockPeerPort(Object)} instead.
    */
   @Deprecated
@@ -30,6 +32,8 @@ public interface NetServerAttributesGetter<REQUEST> {
   }
 
   /**
+   * Returns the peerIp.
+   *
    * @deprecated implement {@link #sockPeerAddr(Object)} instead.
    */
   @Deprecated
