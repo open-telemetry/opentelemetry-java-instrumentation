@@ -28,7 +28,8 @@ public final class SupportabilityMetrics {
 
   private static final SupportabilityMetrics INSTANCE =
       new SupportabilityMetrics(
-              ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false), logger::fine)
+              ConfigPropertiesUtil.getBoolean("hs.debug", "otel.javaagent.debug", false),
+              logger::fine)
           .start();
 
   public static SupportabilityMetrics instance() {

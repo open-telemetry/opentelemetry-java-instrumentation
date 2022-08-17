@@ -32,7 +32,8 @@ public final class ContextPropagationDebug {
   private static final boolean FAIL_ON_CONTEXT_LEAK;
 
   static {
-    boolean agentDebugEnabled = ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false);
+    boolean agentDebugEnabled =
+        ConfigPropertiesUtil.getBoolean("hs.debug", "otel.javaagent.debug", false);
 
     THREAD_PROPAGATION_DEBUGGER =
         ConfigPropertiesUtil.getBoolean(

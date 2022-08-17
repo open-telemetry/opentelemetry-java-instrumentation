@@ -19,6 +19,20 @@ public final class ConfigPropertiesUtil {
     return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
   }
 
+  public static boolean getBoolean(
+      String propertyName, String additionalPropertyName, boolean defaultValue) {
+    String strValue = getString(propertyName);
+    String additionalStrValue = getString(additionalPropertyName);
+
+    if (strValue != null) {
+      return Boolean.parseBoolean(strValue);
+    }
+    if (additionalStrValue != null) {
+      return Boolean.parseBoolean(additionalStrValue);
+    }
+    return defaultValue;
+  }
+
   @Nullable
   public static String getString(String propertyName) {
     String value = System.getProperty(propertyName);

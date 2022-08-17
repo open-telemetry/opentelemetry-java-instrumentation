@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.HELIOS_TEST_TRIGGERED_TRACE;
+
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -17,7 +19,6 @@ import java.util.List;
 
 public class HeliosSampler implements Sampler {
   private final Sampler ratioBasedSampler;
-  public static final String HELIOS_TEST_TRIGGERED_TRACE = "hs-triggered-test";
 
   public HeliosSampler(Double ratio) {
     this.ratioBasedSampler = Sampler.traceIdRatioBased(ratio);
@@ -51,6 +52,6 @@ public class HeliosSampler implements Sampler {
 
   @Override
   public String getDescription() {
-    return "io.opentelemetry.javaagent.tooling.HeliosSampler";
+    return HeliosSampler.class.getName();
   }
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.HeliosSampler.HELIOS_TEST_TRIGGERED_TRACE;
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.HELIOS_TEST_TRIGGERED_TRACE;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Context;

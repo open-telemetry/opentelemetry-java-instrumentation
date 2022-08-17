@@ -17,6 +17,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.util.Collections;
+import java.util.Optional;
 
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public class AgentTracerProviderConfigurer implements AutoConfigurationCustomizerProvider {
@@ -40,11 +41,9 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
     }
     sdkTracerProviderBuilder.addSpanProcessor(new HeliosProcessor());
 
-    String heliosRatioProperty = getHeliosSamplingRationProperty();
-    if (heliosRatioProperty != null) {
-      sdkTracerProviderBuilder.setSampler(
-          new HeliosSampler(Double.parseDouble(heliosRatioProperty)));
-    }
+    Optional<Double> heliosRatioProperty = getHeliosSamplingRationProperty();
+    heliosRatioProperty.ifPresent(
+        ratioProperty -> sdkTracerProviderBuilder.setSampler(new HeliosSampler(ratioProperty)));
 
     maybeEnableLoggingExporter(sdkTracerProviderBuilder);
 
@@ -66,13 +65,18 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
         .contains("logging");
   }
 
-  private static String getHeliosSamplingRationProperty() {
-    String ratio = System.getenv(String.valueOf(RatioProperty.HS_SAMPLING_RATIO));
-    if (ratio == null) {
-      ratio = System.getProperty(RatioProperty.HS_SAMPLING_RATIO.propertyName());
+  private static Optional<Double> getHeliosSamplingRationProperty() {
+    try {
+      String ratio = System.getenv(String.valueOf(RatioProperty.HS_SAMPLING_RATIO));
+      if (ratio == null) {
+        ratio = System.getProperty(RatioProperty.HS_SAMPLING_RATIO.propertyName());
+      }
+      return Optional.of(Double.parseDouble(ratio));
+    } catch (Exception e) {
+      System.out.println("Exception while getting ratio property: " + e);
     }
 
-    return ratio;
+    return Optional.empty();
   }
 
   private enum RatioProperty {
