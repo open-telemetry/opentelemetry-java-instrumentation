@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.config;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static java.util.logging.Level.SEVERE;
 
-import io.opentelemetry.javaagent.extension.config.ConfigPropertySource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -54,7 +53,8 @@ public final class ConfigInitializer {
   private static Properties loadSpiConfiguration(
       List<io.opentelemetry.javaagent.extension.config.ConfigCustomizer> customizers) {
     Properties propertiesFromSpi = new Properties();
-    for (ConfigPropertySource propertySource : loadOrdered(ConfigPropertySource.class)) {
+    for (io.opentelemetry.javaagent.extension.config.ConfigPropertySource propertySource :
+        loadOrdered(io.opentelemetry.javaagent.extension.config.ConfigPropertySource.class)) {
       propertiesFromSpi.putAll(propertySource.getProperties());
     }
     for (io.opentelemetry.javaagent.extension.config.ConfigCustomizer customizer : customizers) {
