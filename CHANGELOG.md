@@ -2,6 +2,80 @@
 
 ## Unreleased
 
+### Migration notes
+
+- The `@WithSpan` and `@SpanAttribute` annotations has been moved from the
+  `io.opentelemetry:opentelemetry-extension-annotations` artifact to the
+  `io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations` in order to live and
+  evolve alongside the instrumentation itself. The instrumentation will continue to support the old
+  artifact for backwards compatibility, but new annotation-based features will only be built out and
+  supported with the new annotation artifact.
+- `InstrumenterBuilder.newInstrumenter()` is renamed to `InstrumenterBuilder.buildInstrumenter()`
+  ([#6363](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6363))
+- `io.opentelemetry.instrumentation.api.config.Config` is deprecated
+  ([#6360](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6360))
+- `HttpCommonAttributesGetter.requestContentLengthUncompressed()` and
+  `responseContentLengthUncompressed` are deprecated
+  ([#6383](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6383))
+- Ktor 2.0 instrumentation name is changed from `io.opentelemetry.ktor-1.0` to
+  `io.opentelemetry.ktor-2.0`
+  ([#6452](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6452))
+- `io.opentelemetry.opentelemetry-annotations-1.0` instrumentation name is changed to
+  `io.opentelemetry.opentelemetry-instrumentation-annotations-1.16`
+  ([#6450](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6450))
+- Liberty instrumentation names are changed from `io.opentelemetry.liberty` and
+  `io.opentelemetry.liberty-dispatcher` to `io.opentelemetry.liberty-20.0` and
+  `io.opentelemetry.liberty-dispatcher-20.0`
+  ([#6456](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6456))
+- The 2-arg variant of HttpCommonAttributesGeter#statusCode() is deprecated
+  ([#6466](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6466))
+- The `opentelemetry-spring-starter` artifact has been renamed to
+  `opentelemetry-spring-boot-starter`, the `opentelemetry-zipkin-exporter-starter` artifact has been
+  renamed to `opentelemetry-zipkin-spring-boot-starter`, and the
+  `opentelemetry-zipkin-exporter-starter` artifact has been renamed to
+  `opentelemetry-zipkin-spring-boot-starter`
+  ([#6453](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6453))
+- Update net semantic convention changes based on recent specification changes:
+  `net.peer.ip` renamed to `net.sock.peer.addr`, `net.host.ip` renamed to `net.sock.host.addr`,
+  `net.peer.name` renamed to `net.sock.peer.name` for socket-level instrumentation,
+  and `NetClientAttributesGetter.peerIp()`, `NetServerAttributesGetter.peerIp()`, and
+  `NetServerAttributesGetter.peerPort()` are deprecated
+  ([#6268](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6268))
+
+### 📈 Enhancements
+
+- Move buffer pool metrics out of experimental
+  ([#6370](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6370))
+- Add code attributes to several instrumentations
+  ([#6365](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6365))
+- Add http.client|server.request|response.size metrics
+  ([#6376](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6376))
+- Add Kafka instrumentation to the Spring Boot starter
+  ([#6371](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6371))
+- Extract HTTP request & response content length from headers
+  ([#6415](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6415))
+- Support DataDirect and Tibco Jdbc URLs
+  ([#6420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6420))
+- Set http.route in spring-autoconfigure webmvc instrumentation
+  ([#6414](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6414))
+- Grizzly: capture all matching request & response headers
+  ([#6463](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6463))
+- Capture messaging header value as span attribute
+  ([#6454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6454))
+- Add JDBC-specific sanitizer property
+  ([#6472](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6472))
+
+### 🛠️ Bug fixes
+
+- Fix duplicate spans for Quarkus gRPC server
+  ([#6356](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6356))
+- Update Kafka library instrumentation to support version 3.0.0 and later
+  ([#6457](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6457))
+- Mongodb: avoid duplicate tracing
+  ([#6465](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6465))
+- Fix netty instrumentation NoSuchElementException
+  ([#6469](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6469))
+
 ## Version 1.16.0 (2022-07-19)
 
 ### Migration notes
