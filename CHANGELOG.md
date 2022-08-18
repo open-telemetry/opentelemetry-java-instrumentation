@@ -4,33 +4,47 @@
 
 ### Migration notes
 
-- @WithSpan
-
-- Rename `newInstrumenter()` into `buildInstrumenter()`
+- The `@WithSpan` and `@SpanAttribute` annotations has been moved from the
+  `io.opentelemetry:opentelemetry-extension-annotations` artifact to the
+  `io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations` in order to live and
+  evolve alongside the instrumentation itself. The instrumentation will continue to support the old
+  artifact for backwards compatibility, but new annotation-based features will only be built out and
+  supported with the new annotation artifact.
+- `InstrumenterBuilder.newInstrumenter()` is renamed to `InstrumenterBuilder.buildInstrumenter()`
   ([#6363](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6363))
-- Deprecate Config
+- `io.opentelemetry.instrumentation.api.config.Config` is deprecated
   ([#6360](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6360))
-- Deprecate uncompressed content length HTTP attributes
+- `HttpCommonAttributesGetter.requestContentLengthUncompressed()` and
+  `responseContentLengthUncompressed` are deprecated
   ([#6383](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6383))
-- Ktor 2.0 instrumentation name changed from `io.opentelemetry.ktor-1.0` to
+- Ktor 2.0 instrumentation name is changed from `io.opentelemetry.ktor-1.0` to
   `io.opentelemetry.ktor-2.0`
   ([#6452](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6452))
-- Update instrumentation name
+- `io.opentelemetry.opentelemetry-annotations-1.0` instrumentation name is changed to
+  `io.opentelemetry.opentelemetry-instrumentation-annotations-1.16`
   ([#6450](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6450))
-- Liberty instrumentation names changed from `io.opentelemetry.liberty` and
+- Liberty instrumentation names are changed from `io.opentelemetry.liberty` and
   `io.opentelemetry.liberty-dispatcher` to `io.opentelemetry.liberty-20.0` and
   `io.opentelemetry.liberty-dispatcher-20.0`
   ([#6456](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6456))
-
-### 🌟 New javaagent instrumentation
-
-
-### 🌟 New library instrumentation
-
+- The 2-arg variant of HttpCommonAttributesGeter#statusCode() is deprecated
+  ([#6466](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6466))
+- The `opentelemetry-spring-starter` artifact has been renamed to
+  `opentelemetry-spring-boot-starter`, the `opentelemetry-zipkin-exporter-starter` artifact has been
+  renamed to `opentelemetry-zipkin-spring-boot-starter`, and the
+  `opentelemetry-zipkin-exporter-starter` artifact has been renamed to
+  `opentelemetry-zipkin-spring-boot-starter`
+  ([#6453](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6453))
+- Update net semantic convention changes based on recent specification changes:
+  `net.peer.ip` renamed to `net.sock.peer.addr`, `net.host.ip` renamed to `net.sock.host.addr`,
+  `net.peer.name` renamed to `net.sock.peer.name` for socket-level instrumentation,
+  and `NetClientAttributesGetter.peerIp()`, `NetServerAttributesGetter.peerIp()`, and
+  `NetServerAttributesGetter.peerPort()` are deprecated
+  ([#6268](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6268))
 
 ### 📈 Enhancements
 
-- Move buffer pool metrics out of the experimental block
+- Move buffer pool metrics out of experimental
   ([#6370](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6370))
 - Add code attributes to several instrumentations
   ([#6365](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6365))
@@ -44,42 +58,23 @@
   ([#6420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6420))
 - Set http.route in spring-autoconfigure webmvc instrumentation
   ([#6414](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6414))
+- Grizzly: capture all matching request & response headers
+  ([#6463](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6463))
+- Capture messaging header value as span attribute
+  ([#6454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6454))
+- Add JDBC-specific sanitizer property
+  ([#6472](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6472))
 
 ### 🛠️ Bug fixes
 
 - Fix duplicate spans for Quarkus gRPC server
   ([#6356](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6356))
-- Replace tracing kafka wrappers with jdk proxies
+- Update Kafka library instrumentation to support version 3.0.0 and later
   ([#6457](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6457))
-
-### 🧰 Tooling
-
-- Grizzly: capture all matching request & response headers
-  ([#6463](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6463))
-- Capture messaging header value as span attribute
-  ([#6454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6454))
-- Update gradle to 7.5.1
-  ([#6359](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6359))
 - Mongodb: avoid duplicate tracing
   ([#6465](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6465))
-- Update SDK to 1.17.0
-  ([#6467](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6467))
-- Deprecate the 2-arg variant of HttpCommonAttributesGeter#statusCode()
-  ([#6466](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6466))
-- Bump com.gradle.common-custom-user-data-gradle-plugin
-  ([#6473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6473))
-- Bump com.gradle.enterprise from 3.10.3 to 3.11.1
-  ([#6474](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6474))
-- Tweak naming of spring autoconfigure and starter modules
-  ([#6453](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6453))
-- Disable crashing tests on openj9 18
-  ([#6481](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6481))
-- JDBC-specific sanitizer property
-  ([#6472](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6472))
-- Fix the build
-  ([#6482](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6482))
-- Add comment to generated PRs
-  ([#6468](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6468))
+- Fix netty instrumentation NoSuchElementException
+  ([#6469](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6469))
 
 ## Version 1.16.0 (2022-07-19)
 
