@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.HELIOS_TEST_TRIGGERED_TRACE;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.Attributes;
@@ -17,7 +18,6 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import java.util.List;
 import java.util.logging.Logger;
-import static java.util.logging.Level.WARNING;
 
 public class HeliosSampler implements Sampler {
 
@@ -49,7 +49,7 @@ public class HeliosSampler implements Sampler {
         return SamplingResult.recordAndSample();
       }
     } catch (Exception e) {
-      logger.log(WARNING,"Got exception when trying to sample span: " + e);
+      logger.log(WARNING, "Got exception when trying to sample span: " + e);
     }
 
     return this.ratioBasedSampler.shouldSample(context, traceId, name, spanKind, attributes, list);
