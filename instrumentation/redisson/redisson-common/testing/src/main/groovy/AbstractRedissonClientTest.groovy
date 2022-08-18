@@ -78,9 +78,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION" "SET"
           }
@@ -92,9 +92,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "GET foo"
             "$SemanticAttributes.DB_OPERATION" "GET"
           }
@@ -118,9 +118,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "SET batch1 ?;SET batch2 ?"
             "$SemanticAttributes.DB_OPERATION" null
           }
@@ -142,9 +142,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "RPUSH list1 ?"
             "$SemanticAttributes.DB_OPERATION" "RPUSH"
           }
@@ -169,9 +169,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "EVAL $script 1 map1 ? ?"
             "$SemanticAttributes.DB_OPERATION" "EVAL"
           }
@@ -183,9 +183,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "HGET map1 key1"
             "$SemanticAttributes.DB_OPERATION" "HGET"
           }
@@ -207,9 +207,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "SADD set1 ?"
             "$SemanticAttributes.DB_OPERATION" "SADD"
           }
@@ -235,9 +235,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "ZADD sort_set1 ? ? ? ? ? ?"
             "$SemanticAttributes.DB_OPERATION" "ZADD"
           }
@@ -259,9 +259,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" "INCR AtomicLong"
             "$SemanticAttributes.DB_OPERATION" "INCR"
           }
@@ -288,9 +288,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" { lockScriptPattern.matcher(it).matches() }
             "$SemanticAttributes.DB_OPERATION" "EVAL"
           }
@@ -304,9 +304,9 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.DB_STATEMENT" { lockScriptPattern.matcher(it).matches() }
             "$SemanticAttributes.DB_OPERATION" "EVAL"
           }

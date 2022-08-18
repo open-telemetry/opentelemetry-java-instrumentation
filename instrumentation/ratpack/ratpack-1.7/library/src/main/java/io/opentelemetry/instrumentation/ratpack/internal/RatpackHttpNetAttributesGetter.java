@@ -32,10 +32,4 @@ public final class RatpackHttpNetAttributesGetter
   public Integer peerPort(RequestSpec request, @Nullable HttpResponse response) {
     return request.getUri().getPort();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(RequestSpec request, @Nullable HttpResponse response) {
-    return null;
-  }
 }

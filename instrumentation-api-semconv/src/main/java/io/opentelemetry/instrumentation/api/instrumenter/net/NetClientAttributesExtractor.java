@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -24,6 +25,15 @@ import javax.annotation.Nullable;
  */
 public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
+
+  private static final AttributeKey<String> NET_SOCK_PEER_ADDR =
+      AttributeKey.stringKey("net.sock.peer.addr");
+  public static final AttributeKey<Long> NET_SOCK_PEER_PORT =
+      AttributeKey.longKey("net.sock.peer.port");
+  public static final AttributeKey<String> NET_SOCK_FAMILY =
+      AttributeKey.stringKey("net.sock.family");
+  public static final AttributeKey<String> NET_SOCK_PEER_NAME =
+      AttributeKey.stringKey("net.sock.peer.name");
 
   private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
 
@@ -49,17 +59,30 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
 
-    String peerIp = getter.peerIp(request, response);
     String peerName = getter.peerName(request, response);
-
-    if (peerName != null && !peerName.equals(peerIp)) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
-    }
-    internalSet(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
-
     Integer peerPort = getter.peerPort(request, response);
-    if (peerPort != null && peerPort > 0) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+    if (peerName != null) {
+      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
+      if (peerPort != null && peerPort > 0) {
+        internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+      }
+    }
+
+    String sockPeerAddr = getter.sockPeerAddr(request, response);
+    if (sockPeerAddr != null && !sockPeerAddr.equals(peerName)) {
+      internalSet(attributes, NET_SOCK_PEER_ADDR, sockPeerAddr);
+
+      Integer sockPeerPort = getter.sockPeerPort(request, response);
+      if (sockPeerPort != null && sockPeerPort > 0 && !sockPeerPort.equals(peerPort)) {
+        internalSet(attributes, NET_SOCK_PEER_PORT, (long) sockPeerPort);
+      }
+
+      internalSet(attributes, NET_SOCK_FAMILY, getter.sockFamily(request, response));
+
+      String sockPeerName = getter.sockPeerName(request, response);
+      if (sockPeerName != null && !sockPeerName.equals(peerName)) {
+        internalSet(attributes, NET_SOCK_PEER_NAME, sockPeerName);
+      }
     }
   }
 }

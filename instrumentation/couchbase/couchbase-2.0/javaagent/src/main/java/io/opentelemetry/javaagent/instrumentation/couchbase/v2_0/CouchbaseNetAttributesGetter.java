@@ -30,10 +30,4 @@ public class CouchbaseNetAttributesGetter
   public Integer peerPort(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
     return couchbaseRequest.getPeerPort();
   }
-
-  @Nullable
-  @Override
-  public String peerIp(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
-    return null;
-  }
 }

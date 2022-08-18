@@ -25,7 +25,6 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-import static com.google.common.net.InetAddresses.isInetAddress
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
@@ -360,22 +359,24 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
       spanName = spanName + " " + operation
     }
 
+    def spanKind
+    switch (trace.span(index).attributes.get(AttributeKey.stringKey("rabbitmq.command"))) {
+      case "basic.publish":
+        spanKind = PRODUCER
+        break
+      case "basic.get":
+        spanKind = CLIENT
+        break
+      case "basic.deliver":
+        spanKind = CONSUMER
+        break
+      default:
+        spanKind = CLIENT
+    }
+
     trace.span(index) {
       name spanName
-
-      switch (trace.span(index).attributes.get(AttributeKey.stringKey("rabbitmq.command"))) {
-        case "basic.publish":
-          kind PRODUCER
-          break
-        case "basic.get":
-          kind CLIENT
-          break
-        case "basic.deliver":
-          kind CONSUMER
-          break
-        default:
-          kind CLIENT
-      }
+      kind spanKind
 
       if (parentSpan) {
         childOf((SpanData) parentSpan)
@@ -393,9 +394,13 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
       }
 
       attributes {
-        "$SemanticAttributes.NET_PEER_NAME" { it == null || it instanceof String }
-        "$SemanticAttributes.NET_PEER_IP" { it == null || isInetAddress(it as String) }
-        "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
+        // "localhost" on linux, "127.0.0.1" on windows
+        if (spanKind != CONSUMER) {
+          "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" }
+          "$SemanticAttributes.NET_PEER_PORT" Long
+          "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+          "net.sock.family" { it == null || it == "inet6" }
+        }
 
         "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
         "$SemanticAttributes.MESSAGING_DESTINATION" exchange

@@ -388,8 +388,8 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.NET_PEER_NAME" "localhost"
-        "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
         "$SemanticAttributes.NET_PEER_PORT" port
+        "net.sock.peer.addr" "127.0.0.1"
         "$SemanticAttributes.DB_STATEMENT" {
           statementEval.call(it.replaceAll(" ", ""))
         }

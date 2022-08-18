@@ -28,10 +28,4 @@ final class AsyncHttpClientNetAttributesGetter
   public Integer peerPort(Request request, @Nullable Response response) {
     return request.getUri().getPort();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(Request request, @Nullable Response response) {
-    return null;
-  }
 }

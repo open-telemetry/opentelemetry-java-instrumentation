@@ -19,13 +19,13 @@ public class LibertyDispatcherNetAttributesGetter
 
   @Override
   @Nullable
-  public Integer peerPort(LibertyRequest libertyRequest) {
+  public Integer sockPeerPort(LibertyRequest libertyRequest) {
     return libertyRequest.peerPort();
   }
 
   @Override
   @Nullable
-  public String peerIp(LibertyRequest libertyRequest) {
+  public String sockPeerAddr(LibertyRequest libertyRequest) {
     return libertyRequest.peerIp();
   }
 }
