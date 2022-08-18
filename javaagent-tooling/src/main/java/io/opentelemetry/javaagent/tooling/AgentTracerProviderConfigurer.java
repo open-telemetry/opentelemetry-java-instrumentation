@@ -70,8 +70,10 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
       String ratio = System.getenv(String.valueOf(RatioProperty.HS_SAMPLING_RATIO));
       if (ratio == null) {
         ratio = System.getProperty(RatioProperty.HS_SAMPLING_RATIO.propertyName());
+        if (ratio != null) {
+          return Optional.of(Double.parseDouble(ratio));
+        }
       }
-      return Optional.of(Double.parseDouble(ratio));
     } catch (Exception e) {
       System.out.println("Exception while getting ratio property: " + e);
     }

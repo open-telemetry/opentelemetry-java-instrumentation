@@ -24,7 +24,7 @@ public class HeliosProcessor implements SpanProcessor {
 
   @Override
   public boolean isStartRequired() {
-    return false;
+    return true;
   }
 
   @Override
