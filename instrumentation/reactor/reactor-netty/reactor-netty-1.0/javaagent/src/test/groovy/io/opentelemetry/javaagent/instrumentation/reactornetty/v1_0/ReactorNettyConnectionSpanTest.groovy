@@ -74,7 +74,7 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "net.sock.peer.addr" "127.0.0.1"
           }
         }
         span(2) {
@@ -95,7 +95,7 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "net.sock.peer.addr" "127.0.0.1"
           }
         }
         span(4) {
@@ -170,7 +170,7 @@ class ReactorNettyConnectionSpanTest extends InstrumentationSpecification implem
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" PortUtils.UNUSABLE_PORT
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "net.sock.peer.addr" "127.0.0.1"
           }
         }
       }

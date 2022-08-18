@@ -120,7 +120,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "net.sock.peer.addr" "127.0.0.1"
           }
         }
         span(3) {
@@ -180,7 +180,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
+            "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
           }
         }
       }

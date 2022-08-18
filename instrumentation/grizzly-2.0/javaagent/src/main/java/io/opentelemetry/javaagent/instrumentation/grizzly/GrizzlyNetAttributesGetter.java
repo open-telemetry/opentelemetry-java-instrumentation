@@ -18,13 +18,13 @@ final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<Http
   }
 
   @Override
-  public Integer peerPort(HttpRequestPacket request) {
+  public Integer sockPeerPort(HttpRequestPacket request) {
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String peerIp(HttpRequestPacket request) {
+  public String sockPeerAddr(HttpRequestPacket request) {
     return request.getRemoteAddress();
   }
 }

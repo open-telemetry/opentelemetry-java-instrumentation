@@ -64,9 +64,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_PORT" Long
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/listProducts"
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -156,9 +155,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             childOf(span(0))
             attributes {
               "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-              "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-              "$SemanticAttributes.NET_PEER_PORT" Long
-              "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+              "net.sock.peer.addr" "127.0.0.1"
+              "net.sock.peer.port" Long
               "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
               "$SemanticAttributes.HTTP_TARGET" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
               "$SemanticAttributes.HTTP_METHOD" "GET"

@@ -105,7 +105,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
@@ -223,7 +223,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "CreateIndexAction"
@@ -238,7 +238,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GetAction"
@@ -268,7 +268,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "IndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "IndexAction"
@@ -289,7 +289,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" tcpPublishAddress.address
+            "$SemanticAttributes.NET_PEER_NAME" tcpPublishAddress.address
             "$SemanticAttributes.NET_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GetAction"

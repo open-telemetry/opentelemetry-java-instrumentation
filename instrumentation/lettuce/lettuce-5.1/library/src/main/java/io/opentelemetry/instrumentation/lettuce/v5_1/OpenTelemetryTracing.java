@@ -69,10 +69,7 @@ final class OpenTelemetryTracing implements Tracing {
   @Nullable
   public Endpoint createEndpoint(SocketAddress socketAddress) {
     if (socketAddress instanceof InetSocketAddress) {
-      InetSocketAddress address = (InetSocketAddress) socketAddress;
-
-      String ip = address.getAddress() == null ? null : address.getAddress().getHostAddress();
-      return new OpenTelemetryEndpoint(ip, address.getPort(), address.getHostString());
+      return new OpenTelemetryEndpoint((InetSocketAddress) socketAddress);
     }
     return null;
   }
@@ -113,14 +110,10 @@ final class OpenTelemetryTracing implements Tracing {
   }
 
   static class OpenTelemetryEndpoint implements Endpoint {
-    @Nullable final String ip;
-    final int port;
-    @Nullable final String name;
+    @Nullable final InetSocketAddress address;
 
-    OpenTelemetryEndpoint(@Nullable String ip, int port, @Nullable String name) {
-      this.ip = ip;
-      this.port = port;
-      this.name = name;
+    OpenTelemetryEndpoint(@Nullable InetSocketAddress address) {
+      this.address = address;
     }
   }
 
