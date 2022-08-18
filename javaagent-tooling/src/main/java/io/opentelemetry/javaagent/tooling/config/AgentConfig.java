@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.isHsDebugEnabled;
+
 import io.opentelemetry.instrumentation.api.config.Config;
 
 public final class AgentConfig {
@@ -40,6 +42,9 @@ public final class AgentConfig {
   }
 
   public boolean isDebugModeEnabled() {
+    if (isHsDebugEnabled()) {
+      return true;
+    }
     return config.getBoolean("otel.javaagent.debug", false);
   }
 }

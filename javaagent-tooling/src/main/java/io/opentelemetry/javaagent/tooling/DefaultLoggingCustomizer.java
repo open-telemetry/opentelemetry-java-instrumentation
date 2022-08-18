@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.isHsDebugEnabled;
+
 import java.util.Locale;
 
 final class DefaultLoggingCustomizer implements LoggingCustomizer {
@@ -60,6 +62,10 @@ final class DefaultLoggingCustomizer implements LoggingCustomizer {
   private static boolean isDebugMode() {
     String tracerDebugLevelSysprop = "otel.javaagent.debug";
     String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
+
+    if (isHsDebugEnabled()) {
+      return true;
+    }
 
     if (tracerDebugLevelProp != null) {
       return Boolean.parseBoolean(tracerDebugLevelProp);
