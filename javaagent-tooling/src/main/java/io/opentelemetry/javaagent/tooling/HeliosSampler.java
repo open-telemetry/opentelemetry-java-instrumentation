@@ -16,8 +16,13 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import java.util.List;
+import java.util.logging.Logger;
+import static java.util.logging.Level.WARNING;
 
 public class HeliosSampler implements Sampler {
+
+  private static final Logger logger = Logger.getLogger(HeliosSampler.class.getName());
+
   private final Sampler ratioBasedSampler;
 
   public HeliosSampler(Double ratio) {
@@ -44,7 +49,7 @@ public class HeliosSampler implements Sampler {
         return SamplingResult.recordAndSample();
       }
     } catch (Exception e) {
-      System.out.println("Got exception when trying to sample span: " + e);
+      logger.log(WARNING,"Got exception when trying to sample span: " + e);
     }
 
     return this.ratioBasedSampler.shouldSample(context, traceId, name, spanKind, attributes, list);
