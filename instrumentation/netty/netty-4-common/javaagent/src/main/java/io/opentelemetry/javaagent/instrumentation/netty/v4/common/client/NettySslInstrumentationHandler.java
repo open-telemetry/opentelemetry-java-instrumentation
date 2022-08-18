@@ -22,6 +22,8 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
   private static final Class<?> SSL_HANDSHAKE_COMPLETION_EVENT;
   private static final MethodHandle GET_CAUSE;
 
+  // this is used elsewhere to manage the link between the underlying (user) handler and our handler
+  // which is needed below so that we can unlink this handler when we remove it below
   private static final VirtualField<ChannelHandler, ChannelHandler> instrumentationHandlerField =
       VirtualField.find(ChannelHandler.class, ChannelHandler.class);
 
