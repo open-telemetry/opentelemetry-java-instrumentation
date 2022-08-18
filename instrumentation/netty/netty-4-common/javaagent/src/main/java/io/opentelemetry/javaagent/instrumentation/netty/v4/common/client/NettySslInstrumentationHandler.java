@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
 
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -19,6 +21,11 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 
   private static final Class<?> SSL_HANDSHAKE_COMPLETION_EVENT;
   private static final MethodHandle GET_CAUSE;
+
+  // this is used elsewhere to manage the link between the underlying (user) handler and our handler
+  // which is needed below so that we can unlink this handler when we remove it below
+  private static final VirtualField<ChannelHandler, ChannelHandler> instrumentationHandlerField =
+      VirtualField.find(ChannelHandler.class, ChannelHandler.class);
 
   static {
     Class<?> sslHandshakeCompletionEvent = null;
@@ -41,12 +48,15 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
   }
 
   private final NettySslInstrumenter instrumenter;
+  private final ChannelHandler realHandler;
   private Context parentContext;
   private NettySslRequest request;
   private Context context;
 
-  public NettySslInstrumentationHandler(NettySslInstrumenter instrumenter) {
+  public NettySslInstrumentationHandler(
+      NettySslInstrumenter instrumenter, ChannelHandler realHandler) {
     this.instrumenter = instrumenter;
+    this.realHandler = realHandler;
   }
 
   @Override
@@ -55,6 +65,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     // are on classpath); checking just to be extra safe
     if (SSL_HANDSHAKE_COMPLETION_EVENT == null) {
       ctx.pipeline().remove(this);
+      instrumentationHandlerField.set(realHandler, null);
       ctx.fireChannelRegistered();
       return;
     }
@@ -94,6 +105,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     if (SSL_HANDSHAKE_COMPLETION_EVENT.isInstance(evt)) {
       if (ctx.pipeline().context(this) != null) {
         ctx.pipeline().remove(this);
+        instrumentationHandlerField.set(realHandler, null);
       }
 
       if (context != null) {
