@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.17.0 (2022-08-18)
+
 ### Migration notes
 
 - The `@WithSpan` and `@SpanAttribute` annotations has been moved from the
