@@ -21,14 +21,14 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Override
   @Nullable
-  public Integer peerPort(Request request) {
+  public Integer sockPeerPort(Request request) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
   }
 
   @Override
   @Nullable
-  public String peerIp(Request request) {
+  public String sockPeerAddr(Request request) {
     request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
     return request.remoteAddr().toString();
   }

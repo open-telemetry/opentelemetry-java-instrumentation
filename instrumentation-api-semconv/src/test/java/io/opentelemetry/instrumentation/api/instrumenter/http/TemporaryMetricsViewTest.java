@@ -34,7 +34,6 @@ class TemporaryMetricsViewTest {
         Attributes.builder()
             .put(SemanticAttributes.HTTP_STATUS_CODE, 500)
             .put(SemanticAttributes.NET_PEER_NAME, "somehost2")
-            .put(SemanticAttributes.NET_PEER_IP, "127.0.0.1")
             .put(SemanticAttributes.NET_PEER_PORT, 443)
             .build();
 
@@ -70,7 +69,6 @@ class TemporaryMetricsViewTest {
         Attributes.builder()
             .put(SemanticAttributes.HTTP_STATUS_CODE, 500)
             .put(SemanticAttributes.NET_PEER_NAME, "somehost2")
-            .put(SemanticAttributes.NET_PEER_IP, "127.0.0.1")
             .put(SemanticAttributes.NET_PEER_PORT, 443)
             .build();
 

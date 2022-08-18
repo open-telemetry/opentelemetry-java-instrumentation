@@ -38,10 +38,12 @@ public class ElasticTransportNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String peerIp(ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String sockPeerAddr(ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getAddress();
     }
     return null;
   }
+
+  // TODO (trask) implement sockFamily
 }

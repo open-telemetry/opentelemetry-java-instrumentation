@@ -32,10 +32,4 @@ final class ApacheHttpClientNetAttributesGetter
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getPort() : null;
   }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpMethod request, @Nullable HttpMethod response) {
-    return null;
-  }
 }

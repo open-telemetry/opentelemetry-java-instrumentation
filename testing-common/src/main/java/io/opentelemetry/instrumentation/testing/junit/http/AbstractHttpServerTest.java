@@ -587,18 +587,20 @@ public abstract class AbstractHttpServerTest<SERVER> {
                 .containsEntry(
                     SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
           }
-          if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+          if (httpAttributes.contains(AttributeKey.longKey("net.sock.peer.port"))) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.NET_PEER_PORT,
+                    AttributeKey.longKey("net.sock.peer.port"),
                     value ->
                         assertThat(value)
                             .isInstanceOf(Long.class)
                             .isNotEqualTo(Long.valueOf(port)));
           }
-          if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)) {
+          if (httpAttributes.contains(AttributeKey.stringKey("net.sock.peer.addr"))) {
             assertThat(attrs)
-                .containsEntry(SemanticAttributes.NET_PEER_IP, options.peerIp.apply(endpoint));
+                .containsEntry(
+                    AttributeKey.stringKey("net.sock.peer.addr"),
+                    options.sockPeerAddr.apply(endpoint));
           }
 
           assertThat(attrs)

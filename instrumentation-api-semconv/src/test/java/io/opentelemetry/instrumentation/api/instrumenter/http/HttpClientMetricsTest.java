@@ -39,7 +39,6 @@ class HttpClientMetricsTest {
             .put("http.target", "/")
             .put("http.scheme", "https")
             .put("net.peer.name", "localhost")
-            .put("net.peer.ip", "0.0.0.0")
             .put("net.peer.port", 1234)
             .put("http.request_content_length", 100)
             .build();

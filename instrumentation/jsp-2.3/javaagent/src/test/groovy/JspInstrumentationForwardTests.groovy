@@ -88,8 +88,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name route
           kind SERVER
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
@@ -156,8 +156,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name route
           kind SERVER
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
@@ -203,8 +203,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name route
           kind SERVER
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
@@ -298,8 +298,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name route
           kind SERVER
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
@@ -379,8 +379,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(JasperException, String)
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
@@ -439,8 +439,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           kind SERVER
           status UNSET
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route

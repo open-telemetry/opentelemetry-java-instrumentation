@@ -81,9 +81,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -150,9 +149,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -239,9 +237,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -306,9 +303,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           status UNSET
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/notfoundgreet"
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -352,9 +348,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/echo"
             "$SemanticAttributes.HTTP_METHOD" "POST"
@@ -403,9 +398,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -469,9 +463,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/double-greet-redirect"
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -503,9 +496,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/double-greet"
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -552,9 +544,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             hasNoParent()
             attributes {
               "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-              "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-              "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-              "$SemanticAttributes.NET_PEER_PORT" Long
+              "net.sock.peer.addr" "127.0.0.1"
+              "net.sock.peer.port" Long
               "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
               "$SemanticAttributes.HTTP_TARGET" urlPath
               "$SemanticAttributes.HTTP_METHOD" "GET"

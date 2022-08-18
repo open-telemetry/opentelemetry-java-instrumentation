@@ -157,7 +157,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     [
       SemanticAttributes.HTTP_ROUTE,
       SemanticAttributes.NET_TRANSPORT,
-      SemanticAttributes.NET_PEER_PORT
+      AttributeKey.stringKey("net.sock.peer.port")
     ] as Set
   }
 
@@ -225,12 +225,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     // the main trace assertion method to groovy to be able to call these assertions.
     @Override
     void assertTheTraces(
-        int size,
-        String traceId,
-        String parentId,
-        String method,
-        ServerEndpoint endpoint,
-        AggregatedHttpResponse response) {
+      int size,
+      String traceId,
+      String parentId,
+      String method,
+      ServerEndpoint endpoint,
+      AggregatedHttpResponse response) {
       HttpServerTest.this.assertTheTraces(size, traceId, parentId, method, endpoint, response)
     }
 

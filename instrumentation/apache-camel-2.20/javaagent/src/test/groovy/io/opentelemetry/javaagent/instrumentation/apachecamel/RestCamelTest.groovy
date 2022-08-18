@@ -95,8 +95,8 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" "/api/{module}/unit/{unitId}"
           }

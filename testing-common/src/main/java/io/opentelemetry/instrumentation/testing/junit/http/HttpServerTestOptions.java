@@ -32,7 +32,7 @@ public final class HttpServerTestOptions {
   BiFunction<ServerEndpoint, String, String> expectedServerSpanNameMapper =
       DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER;
   Function<ServerEndpoint, String> expectedHttpRoute = unused -> null;
-  Function<ServerEndpoint, String> peerIp = unused -> "127.0.0.1";
+  Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
   Throwable expectedException = new Exception(ServerEndpoint.EXCEPTION.getBody());
 
@@ -73,8 +73,8 @@ public final class HttpServerTestOptions {
     return this;
   }
 
-  public HttpServerTestOptions setPeerIp(Function<ServerEndpoint, String> peerIp) {
-    this.peerIp = peerIp;
+  public HttpServerTestOptions setSockPeerAddr(Function<ServerEndpoint, String> sockPeerAddr) {
+    this.sockPeerAddr = sockPeerAddr;
     return this;
   }
 

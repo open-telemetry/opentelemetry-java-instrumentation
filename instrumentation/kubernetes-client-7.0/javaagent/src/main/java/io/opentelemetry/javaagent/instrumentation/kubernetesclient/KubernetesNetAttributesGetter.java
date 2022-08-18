@@ -27,10 +27,4 @@ class KubernetesNetAttributesGetter implements NetClientAttributesGetter<Request
   public Integer peerPort(Request request, @Nullable ApiResponse<?> response) {
     return request.url().port();
   }
-
-  @Nullable
-  @Override
-  public String peerIp(Request request, @Nullable ApiResponse<?> response) {
-    return null;
-  }
 }

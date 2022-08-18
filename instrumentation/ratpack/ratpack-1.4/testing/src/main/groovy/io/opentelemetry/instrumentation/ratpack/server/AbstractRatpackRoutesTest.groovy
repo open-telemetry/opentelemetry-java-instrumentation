@@ -96,10 +96,8 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            // net.peer.name resolves to "127.0.0.1" on windows which is same as net.peer.ip so then not captured
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
+            "net.sock.peer.port" Long
 
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200

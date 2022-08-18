@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
+// TODO (trask) add more test coverage for #6268
 class NetClientAttributesExtractorTest {
 
   static class TestNetClientAttributesGetter
@@ -43,9 +45,9 @@ class NetClientAttributesExtractorTest {
     }
 
     @Override
-    public String peerIp(Map<String, String> request, Map<String, String> response) {
+    public String sockPeerAddr(Map<String, String> request, Map<String, String> response) {
       if (response != null) {
-        return response.get("peerIp");
+        return response.get("sockPeerAddr");
       }
       return null;
     }
@@ -58,12 +60,12 @@ class NetClientAttributesExtractorTest {
     request.put("transport", "TCP");
     request.put("peerName", "github.com");
     request.put("peerPort", "123");
-    request.put("peerIp", "1.2.3.4");
+    request.put("sockPeerAddr", "1.2.3.4");
 
     Map<String, String> response = new HashMap<>();
     response.put("peerName", "opentelemetry.io");
     response.put("peerPort", "42");
-    response.put("peerIp", "4.3.2.1");
+    response.put("sockPeerAddr", "4.3.2.1");
 
     TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
     NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
@@ -85,7 +87,7 @@ class NetClientAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_PEER_PORT, 42L),
-            entry(SemanticAttributes.NET_PEER_IP, "4.3.2.1"));
+            entry(AttributeKey.stringKey("net.sock.peer.addr"), "4.3.2.1"));
   }
 
   @Test
@@ -94,13 +96,13 @@ class NetClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("transport", "TCP");
     request.put("peerName", "1.2.3.4");
-    request.put("peerIp", "1.2.3.4");
+    request.put("sockPeerAddr", "1.2.3.4");
     request.put("peerPort", "123");
 
     Map<String, String> response = new HashMap<>();
     response.put("peerName", "4.3.2.1");
     response.put("peerPort", "42");
-    response.put("peerIp", "4.3.2.1");
+    response.put("sockPeerAddr", "4.3.2.1");
 
     TestNetClientAttributesGetter getter = new TestNetClientAttributesGetter();
     NetClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
@@ -121,7 +123,7 @@ class NetClientAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_PEER_PORT, 42L),
-            entry(SemanticAttributes.NET_PEER_IP, "4.3.2.1"));
+            entry(SemanticAttributes.NET_PEER_NAME, "4.3.2.1"));
   }
 
   @Test
