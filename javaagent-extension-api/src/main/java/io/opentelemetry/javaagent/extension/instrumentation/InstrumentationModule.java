@@ -98,7 +98,7 @@ public abstract class InstrumentationModule implements Ordered {
    * themselves on some other condition.
    */
   public boolean defaultEnabled(ConfigProperties config) {
-    return defaultEnabled();
+    return config.getBoolean("otel.instrumentation.common.default-enabled", true);
   }
 
   /**
