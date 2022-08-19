@@ -12,11 +12,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
@@ -35,9 +35,10 @@ public final class JdbcSingletons {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(dbAttributesGetter)
                     .setStatementSanitizationEnabled(
-                        ConfigPropertiesUtil.getBoolean(
-                            "otel.instrumentation.jdbc.statement-sanitizer.enabled",
-                            CommonConfig.get().isStatementSanitizationEnabled()))
+                        InstrumentationConfig.get()
+                            .getBoolean(
+                                "otel.instrumentation.jdbc.statement-sanitizer.enabled",
+                                CommonConfig.get().isStatementSanitizationEnabled()))
                     .build())
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
