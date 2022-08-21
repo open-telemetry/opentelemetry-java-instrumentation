@@ -45,7 +45,7 @@ public final class HttpClientMetrics implements OperationListener {
   public static OperationMetrics get() {
     return HttpClientMetrics::new;
   }
-
+  
   private final DoubleHistogram duration;
   private final LongHistogram requestSize;
   private final LongHistogram responseSize;
@@ -94,6 +94,7 @@ public final class HttpClientMetrics implements OperationListener {
         applyClientDurationAndSizeView(state.startAttributes(), endAttributes);
     duration.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS, durationAndSizeAttributes, context);
+    
     Long requestLength =
         getAttribute(
             SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, endAttributes, state.startAttributes());

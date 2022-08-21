@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.spring.web.SpringWebTelemetry;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
@@ -15,9 +16,12 @@ import org.springframework.web.client.RestTemplate;
 
 final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
+  
+  private final Attributes resourceAttributes;
 
-  RestTemplateBeanPostProcessor(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+  RestTemplateBeanPostProcessor(ObjectProvider<OpenTelemetry> openTelemetryProvider, Attributes resourceAttributes) {
     this.openTelemetryProvider = openTelemetryProvider;
+    this.resourceAttributes = resourceAttributes;
   }
 
   @Override
@@ -30,7 +34,7 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
     OpenTelemetry openTelemetry = openTelemetryProvider.getIfUnique();
     if (openTelemetry != null) {
       ClientHttpRequestInterceptor interceptor =
-          SpringWebTelemetry.create(openTelemetry).newInterceptor();
+          SpringWebTelemetry.create(openTelemetry, resourceAttributes).newInterceptor();
       addRestTemplateInterceptorIfNotPresent(restTemplate, interceptor);
     }
     return restTemplate;

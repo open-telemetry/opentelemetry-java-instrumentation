@@ -36,7 +36,6 @@ import javax.annotation.Nullable;
  * appropriate for that library and delegate to this class to create the {@link Instrumenter}.
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
-
   private static final SpanSuppressionStrategy spanSuppressionStrategy =
       SpanSuppressionStrategy.fromConfig(
           ConfigPropertiesUtil.getString(
@@ -55,6 +54,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   @Nullable private String instrumentationVersion;
   @Nullable private String schemaUrl = null;
+  
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();

@@ -31,7 +31,7 @@ class RestTemplateBeanPostProcessorTest {
 
   @BeforeEach
   void setUp() {
-    restTemplateBeanPostProcessor = new RestTemplateBeanPostProcessor(openTelemetryProvider);
+    restTemplateBeanPostProcessor = new RestTemplateBeanPostProcessor(openTelemetryProvider, resourceAttributes);
   }
 
   @Test

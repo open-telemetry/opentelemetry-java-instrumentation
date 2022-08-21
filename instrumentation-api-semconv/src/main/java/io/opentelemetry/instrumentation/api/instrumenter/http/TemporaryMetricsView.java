@@ -17,7 +17,6 @@ import java.util.function.BiConsumer;
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/3962#issuecomment-906606325
 @SuppressWarnings("rawtypes")
 final class TemporaryMetricsView {
-
   private static final Set<AttributeKey> durationAlwaysInclude = buildDurationAlwaysInclude();
   private static final Set<AttributeKey> durationClientView = buildDurationClientView();
   private static final Set<AttributeKey> durationServerView = buildDurationServerView();
@@ -30,6 +29,7 @@ final class TemporaryMetricsView {
     view.add(SemanticAttributes.HTTP_METHOD);
     view.add(SemanticAttributes.HTTP_STATUS_CODE); // Optional
     view.add(SemanticAttributes.HTTP_FLAVOR); // Optional
+    view.add(SemanticAttributes.PEER_SERVICE);
     return view;
   }
 
@@ -65,6 +65,7 @@ final class TemporaryMetricsView {
     view.add(SemanticAttributes.HTTP_SCHEME);
     view.add(SemanticAttributes.HTTP_FLAVOR);
     view.add(SemanticAttributes.HTTP_SERVER_NAME);
+    view.add(SemanticAttributes.PEER_SERVICE);
     return view;
   }
 

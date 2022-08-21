@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.web;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -16,22 +17,25 @@ import org.springframework.web.client.RestTemplate;
 public final class SpringWebTelemetry {
 
   /** Returns a new {@link SpringWebTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static SpringWebTelemetry create(OpenTelemetry openTelemetry) {
-    return builder(openTelemetry).build();
+  public static SpringWebTelemetry create(OpenTelemetry openTelemetry,Attributes resourceAttributes) {
+    return builder(openTelemetry, resourceAttributes).build();
   }
 
   /**
    * Returns a new {@link SpringWebTelemetryBuilder} configured with the given {@link
    * OpenTelemetry}.
    */
-  public static SpringWebTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new SpringWebTelemetryBuilder(openTelemetry);
+  public static SpringWebTelemetryBuilder builder(OpenTelemetry openTelemetry,Attributes resourceAttributes) {
+    return new SpringWebTelemetryBuilder(openTelemetry, resourceAttributes);
   }
 
   private final Instrumenter<HttpRequest, ClientHttpResponse> instrumenter;
+  
+  private final Attributes resourceAttributes;
 
-  SpringWebTelemetry(Instrumenter<HttpRequest, ClientHttpResponse> instrumenter) {
+  SpringWebTelemetry(Instrumenter<HttpRequest, ClientHttpResponse> instrumenter, Attributes resourceAttributes) {
     this.instrumenter = instrumenter;
+    this.resourceAttributes = resourceAttributes;
   }
 
   /**
@@ -43,6 +47,6 @@ public final class SpringWebTelemetry {
    * }</pre>
    */
   public ClientHttpRequestInterceptor newInterceptor() {
-    return new RestTemplateInterceptor(instrumenter);
+    return new RestTemplateInterceptor(instrumenter, resourceAttributes);
   }
 }

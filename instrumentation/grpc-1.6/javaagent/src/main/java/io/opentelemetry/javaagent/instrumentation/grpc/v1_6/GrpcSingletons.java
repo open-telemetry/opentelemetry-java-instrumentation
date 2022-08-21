@@ -9,8 +9,11 @@ import io.grpc.ClientInterceptor;
 import io.grpc.Context;
 import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttributesGetter;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 // Holds singleton references.
@@ -29,6 +32,9 @@ public final class GrpcSingletons {
 
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
+                .addAttributeExtractor(PeerServiceAttributesExtractor.create(
+                        new GrpcNetClientAttributesGetter(),
+                        CommonConfig.get().getPeerServiceMapping()))
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
             .build();
 

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.restte
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientsProperties;
+import io.opentelemetry.sdk.resources.Resource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,7 +32,7 @@ public class RestTemplateAutoConfiguration {
 
   @Bean
   public RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
-    return new RestTemplateBeanPostProcessor(openTelemetryProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider, Resource resource) {
+    return new RestTemplateBeanPostProcessor(openTelemetryProvider, resource.getAttributes());
   }
 }

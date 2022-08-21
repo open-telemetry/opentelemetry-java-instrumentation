@@ -77,7 +77,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final ErrorCauseExtractor errorCauseExtractor;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
-
+  
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
     this.tracer = builder.buildTracer();
@@ -164,7 +164,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
             .spanBuilder(spanNameExtractor.extract(request))
             .setSpanKind(spanKind)
             .setParent(parentContext);
-
+    
     if (startTime != null) {
       spanBuilder.setStartTimestamp(startTime);
     }
@@ -210,7 +210,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       @Nullable Throwable error,
       @Nullable Instant endTime) {
     Span span = Span.fromContext(context);
-
+    
     if (error != null) {
       error = errorCauseExtractor.extract(error);
       span.recordException(error);

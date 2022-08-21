@@ -10,6 +10,7 @@ import static org.mockito.BDDMockito.then;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.resources.Resource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,8 +33,8 @@ class SpringWebTelemetryTest {
   void shouldSkipWhenContextHasClientSpan() throws Exception {
     // given
     ClientHttpRequestInterceptor interceptor =
-        SpringWebTelemetry.create(testing.getOpenTelemetry()).newInterceptor();
-
+        SpringWebTelemetry.create(testing.getOpenTelemetry(), Resource.getDefault().getAttributes()).newInterceptor();
+    
     // when
     testing.runWithHttpClientSpan(
         "parent",
