@@ -21,6 +21,11 @@ public class AutoResourceProvider implements ResourceProvider {
 
   private static final AttributeKey<String> TELEMETRY_AUTO_VERSION =
       AttributeKey.stringKey("telemetry.auto.version");
+
+  private static final AttributeKey<String> DEPLOYMENT_ENVIRONMENT =
+      AttributeKey.stringKey("deployment.environment");
+
+  private static final AttributeKey<String> SERVICE_NAME = AttributeKey.stringKey("service.name");
   private static final String TELEMETRY_SDK_NAME_VALUE = "helios-opentelemetry-javaagent";
 
   @Override
@@ -29,7 +34,17 @@ public class AutoResourceProvider implements ResourceProvider {
     attributesBuilder.put(TELEMETRY_SDK_NAME, TELEMETRY_SDK_NAME_VALUE);
     attributesBuilder.put(TELEMETRY_SDK_VERSION, AgentVersion.VERSION);
     attributesBuilder.put(TELEMETRY_AUTO_VERSION, AgentVersion.VERSION);
+    attributesBuilder.put(DEPLOYMENT_ENVIRONMENT, getEnvironmentName());
+    attributesBuilder.put(SERVICE_NAME, getServiceName());
     Attributes attributes = attributesBuilder.build();
     return AgentVersion.VERSION == null ? Resource.empty() : Resource.create(attributes);
+  }
+
+  private String getEnvironmentName() {
+    return System.getenv("HS_ENVIRONMENT");
+  }
+
+  private String getServiceName() {
+    return System.getenv("HS_SERVICE_NAME");
   }
 }
