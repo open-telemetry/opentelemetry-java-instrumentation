@@ -34,8 +34,14 @@ public class AutoResourceProvider implements ResourceProvider {
     attributesBuilder.put(TELEMETRY_SDK_NAME, TELEMETRY_SDK_NAME_VALUE);
     attributesBuilder.put(TELEMETRY_SDK_VERSION, AgentVersion.VERSION);
     attributesBuilder.put(TELEMETRY_AUTO_VERSION, AgentVersion.VERSION);
-    attributesBuilder.put(DEPLOYMENT_ENVIRONMENT, getEnvironmentName());
-    attributesBuilder.put(SERVICE_NAME, getServiceName());
+    String environmentNameByHelios = getEnvironmentName();
+    if (environmentNameByHelios != null) {
+      attributesBuilder.put(DEPLOYMENT_ENVIRONMENT, environmentNameByHelios);
+    }
+    String serviceNameByHelios = getServiceName();
+    if (serviceNameByHelios != null) {
+      attributesBuilder.put(SERVICE_NAME, getServiceName());
+    }
     Attributes attributes = attributesBuilder.build();
     return AgentVersion.VERSION == null ? Resource.empty() : Resource.create(attributes);
   }
