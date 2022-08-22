@@ -80,4 +80,13 @@ public final class OpenTelemetryInstaller {
   }
 
   private OpenTelemetryInstaller() {}
+
+  static void setHeliosSystemProperties() {
+    String hsToken = System.getenv("HS_TOKEN");
+
+    System.setProperty("otel.exporter.otlp.headers", String.format("Authorization=%s", hsToken));
+    System.setProperty(
+        "otel.exporter.otlp.traces.endpoint", "https://collector.heliosphere.io/traces");
+    System.setProperty("otel.exporter.otlp.traces.protocol", "http/protobuf");
+  }
 }
