@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,18 +43,15 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
   }
 
   @Override
-  public Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    try {
-      RequestBody body =
-          HttpMethod.requiresRequestBody(method)
-              ? RequestBody.create(MediaType.parse("text/plain"), "")
-              : null;
-      Request.Builder request = new Request.Builder().url(uri.toURL()).method(method, body);
-      headers.forEach(request::header);
-      return request.build();
-    } catch (MalformedURLException e) {
-      throw new AssertionError("Invalid URL: " + uri, e);
-    }
+  public Request buildRequest(String method, URI uri, Map<String, String> headers)
+      throws Exception {
+    RequestBody body =
+        HttpMethod.requiresRequestBody(method)
+            ? RequestBody.create(MediaType.parse("text/plain"), "")
+            : null;
+    Request.Builder request = new Request.Builder().url(uri.toURL()).method(method, body);
+    headers.forEach(request::header);
+    return request.build();
   }
 
   @Override
