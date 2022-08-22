@@ -63,5 +63,6 @@ jobs:
           git push --set-upstream origin HEAD:update-opentelemetry-javaagent-to-${VERSION}
           gh pr create --title "$message" \
                        --body "$body" \
+                       --reviewer open-telemetry/java-instrumentation-approvers \
                        --repo open-telemetry/opentelemetry-operator \
                        --base main
