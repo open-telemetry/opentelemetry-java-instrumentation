@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getHsToken;
+
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
@@ -62,7 +64,7 @@ public class OpenTelemetryInstaller {
   }
 
   static void setHeliosSystemProperties() {
-    String hsToken = System.getenv("HS_TOKEN");
+    String hsToken = getHsToken();
 
     if (hsToken != null) {
       System.setProperty("otel.exporter.otlp.headers", String.format("Authorization=%s", hsToken));

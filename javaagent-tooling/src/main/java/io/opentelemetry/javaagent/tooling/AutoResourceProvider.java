@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getEnvironmentName;
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getServiceName;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.TELEMETRY_SDK_NAME;
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.TELEMETRY_SDK_VERSION;
 
@@ -38,19 +40,9 @@ public class AutoResourceProvider implements ResourceProvider {
     if (environmentNameByHelios != null) {
       attributesBuilder.put(DEPLOYMENT_ENVIRONMENT, environmentNameByHelios);
     }
-    String serviceNameByHelios = getServiceName();
-    if (serviceNameByHelios != null) {
-      attributesBuilder.put(SERVICE_NAME, getServiceName());
-    }
+    attributesBuilder.put(SERVICE_NAME, getServiceName());
+
     Attributes attributes = attributesBuilder.build();
     return AgentVersion.VERSION == null ? Resource.empty() : Resource.create(attributes);
-  }
-
-  private String getEnvironmentName() {
-    return System.getenv("HS_ENVIRONMENT");
-  }
-
-  private String getServiceName() {
-    return System.getenv("HS_SERVICE_NAME");
   }
 }
