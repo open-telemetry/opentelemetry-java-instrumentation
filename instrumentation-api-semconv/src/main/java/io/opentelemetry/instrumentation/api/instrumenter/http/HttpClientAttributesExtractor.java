@@ -62,8 +62,9 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     if (url == null || url.isEmpty()) {
       return url;
     }
+
     // replace username & password
-    return url.replaceFirst("(?<=\\/\\/)(.+)(?=@)", "username:password");
+    return url.substring(0, url.indexOf("//")+2) + url.substring(url.indexOf("@")+1);
   }
 
   @Override

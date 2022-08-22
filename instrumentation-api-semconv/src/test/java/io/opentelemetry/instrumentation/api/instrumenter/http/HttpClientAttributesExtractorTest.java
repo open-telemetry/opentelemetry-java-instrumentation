@@ -152,7 +152,7 @@ class HttpClientAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), request);
 
     assertThat(attributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_URL, "https://username:password@github.com"));
+        .containsOnly(entry(SemanticAttributes.HTTP_URL, "https://github.com"));
   }
 
   @Test
