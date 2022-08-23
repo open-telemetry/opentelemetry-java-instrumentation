@@ -5,14 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import static java.util.logging.Level.FINE;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import io.undertow.util.HttpString;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +17,7 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.json.JSONObject;
 
 public class UndertowHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServerExchange, HttpServerExchange> {
@@ -148,11 +146,6 @@ public class UndertowHttpAttributesGetter
 
   @Nullable
   static String toJsonString(Map<String, String> m) {
-    try {
-      return JSON_MAPPER.writeValueAsString(m);
-    } catch (IOException e) {
-      logger.log(FINE, "Failed converting headers map to json string", e);
-      return null;
-    }
+    return new JSONObject(m).toString();
   }
 }
