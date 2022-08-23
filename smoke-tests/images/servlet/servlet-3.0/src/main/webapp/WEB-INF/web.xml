@@ -4,9 +4,6 @@
          http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
   version="3.1">
   <display-name>smoke-test-app</display-name>
-  <listener>
-    <listener-class>io.opentelemetry.smoketest.matrix.ExceptionRequestListener</listener-class>
-  </listener>
   <servlet>
     <servlet-name>Headers</servlet-name>
     <servlet-class>io.opentelemetry.smoketest.matrix.HeaderDumpingServlet</servlet-class>
