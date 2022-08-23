@@ -63,9 +63,10 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       return url;
     }
 
+    int atIndex = url.indexOf("@");
     // replace username & password
-    if(url.contains("@")) {
-      return url.substring(0, url.indexOf("//")+2) + url.substring(url.indexOf("@")+1);
+    if (atIndex != -1) {
+      return url.substring(0, url.indexOf("//") + 2) + url.substring(atIndex + 1);
     } else {
       return url;
     }
