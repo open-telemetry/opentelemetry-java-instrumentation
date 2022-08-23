@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -20,16 +19,7 @@ public class ProcessMetrics {
 
   private ProcessMetrics() {}
 
-  /**
-   * Register observers for java runtime metrics.
-   *
-   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
-   */
-  @Deprecated
-  public static void registerObservers() {
-    registerObservers(GlobalOpenTelemetry.get());
-  }
-
+  /** Register observers for java runtime metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
     Meter meter = openTelemetry.getMeterProvider().get("io.opentelemetry.oshi");
     SystemInfo systemInfo = new SystemInfo();

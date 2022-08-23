@@ -22,13 +22,15 @@ class ConfigurationFileTest extends Specification {
   @Shared
   public File tmpDir
 
+  ConfigurationFileLoader loader = new ConfigurationFileLoader();
+
   def "should use env property"() {
     given:
     def path = createFile("config", "property1=val-env")
-    environmentVariables.set(ConfigInitializer.CONFIGURATION_FILE_ENV_VAR, path)
+    environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", path)
 
     when:
-    def properties = ConfigInitializer.loadConfigurationFile()
+    def properties = loader.get()
 
     then:
     properties.get("property1") == "val-env"
@@ -37,10 +39,10 @@ class ConfigurationFileTest extends Specification {
   def "should use system property"() {
     given:
     def path = createFile("config", "property1=val-sys")
-    System.setProperty(ConfigInitializer.CONFIGURATION_FILE_PROPERTY, path)
+    System.setProperty("otel.javaagent.configuration-file", path)
 
     when:
-    def properties = ConfigInitializer.loadConfigurationFile()
+    def properties = loader.get()
 
     then:
     properties.get("property1") == "val-sys"
@@ -51,11 +53,11 @@ class ConfigurationFileTest extends Specification {
     def pathEnv = createFile("configEnv", "property1=val-env")
     def pathSys = createFile("configSys", "property1=val-sys")
 
-    environmentVariables.set(ConfigInitializer.CONFIGURATION_FILE_ENV_VAR, pathEnv)
-    System.setProperty(ConfigInitializer.CONFIGURATION_FILE_PROPERTY, pathSys)
+    environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", pathEnv)
+    System.setProperty("otel.javaagent.configuration-file", pathSys)
 
     when:
-    def properties = ConfigInitializer.loadConfigurationFile()
+    def properties = loader.get()
 
     then:
     properties.get("property1") == "val-sys"
@@ -64,21 +66,21 @@ class ConfigurationFileTest extends Specification {
 
   def "should return empty properties if file does not exist"() {
     given:
-    environmentVariables.set(ConfigInitializer.CONFIGURATION_FILE_ENV_VAR, "somePath")
+    environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", "somePath")
 
     when:
-    def properties = ConfigInitializer.loadConfigurationFile()
+    def properties = loader.get()
 
     then:
-    !properties.propertyNames().hasMoreElements()
+    properties.isEmpty()
   }
 
   def "should return empty properties if property is not set"() {
     when:
-    def properties = ConfigInitializer.loadConfigurationFile()
+    def properties = loader.get()
 
     then:
-    !properties.propertyNames().hasMoreElements()
+    properties.isEmpty()
   }
 
   def createFile(String name, String contents) {

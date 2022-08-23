@@ -26,20 +26,9 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   Integer peerPort(REQUEST request, @Nullable RESPONSE response);
 
-  /**
-   * Returns the peerIp.
-   *
-   * @deprecated implement {@link #sockPeerAddr(Object, Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String peerIp(REQUEST request, @Nullable RESPONSE response) {
-    return null;
-  }
-
   @Nullable
   default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
-    return peerIp(request, response);
+    return null;
   }
 
   @Nullable

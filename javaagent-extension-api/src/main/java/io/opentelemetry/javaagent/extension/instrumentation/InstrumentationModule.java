@@ -31,11 +31,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 public abstract class InstrumentationModule implements Ordered {
 
-  @SuppressWarnings("deprecation") // Config usage, to be removed
-  private static final boolean DEFAULT_ENABLED =
-      io.opentelemetry.instrumentation.api.config.Config.get()
-          .getBoolean("otel.instrumentation.common.default-enabled", true);
-
   private final Set<String> instrumentationNames;
 
   /**
@@ -80,17 +75,6 @@ public abstract class InstrumentationModule implements Ordered {
    */
   public final String instrumentationName() {
     return instrumentationNames.iterator().next();
-  }
-
-  /**
-   * Allows instrumentation modules to disable themselves by default, or to additionally disable
-   * themselves on some other condition.
-   *
-   * @deprecated Use {@link #defaultEnabled(ConfigProperties)} instead.
-   */
-  @Deprecated
-  public boolean defaultEnabled() {
-    return DEFAULT_ENABLED;
   }
 
   /**

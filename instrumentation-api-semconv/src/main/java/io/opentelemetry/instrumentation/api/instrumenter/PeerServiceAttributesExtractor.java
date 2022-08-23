@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import static java.util.Collections.emptyMap;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
@@ -31,21 +29,6 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       Map<String, String> peerServiceMapping) {
     this.attributesGetter = attributesGetter;
     this.peerServiceMapping = peerServiceMapping;
-  }
-
-  /**
-   * Returns a new {@link PeerServiceAttributesExtractor} that will use the passed {@code
-   * netAttributesExtractor} instance to determine the value of the {@code peer.service} attribute.
-   *
-   * @deprecated Use {@link #create(NetClientAttributesGetter, Map)} instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-      NetClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    return create(
-        attributesGetter,
-        io.opentelemetry.instrumentation.api.config.Config.get()
-            .getMap("otel.instrumentation.common.peer-service-mapping", emptyMap()));
   }
 
   /**
