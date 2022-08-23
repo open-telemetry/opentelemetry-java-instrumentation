@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getHsToken;
+
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
@@ -40,6 +42,7 @@ public class OpenTelemetryInstaller {
       builder.setServiceClassLoader(classLoader);
     }
 
+    setHeliosSystemProperties();
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = builder.build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
 
@@ -58,5 +61,16 @@ public class OpenTelemetryInstaller {
     AgentLogEmitterProvider.set(logEmitterProvider);
 
     return autoConfiguredSdk;
+  }
+
+  static void setHeliosSystemProperties() {
+    String hsToken = getHsToken();
+
+    if (hsToken != null) {
+      System.setProperty("otel.exporter.otlp.headers", String.format("Authorization=%s", hsToken));
+    }
+    System.setProperty(
+        "otel.exporter.otlp.traces.endpoint", "https://collector.heliosphere.io/traces");
+    System.setProperty("otel.exporter.otlp.traces.protocol", "http/protobuf");
   }
 }
