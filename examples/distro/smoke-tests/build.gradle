@@ -10,7 +10,7 @@ dependencies {
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:0.16.0-alpha")
   testImplementation("io.opentelemetry:opentelemetry-api:1.6.0")
 
-  testImplementation("ch.qos.logback:logback-classic:1.2.3")
+  testImplementation("ch.qos.logback:logback-classic:1.4.0")
 }
 
 tasks.test {

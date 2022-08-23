@@ -31,13 +31,13 @@ val groovyVersion = "4.0.4"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.13.2.20220328",
+  "com.fasterxml.jackson:jackson-bom:2.13.3",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
-  "org.junit:junit-bom:5.8.2",
-  "org.testcontainers:testcontainers-bom:1.17.1",
+  "org.junit:junit-bom:5.9.0",
+  "org.testcontainers:testcontainers-bom:1.17.3",
 )
 
 val DEPENDENCY_SETS = listOf(
@@ -69,12 +69,12 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "org.mockito",
-    "4.5.1",
+    "4.7.0",
     listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
   ),
   DependencySet(
     "org.slf4j",
-    "1.7.36",
+    "2.0.0",
     listOf("slf4j-api", "slf4j-simple", "log4j-over-slf4j", "jcl-over-slf4j", "jul-to-slf4j")
   ),
 )
@@ -83,11 +83,11 @@ val DEPENDENCY_SETS = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "ch.qos.logback:logback-classic:1.2.11",
+  "ch.qos.logback:logback-classic:1.4.0",
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.9.7",
+  "com.uber.nullaway:nullaway:0.9.9",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",

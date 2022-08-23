@@ -24,7 +24,7 @@ dependencies {
   testImplementation("org.jooq:joox:1.6.2")
   testImplementation("com.jayway.jsonpath:json-path:2.6.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
-  testImplementation("org.slf4j:slf4j-simple:1.7.36")
+  testImplementation("org.slf4j:slf4j-simple:2.0.0")
 }
 
 tasks {
