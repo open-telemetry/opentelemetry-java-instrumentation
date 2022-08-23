@@ -22,7 +22,7 @@ class ConfigurationFileTest extends Specification {
   @Shared
   public File tmpDir
 
-  ConfigurationFileLoader loader = new ConfigurationFileLoader();
+  ConfigurationFileLoader loader = new ConfigurationFileLoader()
 
   def "should use env property"() {
     given:
