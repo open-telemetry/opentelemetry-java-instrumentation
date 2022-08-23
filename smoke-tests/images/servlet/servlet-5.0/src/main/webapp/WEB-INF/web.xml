@@ -3,6 +3,7 @@
   xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
          https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
   version="5.0">
+  <display-name>smoke-test-app</display-name>
   <listener>
     <listener-class>io.opentelemetry.smoketest.matrix.ExceptionRequestListener</listener-class>
   </listener>
@@ -24,14 +25,6 @@
     <servlet-class>io.opentelemetry.smoketest.matrix.ExceptionServlet</servlet-class>
   </servlet>
   <servlet>
-    <servlet-name>Forward</servlet-name>
-    <servlet-class>io.opentelemetry.smoketest.matrix.ForwardServlet</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>Include</servlet-name>
-    <servlet-class>io.opentelemetry.smoketest.matrix.IncludeServlet</servlet-class>
-  </servlet>
-  <servlet>
     <servlet-name>Jsp</servlet-name>
     <servlet-class>io.opentelemetry.smoketest.matrix.JspServlet</servlet-class>
   </servlet>
@@ -50,14 +43,6 @@
   <servlet-mapping>
     <servlet-name>Exception</servlet-name>
     <url-pattern>/exception</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>Forward</servlet-name>
-    <url-pattern>/forward</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>Include</servlet-name>
-    <url-pattern>/include</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>Jsp</servlet-name>
