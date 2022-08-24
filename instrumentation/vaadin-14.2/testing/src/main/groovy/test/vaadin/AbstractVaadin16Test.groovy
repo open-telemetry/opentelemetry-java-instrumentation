@@ -8,6 +8,7 @@ package test.vaadin
 
 import com.vaadin.flow.server.Version
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.sdk.trace.data.SpanData
 
 abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   static final boolean VAADIN_17 = Version.majorVersion >= 4
@@ -55,6 +56,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
           childOf span(0)
         }
         int spanIndex = 2
+        sortHandlerSpans(spans, spanIndex, handlers)
         handlers.each { handler ->
           span(spanIndex++) {
             name handler + ".handleRequest"
@@ -73,6 +75,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
         }
 
         int spanIndex = 2
+        sortHandlerSpans(spans, spanIndex, handlers)
         handlers.each { handler ->
           span(spanIndex++) {
             name handler + ".handleRequest"
@@ -101,6 +104,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
           childOf span(0)
         }
         int spanIndex = 2
+        sortHandlerSpans(spans, spanIndex, handlers)
         handlers.each { handler ->
           span(spanIndex++) {
             name handler + ".handleRequest"
@@ -133,6 +137,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
         }
 
         int spanIndex = 2
+        sortHandlerSpans(spans, spanIndex, handlers)
         handlers.each { handler ->
           span(spanIndex++) {
             name handler + ".handleRequest"
@@ -148,5 +153,13 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
         }
       }
     }
+  }
+
+  static void sortHandlerSpans(List<SpanData> spans, int startIndex, List<String> handlers) {
+    spans.subList(startIndex, startIndex + handlers.size()).sort({
+      // strip .handleRequest from span name to get the handler name
+      def handlerName = it.name.substring(0, it.name.indexOf('.'))
+      return handlers.indexOf(handlerName)
+    })
   }
 }
