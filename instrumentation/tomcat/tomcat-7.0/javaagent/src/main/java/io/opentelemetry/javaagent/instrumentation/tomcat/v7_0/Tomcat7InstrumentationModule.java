@@ -12,12 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHandlerInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Tomcat7InstrumentationModule extends InstrumentationModule {
+public class Tomcat7InstrumentationModule extends TomcatInstrumentationModule {
 
   public Tomcat7InstrumentationModule() {
     super("tomcat", "tomcat-7.0");

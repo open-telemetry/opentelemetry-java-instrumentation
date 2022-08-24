@@ -16,6 +16,7 @@ import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
+import org.json.JSONObject;
 
 public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
@@ -112,17 +113,21 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   @Nullable
   @Override
   public String requestHeaders(Request request, @Nullable Response response) {
-    return String.valueOf(mimeHeadersToMap(request.getMimeHeaders()));
+    return toJsonString(mimeHeadersToMap(request.getMimeHeaders()));
   }
 
   @Nullable
   @Override
   public String responseHeaders(Request request, Response response) {
-    return String.valueOf(mimeHeadersToMap(response.getMimeHeaders()));
+    return toJsonString(mimeHeadersToMap(response.getMimeHeaders()));
   }
 
   private Map<String, String> mimeHeadersToMap(MimeHeaders headers) {
     return Collections.list(headers.names()).stream()
         .collect(Collectors.toMap(Function.identity(), headers::getHeader));
+  }
+
+  private static String toJsonString(Map<String, String> m) {
+    return new JSONObject(m).toString();
   }
 }
