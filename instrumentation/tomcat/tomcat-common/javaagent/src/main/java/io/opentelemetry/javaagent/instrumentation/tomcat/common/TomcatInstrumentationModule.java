@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 
-@AutoService(InstrumentationModule.class)
 public abstract class TomcatInstrumentationModule extends InstrumentationModule {
 
   public TomcatInstrumentationModule(
