@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
@@ -14,17 +13,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.json.JSONObject;
 
 public class UndertowHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServerExchange, HttpServerExchange> {
-
-  private static final Logger logger =
-      Logger.getLogger(UndertowHttpAttributesGetter.class.getName());
-  public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
   @Override
   public String method(HttpServerExchange exchange) {
