@@ -113,13 +113,13 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   @Nullable
   @Override
   public String requestHeaders(Request request, @Nullable Response response) {
-    return String.valueOf(mimeHeadersToMap(request.getMimeHeaders()));
+    return toJsonString(mimeHeadersToMap(request.getMimeHeaders()));
   }
 
   @Nullable
   @Override
   public String responseHeaders(Request request, Response response) {
-    return String.valueOf(mimeHeadersToMap(response.getMimeHeaders()));
+    return toJsonString(mimeHeadersToMap(response.getMimeHeaders()));
   }
 
   private Map<String, String> mimeHeadersToMap(MimeHeaders headers) {
