@@ -15,13 +15,31 @@ public class UndertowNetAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<HttpServerExchange> {
 
   @Override
+  public String transport(HttpServerExchange exchange) {
+    return SemanticAttributes.NetTransportValues.IP_TCP;
+  }
+
   @Nullable
-  public InetSocketAddress getAddress(HttpServerExchange exchange) {
-    return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
+  @Override
+  public String hostName(HttpServerExchange exchange) {
+    return exchange.getHostName();
+  }
+
+  @Nullable
+  @Override
+  public Integer hostPort(HttpServerExchange exchange) {
+    return exchange.getHostPort();
   }
 
   @Override
-  public String transport(HttpServerExchange exchange) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  @Nullable
+  public InetSocketAddress getPeerAddress(HttpServerExchange exchange) {
+    return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getHostAddress(HttpServerExchange exchange) {
+    return exchange.getConnection().getLocalAddress(InetSocketAddress.class);
   }
 }

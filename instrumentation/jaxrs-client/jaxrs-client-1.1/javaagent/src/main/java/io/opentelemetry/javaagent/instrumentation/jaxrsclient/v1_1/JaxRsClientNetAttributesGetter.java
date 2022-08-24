@@ -27,10 +27,30 @@ final class JaxRsClientNetAttributesGetter
 
   @Override
   public Integer peerPort(ClientRequest request, @Nullable ClientResponse response) {
-    int port = request.getURI().getPort();
-    if (port != -1) {
-      return port;
-    }
+    return request.getURI().getPort();
+  }
+
+  @Nullable
+  @Override
+  public String sockFamily(ClientRequest request, @Nullable ClientResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerAddr(ClientRequest request, @Nullable ClientResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerName(ClientRequest request, @Nullable ClientResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(ClientRequest request, @Nullable ClientResponse response) {
     return null;
   }
 }

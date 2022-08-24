@@ -18,18 +18,37 @@ import javax.annotation.Nullable;
  */
 public final class GrpcNetServerAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<GrpcRequest> {
+
+  @Override
+  public String transport(GrpcRequest request) {
+    return SemanticAttributes.NetTransportValues.IP_TCP;
+  }
+
+  @Nullable
+  @Override
+  public String hostName(GrpcRequest grpcRequest) {
+    return grpcRequest.getLogicalHost();
+  }
+
+  @Override
+  public Integer hostPort(GrpcRequest grpcRequest) {
+    return grpcRequest.getLogicalPort();
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getAddress(GrpcRequest request) {
-    SocketAddress address = request.getRemoteAddress();
+  public InetSocketAddress getPeerAddress(GrpcRequest request) {
+    SocketAddress address = request.getPeerAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }
     return null;
   }
 
+  @Nullable
   @Override
-  public String transport(GrpcRequest request) {
-    return SemanticAttributes.NetTransportValues.IP_TCP;
+  public InetSocketAddress getHostAddress(GrpcRequest grpcRequest) {
+    // TODO: later version introduces TRANSPORT_ATTR_LOCAL_ADDR, might be a good idea to use it
+    return null;
   }
 }

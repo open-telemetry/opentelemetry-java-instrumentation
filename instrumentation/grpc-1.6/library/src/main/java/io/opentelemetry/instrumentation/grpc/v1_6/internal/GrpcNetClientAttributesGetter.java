@@ -19,18 +19,30 @@ import javax.annotation.Nullable;
  */
 public final class GrpcNetClientAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<GrpcRequest, Status> {
-  @Override
-  @Nullable
-  public InetSocketAddress getAddress(GrpcRequest request, @Nullable Status response) {
-    SocketAddress address = request.getRemoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
-  }
 
   @Override
   public String transport(GrpcRequest request, @Nullable Status response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
+  }
+
+  @Nullable
+  @Override
+  public String peerName(GrpcRequest grpcRequest, @Nullable Status status) {
+    return grpcRequest.getLogicalHost();
+  }
+
+  @Override
+  public Integer peerPort(GrpcRequest grpcRequest, @Nullable Status status) {
+    return grpcRequest.getLogicalPort();
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getPeerAddress(GrpcRequest request, @Nullable Status response) {
+    SocketAddress address = request.getPeerAddress();
+    if (address instanceof InetSocketAddress) {
+      return (InetSocketAddress) address;
+    }
+    return null;
   }
 }

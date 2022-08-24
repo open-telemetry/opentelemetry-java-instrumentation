@@ -24,10 +24,32 @@ final class NettyNetServerAttributesGetter
     return requestAndChannel.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String hostName(HttpRequestAndChannel requestAndChannel) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer hostPort(HttpRequestAndChannel requestAndChannel) {
+    return null;
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getAddress(HttpRequestAndChannel requestAndChannel) {
+  public InetSocketAddress getPeerAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.remoteAddress();
+    if (address instanceof InetSocketAddress) {
+      return (InetSocketAddress) address;
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getHostAddress(HttpRequestAndChannel requestAndChannel) {
+    SocketAddress address = requestAndChannel.channel().localAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }

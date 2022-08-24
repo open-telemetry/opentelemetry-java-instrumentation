@@ -19,25 +19,42 @@ import javax.annotation.Nullable;
 final class NettyConnectNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<NettyConnectionRequest, Channel> {
 
+  @Override
+  public String transport(NettyConnectionRequest request, @Nullable Channel channel) {
+    return channel instanceof DatagramChannel ? IP_UDP : IP_TCP;
+  }
+
   @Nullable
   @Override
-  public InetSocketAddress getAddress(NettyConnectionRequest request, @Nullable Channel channel) {
-    SocketAddress remoteAddress = null;
-    if (channel != null) {
-      remoteAddress = channel.remoteAddress();
-    }
-    // remote address on end() may be null when connection hasn't been established
-    if (remoteAddress == null) {
-      remoteAddress = request.remoteAddressOnStart();
-    }
-    if (remoteAddress instanceof InetSocketAddress) {
-      return (InetSocketAddress) remoteAddress;
+  public String peerName(NettyConnectionRequest request, @Nullable Channel channel) {
+    SocketAddress requestedAddress = request.remoteAddressOnStart();
+    if (requestedAddress instanceof InetSocketAddress) {
+      return ((InetSocketAddress) requestedAddress).getHostString();
     }
     return null;
   }
 
+  @Nullable
   @Override
-  public String transport(NettyConnectionRequest request, @Nullable Channel channel) {
-    return channel instanceof DatagramChannel ? IP_UDP : IP_TCP;
+  public Integer peerPort(NettyConnectionRequest request, @Nullable Channel channel) {
+    SocketAddress requestedAddress = request.remoteAddressOnStart();
+    if (requestedAddress instanceof InetSocketAddress) {
+      return ((InetSocketAddress) requestedAddress).getPort();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getPeerAddress(
+      NettyConnectionRequest request, @Nullable Channel channel) {
+    if (channel == null) {
+      return null;
+    }
+    SocketAddress remoteAddress = channel.remoteAddress();
+    if (remoteAddress instanceof InetSocketAddress) {
+      return (InetSocketAddress) remoteAddress;
+    }
+    return null;
   }
 }

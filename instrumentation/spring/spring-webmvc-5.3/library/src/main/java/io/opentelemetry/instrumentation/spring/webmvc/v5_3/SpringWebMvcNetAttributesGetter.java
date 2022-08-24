@@ -18,14 +18,48 @@ enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpSe
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
   @Override
-  public Integer sockPeerPort(HttpServletRequest request) {
-    return request.getRemotePort();
+  public String hostName(HttpServletRequest request) {
+    return request.getServerName();
+  }
+
+  @Override
+  public Integer hostPort(HttpServletRequest request) {
+    return request.getServerPort();
+  }
+
+  @Nullable
+  @Override
+  public String sockFamily(HttpServletRequest request) {
+    return null;
   }
 
   @Override
   @Nullable
   public String sockPeerAddr(HttpServletRequest request) {
     return request.getRemoteAddr();
+  }
+
+  @Override
+  public Integer sockPeerPort(HttpServletRequest request) {
+    return request.getRemotePort();
+  }
+
+  @Nullable
+  @Override
+  public String sockHostAddr(HttpServletRequest request) {
+    return request.getLocalAddr();
+  }
+
+  @Nullable
+  @Override
+  public String sockHostName(HttpServletRequest request) {
+    return request.getLocalName();
+  }
+
+  @Override
+  public Integer sockHostPort(HttpServletRequest request) {
+    return request.getLocalPort();
   }
 }

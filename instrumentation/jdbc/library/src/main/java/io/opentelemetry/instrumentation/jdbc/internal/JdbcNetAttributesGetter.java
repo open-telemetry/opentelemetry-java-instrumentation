@@ -31,4 +31,28 @@ public final class JdbcNetAttributesGetter implements NetClientAttributesGetter<
   public Integer peerPort(DbRequest request, @Nullable Void unused) {
     return request.getDbInfo().getPort();
   }
+
+  @Nullable
+  @Override
+  public String sockFamily(DbRequest dbRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerAddr(DbRequest dbRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerName(DbRequest dbRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(DbRequest dbRequest, @Nullable Void unused) {
+    return null;
+  }
 }

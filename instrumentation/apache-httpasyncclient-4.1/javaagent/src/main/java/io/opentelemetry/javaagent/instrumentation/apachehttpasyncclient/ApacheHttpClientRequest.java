@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -27,8 +29,9 @@ public final class ApacheHttpClientRequest {
   @Nullable private final URI uri;
 
   private final HttpRequest delegate;
+  @Nullable private final HttpHost target;
 
-  public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && httpHost != null) {
       uri = getCalculatedUri(httpHost, calculatedUri);
@@ -36,6 +39,7 @@ public final class ApacheHttpClientRequest {
       uri = calculatedUri;
     }
     delegate = httpRequest;
+    target = httpHost;
   }
 
   public List<String> getHeader(String name) {
@@ -142,5 +146,14 @@ public final class ApacheHttpClientRequest {
       logger.log(FINE, e.getMessage(), e);
       return null;
     }
+  }
+
+  @Nullable
+  public InetSocketAddress peerAddress() {
+    if (target == null) {
+      return null;
+    }
+    InetAddress inetAddress = target.getAddress();
+    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 }

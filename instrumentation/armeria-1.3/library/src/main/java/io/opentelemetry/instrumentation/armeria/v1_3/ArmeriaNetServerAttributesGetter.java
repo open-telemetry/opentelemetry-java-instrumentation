@@ -20,10 +20,32 @@ final class ArmeriaNetServerAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String hostName(RequestContext ctx) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer hostPort(RequestContext ctx) {
+    return null;
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getAddress(RequestContext ctx) {
+  public InetSocketAddress getPeerAddress(RequestContext ctx) {
     SocketAddress address = ctx.remoteAddress();
+    if (address instanceof InetSocketAddress) {
+      return (InetSocketAddress) address;
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getHostAddress(RequestContext ctx) {
+    SocketAddress address = ctx.localAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }

@@ -13,19 +13,53 @@ public class LibertyDispatcherNetAttributesGetter
     implements NetServerAttributesGetter<LibertyRequest> {
 
   @Override
-  public String transport(LibertyRequest libertyRequest) {
+  public String transport(LibertyRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
-  @Override
   @Nullable
-  public Integer sockPeerPort(LibertyRequest libertyRequest) {
-    return libertyRequest.peerPort();
+  @Override
+  public String hostName(LibertyRequest request) {
+    return request.request().getURLHost();
+  }
+
+  @Override
+  public Integer hostPort(LibertyRequest request) {
+    return request.request().getURLPort();
+  }
+
+  @Nullable
+  @Override
+  public String sockFamily(LibertyRequest request) {
+    return null;
   }
 
   @Override
   @Nullable
-  public String sockPeerAddr(LibertyRequest libertyRequest) {
-    return libertyRequest.peerIp();
+  public String sockPeerAddr(LibertyRequest request) {
+    return request.dispatcher().getRemoteHostAddress();
+  }
+
+  @Override
+  public Integer sockPeerPort(LibertyRequest request) {
+    return request.dispatcher().getRemotePort();
+  }
+
+  @Nullable
+  @Override
+  public String sockHostAddr(LibertyRequest request) {
+    return request.dispatcher().getLocalHostAddress();
+  }
+
+  @Nullable
+  @Override
+  public String sockHostName(LibertyRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockHostPort(LibertyRequest request) {
+    return request.dispatcher().getLocalPort();
   }
 }

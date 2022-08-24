@@ -21,9 +21,21 @@ final class CassandraNetAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String peerName(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer peerPort(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+    return null;
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getAddress(
+  public InetSocketAddress getPeerAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;

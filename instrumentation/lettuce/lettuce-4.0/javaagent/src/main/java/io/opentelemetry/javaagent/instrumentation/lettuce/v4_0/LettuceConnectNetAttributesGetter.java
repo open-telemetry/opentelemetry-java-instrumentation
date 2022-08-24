@@ -26,4 +26,28 @@ final class LettuceConnectNetAttributesGetter implements NetClientAttributesGett
   public Integer peerPort(RedisURI redisUri, @Nullable Void unused) {
     return redisUri.getPort();
   }
+
+  @Nullable
+  @Override
+  public String sockFamily(RedisURI redisUri, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerAddr(RedisURI redisUri, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerName(RedisURI redisUri, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(RedisURI redisUri, @Nullable Void unused) {
+    return null;
+  }
 }

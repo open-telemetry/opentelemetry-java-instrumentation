@@ -19,9 +19,20 @@ final class AsyncHttpClientNetAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String peerName(RequestContext requestContext, @Nullable Response response) {
+    return requestContext.getRequest().getUri().getHost();
+  }
+
+  @Override
+  public Integer peerPort(RequestContext requestContext, @Nullable Response response) {
+    return requestContext.getRequest().getUri().getPort();
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getAddress(RequestContext request, @Nullable Response response) {
+  public InetSocketAddress getPeerAddress(RequestContext request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();
     }

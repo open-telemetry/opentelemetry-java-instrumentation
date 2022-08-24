@@ -27,4 +27,28 @@ class HttpUrlNetAttributesGetter implements NetClientAttributesGetter<HttpURLCon
   public Integer peerPort(HttpURLConnection connection, @Nullable Integer status) {
     return connection.getURL().getPort();
   }
+
+  @Nullable
+  @Override
+  public String sockFamily(HttpURLConnection connection, @Nullable Integer status) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerAddr(HttpURLConnection connection, @Nullable Integer status) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerName(HttpURLConnection connection, @Nullable Integer status) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(HttpURLConnection connection, @Nullable Integer status) {
+    return null;
+  }
 }

@@ -48,6 +48,18 @@ final class ElasticsearchRestNetResponseAttributesGetter
 
   @Nullable
   @Override
+  public String sockPeerName(ElasticsearchRestRequest request, @Nullable Response response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(ElasticsearchRestRequest request, @Nullable Response response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String sockFamily(
       ElasticsearchRestRequest elasticsearchRestRequest, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() instanceof Inet6Address) {

@@ -16,17 +16,29 @@ import javax.annotation.Nullable;
 final class NettySslNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<NettySslRequest, Void> {
 
+  @Override
+  public String transport(NettySslRequest request, @Nullable Void unused) {
+    return request.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
+  }
+
   @Nullable
   @Override
-  public InetSocketAddress getAddress(NettySslRequest request, @Nullable Void unused) {
+  public String peerName(NettySslRequest nettySslRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer peerPort(NettySslRequest nettySslRequest, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getPeerAddress(NettySslRequest request, @Nullable Void unused) {
     if (request.remoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) request.remoteAddress();
     }
     return null;
-  }
-
-  @Override
-  public String transport(NettySslRequest request, @Nullable Void unused) {
-    return request.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 }

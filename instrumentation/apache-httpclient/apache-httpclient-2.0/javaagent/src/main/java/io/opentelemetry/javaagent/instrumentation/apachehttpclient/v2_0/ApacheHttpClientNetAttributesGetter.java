@@ -32,4 +32,28 @@ final class ApacheHttpClientNetAttributesGetter
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getPort() : null;
   }
+
+  @Nullable
+  @Override
+  public String sockFamily(HttpMethod request, @Nullable HttpMethod response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerAddr(HttpMethod request, @Nullable HttpMethod response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerName(HttpMethod request, @Nullable HttpMethod response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(HttpMethod request, @Nullable HttpMethod response) {
+    return null;
+  }
 }
