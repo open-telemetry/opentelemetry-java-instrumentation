@@ -32,7 +32,6 @@ For more information, see the `extendedAgent` task in [build.gradle](build.gradl
 
 * Custom `IdGenerator`: [DemoIdGenerator](src/main/java/com/example/javaagent/DemoIdGenerator.java)
 * Custom `TextMapPropagator`: [DemoPropagator](src/main/java/com/example/javaagent/DemoPropagator.java)
-* New default configuration: [DemoPropertySource](src/main/java/com/example/javaagent/DemoPropertySource.java)
 * Custom `Sampler`: [DemoSampler](src/main/java/com/example/javaagent/DemoSampler.java)
 * Custom `SpanProcessor`: [DemoSpanProcessor](src/main/java/com/example/javaagent/DemoSpanProcessor.java)
 * Custom `SpanExporter`: [DemoSpanExporter](src/main/java/com/example/javaagent/DemoSpanExporter.java)
