@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
@@ -77,9 +78,7 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
-  @SuppressWarnings("deprecation") // Config usage, to be removed
-  public static void installBytebuddyAgent(
-      Instrumentation inst, io.opentelemetry.instrumentation.api.config.Config config) {
+  public static void installBytebuddyAgent(Instrumentation inst) {
     addByteBuddyRawSetting();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
@@ -89,20 +88,17 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    if (config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (ConfigPropertiesUtil.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
-      installBytebuddyAgent(inst, config, agentListeners);
+      installBytebuddyAgent(inst, agentListeners);
     } else {
       logger.fine("Tracing is disabled, not installing instrumentations.");
     }
   }
 
-  @SuppressWarnings("deprecation") // Config usage, to be removed
   private static void installBytebuddyAgent(
-      Instrumentation inst,
-      io.opentelemetry.instrumentation.api.config.Config config,
-      Iterable<AgentListener> agentListeners) {
+      Instrumentation inst, Iterable<AgentListener> agentListeners) {
 
     WeakRefAsyncOperationEndStrategies.initialize();
 
@@ -113,7 +109,7 @@ public class AgentInstaller {
 
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
-    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = installOpenTelemetrySdk(config);
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = installOpenTelemetrySdk();
 
     ConfigProperties sdkConfig = autoConfiguredSdk.getConfig();
     InstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
