@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider
 import spock.lang.Specification
 
@@ -25,7 +24,7 @@ class OpenTelemetryInstallerTest extends Specification {
 
   def "should initialize GlobalOpenTelemetry"() {
     when:
-    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk(Config.builder().build())
+    def otelInstaller = OpenTelemetryInstaller.installOpenTelemetrySdk()
 
     then:
     otelInstaller != null
