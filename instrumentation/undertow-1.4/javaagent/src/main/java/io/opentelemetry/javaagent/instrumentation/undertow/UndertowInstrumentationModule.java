@@ -20,6 +20,12 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return className.startsWith("com.opentelemetry.javaagent.instrumentation.undertow")
+        || className.startsWith("org.json");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new HandlerInstrumentation(), new HttpServerExchangeInstrumentation());
   }
