@@ -63,7 +63,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    * request a second time to verify that the traceparent header is not added multiple times to the
    * request, and that the last one wins. Tests will fail if the header shows multiple times.
    */
-  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers);
+  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
+      throws Exception;
 
   /**
    * Helper class for capturing result of asynchronous request and running a callback when result is

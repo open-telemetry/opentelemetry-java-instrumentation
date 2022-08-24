@@ -20,8 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Locale;
@@ -43,15 +41,11 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   }
 
   @Override
-  protected final HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+  protected final HttpRequest buildRequest(String method, URI uri, Map<String, String> headers)
+      throws Exception {
     GenericUrl genericUrl = new GenericUrl(uri);
 
-    HttpRequest request;
-    try {
-      request = requestFactory.buildRequest(method, genericUrl, null);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+    HttpRequest request = requestFactory.buildRequest(method, genericUrl, null);
     request.setConnectTimeout((int) connectTimeout().toMillis());
     if (uri.toString().contains("/read-timeout")) {
       request.setReadTimeout((int) readTimeout().toMillis());
