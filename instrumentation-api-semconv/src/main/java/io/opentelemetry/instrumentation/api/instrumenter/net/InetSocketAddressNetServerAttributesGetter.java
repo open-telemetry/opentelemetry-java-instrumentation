@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -20,22 +21,65 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
     implements NetServerAttributesGetter<REQUEST> {
 
   @Nullable
-  public abstract InetSocketAddress getAddress(REQUEST request);
+  public abstract InetSocketAddress getPeerAddress(REQUEST request);
 
-  @Override
+  // optional
   @Nullable
-  public final Integer sockPeerPort(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
+  public abstract InetSocketAddress getHostAddress(REQUEST request);
+
+  @Nullable
+  @Override
+  public String sockFamily(REQUEST request) {
+    InetSocketAddress address = getPeerAddress(request);
+    if (address == null) {
+      address = getHostAddress(request);
+    }
     if (address == null) {
       return null;
     }
-    return address.getPort();
+    InetAddress inetAddress = address.getAddress();
+    if (inetAddress instanceof Inet6Address) {
+      return "inet6";
+    }
+    return null;
   }
 
   @Override
   @Nullable
   public final String sockPeerAddr(REQUEST request) {
-    InetSocketAddress address = getAddress(request);
+    return getAddress(getPeerAddress(request));
+  }
+
+  @Override
+  @Nullable
+  public final Integer sockPeerPort(REQUEST request) {
+    return getPort(getPeerAddress(request));
+  }
+
+  @Nullable
+  @Override
+  public String sockHostAddr(REQUEST request) {
+    return getAddress(getHostAddress(request));
+  }
+
+  @Nullable
+  @Override
+  public String sockHostName(REQUEST request) {
+    InetSocketAddress address = getHostAddress(request);
+    if (address == null) {
+      return null;
+    }
+    return address.getHostString();
+  }
+
+  @Nullable
+  @Override
+  public Integer sockHostPort(REQUEST request) {
+    return getPort(getHostAddress(request));
+  }
+
+  @Nullable
+  private static String getAddress(InetSocketAddress address) {
     if (address == null) {
       return null;
     }
@@ -44,5 +88,13 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
       return remoteAddress.getHostAddress();
     }
     return null;
+  }
+
+  @Nullable
+  private static Integer getPort(InetSocketAddress address) {
+    if (address == null) {
+      return null;
+    }
+    return address.getPort();
   }
 }

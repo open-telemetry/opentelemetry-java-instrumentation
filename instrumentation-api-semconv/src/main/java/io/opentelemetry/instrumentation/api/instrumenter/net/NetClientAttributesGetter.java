@@ -20,6 +20,8 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   String transport(REQUEST request, @Nullable RESPONSE response);
 
+  // TODO: peerName and peerPort should be extracted onStart
+
   @Nullable
   String peerName(REQUEST request, @Nullable RESPONSE response);
 
@@ -27,22 +29,14 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   Integer peerPort(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
-    return null;
-  }
+  String sockFamily(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  default Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    return null;
-  }
+  String sockPeerAddr(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  default String sockFamily(REQUEST request, @Nullable RESPONSE response) {
-    return null;
-  }
+  String sockPeerName(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  default String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
-    return null;
-  }
+  Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response);
 }
