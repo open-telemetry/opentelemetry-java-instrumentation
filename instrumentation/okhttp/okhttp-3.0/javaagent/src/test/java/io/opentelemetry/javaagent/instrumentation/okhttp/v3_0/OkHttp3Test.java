@@ -27,6 +27,7 @@ public class OkHttp3Test extends AbstractOkHttp3Test {
   }
 
   @Test
+  @SuppressWarnings("PreferJavaTimeOverload")
   void reusedBuilderHasOneInterceptor() {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
