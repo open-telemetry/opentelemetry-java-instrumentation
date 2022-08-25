@@ -96,8 +96,13 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" { it == "localhost" || it == null }
+            "$SemanticAttributes.NET_HOST_PORT" { it instanceof Long || it == null }
             "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
-            "net.sock.peer.port" Long
+            "net.sock.peer.port" { it instanceof Long || it == null }
+            "net.sock.host.addr" { it == "127.0.0.1" || it == null }
+            "net.sock.host.name" { it == "localhost" || it == "127.0.0.1" || it == null }
+            "net.sock.host.port" { it instanceof Long || it == null }
 
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200

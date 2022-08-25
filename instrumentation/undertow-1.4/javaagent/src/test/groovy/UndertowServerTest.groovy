@@ -138,8 +138,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           }
 
           attributes {
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
             "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
             "$SemanticAttributes.HTTP_HOST" uri.getHost() + ":" + uri.getPort()
@@ -153,6 +151,12 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/sendResponse"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" uri.host
+            "$SemanticAttributes.NET_HOST_PORT" uri.port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.name" "127.0.0.1"
           }
         }
         span(1) {
@@ -191,8 +195,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           errorEvent(Exception, "exception after sending response", 2)
 
           attributes {
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
             "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
             "$SemanticAttributes.HTTP_HOST" uri.getHost() + ":" + uri.getPort()
@@ -206,6 +208,12 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/sendResponseWithException"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" uri.host
+            "$SemanticAttributes.NET_HOST_PORT" uri.port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.name" "127.0.0.1"
           }
         }
         span(1) {

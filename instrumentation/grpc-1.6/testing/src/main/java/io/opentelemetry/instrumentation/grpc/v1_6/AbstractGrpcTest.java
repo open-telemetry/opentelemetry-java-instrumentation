@@ -164,16 +164,18 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.OK.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -213,6 +215,8 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -342,16 +346,18 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.OK.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -394,6 +400,8 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -531,16 +539,18 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.OK.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -583,6 +593,8 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -684,16 +696,18 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) status.getCode().value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) status.getCode().value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).isNotEmpty();
@@ -729,6 +743,8 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -836,16 +852,18 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.UNKNOWN.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.UNKNOWN.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(2);
@@ -876,6 +894,8 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
+                                                equalTo(
+                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -1089,16 +1109,18 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.OK.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1230,16 +1252,18 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.CANCELLED.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.CANCELLED.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1371,16 +1395,18 @@ public abstract class AbstractGrpcTest {
                                     SemanticAttributes.RPC_SERVICE,
                                     "grpc.reflection.v1alpha.ServerReflection"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "ServerReflectionInfo"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.OK.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1495,16 +1521,18 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.OK.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event

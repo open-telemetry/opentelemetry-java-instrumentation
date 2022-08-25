@@ -199,6 +199,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.hasExceptionOnServerSpan = { endpoint ->
         HttpServerTest.this.hasExceptionOnServerSpan(endpoint)
       }
+      options.sockPeerAddr = { endpoint ->
+        HttpServerTest.this.peerIp(endpoint)
+      }
 
       options.testRedirect = testRedirect()
       options.testError = testError()
