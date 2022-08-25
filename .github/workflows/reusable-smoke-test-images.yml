@@ -55,20 +55,20 @@ jobs:
 
       - name: Build Java 8 Docker image
         if: ${{ !inputs.skip-java-8 }}
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 11 Docker image
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 17 Docker image
         if: ${{ !inputs.skip-java-17 }}
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
 
         # TODO (trask) remove Java 18 test once Java 19 is GA
       - name: Build Java 18 Docker image
         if: ${{ !inputs.skip-java-18 }}
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=18 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 19 Docker image
         if: ${{ !inputs.skip-java-19 }}
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -PtargetJDK=19 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=19 -Djib.httpTimeout=120000 -Djib.console=plain
