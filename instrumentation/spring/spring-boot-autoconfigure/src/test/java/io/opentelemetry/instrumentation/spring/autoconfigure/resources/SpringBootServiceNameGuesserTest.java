@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -95,9 +94,14 @@ class SpringBootServiceNameGuesserTest {
 
   @Test
   void getFromCommandlineArgsWithProcessHandle() throws Exception {
-    when(system.attemptGetCommandLineViaReflection())
+    when(system.attemptGetCommandLineArgsViaReflection())
         .thenReturn(
-            "/bin/java sweet-spring.jar --spring.application.name=tiger-town --quiet=never");
+            new String[] {
+              "/bin/java",
+              "sweet-spring.jar",
+              "--spring.application.name=tiger-town",
+              "--quiet=never"
+            });
     SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "tiger-town");

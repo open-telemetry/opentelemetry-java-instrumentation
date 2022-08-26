@@ -49,10 +49,11 @@ import org.yaml.snakeyaml.Yaml;
 @AutoService(ResourceProvider.class)
 public class SpringBootServiceNameGuesser implements ResourceProvider {
 
-  private static final Pattern COMMANDLINE_PATTERN =
-      Pattern.compile(".*--spring\\.application\\.name=([a-zA-Z.\\-_]+).*");
   private static final Logger logger =
       Logger.getLogger(SpringBootServiceNameGuesser.class.getName());
+  public static final String COMMANDLINE_ARG_PREFIX = "--spring.application.name=";
+  private static final Pattern COMMANDLINE_PATTERN =
+      Pattern.compile(".*--spring\\.application\\.name=([a-zA-Z.\\-_]+).*");
   private final SystemHelper system;
 
   public SpringBootServiceNameGuesser() {
@@ -179,8 +180,8 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
   @Nullable
   private String attemptProcessHandleReflection() {
     try {
-      String commandLine = system.attemptGetCommandLineViaReflection();
-      return parseNameFromCommandLine(commandLine);
+      String[] args = system.attemptGetCommandLineArgsViaReflection();
+      return parseNameFromProcessArgs(args);
     } catch (Exception e) {
       return null;
     }
@@ -196,6 +197,15 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
       return matcher.group(1);
     }
     return null;
+  }
+
+  @Nullable
+  private static String parseNameFromProcessArgs(String[] args) {
+    return Stream.of(args)
+        .filter(arg -> arg.startsWith(COMMANDLINE_ARG_PREFIX))
+        .map(arg -> arg.substring(COMMANDLINE_ARG_PREFIX.length()))
+        .findFirst()
+        .orElse(null);
   }
 
   @Nullable
@@ -249,16 +259,16 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
      * succeed on java 9+.
      */
     @SuppressWarnings("unchecked")
-    @Nullable
-    String attemptGetCommandLineViaReflection() throws Exception {
+    String[] attemptGetCommandLineArgsViaReflection() throws Exception {
       Class<?> clazz = Class.forName("java.lang.ProcessHandle");
       Method currentMethod = clazz.getDeclaredMethod("current");
       Method infoMethod = clazz.getDeclaredMethod("info");
       Object currentInstance = currentMethod.invoke(null);
       Object info = infoMethod.invoke(currentInstance);
-      Method commandLineMethod = info.getClass().getInterfaces()[0].getMethod("commandLine");
-      Object optionalCommandLine = commandLineMethod.invoke(info);
-      return ((Optional<String>) optionalCommandLine).orElse(null);
+      Class<?> infoClass = Class.forName("java.lang.ProcessHandle$Info");
+      Method argumentsMethod = infoClass.getMethod("arguments");
+      Optional<String[]> optionalArgs = (Optional<String[]>) argumentsMethod.invoke(info);
+      return optionalArgs.orElse(new String[0]);
     }
   }
 }
