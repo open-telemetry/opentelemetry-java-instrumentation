@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -22,10 +22,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SpringBootServiceNameGuesserTest {
@@ -117,18 +117,18 @@ class SpringBootServiceNameGuesserTest {
   }
 
   private static void writeString(Path path, String value) throws Exception {
-    try(OutputStream out = Files.newOutputStream(path)){
-      out.write(value.getBytes(StandardCharsets.UTF_8));
+    try (OutputStream out = Files.newOutputStream(path)) {
+      out.write(value.getBytes(UTF_8));
     }
   }
 
   private static String readString(Path path) throws Exception {
     StringBuilder buff = new StringBuilder();
     try (InputStream in = Files.newInputStream(path)) {
-      BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+      BufferedReader reader = new BufferedReader(new InputStreamReader(in, UTF_8));
       char[] block = new char[1024];
       int rc;
-      while((rc = reader.read(block)) > 0){
+      while ((rc = reader.read(block)) > 0) {
         buff.append(block, 0, rc);
       }
       return buff.toString();
