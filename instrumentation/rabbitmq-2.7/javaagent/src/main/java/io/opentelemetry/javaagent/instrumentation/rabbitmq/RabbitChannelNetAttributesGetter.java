@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import java.net.Inet6Address;
 import javax.annotation.Nullable;
 
 public class RabbitChannelNetAttributesGetter
@@ -21,7 +22,7 @@ public class RabbitChannelNetAttributesGetter
   @Override
   public String peerName(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     // not using InetAddress.getHostName() since that can trigger reverse name lookup
-    return null;
+    return channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
   }
 
   @Nullable
@@ -32,7 +33,16 @@ public class RabbitChannelNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerIp(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public String sockPeerAddr(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
+  }
+
+  @Nullable
+  @Override
+  public String sockFamily(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+    if (channelAndMethod.getChannel().getConnection().getAddress() instanceof Inet6Address) {
+      return "inet6";
+    }
+    return null;
   }
 }

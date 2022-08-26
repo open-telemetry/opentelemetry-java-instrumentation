@@ -88,6 +88,11 @@ tasks {
   withType<Test>().configureEach {
     environment("OTEL_TRACES_EXPORTER", "none")
     environment("OTEL_METRICS_EXPORTER", "none")
+
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
   // TODO this should live in jmh-conventions

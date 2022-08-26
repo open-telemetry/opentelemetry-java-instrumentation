@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -22,6 +23,10 @@ import javax.annotation.Nullable;
 public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
+  public static final AttributeKey<String> NET_SOCK_PEER_ADDR =
+      AttributeKey.stringKey("net.sock.peer.addr");
+  public static final AttributeKey<Long> NET_SOCK_PEER_PORT =
+      AttributeKey.longKey("net.sock.peer.port");
   private final NetServerAttributesGetter<REQUEST> getter;
 
   public static <REQUEST, RESPONSE> NetServerAttributesExtractor<REQUEST, RESPONSE> create(
@@ -37,13 +42,13 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request));
 
-    String peerIp = getter.peerIp(request);
+    String sockPeerAddr = getter.sockPeerAddr(request);
 
-    internalSet(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
+    internalSet(attributes, NET_SOCK_PEER_ADDR, sockPeerAddr);
 
-    Integer peerPort = getter.peerPort(request);
-    if (peerPort != null && peerPort > 0) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+    Integer sockPeerPort = getter.sockPeerPort(request);
+    if (sockPeerPort != null && sockPeerPort > 0) {
+      internalSet(attributes, NET_SOCK_PEER_PORT, (long) sockPeerPort);
     }
   }
 

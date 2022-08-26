@@ -33,10 +33,4 @@ final class JaxRsClientNetAttributesGetter
     }
     return null;
   }
-
-  @Override
-  @Nullable
-  public String peerIp(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
 }

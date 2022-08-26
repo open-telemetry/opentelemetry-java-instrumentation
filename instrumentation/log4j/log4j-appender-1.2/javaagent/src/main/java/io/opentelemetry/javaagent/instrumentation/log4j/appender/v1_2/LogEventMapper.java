@@ -11,7 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogRecordBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
@@ -63,7 +63,7 @@ public final class LogEventMapper {
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
-    LogBuilder builder =
+    LogRecordBuilder builder =
         AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
 
     // message
@@ -98,7 +98,7 @@ public final class LogEventMapper {
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
     }
 
-    builder.setAttributes(attributes.build());
+    builder.setAllAttributes(attributes.build());
 
     // span context
     builder.setContext(Context.current());

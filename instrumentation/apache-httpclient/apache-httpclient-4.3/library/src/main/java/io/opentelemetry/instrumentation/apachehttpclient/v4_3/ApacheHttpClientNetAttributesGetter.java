@@ -29,10 +29,4 @@ final class ApacheHttpClientNetAttributesGetter
   public Integer peerPort(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getPeerPort();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
 }

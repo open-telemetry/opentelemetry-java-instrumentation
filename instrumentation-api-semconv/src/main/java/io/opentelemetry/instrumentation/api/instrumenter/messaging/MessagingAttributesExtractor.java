@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.messaging.CapturedMessageHeadersUtil.attributeKey;
+import static io.opentelemetry.instrumentation.api.instrumenter.messaging.CapturedMessageHeadersUtil.lowercase;
 import static io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation.PROCESS;
 import static io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation.RECEIVE;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
@@ -15,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -31,20 +34,34 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   static final String TEMP_DESTINATION_NAME = "(temporary)";
 
   /**
-   * Creates the messaging attributes extractor for the given {@link MessageOperation operation}.
+   * Creates the messaging attributes extractor for the given {@link MessageOperation operation}
+   * with default configuration.
    */
   public static <REQUEST, RESPONSE> MessagingAttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
-    return new MessagingAttributesExtractor<>(getter, operation);
+    return builder(getter, operation).build();
+  }
+
+  /**
+   * Returns a new {@link MessagingAttributesExtractorBuilder} for the given {@link MessageOperation
+   * operation} that can be used to configure the messaging attributes extractor.
+   */
+  public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+    return new MessagingAttributesExtractorBuilder<>(getter, operation);
   }
 
   private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
   private final MessageOperation operation;
+  private final List<String> capturedHeaders;
 
-  private MessagingAttributesExtractor(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+  MessagingAttributesExtractor(
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessageOperation operation,
+      List<String> capturedHeaders) {
     this.getter = getter;
     this.operation = operation;
+    this.capturedHeaders = lowercase(capturedHeaders);
   }
 
   @SuppressWarnings("deprecation") // operationName
@@ -89,6 +106,13 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     internalSet(
         attributes, SemanticAttributes.MESSAGING_MESSAGE_ID, getter.messageId(request, response));
+
+    for (String name : capturedHeaders) {
+      List<String> values = getter.header(request, name);
+      if (!values.isEmpty()) {
+        internalSet(attributes, attributeKey(name), values);
+      }
+    }
   }
 
   /**

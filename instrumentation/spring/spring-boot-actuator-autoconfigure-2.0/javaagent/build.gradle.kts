@@ -18,3 +18,9 @@ dependencies {
 
   implementation(project(":instrumentation:micrometer:micrometer-1.5:javaagent"))
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}

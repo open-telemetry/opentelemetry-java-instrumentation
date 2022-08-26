@@ -22,4 +22,6 @@ public class TestMain {
     logger.info("Server started at port 8080.");
     server.awaitTermination();
   }
+
+  private TestMain() {}
 }

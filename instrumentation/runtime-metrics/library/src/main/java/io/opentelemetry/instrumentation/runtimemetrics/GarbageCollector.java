@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -34,16 +33,7 @@ import java.util.List;
 public final class GarbageCollector {
   private static final AttributeKey<String> GC_KEY = AttributeKey.stringKey("gc");
 
-  /**
-   * Register all observers provided by this module.
-   *
-   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
-   */
-  @Deprecated
-  public static void registerObservers() {
-    registerObservers(GlobalOpenTelemetry.get());
-  }
-
+  /** Register observers for java runtime garbage collector metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
     List<GarbageCollectorMXBean> garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
     Meter meter = openTelemetry.getMeterProvider().get(GarbageCollector.class.getName());

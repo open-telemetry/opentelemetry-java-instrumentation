@@ -17,13 +17,13 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
   }
 
   @Override
-  public Integer peerPort(Request request) {
+  public Integer sockPeerPort(Request request) {
     return request.getClientInfo().getPort();
   }
 
   @Override
   @Nullable
-  public String peerIp(Request request) {
+  public String sockPeerAddr(Request request) {
     return request.getClientInfo().getAddress();
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -44,7 +45,7 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
 
   @Override
   @Nullable
-  public final String peerIp(REQUEST request, @Nullable RESPONSE response) {
+  public final String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
@@ -52,6 +53,30 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
     InetAddress remoteAddress = address.getAddress();
     if (remoteAddress != null) {
       return remoteAddress.getHostAddress();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
+    if (address == null) {
+      return null;
+    }
+    return address.getPort();
+  }
+
+  @Nullable
+  @Override
+  public String sockFamily(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getAddress(request, response);
+    if (address == null) {
+      return null;
+    }
+    InetAddress remoteAddress = address.getAddress();
+    if (remoteAddress instanceof Inet6Address) {
+      return "inet6";
     }
     return null;
   }

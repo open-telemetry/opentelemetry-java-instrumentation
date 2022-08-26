@@ -63,7 +63,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    * request a second time to verify that the traceparent header is not added multiple times to the
    * request, and that the last one wins. Tests will fail if the header shows multiple times.
    */
-  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers);
+  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
+      throws Exception;
 
   /**
    * Helper class for capturing result of asynchronous request and running a callback when result is
@@ -946,13 +947,15 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               }
 
               // TODO(anuraaga): Move to test knob rather than always treating as optional
-              if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_IP)) {
+              if (attrs.asMap().containsKey(AttributeKey.stringKey("net.sock.peer.addr"))) {
                 if (uri.getHost().equals("192.0.2.1")) {
                   // NB(anuraaga): This branch seems to currently only be exercised on Java 15.
                   // It would be good to understand how the JVM version is impacting this check.
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, "192.0.2.1");
+                  assertThat(attrs)
+                      .containsEntry(AttributeKey.stringKey("net.sock.peer.addr"), "192.0.2.1");
                 } else {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, "127.0.0.1");
+                  assertThat(attrs)
+                      .containsEntry(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1");
                 }
               }
 
@@ -978,13 +981,13 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                           actual -> assertThat(actual).startsWith(userAgent));
                 }
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+              if (attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
                 assertThat(attrs)
                     .hasEntrySatisfying(
                         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
                         length -> assertThat(length).isNotNegative());
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+              if (attrs.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH) != null) {
                 assertThat(attrs)
                     .hasEntrySatisfying(
                         SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,

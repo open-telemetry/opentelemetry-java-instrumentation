@@ -28,10 +28,4 @@ class AwsSdkNetAttributesGetter implements NetClientAttributesGetter<Request<?>,
   public Integer peerPort(Request<?> request, @Nullable Response<?> response) {
     return request.getEndpoint().getPort();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(Request<?> request, @Nullable Response<?> response) {
-    return null;
-  }
 }

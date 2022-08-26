@@ -51,6 +51,7 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
     }
   }
 
+  @SuppressWarnings("unused")
   public static class WrapCompletableFutureAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

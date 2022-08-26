@@ -51,10 +51,4 @@ public class JdkHttpNetAttributesGetter
         return null;
     }
   }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
-    return null;
-  }
 }

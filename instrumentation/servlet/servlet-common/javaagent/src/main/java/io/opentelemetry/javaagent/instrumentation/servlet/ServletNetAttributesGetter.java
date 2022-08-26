@@ -25,13 +25,13 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public Integer peerPort(ServletRequestContext<REQUEST> requestContext) {
+  public Integer sockPeerPort(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemotePort(requestContext.request());
   }
 
   @Override
   @Nullable
-  public String peerIp(ServletRequestContext<REQUEST> requestContext) {
+  public String sockPeerAddr(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestRemoteAddr(requestContext.request());
   }
 }

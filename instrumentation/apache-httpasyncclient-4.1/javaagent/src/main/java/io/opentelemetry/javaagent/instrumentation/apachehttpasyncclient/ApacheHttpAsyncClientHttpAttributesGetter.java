@@ -33,21 +33,8 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLength(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Integer statusCode(ApacheHttpClientRequest request, HttpResponse response) {
+  public Integer statusCode(
+      ApacheHttpClientRequest request, HttpResponse response, @Nullable Throwable error) {
     StatusLine statusLine = response.getStatusLine();
     return statusLine != null ? statusLine.getStatusCode() : null;
   }
@@ -56,19 +43,6 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   @Nullable
   public String flavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getFlavor();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(ApacheHttpClientRequest request, HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      ApacheHttpClientRequest request, HttpResponse response) {
-    return null;
   }
 
   @Override

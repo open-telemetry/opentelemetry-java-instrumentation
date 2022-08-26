@@ -40,6 +40,7 @@ import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.reflection.v1alpha.ServerReflectionRequest;
 import io.grpc.reflection.v1alpha.ServerReflectionResponse;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -163,17 +164,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
@@ -349,17 +342,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
@@ -546,17 +531,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
@@ -707,17 +684,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
@@ -867,17 +836,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
@@ -1128,17 +1089,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
@@ -1277,17 +1230,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
@@ -1426,17 +1371,9 @@ public abstract class AbstractGrpcTest {
                                     SemanticAttributes.RPC_SERVICE,
                                     "grpc.reflection.v1alpha.ServerReflection"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "ServerReflectionInfo"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
@@ -1558,17 +1495,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(SemanticAttributes.NET_PEER_IP, "127.0.0.1"),
-                                // net.peer.name resolves to "127.0.0.1" on windows which is same as
-                                // net.peer.ip so then not captured
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_PEER_NAME,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isNull(),
-                                            v -> assertThat(v).isEqualTo("localhost"))),
-                                satisfies(
-                                    SemanticAttributes.NET_PEER_PORT,
+                                    AttributeKey.longKey("net.sock.peer.port"),
                                     val -> assertThat(val).isNotNull()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,

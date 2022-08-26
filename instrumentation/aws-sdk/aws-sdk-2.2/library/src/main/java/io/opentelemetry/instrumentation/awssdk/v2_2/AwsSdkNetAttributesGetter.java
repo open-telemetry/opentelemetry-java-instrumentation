@@ -34,10 +34,4 @@ class AwsSdkNetAttributesGetter
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.port();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
-  }
 }

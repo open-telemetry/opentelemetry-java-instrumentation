@@ -191,6 +191,41 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     channel2.unsubscribe(messageHandler)
   }
 
+  def "capture message header"() {
+    given:
+    def channel = applicationContext.getBean("directChannel", SubscribableChannel)
+
+    def messageHandler = new CapturingMessageHandler()
+    channel.subscribe(messageHandler)
+
+    when:
+    channel.send(MessageBuilder.withPayload("test")
+      .setHeader("test-message-header", "test")
+      .build())
+
+    then:
+    def capturedMessage = messageHandler.join()
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "application.directChannel process"
+          kind CONSUMER
+        }
+        span(1) {
+          name "handler"
+          childOf span(0)
+        }
+
+        def interceptorSpan = span(0)
+        verifyCorrectSpanWasPropagated(capturedMessage, interceptorSpan)
+      }
+    }
+
+    cleanup:
+    channel.unsubscribe(messageHandler)
+  }
+
   static void verifyCorrectSpanWasPropagated(Message<?> capturedMessage, SpanData parentSpan) {
     def propagatedSpan = capturedMessage.headers.get("traceparent") as String
     assert propagatedSpan.contains(parentSpan.traceId), "wrong trace id"

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -21,7 +21,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 @Configuration
 @EnableConfigurationProperties(TraceAspectProperties.class)
 @ConditionalOnProperty(prefix = "otel.springboot.aspects", name = "enabled", matchIfMissing = true)
-@ConditionalOnClass({Aspect.class, WithSpan.class})
+@ConditionalOnClass(Aspect.class)
 public class TraceAspectAutoConfiguration {
 
   @Bean
@@ -31,8 +31,17 @@ public class TraceAspectAutoConfiguration {
   }
 
   @Bean
-  public WithSpanAspect withSpanAspect(
+  @ConditionalOnClass(WithSpan.class)
+  public WithSpanAspect instrumentationWithSpanAspect(
       OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
-    return new WithSpanAspect(openTelemetry, parameterNameDiscoverer);
+    return new InstrumentationWithSpanAspect(openTelemetry, parameterNameDiscoverer);
+  }
+
+  @Bean
+  @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
+  @ConditionalOnClass(io.opentelemetry.extension.annotations.WithSpan.class)
+  public WithSpanAspect sdkExtensionWithSpanAspect(
+      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
+    return new SdkExtensionWithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }
 }

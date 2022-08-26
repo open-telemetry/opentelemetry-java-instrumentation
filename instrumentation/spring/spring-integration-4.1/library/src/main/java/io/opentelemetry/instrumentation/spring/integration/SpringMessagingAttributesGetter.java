@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.spring.integration;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 
 // this class is needed mostly for correct CONSUMER span suppression
@@ -76,5 +78,14 @@ enum SpringMessagingAttributesGetter
   @Nullable
   public String messageId(MessageWithChannel messageWithChannel, @Nullable Void unused) {
     return null;
+  }
+
+  @Override
+  public List<String> header(MessageWithChannel request, String name) {
+    Object value = request.getMessage().getHeaders().get(name);
+    if (value != null) {
+      return Collections.singletonList(value.toString());
+    }
+    return Collections.emptyList();
   }
 }

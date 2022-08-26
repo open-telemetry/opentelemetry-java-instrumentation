@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
@@ -31,7 +32,7 @@ public final class JmsSingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operation))
-        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
+        .addAttributesExtractor(buildMessagingAttributesExtractor(getter, operation))
         .buildProducerInstrumenter(MessagePropertySetter.INSTANCE);
   }
 
@@ -44,7 +45,7 @@ public final class JmsSingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operation))
-        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
+        .addAttributesExtractor(buildMessagingAttributesExtractor(getter, operation))
         .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
@@ -57,8 +58,17 @@ public final class JmsSingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operation))
-        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
+        .addAttributesExtractor(buildMessagingAttributesExtractor(getter, operation))
         .buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
+  }
+
+  private static MessagingAttributesExtractor<MessageWithDestination, Void>
+      buildMessagingAttributesExtractor(
+          MessagingAttributesGetter<MessageWithDestination, Void> getter,
+          MessageOperation operation) {
+    return MessagingAttributesExtractor.builder(getter, operation)
+        .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+        .build();
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {

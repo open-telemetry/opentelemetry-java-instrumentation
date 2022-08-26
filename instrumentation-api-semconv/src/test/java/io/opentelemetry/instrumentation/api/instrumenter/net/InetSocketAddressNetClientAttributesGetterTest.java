@@ -8,10 +8,12 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +58,8 @@ class InetSocketAddressNetClientAttributesGetterTest {
     InetSocketAddress response = new InetSocketAddress("api.github.com", 456);
     assertThat(request.getAddress().getHostAddress()).isNotNull();
 
+    boolean ipv4 = response.getAddress() instanceof Inet4Address;
+
     Context context = Context.root();
 
     // when
@@ -68,12 +72,17 @@ class InetSocketAddressNetClientAttributesGetterTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
 
-    assertThat(endAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
-            entry(SemanticAttributes.NET_PEER_IP, response.getAddress().getHostAddress()),
-            entry(SemanticAttributes.NET_PEER_NAME, "api.github.com"),
-            entry(SemanticAttributes.NET_PEER_PORT, 456L));
+    AttributesBuilder builder = Attributes.builder();
+    builder.put(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
+    builder.put(
+        AttributeKey.stringKey("net.sock.peer.addr"), response.getAddress().getHostAddress());
+    if (!ipv4) {
+      builder.put(AttributeKey.stringKey("net.sock.family"), "inet6");
+    }
+    builder.put(SemanticAttributes.NET_PEER_NAME, "api.github.com");
+    builder.put(SemanticAttributes.NET_PEER_PORT, 456L);
+
+    assertThat(endAttributes.build()).isEqualTo(builder.build());
   }
 
   @Test

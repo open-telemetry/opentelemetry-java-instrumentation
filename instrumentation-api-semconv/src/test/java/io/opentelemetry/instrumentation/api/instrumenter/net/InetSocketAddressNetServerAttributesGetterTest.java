@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -65,8 +66,10 @@ class InetSocketAddressNetServerAttributesGetterTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
-            entry(SemanticAttributes.NET_PEER_IP, request.getAddress().getHostAddress()),
-            entry(SemanticAttributes.NET_PEER_PORT, 123L));
+            entry(
+                AttributeKey.stringKey("net.sock.peer.addr"),
+                request.getAddress().getHostAddress()),
+            entry(AttributeKey.longKey("net.sock.peer.port"), 123L));
 
     assertThat(endAttributes.build()).isEmpty();
   }
@@ -93,7 +96,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
-            entry(SemanticAttributes.NET_PEER_PORT, 123L));
+            entry(AttributeKey.longKey("net.sock.peer.port"), 123L));
 
     assertThat(endAttributes.build()).isEmpty();
   }

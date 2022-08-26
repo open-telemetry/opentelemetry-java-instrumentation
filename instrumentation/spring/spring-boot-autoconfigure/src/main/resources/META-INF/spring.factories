@@ -8,6 +8,7 @@ io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExp
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate.RestTemplateAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient.WebClientAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.kafka.KafkaInstrumentationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.metrics.MicrometerShimAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration,\

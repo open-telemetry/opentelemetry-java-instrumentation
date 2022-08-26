@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.extension.annotations.WithSpan
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.test.annotation.TracedWithSpan
@@ -25,7 +25,8 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 /**
- * This test verifies that auto instrumentation supports {@link io.opentelemetry.extension.annotations.WithSpan} contrib annotation.
+ * This test verifies that auto instrumentation supports the
+ * {@link io.opentelemetry.instrumentation.annotations.WithSpan} annotation.
  */
 class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
 

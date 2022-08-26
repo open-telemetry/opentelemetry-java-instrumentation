@@ -11,7 +11,9 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-val otelVersion = "1.16.0"
+// this line is managed by .github/scripts/update-sdk-version.sh
+val otelVersion = "1.17.0"
+
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and groovy jars
@@ -110,7 +112,7 @@ val DEPENDENCIES = listOf(
   "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE"
+  "org.springframework.boot:spring-boot-dependencies:2.7.2"
 )
 
 javaPlatform {
