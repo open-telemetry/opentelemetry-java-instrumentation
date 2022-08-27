@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.instrumentation.cassandra.v4_0.CassandraSingletons.instrumenter;
-
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DriverException;
@@ -25,6 +23,7 @@ import com.datastax.oss.driver.api.core.session.Request;
 import com.datastax.oss.driver.api.core.type.reflect.GenericType;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -33,9 +32,12 @@ import javax.annotation.Nullable;
 
 public class TracingCqlSession implements CqlSession {
   private final CqlSession session;
+  private final Instrumenter<CassandraRequest, ExecutionInfo> instrumenter;
 
-  public TracingCqlSession(CqlSession session) {
+  public TracingCqlSession(
+      CqlSession session, Instrumenter<CassandraRequest, ExecutionInfo> instrumenter) {
     this.session = session;
+    this.instrumenter = instrumenter;
   }
 
   @Override
@@ -158,15 +160,15 @@ public class TracingCqlSession implements CqlSession {
   @Override
   public ResultSet execute(String query) {
     CassandraRequest request = CassandraRequest.create(session, query);
-    Context context = instrumenter().start(Context.current(), request);
+    Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
     } catch (RuntimeException e) {
-      instrumenter().end(context, request, getExecutionInfo(e), e);
+      instrumenter.end(context, request, getExecutionInfo(e), e);
       throw e;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter.end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
   }
 
@@ -174,15 +176,15 @@ public class TracingCqlSession implements CqlSession {
   public ResultSet execute(Statement<?> statement) {
     String query = getQuery(statement);
     CassandraRequest request = CassandraRequest.create(session, query);
-    Context context = instrumenter().start(Context.current(), request);
+    Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
     } catch (RuntimeException e) {
-      instrumenter().end(context, request, getExecutionInfo(e), e);
+      instrumenter.end(context, request, getExecutionInfo(e), e);
       throw e;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter.end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
   }
 
@@ -199,21 +201,17 @@ public class TracingCqlSession implements CqlSession {
     return executeAsync(request, () -> session.executeAsync(query));
   }
 
-  private static CompletionStage<AsyncResultSet> executeAsync(
+  private CompletionStage<AsyncResultSet> executeAsync(
       CassandraRequest request, Supplier<CompletionStage<AsyncResultSet>> query) {
     Context parentContext = Context.current();
-    Context context = instrumenter().start(parentContext, request);
+    Context context = instrumenter.start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = query.get();
       return wrap(
           stage.whenComplete(
               (asyncResultSet, throwable) ->
-                  instrumenter()
-                      .end(
-                          context,
-                          request,
-                          getExecutionInfo(asyncResultSet, throwable),
-                          throwable)),
+                  instrumenter.end(
+                      context, request, getExecutionInfo(asyncResultSet, throwable), throwable)),
           parentContext);
     }
   }

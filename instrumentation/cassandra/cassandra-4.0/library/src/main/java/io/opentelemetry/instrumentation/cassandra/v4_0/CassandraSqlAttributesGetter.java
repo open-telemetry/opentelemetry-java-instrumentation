@@ -10,7 +10,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesG
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
+public final class CassandraSqlAttributesGetter
+    implements SqlClientAttributesGetter<CassandraRequest> {
 
   @Override
   public String system(CassandraRequest request) {

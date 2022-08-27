@@ -12,7 +12,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class CassandraNetAttributesGetter
+public final class CassandraNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<CassandraRequest, ExecutionInfo> {
 
   @Override

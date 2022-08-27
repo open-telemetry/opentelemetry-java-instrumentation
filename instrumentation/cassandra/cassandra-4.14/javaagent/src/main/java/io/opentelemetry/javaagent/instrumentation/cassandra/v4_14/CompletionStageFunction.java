@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_14;
 
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_14.CassandraSingletons.instrumenter;
+
 import com.datastax.oss.driver.api.core.CqlSession;
 import java.util.function.Function;
 
@@ -19,6 +21,6 @@ public class CompletionStageFunction implements Function<Object, Object> {
     if (session.getClass().getName().endsWith("cassandra4.TracingCqlSession")) {
       return session;
     }
-    return new TracingCqlSession((CqlSession) session);
+    return new TracingCqlSession((CqlSession) session, instrumenter());
   }
 }
