@@ -17,7 +17,7 @@ val otelVersion = "1.17.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.2"
+val groovyVersion = "4.0.4"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -108,8 +108,8 @@ val DEPENDENCIES = listOf(
   "org.apache.groovy:groovy-json:${groovyVersion}",
   "org.junit-pioneer:junit-pioneer:1.7.0",
   "org.objenesis:objenesis:3.2",
-  "org.spockframework:spock-core:2.2-M1-groovy-4.0",
-  "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",
+  "org.spockframework:spock-core:2.2-M3-groovy-4.0",
+  "org.spockframework:spock-junit4:2.2-M3-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.7.2"
