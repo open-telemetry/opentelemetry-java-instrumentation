@@ -10,6 +10,10 @@ dependencies {
 
 tasks {
   shadowJar {
+    dependencies {
+      exclude(dependency("org.slf4j:slf4j-api"))
+    }
+
     // Ensures tests are not affected by Armeria instrumentation
     relocate("com.linecorp.armeria", "io.opentelemetry.testing.internal.armeria")
     relocate("com.fasterxml.jackson", "io.opentelemetry.testing.internal.jackson")
