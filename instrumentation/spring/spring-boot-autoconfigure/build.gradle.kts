@@ -14,9 +14,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   implementation("javax.validation:validation-api:2.0.1.Final")
-  annotationProcessor("com.google.auto.service:auto-service")
-  compileOnly("com.google.auto.service:auto-service-annotations")
-  testCompileOnly("com.google.auto.service:auto-service-annotations")
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
