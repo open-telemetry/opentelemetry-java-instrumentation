@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -127,15 +128,7 @@ class SpringBootServiceNameGuesserTest {
   }
 
   private static String readString(Path path) throws Exception {
-    StringBuilder buff = new StringBuilder();
-    try (InputStream in = Files.newInputStream(path)) {
-      BufferedReader reader = new BufferedReader(new InputStreamReader(in, UTF_8));
-      char[] block = new char[1024];
-      int rc;
-      while ((rc = reader.read(block)) > 0) {
-        buff.append(block, 0, rc);
-      }
-      return buff.toString();
-    }
+    byte[] allBytes = Files.readAllBytes(path);
+    return new String(allBytes, UTF_8);
   }
 }
