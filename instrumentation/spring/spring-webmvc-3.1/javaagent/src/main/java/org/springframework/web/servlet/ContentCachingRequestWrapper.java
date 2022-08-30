@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.springframework.web.servlet;
 
 import java.io.BufferedReader;
@@ -10,32 +15,28 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.web.util.WebUtils;
 import javax.annotation.Nullable;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.web.util.WebUtils;
 
 public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
 
   private final ByteArrayOutputStream cachedContent;
 
-  @Nullable
-  private final Integer contentCacheLimit;
+  @Nullable private final Integer contentCacheLimit;
 
-  @Nullable
-  private ServletInputStream inputStream;
+  @Nullable private ServletInputStream inputStream;
 
-  @Nullable
-  private BufferedReader reader;
-
+  @Nullable private BufferedReader reader;
 
   /**
    * Create a new ContentCachingRequestWrapper for the given servlet request.
+   *
    * @param request the original servlet request
    */
   public ContentCachingRequestWrapper(HttpServletRequest request) {
@@ -47,6 +48,7 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
 
   /**
    * Create a new ContentCachingRequestWrapper for the given servlet request.
+   *
    * @param request the original servlet request
    * @param contentCacheLimit the maximum number of bytes to cache per request
    * @since 4.3.6
@@ -57,7 +59,6 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
     this.cachedContent = new ByteArrayOutputStream(contentCacheLimit);
     this.contentCacheLimit = contentCacheLimit;
   }
-
 
   @Override
   public ServletInputStream getInputStream() throws IOException {
@@ -76,7 +77,8 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
   @Override
   public BufferedReader getReader() throws IOException {
     if (this.reader == null) {
-      this.reader = new BufferedReader(new InputStreamReader(getInputStream(), getCharacterEncoding()));
+      this.reader =
+          new BufferedReader(new InputStreamReader(getInputStream(), getCharacterEncoding()));
     }
     return this.reader;
   }
@@ -113,11 +115,11 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
     return super.getParameterValues(name);
   }
 
-
   private boolean isFormPost() {
     String contentType = getContentType();
-    return (contentType != null && contentType.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE) &&
-        HttpMethod.POST.toString().equals(getMethod()));
+    return (contentType != null
+        && contentType.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+        && HttpMethod.POST.toString().equals(getMethod()));
   }
 
   void writeRequestParametersToCachedContent() {
@@ -144,19 +146,20 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
           }
         }
       }
-    }
-    catch (IOException ex) {
+    } catch (IOException ex) {
       throw new IllegalStateException("Failed to write request parameters to cached content", ex);
     }
   }
 
   /**
    * Return the cached request content as a byte array.
+   *
    * <p>The returned array will never be larger than the content cache limit.
-   * <p><strong>Note:</strong> The byte array returned from this method
-   * reflects the amount of content that has been read at the time when it
-   * is called. If the application does not read the content, this method
-   * returns an empty array.
+   *
+   * <p><strong>Note:</strong> The byte array returned from this method reflects the amount of
+   * content that has been read at the time when it is called. If the application does not read the
+   * content, this method returns an empty array.
+   *
    * @see #ContentCachingRequestWrapper(HttpServletRequest, int)
    */
   public byte[] getContentAsByteArray() {
@@ -164,18 +167,18 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
   }
 
   /**
-   * Template method for handling a content overflow: specifically, a request
-   * body being read that exceeds the specified content cache limit.
-   * <p>The default implementation is empty. Subclasses may override this to
-   * throw a payload-too-large exception or the like.
-   * @param contentCacheLimit the maximum number of bytes to cache per request
-   * which has just been exceeded
+   * Template method for handling a content overflow: specifically, a request body being read that
+   * exceeds the specified content cache limit.
+   *
+   * <p>The default implementation is empty. Subclasses may override this to throw a
+   * payload-too-large exception or the like.
+   *
+   * @param contentCacheLimit the maximum number of bytes to cache per request which has just been
+   *     exceeded
    * @since 4.3.6
    * @see #ContentCachingRequestWrapper(HttpServletRequest, int)
    */
-  protected void handleContentOverflow(int contentCacheLimit) {
-  }
-
+  protected void handleContentOverflow(int contentCacheLimit) {}
 
   private class ContentCachingInputStream extends ServletInputStream {
 
@@ -187,6 +190,18 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
       this.is = is;
     }
 
+    private void writeToCache(final byte[] b, final int off, int count) {
+      if (!this.overflow && count > 0) {
+        if (contentCacheLimit != null && count + cachedContent.size() > contentCacheLimit) {
+          this.overflow = true;
+          cachedContent.write(b, off, contentCacheLimit - cachedContent.size());
+          handleContentOverflow(contentCacheLimit);
+          return;
+        }
+        cachedContent.write(b, off, count);
+      }
+    }
+
     @Override
     public int read() throws IOException {
       int ch = this.is.read();
@@ -194,8 +209,7 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
         if (contentCacheLimit != null && cachedContent.size() == contentCacheLimit) {
           this.overflow = true;
           handleContentOverflow(contentCacheLimit);
-        }
-        else {
+        } else {
           cachedContent.write(ch);
         }
       }
@@ -207,19 +221,6 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
       int count = this.is.read(b);
       writeToCache(b, 0, count);
       return count;
-    }
-
-    private void writeToCache(final byte[] b, final int off, int count) {
-      if (!this.overflow && count > 0) {
-        if (contentCacheLimit != null &&
-            count + cachedContent.size() > contentCacheLimit) {
-          this.overflow = true;
-          cachedContent.write(b, off, contentCacheLimit - cachedContent.size());
-          handleContentOverflow(contentCacheLimit);
-          return;
-        }
-        cachedContent.write(b, off, count);
-      }
     }
 
     @Override
@@ -251,5 +252,4 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
       this.is.setReadListener(readListener);
     }
   }
-
 }

@@ -98,7 +98,9 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   }
 
   private void setAttributes(
-      ContentCachingRequestWrapper requestWrapper, ContentCachingResponseWrapper responseWrapper, Context context)
+      ContentCachingRequestWrapper requestWrapper,
+      ContentCachingResponseWrapper responseWrapper,
+      Context context)
       throws IOException {
     Span span = Span.fromContext(context);
     requestWrapper.writeRequestParametersToCachedContent();

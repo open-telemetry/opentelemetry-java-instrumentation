@@ -68,9 +68,9 @@ public class OpenTelemetryInstaller {
 
     if (hsToken != null) {
       System.setProperty("otel.exporter.otlp.headers", String.format("Authorization=%s", hsToken));
+      System.setProperty(
+          "otel.exporter.otlp.traces.endpoint", "https://collector.heliosphere.io/traces");
+      System.setProperty("otel.exporter.otlp.traces.protocol", "http/protobuf");
     }
-    System.setProperty(
-        "otel.exporter.otlp.traces.endpoint", "https://collector.heliosphere.io/traces");
-    System.setProperty("otel.exporter.otlp.traces.protocol", "http/protobuf");
   }
 }

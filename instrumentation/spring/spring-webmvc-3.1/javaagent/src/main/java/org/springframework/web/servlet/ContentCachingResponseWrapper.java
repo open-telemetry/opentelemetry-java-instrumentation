@@ -1,20 +1,20 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.springframework.web.servlet;
 
-/**
- * Create a new ContentCachingResponseWrapper for the given servlet response.
- *
- * @param response the original servlet response
- */
-import org.springframework.web.util.WebUtils;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+import org.springframework.web.util.WebUtils;
 
 public class ContentCachingResponseWrapper extends HttpServletResponseWrapper {
   private final ByteArrayOutputStream content = new ByteArrayOutputStream(1024);
@@ -24,6 +24,7 @@ public class ContentCachingResponseWrapper extends HttpServletResponseWrapper {
   private PrintWriter writer;
 
   private int statusCode = HttpServletResponse.SC_OK;
+
   public ContentCachingResponseWrapper(HttpServletResponse response) {
     super(response);
   }
@@ -153,4 +154,3 @@ public class ContentCachingResponseWrapper extends HttpServletResponseWrapper {
     }
   }
 }
-
