@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2022-08-23 12:15:13 CEST_
+_2022-08-30 14:07:10 CEST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18` 
@@ -9,19 +9,19 @@ _2022-08-23 12:15:13 CEST_
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.13.2` 
+**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.13.3` 
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.13.2.jar/META-INF/LICENSE](jackson-core-2.13.2.jar/META-INF/LICENSE) 
-    - [jackson-core-2.13.2.jar/META-INF/NOTICE](jackson-core-2.13.2.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.13.3.jar/META-INF/LICENSE](jackson-core-2.13.3.jar/META-INF/LICENSE) 
+    - [jackson-core-2.13.3.jar/META-INF/NOTICE](jackson-core-2.13.3.jar/META-INF/NOTICE)
 
-**3** **Group:** `com.fasterxml.jackson.jr` **Name:** `jackson-jr-objects` **Version:** `2.13.2` 
+**3** **Group:** `com.fasterxml.jackson.jr` **Name:** `jackson-jr-objects` **Version:** `2.13.3` 
 > - **Project URL**: [http://wiki.fasterxml.com/JacksonHome](http://wiki.fasterxml.com/JacksonHome)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-jr-objects-2.13.2.jar/META-INF/LICENSE](jackson-jr-objects-2.13.2.jar/META-INF/LICENSE) 
-    - [jackson-jr-objects-2.13.2.jar/META-INF/NOTICE](jackson-jr-objects-2.13.2.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-jr-objects-2.13.3.jar/META-INF/LICENSE](jackson-jr-objects-2.13.3.jar/META-INF/LICENSE) 
+    - [jackson-jr-objects-2.13.3.jar/META-INF/NOTICE](jackson-jr-objects-2.13.3.jar/META-INF/NOTICE)
 
 **4** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2` 
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
