@@ -170,7 +170,7 @@ Thanks to all the people who already contributed!
 
 ## Helios Internal
 To Build locally use:
-`./gradlew build -x test -x :instrumentation:kafka:kafka-streams-0.11:javaagent:testReceiveSpansDisabled -x :instrumentation:spring:spring-webmvc-3.1:javaagent:codenarcTest -x :instrumentation:vertx:vertx-kafka-client-3.6:javaagent:testNoReceiveTelemetry -x :instrumentation:servlet:servlet-3.0:javaagent:checkstyleMain
+`./gradlew build -x test -x :instrumentation:kafka:kafka-streams-0.11:javaagent:testReceiveSpansDisabled -x :instrumentation:spring:spring-webmvc-3.1:javaagent:codenarcTest -x :instrumentation:vertx:vertx-kafka-client-3.6:javaagent:testNoReceiveTelemetry
 `
 
 After building, you should be able to see the updated agent jar under `javaagent/build/libs`
