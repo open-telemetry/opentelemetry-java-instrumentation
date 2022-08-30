@@ -69,6 +69,10 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
   public Resource createResource(ConfigProperties config) {
 
     logger.log(Level.FINER, "Performing Spring Boot service name auto-detection...");
+    // Note: The order should be consistent with the order of Spring matching, but noting
+    // that we have "first one wins" while Spring has "last one wins".
+    // The docs for Spring are here:
+    // https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config
     Stream<Supplier<String>> finders =
         Stream.of(
             this::findByCommandlineArgument,
