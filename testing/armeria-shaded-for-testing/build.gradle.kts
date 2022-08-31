@@ -12,6 +12,8 @@ tasks {
   shadowJar {
     dependencies {
       exclude(dependency("org.slf4j:slf4j-api"))
+      exclude(dependency("org.junit.jupiter:junit-jupiter-api"))
+      exclude(dependency("org.junit.platform:junit-platform-commons"))
     }
 
     // Ensures tests are not affected by Armeria instrumentation
