@@ -39,8 +39,5 @@ public interface NetServerAttributesGetter<REQUEST> {
   String sockHostAddr(REQUEST request);
 
   @Nullable
-  String sockHostName(REQUEST request);
-
-  @Nullable
   Integer sockHostPort(REQUEST request);
 }

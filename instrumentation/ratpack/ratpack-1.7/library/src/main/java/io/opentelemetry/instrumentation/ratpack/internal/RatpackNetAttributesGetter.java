@@ -69,12 +69,6 @@ public final class RatpackNetAttributesGetter implements NetServerAttributesGett
 
   @Nullable
   @Override
-  public String sockHostName(Request request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public Integer sockHostPort(Request request) {
     return null;
   }

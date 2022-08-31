@@ -68,12 +68,6 @@ class NetServerAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String sockHostName(Map<String, String> request) {
-      return request.get("sockHostName");
-    }
-
-    @Nullable
-    @Override
     public Integer sockHostPort(Map<String, String> request) {
       String sockHostPort = request.get("sockHostPort");
       return sockHostPort == null ? null : Integer.valueOf(sockHostPort);
@@ -94,7 +88,6 @@ class NetServerAttributesExtractorTest {
     map.put("sockPeerAddr", "1:2:3:4::");
     map.put("sockPeerPort", "42");
     map.put("sockHostAddr", "4:3:2:1::");
-    map.put("sockHostName", "localhost");
     map.put("sockHostPort", "8080");
 
     Context context = Context.root();
@@ -116,7 +109,6 @@ class NetServerAttributesExtractorTest {
             entry(NetAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
             entry(NetAttributes.NET_SOCK_PEER_PORT, 42L),
             entry(NetAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"),
-            entry(NetAttributes.NET_SOCK_HOST_NAME, "localhost"),
             entry(NetAttributes.NET_SOCK_HOST_PORT, 8080L));
 
     assertThat(endAttributes.build()).isEmpty();
@@ -150,7 +142,6 @@ class NetServerAttributesExtractorTest {
     map.put("hostPort", "80");
     map.put("sockFamily", "inet6");
     map.put("sockHostAddr", "4:3:2:1::");
-    map.put("sockHostName", "localhost");
     map.put("sockHostPort", "8080");
 
     Context context = Context.root();
@@ -183,7 +174,6 @@ class NetServerAttributesExtractorTest {
     map.put("hostPort", "80");
     map.put("sockFamily", "inet6");
     map.put("sockHostAddr", "4:3:2:1::");
-    map.put("sockHostName", "opentelemetry.io");
     map.put("sockHostPort", "80");
 
     Context context = Context.root();

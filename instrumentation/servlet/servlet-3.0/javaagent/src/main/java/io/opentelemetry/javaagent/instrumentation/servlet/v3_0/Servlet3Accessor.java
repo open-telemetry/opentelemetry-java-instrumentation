@@ -27,11 +27,6 @@ public class Servlet3Accessor extends JavaxServletAccessor<HttpServletResponse> 
   }
 
   @Override
-  public String getRequestLocalName(HttpServletRequest request) {
-    return request.getLocalName();
-  }
-
-  @Override
   public String getRequestLocalAddr(HttpServletRequest request) {
     return request.getLocalAddr();
   }

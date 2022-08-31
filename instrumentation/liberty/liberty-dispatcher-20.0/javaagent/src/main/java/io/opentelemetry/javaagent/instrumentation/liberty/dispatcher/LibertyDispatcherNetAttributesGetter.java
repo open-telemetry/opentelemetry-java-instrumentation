@@ -53,12 +53,6 @@ public class LibertyDispatcherNetAttributesGetter
 
   @Nullable
   @Override
-  public String sockHostName(LibertyRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public Integer sockHostPort(LibertyRequest request) {
     return request.dispatcher().getLocalPort();
   }

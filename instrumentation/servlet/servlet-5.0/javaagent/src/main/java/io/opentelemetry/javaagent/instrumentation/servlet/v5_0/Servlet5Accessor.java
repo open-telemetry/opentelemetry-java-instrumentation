@@ -86,11 +86,6 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
-  public String getRequestLocalName(HttpServletRequest request) {
-    return request.getLocalName();
-  }
-
-  @Override
   public String getRequestLocalAddr(HttpServletRequest request) {
     return request.getLocalAddr();
   }

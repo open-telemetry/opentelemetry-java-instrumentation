@@ -43,8 +43,6 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   Integer getRequestRemotePort(REQUEST request);
 
-  String getRequestLocalName(REQUEST request);
-
   String getRequestLocalAddr(REQUEST request);
 
   Integer getRequestLocalPort(REQUEST request);

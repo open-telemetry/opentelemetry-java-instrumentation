@@ -101,7 +101,6 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
             "net.host.port" port
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
-            "net.sock.host.name" String
             "net.sock.host.addr" "127.0.0.1"
           }
         }

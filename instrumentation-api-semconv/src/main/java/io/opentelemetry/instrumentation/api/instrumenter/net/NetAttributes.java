@@ -18,8 +18,6 @@ final class NetAttributes {
   static final AttributeKey<Long> NET_SOCK_PEER_PORT = AttributeKey.longKey("net.sock.peer.port");
   static final AttributeKey<String> NET_SOCK_HOST_ADDR =
       AttributeKey.stringKey("net.sock.host.addr");
-  static final AttributeKey<String> NET_SOCK_HOST_NAME =
-      AttributeKey.stringKey("net.sock.host.name");
   static final AttributeKey<Long> NET_SOCK_HOST_PORT = AttributeKey.longKey("net.sock.host.port");
 
   static final String SOCK_FAMILY_INET = "inet";

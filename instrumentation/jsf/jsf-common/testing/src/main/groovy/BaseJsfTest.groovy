@@ -103,7 +103,6 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.name" "127.0.0.1"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:$port" }

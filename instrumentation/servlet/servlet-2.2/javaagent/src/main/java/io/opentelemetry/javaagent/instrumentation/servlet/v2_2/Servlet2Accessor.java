@@ -23,11 +23,6 @@ public class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse> 
   }
 
   @Override
-  public String getRequestLocalName(HttpServletRequest request) {
-    return null;
-  }
-
-  @Override
   public String getRequestLocalAddr(HttpServletRequest request) {
     return null;
   }

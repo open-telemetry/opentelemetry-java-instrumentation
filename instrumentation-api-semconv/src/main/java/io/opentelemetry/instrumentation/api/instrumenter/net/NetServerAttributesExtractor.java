@@ -71,11 +71,6 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
       if (sockHostPort != null && sockHostPort > 0 && !sockHostPort.equals(hostPort)) {
         internalSet(attributes, NetAttributes.NET_SOCK_HOST_PORT, (long) sockHostPort);
       }
-
-      String sockHostName = getter.sockHostName(request);
-      if (sockHostName != null && !sockHostName.equals(hostName)) {
-        internalSet(attributes, NetAttributes.NET_SOCK_HOST_NAME, sockHostName);
-      }
     }
 
     if (setSockFamily) {

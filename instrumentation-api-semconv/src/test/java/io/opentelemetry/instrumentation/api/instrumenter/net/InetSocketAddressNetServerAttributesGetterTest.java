@@ -90,7 +90,6 @@ class InetSocketAddressNetServerAttributesGetterTest {
     builder.put(NetAttributes.NET_SOCK_PEER_ADDR, request.peer.getAddress().getHostAddress());
     builder.put(NetAttributes.NET_SOCK_PEER_PORT, 123L);
     builder.put(NetAttributes.NET_SOCK_HOST_ADDR, request.host.getAddress().getHostAddress());
-    builder.put(NetAttributes.NET_SOCK_HOST_NAME, "api.github.com");
     builder.put(NetAttributes.NET_SOCK_HOST_PORT, 456L);
 
     assertThat(startAttributes.build()).isEqualTo(builder.build());

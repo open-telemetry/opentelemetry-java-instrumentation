@@ -62,12 +62,6 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
-  public String sockHostName(ServletRequestContext<REQUEST> requestContext) {
-    return accessor.getRequestLocalName(requestContext.request());
-  }
-
-  @Nullable
-  @Override
   public Integer sockHostPort(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestLocalPort(requestContext.request());
   }

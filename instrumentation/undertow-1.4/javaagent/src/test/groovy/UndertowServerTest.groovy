@@ -156,7 +156,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.name" "127.0.0.1"
           }
         }
         span(1) {
@@ -213,7 +212,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.name" "127.0.0.1"
           }
         }
         span(1) {

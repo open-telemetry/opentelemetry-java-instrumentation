@@ -52,12 +52,6 @@ enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpSe
     return request.getLocalAddr();
   }
 
-  @Nullable
-  @Override
-  public String sockHostName(HttpServletRequest request) {
-    return request.getLocalName();
-  }
-
   @Override
   public Integer sockHostPort(HttpServletRequest request) {
     return request.getLocalPort();

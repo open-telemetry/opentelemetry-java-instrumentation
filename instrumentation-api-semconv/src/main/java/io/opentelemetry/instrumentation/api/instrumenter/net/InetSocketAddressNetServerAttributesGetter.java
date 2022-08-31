@@ -64,16 +64,6 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
 
   @Nullable
   @Override
-  public String sockHostName(REQUEST request) {
-    InetSocketAddress address = getHostAddress(request);
-    if (address == null) {
-      return null;
-    }
-    return address.getHostString();
-  }
-
-  @Nullable
-  @Override
   public Integer sockHostPort(REQUEST request) {
     return getPort(getHostAddress(request));
   }

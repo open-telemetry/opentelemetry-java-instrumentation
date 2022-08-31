@@ -59,13 +59,6 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String sockHostName(Request request) {
-    request.action(ActionCode.REQ_LOCAL_NAME_ATTRIBUTE, request);
-    return request.localName().toString();
-  }
-
-  @Nullable
-  @Override
   public Integer sockHostPort(Request request) {
     request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);
     return request.getLocalPort();

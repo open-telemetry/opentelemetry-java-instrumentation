@@ -54,12 +54,6 @@ final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<Http
     return request.getLocalAddress();
   }
 
-  @Nullable
-  @Override
-  public String sockHostName(HttpRequestPacket request) {
-    return null;
-  }
-
   @Override
   public Integer sockHostPort(HttpRequestPacket request) {
     return request.getLocalPort();

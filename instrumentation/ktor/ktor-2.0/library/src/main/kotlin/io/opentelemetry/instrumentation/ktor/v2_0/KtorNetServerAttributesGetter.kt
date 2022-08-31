@@ -43,10 +43,6 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
     return null
   }
 
-  override fun sockHostName(request: ApplicationRequest): String? {
-    return null
-  }
-
   override fun sockHostPort(request: ApplicationRequest): Int? {
     return null
   }

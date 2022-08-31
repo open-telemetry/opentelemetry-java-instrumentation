@@ -59,12 +59,6 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Nullable
   @Override
-  public String sockHostName(Request request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public Integer sockHostPort(Request request) {
     return null;
   }
