@@ -1,11 +1,3 @@
-plugins {
-  id("com.github.johnrengelman.shadow") version "7.1.2"
-}
-
-apply from: "$rootDir/gradle/shadow.gradle"
-
-def relocatePackages = ext.relocatePackages
-
 Project instr_project = project
 subprojects {
   afterEvaluate { Project subProj ->
@@ -18,14 +10,4 @@ subprojects {
       }
     }
   }
-}
-
-shadowJar {
-  mergeServiceFiles()
-
-  exclude '**/module-info.class'
-
-  duplicatesStrategy = DuplicatesStrategy.FAIL
-
-  relocatePackages(it)
 }

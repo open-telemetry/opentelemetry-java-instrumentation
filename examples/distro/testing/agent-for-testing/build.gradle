@@ -28,21 +28,8 @@ configurations {
 
 dependencies {
   bootstrapLibs(project(":bootstrap"))
-
-  javaagentLibs(project(":custom"))
-
-  upstreamAgent("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
-}
-
-// collect all instrumentation sub projects
-Project instr_project = project
-DependencyHandler javaagentDependencies = dependencies
-project(":instrumentation").subprojects {
-  afterEvaluate { Project subProj ->
-    if (subProj.getPlugins().hasPlugin('java')) {
-      javaagentDependencies.add(instr_project.configurations.javaagentLibs.name, project(subProj.path))
-    }
-  }
+  // and finally include everything from otel agent for testing
+  upstreamAgent("io.opentelemetry.javaagent:opentelemetry-agent-for-testing:${versions.opentelemetryJavaagentAlpha}")
 }
 
 CopySpec isolateClasses(Iterable<File> jars) {
@@ -108,7 +95,7 @@ tasks {
     dependsOn(tasks.isolateJavaagentLibs)
     from(tasks.isolateJavaagentLibs.outputs)
 
-    archiveClassifier.set("all")
+    archiveClassifier.set("")
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
