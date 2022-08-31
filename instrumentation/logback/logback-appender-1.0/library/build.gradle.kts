@@ -21,7 +21,7 @@ dependencies {
   if (findProperty("testLatestDeps") as Boolean) {
     testImplementation("ch.qos.logback:logback-classic:+")
   } else {
-    // TODO these version were actually used during test before slf4j was updated to 2.0
+    // TODO these versions are actually used during test
     // currently our tests fail for logback-classic 0.9.16
     testImplementation("ch.qos.logback:logback-classic") {
       version {

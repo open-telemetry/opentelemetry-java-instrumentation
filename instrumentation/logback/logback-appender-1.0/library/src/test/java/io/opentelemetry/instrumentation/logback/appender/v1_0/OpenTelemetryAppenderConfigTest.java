@@ -41,7 +41,6 @@ class OpenTelemetryAppenderConfigTest {
   private static InstrumentationScopeInfo instrumentationScopeInfo;
 
   @BeforeAll
-  @SuppressWarnings("SystemOut")
   static void setupAll() {
     logExporter = InMemoryLogExporter.create();
     resource = Resource.getDefault();

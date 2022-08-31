@@ -74,7 +74,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "org.slf4j",
-    "2.0.0",
+    "1.7.36",
     listOf("slf4j-api", "slf4j-simple", "log4j-over-slf4j", "jcl-over-slf4j", "jul-to-slf4j")
   ),
 )
@@ -83,8 +83,7 @@ val DEPENDENCY_SETS = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  // using 1.3.0 on purpose: 1.4.0 requires Java 11 to run
-  "ch.qos.logback:logback-classic:1.3.0",
+  "ch.qos.logback:logback-classic:1.2.11",
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
