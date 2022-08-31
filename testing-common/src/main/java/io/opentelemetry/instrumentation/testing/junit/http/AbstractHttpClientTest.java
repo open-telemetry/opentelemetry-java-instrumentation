@@ -943,7 +943,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   }
                 }
 
-                // In theses cases the peer connection is not established, so the HTTP client should
+                // In these cases the peer connection is not established, so the HTTP client should
                 // not report any socket-level attributes
                 // TODO https://github.com/open-telemetry/opentelemetry-java/pull/4723
                 assertThat(attrs.asMap())
