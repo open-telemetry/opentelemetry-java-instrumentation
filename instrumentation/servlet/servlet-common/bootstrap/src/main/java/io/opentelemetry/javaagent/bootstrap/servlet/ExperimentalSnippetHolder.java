@@ -22,4 +22,6 @@ public class ExperimentalSnippetHolder {
   public static byte[] getSnippetBytes(String encoding) throws UnsupportedEncodingException {
     return snippet.getBytes(encoding);
   }
+
+  private ExperimentalSnippetHolder() {}
 }
