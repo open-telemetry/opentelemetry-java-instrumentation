@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpStatusConverter.SERVER;
@@ -13,13 +18,12 @@ import org.junit.jupiter.api.TestFactory;
 public class HttpServerStatusConverterTest {
 
   @TestFactory
-  Collection<DynamicTest> serverStatuCodes() {
+  Collection<DynamicTest> httpStatusCodeToOtelStatus() {
     return Arrays.asList(
         test(100, StatusCode.UNSET),
         test(101, StatusCode.UNSET),
         test(102, StatusCode.UNSET),
         test(103, StatusCode.UNSET),
-
         test(200, StatusCode.UNSET),
         test(201, StatusCode.UNSET),
         test(202, StatusCode.UNSET),
@@ -30,7 +34,6 @@ public class HttpServerStatusConverterTest {
         test(207, StatusCode.UNSET),
         test(208, StatusCode.UNSET),
         test(226, StatusCode.UNSET),
-
         test(300, StatusCode.UNSET),
         test(301, StatusCode.UNSET),
         test(302, StatusCode.UNSET),
@@ -40,7 +43,6 @@ public class HttpServerStatusConverterTest {
         test(306, StatusCode.UNSET),
         test(307, StatusCode.UNSET),
         test(308, StatusCode.UNSET),
-
         test(400, StatusCode.UNSET),
         test(401, StatusCode.UNSET),
         test(403, StatusCode.UNSET),
@@ -69,7 +71,6 @@ public class HttpServerStatusConverterTest {
         test(429, StatusCode.UNSET),
         test(431, StatusCode.UNSET),
         test(451, StatusCode.UNSET),
-
         test(500, StatusCode.ERROR),
         test(501, StatusCode.ERROR),
         test(502, StatusCode.ERROR),
@@ -83,15 +84,13 @@ public class HttpServerStatusConverterTest {
         test(511, StatusCode.ERROR),
 
         // Don't exist
-        test(99 , StatusCode.ERROR),
-        test(600, StatusCode.ERROR)
-    );
+        test(99, StatusCode.ERROR),
+        test(600, StatusCode.ERROR));
   }
 
-  DynamicTest test(int numeric, StatusCode code){
-    return dynamicTest("" + numeric + " -> " + code,
+  DynamicTest test(int numeric, StatusCode code) {
+    return dynamicTest(
+        "" + numeric + " -> " + code,
         () -> assertEquals(code, SERVER.statusFromHttpStatus(numeric)));
   }
-
-
 }
