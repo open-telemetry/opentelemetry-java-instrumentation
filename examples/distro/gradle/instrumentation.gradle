@@ -10,7 +10,6 @@ def relocatePackages = ext.relocatePackages
 configurations {
   testInstrumentation
   testAgent
-  bootstrapLibs
 }
 
 dependencies {
@@ -30,7 +29,6 @@ dependencies {
   testImplementation("org.assertj:assertj-core:3.19.0")
 
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
-  add("codegen", "ch.qos.logback:logback-classic:1.2.3")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
