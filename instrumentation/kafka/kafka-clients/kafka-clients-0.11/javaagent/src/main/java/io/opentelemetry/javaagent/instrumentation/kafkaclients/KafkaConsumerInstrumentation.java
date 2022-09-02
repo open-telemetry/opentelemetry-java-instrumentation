@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.consumerReceiveInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.metricConfigProperties;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.enhanceConfig;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -60,7 +60,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) Map<String, Object> config) {
-      config.putAll(metricConfigProperties());
+      enhanceConfig(config);
     }
   }
 
@@ -69,7 +69,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) Properties config) {
-      config.putAll(metricConfigProperties());
+      enhanceConfig(config);
     }
   }
 

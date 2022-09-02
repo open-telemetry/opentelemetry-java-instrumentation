@@ -11,8 +11,6 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -61,17 +59,16 @@ public final class KafkaSingletons {
     return CONSUMER_PROCESS_INSTRUMENTER;
   }
 
-  public static Map<String, ?> metricConfigProperties() {
-    Map<String, Object> config = new HashMap<>();
-    config.put(
+  public static void enhanceConfig(Map<? super String, Object> config) {
+    config.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        OpenTelemetryMetricsReporter.class.getName());
+        OpenTelemetryMetricsReporter.class.getName(),
+        (class1, class2) -> class1 + "," + class2);
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, GlobalOpenTelemetry.get());
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         INSTRUMENTATION_NAME);
-    return Collections.unmodifiableMap(config);
   }
 
   private KafkaSingletons() {}

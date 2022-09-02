@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.metricConfigProperties;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.enhanceConfig;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -57,7 +57,7 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) Map<String, Object> config) {
-      config.putAll(metricConfigProperties());
+      enhanceConfig(config);
     }
   }
 
@@ -66,7 +66,7 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) Properties config) {
-      config.putAll(metricConfigProperties());
+      enhanceConfig(config);
     }
   }
 
