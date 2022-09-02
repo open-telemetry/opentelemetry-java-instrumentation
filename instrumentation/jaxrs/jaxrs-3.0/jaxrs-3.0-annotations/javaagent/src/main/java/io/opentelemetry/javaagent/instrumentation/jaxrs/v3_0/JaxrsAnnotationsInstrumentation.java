@@ -151,18 +151,13 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
       CompletionStage<?> asyncReturnValue =
           returnValue instanceof CompletionStage ? (CompletionStage<?>) returnValue : null;
-
-      if (asyncResponse != null && !asyncResponse.isSuspended()) {
-        // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
-        VirtualField.find(AsyncResponse.class, AsyncResponseData.class).set(asyncResponse, null);
-      }
       if (asyncReturnValue != null) {
         // span finished by CompletionStageFinishCallback
         asyncReturnValue =
             asyncReturnValue.handle(
                 new CompletionStageFinishCallback<>(instrumenter(), context, handlerData));
       }
-      if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
+      if (asyncResponse == null && asyncReturnValue == null) {
         instrumenter().end(context, handlerData, null, null);
       }
       // else span finished by AsyncResponse*Advice
