@@ -1,6 +1,22 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
+muzzle {
+  pass {
+    group.set("javax.servlet")
+    module.set("javax.servlet-api")
+    versions.set("[3.0,)")
+    assertInverse.set(true)
+  }
+  pass {
+    group.set("javax.servlet")
+    module.set("servlet-api")
+    versions.set("[2.2, 3.0)")
+    assertInverse.set(true)
+  }
+}
+
 dependencies {
+  compileOnly project(":bootstrap")
   compileOnly "javax.servlet:javax.servlet-api:3.0.1"
 
   testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-common:${versions.opentelemetryJavaagentAlpha}"
