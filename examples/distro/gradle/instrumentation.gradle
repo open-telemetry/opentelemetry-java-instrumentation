@@ -1,5 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'io.opentelemetry.instrumentation.muzzle-generation'
+apply plugin: 'io.opentelemetry.instrumentation.muzzle-check'
 
 apply from: "$rootDir/gradle/shadow.gradle"
 
@@ -12,6 +14,7 @@ configurations {
 
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
 
   compileOnly deps.bytebuddy
@@ -19,11 +22,16 @@ dependencies {
   compileOnly deps.autoservice
 
   // the javaagent that is going to be used when running instrumentation unit tests
-  testAgent("io.opentelemetry.javaagent:opentelemetry-agent-for-testing:${versions.opentelemetryJavaagentAlpha}")
+  testAgent(project(path: ":testing:agent-for-testing", configuration: "shadow"))
   // test dependencies
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common:${versions.opentelemetryJavaagentAlpha}")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing:${versions.opentelemetry}")
   testImplementation("org.assertj:assertj-core:3.19.0")
+
+  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions.opentelemetryJavaagentAlpha}")
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
 }
 
 shadowJar {
@@ -48,6 +56,7 @@ tasks.withType(Test).configureEach {
   jvmArgs "-Dotel.metrics.exporter=otlp"
 
   dependsOn shadowJar
+  dependsOn configurations.testAgent.buildDependencies
 
   // The sources are packaged into the testing jar so we need to make sure to exclude from the test
   // classpath, which automatically inherits them, to ensure our shaded versions are used.
