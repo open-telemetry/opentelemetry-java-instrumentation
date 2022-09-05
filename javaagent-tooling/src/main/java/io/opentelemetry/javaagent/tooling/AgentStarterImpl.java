@@ -25,6 +25,7 @@ import org.objectweb.asm.Type;
  * Main entry point into code that is running inside agent class loader, used reflectively from
  * {@code io.opentelemetry.javaagent.bootstrap.AgentInitializer}.
  */
+@SuppressWarnings("unused")
 public class AgentStarterImpl implements AgentStarter {
   private final Instrumentation instrumentation;
   private final File javaagentFile;
@@ -77,7 +78,7 @@ public class AgentStarterImpl implements AgentStarter {
     if (loggingCustomizers.hasNext()) {
       loggingCustomizer = loggingCustomizers.next();
     } else {
-      loggingCustomizer = new DefaultLoggingCustomizer();
+      loggingCustomizer = NoopLoggingCustomizer.INSTANCE;
     }
 
     Throwable startupError = null;

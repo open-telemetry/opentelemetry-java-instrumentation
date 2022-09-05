@@ -20,9 +20,7 @@ public final class Constants {
   public static final List<String> BOOTSTRAP_PACKAGE_PREFIXES =
       Collections.unmodifiableList(
           Arrays.asList(
-              "io.opentelemetry.javaagent.bootstrap",
-              "io.opentelemetry.javaagent.shaded",
-              "io.opentelemetry.javaagent.slf4j"));
+              "io.opentelemetry.javaagent.bootstrap", "io.opentelemetry.javaagent.shaded"));
 
   private Constants() {}
 }

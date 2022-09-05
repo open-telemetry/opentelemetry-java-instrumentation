@@ -92,12 +92,12 @@ class JavaagentTestArgumentsProvider(
     "-Dotel.metrics.exporter=otlp",
     // suppress repeated logging of "No metric data to export - skipping export."
     // since PeriodicMetricReader is configured with a short interval
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
+    "-Dio.opentelemetry.javaagent.logging.simple.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
     // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO"
+    "-Dio.opentelemetry.javaagent.logging.simple.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
+    "-Dio.opentelemetry.javaagent.logging.simple.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
+    "-Dio.opentelemetry.javaagent.logging.simple.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
+    "-Dio.opentelemetry.javaagent.logging.simple.slf4j.simpleLogger.log.io.grpc.Context=INFO"
   )
 }
 
