@@ -70,5 +70,5 @@ dependencies {
   add("vaadin14LatestTestImplementation", "com.vaadin:vaadin-spring-boot-starter:14.+")
   // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6551
   // add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:+")
-  add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:23.1.7")
+  add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:23.1.+")
 }
