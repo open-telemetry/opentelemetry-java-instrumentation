@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
 final class DefaultLoggingCustomizer implements LoggingCustomizer {
@@ -32,6 +33,21 @@ final class DefaultLoggingCustomizer implements LoggingCustomizer {
     } else {
       // by default muzzle warnings are turned off
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "muzzleMatcher", "OFF");
+    }
+
+    ClassLoader previous = Thread.currentThread().getContextClassLoader();
+    try {
+      // make sure that slf4j finds the provider in the bootstrap CL
+      Thread.currentThread().setContextClassLoader(null);
+      Class<?> loggerFactory = Class.forName("org.slf4j.LoggerFactory");
+      loggerFactory.getMethod("getILoggerFactory").invoke(null);
+    } catch (ClassNotFoundException
+        | InvocationTargetException
+        | IllegalAccessException
+        | NoSuchMethodException e) {
+      throw new IllegalStateException("Failed to initialize logging", e);
+    } finally {
+      Thread.currentThread().setContextClassLoader(previous);
     }
   }
 
