@@ -102,6 +102,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "messaging.payload" String
           }
         }
         span(6) {

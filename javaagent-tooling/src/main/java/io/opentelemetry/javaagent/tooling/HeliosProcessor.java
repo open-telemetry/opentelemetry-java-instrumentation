@@ -18,7 +18,7 @@ public class HeliosProcessor implements SpanProcessor {
   public void onStart(Context parentContext, ReadWriteSpan span) {
     Baggage baggage = Baggage.fromContext(parentContext);
     if (baggage.getEntryValue(HELIOS_TEST_TRIGGERED_TRACE) != null) {
-      span.setAttribute(HELIOS_TEST_TRIGGERED_TRACE, HELIOS_TEST_TRIGGERED_TRACE);
+      span.setAttribute(HELIOS_TEST_TRIGGERED_TRACE, "true");
     }
   }
 

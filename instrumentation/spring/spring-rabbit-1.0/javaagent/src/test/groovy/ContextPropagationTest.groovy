@@ -94,7 +94,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
-            "messaging.payload" String
+            "messaging.payload" "test"
           }
         }
         // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue immediately after receiving
@@ -111,7 +111,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_RABBITMQ_ROUTING_KEY" String
-            "messaging.payload" String
+            "messaging.payload" "test"
           }
         }
         span(3) {
@@ -125,6 +125,7 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "messaging.payload" "test"
           }
         }
         span(4) {
