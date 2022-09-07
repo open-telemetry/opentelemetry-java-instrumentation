@@ -51,9 +51,9 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
 
   private static final Logger logger =
       Logger.getLogger(SpringBootServiceNameGuesser.class.getName());
-  public static final String COMMANDLINE_ARG_PREFIX = "--spring.application.name=";
+  private static final String COMMANDLINE_ARG_PREFIX = "--spring.application.name=";
   private static final Pattern COMMANDLINE_PATTERN =
-      Pattern.compile(".*--spring\\.application\\.name=([a-zA-Z.\\-_]+).*");
+      Pattern.compile("--spring\\.application\\.name=([a-zA-Z.\\-_]+)");
   private final SystemHelper system;
 
   public SpringBootServiceNameGuesser() {
@@ -88,7 +88,7 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
         .findFirst()
         .map(
             serviceName -> {
-              logger.log(Level.FINER, "Guessed Spring Boot service name: " + serviceName);
+              logger.log(Level.FINER, "Guessed Spring Boot service name: {0}", serviceName);
               return Resource.builder().put(ResourceAttributes.SERVICE_NAME, serviceName).build();
             })
         .orElseGet(Resource::empty);

@@ -79,7 +79,6 @@ class SpringBootServiceNameGuesserTest {
       URL url = getClass().getClassLoader().getResource(APPLICATION_YML);
       String content = readString(Paths.get(url.toURI()));
       writeString(yamlPath, content);
-      when(system.openFile(PROPS)).thenThrow(new FileNotFoundException());
       when(system.openFile(APPLICATION_YML)).thenCallRealMethod();
       SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
       Resource result = guesser.createResource(config);
