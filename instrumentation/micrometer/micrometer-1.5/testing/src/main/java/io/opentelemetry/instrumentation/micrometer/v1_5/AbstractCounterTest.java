@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 
 public abstract class AbstractCounterTest {
 
-  static final String INSTRUMENTATION_NAME = "io.opentelemetry.instrumentation.micrometer1shim";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
   protected abstract InstrumentationExtension testing();
 

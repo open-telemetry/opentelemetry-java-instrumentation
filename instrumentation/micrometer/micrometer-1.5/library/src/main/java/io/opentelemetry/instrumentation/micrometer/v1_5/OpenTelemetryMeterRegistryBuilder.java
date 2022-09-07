@@ -15,8 +15,7 @@ import java.util.concurrent.TimeUnit;
 public final class OpenTelemetryMeterRegistryBuilder {
 
   // Visible for testing
-  private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.instrumentation.micrometer1shim";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
