@@ -106,10 +106,10 @@ val DEPENDENCIES = listOf(
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.junit-pioneer:junit-pioneer:1.7.0",
+  "org.junit-pioneer:junit-pioneer:1.7.1",
   "org.objenesis:objenesis:3.2",
-  "org.spockframework:spock-core:2.2-M3-groovy-4.0",
-  "org.spockframework:spock-junit4:2.2-M3-groovy-4.0",
+  "org.spockframework:spock-core:2.2-groovy-4.0",
+  "org.spockframework:spock-junit4:2.2-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.7.2"
