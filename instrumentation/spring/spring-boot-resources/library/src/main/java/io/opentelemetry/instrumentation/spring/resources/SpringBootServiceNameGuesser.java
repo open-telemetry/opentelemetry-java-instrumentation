@@ -56,6 +56,7 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
       Pattern.compile("--spring\\.application\\.name=([a-zA-Z.\\-_]+)");
   private final SystemHelper system;
 
+  @SuppressWarnings("unused")
   public SpringBootServiceNameGuesser() {
     this(new SystemHelper());
   }
@@ -97,14 +98,14 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
   @Nullable
   private String findByEnvironmentVariable() {
     String result = system.getenv("SPRING_APPLICATION_NAME");
-    logger.log(Level.FINER, "Checking for SPRING_APPLICATION_NAME in env: " + result);
+    logger.log(Level.FINER, "Checking for SPRING_APPLICATION_NAME in env: {0}", result);
     return result;
   }
 
   @Nullable
   private String findBySystemProperties() {
     String result = system.getProperty("spring.application.name");
-    logger.log(Level.FINER, "Checking for spring.application.name system property: " + result);
+    logger.log(Level.FINER, "Checking for spring.application.name system property: {0}", result);
     return result;
   }
 
@@ -113,7 +114,8 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
     String result = readNameFromAppProperties();
     logger.log(
         Level.FINER,
-        "Checking for spring.application.name in application.properties file: " + result);
+        "Checking for spring.application.name in application.properties file: {0}",
+        result);
     return result;
   }
 
@@ -125,7 +127,7 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
     } catch (Exception e) {
       // expected to fail sometimes
     }
-    logger.log(Level.FINER, "Checking application.properties in current dir: " + result);
+    logger.log(Level.FINER, "Checking application.properties in current dir: {0}", result);
     return result;
   }
 
@@ -133,7 +135,7 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
   private String findByClasspathApplicationYaml() {
     String result =
         loadFromClasspath("application.yml", SpringBootServiceNameGuesser::parseNameFromYaml);
-    logger.log(Level.FINER, "Checking application.yml in classpath: " + result);
+    logger.log(Level.FINER, "Checking application.yml in classpath: {0}", result);
     return result;
   }
 
@@ -145,7 +147,7 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
     } catch (Exception e) {
       // expected to fail sometimes
     }
-    logger.log(Level.FINER, "Checking application.yml in current dir: " + result);
+    logger.log(Level.FINER, "Checking application.yml in current dir: {0}", result);
     return result;
   }
 
@@ -177,7 +179,7 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
       String javaCommand = system.getProperty("sun.java.command");
       result = parseNameFromCommandLine(javaCommand);
     }
-    logger.log(Level.FINER, "Checking application commandline args: " + result);
+    logger.log(Level.FINER, "Checking application commandline args: {0}", result);
     return result;
   }
 
@@ -259,8 +261,8 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
     }
 
     /**
-     * Attempts to use ProcessHandle to get the full commandline of the current process. Will only
-     * succeed on java 9+.
+     * Attempts to use ProcessHandle to get the full commandline of the current process (including
+     * the main method arguments). Will only succeed on java 9+.
      */
     @SuppressWarnings("unchecked")
     String[] attemptGetCommandLineArgsViaReflection() throws Exception {

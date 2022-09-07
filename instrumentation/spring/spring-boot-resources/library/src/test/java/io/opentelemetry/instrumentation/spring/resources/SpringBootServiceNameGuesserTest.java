@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
