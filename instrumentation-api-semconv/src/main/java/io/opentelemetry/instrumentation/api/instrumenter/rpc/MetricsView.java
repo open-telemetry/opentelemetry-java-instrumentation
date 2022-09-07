@@ -30,6 +30,7 @@ final class MetricsView {
     view.add(SemanticAttributes.RPC_SYSTEM);
     view.add(SemanticAttributes.RPC_SERVICE);
     view.add(SemanticAttributes.RPC_METHOD);
+    view.add(SemanticAttributes.RPC_GRPC_STATUS_CODE);
     return view;
   }
 

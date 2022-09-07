@@ -217,7 +217,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -242,7 +245,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
   }
 
   @Test
@@ -398,7 +404,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -423,7 +432,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
   }
 
   @Test
@@ -587,7 +599,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -612,7 +627,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
   }
 
   @ParameterizedTest
@@ -733,7 +751,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) status.getCode().value()))))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -758,7 +779,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) status.getCode().value()))))));
   }
 
   @ParameterizedTest
@@ -880,7 +904,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.UNKNOWN.value()))))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -905,7 +932,10 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.UNKNOWN.value()))))));
   }
 
   static class ErrorProvider implements ArgumentsProvider {

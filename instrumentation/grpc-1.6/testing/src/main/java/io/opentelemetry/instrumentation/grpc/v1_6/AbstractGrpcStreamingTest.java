@@ -227,7 +227,10 @@ public abstract class AbstractGrpcStreamingTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -253,7 +256,10 @@ public abstract class AbstractGrpcStreamingTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
