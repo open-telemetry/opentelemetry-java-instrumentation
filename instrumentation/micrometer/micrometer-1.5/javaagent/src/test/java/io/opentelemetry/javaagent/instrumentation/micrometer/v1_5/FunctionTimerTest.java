@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.micrometer.v1_5.AbstractFunctionTimerTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class FunctionTimerTest extends AbstractFunctionTimerTest {
@@ -15,9 +17,10 @@ class FunctionTimerTest extends AbstractFunctionTimerTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension
-  static final MicrometerTestingExtension micrometerExtension =
-      new MicrometerTestingExtension(testing);
+  @AfterEach
+  public void cleanup() {
+    Metrics.globalRegistry.forEachMeter(Metrics.globalRegistry::remove);
+  }
 
   @Override
   protected InstrumentationExtension testing() {
