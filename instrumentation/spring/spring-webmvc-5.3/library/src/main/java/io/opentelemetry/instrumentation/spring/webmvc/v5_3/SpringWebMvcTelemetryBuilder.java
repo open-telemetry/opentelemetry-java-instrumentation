@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 /** A builder of {@link SpringWebMvcTelemetry}. */
 public final class SpringWebMvcTelemetryBuilder {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-3.1";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-5.3";
 
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<HttpServletRequest, HttpServletResponse>>
