@@ -46,7 +46,7 @@ final class NettyConnectNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       NettyConnectionRequest request, @Nullable Channel channel) {
     if (channel == null) {
       return null;

@@ -33,13 +33,13 @@ public class UndertowNetAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(HttpServerExchange exchange) {
+  protected InetSocketAddress getPeerSocketAddress(HttpServerExchange exchange) {
     return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getHostAddress(HttpServerExchange exchange) {
+  protected InetSocketAddress getHostSocketAddress(HttpServerExchange exchange) {
     return exchange.getConnection().getLocalAddress(InetSocketAddress.class);
   }
 }

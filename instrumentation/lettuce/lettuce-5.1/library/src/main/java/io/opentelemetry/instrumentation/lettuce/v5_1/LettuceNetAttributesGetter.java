@@ -34,7 +34,7 @@ final class LettuceNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       OpenTelemetryEndpoint openTelemetryEndpoint, @Nullable Void unused) {
     return openTelemetryEndpoint.address;
   }

@@ -37,13 +37,13 @@ public final class DubboNetServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(DubboRequest request) {
+  protected InetSocketAddress getPeerSocketAddress(DubboRequest request) {
     return request.remoteAddress();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getHostAddress(DubboRequest request) {
+  protected InetSocketAddress getHostSocketAddress(DubboRequest request) {
     return request.localAddress();
   }
 }

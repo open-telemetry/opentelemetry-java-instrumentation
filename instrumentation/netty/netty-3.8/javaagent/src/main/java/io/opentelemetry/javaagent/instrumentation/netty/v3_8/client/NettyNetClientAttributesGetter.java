@@ -41,7 +41,7 @@ final class NettyNetClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().getRemoteAddress();
     if (address instanceof InetSocketAddress) {

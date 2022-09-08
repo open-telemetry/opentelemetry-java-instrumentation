@@ -28,12 +28,6 @@ public class LibertyDispatcherNetAttributesGetter
     return request.request().getURLPort();
   }
 
-  @Nullable
-  @Override
-  public String sockFamily(LibertyRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String sockPeerAddr(LibertyRequest request) {

@@ -29,14 +29,22 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   Integer peerPort(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  String sockFamily(REQUEST request, @Nullable RESPONSE response);
+  default String sockFamily(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
 
   @Nullable
-  String sockPeerAddr(REQUEST request, @Nullable RESPONSE response);
+  default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
 
   @Nullable
-  String sockPeerName(REQUEST request, @Nullable RESPONSE response);
+  default String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
 
   @Nullable
-  Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response);
+  default Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
 }

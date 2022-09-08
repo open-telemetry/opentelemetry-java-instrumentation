@@ -39,12 +39,6 @@ public class RabbitReceiveNetAttributesGetter
 
   @Nullable
   @Override
-  public String sockPeerName(ReceiveRequest request, @Nullable GetResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public Integer sockPeerPort(ReceiveRequest request, @Nullable GetResponse response) {
     return request.getConnection().getPort();
   }

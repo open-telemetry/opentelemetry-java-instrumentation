@@ -124,13 +124,13 @@ public class InstrumenterBenchmark {
 
     @Override
     @Nullable
-    public InetSocketAddress getPeerAddress(Void unused) {
+    protected InetSocketAddress getPeerSocketAddress(Void unused) {
       return PEER_ADDRESS;
     }
 
     @Nullable
     @Override
-    public InetSocketAddress getHostAddress(Void unused) {
+    protected InetSocketAddress getHostSocketAddress(Void unused) {
       return HOST_ADDRESS;
     }
   }

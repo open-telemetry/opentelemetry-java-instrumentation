@@ -152,7 +152,7 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public InetSocketAddress peerAddress() {
+  public InetSocketAddress peerSocketAddress() {
     if (target == null) {
       return null;
     }

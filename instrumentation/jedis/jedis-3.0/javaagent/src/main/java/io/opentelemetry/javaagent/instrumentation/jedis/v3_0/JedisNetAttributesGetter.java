@@ -32,7 +32,8 @@ final class JedisNetAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(JedisRequest jedisRequest, @Nullable Void unused) {
+  protected InetSocketAddress getPeerSocketAddress(
+      JedisRequest jedisRequest, @Nullable Void unused) {
     Socket socket = jedisRequest.getConnection().getSocket();
     if (socket != null && socket.getRemoteSocketAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) socket.getRemoteSocketAddress();

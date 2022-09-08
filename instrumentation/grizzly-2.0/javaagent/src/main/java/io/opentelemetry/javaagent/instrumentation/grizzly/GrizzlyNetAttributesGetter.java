@@ -33,12 +33,6 @@ final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<Http
 
   @Nullable
   @Override
-  public String sockFamily(HttpRequestPacket request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String sockPeerAddr(HttpRequestPacket request) {
     return request.getRemoteAddress();
   }

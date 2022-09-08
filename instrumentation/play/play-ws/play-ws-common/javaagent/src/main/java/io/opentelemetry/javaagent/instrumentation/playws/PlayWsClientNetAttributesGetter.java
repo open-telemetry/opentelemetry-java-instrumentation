@@ -33,7 +33,7 @@ final class PlayWsClientNetAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(Request request, @Nullable Response response) {
+  protected InetSocketAddress getPeerSocketAddress(Request request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();
     }

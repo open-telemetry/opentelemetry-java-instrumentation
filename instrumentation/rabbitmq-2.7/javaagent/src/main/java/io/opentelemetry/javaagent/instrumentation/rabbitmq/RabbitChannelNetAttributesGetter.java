@@ -36,12 +36,6 @@ public class RabbitChannelNetAttributesGetter
     return channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
   }
 
-  @Nullable
-  @Override
-  public String sockPeerName(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
-    return null;
-  }
-
   @Override
   public Integer sockPeerPort(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return channelAndMethod.getChannel().getConnection().getPort();

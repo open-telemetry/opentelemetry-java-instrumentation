@@ -31,7 +31,7 @@ final class RedissonNetAttributesGetter
   }
 
   @Override
-  public InetSocketAddress getPeerAddress(RedissonRequest request, @Nullable Void unused) {
+  protected InetSocketAddress getPeerSocketAddress(RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();
   }
 }

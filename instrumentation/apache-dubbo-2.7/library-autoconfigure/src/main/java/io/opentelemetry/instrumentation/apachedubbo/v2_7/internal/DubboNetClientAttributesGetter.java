@@ -37,7 +37,8 @@ public final class DubboNetClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(DubboRequest request, @Nullable Result response) {
+  protected InetSocketAddress getPeerSocketAddress(
+      DubboRequest request, @Nullable Result response) {
     return request.remoteAddress();
   }
 }

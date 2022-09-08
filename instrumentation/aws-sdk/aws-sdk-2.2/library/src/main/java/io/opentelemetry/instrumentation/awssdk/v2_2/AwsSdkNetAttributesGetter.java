@@ -34,28 +34,4 @@ class AwsSdkNetAttributesGetter
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.port();
   }
-
-  @Nullable
-  @Override
-  public String sockFamily(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerAddr(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerName(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer sockPeerPort(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
-    return null;
-  }
 }

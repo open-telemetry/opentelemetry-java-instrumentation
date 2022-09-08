@@ -35,7 +35,7 @@ public class CouchbaseNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
     SocketAddress peerAddress = couchbaseRequest.getPeerAddress();
     if (peerAddress instanceof InetSocketAddress) {

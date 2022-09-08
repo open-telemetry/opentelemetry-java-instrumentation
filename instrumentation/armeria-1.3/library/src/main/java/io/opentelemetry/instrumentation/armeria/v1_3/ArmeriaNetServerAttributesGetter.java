@@ -34,7 +34,7 @@ final class ArmeriaNetServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(RequestContext ctx) {
+  protected InetSocketAddress getPeerSocketAddress(RequestContext ctx) {
     SocketAddress address = ctx.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
@@ -44,7 +44,7 @@ final class ArmeriaNetServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostAddress(RequestContext ctx) {
+  protected InetSocketAddress getHostSocketAddress(RequestContext ctx) {
     SocketAddress address = ctx.localAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

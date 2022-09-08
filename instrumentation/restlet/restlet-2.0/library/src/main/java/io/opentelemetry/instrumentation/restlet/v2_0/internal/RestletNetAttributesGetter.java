@@ -33,12 +33,6 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
     return call == null ? null : call.getServerPort();
   }
 
-  @Nullable
-  @Override
-  public String sockFamily(Request request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String sockPeerAddr(Request request) {
@@ -55,12 +49,6 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
   public String sockHostAddr(Request request) {
     ServerCall call = serverCall(request);
     return call == null ? null : call.getServerAddress();
-  }
-
-  @Nullable
-  @Override
-  public Integer sockHostPort(Request request) {
-    return null;
   }
 
   @Nullable

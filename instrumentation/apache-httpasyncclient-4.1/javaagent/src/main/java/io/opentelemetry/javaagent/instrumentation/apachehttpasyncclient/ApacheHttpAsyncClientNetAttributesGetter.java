@@ -32,8 +32,8 @@ final class ApacheHttpAsyncClientNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.peerAddress();
+    return request.peerSocketAddress();
   }
 }

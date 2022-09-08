@@ -32,7 +32,8 @@ final class AsyncHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(RequestContext request, @Nullable Response response) {
+  protected InetSocketAddress getPeerSocketAddress(
+      RequestContext request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();
     }

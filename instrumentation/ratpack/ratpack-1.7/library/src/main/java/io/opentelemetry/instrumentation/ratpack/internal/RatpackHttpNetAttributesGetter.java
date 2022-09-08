@@ -33,28 +33,4 @@ public final class RatpackHttpNetAttributesGetter
   public Integer peerPort(RequestSpec request, @Nullable HttpResponse response) {
     return request.getUri().getPort();
   }
-
-  @Nullable
-  @Override
-  public String sockFamily(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerAddr(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerName(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer sockPeerPort(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
-    return null;
-  }
 }

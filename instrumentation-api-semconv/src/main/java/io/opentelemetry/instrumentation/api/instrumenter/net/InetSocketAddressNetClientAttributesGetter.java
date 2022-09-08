@@ -21,12 +21,13 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
     implements NetClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
-  public abstract InetSocketAddress getPeerAddress(REQUEST request, @Nullable RESPONSE response);
+  protected abstract InetSocketAddress getPeerSocketAddress(
+      REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
   @Override
   public String sockFamily(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getPeerAddress(request, response);
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -40,7 +41,7 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
   @Override
   @Nullable
   public final String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getPeerAddress(request, response);
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -54,7 +55,7 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
   @Override
   @Nullable
   public String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getPeerAddress(request, response);
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -64,7 +65,7 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
   @Nullable
   @Override
   public Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getPeerAddress(request, response);
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }

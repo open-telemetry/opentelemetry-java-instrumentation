@@ -44,32 +44,8 @@ public final class RatpackNetAttributesGetter implements NetServerAttributesGett
     return ratpackContext.get(PublicAddress.class);
   }
 
-  @Nullable
-  @Override
-  public String sockFamily(Request request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String sockPeerAddr(Request request) {
-    return null;
-  }
-
   @Override
   public Integer sockPeerPort(Request request) {
     return request.getRemoteAddress().getPort();
-  }
-
-  @Nullable
-  @Override
-  public String sockHostAddr(Request request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer sockHostPort(Request request) {
-    return null;
   }
 }

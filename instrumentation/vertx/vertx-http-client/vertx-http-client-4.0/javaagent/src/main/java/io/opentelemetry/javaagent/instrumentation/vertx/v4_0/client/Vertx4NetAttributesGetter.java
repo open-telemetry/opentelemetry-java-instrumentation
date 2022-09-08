@@ -34,7 +34,7 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;

@@ -28,28 +28,4 @@ final class ApacheHttpClientNetAttributesGetter
   public Integer peerPort(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getPeerPort();
   }
-
-  @Nullable
-  @Override
-  public String sockFamily(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerAddr(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerName(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer sockPeerPort(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
 }

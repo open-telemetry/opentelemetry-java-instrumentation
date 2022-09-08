@@ -42,12 +42,12 @@ class InetSocketAddressNetServerAttributesGetterTest {
         }
 
         @Override
-        public InetSocketAddress getPeerAddress(Addresses request) {
+        protected InetSocketAddress getPeerSocketAddress(Addresses request) {
           return request.peer;
         }
 
         @Override
-        public InetSocketAddress getHostAddress(Addresses request) {
+        protected InetSocketAddress getHostSocketAddress(Addresses request) {
           return request.host;
         }
       };

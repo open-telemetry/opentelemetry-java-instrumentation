@@ -30,12 +30,6 @@ public class ElasticTransportNetResponseAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public String sockFamily(ElasticTransportRequest request, @Nullable ActionResponse response) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String sockPeerAddr(ElasticTransportRequest request, @Nullable ActionResponse response) {

@@ -29,32 +29,4 @@ final class SpringWebNetAttributesGetter
   public Integer peerPort(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
     return httpRequest.getURI().getPort();
   }
-
-  @Nullable
-  @Override
-  public String sockFamily(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerAddr(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerName(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer sockPeerPort(
-      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
-    return null;
-  }
 }

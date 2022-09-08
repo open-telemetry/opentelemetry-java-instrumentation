@@ -37,7 +37,7 @@ final class NettyNetServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(HttpRequestAndChannel requestAndChannel) {
+  protected InetSocketAddress getPeerSocketAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.channel().getRemoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
@@ -47,7 +47,7 @@ final class NettyNetServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostAddress(HttpRequestAndChannel requestAndChannel) {
+  protected InetSocketAddress getHostSocketAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.channel().getLocalAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

@@ -29,12 +29,6 @@ enum SpringWebMvcNetAttributesGetter implements NetServerAttributesGetter<HttpSe
     return request.getServerPort();
   }
 
-  @Nullable
-  @Override
-  public String sockFamily(HttpServletRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String sockPeerAddr(HttpServletRequest request) {

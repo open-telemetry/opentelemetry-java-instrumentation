@@ -21,18 +21,18 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
     implements NetServerAttributesGetter<REQUEST> {
 
   @Nullable
-  public abstract InetSocketAddress getPeerAddress(REQUEST request);
+  protected abstract InetSocketAddress getPeerSocketAddress(REQUEST request);
 
   // optional
   @Nullable
-  public abstract InetSocketAddress getHostAddress(REQUEST request);
+  protected abstract InetSocketAddress getHostSocketAddress(REQUEST request);
 
   @Nullable
   @Override
   public String sockFamily(REQUEST request) {
-    InetSocketAddress address = getPeerAddress(request);
+    InetSocketAddress address = getPeerSocketAddress(request);
     if (address == null) {
-      address = getHostAddress(request);
+      address = getHostSocketAddress(request);
     }
     if (address == null) {
       return null;
@@ -47,25 +47,25 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
   @Override
   @Nullable
   public final String sockPeerAddr(REQUEST request) {
-    return getAddress(getPeerAddress(request));
+    return getAddress(getPeerSocketAddress(request));
   }
 
   @Override
   @Nullable
   public final Integer sockPeerPort(REQUEST request) {
-    return getPort(getPeerAddress(request));
+    return getPort(getPeerSocketAddress(request));
   }
 
   @Nullable
   @Override
   public String sockHostAddr(REQUEST request) {
-    return getAddress(getHostAddress(request));
+    return getAddress(getHostSocketAddress(request));
   }
 
   @Nullable
   @Override
   public Integer sockHostPort(REQUEST request) {
-    return getPort(getHostAddress(request));
+    return getPort(getHostSocketAddress(request));
   }
 
   @Nullable

@@ -36,28 +36,4 @@ class MongoNetAttributesGetter implements NetClientAttributesGetter<CommandStart
     }
     return null;
   }
-
-  @Nullable
-  @Override
-  public String sockFamily(CommandStartedEvent event, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerAddr(CommandStartedEvent event, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerName(CommandStartedEvent event, @Nullable Void unused) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer sockPeerPort(CommandStartedEvent event, @Nullable Void unused) {
-    return null;
-  }
 }

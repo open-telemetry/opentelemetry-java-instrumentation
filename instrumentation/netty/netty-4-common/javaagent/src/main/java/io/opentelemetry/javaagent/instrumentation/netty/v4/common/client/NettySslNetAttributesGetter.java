@@ -35,7 +35,7 @@ final class NettySslNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getPeerAddress(NettySslRequest request, @Nullable Void unused) {
+  protected InetSocketAddress getPeerSocketAddress(NettySslRequest request, @Nullable Void unused) {
     if (request.remoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) request.remoteAddress();
     }

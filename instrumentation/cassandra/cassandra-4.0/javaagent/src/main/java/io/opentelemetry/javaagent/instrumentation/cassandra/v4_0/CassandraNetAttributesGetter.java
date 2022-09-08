@@ -35,7 +35,7 @@ final class CassandraNetAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;

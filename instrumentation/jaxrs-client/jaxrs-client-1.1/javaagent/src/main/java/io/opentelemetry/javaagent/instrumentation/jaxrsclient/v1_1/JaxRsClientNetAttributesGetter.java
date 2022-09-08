@@ -29,28 +29,4 @@ final class JaxRsClientNetAttributesGetter
   public Integer peerPort(ClientRequest request, @Nullable ClientResponse response) {
     return request.getURI().getPort();
   }
-
-  @Nullable
-  @Override
-  public String sockFamily(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerAddr(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerName(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer sockPeerPort(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
-  }
 }

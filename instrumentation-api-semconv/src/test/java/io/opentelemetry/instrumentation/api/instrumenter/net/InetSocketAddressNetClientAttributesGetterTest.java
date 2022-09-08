@@ -42,7 +42,7 @@ class InetSocketAddressNetClientAttributesGetterTest {
             }
 
             @Override
-            public InetSocketAddress getPeerAddress(
+            protected InetSocketAddress getPeerSocketAddress(
                 InetSocketAddress request, InetSocketAddress response) {
               return response;
             }

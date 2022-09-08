@@ -33,29 +33,4 @@ public final class SpringWebfluxNetAttributesGetter
   public Integer peerPort(ClientRequest request, @Nullable ClientResponse response) {
     return request.url().getPort();
   }
-
-  @Nullable
-  @Override
-  public String sockFamily(ClientRequest clientRequest, @Nullable ClientResponse clientResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerAddr(ClientRequest clientRequest, @Nullable ClientResponse clientResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerName(ClientRequest clientRequest, @Nullable ClientResponse clientResponse) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer sockPeerPort(
-      ClientRequest clientRequest, @Nullable ClientResponse clientResponse) {
-    return null;
-  }
 }

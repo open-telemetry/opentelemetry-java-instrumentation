@@ -33,7 +33,7 @@ public class Elasticsearch6TransportNetAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().address();

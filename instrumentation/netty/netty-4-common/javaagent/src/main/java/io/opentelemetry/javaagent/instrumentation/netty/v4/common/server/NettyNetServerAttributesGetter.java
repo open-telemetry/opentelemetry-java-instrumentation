@@ -19,7 +19,6 @@ final class NettyNetServerAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<HttpRequestAndChannel> {
 
   @Override
-  @Nullable
   public String transport(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
@@ -38,7 +37,7 @@ final class NettyNetServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(HttpRequestAndChannel requestAndChannel) {
+  protected InetSocketAddress getPeerSocketAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
@@ -48,7 +47,7 @@ final class NettyNetServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostAddress(HttpRequestAndChannel requestAndChannel) {
+  protected InetSocketAddress getHostSocketAddress(HttpRequestAndChannel requestAndChannel) {
     SocketAddress address = requestAndChannel.channel().localAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

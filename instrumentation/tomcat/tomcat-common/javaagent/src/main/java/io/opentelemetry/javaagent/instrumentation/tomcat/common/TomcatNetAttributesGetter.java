@@ -30,12 +30,6 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
     return request.getServerPort();
   }
 
-  @Nullable
-  @Override
-  public String sockFamily(Request request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String sockPeerAddr(Request request) {

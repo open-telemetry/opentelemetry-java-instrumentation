@@ -36,12 +36,6 @@ public class ServletNetAttributesGetter<REQUEST, RESPONSE>
     return accessor.getRequestServerPort(requestContext.request());
   }
 
-  @Nullable
-  @Override
-  public String sockFamily(ServletRequestContext<REQUEST> requestContext) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String sockPeerAddr(ServletRequestContext<REQUEST> requestContext) {

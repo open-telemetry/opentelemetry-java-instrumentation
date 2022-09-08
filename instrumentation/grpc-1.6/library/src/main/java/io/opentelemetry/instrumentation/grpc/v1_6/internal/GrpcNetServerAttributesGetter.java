@@ -37,7 +37,7 @@ public final class GrpcNetServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getPeerAddress(GrpcRequest request) {
+  protected InetSocketAddress getPeerSocketAddress(GrpcRequest request) {
     SocketAddress address = request.getPeerAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
@@ -47,7 +47,7 @@ public final class GrpcNetServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getHostAddress(GrpcRequest grpcRequest) {
+  protected InetSocketAddress getHostSocketAddress(GrpcRequest grpcRequest) {
     // TODO: later version introduces TRANSPORT_ATTR_LOCAL_ADDR, might be a good idea to use it
     return null;
   }
