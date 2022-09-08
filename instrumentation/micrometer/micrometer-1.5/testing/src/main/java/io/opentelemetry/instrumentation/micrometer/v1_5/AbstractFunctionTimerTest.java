@@ -18,7 +18,7 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-abstract class AbstractFunctionTimerTest {
+public abstract class AbstractFunctionTimerTest {
 
   protected abstract InstrumentationExtension testing();
 
