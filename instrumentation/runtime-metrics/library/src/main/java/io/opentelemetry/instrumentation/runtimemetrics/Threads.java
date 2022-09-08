@@ -52,7 +52,8 @@ public final class Threads {
         .setDescription("Number of live daemon threads")
         .setUnit("1")
         .buildWithCallback(
-            observableMeasurement -> observableMeasurement.record(threadBean.getDaemonThreadCount()));    
+            observableMeasurement -> observableMeasurement.record(
+                threadBean.getDaemonThreadCount()));
   }
 
   private Threads() {}
