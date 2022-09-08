@@ -23,6 +23,7 @@ import java.lang.management.ThreadMXBean;
  *
  * <pre>
  *   process.runtime.jvm.threads.count 4
+ *   process.runtime.jvm.daemon.threads.count 3
  * </pre>
  */
 public final class Threads {
@@ -45,6 +46,13 @@ public final class Threads {
         .setUnit("1")
         .buildWithCallback(
             observableMeasurement -> observableMeasurement.record(threadBean.getThreadCount()));
+
+    meter
+        .upDownCounterBuilder("process.runtime.jvm.daemon.threads.count")
+        .setDescription("Number of live daemon threads")
+        .setUnit("1")
+        .buildWithCallback(
+            observableMeasurement -> observableMeasurement.record(threadBean.getDaemonThreadCount()));    
   }
 
   private Threads() {}
