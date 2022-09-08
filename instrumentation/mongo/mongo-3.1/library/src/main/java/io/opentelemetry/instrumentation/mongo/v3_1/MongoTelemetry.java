@@ -28,9 +28,13 @@ public final class MongoTelemetry {
 
   private final Instrumenter<CommandStartedEvent, Void> instrumenter;
 
-  MongoTelemetry(OpenTelemetry openTelemetry, int maxNormalizedQueryLength) {
+  MongoTelemetry(
+      OpenTelemetry openTelemetry,
+      boolean statementSanitizationEnabled,
+      int maxNormalizedQueryLength) {
     this.instrumenter =
-        MongoInstrumenterFactory.createInstrumenter(openTelemetry, maxNormalizedQueryLength);
+        MongoInstrumenterFactory.createInstrumenter(
+            openTelemetry, statementSanitizationEnabled, maxNormalizedQueryLength);
   }
 
   /**
