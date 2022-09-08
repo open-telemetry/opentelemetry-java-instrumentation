@@ -78,11 +78,15 @@ enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Me
   @Nullable
   @Override
   public String messagePayload(Message message) {
-    byte[] body = message.getBody();
-    if (body != null) {
-      return new String(body, StandardCharsets.UTF_8);
+    if (message == null) {
+      return null;
     }
 
-    return null;
+    byte[] body = message.getBody();
+    if (body == null) {
+      return null;
+    }
+
+    return new String(body, StandardCharsets.UTF_8);
   }
 }
