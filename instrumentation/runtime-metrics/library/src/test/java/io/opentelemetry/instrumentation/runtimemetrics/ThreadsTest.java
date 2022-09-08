@@ -56,7 +56,7 @@ class ThreadsTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
-                        .hasDescription("Number of daemon threads")
+                        .hasDescription("Number of live daemon threads")
                         .hasUnit("1")
                         .hasLongSumSatisfying(
                             sum ->
