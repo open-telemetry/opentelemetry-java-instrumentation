@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
-abstract class AbstractLongTaskTimerHistogramTest {
+public abstract class AbstractLongTaskTimerHistogramTest {
 
   protected abstract InstrumentationExtension testing();
 
