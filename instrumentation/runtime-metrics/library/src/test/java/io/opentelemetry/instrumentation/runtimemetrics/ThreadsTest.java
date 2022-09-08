@@ -29,6 +29,7 @@ class ThreadsTest {
   @Test
   void registerObservers() {
     when(threadBean.getThreadCount()).thenReturn(3);
+    when(threadBean.getDaemonThreadCount()).thenReturn(2);
 
     Threads.INSTANCE.registerObservers(testing.getOpenTelemetry(), threadBean);
 
@@ -47,5 +48,21 @@ class ThreadsTest {
                                     .hasPointsSatisfying(
                                         point ->
                                             point.hasValue(3).hasAttributes(Attributes.empty())))));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.runtime-metrics",
+        "process.runtime.jvm.daemon.threads.count",
+        metrics ->
+            metrics.anySatisfy(
+                metricData ->
+                    assertThat(metricData)
+                        .hasDescription("Number of daemon threads")
+                        .hasUnit("1")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point.hasValue(2).hasAttributes(Attributes.empty())))));
   }
 }
