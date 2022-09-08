@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 
-abstract class AbstractGaugeTest {
+public abstract class AbstractGaugeTest {
 
   protected abstract InstrumentationExtension testing();
 
