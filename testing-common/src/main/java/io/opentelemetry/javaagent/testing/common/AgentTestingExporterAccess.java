@@ -188,10 +188,9 @@ public final class AgentTestingExporterAccess {
                       io.opentelemetry.sdk.resources.Resource.create(
                           fromProto(resource.getAttributesList())))
                   .setInstrumentationScopeInfo(
-                      InstrumentationScopeInfo.create(
-                          instrumentationScope.getName(),
-                          instrumentationScope.getVersion(),
-                          /* schemaUrl= */ null))
+                      InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                          .setVersion(instrumentationScope.getVersion())
+                          .build())
                   .setName(span.getName())
                   .setStartEpochNanos(span.getStartTimeUnixNano())
                   .setEndEpochNanos(span.getEndTimeUnixNano())
@@ -267,10 +266,9 @@ public final class AgentTestingExporterAccess {
                   metric,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
-                  InstrumentationScopeInfo.create(
-                      instrumentationScope.getName(),
-                      instrumentationScope.getVersion(),
-                      /* schemaUrl= */ null)));
+                  InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                      .setVersion(instrumentationScope.getVersion())
+                      .build()));
         }
       }
     }
@@ -309,10 +307,9 @@ public final class AgentTestingExporterAccess {
                   logRecord,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
-                  InstrumentationScopeInfo.create(
-                      instrumentationScope.getName(),
-                      instrumentationScope.getVersion(),
-                      /* schemaUrl= */ null)));
+                  InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                      .setVersion(instrumentationScope.getVersion())
+                      .build()));
         }
       }
     }

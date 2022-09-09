@@ -498,7 +498,7 @@ class InstrumenterTest {
 
     // see the test-instrumentation.properties file
     InstrumentationScopeInfo expectedLibraryInfo =
-        InstrumentationScopeInfo.create("test-instrumentation", "1.2.3", /* schemaUrl= */ null);
+        InstrumentationScopeInfo.builder("test-instrumentation").setVersion("1.2.3").build();
 
     otelTesting
         .assertTraces()
@@ -529,8 +529,9 @@ class InstrumenterTest {
                     span ->
                         span.hasName("span")
                             .hasInstrumentationScopeInfo(
-                                InstrumentationScopeInfo.create(
-                                    "test", "1.0", /* schemaUrl= */ null))));
+                                InstrumentationScopeInfo.builder("test")
+                                    .setVersion("1.0")
+                                    .build())));
   }
 
   @Test
@@ -547,7 +548,9 @@ class InstrumenterTest {
     instrumenter.end(context, Collections.emptyMap(), Collections.emptyMap(), null);
 
     InstrumentationScopeInfo expectedLibraryInfo =
-        InstrumentationScopeInfo.create("test", null, "https://opentelemetry.io/schemas/1.0.0");
+        InstrumentationScopeInfo.builder("test")
+            .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
+            .build();
     otelTesting
         .assertTraces()
         .hasTracesSatisfyingExactly(
