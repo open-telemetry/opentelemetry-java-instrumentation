@@ -50,6 +50,6 @@ final class Slf4jSimpleLogger extends InternalLogger {
       case TRACE:
         return org.slf4j.event.Level.TRACE;
     }
-    throw new IllegalStateException("Missing logging levek value in switch");
+    throw new IllegalStateException("Missing logging level value in switch");
   }
 }

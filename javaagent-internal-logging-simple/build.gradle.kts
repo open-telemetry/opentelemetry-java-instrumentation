@@ -28,7 +28,7 @@ tasks {
     // required for META-INF/services files relocation
     mergeServiceFiles()
 
-    // Prevents conflict with other SLF4J instances
+    // Prevents configuration naming conflict with other SLF4J instances
     relocate("org.slf4j", "io.opentelemetry.javaagent.logging.simple.slf4j")
   }
 
