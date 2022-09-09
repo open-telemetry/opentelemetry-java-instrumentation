@@ -1,0 +1,63 @@
+---
+rules:
+  # Producer metrics
+
+  - bean: kafka.producer:client-id=*,type=producer-metrics
+    label:
+      client-id: param(client-id)
+    prefix: kafka.producer.all.
+    type: gauge
+    unit: 1
+    mapping:
+      batch-size-avg:
+        desc: Average number of bytes sent per partition per request
+        unit: By
+      bufferpool-wait-ratio:
+        desc: The fraction of time an appender waits for space allocation
+      compression-rate-avg:
+        desc: Average ratio of the compressed batch size to the uncompressed size
+      io-wait-time-ns-avg:
+        desc: The average time the I/O thread spent waiting for a socket ready for reads or writes
+        unit: ns
+      outgoing-byte-rate:
+        desc: The average number of outgoing bytes sent per second to all servers
+        unit: By
+      produce-throttle-time-avg:
+        desc: Average time a request was throttled by a broker
+        unit: ms
+      record-queue-time-avg:
+        desc: The average time record batches spent in the send buffer
+        unit: ms
+      record-retry-rate:
+        desc: The average number of retried record sends per second
+      request-latency-avg:
+        desc: The average request latency
+        unit: ms
+      request-rate:
+        desc: The average number of requests sent per second
+        unit: '{requests}'
+      response-rate:
+        desc: The average number of responses received per second
+        unit: '{responses}'
+
+  # Per-topic Producer metrics
+
+  - bean: kafka.producer:client-id=*,topic=*,type=producer-topic-metrics
+    label:
+      client-id: param(client-id)
+      topic: param(topic)
+    prefix: kafka.producer.
+    type: gauge
+    unit: 1
+    mapping:
+      byte-rate:
+        desc: The average number of bytes sent per second for a topic
+        unit: By
+      compression-rate:
+        desc: The average compression rate of record batches for a topic
+      record-error-rate:
+        desc: The average per-second number of record sends that resulted in errors for a topic
+      record-retry-rate:
+        desc: The average per-second number of retried record sends for a topic
+      record-send-rate:
+        desc: The average number of records sent per second for a topic

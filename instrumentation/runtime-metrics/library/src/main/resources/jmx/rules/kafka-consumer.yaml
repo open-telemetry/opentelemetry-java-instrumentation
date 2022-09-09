@@ -1,0 +1,80 @@
+---
+rules:
+  # Consumer metrics
+
+  - bean: kafka.consumer:client-id=*,type=consumer-coordinator-metrics
+    label:
+      client-id: param(client-id)
+    prefix: kafka.consumer.all.
+    type: gauge
+    unit: 1
+    mapping:
+      rebalance-latency-avg:
+        desc: The average time taken for a group to complete a successful rebalance
+        unit: ms
+      rebalance-latency-max:
+        desc: The maximum time taken for a group to complete a successful rebalance
+        unit: ms
+      rebalance-latency-total:
+        desc: The total time this consumer has spent in successful rebalances since creation
+        unit: ms
+      rebalance-rate-per-hour:
+        desc: The number of successful rebalance events per hour
+      rebalance-total:
+        desc: The total number of successful rebalance events
+      last-rebalance-seconds-ago:
+        desc: Number of seconds since the last rebalance event
+        unit: s
+      failed-rebalance-rate-per-hour:
+        desc: Number of failed rebalance events per hour
+      failed-rebalance-total:
+        desc: Total number of failed rebalance events
+      commit-latency-avg:
+        desc: The average time taken for a commit request
+        unit: ms
+      commit-rate:
+        desc: The number of commit calls per second
+
+  - bean: kafka.consumer:client-id=*,type=consumer-fetch-manager-metrics
+    label:
+      client-id: param(client-id)
+    prefix: kafka.consumer.all.
+    type: gauge
+    unit: 1
+    mapping:
+      fetch-rate:
+        desc: The number of fetch requests for all topics per second
+      fetch-size-avg:
+        desc: The average number of bytes fetched per request for all topics
+        unit: By
+      fetch-latency-avg:
+        desc: The average time taken for a fetch request
+        unit: ms
+      fetch-throttle-time-avg:
+        desc: The average throttle time
+        unit: ms
+      records-lag-max:
+        desc: Number of messages the consumer lags behind the producer
+      records-consumed-rate:
+        desc: The average number of records consumed for all topics per second
+      bytes-consumed-rate:
+        desc: The average number of bytes consumed for all topics per second
+        unit: By
+
+  # Per-topic consumer metrics
+
+  - bean: kafka.consumer:client-id=*,topic=*,type=consumer-fetch-manager-metrics
+    label:
+      client-id: param(client-id)
+      topic: param(topic)
+    prefix: kafka.consumer.
+    type: gauge
+    unit: By
+    mapping:
+      bytes-consumed-rate:
+        desc: The average number of bytes consumed per second
+      fetch-size-avg:
+        desc: The average number of bytes fetched per request
+      records-consumed-rate:
+        desc: The average number of records consumed per second
+        unit: 1

@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.runtimemetrics.Cpu;
 import io.opentelemetry.instrumentation.runtimemetrics.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimemetrics.MemoryPools;
 import io.opentelemetry.instrumentation.runtimemetrics.Threads;
+import io.opentelemetry.instrumentation.runtimemetrics.jmx.MetricService;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -27,21 +28,25 @@ public class RuntimeMetricsInstaller implements AgentListener {
     ConfigProperties config = autoConfiguredSdk.getConfig();
 
     boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
-    if (!config.getBoolean("otel.instrumentation.runtime-metrics.enabled", defaultEnabled)) {
-      return;
+    if (config.getBoolean("otel.instrumentation.runtime-metrics.enabled", defaultEnabled)) {
+
+      OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+
+      BufferPools.registerObservers(openTelemetry);
+      Classes.registerObservers(openTelemetry);
+      Cpu.registerObservers(openTelemetry);
+      MemoryPools.registerObservers(openTelemetry);
+      Threads.registerObservers(openTelemetry);
+
+      if (config.getBoolean(
+          "otel.instrumentation.runtime-metrics.experimental-metrics.enabled", false)) {
+        GarbageCollector.registerObservers(openTelemetry);
+      }
     }
 
-    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-
-    BufferPools.registerObservers(openTelemetry);
-    Classes.registerObservers(openTelemetry);
-    Cpu.registerObservers(openTelemetry);
-    MemoryPools.registerObservers(openTelemetry);
-    Threads.registerObservers(openTelemetry);
-
-    if (config.getBoolean(
-        "otel.instrumentation.runtime-metrics.experimental-metrics.enabled", false)) {
-      GarbageCollector.registerObservers(openTelemetry);
+    if (config.getBoolean("otel.jmx.enabled", true)) {
+      MetricService service = new MetricService(GlobalOpenTelemetry.get(), config);
+      service.start();
     }
   }
 }

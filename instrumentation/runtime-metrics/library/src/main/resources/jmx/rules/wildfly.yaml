@@ -1,0 +1,83 @@
+---
+rules:
+ - bean: jboss.as:deployment=*,subsystem=undertow
+   label:
+     deployment: param(deployment)
+   prefix: wildfly.session.
+   type: counter
+   unit: 1
+   mapping:
+     sessionsCreated:
+     activeSessions:
+       type: updowncounter
+     expiredSessions:
+     rejectedSessions:
+ - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
+   label:
+     server: param(server)
+     listener: param(http-listener)
+   prefix: wildfly.request.
+   type: counter
+   unit: 1
+   mapping:
+     requestCount:
+     processingTime:
+       unit: ns
+     errorCount:
+ - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
+   label:
+     server: param(server)
+     listener: param(http-listener)
+   type: counter
+   unit: By
+   mapping:
+     bytesSent:
+       metric: wildfly.network.io
+       desc: Total number of bytes transferred
+       label:
+         direction: out
+     bytesReceived:
+       metric: wildfly.network.io
+       desc: Total number of bytes transferred
+       label:
+         direction: in
+ - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
+   unit: 1
+   label:
+     data_source: param(data-source)
+   mapping:
+     ActiveCount:
+       metric: wildfly.db.client.connections.usage
+       label:
+         state: used
+       desc: The number of open jdbc connections
+     IdleCount:
+       metric: wildfly.db.client.connections.usage
+       label:
+         state: idle
+       desc: The number of open jdbc connections
+     WaitCount:
+       metric: wildfly.db.client.connections.WaitCount
+       type: counter
+ - bean: jboss.as:subsystem=transactions
+   type: counter
+   prefix: wildfly.db.client.
+   unit: "{transactions}"
+   mapping:
+     numberOfTransactions:
+       metric: transaction.NumberOfTransactions
+     numberOfApplicationRollbacks:
+       metric: rollback.count
+       label:
+         cause: application
+       desc: The total number of transactions rolled back
+     numberOfResourceRollbacks:
+       metric: rollback.count
+       label:
+         cause: resource
+       desc: The total number of transactions rolled back
+     numberOfSystemRollbacks:
+       metric: rollback.count
+       label:
+         cause: system
+       desc: The total number of transactions rolled back
