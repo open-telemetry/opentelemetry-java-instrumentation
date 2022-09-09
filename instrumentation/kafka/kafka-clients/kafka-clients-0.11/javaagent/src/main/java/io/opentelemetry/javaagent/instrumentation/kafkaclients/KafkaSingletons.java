@@ -23,6 +23,9 @@ public final class KafkaSingletons {
   private static final boolean PROPAGATION_ENABLED =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true);
+  private static final boolean METRICS_ENABLED =
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
 
   private static final Instrumenter<ProducerRecord<?, ?>, Void> PRODUCER_INSTRUMENTER;
   private static final Instrumenter<ConsumerRecords<?, ?>, Void> CONSUMER_RECEIVE_INSTRUMENTER;
@@ -60,6 +63,9 @@ public final class KafkaSingletons {
   }
 
   public static void enhanceConfig(Map<? super String, Object> config) {
+    if (!METRICS_ENABLED) {
+      return;
+    }
     config.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         OpenTelemetryMetricsReporter.class.getName(),
