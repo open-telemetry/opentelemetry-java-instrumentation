@@ -41,7 +41,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
   @Override
   public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
       MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
-    GrpcRequest request = new GrpcRequest(method, null, null, null);
+    GrpcRequest request = new GrpcRequest(method, null, null, next.authority());
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return next.newCall(method, callOptions);
@@ -59,8 +59,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       }
     }
 
-    request.setLogicalAddress(next.authority());
-    request.setPeerAddress(result.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+    request.setPeerSocketAddress(result.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
 
     return new TracingClientCall<>(result, parentContext, context, request);
   }

@@ -19,17 +19,30 @@ public final class GrpcRequest {
 
   @Nullable private volatile String logicalHost;
   private volatile int logicalPort = -1;
-  @Nullable private volatile SocketAddress peerAddress;
+  @Nullable private volatile SocketAddress peerSocketAddress;
 
   GrpcRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
-      @Nullable SocketAddress peerAddress,
+      @Nullable SocketAddress peerSocketAddress,
       @Nullable String authority) {
     this.method = method;
     this.metadata = metadata;
-    this.peerAddress = peerAddress;
+    this.peerSocketAddress = peerSocketAddress;
     setLogicalAddress(authority);
+  }
+
+  private void setLogicalAddress(@Nullable String authority) {
+    if (authority == null) {
+      return;
+    }
+    try {
+      URI uri = new URI(null, authority, null, null, null);
+      logicalHost = uri.getHost();
+      logicalPort = uri.getPort();
+    } catch (Throwable e) {
+      // do nothing
+    }
   }
 
   public MethodDescriptor<?, ?> getMethod() {
@@ -54,25 +67,12 @@ public final class GrpcRequest {
     return logicalPort;
   }
 
-  void setLogicalAddress(@Nullable String authority) {
-    if (authority == null) {
-      return;
-    }
-    try {
-      URI uri = new URI(null, authority, null, null, null);
-      logicalHost = uri.getHost();
-      logicalPort = uri.getPort();
-    } catch (Throwable e) {
-      // do nothing
-    }
-  }
-
   @Nullable
-  public SocketAddress getPeerAddress() {
-    return peerAddress;
+  public SocketAddress getPeerSocketAddress() {
+    return peerSocketAddress;
   }
 
-  void setPeerAddress(SocketAddress peerAddress) {
-    this.peerAddress = peerAddress;
+  void setPeerSocketAddress(SocketAddress peerSocketAddress) {
+    this.peerSocketAddress = peerSocketAddress;
   }
 }

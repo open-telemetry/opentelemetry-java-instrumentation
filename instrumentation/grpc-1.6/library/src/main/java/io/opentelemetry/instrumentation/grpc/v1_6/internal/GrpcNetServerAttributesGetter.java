@@ -38,7 +38,7 @@ public final class GrpcNetServerAttributesGetter
   @Override
   @Nullable
   protected InetSocketAddress getPeerSocketAddress(GrpcRequest request) {
-    SocketAddress address = request.getPeerAddress();
+    SocketAddress address = request.getPeerSocketAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }
