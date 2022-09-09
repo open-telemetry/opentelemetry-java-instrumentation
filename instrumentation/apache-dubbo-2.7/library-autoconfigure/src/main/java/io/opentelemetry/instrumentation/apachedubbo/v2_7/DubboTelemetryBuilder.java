@@ -64,7 +64,7 @@ public final class DubboTelemetryBuilder {
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractors(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(
                 NetServerAttributesExtractor.create(new DubboNetServerAttributesGetter()))
             .addAttributesExtractors(attributesExtractors);
