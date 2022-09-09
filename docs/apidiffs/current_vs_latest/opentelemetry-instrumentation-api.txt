@@ -28,8 +28,6 @@ Comparing source compatibility of  against
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor)
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder addAttributesExtractors(java.lang.Iterable)
-	+++  NEW METHOD: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder addAttributesExtractors(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor[])
-		+++  NEW ANNOTATION: java.lang.SafeVarargs
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder addContextCustomizer(io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer)
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder addOperationListener(io.opentelemetry.instrumentation.api.instrumenter.OperationListener)
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder addOperationMetrics(io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics)
