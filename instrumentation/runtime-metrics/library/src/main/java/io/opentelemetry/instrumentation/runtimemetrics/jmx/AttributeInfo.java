@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics.jmx;
 
 /**
- * A class holding relevant information about an MBean atribute which will be used for collecting
+ * A class holding relevant information about an MBean attribute which will be used for collecting
  * metric values. The info comes directly from the relevant MBeans.
  */
 class AttributeInfo {
