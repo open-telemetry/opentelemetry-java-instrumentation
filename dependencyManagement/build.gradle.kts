@@ -106,6 +106,7 @@ val DEPENDENCIES = listOf(
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
+  "org.codehaus.mojo:animal-sniffer-annotations:1.22",
   "org.junit-pioneer:junit-pioneer:1.7.1",
   "org.objenesis:objenesis:3.2",
   "org.spockframework:spock-core:2.2-groovy-4.0",
