@@ -54,6 +54,10 @@ public class TestClasses {
         return new ConcurrentHashMap<>();
       }
 
+      public SomeEnum returningEnum() {
+        return SomeEnum.VALUE;
+      }
+
       @SuppressWarnings("MethodCanBeStatic")
       private void privateStuff() {}
 
@@ -137,6 +141,10 @@ public class TestClasses {
     public static void adviceMethod() {
       new ExternalHelper().instrument();
     }
+  }
+
+  public enum SomeEnum {
+    VALUE
   }
 
   private TestClasses() {}

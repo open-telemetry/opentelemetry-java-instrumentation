@@ -142,6 +142,7 @@ class ReferenceMatcherTest extends Specification {
     "methodWithArrays"        | "([Ljava/lang/String;)[Ljava/lang/Object;" | []                    | Nested.B             | []                       | "match method using arrays"
     "methodWithReturnSubType" | "()Ljava/util/Map;"                        | []                    | Nested.B             | []                       | "match method that in runtime returns a subtype of referenced return type (interface)"
     "methodWithReturnSubType" | "()Ljava/lang/Object;"                     | []                    | Nested.B             | []                       | "match method that in runtime returns a subtype of referenced return type (super class)"
+    "returningEnum"           | "()Lmuzzle/TestClasses\$SomeEnum;"         | []                    | Nested.B             | []                       | "match method that returns a nested enum type"
     "hashCode"                | "()I"                                      | []                    | Nested.B             | []                       | "match method declared in superclass"
     "someMethod"              | "()V"                                      | []                    | Nested.SomeInterface | []                       | "match method declared in interface"
     "privateStuff"            | "()V"                                      | [PRIVATE_OR_HIGHER]   | Nested.B             | []                       | "match private method"

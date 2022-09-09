@@ -333,8 +333,8 @@ public final class ReferenceMatcher {
       ParameterDescription.InDefinedShape actualArgument = actualIt.next();
       // different argument types
       if (!argumentTypeRef
-          .getClassName()
-          .equals(actualArgument.getType().asErasure().getCanonicalName())) {
+          .getDescriptor()
+          .equals(actualArgument.getType().asErasure().getDescriptor())) {
         return false;
       }
     }
@@ -343,7 +343,7 @@ public final class ReferenceMatcher {
   }
 
   private static boolean matchesReturnType(Type returnTypeRef, TypeDescription actualReturnType) {
-    if (returnTypeRef.getClassName().equals(actualReturnType.getCanonicalName())) {
+    if (returnTypeRef.getDescriptor().equals(actualReturnType.getDescriptor())) {
       return true;
     }
     // actual return type might be a subclass of the referenced return type
