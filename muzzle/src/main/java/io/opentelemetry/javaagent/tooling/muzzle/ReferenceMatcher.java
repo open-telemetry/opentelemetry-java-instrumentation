@@ -17,12 +17,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.pool.TypePool;
 import org.objectweb.asm.Type;
@@ -283,7 +286,9 @@ public final class ReferenceMatcher {
     for (MethodDescription.InDefinedShape methodDescription :
         typeOnClasspath.getDeclaredMethods()) {
       if (methodDescription.getInternalName().equals(methodRef.getName())
-          && methodDescription.getDescriptor().equals(methodRef.getDescriptor())) {
+          && matchesArgumentTypes(methodRef.getArgumentTypes(), methodDescription.getParameters())
+          && matchesReturnType(
+              methodRef.getReturnType(), methodDescription.getReturnType().asErasure())) {
         return methodDescription;
       }
     }
@@ -309,6 +314,50 @@ public final class ReferenceMatcher {
       }
     }
     return null;
+  }
+
+  private static boolean matchesArgumentTypes(
+      Type[] argumentTypeRefs,
+      ParameterList<ParameterDescription.InDefinedShape> actualArgumentTypes) {
+
+    // different argument list sizes
+    if (argumentTypeRefs.length != actualArgumentTypes.size()) {
+      return false;
+    }
+
+    int refIt = 0;
+    ListIterator<ParameterDescription.InDefinedShape> actualIt = actualArgumentTypes.listIterator();
+
+    while (refIt < argumentTypeRefs.length && actualIt.hasNext()) {
+      Type argumentTypeRef = argumentTypeRefs[refIt++];
+      ParameterDescription.InDefinedShape actualArgument = actualIt.next();
+      // different argument types
+      if (!argumentTypeRef
+          .getClassName()
+          .equals(actualArgument.getType().asErasure().getCanonicalName())) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private static boolean matchesReturnType(Type returnTypeRef, TypeDescription actualReturnType) {
+    if (returnTypeRef.getClassName().equals(actualReturnType.getCanonicalName())) {
+      return true;
+    }
+    // actual return type might be a subclass of the referenced return type
+    if (actualReturnType.getSuperClass() != null
+        && matchesReturnType(returnTypeRef, actualReturnType.getSuperClass().asErasure())) {
+      return true;
+    }
+    // if the referenced return type is an interface, the actual return type might implement it
+    for (TypeDescription.Generic interfaceType : actualReturnType.getInterfaces()) {
+      if (matchesReturnType(returnTypeRef, interfaceType.asErasure())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // optimization to avoid ArrayList allocation in the common case when there are no mismatches

@@ -106,7 +106,7 @@ public final class ClassRefBuilder {
             COLLECT_SOURCES ? new LinkedHashSet<>(asList(methodSources)) : emptySet(),
             new LinkedHashSet<>(asList(methodFlags)),
             methodName,
-            Type.getMethodDescriptor(methodReturnType, methodArgumentTypes));
+            Type.getMethodType(methodReturnType, methodArgumentTypes));
 
     int existingIndex = methods.indexOf(method);
     if (existingIndex == -1) {

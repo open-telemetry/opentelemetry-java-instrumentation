@@ -26,13 +26,13 @@ public final class MethodRef {
   private final Set<Source> sources;
   private final Set<Flag> flags;
   private final String name;
-  private final String descriptor;
+  private final Type methodType;
 
-  MethodRef(Set<Source> sources, Set<Flag> flags, String name, String descriptor) {
+  MethodRef(Set<Source> sources, Set<Flag> flags, String name, Type methodType) {
     this.sources = sources;
     this.flags = flags;
     this.name = name;
-    this.descriptor = descriptor;
+    this.methodType = methodType;
   }
 
   /** Returns information about code locations where this method was referenced. */
@@ -52,7 +52,17 @@ public final class MethodRef {
 
   /** Returns this method's type descriptor. */
   public String getDescriptor() {
-    return descriptor;
+    return methodType.getDescriptor();
+  }
+
+  /** Returns this method's argument types. */
+  public Type[] getArgumentTypes() {
+    return methodType.getArgumentTypes();
+  }
+
+  /** Returns this method's return type. */
+  public Type getReturnType() {
+    return methodType.getReturnType();
   }
 
   public boolean isConstructor() {
@@ -67,7 +77,7 @@ public final class MethodRef {
         mergeSet(sources, anotherMethod.sources),
         mergeFlags(flags, anotherMethod.flags),
         name,
-        descriptor);
+        methodType);
   }
 
   @Override
@@ -79,17 +89,16 @@ public final class MethodRef {
       return false;
     }
     MethodRef other = (MethodRef) obj;
-    return name.equals(other.name) && descriptor.equals(other.descriptor);
+    return name.equals(other.name) && methodType.equals(other.methodType);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, descriptor);
+    return Objects.hash(name, methodType);
   }
 
   @Override
   public String toString() {
-    Type methodType = Type.getMethodType(getDescriptor());
     String returnType = methodType.getReturnType().getClassName();
     String modifiers = flags.stream().map(Flag::toString).collect(Collectors.joining(" "));
     String parameters =

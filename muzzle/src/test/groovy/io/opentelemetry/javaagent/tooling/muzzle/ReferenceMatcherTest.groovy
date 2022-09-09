@@ -133,14 +133,21 @@ class ReferenceMatcherTest extends Specification {
     getMismatchClassSet(mismatches) == expectedMismatches as Set
 
     where:
-    methodName      | methodDesc                               | methodFlags           | classToCheck         | expectedMismatches       | methodTestDesc
-    "method"        | "(Ljava/lang/String;)Ljava/lang/String;" | []                    | Nested.B             | []                       | "match method declared in class"
-    "hashCode"      | "()I"                                    | []                    | Nested.B             | []                       | "match method declared in superclass"
-    "someMethod"    | "()V"                                    | []                    | Nested.SomeInterface | []                       | "match method declared in interface"
-    "privateStuff"  | "()V"                                    | [PRIVATE_OR_HIGHER]   | Nested.B             | []                       | "match private method"
-    "privateStuff"  | "()V"                                    | [PROTECTED_OR_HIGHER] | Nested.B2            | [Mismatch.MissingFlag]   | "fail match private in supertype"
-    "staticMethod"  | "()V"                                    | [NON_STATIC]          | Nested.B             | [Mismatch.MissingFlag]   | "static method mismatch"
-    "missingMethod" | "()V"                                    | []                    | Nested.B             | [Mismatch.MissingMethod] | "missing method mismatch"
+    methodName                | methodDesc                                 | methodFlags           | classToCheck         | expectedMismatches       | methodTestDesc
+    "method"                  | "(Ljava/lang/String;)Ljava/lang/String;"   | []                    | Nested.B             | []                       | "match method declared in class"
+    "method"                  | "(I)Ljava/lang/String;"                    | []                    | Nested.B             | [Mismatch.MissingMethod] | "method with different argument types"
+    "method"                  | "(Ljava/lang/String;I)Ljava/lang/String;"  | []                    | Nested.B             | [Mismatch.MissingMethod] | "method with bigger argument list size"
+    "method"                  | "()Ljava/lang/String;"                     | []                    | Nested.B             | [Mismatch.MissingMethod] | "method with smaller argument list size"
+    "method"                  | "(Ljava/lang/String;)I"                    | []                    | Nested.B             | [Mismatch.MissingMethod] | "method with different return type"
+    "methodWithArrays"        | "([Ljava/lang/String;)[Ljava/lang/Object;" | []                    | Nested.B             | []                       | "match method using arrays"
+    "methodWithReturnSubType" | "()Ljava/util/Map;"                        | []                    | Nested.B             | []                       | "match method that in runtime returns a subtype of referenced return type (interface)"
+    "methodWithReturnSubType" | "()Ljava/lang/Object;"                     | []                    | Nested.B             | []                       | "match method that in runtime returns a subtype of referenced return type (super class)"
+    "hashCode"                | "()I"                                      | []                    | Nested.B             | []                       | "match method declared in superclass"
+    "someMethod"              | "()V"                                      | []                    | Nested.SomeInterface | []                       | "match method declared in interface"
+    "privateStuff"            | "()V"                                      | [PRIVATE_OR_HIGHER]   | Nested.B             | []                       | "match private method"
+    "privateStuff"            | "()V"                                      | [PROTECTED_OR_HIGHER] | Nested.B2            | [Mismatch.MissingFlag]   | "fail match private in supertype"
+    "staticMethod"            | "()V"                                      | [NON_STATIC]          | Nested.B             | [Mismatch.MissingFlag]   | "static method mismatch"
+    "missingMethod"           | "()V"                                      | []                    | Nested.B             | [Mismatch.MissingMethod] | "missing method mismatch"
   }
 
   def "field match #fieldTestDesc"() {

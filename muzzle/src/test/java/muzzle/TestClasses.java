@@ -8,6 +8,7 @@ package muzzle;
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses.Helper;
+import java.util.concurrent.ConcurrentHashMap;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
@@ -47,6 +48,10 @@ public class TestClasses {
 
       public Object[] methodWithArrays(String[] s) {
         return s;
+      }
+
+      public ConcurrentHashMap<String, Integer> methodWithReturnSubType() {
+        return new ConcurrentHashMap<>();
       }
 
       @SuppressWarnings("MethodCanBeStatic")
