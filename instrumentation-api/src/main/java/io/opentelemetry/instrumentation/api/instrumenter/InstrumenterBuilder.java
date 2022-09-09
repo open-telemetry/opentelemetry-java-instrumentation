@@ -22,7 +22,6 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -118,14 +117,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
           attributesExtractors) {
     attributesExtractors.forEach(this::addAttributesExtractor);
     return this;
-  }
-
-  /** Adds {@link AttributesExtractor}s that will extract attributes from requests and responses. */
-  @SafeVarargs
-  @SuppressWarnings("varargs")
-  public final InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
-      AttributesExtractor<? super REQUEST, ? super RESPONSE>... attributesExtractors) {
-    return addAttributesExtractors(Arrays.asList(attributesExtractors));
   }
 
   /** Adds a {@link SpanLinksExtractor} that will extract span links from requests. */
