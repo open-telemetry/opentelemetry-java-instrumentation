@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+## Version 1.18.0
+
+### Migration notes
+
+- The deprecated `io.opentelemetry.instrumentation.api.config.Config` and related classes
+  have been removed
+  ([#6501](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6501))
+
+### 📈 Enhancements
+
+- Add Spring Boot service name guesser / ResourceProvider
+  ([#6516](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6516))
+- Move micrometer shim library instrumentation back
+  ([#6538](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6538))
+- Add grpc status code to metrics attrs
+  ([#6556](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6556))
+- Add mongo sanitization configuration
+  ([#6541](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6541))
+
+### 🛠️ Bug fixes
+
+- Fix default-enabled config
+  ([#6491](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6491))
+- Fix new jdbc javaagent config
+  ([#6492](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6492))
+- Fix jaxrs async instrumentation race
+  ([#6523](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6523))
+- Fix spring webmvc instrumentation name
+  ([#6557](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6557))
+
 ## Version 1.17.0 (2022-08-18)
 
 ### Migration notes
