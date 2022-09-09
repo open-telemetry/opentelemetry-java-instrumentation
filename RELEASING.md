@@ -52,6 +52,20 @@ and deadlocks.
     (note that if this is not a patch release then the change log on main may already be up-to-date,
     in which case no pull request will be created).
 
+## Update release versions in documentations
+
+After releasing is done, you need to first update the docs. This needs to happen after artifacts have propagated
+to Maven Central so should probably be done an hour or two after the release workflow finishes.
+
+```sh
+./gradlew japicmp -PapiBaseVersion=a.b.c -PapiNewVersion=x.y.z
+./gradlew --refresh-dependencies japicmp
+```
+
+Where `x.y.z` is the version just released and `a.b.c` is the previous version.
+
+Create a PR to mark the new release in docs on the main branch.
+
 ## Credentials
 
 Same as the core repo, see [opentelemetry-java/RELEASING.md#credentials](https://github.com/open-telemetry/opentelemetry-java/blob/main/RELEASING.md#credentials).
