@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.servlet.ServletOutputStream;
 
 public class Injection {
+
   private static final VirtualField<ServletOutputStream, InjectionState> virtualField =
       VirtualField.find(ServletOutputStream.class, InjectionState.class);
 
@@ -28,4 +29,6 @@ public class Injection {
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
     return virtualField.get(servletOutputStream);
   }
+
+  private Injection() {}
 }

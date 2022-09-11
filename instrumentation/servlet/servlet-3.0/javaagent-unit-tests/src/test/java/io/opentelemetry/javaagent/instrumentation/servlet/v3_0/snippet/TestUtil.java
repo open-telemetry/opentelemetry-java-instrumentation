@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class TestUtil {
+
   public static String readFile(String resourceName) throws IOException {
     InputStream in =
         SnippetInjectingResponseWrapperTest.class
@@ -24,4 +25,6 @@ public class TestUtil {
     }
     return result.toString(StandardCharsets.UTF_8.name());
   }
+
+  private TestUtil() {}
 }

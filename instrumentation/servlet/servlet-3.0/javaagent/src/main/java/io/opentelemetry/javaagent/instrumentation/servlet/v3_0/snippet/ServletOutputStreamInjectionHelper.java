@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import javax.servlet.ServletOutputStream;
 
 public class ServletOutputStreamInjectionHelper {
+
   private static final Logger logger =
       Logger.getLogger(ServletOutputStreamInjectionHelper.class.getName());
 
@@ -84,4 +85,6 @@ public class ServletOutputStreamInjectionHelper {
     out.write(snippetBytes);
     return true;
   }
+
+  private ServletOutputStreamInjectionHelper() {}
 }
