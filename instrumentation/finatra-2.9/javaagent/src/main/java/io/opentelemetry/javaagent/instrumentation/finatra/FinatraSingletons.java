@@ -17,7 +17,7 @@ public final class FinatraSingletons {
 
   private static final Instrumenter<Class<?>, Void> INSTRUMENTER =
       Instrumenter.<Class<?>, Void>builder(
-              GlobalOpenTelemetry.get(), "io.opentelemetry.finatra-2.9", ClassNames::simpleName)
+              GlobalOpenTelemetry.get(), "io.opentelemetry.finatra-2.9", ClassNames::getSimpleName)
           .buildInstrumenter();
 
   public static Instrumenter<Class<?>, Void> instrumenter() {

@@ -32,7 +32,7 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
   @Override
   public String extract(REQUEST request) {
     Class<?> cls = getter.codeClass(request);
-    String className = cls != null ? ClassNames.simpleName(cls) : "<unknown>";
+    String className = cls != null ? ClassNames.getSimpleName(cls) : "<unknown>";
     String methodName = defaultString(getter.methodName(request));
     return className + "." + methodName;
   }

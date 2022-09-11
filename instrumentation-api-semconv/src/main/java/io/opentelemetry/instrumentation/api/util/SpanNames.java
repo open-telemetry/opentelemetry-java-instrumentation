@@ -36,7 +36,7 @@ public final class SpanNames {
     if (spanName != null) {
       return spanName;
     }
-    spanName = ClassNames.simpleName(clazz) + "." + methodName;
+    spanName = ClassNames.getSimpleName(clazz) + "." + methodName;
     spanNameCache.put(methodName, spanName);
     return spanName;
   }

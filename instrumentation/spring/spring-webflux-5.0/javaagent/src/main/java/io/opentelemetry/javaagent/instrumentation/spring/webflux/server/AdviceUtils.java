@@ -18,7 +18,7 @@ public final class AdviceUtils {
   public static final String ON_SPAN_END = AdviceUtils.class.getName() + ".Context";
 
   public static String spanNameForHandler(Object handler) {
-    String className = ClassNames.simpleName(handler.getClass());
+    String className = ClassNames.getSimpleName(handler.getClass());
     int lambdaIdx = className.indexOf("$$Lambda$");
 
     if (lambdaIdx > -1) {

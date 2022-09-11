@@ -16,7 +16,7 @@ public final class ClassNames {
    * Returns a simple class name based on a given class reference, e.g. for use in span names and
    * attributes. Anonymous classes are named based on their parent.
    */
-  public static String simpleName(Class<?> type) {
+  public static String getSimpleName(Class<?> type) {
     return simpleNames.computeIfAbsent(type, ClassNames::computeSimpleName);
   }
 

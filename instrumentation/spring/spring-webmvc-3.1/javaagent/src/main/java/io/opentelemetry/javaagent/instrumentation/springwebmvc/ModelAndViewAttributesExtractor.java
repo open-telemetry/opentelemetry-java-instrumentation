@@ -27,7 +27,7 @@ public class ModelAndViewAttributesExtractor implements AttributesExtractor<Mode
       attributes.put("spring-webmvc.view.name", modelAndView.getViewName());
       View view = modelAndView.getView();
       if (view != null) {
-        attributes.put("spring-webmvc.view.type", ClassNames.simpleName(view.getClass()));
+        attributes.put("spring-webmvc.view.type", ClassNames.getSimpleName(view.getClass()));
       }
     }
   }
