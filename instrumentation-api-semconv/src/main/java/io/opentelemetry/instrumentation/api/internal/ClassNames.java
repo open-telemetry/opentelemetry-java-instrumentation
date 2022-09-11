@@ -7,7 +7,12 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 
-/** A utility class used to compute readable simple class names. */
+/**
+ * A utility class used to compute readable simple class names.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public final class ClassNames {
 
   private static final Cache<Class<?>, String> simpleNames = Cache.weak();
