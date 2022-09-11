@@ -10,8 +10,8 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
-final class JdkErrorCauseExtractor implements ErrorCauseExtractor {
-  static final ErrorCauseExtractor INSTANCE = new JdkErrorCauseExtractor();
+final class DefaultErrorCauseExtractor implements ErrorCauseExtractor {
+  static final ErrorCauseExtractor INSTANCE = new DefaultErrorCauseExtractor();
 
   @Nullable
   private static final Class<?> COMPLETION_EXCEPTION_CLASS = getCompletionExceptionClass();
@@ -42,5 +42,5 @@ final class JdkErrorCauseExtractor implements ErrorCauseExtractor {
     }
   }
 
-  private JdkErrorCauseExtractor() {}
+  private DefaultErrorCauseExtractor() {}
 }

@@ -32,7 +32,7 @@ public final class KafkaInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
-  private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
+  private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
