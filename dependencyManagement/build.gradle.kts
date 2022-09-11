@@ -12,12 +12,12 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelVersion = "1.17.0"
+val otelVersion = "1.18.0"
 
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.2"
+val groovyVersion = "4.0.4"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -31,13 +31,13 @@ val groovyVersion = "4.0.2"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.13.2.20220328",
+  "com.fasterxml.jackson:jackson-bom:2.13.4",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
-  "org.junit:junit-bom:5.8.2",
-  "org.testcontainers:testcontainers-bom:1.17.1",
+  "org.junit:junit-bom:5.9.0",
+  "org.testcontainers:testcontainers-bom:1.17.3",
 )
 
 val DEPENDENCY_SETS = listOf(
@@ -69,7 +69,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "org.mockito",
-    "4.5.1",
+    "4.7.0",
     listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
   ),
   DependencySet(
@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.9.7",
+  "com.uber.nullaway:nullaway:0.9.9",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
@@ -106,10 +106,10 @@ val DEPENDENCIES = listOf(
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.junit-pioneer:junit-pioneer:1.7.0",
+  "org.junit-pioneer:junit-pioneer:1.7.1",
   "org.objenesis:objenesis:3.2",
-  "org.spockframework:spock-core:2.2-M1-groovy-4.0",
-  "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",
+  "org.spockframework:spock-core:2.2-groovy-4.0",
+  "org.spockframework:spock-junit4:2.2-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.7.2"

@@ -21,10 +21,7 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-web-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webmvc-5.3:library"))
   implementation(project(":instrumentation:spring:spring-webflux-5.0:library"))
-  implementation("io.opentelemetry:opentelemetry-micrometer1-shim") {
-    // just get the instrumentation, without micrometer itself
-    exclude("io.micrometer", "micrometer-core")
-  }
+  implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
 
   compileOnly("org.springframework.kafka:spring-kafka:2.9.0")
   compileOnly("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
@@ -79,7 +76,8 @@ tasks.withType<Test>().configureEach {
 
   // disable tests on openj9 18 because they often crash JIT compiler
   val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
-  val testOnOpenJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" } ?: false
+  val testOnOpenJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
+    ?: false
   if (testOnOpenJ9 && testJavaVersion?.majorVersion == "18") {
     enabled = false
   }

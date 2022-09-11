@@ -28,11 +28,6 @@ public class MicrometerInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.micrometer1shim.");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new MetricsInstrumentation());
   }

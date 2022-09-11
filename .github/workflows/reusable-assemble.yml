@@ -62,6 +62,18 @@ jobs:
             exit 1
           fi
 
+      - name: Check for jApiCmp diffs
+        run: |
+          if git diff --quiet
+          then
+            echo "No diff detected."
+          else
+            echo "Diff detected - did you run './gradlew jApiCmp'?"
+            echo $(git diff --name-only)
+            echo $(git diff)
+            exit 1
+          fi
+
       - name: Upload deadlock detector artifacts if any
         if: always()
         uses: actions/upload-artifact@v3

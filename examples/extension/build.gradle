@@ -23,8 +23,8 @@ version '1.0'
 ext {
   versions = [
     // these lines are managed by .github/scripts/update-sdk-version.sh
-    opentelemetry              : "1.17.0",
-    opentelemetryAlpha         : "1.17.0-alpha",
+    opentelemetry              : "1.18.0",
+    opentelemetryAlpha         : "1.18.0-alpha",
 
     // these lines are managed by .github/scripts/update-version.sh
     opentelemetryJavaagent     : "1.18.0-SNAPSHOT",
@@ -99,16 +99,15 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-api:${versions.opentelemetry}")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:0.16.0-alpha")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.2.3")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.2.11")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
 
   //TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
-  add("codegen", "ch.qos.logback:logback-classic:1.2.3")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")

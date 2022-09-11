@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import static java.util.logging.Level.WARNING;
 
-import io.opentelemetry.micrometer1shim.OpenTelemetryMeterRegistry;
+import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;

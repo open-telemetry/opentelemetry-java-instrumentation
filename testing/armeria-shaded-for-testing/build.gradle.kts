@@ -5,13 +5,15 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.13.3")
+  implementation("com.linecorp.armeria:armeria-junit5:1.18.0")
 }
 
 tasks {
   shadowJar {
     dependencies {
       exclude(dependency("org.slf4j:slf4j-api"))
+      exclude(dependency("org.junit.jupiter:junit-jupiter-api"))
+      exclude(dependency("org.junit.platform:junit-platform-commons"))
     }
 
     // Ensures tests are not affected by Armeria instrumentation

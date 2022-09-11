@@ -108,6 +108,12 @@ project(":instrumentation").subprojects {
       add(javaagentLibs.name, project(subProj.path))
     }
   }
+
+  plugins.withId("otel.sdk-extension") {
+    javaagentDependencies.run {
+      add(javaagentLibs.name, project(subProj.path))
+    }
+  }
 }
 
 tasks {
