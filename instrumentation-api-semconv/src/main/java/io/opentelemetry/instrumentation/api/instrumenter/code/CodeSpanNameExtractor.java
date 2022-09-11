@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.code;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.util.ClassNames;
-import javax.annotation.Nullable;
 
 /**
  * A helper {@link SpanNameExtractor} implementation for instrumentations that target specific Java
@@ -33,11 +32,10 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
   public String extract(REQUEST request) {
     Class<?> cls = getter.codeClass(request);
     String className = cls != null ? ClassNames.simpleName(cls) : "<unknown>";
-    String methodName = defaultString(getter.methodName(request));
+    String methodName = getter.methodName(request);
+    if (methodName == null) {
+      return className;
+    }
     return className + "." + methodName;
-  }
-
-  private static String defaultString(@Nullable String s) {
-    return s == null ? "<unknown>" : s;
   }
 }
