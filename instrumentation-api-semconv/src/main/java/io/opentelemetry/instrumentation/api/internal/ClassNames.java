@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.util;
+package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 
