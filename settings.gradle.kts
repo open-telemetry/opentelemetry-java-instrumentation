@@ -106,6 +106,7 @@ include(":javaagent-tooling")
 include(":javaagent-tooling:javaagent-tooling-java9")
 include(":javaagent")
 
+include(":bom")
 include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-semconv")
