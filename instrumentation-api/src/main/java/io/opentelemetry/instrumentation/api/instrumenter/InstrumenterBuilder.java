@@ -301,12 +301,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> propagatingToDownstream(
         TextMapSetter<RQ> setter) {
-      return builder -> new ClientInstrumenter<>(builder, setter);
+      return builder -> new PropagatingToDownstreamInstrumenter<>(builder, setter);
     }
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> propagatingFromUpstream(
         TextMapGetter<RQ> getter) {
-      return builder -> new ServerInstrumenter<>(builder, getter);
+      return builder -> new PropagatingFromUpstreamInstrumenter<>(builder, getter);
     }
   }
 }
