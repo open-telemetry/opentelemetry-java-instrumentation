@@ -6,6 +6,8 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.testing.internal.armeria.client.WebClient
+import spock.lang.Ignore
+
 import java.time.Duration
 import spock.lang.IgnoreIf
 
@@ -33,6 +35,7 @@ class PrometheusSmokeTest extends SmokeTest {
     return [PROMETHEUS_PORT]
   }
 
+  @Ignore // We've disabled the metrics provider
   def "Should export metrics"(int jdk) {
     setup:
     startTarget(jdk)

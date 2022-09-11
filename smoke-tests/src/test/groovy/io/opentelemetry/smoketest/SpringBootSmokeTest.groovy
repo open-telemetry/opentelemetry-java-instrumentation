@@ -75,12 +75,12 @@ class SpringBootSmokeTest extends SmokeTest {
       .collect(toSet())
     loggedTraceIds == spanTraceIds
 
-    then: "JVM metrics are exported"
-    def metrics = new MetricsInspector(waitForMetrics())
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.init")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.usage")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.limit")
+//    then: "JVM metrics are exported"
+//    def metrics = new MetricsInspector(waitForMetrics())
+//    metrics.hasMetricsNamed("process.runtime.jvm.memory.init")
+//    metrics.hasMetricsNamed("process.runtime.jvm.memory.usage")
+//    metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
+//    metrics.hasMetricsNamed("process.runtime.jvm.memory.limit")
 
     cleanup:
     stopTarget()
