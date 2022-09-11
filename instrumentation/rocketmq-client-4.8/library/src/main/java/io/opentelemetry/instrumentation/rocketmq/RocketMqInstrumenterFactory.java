@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperat
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -110,7 +111,7 @@ class RocketMqInstrumenterFactory {
 
     if (batch) {
       SpanLinksExtractor<MessageExt> spanLinksExtractor =
-          SpanLinksExtractor.extractFromRequest(
+          new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
               TextMapExtractAdapter.INSTANCE);
 
