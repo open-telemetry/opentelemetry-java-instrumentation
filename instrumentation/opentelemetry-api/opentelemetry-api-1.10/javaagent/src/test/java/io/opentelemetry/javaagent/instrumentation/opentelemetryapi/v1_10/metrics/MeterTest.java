@@ -69,8 +69,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isMonotonic()
@@ -102,8 +103,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isMonotonic()
@@ -142,8 +144,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasDoubleSumSatisfying(
                             sum ->
                                 sum.isMonotonic()
@@ -176,8 +179,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasDoubleSumSatisfying(
                             sum ->
                                 sum.isMonotonic()
@@ -216,8 +220,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isNotMonotonic()
@@ -249,8 +254,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isNotMonotonic()
@@ -289,8 +295,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasDoubleSumSatisfying(
                             sum ->
                                 sum.isNotMonotonic()
@@ -323,8 +330,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasDoubleSumSatisfying(
                             sum ->
                                 sum.isNotMonotonic()
@@ -363,8 +371,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasHistogramSatisfying(
                             histogram ->
                                 histogram.hasPointsSatisfying(
@@ -393,8 +402,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasHistogramSatisfying(
                             histogram ->
                                 histogram.hasPointsSatisfying(
@@ -426,8 +436,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasLongGaugeSatisfying(
                             gauge ->
                                 gauge.hasPointsSatisfying(
@@ -467,8 +478,9 @@ class MeterTest {
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
-                            InstrumentationScopeInfo.create(
-                                instrumentationName, "1.2.3", /* schemaUrl= */ null))
+                            InstrumentationScopeInfo.builder(instrumentationName)
+                                .setVersion("1.2.3")
+                                .build())
                         .hasDoubleGaugeSatisfying(
                             gauge ->
                                 gauge.hasPointsSatisfying(

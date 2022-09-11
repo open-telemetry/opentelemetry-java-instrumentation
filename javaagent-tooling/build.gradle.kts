@@ -27,7 +27,8 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-metric-incubator")
+  // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 
   // Exporters with dependencies
   implementation("io.opentelemetry:opentelemetry-exporter-jaeger")
