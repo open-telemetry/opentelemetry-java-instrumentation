@@ -35,7 +35,7 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     int lambdaIdx = className.indexOf("$$Lambda$");
     if (lambdaIdx > -1) {
       // need to produce low-cardinality name, since lambda class names change with each restart
-      return className.substring(0, lambdaIdx) + ".lambda";
+      className = className.substring(0, lambdaIdx + "$$Lambda$".length());
     }
     String methodName = getter.methodName(request);
     if (methodName == null) {
