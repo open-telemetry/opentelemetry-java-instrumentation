@@ -3,23 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling;
+package io.opentelemetry.javaagent.logging.simple;
 
-import java.lang.reflect.InvocationTargetException;
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.InternalLogger;
+import io.opentelemetry.javaagent.tooling.LoggingCustomizer;
 import java.util.Locale;
+import org.slf4j.LoggerFactory;
 
-final class DefaultLoggingCustomizer implements LoggingCustomizer {
+@AutoService(LoggingCustomizer.class)
+public final class Slf4jSimpleLoggingCustomizer implements LoggingCustomizer {
 
+  // org.slf4j package name in the constants will be shaded too
   private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
-      "io.opentelemetry.javaagent.slf4j.simpleLogger.showDateTime";
+      "org.slf4j.simpleLogger.showDateTime";
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY =
-      "io.opentelemetry.javaagent.slf4j.simpleLogger.dateTimeFormat";
+      "org.slf4j.simpleLogger.dateTimeFormat";
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT =
       "'[otel.javaagent 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
   private static final String SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY =
-      "io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel";
-  private static final String SIMPLE_LOGGER_PREFIX =
-      "io.opentelemetry.javaagent.slf4j.simpleLogger.log.";
+      "org.slf4j.simpleLogger.defaultLogLevel";
+  private static final String SIMPLE_LOGGER_PREFIX = "org.slf4j.simpleLogger.log.";
 
   @Override
   public void init() {
@@ -35,20 +39,10 @@ final class DefaultLoggingCustomizer implements LoggingCustomizer {
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "muzzleMatcher", "OFF");
     }
 
-    ClassLoader previous = Thread.currentThread().getContextClassLoader();
-    try {
-      // make sure that slf4j finds the provider in the bootstrap CL
-      Thread.currentThread().setContextClassLoader(null);
-      Class<?> loggerFactory = Class.forName("org.slf4j.LoggerFactory");
-      loggerFactory.getMethod("getILoggerFactory").invoke(null);
-    } catch (ClassNotFoundException
-        | InvocationTargetException
-        | IllegalAccessException
-        | NoSuchMethodException e) {
-      throw new IllegalStateException("Failed to initialize logging", e);
-    } finally {
-      Thread.currentThread().setContextClassLoader(previous);
-    }
+    // trigger loading the provider from the agent CL
+    LoggerFactory.getILoggerFactory();
+
+    InternalLogger.initialize(Slf4jSimpleLogger::create);
   }
 
   @Override

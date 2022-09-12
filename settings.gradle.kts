@@ -104,6 +104,7 @@ include(":javaagent-bootstrap")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
 include(":javaagent-tooling:javaagent-tooling-java9")
+include(":javaagent-internal-logging-simple")
 include(":javaagent")
 
 include(":bom")
