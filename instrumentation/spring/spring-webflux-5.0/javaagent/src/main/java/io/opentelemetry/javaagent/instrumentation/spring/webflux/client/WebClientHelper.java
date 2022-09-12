@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.client;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.client.internal.SpringWebfluxNetAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
