@@ -61,7 +61,6 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // tests under "io.opentelemetry.javaagent." will still be instrumented
     builder.ignoreClass("io.opentelemetry.javaagent.bootstrap.");
     builder.ignoreClass("io.opentelemetry.javaagent.shaded.");
-    builder.ignoreClass("io.opentelemetry.javaagent.slf4j.");
 
     builder
         .ignoreClass("java.")
