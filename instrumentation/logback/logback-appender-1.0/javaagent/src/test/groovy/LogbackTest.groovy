@@ -56,12 +56,12 @@ class LogbackTest extends AgentInstrumentationSpecification {
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
-        assertThat(log.getAttributes().size()).isEqualTo(5)
+        assertThat(log.getAttributes().size()).isEqualTo(5 + 4) // 4 code attributes
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(LogbackTest.name)
       } else {
-        assertThat(log.getAttributes().size()).isEqualTo(2)
+        assertThat(log.getAttributes().size()).isEqualTo(2 + 4)  // 4 code attributes
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).isNull()
@@ -123,7 +123,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
-    assertThat(log.getAttributes().size()).isEqualTo(4)
+    assertThat(log.getAttributes().size()).isEqualTo(3 + 4) // 4 code attributes
     assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1"))).isEqualTo("val1")
     assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2"))).isEqualTo("val2")
     assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
