@@ -105,6 +105,12 @@ public class SpringBootServiceNameGuesser implements ConditionalResourceProvider
         && "unknown_service:java".equals(resource.getAttribute(ResourceAttributes.SERVICE_NAME));
   }
 
+  @Override
+  public int order() {
+    // make it run later than the default set of providers
+    return 100;
+  }
+
   @Nullable
   private String findByEnvironmentVariable() {
     String result = system.getenv("SPRING_APPLICATION_NAME");
