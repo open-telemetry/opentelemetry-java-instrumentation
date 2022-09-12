@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.springrmi.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
-import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
+import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 
 public enum ServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod> {
   INSTANCE;
