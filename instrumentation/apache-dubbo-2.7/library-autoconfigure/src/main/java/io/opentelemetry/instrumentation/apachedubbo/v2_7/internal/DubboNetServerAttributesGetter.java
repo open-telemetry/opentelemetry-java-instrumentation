@@ -19,13 +19,31 @@ public final class DubboNetServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getAddress(DubboRequest request) {
-    return request.remoteAddress();
+  public String transport(DubboRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String hostName(DubboRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer hostPort(DubboRequest request) {
+    return null;
   }
 
   @Override
   @Nullable
-  public String transport(DubboRequest request) {
-    return null;
+  protected InetSocketAddress getPeerSocketAddress(DubboRequest request) {
+    return request.remoteAddress();
+  }
+
+  @Nullable
+  @Override
+  protected InetSocketAddress getHostSocketAddress(DubboRequest request) {
+    return request.localAddress();
   }
 }

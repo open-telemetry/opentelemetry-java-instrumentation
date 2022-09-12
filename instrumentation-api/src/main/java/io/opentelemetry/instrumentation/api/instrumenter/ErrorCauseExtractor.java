@@ -17,10 +17,10 @@ public interface ErrorCauseExtractor {
   Throwable extract(Throwable error);
 
   /**
-   * Returns a {@link ErrorCauseExtractor} which unwraps common standard library wrapping
+   * Returns the default {@link ErrorCauseExtractor}, which unwraps common standard library wrapping
    * exceptions.
    */
-  static ErrorCauseExtractor jdk() {
-    return JdkErrorCauseExtractor.INSTANCE;
+  static ErrorCauseExtractor getDefault() {
+    return DefaultErrorCauseExtractor.INSTANCE;
   }
 }

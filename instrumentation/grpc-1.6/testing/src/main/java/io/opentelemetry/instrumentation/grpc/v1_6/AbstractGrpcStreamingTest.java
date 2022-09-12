@@ -196,16 +196,18 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
                                 equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
                                 equalTo(SemanticAttributes.RPC_METHOD, "Conversation"),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                                satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
-                                    val -> assertThat(val).isNotNull()),
+                                equalTo(
+                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.OK.value()),
                                 equalTo(
                                     SemanticAttributes.NET_TRANSPORT,
                                     SemanticAttributes.NetTransportValues.IP_TCP),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()))
+                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
+                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                satisfies(
+                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0]))));
     testing()
         .waitAndAssertMetrics(
@@ -223,11 +225,16 @@ public abstract class AbstractGrpcStreamingTest {
                                             point.hasAttributesSatisfying(
                                                 equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"),
                                                 equalTo(
+                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                                equalTo(
                                                     SemanticAttributes.RPC_METHOD, "Conversation"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -253,7 +260,10 @@ public abstract class AbstractGrpcStreamingTest {
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
                                                     "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"))))));
+                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    (long) Status.Code.OK.value()))))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
