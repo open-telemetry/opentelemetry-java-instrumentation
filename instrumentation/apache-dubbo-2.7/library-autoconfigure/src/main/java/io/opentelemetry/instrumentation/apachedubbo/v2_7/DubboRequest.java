@@ -19,7 +19,11 @@ public abstract class DubboRequest {
     // In dubbo 3 RpcContext delegates to a ThreadLocal context. We copy the url and remote address
     // here to ensure we can access them from the thread that ends the span.
     return new AutoValue_DubboRequest(
-        invocation, context, context.getUrl(), context.getRemoteAddress());
+        invocation,
+        context,
+        context.getUrl(),
+        context.getRemoteAddress(),
+        context.getLocalAddress());
   }
 
   abstract RpcInvocation invocation();
@@ -30,4 +34,7 @@ public abstract class DubboRequest {
 
   @Nullable
   public abstract InetSocketAddress remoteAddress();
+
+  @Nullable
+  public abstract InetSocketAddress localAddress();
 }

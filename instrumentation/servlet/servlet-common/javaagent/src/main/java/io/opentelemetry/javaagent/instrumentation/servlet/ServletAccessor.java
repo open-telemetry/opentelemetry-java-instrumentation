@@ -35,7 +35,17 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   String getRequestMethod(REQUEST request);
 
+  String getRequestServerName(REQUEST request);
+
+  Integer getRequestServerPort(REQUEST request);
+
   String getRequestRemoteAddr(REQUEST request);
+
+  Integer getRequestRemotePort(REQUEST request);
+
+  String getRequestLocalAddr(REQUEST request);
+
+  Integer getRequestLocalPort(REQUEST request);
 
   String getRequestHeader(REQUEST request, String name);
 
@@ -50,8 +60,6 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
   String getRequestPathInfo(REQUEST request);
 
   Principal getRequestUserPrincipal(REQUEST request);
-
-  Integer getRequestRemotePort(REQUEST request);
 
   void addRequestAsyncListener(
       REQUEST request, ServletAsyncListener<RESPONSE> listener, Object response);

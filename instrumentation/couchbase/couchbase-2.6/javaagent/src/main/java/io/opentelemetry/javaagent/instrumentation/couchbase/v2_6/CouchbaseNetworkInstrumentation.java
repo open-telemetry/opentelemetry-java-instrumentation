@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
+import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -46,26 +47,16 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addNetworkTagsToSpan(
-        @Advice.FieldValue("remoteHostname") String remoteHostname,
-        @Advice.FieldValue("remoteSocket") String remoteSocket,
         @Advice.FieldValue("localSocket") String localSocket,
+        @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,
         @Advice.Argument(1) CouchbaseRequest request) {
+
       VirtualField<CouchbaseRequest, CouchbaseRequestInfo> virtualField =
           VirtualField.find(CouchbaseRequest.class, CouchbaseRequestInfo.class);
 
       CouchbaseRequestInfo requestInfo = virtualField.get(request);
       if (requestInfo != null) {
-        if (remoteHostname != null) {
-          requestInfo.setPeerName(remoteHostname);
-        }
-
-        if (remoteSocket != null) {
-          int splitIndex = remoteSocket.lastIndexOf(":");
-          if (splitIndex != -1) {
-            requestInfo.setPeerPort(Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
-          }
-        }
-
+        requestInfo.setPeerAddress(channelHandlerContext.channel().remoteAddress());
         requestInfo.setLocalAddress(localSocket);
       }
     }

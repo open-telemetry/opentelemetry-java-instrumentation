@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
@@ -92,7 +93,9 @@ class ReactorNettyClientSslTest {
                         .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, uri)),
+                            equalTo(SemanticAttributes.HTTP_URL, uri),
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort())),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)
@@ -120,9 +123,9 @@ class ReactorNettyClientSslTest {
                         .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1"))));
+                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                            equalTo(stringKey("net.sock.peer.name"), "localhost"),
+                            equalTo(longKey("net.sock.peer.port"), server.httpsPort()))));
   }
 
   @Test
@@ -184,9 +187,9 @@ class ReactorNettyClientSslTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1")),
+                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                            equalTo(stringKey("net.sock.peer.name"), "localhost"),
+                            equalTo(longKey("net.sock.peer.port"), server.httpsPort())),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }

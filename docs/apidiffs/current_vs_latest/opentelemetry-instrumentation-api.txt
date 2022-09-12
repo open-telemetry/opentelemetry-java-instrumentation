@@ -14,7 +14,7 @@ Comparing source compatibility of  against
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.Throwable extract(java.lang.Throwable)
-	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor jdk()
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor getDefault()
 	+++  NEW ANNOTATION: java.lang.FunctionalInterface
 +++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.Instrumenter  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
@@ -79,7 +79,6 @@ Comparing source compatibility of  against
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) void extract(io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder, io.opentelemetry.context.Context, java.lang.Object)
-	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor extractFromRequest(io.opentelemetry.context.propagation.TextMapPropagator, io.opentelemetry.context.propagation.TextMapGetter)
 	+++  NEW ANNOTATION: java.lang.FunctionalInterface
 +++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
