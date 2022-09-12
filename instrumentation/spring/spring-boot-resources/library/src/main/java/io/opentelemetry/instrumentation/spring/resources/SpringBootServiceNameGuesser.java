@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.resources;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import java.io.IOException;
@@ -47,7 +48,7 @@ import org.yaml.snakeyaml.Yaml;
  * </ul>
  */
 @AutoService(ResourceProvider.class)
-public class SpringBootServiceNameGuesser implements ResourceProvider {
+public class SpringBootServiceNameGuesser implements ConditionalResourceProvider {
 
   private static final Logger logger =
       Logger.getLogger(SpringBootServiceNameGuesser.class.getName());
@@ -93,6 +94,21 @@ public class SpringBootServiceNameGuesser implements ResourceProvider {
               return Resource.builder().put(ResourceAttributes.SERVICE_NAME, serviceName).build();
             })
         .orElseGet(Resource::empty);
+  }
+
+  @Override
+  public boolean shouldApply(ConfigProperties configProperties, Resource resource) {
+    String serviceNameResourceAttr = resource.getAttribute(ResourceAttributes.SERVICE_NAME);
+    boolean resourceDoesNotHaveServiceName =
+        serviceNameResourceAttr == null || serviceNameResourceAttr.equals("unknown_service:java");
+    boolean configDoesNotHaveServiceName = configProperties.getString("otel.service.name") == null;
+    boolean configDoesNotHaveServiceNameResourceAttribute =
+        !configProperties
+            .getMap("otel.resource.attributes")
+            .containsKey(ResourceAttributes.SERVICE_NAME.getKey());
+    return resourceDoesNotHaveServiceName
+        && configDoesNotHaveServiceName
+        && configDoesNotHaveServiceNameResourceAttribute;
   }
 
   @Nullable
