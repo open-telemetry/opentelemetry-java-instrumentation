@@ -57,7 +57,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
-  ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
+  ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   boolean enabled = true;
 
   InstrumenterBuilder(

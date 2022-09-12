@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class JdkErrorCauseExtractorTest {
+class DefaultErrorCauseExtractorTest {
 
   @ParameterizedTest
   @ValueSource(
@@ -31,7 +31,7 @@ class JdkErrorCauseExtractorTest {
             .getConstructor(Throwable.class)
             .newInstance(new IllegalArgumentException("test"));
 
-    assertThat(ErrorCauseExtractor.jdk().extract(exception))
+    assertThat(ErrorCauseExtractor.getDefault().extract(exception))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("test");
   }
@@ -39,7 +39,7 @@ class JdkErrorCauseExtractorTest {
   @Test
   void multipleUnwraps() {
     assertThat(
-            ErrorCauseExtractor.jdk()
+            ErrorCauseExtractor.getDefault()
                 .extract(
                     new ExecutionException(
                         new UndeclaredThrowableException(new IllegalArgumentException("test")))))
@@ -49,11 +49,11 @@ class JdkErrorCauseExtractorTest {
 
   @Test
   void notWrapped() {
-    assertThat(ErrorCauseExtractor.jdk().extract(new IllegalArgumentException("test")))
+    assertThat(ErrorCauseExtractor.getDefault().extract(new IllegalArgumentException("test")))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("test");
     assertThat(
-            ErrorCauseExtractor.jdk()
+            ErrorCauseExtractor.getDefault()
                 .extract(new IllegalArgumentException("test", new IllegalStateException("state"))))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("test");
