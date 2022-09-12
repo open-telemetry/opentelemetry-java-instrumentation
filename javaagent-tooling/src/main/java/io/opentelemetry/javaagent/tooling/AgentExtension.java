@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.javaagent.extension.Ordered;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 /**
