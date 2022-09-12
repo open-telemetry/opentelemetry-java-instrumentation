@@ -9,12 +9,13 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
-final class ClientInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, RESPONSE> {
+final class PropagatingToDownstreamInstrumenter<REQUEST, RESPONSE>
+    extends Instrumenter<REQUEST, RESPONSE> {
 
   private final ContextPropagators propagators;
   private final TextMapSetter<REQUEST> setter;
 
-  ClientInstrumenter(
+  PropagatingToDownstreamInstrumenter(
       InstrumenterBuilder<REQUEST, RESPONSE> builder, TextMapSetter<REQUEST> setter) {
     super(builder);
     this.propagators = builder.openTelemetry.getPropagators();

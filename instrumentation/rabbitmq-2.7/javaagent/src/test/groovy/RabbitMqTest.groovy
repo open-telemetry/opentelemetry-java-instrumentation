@@ -394,11 +394,9 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
       }
 
       attributes {
-        // "localhost" on linux, "127.0.0.1" on windows
         if (spanKind != CONSUMER) {
-          "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" }
-          "$SemanticAttributes.NET_PEER_PORT" Long
           "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+          "net.sock.peer.port" Long
           "net.sock.family" { it == null || it == "inet6" }
         }
 

@@ -118,9 +118,9 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           errorEventWithAnyMessage(SSLHandshakeException)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
             "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
+            "net.sock.peer.name" uri.host
+            "net.sock.peer.port" uri.port
           }
         }
       }
@@ -183,9 +183,9 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
             "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
+            "net.sock.peer.name" uri.host
+            "net.sock.peer.port" uri.port
           }
         }
         span(4) {

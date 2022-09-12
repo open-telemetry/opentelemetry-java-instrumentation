@@ -21,32 +21,27 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
     implements NetClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
-  public abstract InetSocketAddress getAddress(REQUEST request, @Nullable RESPONSE response);
+  protected abstract InetSocketAddress getPeerSocketAddress(
+      REQUEST request, @Nullable RESPONSE response);
 
-  @Override
   @Nullable
-  public final String peerName(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  @Override
+  public String sockFamily(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
-    return address.getHostString();
-  }
-
-  @Override
-  @Nullable
-  public final Integer peerPort(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
-    if (address == null) {
-      return null;
+    InetAddress remoteAddress = address.getAddress();
+    if (remoteAddress instanceof Inet6Address) {
+      return "inet6";
     }
-    return address.getPort();
+    return null;
   }
 
   @Override
   @Nullable
   public final String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -57,27 +52,23 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
     return null;
   }
 
-  @Nullable
   @Override
-  public Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  @Nullable
+  public String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
-    return address.getPort();
+    return address.getHostString();
   }
 
   @Nullable
   @Override
-  public String sockFamily(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  public Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
-    InetAddress remoteAddress = address.getAddress();
-    if (remoteAddress instanceof Inet6Address) {
-      return "inet6";
-    }
-    return null;
+    return address.getPort();
   }
 }

@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import reactor.netty.http.client.HttpClient
 
 import java.util.concurrent.CountDownLatch
@@ -100,7 +101,10 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       case "https://192.0.2.1/": // non routable address
         return []
     }
-    return super.httpAttributes(uri)
+    def attributes = super.httpAttributes(uri)
+    attributes.remove(SemanticAttributes.NET_PEER_NAME)
+    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    return attributes
   }
 
   abstract HttpClient createHttpClient(boolean readTimeout)

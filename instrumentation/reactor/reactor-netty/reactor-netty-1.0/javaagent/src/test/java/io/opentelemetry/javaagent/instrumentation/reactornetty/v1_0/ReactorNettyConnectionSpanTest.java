@@ -153,7 +153,9 @@ class ReactorNettyConnectionSpanTest {
                         .hasException(connectException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, uri)),
+                            equalTo(SemanticAttributes.HTTP_URL, uri),
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, PortUtils.UNUSABLE_PORT)),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)
@@ -172,6 +174,8 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, PortUtils.UNUSABLE_PORT),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1"))));
+                            satisfies(
+                                stringKey("net.sock.peer.addr"),
+                                val -> val.isIn(null, "127.0.0.1")))));
   }
 }
