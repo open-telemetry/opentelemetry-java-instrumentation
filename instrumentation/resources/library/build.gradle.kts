@@ -12,6 +12,9 @@ dependencies {
 
   compileOnly("org.codehaus.mojo:animal-sniffer-annotations")
 
+  annotationProcessor("com.google.auto.service:auto-service")
+  compileOnly("com.google.auto.service:auto-service-annotations")
+
   testImplementation("org.junit.jupiter:junit-jupiter-api")
 }
 
