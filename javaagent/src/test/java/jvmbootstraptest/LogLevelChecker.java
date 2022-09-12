@@ -11,8 +11,7 @@ public class LogLevelChecker {
   public static void main(String[] args) {
 
     String str =
-        System.getProperty(
-            "io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel");
+        System.getProperty("io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel");
 
     if ((str == null) || (str != null && !str.equalsIgnoreCase("debug"))) {
       throw new IllegalStateException("debug mode not set");
