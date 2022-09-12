@@ -11,7 +11,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.util.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public class VaadinSingletons {
