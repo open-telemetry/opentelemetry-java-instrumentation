@@ -33,7 +33,6 @@ val javaagentLibs by configurations.creating {
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
 listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
-    exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
     exclude("io.opentelemetry", "opentelemetry-semconv")
   }
@@ -62,6 +61,7 @@ dependencies {
   baseJavaagentLibs(project(":javaagent-extension-api"))
 
   baseJavaagentLibs(project(":javaagent-tooling"))
+  baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
@@ -81,6 +81,7 @@ dependencies {
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
   //  but I couldn't get that to work
   licenseReportDependencies(project(":javaagent-tooling"))
+  licenseReportDependencies(project(":javaagent-internal-logging-simple"))
   licenseReportDependencies(project(":javaagent-extension-api"))
 
   testCompileOnly(project(":javaagent-bootstrap"))

@@ -49,8 +49,7 @@ public final class HelperClassPredicate {
         || className.startsWith("io.opentelemetry.javaagent.bootstrap.")
         || className.startsWith("io.opentelemetry.api.")
         || className.startsWith("io.opentelemetry.context.")
-        || className.startsWith("io.opentelemetry.semconv.")
-        || className.startsWith("org.slf4j.");
+        || className.startsWith("io.opentelemetry.semconv.");
   }
 
   private static boolean isJavaagentHelperClass(String className) {
