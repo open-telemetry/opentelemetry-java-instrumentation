@@ -7,12 +7,14 @@ package io.opentelemetry.instrumentation.ratpack.client;
 
 import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutException;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.condition.OS;
@@ -139,16 +141,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           return exception;
         });
 
-    options.setHttpAttributes(
-        uri -> {
-          switch (uri.toString()) {
-            case "http://localhost:61/": // unopened port
-            case "https://192.0.2.1/": // non routable address
-              return Collections.emptySet();
-            default:
-              return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
-          }
-        });
+    options.setHttpAttributes(this::computeHttpAttributes);
 
     options.disableTestRedirects();
 
@@ -156,5 +149,15 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
     options.disableTestReusedRequest();
 
     options.enableTestReadTimeout();
+  }
+
+  protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "https://192.0.2.1/": // non routable address
+        return Collections.emptySet();
+      default:
+        return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+    }
   }
 }

@@ -11,15 +11,19 @@ import com.ibm.wsspi.http.HttpResponse;
 @SuppressWarnings("OtelInternalJavadoc")
 public class HttpDispatcherLink {
 
-  public int getRemotePort() {
-    throw new UnsupportedOperationException();
-  }
-
   public String getRemoteHostAddress() {
     throw new UnsupportedOperationException();
   }
 
-  public int getRequestedPort() {
+  public int getRemotePort() {
+    throw new UnsupportedOperationException();
+  }
+
+  public String getLocalHostAddress() {
+    throw new UnsupportedOperationException();
+  }
+
+  public int getLocalPort() {
     throw new UnsupportedOperationException();
   }
 

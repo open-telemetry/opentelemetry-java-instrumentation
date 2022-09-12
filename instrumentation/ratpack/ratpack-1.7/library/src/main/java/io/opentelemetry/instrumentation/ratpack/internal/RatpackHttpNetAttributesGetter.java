@@ -17,6 +17,7 @@ import ratpack.http.client.RequestSpec;
  */
 public final class RatpackHttpNetAttributesGetter
     implements NetClientAttributesGetter<RequestSpec, HttpResponse> {
+
   @Override
   public String transport(RequestSpec request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

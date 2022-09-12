@@ -124,9 +124,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
           }
@@ -157,9 +157,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "net.sock.peer.addr" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
           }
@@ -191,9 +191,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET TESTKEY"
           }
@@ -221,9 +221,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET NON_EXISTENT_KEY"
           }
@@ -251,9 +251,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
             "$SemanticAttributes.DB_SYSTEM" "redis"
           }
@@ -281,9 +281,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "LPUSH TESTLIST ?"
           }
@@ -311,9 +311,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "HMSET user firstname ? lastname ? age ?"
           }
@@ -341,9 +341,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "HGETALL TESTHM"
           }
@@ -376,9 +376,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "EVAL $b64Script 1 TESTLIST ? ?"
           }
@@ -410,9 +410,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "MSET key1 ? key2 ?"
           }
@@ -440,9 +440,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           // Disconnect not an actual error even though an exception is recorded.
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "DEBUG SEGFAULT"
           }
@@ -476,9 +476,9 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           }
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_PORT" port
             "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SHUTDOWN NOSAVE"
             if (!Boolean.getBoolean("testLatestDeps")) {

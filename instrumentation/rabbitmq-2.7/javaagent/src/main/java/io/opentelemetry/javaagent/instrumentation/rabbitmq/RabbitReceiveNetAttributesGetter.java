@@ -22,20 +22,25 @@ public class RabbitReceiveNetAttributesGetter
   @Nullable
   @Override
   public String peerName(ReceiveRequest request, @Nullable GetResponse response) {
-    // not using InetAddress.getHostName() since that can trigger reverse name lookup
-    return request.getConnection().getAddress().getHostAddress();
+    return null;
   }
 
   @Nullable
   @Override
   public Integer peerPort(ReceiveRequest request, @Nullable GetResponse response) {
-    return request.getConnection().getPort();
+    return null;
   }
 
   @Nullable
   @Override
   public String sockPeerAddr(ReceiveRequest request, @Nullable GetResponse response) {
     return request.getConnection().getAddress().getHostAddress();
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(ReceiveRequest request, @Nullable GetResponse response) {
+    return request.getConnection().getPort();
   }
 
   @Nullable

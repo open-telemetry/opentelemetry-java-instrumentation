@@ -37,10 +37,8 @@ class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements W
           name 'exchange.declare'
           kind SpanKind.CLIENT
           attributes {
-            // "localhost" on linux, "127.0.0.1" on windows
-            "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" }
-            "$SemanticAttributes.NET_PEER_PORT" Long
             "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "net.sock.peer.port" Long
             "net.sock.family" { it == null || it == "inet6" }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
