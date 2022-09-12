@@ -97,18 +97,12 @@ public class SpringBootServiceNameGuesser implements ConditionalResourceProvider
   }
 
   @Override
-  public boolean shouldApply(ConfigProperties configProperties, Resource resource) {
-    String serviceNameResourceAttr = resource.getAttribute(ResourceAttributes.SERVICE_NAME);
-    boolean resourceDoesNotHaveServiceName =
-        serviceNameResourceAttr == null || serviceNameResourceAttr.equals("unknown_service:java");
-    boolean configDoesNotHaveServiceName = configProperties.getString("otel.service.name") == null;
-    boolean configDoesNotHaveServiceNameResourceAttribute =
-        !configProperties
-            .getMap("otel.resource.attributes")
-            .containsKey(ResourceAttributes.SERVICE_NAME.getKey());
-    return resourceDoesNotHaveServiceName
-        && configDoesNotHaveServiceName
-        && configDoesNotHaveServiceNameResourceAttribute;
+  public boolean shouldApply(ConfigProperties config, Resource resource) {
+    String serviceName = config.getString("otel.service.name");
+    Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
+    return serviceName == null
+        && !resourceAttributes.containsKey(ResourceAttributes.SERVICE_NAME.getKey())
+        && "unknown_service:java".equals(resource.getAttribute(ResourceAttributes.SERVICE_NAME));
   }
 
   @Nullable
