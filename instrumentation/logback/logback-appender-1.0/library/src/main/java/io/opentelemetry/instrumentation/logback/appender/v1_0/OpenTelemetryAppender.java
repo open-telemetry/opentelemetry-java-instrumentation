@@ -67,7 +67,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   /**
    * Sets whether the code attributes (file name, class name, method name and line number) should be
-   * set to logs.
+   * set to logs. Enabling these attributes can potentially impact performance (see
+   * https://logback.qos.ch/manual/layouts.html).
    *
    * @param captureCodeAttributes To enable or disable the code attributes (file name, class name,
    *     method name and line number)
