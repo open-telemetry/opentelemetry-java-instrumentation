@@ -326,6 +326,25 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   @Test
+  void requestWithCallbackAndImplicitParent() throws Throwable {
+    assumeTrue(options.testCallbackWithImplicitParent);
+
+    String method = "GET";
+    URI uri = resolveAddress("/success");
+
+    RequestResult result =
+        doRequestWithCallback(method, uri, () -> testing.runWithSpan("callback", () -> {}));
+
+    assertThat(result.get()).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void basicRequestWith1Redirect() throws Exception {
     // TODO quite a few clients create an extra span for the redirect
     // This test should handle both types or we should unify how the clients work
