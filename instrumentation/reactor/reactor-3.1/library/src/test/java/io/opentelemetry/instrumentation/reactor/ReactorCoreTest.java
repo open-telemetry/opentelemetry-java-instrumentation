@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.reactor;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -24,6 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
+import java.time.Duration;
 
 class ReactorCoreTest extends AbstractReactorCoreTest {
 
@@ -252,9 +254,10 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     publish
         .take(2)
         .subscribe(n -> {
-          assertThat(Span.current().getSpanContext().isValid()).isTrue();
-          Span.current().setAttribute("onNext", true);
-        });
+              assertThat(Span.current().getSpanContext().isValid()).isTrue();
+              Span.current().setAttribute("onNext", true);
+            },
+            error -> fail(error.getMessage()));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -264,7 +267,35 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("inner").hasNoParent()
-                .hasAttributes(attributeEntry("onNext", true))));
+                    .hasAttributes(attributeEntry("onNext", true))));
+  }
+
+  @Test
+  void doesNotOverrideInnerCurrentSpansAsync() {
+    Flux<Object> publish = Flux.create(sink -> {
+      Span s = tracer.spanBuilder("inner").startSpan();
+      try (Scope scope = s.makeCurrent()) {
+        sink.next(s);
+      } finally {
+        s.end();
+      }
+    });
+
+    publish
+        .take(1)
+        .delayElements(Duration.ofMillis(1))
+        .doOnNext(span -> {
+            assertThat(Span.current().getSpanContext().isValid()).isTrue();
+            assertThat(Span.current()).isSameAs(span);
+        })
+        .subscribe(
+            span -> assertThat(Span.current()).isSameAs(span),
+            error -> fail(error.getMessage()));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("inner").hasNoParent()));
   }
 
   @Test
