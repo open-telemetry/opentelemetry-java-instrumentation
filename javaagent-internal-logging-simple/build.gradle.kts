@@ -29,7 +29,7 @@ tasks {
     mergeServiceFiles()
 
     // Prevents configuration naming conflict with other SLF4J instances
-    relocate("org.slf4j", "io.opentelemetry.javaagent.logging.simple.slf4j")
+    relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")
   }
 
   assemble {
