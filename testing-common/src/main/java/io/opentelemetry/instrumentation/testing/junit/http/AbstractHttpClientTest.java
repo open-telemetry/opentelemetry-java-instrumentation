@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -912,10 +913,14 @@ public abstract class AbstractHttpClientTest<REQUEST> {
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
+              // TODO: Move to test knob rather than always treating as optional
+              if (attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
+              }
+
               if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
-                // TODO(anuraaga): For theses cases, there isn't actually a peer so we shouldn't be
-                // filling in peer information but some instrumentation does so based on the URL
-                // itself which is present in HTTP attributes. We should fix this.
+                // TODO: net.peer.name and net.peer.port should always be populated from the URI or
+                // the Host header, verify these assertions below
                 if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_NAME)) {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
                 }
@@ -937,6 +942,17 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                             });
                   }
                 }
+
+                // In these cases the peer connection is not established, so the HTTP client should
+                // not report any socket-level attributes
+                // TODO https://github.com/open-telemetry/opentelemetry-java/pull/4723
+                assertThat(attrs.asMap())
+                    .doesNotContainKey(AttributeKey.stringKey("net.sock.family"))
+                    // TODO netty sometimes reports net.sock.peer.addr in connection error test
+                    // .doesNotContainKey(AttributeKey.stringKey("net.sock.peer.addr"))
+                    .doesNotContainKey(AttributeKey.stringKey("net.sock.peer.name"))
+                    .doesNotContainKey(AttributeKey.stringKey("net.sock.peer.port"));
+
               } else {
                 if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
@@ -944,18 +960,17 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
                 }
-              }
 
-              // TODO(anuraaga): Move to test knob rather than always treating as optional
-              if (attrs.asMap().containsKey(AttributeKey.stringKey("net.sock.peer.addr"))) {
-                if (uri.getHost().equals("192.0.2.1")) {
-                  // NB(anuraaga): This branch seems to currently only be exercised on Java 15.
-                  // It would be good to understand how the JVM version is impacting this check.
-                  assertThat(attrs)
-                      .containsEntry(AttributeKey.stringKey("net.sock.peer.addr"), "192.0.2.1");
-                } else {
+                // TODO: Move to test knob rather than always treating as optional
+                if (attrs.asMap().containsKey(AttributeKey.stringKey("net.sock.peer.addr"))) {
                   assertThat(attrs)
                       .containsEntry(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1");
+                }
+                if (attrs.asMap().containsKey(AttributeKey.stringKey("net.sock.peer.port"))) {
+                  assertThat(attrs)
+                      .containsEntry(
+                          AttributeKey.longKey("net.sock.peer.port"),
+                          "https".equals(uri.getScheme()) ? server.httpsPort() : server.httpPort());
                 }
               }
 

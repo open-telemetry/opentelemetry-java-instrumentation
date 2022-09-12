@@ -100,7 +100,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
-  String peerIp(ServerEndpoint endpoint) {
+  String sockPeerAddr(ServerEndpoint endpoint) {
     "127.0.0.1"
   }
 
@@ -206,6 +206,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.expectedException = expectedException()
       options.hasExceptionOnServerSpan = { endpoint ->
         HttpServerTest.this.hasExceptionOnServerSpan(endpoint)
+      }
+      options.sockPeerAddr = { endpoint ->
+        HttpServerTest.this.sockPeerAddr(endpoint)
       }
 
       options.testRedirect = testRedirect()
