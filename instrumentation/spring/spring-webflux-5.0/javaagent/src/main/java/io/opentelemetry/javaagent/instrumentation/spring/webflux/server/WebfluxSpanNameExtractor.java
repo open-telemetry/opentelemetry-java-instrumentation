@@ -12,7 +12,7 @@ import org.springframework.web.method.HandlerMethod;
 
 public class WebfluxSpanNameExtractor implements SpanNameExtractor<Object> {
 
-  private final SpanNameExtractor<Object> handlerCodeAttributesGetter =
+  private final SpanNameExtractor<Object> handlerSpanNameExtractor =
       CodeSpanNameExtractor.create(new HandlerCodeAttributesGetter());
 
   @Override
@@ -22,7 +22,7 @@ public class WebfluxSpanNameExtractor implements SpanNameExtractor<Object> {
       HandlerMethod handlerMethod = (HandlerMethod) handler;
       return SpanNames.fromMethod(handlerMethod.getMethod());
     } else {
-      return handlerCodeAttributesGetter.extract(handler);
+      return handlerSpanNameExtractor.extract(handler);
     }
   }
 }
