@@ -9,8 +9,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.javaagent.extension.Ordered;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
