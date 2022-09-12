@@ -19,6 +19,6 @@ public class ServletErrorCauseExtractor<REQUEST, RESPONSE> implements ErrorCause
     if (accessor.isServletException(error) && error.getCause() != null) {
       error = error.getCause();
     }
-    return ErrorCauseExtractor.jdk().extract(error);
+    return ErrorCauseExtractor.getDefault().extract(error);
   }
 }
