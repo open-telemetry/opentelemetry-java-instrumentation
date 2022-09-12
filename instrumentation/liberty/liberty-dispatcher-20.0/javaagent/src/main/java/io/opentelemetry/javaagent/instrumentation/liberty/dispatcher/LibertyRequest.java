@@ -38,10 +38,6 @@ public class LibertyRequest {
     return httpRequestMessage.getQueryString();
   }
 
-  public int getServerPort() {
-    return httpDispatcherLink.getRequestedPort();
-  }
-
   public List<String> getAllHeaderNames() {
     return httpRequestMessage.getAllHeaderNames();
   }
@@ -63,15 +59,15 @@ public class LibertyRequest {
     return stringHeaders;
   }
 
-  public int peerPort() {
-    return httpDispatcherLink.getRemotePort();
-  }
-
-  public String peerIp() {
-    return httpDispatcherLink.getRemoteHostAddress();
-  }
-
   public String getProtocol() {
     return httpRequestMessage.getVersion();
+  }
+
+  public HttpDispatcherLink dispatcher() {
+    return httpDispatcherLink;
+  }
+
+  public HttpRequestMessage request() {
+    return httpRequestMessage;
   }
 }

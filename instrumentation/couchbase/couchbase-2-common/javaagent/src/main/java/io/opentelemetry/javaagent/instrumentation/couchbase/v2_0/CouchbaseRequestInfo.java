@@ -11,6 +11,7 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
+import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
@@ -29,10 +30,9 @@ public abstract class CouchbaseRequestInfo {
         }
       };
 
-  private String peerName;
-  private Integer peerPort;
   private String localAddress;
   private String operationId;
+  private SocketAddress peerAddress;
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, Class<?> declaringClass, String methodName) {
@@ -77,24 +77,6 @@ public abstract class CouchbaseRequestInfo {
   public abstract boolean isMethodCall();
 
   @Nullable
-  public String getPeerName() {
-    return peerName;
-  }
-
-  public void setPeerName(String peerName) {
-    this.peerName = peerName;
-  }
-
-  @Nullable
-  public Integer getPeerPort() {
-    return peerPort;
-  }
-
-  public void setPeerPort(Integer peerPort) {
-    this.peerPort = peerPort;
-  }
-
-  @Nullable
   public String getLocalAddress() {
     return localAddress;
   }
@@ -110,5 +92,14 @@ public abstract class CouchbaseRequestInfo {
 
   public void setOperationId(String operationId) {
     this.operationId = operationId;
+  }
+
+  @Nullable
+  public SocketAddress getPeerAddress() {
+    return peerAddress;
+  }
+
+  public void setPeerAddress(SocketAddress peerAddress) {
+    this.peerAddress = peerAddress;
   }
 }
