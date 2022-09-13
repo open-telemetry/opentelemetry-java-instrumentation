@@ -16,7 +16,11 @@ class QuartzTest extends AbstractQuartzTest {
 
   @Override
   protected void configureScheduler(Scheduler scheduler) {
-    QuartzTelemetry.create(testing.getOpenTelemetry()).configure(scheduler);
+    QuartzTelemetry.builder(testing.getOpenTelemetry())
+        // TODO run tests both with and without experimental span attributes
+        .setCaptureExperimentalSpanAttributes(true)
+        .build()
+        .configure(scheduler);
   }
 
   @Override
