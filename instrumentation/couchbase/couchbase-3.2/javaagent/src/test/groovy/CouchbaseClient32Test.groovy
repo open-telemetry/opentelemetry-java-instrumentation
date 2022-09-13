@@ -6,7 +6,6 @@
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
-import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
