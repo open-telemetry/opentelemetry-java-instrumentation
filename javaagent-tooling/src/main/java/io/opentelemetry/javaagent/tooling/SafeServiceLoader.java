@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.javaagent.extension.Ordered;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;

@@ -50,7 +50,7 @@ public final class RatpackSingletons {
   public static void onError(io.opentelemetry.context.Context context, Throwable error) {
     Span span = Span.fromContext(context);
     span.setStatus(StatusCode.ERROR);
-    span.recordException(ErrorCauseExtractor.jdk().extract(error));
+    span.recordException(ErrorCauseExtractor.getDefault().extract(error));
   }
 
   private RatpackSingletons() {}

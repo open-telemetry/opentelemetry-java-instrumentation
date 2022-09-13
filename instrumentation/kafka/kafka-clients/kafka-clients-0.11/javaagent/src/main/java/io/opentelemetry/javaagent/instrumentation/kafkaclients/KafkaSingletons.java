@@ -8,8 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import java.util.Map;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -20,6 +23,9 @@ public final class KafkaSingletons {
   private static final boolean PROPAGATION_ENABLED =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true);
+  private static final boolean METRICS_ENABLED =
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
 
   private static final Instrumenter<ProducerRecord<?, ?>, Void> PRODUCER_INSTRUMENTER;
   private static final Instrumenter<ConsumerRecords<?, ?>, Void> CONSUMER_RECEIVE_INSTRUMENTER;
@@ -54,6 +60,21 @@ public final class KafkaSingletons {
 
   public static Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter() {
     return CONSUMER_PROCESS_INSTRUMENTER;
+  }
+
+  public static void enhanceConfig(Map<? super String, Object> config) {
+    if (!METRICS_ENABLED) {
+      return;
+    }
+    config.merge(
+        CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
+        OpenTelemetryMetricsReporter.class.getName(),
+        (class1, class2) -> class1 + "," + class2);
+    config.put(
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, GlobalOpenTelemetry.get());
+    config.put(
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
+        INSTRUMENTATION_NAME);
   }
 
   private KafkaSingletons() {}

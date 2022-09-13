@@ -28,6 +28,8 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }

@@ -21,7 +21,7 @@ pluginManagement {
 plugins {
   id("com.gradle.enterprise") version "3.11.1"
   id("com.github.burrunan.s3-build-cache") version "1.3"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.1"
 }
 
 dependencyResolutionManagement {
@@ -104,8 +104,10 @@ include(":javaagent-bootstrap")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
 include(":javaagent-tooling:javaagent-tooling-java9")
+include(":javaagent-internal-logging-simple")
 include(":javaagent")
 
+include(":bom")
 include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-semconv")

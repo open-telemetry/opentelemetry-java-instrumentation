@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;

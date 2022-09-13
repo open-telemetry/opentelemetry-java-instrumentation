@@ -10,12 +10,13 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 
-final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, RESPONSE> {
+final class PropagatingFromUpstreamInstrumenter<REQUEST, RESPONSE>
+    extends Instrumenter<REQUEST, RESPONSE> {
 
   private final ContextPropagators propagators;
   private final TextMapGetter<REQUEST> getter;
 
-  ServerInstrumenter(
+  PropagatingFromUpstreamInstrumenter(
       InstrumenterBuilder<REQUEST, RESPONSE> builder, TextMapGetter<REQUEST> getter) {
     super(builder);
     this.propagators = builder.openTelemetry.getPropagators();

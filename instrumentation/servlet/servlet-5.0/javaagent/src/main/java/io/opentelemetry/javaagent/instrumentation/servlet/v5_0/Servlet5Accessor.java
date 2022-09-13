@@ -66,8 +66,33 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
+  public String getRequestServerName(HttpServletRequest request) {
+    return request.getServerName();
+  }
+
+  @Override
+  public Integer getRequestServerPort(HttpServletRequest request) {
+    return request.getServerPort();
+  }
+
+  @Override
   public String getRequestRemoteAddr(HttpServletRequest request) {
     return request.getRemoteAddr();
+  }
+
+  @Override
+  public Integer getRequestRemotePort(HttpServletRequest request) {
+    return request.getRemotePort();
+  }
+
+  @Override
+  public String getRequestLocalAddr(HttpServletRequest request) {
+    return request.getLocalAddr();
+  }
+
+  @Override
+  public Integer getRequestLocalPort(HttpServletRequest request) {
+    return request.getLocalPort();
   }
 
   @Override
@@ -106,11 +131,6 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   @Override
   public Principal getRequestUserPrincipal(HttpServletRequest request) {
     return request.getUserPrincipal();
-  }
-
-  @Override
-  public Integer getRequestRemotePort(HttpServletRequest request) {
-    return request.getRemotePort();
   }
 
   @Override
