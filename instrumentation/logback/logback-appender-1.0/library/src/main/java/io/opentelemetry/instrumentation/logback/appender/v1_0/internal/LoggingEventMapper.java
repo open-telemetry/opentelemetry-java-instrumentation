@@ -119,7 +119,7 @@ public final class LoggingEventMapper {
         attributes.put(SemanticAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
         attributes.put(SemanticAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
         int lineNumber = firstStackElement.getLineNumber();
-        if (lineNumber != -1) {
+        if (lineNumber > 0) {
           attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
         }
       }
