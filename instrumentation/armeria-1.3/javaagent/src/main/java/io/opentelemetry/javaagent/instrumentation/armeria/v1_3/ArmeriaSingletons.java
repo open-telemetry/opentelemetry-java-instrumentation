@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.client.HttpClient;
 import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetry;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;

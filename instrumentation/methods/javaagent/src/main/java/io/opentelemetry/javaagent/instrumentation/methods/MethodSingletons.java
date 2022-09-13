@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
+import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 
 public final class MethodSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";

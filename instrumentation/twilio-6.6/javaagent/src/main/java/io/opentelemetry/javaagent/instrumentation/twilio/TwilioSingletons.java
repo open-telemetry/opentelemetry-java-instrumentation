@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtracto
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.util.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class TwilioSingletons {
