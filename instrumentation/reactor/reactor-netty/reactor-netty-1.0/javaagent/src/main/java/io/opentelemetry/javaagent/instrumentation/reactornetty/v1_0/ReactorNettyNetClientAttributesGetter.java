@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
 import javax.annotation.Nullable;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientConfig;
@@ -27,15 +25,13 @@ final class ReactorNettyNetClientAttributesGetter
   @Nullable
   @Override
   public String peerName(HttpClientConfig request, @Nullable HttpClientResponse response) {
-    URI parsedUri = parseUri(request);
-    return parsedUri == null ? null : parsedUri.getHost();
+    return getHost(request);
   }
 
   @Nullable
   @Override
   public Integer peerPort(HttpClientConfig request, @Nullable HttpClientResponse response) {
-    URI parsedUri = parseUri(request);
-    return parsedUri == null ? null : parsedUri.getPort();
+    return getPort(request);
   }
 
   @Nullable
@@ -55,20 +51,27 @@ final class ReactorNettyNetClientAttributesGetter
     return null;
   }
 
-  private static URI parseUri(HttpClientConfig request) {
+  @Nullable
+  private static String getHost(HttpClientConfig request) {
     String baseUrl = request.baseUrl();
     String uri = request.uri();
 
-    URI parsedUri;
-    try {
-      if (baseUrl != null && uri.startsWith("/")) {
-        parsedUri = new URI(baseUrl);
-      } else {
-        parsedUri = new URI(uri);
-      }
-    } catch (URISyntaxException ignored) {
-      return null;
+    if (baseUrl != null && uri.startsWith("/")) {
+      return UrlParser.getHost(baseUrl);
+    } else {
+      return UrlParser.getHost(uri);
     }
-    return parsedUri;
+  }
+
+  @Nullable
+  private static Integer getPort(HttpClientConfig request) {
+    String baseUrl = request.baseUrl();
+    String uri = request.uri();
+
+    if (baseUrl != null && uri.startsWith("/")) {
+      return UrlParser.getPort(baseUrl);
+    } else {
+      return UrlParser.getPort(uri);
+    }
   }
 }
