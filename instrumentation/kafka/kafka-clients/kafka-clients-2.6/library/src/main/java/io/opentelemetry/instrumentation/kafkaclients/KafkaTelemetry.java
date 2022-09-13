@@ -150,6 +150,9 @@ public final class KafkaTelemetry {
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         OpenTelemetryMetricsReporter.class.getName());
     config.put(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, openTelemetry);
+    config.put(
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
+        KafkaTelemetryBuilder.INSTRUMENTATION_NAME);
     return Collections.unmodifiableMap(config);
   }
 
