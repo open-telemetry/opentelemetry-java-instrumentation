@@ -98,6 +98,8 @@ public class SpringBootServiceNameGuesser implements ConditionalResourceProvider
 
   @Override
   public boolean shouldApply(ConfigProperties config, Resource resource) {
+    // we're skipping this provider if the service name was manually set by the user -- no need to
+    // waste time trying to compute the service name if it's going to be overriden anyway
     String serviceName = config.getString("otel.service.name");
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
