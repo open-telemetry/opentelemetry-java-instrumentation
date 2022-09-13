@@ -52,10 +52,9 @@ final class RestletNetAttributesGetter implements NetServerAttributesGetter<Requ
       }
     }
 
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-
     if (httpRequestClass != null && serverCallClass != null) {
       try {
+        MethodHandles.Lookup lookup = MethodHandles.publicLookup();
         getHttpCall =
             lookup.findVirtual(httpRequestClass, "getHttpCall", methodType(serverCallClass));
         getHostDomain =
