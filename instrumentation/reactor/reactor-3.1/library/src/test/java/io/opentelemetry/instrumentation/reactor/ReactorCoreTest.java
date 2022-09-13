@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
-import java.time.Duration;
 
 class ReactorCoreTest extends AbstractReactorCoreTest {
 
@@ -235,25 +235,29 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
 
   @Test
   void doesNotOverrideInnerCurrentSpans() {
-    Flux<Object> publish = Flux.create(sink -> {
-      for (int i = 0; i < 2; i ++) {
-        Span s = tracer.spanBuilder("inner").startSpan();
-        try (Scope scope = s.makeCurrent()) {
-          sink.next(i);
-        } finally {
-          s.end();
-        }
-      }
-    });
+    Flux<Object> publish =
+        Flux.create(
+            sink -> {
+              for (int i = 0; i < 2; i++) {
+                Span s = tracer.spanBuilder("inner").startSpan();
+                try (Scope scope = s.makeCurrent()) {
+                  sink.next(i);
+                } finally {
+                  s.end();
+                }
+              }
+            });
 
     // as a result we'll have
     // 1. publish subscriber that creates inner spans
     // 2. tracing subscriber without current context - subscription was done outside any scope
     // 3. inner subscriber that will add onNext attribute to inner spans
-    // I.e. tracing subscriber context (root) at subscription time will be different from inner in onNext
+    // I.e. tracing subscriber context (root) at subscription time will be different from inner in
+    // onNext
     publish
         .take(2)
-        .subscribe(n -> {
+        .subscribe(
+            n -> {
               assertThat(Span.current().getSpanContext().isValid()).isTrue();
               Span.current().setAttribute("onNext", true);
             },
@@ -262,54 +266,60 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("inner").hasNoParent()
-                    .hasAttributes(attributeEntry("onNext", true))),
+                span ->
+                    span.hasName("inner")
+                        .hasNoParent()
+                        .hasAttributes(attributeEntry("onNext", true))),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("inner").hasNoParent()
-                    .hasAttributes(attributeEntry("onNext", true))));
+                span ->
+                    span.hasName("inner")
+                        .hasNoParent()
+                        .hasAttributes(attributeEntry("onNext", true))));
   }
 
   @Test
   void doesNotOverrideInnerCurrentSpansAsync() {
-    Flux<Object> publish = Flux.create(sink -> {
-      Span s = tracer.spanBuilder("inner").startSpan();
-      try (Scope scope = s.makeCurrent()) {
-        sink.next(s);
-      } finally {
-        s.end();
-      }
-    });
+    Flux<Object> publish =
+        Flux.create(
+            sink -> {
+              Span s = tracer.spanBuilder("inner").startSpan();
+              try (Scope scope = s.makeCurrent()) {
+                sink.next(s);
+              } finally {
+                s.end();
+              }
+            });
 
     publish
         .take(1)
         .delayElements(Duration.ofMillis(1))
-        .doOnNext(span -> {
-            assertThat(Span.current().getSpanContext().isValid()).isTrue();
-            assertThat(Span.current()).isSameAs(span);
-        })
+        .doOnNext(
+            span -> {
+              assertThat(Span.current().getSpanContext().isValid()).isTrue();
+              assertThat(Span.current()).isSameAs(span);
+            })
         .subscribe(
-            span -> assertThat(Span.current()).isSameAs(span),
-            error -> fail(error.getMessage()));
+            span -> assertThat(Span.current()).isSameAs(span), error -> fail(error.getMessage()));
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("inner").hasNoParent()));
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("inner").hasNoParent()));
   }
 
   @Test
   void doesNotOverrideInnerCurrentSpansWithThereIsOuterCurrent() {
-    Flux<Object> publish = Flux.create(sink -> {
-      for (int i = 0; i < 2; i++) {
-        Span s = tracer.spanBuilder("inner").startSpan();
-        try (Scope scope = s.makeCurrent()) {
-          sink.next(i);
-        } finally {
-          s.end();
-        }
-      }
-    });
+    Flux<Object> publish =
+        Flux.create(
+            sink -> {
+              for (int i = 0; i < 2; i++) {
+                Span s = tracer.spanBuilder("inner").startSpan();
+                try (Scope scope = s.makeCurrent()) {
+                  sink.next(i);
+                } finally {
+                  s.end();
+                }
+              }
+            });
 
     // as a result we'll have
     // 1. publish subscriber that creates inner spans
@@ -318,17 +328,20 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     // I.e. tracing subscriber context at subscription time will be different from inner in onNext
     Span outer = tracer.spanBuilder("outer").startSpan();
     try (Scope scope = outer.makeCurrent()) {
-      StepVerifier.create(publish
-              .take(2)
-              .doOnNext(n -> {
-                assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                Span.current().setAttribute("onNext", true);
-              })
-              .subscriberContext(
-                  // subscribers that know that their subscription can happen
-                  // ahead of time and in the 'wrong' context, has to clean up 'wrong' context
-                  context -> ContextPropagationOperator.storeOpenTelemetryContext(context,
-                      Context.root())))
+      StepVerifier.create(
+              publish
+                  .take(2)
+                  .doOnNext(
+                      n -> {
+                        assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                        Span.current().setAttribute("onNext", true);
+                      })
+                  .subscriberContext(
+                      // subscribers that know that their subscription can happen
+                      // ahead of time and in the 'wrong' context, has to clean up 'wrong' context
+                      context ->
+                          ContextPropagationOperator.storeOpenTelemetryContext(
+                              context, Context.root())))
           .expectNextCount(2)
           .verifyComplete();
 
@@ -339,10 +352,14 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("outer").hasNoParent(),
-                span -> span.hasName("inner").hasParent(trace.getSpan(0))
-                    .hasAttributes(attributeEntry("onNext", true)),
-                span -> span.hasName("inner").hasParent(trace.getSpan(0))
-                    .hasAttributes(attributeEntry("onNext", true))));
+                span ->
+                    span.hasName("inner")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributes(attributeEntry("onNext", true)),
+                span ->
+                    span.hasName("inner")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributes(attributeEntry("onNext", true))));
   }
 
   private <T> Mono<T> monoSpan(Mono<T> mono, String spanName) {

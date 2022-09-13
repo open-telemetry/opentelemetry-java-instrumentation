@@ -48,7 +48,8 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     this.subscriber = subscriber;
     this.context = ctx;
     this.traceContext = ContextPropagationOperator.getOpenTelemetryContext(ctx, contextToPropagate);
-    this.hasContextToPropagate = traceContext == null ? false : Span.fromContext(traceContext).getSpanContext().isValid();
+    this.hasContextToPropagate =
+        traceContext == null ? false : Span.fromContext(traceContext).getSpanContext().isValid();
   }
 
   @Override

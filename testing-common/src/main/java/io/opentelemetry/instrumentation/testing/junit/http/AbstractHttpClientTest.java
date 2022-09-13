@@ -342,10 +342,14 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     assertThat(result.get()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -1122,7 +1126,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   protected boolean testCallbackWithImplicitParent() {
-    // depending on async behavior callback can be executed withing
+    // depending on async behavior callback can be executed within
     // parent span scope or outside of the scope, e.g. in reactor-netty or spring
     // callback is correlated.
     return false;

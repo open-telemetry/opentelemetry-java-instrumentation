@@ -512,7 +512,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testCallbackWithImplicitParent() {
-    // depending on async behavior callback can be executed withing
+    // depending on async behavior callback can be executed within
     // parent span scope or outside of the scope, e.g. in reactor-netty or spring
     // callback is correlated.
     false
