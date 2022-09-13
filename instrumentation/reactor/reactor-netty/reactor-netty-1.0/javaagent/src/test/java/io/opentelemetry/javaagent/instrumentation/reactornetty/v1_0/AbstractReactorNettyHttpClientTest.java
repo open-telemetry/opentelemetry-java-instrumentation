@@ -179,7 +179,7 @@ abstract class AbstractReactorNettyHttpClientTest
               span -> span.hasName("HTTP GET").hasKind(CLIENT).hasParent(parentSpan),
               span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
 
-          assertSameSpan(nettyClientSpan, onRequestSpan);
+          assertSameSpan(parentSpan, onRequestSpan);
           assertSameSpan(nettyClientSpan, afterRequestSpan);
           assertSameSpan(nettyClientSpan, onResponseSpan);
           assertSameSpan(parentSpan, afterResponseSpan);
