@@ -4,11 +4,25 @@
 
 ## Version 1.18.0
 
+The `opentelemetry-instrumentation-api` artifact is declared stable in this release.
+
 ### Migration notes
 
+- There were a few late-breaking changes in `opentelemetry-instrumentation-api`, prior to it being
+  declared stable:
+  * `InstrumenterBuilder.addAttributesExtractors(AttributesExtractor...)` was removed, use instead
+    `addAttributesExtractors(AttributesExtractor)` or
+    `addAttributesExtractors(Iterable<AttributesExtractor>)`
+  * `SpanLinksExtractor.extractFromRequest()` was removed, use instead manual extraction
+  * `ErrorCauseExtractor.jdk()` was renamed to `ErrorCauseExtractor.getDefault()`
 - The deprecated `io.opentelemetry.instrumentation.api.config.Config` and related classes
   have been removed
   ([#6501](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6501))
+- Net attributes getters were updated to reflect latest specification changes
+  ([#6503](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6503))
+- The deprecated `Ordered` interface was removed from the `opentelemetry-javaagent-extension-api`,
+  use instead the `Ordered` interface from `opentelemetry-sdk-extension-autoconfigure-spi`
+  ([#6589](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6589))
 
 ### 📈 Enhancements
 
@@ -20,6 +34,8 @@
   ([#6556](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6556))
 - Add mongo sanitization configuration
   ([#6541](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6541))
+- Add kafka client metrics to the javaagent instrumentation
+  ([#6533](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6533))
 
 ### 🛠️ Bug fixes
 
