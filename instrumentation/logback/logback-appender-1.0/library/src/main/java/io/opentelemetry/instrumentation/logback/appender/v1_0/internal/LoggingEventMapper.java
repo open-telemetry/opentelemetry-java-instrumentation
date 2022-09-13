@@ -113,13 +113,13 @@ public final class LoggingEventMapper {
       if (callerData != null && callerData.length > 0) {
         StackTraceElement firstStackElement = callerData[0];
         String fileName = firstStackElement.getFileName();
-        if(fileName != null) {
+        if (fileName != null) {
           attributes.put(SemanticAttributes.CODE_FILEPATH, fileName);
         }
         attributes.put(SemanticAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
         attributes.put(SemanticAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
         int lineNumber = firstStackElement.getLineNumber();
-        if(lineNumber != -1) {
+        if (lineNumber != -1) {
           attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
         }
       }
