@@ -44,11 +44,11 @@ class LogbackTest extends AgentInstrumentationSpecification {
       waitForTraces(1)
     }
 
-    String jvmVersion = System.getProperty("java.vm.specification.version");
-    int codeAttributes = 3;
+    String jvmVersion = System.getProperty("java.vm.specification.version")
+    int codeAttributes = 3
     boolean jvmVersionGreaterThanOrEqualTo18 = jvmVersion.startsWith("1.8") && Integer.parseInt(jvmVersion) >= 18
-    if(jvmVersionGreaterThanOrEqualTo18) {
-      codeAttributes = 4; // Java 18 specificity on line number
+    if (jvmVersionGreaterThanOrEqualTo18) {
+      codeAttributes = 4 // Java 18 specificity on line number
     }
 
     if (severity != null) {
