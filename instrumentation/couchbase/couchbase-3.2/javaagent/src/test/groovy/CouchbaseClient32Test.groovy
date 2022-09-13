@@ -6,6 +6,7 @@
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.Collection
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,6 +17,8 @@ import org.testcontainers.couchbase.CouchbaseService
 import spock.lang.Shared
 
 import java.time.Duration
+
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 // Couchbase instrumentation is owned upstream so we don't assert on the contents of the spans, only
 // that the instrumentation is properly registered by the agent, meaning some spans were generated.
@@ -61,6 +64,9 @@ class CouchbaseClient32Test extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name(~/.*get/)
+          if (Boolean.getBoolean("testLatestDeps")) {
+            status ERROR
+          }
         }
         span(1) {
           name(~/.*dispatch_to_server/)
