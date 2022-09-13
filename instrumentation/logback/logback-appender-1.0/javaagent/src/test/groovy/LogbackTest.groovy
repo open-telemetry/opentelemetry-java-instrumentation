@@ -123,7 +123,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
-    assertThat(log.getAttributes().size()).isEqualTo(3 + 4) // 4 code attributes
+    assertThat(log.getAttributes().size()).isEqualTo(3 + 3) // 3 code attributes
     assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1"))).isEqualTo("val1")
     assertThat(log.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2"))).isEqualTo("val2")
     assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
