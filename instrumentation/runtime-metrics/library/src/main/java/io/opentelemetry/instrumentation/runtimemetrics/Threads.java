@@ -23,8 +23,8 @@ import java.lang.management.ThreadMXBean;
  * <p>Example metrics being exported:
  *
  * <pre>
- *   process.runtime.jvm.threads.count 4
- *   process.runtime.jvm.daemon.threads.count 3
+ *   process.runtime.jvm.threads.count{daemon=true} 2
+ *   process.runtime.jvm.threads.count{daemon=false} 5
  * </pre>
  */
 public final class Threads {
