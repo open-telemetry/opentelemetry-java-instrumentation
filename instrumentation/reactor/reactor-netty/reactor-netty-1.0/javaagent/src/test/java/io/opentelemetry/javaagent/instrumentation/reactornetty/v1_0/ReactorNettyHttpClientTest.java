@@ -6,8 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.netty.channel.ChannelOption;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 import reactor.netty.http.client.HttpClient;
 
 class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
@@ -47,5 +52,19 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
                   .status()
                   .code();
         });
+  }
+
+  @Override
+  protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
+    if (uri.toString().contains("/success")) {
+      // the single connection test does not report net.peer.* attributes; it only reports the
+      // net.peer.sock.* attributes
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(SemanticAttributes.NET_PEER_NAME);
+      attributes.remove(SemanticAttributes.NET_PEER_PORT);
+      return attributes;
+    }
+    return super.getHttpAttributes(uri);
   }
 }

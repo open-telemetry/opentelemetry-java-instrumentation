@@ -21,7 +21,7 @@ pluginManagement {
 plugins {
   id("com.gradle.enterprise") version "3.11.1"
   id("com.github.burrunan.s3-build-cache") version "1.3"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.1"
 }
 
 dependencyResolutionManagement {
@@ -104,8 +104,10 @@ include(":javaagent-bootstrap")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
 include(":javaagent-tooling:javaagent-tooling-java9")
+include(":javaagent-internal-logging-simple")
 include(":javaagent")
 
+include(":bom")
 include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-semconv")
@@ -387,6 +389,7 @@ include(":instrumentation:reactor:reactor-3.1:library")
 include(":instrumentation:reactor:reactor-3.1:testing")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent")
+include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent-unit-tests")
 include(":instrumentation:rediscala-1.8:javaagent")
 include(":instrumentation:redisson:redisson-3.0:javaagent")
 include(":instrumentation:redisson:redisson-3.17:javaagent")

@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.spring.resources;
 
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.OutputStream;
@@ -109,6 +111,35 @@ class SpringBootServiceNameGuesserTest {
     SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "bullpen");
+  }
+
+  @Test
+  void shouldApply() {
+    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    assertThat(guesser.shouldApply(config, Resource.getDefault())).isTrue();
+  }
+
+  @Test
+  void shouldNotApplyWhenResourceHasServiceName() {
+    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    Resource resource =
+        Resource.getDefault().merge(Resource.create(Attributes.of(SERVICE_NAME, "test-service")));
+    assertThat(guesser.shouldApply(config, resource)).isFalse();
+  }
+
+  @Test
+  void shouldNotApplyIfConfigHasServiceName() {
+    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    when(config.getString("otel.service.name")).thenReturn("test-service");
+    assertThat(guesser.shouldApply(config, Resource.getDefault())).isFalse();
+  }
+
+  @Test
+  void shouldNotApplyIfConfigHasServiceNameResourceAttribute() {
+    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    when(config.getMap("otel.resource.attributes"))
+        .thenReturn(singletonMap(SERVICE_NAME.getKey(), "test-service"));
+    assertThat(guesser.shouldApply(config, Resource.getDefault())).isFalse();
   }
 
   private static void expectServiceName(Resource result, String expected) {

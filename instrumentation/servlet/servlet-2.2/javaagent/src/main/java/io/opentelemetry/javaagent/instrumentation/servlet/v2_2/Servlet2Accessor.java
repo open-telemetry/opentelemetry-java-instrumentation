@@ -23,6 +23,16 @@ public class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse> 
   }
 
   @Override
+  public String getRequestLocalAddr(HttpServletRequest request) {
+    return null;
+  }
+
+  @Override
+  public Integer getRequestLocalPort(HttpServletRequest request) {
+    return null;
+  }
+
+  @Override
   public void addRequestAsyncListener(
       HttpServletRequest httpServletRequest,
       ServletAsyncListener<HttpServletResponse> listener,

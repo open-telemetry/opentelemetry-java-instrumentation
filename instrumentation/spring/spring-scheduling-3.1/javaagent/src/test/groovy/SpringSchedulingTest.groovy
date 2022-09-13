@@ -26,6 +26,7 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
           name "TriggerTask.run"
           hasNoParent()
           attributes {
+            "job.system" "spring_scheduling"
             "code.namespace" "TriggerTask"
             "code.function" "run"
           }
@@ -49,6 +50,7 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
           name "IntervalTask.run"
           hasNoParent()
           attributes {
+            "job.system" "spring_scheduling"
             "code.namespace" "IntervalTask"
             "code.function" "run"
           }
@@ -71,6 +73,7 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
           nameContains "LambdaTaskConfigurer\$\$Lambda\$"
           hasNoParent()
           attributes {
+            "job.system" "spring_scheduling"
             "code.namespace" { it.contains("LambdaTaskConfigurer\$\$Lambda\$") }
             "code.function" "run"
           }
@@ -98,6 +101,7 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
           name "EnhancedClassTaskConfig.run"
           hasNoParent()
           attributes {
+            "job.system" "spring_scheduling"
             "code.namespace" "EnhancedClassTaskConfig"
             "code.function" "run"
           }
