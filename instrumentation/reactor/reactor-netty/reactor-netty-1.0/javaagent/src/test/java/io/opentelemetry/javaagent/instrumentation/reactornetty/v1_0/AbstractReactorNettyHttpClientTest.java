@@ -102,7 +102,6 @@ abstract class AbstractReactorNettyHttpClientTest
     options.disableTestRedirects();
     options.enableTestReadTimeout();
     options.setUserAgent(USER_AGENT);
-    options.disableTestCallback();
     options.enableTestCallbackWithImplicitParent();
 
     options.setClientSpanErrorMapper(

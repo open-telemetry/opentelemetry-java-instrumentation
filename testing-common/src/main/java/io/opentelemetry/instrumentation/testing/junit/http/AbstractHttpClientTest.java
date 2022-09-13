@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -196,7 +197,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     if (!testErrorWithCallback()) {
       options.disableTestErrorWithCallback();
     }
-
+    if (testCallbackWithImplicitParent()) {
+      options.enableTestCallbackWithImplicitParent();
+    }
     configure(options);
   }
 
@@ -305,6 +308,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   @Test
   void requestWithCallbackAndNoParent() throws Throwable {
     assumeTrue(options.testCallback);
+    assumeFalse(options.testCallbackWithImplicitParent);
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -1115,6 +1119,13 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
     // function is used.  There is no way to stop a test from a derived class hence the flag
     return true;
+  }
+
+  protected boolean testCallbackWithImplicitParent() {
+    // depending on async behavior callback can be executed withing
+    // parent span scope or outside of the scope, e.g. in reactor-netty or spring
+    // callback is correlated.
+    return false;
   }
 
   protected boolean testErrorWithCallback() {
