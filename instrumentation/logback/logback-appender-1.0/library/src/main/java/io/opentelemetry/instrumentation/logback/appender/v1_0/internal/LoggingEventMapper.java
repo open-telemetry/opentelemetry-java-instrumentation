@@ -118,7 +118,10 @@ public final class LoggingEventMapper {
         }
         attributes.put(SemanticAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
         attributes.put(SemanticAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
-        attributes.put(SemanticAttributes.CODE_LINENO, firstStackElement.getLineNumber());
+        int lineNumber = firstStackElement.getLineNumber();
+        if(lineNumber != -1) {
+          attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
+        }
       }
     }
 
