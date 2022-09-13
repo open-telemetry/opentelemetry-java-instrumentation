@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
