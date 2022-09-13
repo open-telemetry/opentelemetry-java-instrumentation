@@ -54,4 +54,5 @@ tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+  jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
 }
