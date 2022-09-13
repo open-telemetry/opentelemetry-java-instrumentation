@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.util.ClassNames;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import javax.annotation.Nullable;
 import org.springframework.web.servlet.ModelAndView;
@@ -27,7 +26,7 @@ public class ModelAndViewAttributesExtractor implements AttributesExtractor<Mode
       attributes.put("spring-webmvc.view.name", modelAndView.getViewName());
       View view = modelAndView.getView();
       if (view != null) {
-        attributes.put("spring-webmvc.view.type", ClassNames.simpleName(view.getClass()));
+        attributes.put("spring-webmvc.view.type", view.getClass().getName());
       }
     }
   }

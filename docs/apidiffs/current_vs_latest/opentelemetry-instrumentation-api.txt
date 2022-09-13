@@ -96,10 +96,6 @@ Comparing source compatibility of  against
 	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) void extract(io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder, java.lang.Object, java.lang.Object, java.lang.Throwable)
 	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor getDefault()
 	+++  NEW ANNOTATION: java.lang.FunctionalInterface
-+++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.util.ClassNames  (not serializable)
-	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
-	+++  NEW SUPERCLASS: java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) STATIC(+) java.lang.String simpleName(java.lang.Class)
 +++  NEW CLASS: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.util.VirtualField  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object

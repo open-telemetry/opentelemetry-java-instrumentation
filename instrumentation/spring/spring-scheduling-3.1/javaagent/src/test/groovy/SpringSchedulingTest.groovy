@@ -70,11 +70,11 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          nameContains "LambdaTaskConfigurer\$\$Lambda\$"
+          name "LambdaTaskConfigurer\$\$Lambda\$.run"
           hasNoParent()
           attributes {
             "job.system" "spring_scheduling"
-            "code.namespace" { it.contains("LambdaTaskConfigurer\$\$Lambda\$") }
+            "code.namespace" { it.startsWith("LambdaTaskConfigurer\$\$Lambda\$") }
             "code.function" "run"
           }
         }
