@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.util.ClassNames;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
@@ -45,6 +44,6 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Override
   public String operation(RedisCommand<?, ?> redisCommand) {
-    return ClassNames.simpleName(redisCommand.getClass()).toUpperCase(Locale.ROOT);
+    return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
   }
 }
