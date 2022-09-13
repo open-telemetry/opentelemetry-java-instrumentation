@@ -48,21 +48,5 @@ class ThreadsTest {
                                     .hasPointsSatisfying(
                                         point ->
                                             point.hasValue(3).hasAttributes(Attributes.empty())))));
-
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-metrics",
-        "process.runtime.jvm.daemon.threads.count",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription("Number of live daemon threads")
-                        .hasUnit("1")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point.hasValue(2).hasAttributes(Attributes.empty())))));
   }
 }

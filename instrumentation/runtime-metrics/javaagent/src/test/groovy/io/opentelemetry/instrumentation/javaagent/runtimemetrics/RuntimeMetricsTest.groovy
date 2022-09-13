@@ -29,7 +29,6 @@ class RuntimeMetricsTest extends AgentInstrumentationSpecification {
       assert getMetrics().any { it.name == "process.runtime.jvm.memory.committed" }
       assert getMetrics().any { it.name == "process.runtime.jvm.memory.limit" }
       assert getMetrics().any { it.name == "process.runtime.jvm.threads.count" }
-      assert getMetrics().any { it.name == "process.runtime.jvm.daemon.threads.count" }
       assert getMetrics().any { it.name == "process.runtime.jvm.buffer.limit" }
       assert getMetrics().any { it.name == "process.runtime.jvm.buffer.count" }
       assert getMetrics().any { it.name == "process.runtime.jvm.buffer.usage" }

@@ -31,6 +31,8 @@ public final class Threads {
   // Visible for testing
   static final Threads INSTANCE = new Threads();
 
+  private static final String DAEMON_KEY = "daemon";
+
   /** Register observers for java runtime class metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
     INSTANCE.registerObservers(openTelemetry, ManagementFactory.getThreadMXBean());
@@ -45,15 +47,14 @@ public final class Threads {
         .setDescription("Number of executing threads")
         .setUnit("1")
         .buildWithCallback(
-            observableMeasurement -> observableMeasurement.record(threadBean.getThreadCount()));
-
-    meter
-        .upDownCounterBuilder("process.runtime.jvm.daemon.threads.count")
-        .setDescription("Number of live daemon threads")
-        .setUnit("1")
-        .buildWithCallback(
-            observableMeasurement ->
-                observableMeasurement.record(threadBean.getDaemonThreadCount()));
+            observableMeasurement -> {
+              observableMeasurement.record(
+                  threadBean.getDaemonThreadCount(),
+                  Attributes.builder().put(DAEMON_KEY, true).build());
+              observableMeasurement.record(
+                  threadBean.getThreadCount() - threadBean.getDaemonThreadCount(),
+                  Attributes.builder().put(DAEMON_KEY, false).build());
+            });
   }
 
   private Threads() {}
