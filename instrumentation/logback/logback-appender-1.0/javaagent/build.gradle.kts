@@ -55,4 +55,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
+
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
