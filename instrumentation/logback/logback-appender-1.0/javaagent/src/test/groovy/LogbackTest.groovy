@@ -56,12 +56,12 @@ class LogbackTest extends AgentInstrumentationSpecification {
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
-        assertThat(log.getAttributes().size()).isEqualTo(5 + 4) // 4 code attributes
+        assertThat(log.getAttributes().size()).isEqualTo(5 + 3) // 3 code attributes
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(LogbackTest.name)
       } else {
-        assertThat(log.getAttributes().size()).isEqualTo(2 + 4)  // 4 code attributes
+        assertThat(log.getAttributes().size()).isEqualTo(2 + 3)  // 3 code attributes
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).isNull()
