@@ -15,6 +15,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
     `addAttributesExtractors(Iterable<AttributesExtractor>)`
   * `SpanLinksExtractor.extractFromRequest()` was removed, use instead manual extraction
   * `ErrorCauseExtractor.jdk()` was renamed to `ErrorCauseExtractor.getDefault()`
+  * `ClassNames` utility was removed with no direct replacement
 - The deprecated `io.opentelemetry.instrumentation.api.config.Config` and related classes
   have been removed
   ([#6501](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6501))
@@ -36,6 +37,10 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#6541](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6541))
 - Add kafka client metrics to the javaagent instrumentation
   ([#6533](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6533))
+- Add experimental span attribute job.system
+  ([#6586](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6586))
+- Add code attributes for Logback
+  ([#6591](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6591))
 
 ### 🛠️ Bug fixes
 
