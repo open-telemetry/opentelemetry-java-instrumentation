@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
+import static io.opentelemetry.instrumentation.runtimemetrics.Threads.DAEMON_KEY;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +29,7 @@ class ThreadsTest {
 
   @Test
   void registerObservers() {
-    when(threadBean.getThreadCount()).thenReturn(3);
+    when(threadBean.getThreadCount()).thenReturn(7);
     when(threadBean.getDaemonThreadCount()).thenReturn(2);
 
     Threads.INSTANCE.registerObservers(testing.getOpenTelemetry(), threadBean);
@@ -47,6 +48,18 @@ class ThreadsTest {
                                 sum.isNotMonotonic()
                                     .hasPointsSatisfying(
                                         point ->
-                                            point.hasValue(3).hasAttributes(Attributes.empty())))));
+                                            point
+                                                .hasValue(2)
+                                                .hasAttributes(
+                                                    Attributes.builder()
+                                                        .put(DAEMON_KEY, true)
+                                                        .build()),
+                                        point ->
+                                            point
+                                                .hasValue(5)
+                                                .hasAttributes(
+                                                    Attributes.builder()
+                                                        .put(DAEMON_KEY, false)
+                                                        .build())))));
   }
 }

@@ -31,7 +31,7 @@ public final class Threads {
   // Visible for testing
   static final Threads INSTANCE = new Threads();
 
-  private static final String DAEMON_KEY = "daemon";
+  static final String DAEMON_KEY = "daemon";
 
   /** Register observers for java runtime class metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
