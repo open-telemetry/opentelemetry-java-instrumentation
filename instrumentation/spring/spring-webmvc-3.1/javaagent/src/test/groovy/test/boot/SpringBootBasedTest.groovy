@@ -212,7 +212,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       name "Render RedirectView"
       kind INTERNAL
       attributes {
-        "spring-webmvc.view.type" RedirectView.simpleName
+        "spring-webmvc.view.type" RedirectView.name
       }
     }
   }
