@@ -72,9 +72,9 @@ class UrlParser {
         break;
       }
     }
+
     if (portIndex == -1) {
-      String scheme = url.substring(0, schemeEndIndex);
-      return getDefaultPortForScheme(scheme);
+      return null;
     }
 
     // look for the end of the port:
@@ -96,16 +96,6 @@ class UrlParser {
     } catch (NumberFormatException e) {
       return null;
     }
-  }
-
-  private static Integer getDefaultPortForScheme(String scheme) {
-    if (scheme.equals("https")) {
-      return 443;
-    }
-    if (scheme.equals("http")) {
-      return 80;
-    }
-    return null;
   }
 
   private UrlParser() {}

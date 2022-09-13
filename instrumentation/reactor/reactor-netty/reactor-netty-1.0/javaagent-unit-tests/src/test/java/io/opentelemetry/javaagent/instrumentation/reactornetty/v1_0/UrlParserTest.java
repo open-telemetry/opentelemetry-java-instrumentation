@@ -85,38 +85,20 @@ class UrlParserTest {
 
   @Test
   public void testGetPort() {
-    assertThat(UrlParser.getPort("https://localhost")).isEqualTo(443);
-    assertThat(UrlParser.getPort("https://localhost/")).isEqualTo(443);
+    assertThat(UrlParser.getPort("https://localhost")).isNull();
+    assertThat(UrlParser.getPort("https://localhost/")).isNull();
 
-    assertThat(UrlParser.getPort("https://localhost?")).isEqualTo(443);
-    assertThat(UrlParser.getPort("https://localhost/?")).isEqualTo(443);
+    assertThat(UrlParser.getPort("https://localhost?")).isNull();
+    assertThat(UrlParser.getPort("https://localhost/?")).isNull();
 
-    assertThat(UrlParser.getPort("https://localhost?query")).isEqualTo(443);
-    assertThat(UrlParser.getPort("https://localhost/?query")).isEqualTo(443);
+    assertThat(UrlParser.getPort("https://localhost?query")).isNull();
+    assertThat(UrlParser.getPort("https://localhost/?query")).isNull();
 
-    assertThat(UrlParser.getPort("https://localhost#")).isEqualTo(443);
-    assertThat(UrlParser.getPort("https://localhost/#")).isEqualTo(443);
+    assertThat(UrlParser.getPort("https://localhost#")).isNull();
+    assertThat(UrlParser.getPort("https://localhost/#")).isNull();
 
-    assertThat(UrlParser.getPort("https://localhost#fragment")).isEqualTo(443);
-    assertThat(UrlParser.getPort("https://localhost/#fragment")).isEqualTo(443);
-  }
-
-  @Test
-  public void testGetPortWithHttp() {
-    assertThat(UrlParser.getPort("http://localhost")).isEqualTo(80);
-    assertThat(UrlParser.getPort("http://localhost/")).isEqualTo(80);
-
-    assertThat(UrlParser.getPort("http://localhost?")).isEqualTo(80);
-    assertThat(UrlParser.getPort("http://localhost/?")).isEqualTo(80);
-
-    assertThat(UrlParser.getPort("http://localhost?query")).isEqualTo(80);
-    assertThat(UrlParser.getPort("http://localhost/?query")).isEqualTo(80);
-
-    assertThat(UrlParser.getPort("http://localhost#")).isEqualTo(80);
-    assertThat(UrlParser.getPort("http://localhost/#")).isEqualTo(80);
-
-    assertThat(UrlParser.getPort("http://localhost#fragment")).isEqualTo(80);
-    assertThat(UrlParser.getPort("http://localhost/#fragment")).isEqualTo(80);
+    assertThat(UrlParser.getPort("https://localhost#fragment")).isNull();
+    assertThat(UrlParser.getPort("https://localhost/#fragment")).isNull();
   }
 
   @Test
@@ -153,24 +135,6 @@ class UrlParserTest {
 
     assertThat(UrlParser.getPort("https:#fragment")).isNull();
     assertThat(UrlParser.getPort("https:/#fragment")).isNull();
-  }
-
-  @Test
-  public void testGetPortWithHttpAndNoAuthority() {
-    assertThat(UrlParser.getPort("http:")).isNull();
-    assertThat(UrlParser.getPort("http:/")).isNull();
-
-    assertThat(UrlParser.getPort("http:?")).isNull();
-    assertThat(UrlParser.getPort("http:/?")).isNull();
-
-    assertThat(UrlParser.getPort("http:?query")).isNull();
-    assertThat(UrlParser.getPort("http:/?query")).isNull();
-
-    assertThat(UrlParser.getPort("http:#")).isNull();
-    assertThat(UrlParser.getPort("http:/#")).isNull();
-
-    assertThat(UrlParser.getPort("http:#fragment")).isNull();
-    assertThat(UrlParser.getPort("http:/#fragment")).isNull();
   }
 
   @Test
