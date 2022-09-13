@@ -64,6 +64,7 @@ class CouchbaseClient32Test extends AgentInstrumentationSpecification {
         span(0) {
           name(~/.*get/)
           if (Boolean.getBoolean("testLatestDeps")) {
+            // this is the correct behavior
             status ERROR
           }
         }
