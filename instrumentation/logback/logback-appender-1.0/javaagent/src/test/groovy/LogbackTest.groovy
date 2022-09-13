@@ -44,6 +44,13 @@ class LogbackTest extends AgentInstrumentationSpecification {
       waitForTraces(1)
     }
 
+    String jvmVersion = System.getProperty("java.vm.specification.version");
+    int codeAttributes = 3;
+    boolean jvmVersionGreaterThanOrEqualTo18 = jvmVersion.startsWith("1.8") && Integer.parseInt(jvmVersion) >= 18
+    if(jvmVersionGreaterThanOrEqualTo18) {
+      codeAttributes = 4; // Java 18 specificity on line number
+    }
+
     if (severity != null) {
       await()
         .untilAsserted(
@@ -56,12 +63,12 @@ class LogbackTest extends AgentInstrumentationSpecification {
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
-        assertThat(log.getAttributes().size()).isEqualTo(5 + 3) // 3 code attributes
+        assertThat(log.getAttributes().size()).isEqualTo(5 + codeAttributes)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(LogbackTest.name)
       } else {
-        assertThat(log.getAttributes().size()).isEqualTo(2 + 3)  // 3 code attributes
+        assertThat(log.getAttributes().size()).isEqualTo(2 + codeAttributes)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).isNull()
