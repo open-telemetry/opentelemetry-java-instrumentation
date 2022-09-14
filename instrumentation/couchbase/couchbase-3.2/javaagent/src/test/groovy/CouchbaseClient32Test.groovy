@@ -17,6 +17,8 @@ import spock.lang.Shared
 
 import java.time.Duration
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 // Couchbase instrumentation is owned upstream so we don't assert on the contents of the spans, only
 // that the instrumentation is properly registered by the agent, meaning some spans were generated.
 class CouchbaseClient32Test extends AgentInstrumentationSpecification {
@@ -61,6 +63,10 @@ class CouchbaseClient32Test extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name(~/.*get/)
+          if (Boolean.getBoolean("testLatestDeps")) {
+            // this is the correct behavior
+            status ERROR
+          }
         }
         span(1) {
           name(~/.*dispatch_to_server/)
