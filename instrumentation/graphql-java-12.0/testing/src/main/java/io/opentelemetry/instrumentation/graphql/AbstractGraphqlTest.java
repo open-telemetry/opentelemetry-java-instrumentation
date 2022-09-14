@@ -209,12 +209,8 @@ public abstract class AbstractGraphqlTest {
                                               assertThat(attrs)
                                                   .containsEntry("exception.type", "InvalidSyntax");
                                               String message =
-                                                  String.valueOf(
-                                                      attrs
-                                                          .asMap()
-                                                          .get(
-                                                              AttributeKey.stringKey(
-                                                                  "exception.message")));
+                                                  attrs.get(
+                                                      AttributeKey.stringKey("exception.message"));
                                               assertThat(message).startsWith("Invalid Syntax");
                                             }))));
   }
@@ -256,12 +252,8 @@ public abstract class AbstractGraphqlTest {
                                                   .containsEntry(
                                                       "exception.type", "ValidationError");
                                               String message =
-                                                  String.valueOf(
-                                                      attrs
-                                                          .asMap()
-                                                          .get(
-                                                              AttributeKey.stringKey(
-                                                                  "exception.message")));
+                                                  attrs.get(
+                                                      AttributeKey.stringKey("exception.message"));
                                               assertThat(message)
                                                   .startsWith(
                                                       "Validation error of type FieldUndefined");
