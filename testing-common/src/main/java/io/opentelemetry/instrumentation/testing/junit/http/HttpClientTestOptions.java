@@ -56,6 +56,7 @@ public final class HttpClientTestOptions {
   boolean testCausalityWithCallback = true;
   boolean testCallback = true;
   boolean testCallbackWithParent = true;
+  boolean testCallbackWithImplicitParent = false;
   boolean testErrorWithCallback = true;
 
   HttpClientTestOptions() {}
@@ -156,6 +157,11 @@ public final class HttpClientTestOptions {
 
   public HttpClientTestOptions disableTestCallbackWithParent() {
     testCallbackWithParent = false;
+    return this;
+  }
+
+  public HttpClientTestOptions enableTestCallbackWithImplicitParent() {
+    testCallbackWithImplicitParent = true;
     return this;
   }
 
