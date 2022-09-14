@@ -18,7 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServerTest {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
-    def handlerSpanName = "${ServerTestRouteFactory.simpleName}.lambda"
+    def handlerSpanName = "${ServerTestRouteFactory.simpleName}\$\$Lambda\$.handle"
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceWebHandler.handle"
     }

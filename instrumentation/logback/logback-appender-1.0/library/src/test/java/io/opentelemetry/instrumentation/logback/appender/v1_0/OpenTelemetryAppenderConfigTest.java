@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
@@ -71,7 +70,7 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes()).isEqualTo(Attributes.empty());
+    assertThat(logData.getAttributes().size()).isEqualTo(4); // 4 code attributes
   }
 
   @Test
@@ -115,13 +114,27 @@ class OpenTelemetryAppenderConfigTest {
         .isLessThan(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
-    assertThat(logData.getAttributes().size()).isEqualTo(3);
+    assertThat(logData.getAttributes().size()).isEqualTo(3 + 4); // 4 code attributes
     assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE))
         .isEqualTo(IllegalStateException.class.getName());
     assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE))
         .isEqualTo("Error!");
     assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE))
         .contains("logWithExtras");
+
+    String file = logData.getAttributes().get(SemanticAttributes.CODE_FILEPATH);
+    assertThat(file).isEqualTo("OpenTelemetryAppenderConfigTest.java");
+
+    String codeClass = logData.getAttributes().get(SemanticAttributes.CODE_NAMESPACE);
+    assertThat(codeClass)
+        .isEqualTo(
+            "io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppenderConfigTest");
+
+    String method = logData.getAttributes().get(SemanticAttributes.CODE_FUNCTION);
+    assertThat(method).isEqualTo("logWithExtras");
+
+    Long lineNumber = logData.getAttributes().get(SemanticAttributes.CODE_LINENO);
+    assertThat(lineNumber).isGreaterThan(1);
   }
 
   @Test
@@ -140,7 +153,7 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes().size()).isEqualTo(2);
+    assertThat(logData.getAttributes().size()).isEqualTo(2 + 4); // 4 code attributes
     AssertionsForClassTypes.assertThat(
             logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1")))
         .isEqualTo("val1");

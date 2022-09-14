@@ -34,10 +34,14 @@ public final class LoggingEventMapper {
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
   private final boolean captureAllMdcAttributes;
+  private final boolean captureCodeAttributes;
 
   public LoggingEventMapper(
-      boolean captureExperimentalAttributes, List<String> captureMdcAttributes) {
+      boolean captureExperimentalAttributes,
+      List<String> captureMdcAttributes,
+      boolean captureCodeAttributes) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
+    this.captureCodeAttributes = captureCodeAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
@@ -102,6 +106,23 @@ public final class LoggingEventMapper {
       Thread currentThread = Thread.currentThread();
       attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+    }
+
+    if (captureCodeAttributes) {
+      StackTraceElement[] callerData = loggingEvent.getCallerData();
+      if (callerData != null && callerData.length > 0) {
+        StackTraceElement firstStackElement = callerData[0];
+        String fileName = firstStackElement.getFileName();
+        if (fileName != null) {
+          attributes.put(SemanticAttributes.CODE_FILEPATH, fileName);
+        }
+        attributes.put(SemanticAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
+        attributes.put(SemanticAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
+        int lineNumber = firstStackElement.getLineNumber();
+        if (lineNumber > 0) {
+          attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
+        }
+      }
     }
 
     builder.setAllAttributes(attributes.build());

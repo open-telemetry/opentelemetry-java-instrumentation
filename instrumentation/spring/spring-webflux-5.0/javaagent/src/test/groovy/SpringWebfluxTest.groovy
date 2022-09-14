@@ -492,14 +492,11 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           }
         }
         span(1) {
-          name "RedirectComponent.lambda"
+          name "RedirectComponent\$\$Lambda\$.handle"
           kind INTERNAL
           childOf span(0)
           attributes {
-            "spring-webflux.handler.type" { String tagVal ->
-              return (tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                || tagVal.contains("Lambda"))
-            }
+            "spring-webflux.handler.type" { it.startsWith("server.RedirectComponent\$\$Lambda\$") }
           }
         }
       }
