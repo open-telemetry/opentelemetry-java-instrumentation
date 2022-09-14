@@ -41,6 +41,8 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#6586](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6586))
 - Add code attributes for Logback
   ([#6591](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6591))
+- Reactor instrumentation: do not make root context current
+  ([#6593](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6593))
 
 ### 🛠️ Bug fixes
 
