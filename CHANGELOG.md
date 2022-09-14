@@ -1,8 +1,6 @@
 # Changelog
 
-## Unreleased
-
-## Version 1.18.0
+## Version 1.18.0 (2022-09-14)
 
 The `opentelemetry-instrumentation-api` artifact is declared stable in this release.
 
