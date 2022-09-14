@@ -54,6 +54,8 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   ([#6523](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6523))
 - Fix spring webmvc instrumentation name
   ([#6557](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6557))
+- Fix spring boot `@WithSpan` handling
+  ([#6619](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6619))
 
 ## Version 1.17.0 (2022-08-18)
 
