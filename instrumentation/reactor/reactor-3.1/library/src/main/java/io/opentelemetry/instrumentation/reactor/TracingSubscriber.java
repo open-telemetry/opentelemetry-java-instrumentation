@@ -20,6 +20,7 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -34,6 +35,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
+  private final boolean hasContextToPropagate;
 
   public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
     this(subscriber, ctx, io.opentelemetry.context.Context.current());
@@ -46,6 +48,8 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     this.subscriber = subscriber;
     this.context = ctx;
     this.traceContext = ContextPropagationOperator.getOpenTelemetryContext(ctx, contextToPropagate);
+    this.hasContextToPropagate =
+        traceContext == null ? false : Span.fromContext(traceContext).getSpanContext().isValid();
   }
 
   @Override
@@ -74,7 +78,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   }
 
   private void withActiveSpan(Runnable runnable) {
-    if (traceContext != null) {
+    if (hasContextToPropagate) {
       try (Scope ignored = traceContext.makeCurrent()) {
         runnable.run();
       }
