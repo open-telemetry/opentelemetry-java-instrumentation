@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.18.0 (2022-09-14)
 
 ## Version 1.18.0
 
