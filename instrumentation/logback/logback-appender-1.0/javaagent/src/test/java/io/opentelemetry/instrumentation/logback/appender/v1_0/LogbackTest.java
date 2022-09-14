@@ -1,7 +1,9 @@
-package io.opentelemetry.instrumentation.logback.appender.v1_0; /*
-                                                                 * Copyright The OpenTelemetry Authors
-                                                                 * SPDX-License-Identifier: Apache-2.0
-                                                                 */
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.LogAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
