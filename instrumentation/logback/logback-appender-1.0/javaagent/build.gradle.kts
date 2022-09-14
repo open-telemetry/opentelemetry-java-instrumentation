@@ -47,6 +47,7 @@ dependencies {
 
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
+  testImplementation("io.opentelemetry:opentelemetry-sdk-logs-testing")
   testImplementation("org.awaitility:awaitility")
 }
 
