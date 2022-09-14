@@ -1,7 +1,7 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
+package io.opentelemetry.instrumentation.logback.appender.v1_0; /*
+                                                                 * Copyright The OpenTelemetry Authors
+                                                                 * SPDX-License-Identifier: Apache-2.0
+                                                                 */
 
 import static io.opentelemetry.sdk.testing.assertj.LogAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -164,7 +164,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
                       .containsEntry(
                           SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
                       .containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
-                      .containsEntry(SemanticAttributes.CODE_NAMESPACE, "LogbackTest")
+                      .containsEntry(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName())
                       .containsEntry(SemanticAttributes.CODE_FUNCTION, "performLogging")
                       .hasEntrySatisfying(
                           SemanticAttributes.CODE_LINENO, value -> assertThat(value).isPositive())
@@ -210,7 +210,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
                     .containsEntry(AttributeKey.stringKey("logback.mdc.key2"), "val2")
                     .containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
                     .containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
-                    .containsEntry(SemanticAttributes.CODE_NAMESPACE, "LogbackTest")
+                    .containsEntry(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName())
                     .containsEntry(SemanticAttributes.CODE_FUNCTION, "testMdc")
                     .hasEntrySatisfying(
                         SemanticAttributes.CODE_LINENO, value -> assertThat(value).isPositive())
