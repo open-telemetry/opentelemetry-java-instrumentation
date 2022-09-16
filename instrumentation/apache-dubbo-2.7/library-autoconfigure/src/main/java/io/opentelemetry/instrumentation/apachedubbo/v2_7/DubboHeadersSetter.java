@@ -13,5 +13,6 @@ enum DubboHeadersSetter implements TextMapSetter<DubboRequest> {
   @Override
   public void set(DubboRequest request, String key, String value) {
     request.context().setAttachment(key, value);
+    request.invocation().setAttachment(key, value);
   }
 }
