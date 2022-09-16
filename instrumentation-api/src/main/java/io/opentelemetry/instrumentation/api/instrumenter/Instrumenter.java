@@ -160,10 +160,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private Context doStart(Context parentContext, REQUEST request, @Nullable Instant startTime) {
     SpanKind spanKind = spanKindExtractor.extract(request);
     SpanBuilder spanBuilder =
-        tracer
-            .spanBuilder(spanNameExtractor.extract(request))
-            .setSpanKind(spanKind)
-            .setParent(parentContext);
+        tracer.spanBuilder(spanNameExtractor.extract(request)).setSpanKind(spanKind);
 
     if (startTime != null) {
       spanBuilder.setStartTimestamp(startTime);
@@ -195,7 +192,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     boolean localRoot = LocalRootSpan.isLocalRoot(context);
 
     spanBuilder.setAllAttributes(attributes);
-    Span span = spanBuilder.startSpan();
+    Span span = spanBuilder.setParent(context).startSpan();
     context = context.with(span);
 
     if (localRoot) {
