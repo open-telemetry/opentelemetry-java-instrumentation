@@ -181,10 +181,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Context context = parentContext;
 
-    spanBuilder.setAllAttributes(attributes);
-    Span span = spanBuilder.startSpan();
-    context = context.with(span);
-
     for (ContextCustomizer<? super REQUEST> contextCustomizer : contextCustomizers) {
       context = contextCustomizer.onStart(context, request, attributes);
     }
@@ -196,7 +192,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
       }
     }
 
-    if (LocalRootSpan.isLocalRoot(parentContext)) {
+    boolean localRoot = LocalRootSpan.isLocalRoot(context);
+
+    spanBuilder.setAllAttributes(attributes);
+    Span span = spanBuilder.startSpan();
+    context = context.with(span);
+
+    if (localRoot) {
       context = LocalRootSpan.store(context, span);
     }
 
