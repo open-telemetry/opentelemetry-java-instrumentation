@@ -100,12 +100,6 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     // armeria requests can't be reused
     options.disableTestReusedRequest();
     options.enableTestReadTimeout();
-
-    // TODO armeria 1.19 changed how the HttpResponse#aggregate() method works, and callbacks no
-    // longer execute in parent context
-    if (Boolean.getBoolean("testLatestDeps")) {
-      options.disableTestCallback();
-    }
   }
 
   @Test
