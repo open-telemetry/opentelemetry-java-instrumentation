@@ -13,7 +13,7 @@ val springBootVersion = versions["org.springframework.boot"]
 dependencies {
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
-  implementation("javax.validation:validation-api:2.0.1.Final")
+  implementation("javax.validation:validation-api")
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))

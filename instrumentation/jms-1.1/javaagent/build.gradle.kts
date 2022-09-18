@@ -26,7 +26,7 @@ tasks {
   }
 
   test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
@@ -34,8 +34,6 @@ tasks {
     dependsOn(jms2Test)
   }
 }
-
-val versions: Map<String, String> by project
 
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
