@@ -18,5 +18,5 @@ import io.opentelemetry.context.Context;
 public interface ContextCustomizer<REQUEST> {
 
   /** Allows to customize the operation {@link Context}. */
-  Context onStart(Context context, REQUEST request, Attributes startAttributes);
+  Context onStart(Context parentContext, REQUEST request, Attributes startAttributes);
 }

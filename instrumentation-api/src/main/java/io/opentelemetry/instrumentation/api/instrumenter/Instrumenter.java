@@ -178,15 +178,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Context context = parentContext;
 
+    // context customizers run before span start, so that they can have access to the parent span
+    // context, and so that their additions to the context will be visible to span processors
     for (ContextCustomizer<? super REQUEST> contextCustomizer : contextCustomizers) {
       context = contextCustomizer.onStart(context, request, attributes);
-    }
-
-    if (!operationListeners.isEmpty()) {
-      long startNanos = getNanos(startTime);
-      for (OperationListener operationListener : operationListeners) {
-        context = operationListener.onStart(context, attributes, startNanos);
-      }
     }
 
     boolean localRoot = LocalRootSpan.isLocalRoot(context);
@@ -194,6 +189,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.setParent(context).startSpan();
     context = context.with(span);
+
+    if (!operationListeners.isEmpty()) {
+      // operation listeners run after span start, so that they have access to the current span
+      // for capturing exemplars
+      long startNanos = getNanos(startTime);
+      for (OperationListener operationListener : operationListeners) {
+        context = operationListener.onStart(context, attributes, startNanos);
+      }
+    }
 
     if (localRoot) {
       context = LocalRootSpan.store(context, span);
