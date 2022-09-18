@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -20,7 +21,10 @@ import org.reactivestreams.Subscriber;
 public class AbstractStreamMessageSubscriptionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.linecorp.armeria.common.stream.AbstractStreamMessage$SubscriptionImpl");
+    return namedOneOf(
+        "com.linecorp.armeria.common.stream.AbstractStreamMessage$SubscriptionImpl",
+        // renamed in 1.19.0
+        "com.linecorp.armeria.common.stream.CancellableStreamMessage$SubscriptionImpl");
   }
 
   @Override
@@ -28,10 +32,14 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(
-                takesArgument(0, named("com.linecorp.armeria.common.stream.AbstractStreamMessage")))
+                takesArgument(
+                    0,
+                    namedOneOf(
+                        "com.linecorp.armeria.common.stream.AbstractStreamMessage",
+                        "com.linecorp.armeria.common.stream.CancellableStreamMessage")))
             .and(takesArgument(1, named("org.reactivestreams.Subscriber"))),
         AbstractStreamMessageSubscriptionInstrumentation.class.getName() + "$WrapSubscriberAdvice");
-    // since 1.9.0
+    // from 1.9.0 to 1.9.2
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(
