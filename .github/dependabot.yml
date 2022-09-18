@@ -15,6 +15,14 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "gradle"
+    directory: "/conventions"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gradle"
+    directory: "/gradle-plugins"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gradle"
     directory: "/"
     allow:
       - dependency-name: "com.gradle*"
