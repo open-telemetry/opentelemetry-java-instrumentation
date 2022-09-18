@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -54,17 +55,20 @@ final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
   }
 
   @Override
+  @CanIgnoreReturnValue
   public <T> AttributesBuilder put(AttributeKey<Long> key, int value) {
     return put(key, (long) value);
   }
 
   @Override
+  @CanIgnoreReturnValue
   public <T> AttributesBuilder put(AttributeKey<T> key, T value) {
     super.put(key, value);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public AttributesBuilder putAll(Attributes attributes) {
     attributes.forEach(this::put);
     return this;

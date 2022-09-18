@@ -80,7 +80,9 @@ public final class SupportabilityMetrics {
         });
   }
 
-  SupportabilityMetrics start() {
+  // this private method is designed for assignment of the return value
+  @SuppressWarnings("CanIgnoreReturnValueSuggester")
+  private SupportabilityMetrics start() {
     if (agentDebugEnabled) {
       Executors.newScheduledThreadPool(
               1,

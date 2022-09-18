@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 public final class ContextPropagationOperatorBuilder {
   private boolean captureExperimentalSpanAttributes;
 
   ContextPropagationOperatorBuilder() {}
 
+  @CanIgnoreReturnValue
   public ContextPropagationOperatorBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;

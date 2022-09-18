@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public final class RocketMqTelemetryBuilder {
    * removed in the future, so only enable this if you know you do not require attributes filled by
    * this instrumentation to be stable across versions
    */
+  @CanIgnoreReturnValue
   public RocketMqTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
@@ -38,6 +40,7 @@ public final class RocketMqTelemetryBuilder {
    * Sets whether the trace context should be written from producers / read from consumers for
    * propagating through messaging.
    */
+  @CanIgnoreReturnValue
   public RocketMqTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
     this.propagationEnabled = propagationEnabled;
     return this;
@@ -48,6 +51,7 @@ public final class RocketMqTelemetryBuilder {
    *
    * @param capturedHeaders A list of messaging header names.
    */
+  @CanIgnoreReturnValue
   public RocketMqTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
     this.capturedHeaders = capturedHeaders;
     return this;

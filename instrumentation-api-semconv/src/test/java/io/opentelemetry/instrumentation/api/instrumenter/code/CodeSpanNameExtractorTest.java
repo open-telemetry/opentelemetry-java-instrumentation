@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.code;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.BDDMockito.willReturn;
+import static org.mockito.Mockito.doReturn;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.junit.jupiter.api.Test;
@@ -23,8 +23,8 @@ class CodeSpanNameExtractorTest {
     // given
     Object request = new Object();
 
-    willReturn(TestClass.class).given(getter).codeClass(request);
-    willReturn("doSomething").given(getter).methodName(request);
+    doReturn(TestClass.class).when(getter).codeClass(request);
+    doReturn("doSomething").when(getter).methodName(request);
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -41,8 +41,8 @@ class CodeSpanNameExtractorTest {
     AnonymousBaseClass anon = new AnonymousBaseClass() {};
     Object request = new Object();
 
-    willReturn(anon.getClass()).given(getter).codeClass(request);
-    willReturn("doSomething").given(getter).methodName(request);
+    doReturn(anon.getClass()).when(getter).codeClass(request);
+    doReturn("doSomething").when(getter).methodName(request);
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -59,8 +59,8 @@ class CodeSpanNameExtractorTest {
     Runnable lambda = () -> {};
     Object request = new Object();
 
-    willReturn(lambda.getClass()).given(getter).codeClass(request);
-    willReturn("doSomething").given(getter).methodName(request);
+    doReturn(lambda.getClass()).when(getter).codeClass(request);
+    doReturn("doSomething").when(getter).methodName(request);
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 

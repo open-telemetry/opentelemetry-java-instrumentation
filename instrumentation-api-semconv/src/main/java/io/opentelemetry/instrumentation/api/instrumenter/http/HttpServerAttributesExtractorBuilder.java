@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.List;
 
 /** A builder of {@link HttpServerAttributesExtractor}. */
@@ -31,6 +32,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       List<String> requestHeaders) {
     this.capturedRequestHeaders = requestHeaders;
@@ -49,6 +51,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       List<String> responseHeaders) {
     this.capturedResponseHeaders = responseHeaders;

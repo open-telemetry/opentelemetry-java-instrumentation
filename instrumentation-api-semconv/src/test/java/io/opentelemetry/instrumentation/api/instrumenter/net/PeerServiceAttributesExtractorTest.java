@@ -10,7 +10,7 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -54,7 +54,7 @@ class PeerServiceAttributesExtractorTest {
     PeerServiceAttributesExtractor<String, String> underTest =
         new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
-    given(netAttributesExtractor.peerName(any(), any())).willReturn("example2.com");
+    when(netAttributesExtractor.peerName(any(), any())).thenReturn("example2.com");
 
     Context context = Context.root();
 
@@ -79,7 +79,7 @@ class PeerServiceAttributesExtractorTest {
     PeerServiceAttributesExtractor<String, String> underTest =
         new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
-    given(netAttributesExtractor.peerName(any(), any())).willReturn("example.com");
+    when(netAttributesExtractor.peerName(any(), any())).thenReturn("example.com");
 
     Context context = Context.root();
 

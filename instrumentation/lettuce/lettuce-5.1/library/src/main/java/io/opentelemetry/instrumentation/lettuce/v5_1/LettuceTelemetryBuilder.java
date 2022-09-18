@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 
 /** A builder of {@link LettuceTelemetry}. */
@@ -23,6 +24,7 @@ public final class LettuceTelemetryBuilder {
    * LettuceTelemetry} should be sanitized. If set to {@code true}, all parameters that can
    * potentially contain sensitive information will be masked. Enabled by default.
    */
+  @CanIgnoreReturnValue
   public LettuceTelemetryBuilder setStatementSanitizationEnabled(
       boolean statementSanitizationEnabled) {
     this.statementSanitizationEnabled = statementSanitizationEnabled;

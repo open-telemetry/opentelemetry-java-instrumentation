@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bootstrap;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.tooling.Constants;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,12 +17,14 @@ public class BootstrapPackagesBuilderImpl implements BootstrapPackagesBuilder {
   private final List<String> packages = new ArrayList<>(Constants.BOOTSTRAP_PACKAGE_PREFIXES);
 
   @Override
+  @CanIgnoreReturnValue
   public BootstrapPackagesBuilder add(String classNameOrPrefix) {
     packages.add(classNameOrPrefix);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public BootstrapPackagesBuilder addAll(Collection<String> classNamesOrPrefixes) {
     packages.addAll(classNamesOrPrefixes);
     return this;
