@@ -17,7 +17,7 @@ val otelVersion = "1.18.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.4"
+val groovyVersion = "4.0.5"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.9.9",
+  "com.uber.nullaway:nullaway:0.10.1",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
@@ -100,7 +100,7 @@ val DEPENDENCIES = listOf(
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
-  "org.assertj:assertj-core:3.22.0",
+  "org.assertj:assertj-core:3.23.1",
   "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
@@ -114,7 +114,7 @@ val DEPENDENCIES = listOf(
   "org.spockframework:spock-spring:2.2-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.2",
+  "org.springframework.boot:spring-boot-dependencies:2.7.3",
   "javax.validation:validation-api:2.0.1.Final",
   "org.yaml:snakeyaml:1.32"
 )
