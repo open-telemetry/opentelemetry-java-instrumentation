@@ -60,8 +60,7 @@ if you are looking for documentation on using those.
 ## Getting Started
 
 Download
-the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar)
-.
+the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar).
 
 This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
@@ -97,13 +96,12 @@ The agent is [highly configurable][config]!  Many aspects of the agent's behavio
 configured for your needs, such as exporter choice, exporter config (like where
 data is sent), trace context propagation headers, and much more.
 
-[Click here to see the detailed list of configuration environment variables and system properties.][config]
+[Click here to see the detailed list of configuration environment variables and system properties][config].
 
 *Note: Config parameter names are very likely to change over time, so please check
 back here when trying out a new version!
 Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues)
-or unexpected
-behavior you find.*
+or unexpected behavior you find.*
 
 ## Supported libraries, frameworks, and application servers
 
@@ -168,8 +166,7 @@ Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.c
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
 Learn more about roles in
-the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md)
-.
+the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md).
 
 Thanks to all the people who already contributed!
 
