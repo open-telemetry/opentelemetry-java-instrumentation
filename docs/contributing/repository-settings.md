@@ -1,8 +1,11 @@
 # Repository settings
 
-(In addition to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
+(In addition
+to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
-## General
+## General > Pull Requests
+
+* Allow squash merging > Default to pull request title and description
 
 * Automatically delete head branches: CHECKED
 
@@ -18,7 +21,8 @@
 
 ## Branch protections
 
-(In addition to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
+(In addition
+to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
 ### `main` and `release/*`
 
