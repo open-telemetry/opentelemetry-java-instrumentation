@@ -11,6 +11,7 @@
 
   <logger name="abc" level="INFO"/>
   <logger name="def" level="WARN"/>
+  <logger name="ghi" level="INFO"/>
 
   <root level="INFO">
     <appender-ref ref="console"/>

@@ -26,6 +26,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   private volatile boolean captureExperimentalAttributes = false;
   private volatile boolean captureCodeAttributes = false;
+  private volatile boolean captureMarkerAttributes = false;
   private volatile List<String> captureMdcAttributes = emptyList();
 
   private volatile LoggingEventMapper mapper;
@@ -36,7 +37,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   public void start() {
     mapper =
         new LoggingEventMapper(
-            captureExperimentalAttributes, captureMdcAttributes, captureCodeAttributes);
+            captureExperimentalAttributes,
+            captureMdcAttributes,
+            captureCodeAttributes,
+            captureMarkerAttributes);
     super.start();
   }
 
@@ -75,6 +79,16 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setCaptureCodeAttributes(boolean captureCodeAttributes) {
     this.captureCodeAttributes = captureCodeAttributes;
+  }
+
+  /**
+   * Sets whether the marker attributes (file name, class name, method name and line number) should
+   * be set to logs.
+   *
+   * @param captureMarkerAttributes To enable or disable the marker attributes
+   */
+  public void setCaptureMarkerAttributes(boolean captureMarkerAttributes) {
+    this.captureMarkerAttributes = captureMarkerAttributes;
   }
 
   /** Configures the {@link MDC} attributes that will be copied to logs. */
