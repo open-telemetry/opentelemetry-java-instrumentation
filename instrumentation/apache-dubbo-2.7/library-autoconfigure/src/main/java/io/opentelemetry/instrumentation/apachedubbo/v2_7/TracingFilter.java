@@ -9,8 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
@@ -22,7 +20,7 @@ final class TracingFilter implements Filter {
 
   private final Instrumenter<DubboRequest, Result> serverInstrumenter;
   private final Instrumenter<DubboRequest, Result> clientInstrumenter;
-  
+
   TracingFilter(
       Instrumenter<DubboRequest, Result> serverInstrumenter,
       Instrumenter<DubboRequest, Result> clientInstrumenter) {
