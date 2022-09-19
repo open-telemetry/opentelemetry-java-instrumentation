@@ -64,11 +64,20 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     }
 
     int atIndex = url.indexOf("@");
-    // replace username & password
-    if (atIndex != -1) {
-      return url.substring(0, url.indexOf("//") + 2) + url.substring(atIndex + 1);
-    } else {
+    int questionMarkIndex = url.indexOf("?");
+
+    // '@' char is present and is not a query param
+    if (atIndex == -1 || (questionMarkIndex != -1 && atIndex > questionMarkIndex)) {
       return url;
+    }
+
+    int doubleSlash = url.indexOf("//");
+
+    // No scheme present
+    if (doubleSlash == -1) {
+      return url.substring(atIndex + 1);
+    } else {
+      return url.substring(0, doubleSlash + 2) + url.substring(atIndex + 1);
     }
   }
 

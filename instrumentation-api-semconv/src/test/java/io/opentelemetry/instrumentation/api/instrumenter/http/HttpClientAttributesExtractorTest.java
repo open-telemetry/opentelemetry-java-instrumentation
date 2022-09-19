@@ -145,14 +145,33 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("url", "https://user1:secret@github.com");
 
+    stripRequestTest(request, "https://github.com");
+  }
+
+  @Test
+  public void stripBasicAuthWithQueryParamTest() {
+    Map<String, String> request = new HashMap<>();
+    request.put("url", "https://user1:secret@github.com?foo=b@r");
+
+    stripRequestTest(request, "https://github.com?foo=b@r");
+  }
+
+  @Test
+  public void stripBasicAuthWithoutSchemeTest() {
+    Map<String, String> request = new HashMap<>();
+    request.put("url", "user1:secret@github.com");
+
+    stripRequestTest(request, "github.com");
+  }
+
+  private static void stripRequestTest(Map<String, String> request, String expected) {
     HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter()).build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
 
-    assertThat(attributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_URL, "https://github.com"));
+    assertThat(attributes.build()).containsOnly(entry(SemanticAttributes.HTTP_URL, expected));
   }
 
   @Test
