@@ -20,8 +20,6 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 // DQH - API changes that impact instrumentation occurred in spring-data-commons in March 2014.
 // For now, that limits support to spring-data-commons 1.9.0 (maybe 1.8.0).
 // For testing, chose a couple spring-data modules that are old enough to work with 1.9.0.
@@ -29,7 +27,7 @@ dependencies {
   library("org.springframework.data:spring-data-commons:1.8.0.RELEASE")
   compileOnly("org.springframework:spring-aop:1.2")
 
-  testImplementation("org.spockframework:spock-spring:${versions["org.spockframework"]}")
+  testImplementation("org.spockframework:spock-spring")
   testLibrary("org.springframework:spring-test:3.0.0.RELEASE")
   testLibrary("org.springframework.data:spring-data-jpa:1.8.0.RELEASE")
 

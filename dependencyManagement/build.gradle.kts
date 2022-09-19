@@ -111,9 +111,12 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.2",
   "org.spockframework:spock-core:2.2-groovy-4.0",
   "org.spockframework:spock-junit4:2.2-groovy-4.0",
+  "org.spockframework:spock-spring:2.2-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.2"
+  "org.springframework.boot:spring-boot-dependencies:2.7.2",
+  "javax.validation:validation-api:2.0.1.Final",
+  "org.yaml:snakeyaml:1.32"
 )
 
 javaPlatform {
