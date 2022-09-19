@@ -59,17 +59,20 @@ if you are looking for documentation on using those.
 
 ## Getting Started
 
-Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar).
+Download
+the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar).
 
 This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
 The package provides a completely automatic, out-of-the-box experience.
 
 Enable the instrumentation agent using the `-javaagent` flag to the JVM.
+
 ```
 java -javaagent:path/to/opentelemetry-javaagent.jar \
      -jar myapp.jar
 ```
+
 By default, the OpenTelemetry Java agent uses
 [OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp)
 configured to send data to
@@ -79,6 +82,7 @@ at `http://localhost:4317`.
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables. See [the configuration documentation][config]
 for the full list of configuration items. For example:
+
 ```
 java -javaagent:path/to/opentelemetry-javaagent.jar \
      -Dotel.resource.attributes=service.name=your-service-name \
@@ -95,25 +99,32 @@ data is sent), trace context propagation headers, and much more.
 [Click here to see the detailed list of configuration environment variables and system properties][config].
 
 *Note: Config parameter names are very likely to change over time, so please check
-back here when trying out a new version! Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues) or unexpected
-behavior you find.*
+back here when trying out a new version!
+Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues)
+or unexpected behavior you find.*
 
 ## Supported libraries, frameworks, and application servers
 
-We support an impressively huge number of [libraries and frameworks](docs/supported-libraries.md#libraries--frameworks) and
-a majority of the most popular [application servers](docs/supported-libraries.md#application-servers)...right out of the box!
+We support an impressively huge number
+of [libraries and frameworks](docs/supported-libraries.md#libraries--frameworks) and
+a majority of the most
+popular [application servers](docs/supported-libraries.md#application-servers)...right out of the
+box!
 [Click here to see the full list](docs/supported-libraries.md) and to learn more about
 [disabled instrumentation](docs/supported-libraries.md#disabled-instrumentations)
 and how to [suppress unwanted instrumentation][suppress].
 
 ## Creating agent extensions
 
-[Extensions](examples/extension/README.md) add new features and capabilities to the agent without having to create a separate distribution or to fork this repository. For example, you can create custom samplers or span exporters, set new defaults, and embed it all in the agent to obtain a single jar file.
+[Extensions](examples/extension/README.md) add new features and capabilities to the agent without
+having to create a separate distribution or to fork this repository. For example, you can create
+custom samplers or span exporters, set new defaults, and embed it all in the agent to obtain a
+single jar file.
 
 ## Manually instrumenting
 
 For most users, the out-of-the-box instrumentation is completely sufficient and nothing more has to
-be done.  Sometimes, however, users wish to add attributes to the otherwise automatic spans,
+be done. Sometimes, however, users wish to add attributes to the otherwise automatic spans,
 or they might want to manually create spans for their own custom code.
 
 For detailed instructions, see [Manual instrumentation][manual].
@@ -139,7 +150,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
 
-- [Jack Berg](https://github.com/jack-berg), New Relic
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
 
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
@@ -155,7 +165,8 @@ Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.c
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
-Learn more about roles in the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md).
+Learn more about roles in
+the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md).
 
 Thanks to all the people who already contributed!
 
@@ -164,7 +175,9 @@ Thanks to all the people who already contributed!
 </a>
 
 [config]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/
+
 [manual]: https://opentelemetry.io/docs/instrumentation/java/manual/
+
 [suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation
 
 
