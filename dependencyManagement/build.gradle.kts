@@ -100,7 +100,7 @@ val DEPENDENCIES = listOf(
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.proto:opentelemetry-proto:0.17.0-alpha",
-  "org.assertj:assertj-core:3.22.0",
+  "org.assertj:assertj-core:3.23.1",
   "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
