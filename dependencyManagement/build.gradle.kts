@@ -108,7 +108,7 @@ val DEPENDENCIES = listOf(
   "org.apache.groovy:groovy-json:${groovyVersion}",
   "org.codehaus.mojo:animal-sniffer-annotations:1.22",
   "org.junit-pioneer:junit-pioneer:1.7.1",
-  "org.objenesis:objenesis:3.2",
+  "org.objenesis:objenesis:3.3",
   "org.spockframework:spock-core:2.2-groovy-4.0",
   "org.spockframework:spock-junit4:2.2-groovy-4.0",
   "org.spockframework:spock-spring:2.2-groovy-4.0",
