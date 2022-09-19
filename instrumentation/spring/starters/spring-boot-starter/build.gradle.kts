@@ -6,10 +6,11 @@ plugins {
 group = "io.opentelemetry.instrumentation"
 
 val versions: Map<String, String> by project
+val springBootVersion = versions["org.springframework.boot"]
 
 dependencies {
-  api("org.springframework.boot:spring-boot-starter:${versions["org.springframework.boot"]}")
-  api("org.springframework.boot:spring-boot-starter-aop:${versions["org.springframework.boot"]}")
+  api("org.springframework.boot:spring-boot-starter:$springBootVersion")
+  api("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   api(project(":instrumentation:spring:spring-boot-autoconfigure"))
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   api("io.opentelemetry:opentelemetry-api")
