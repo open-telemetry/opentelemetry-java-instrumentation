@@ -238,7 +238,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
         .hasAttributesSatisfying(
             attributes ->
                 assertThat(attributes)
-                    .containsEntry(AttributeKey.stringKey("log.marker"), markerName));
+                    .containsEntry(AttributeKey.stringKey("logback.marker"), markerName));
   }
 
   private static void performLogging(

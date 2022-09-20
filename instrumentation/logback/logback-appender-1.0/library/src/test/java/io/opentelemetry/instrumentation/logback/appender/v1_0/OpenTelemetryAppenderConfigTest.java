@@ -141,7 +141,7 @@ class OpenTelemetryAppenderConfigTest {
     Long lineNumber = logData.getAttributes().get(SemanticAttributes.CODE_LINENO);
     assertThat(lineNumber).isGreaterThan(1);
 
-    String logMarker = logData.getAttributes().get(AttributeKey.stringKey("log.marker"));
+    String logMarker = logData.getAttributes().get(AttributeKey.stringKey("logback.marker"));
     assertThat(logMarker).isEqualTo(markerName);
   }
 

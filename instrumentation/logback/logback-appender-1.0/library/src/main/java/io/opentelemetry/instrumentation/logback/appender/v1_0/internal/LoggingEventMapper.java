@@ -32,7 +32,7 @@ public final class LoggingEventMapper {
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
-  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("log.marker");
+  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("logback.marker");
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
