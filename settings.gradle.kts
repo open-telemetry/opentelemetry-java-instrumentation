@@ -432,6 +432,7 @@ include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagen
 include(":instrumentation:spring:spring-boot-resources:library")
 include(":instrumentation:spring:spring-core-2.0:javaagent")
 include(":instrumentation:spring:spring-data-1.8:javaagent")
+include(":instrumentation:spring:spring-graphql-1.0:javaagent")
 include(":instrumentation:spring:spring-integration-4.1:javaagent")
 include(":instrumentation:spring:spring-integration-4.1:library")
 include(":instrumentation:spring:spring-integration-4.1:testing")

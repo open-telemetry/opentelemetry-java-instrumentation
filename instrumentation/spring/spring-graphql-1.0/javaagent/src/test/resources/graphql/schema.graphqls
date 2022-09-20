@@ -1,0 +1,6 @@
+type Query {
+  helloWorldAsValue: String!
+  helloWorldAsMono: String!
+  helloWorldAsFlux: String!
+  helloWorldAsCallable: String!
+}
