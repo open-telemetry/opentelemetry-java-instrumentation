@@ -53,7 +53,13 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           message="Update the javaagent version to $VERSION"
-          body="Update the javaagent version to \`$VERSION\`."
+          # note that @open-telemetry/java-instrumentation-approvers cannot be used below
+          # because opentelemetrybot is not a member of the OpenTelemetry org,
+          # and so it cannot @ mention OpenTelemetry org groups
+          body="Update the javaagent version to \`$VERSION\`.
+
+          cc @laurit @mateuszrzeszutek @trask
+          "
 
           # gh pr create doesn't have a way to explicitly specify different head and base
           # repositories currently, but it will implicitly pick up the head from a different
@@ -63,6 +69,5 @@ jobs:
           git push --set-upstream origin HEAD:update-opentelemetry-javaagent-to-${VERSION}
           gh pr create --title "$message" \
                        --body "$body" \
-                       --reviewer open-telemetry/java-instrumentation-approvers \
                        --repo open-telemetry/opentelemetry-operator \
                        --base main

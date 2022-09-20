@@ -19,7 +19,7 @@ testSets {
 
 tasks {
   test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
@@ -29,8 +29,6 @@ tasks {
     dependsOn(testReceiveSpansDisabled)
   }
 }
-
-val versions: Map<String, String> by project
 
 dependencies {
   implementation(project(":instrumentation:jms-1.1:javaagent"))

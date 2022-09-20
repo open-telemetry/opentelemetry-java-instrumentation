@@ -1,8 +1,11 @@
 # Repository settings
 
-(In addition to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
+(In addition
+to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
-## General
+## General > Pull Requests
+
+* Allow squash merging > Default to pull request title and description
 
 * Automatically delete head branches: CHECKED
 
@@ -18,7 +21,8 @@
 
 ## Branch protections
 
-(In addition to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
+(In addition
+to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
 ### `main` and `release/*`
 
@@ -48,6 +52,20 @@ Same settings as above for new release branches (`release/**`), except:
   [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
   job.
 
+### `dependabot/**/*`
+
+* Status checks that are required:
+
+  EasyCLA
+
+* Allow force pushes > Everyone
+
+  So that dependabot can rebase its PR branches
+
+* Allow deletions: CHECKED
+
+  So that dependabot PR branches can be deleted
+
 ### `**/**`
 
 * Status checks that are required:
@@ -56,4 +74,4 @@ Same settings as above for new release branches (`release/**`), except:
 
 * Allow deletions: CHECKED
 
-  So that bot PR branches can be deleted
+  So that automation PR branches can be deleted
