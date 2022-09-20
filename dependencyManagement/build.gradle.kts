@@ -36,7 +36,7 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
-  "org.junit:junit-bom:5.9.0",
+  "org.junit:junit-bom:5.9.1",
   "org.testcontainers:testcontainers-bom:1.17.3",
 )
 
