@@ -36,7 +36,6 @@ class LogbackTest extends AgentInstrumentationSpecification {
 
   private static final Logger abcLogger = LoggerFactory.getLogger("abc");
   private static final Logger defLogger = LoggerFactory.getLogger("def");
-  private static final Logger ghiLogger = LoggerFactory.getLogger("ghi");
 
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
@@ -228,7 +227,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);
 
-    ghiLogger.info(marker, "Message");
+    abcLogger.info(marker, "Message");
 
     await().untilAsserted(() -> assertThat(testing.logs().size()).isEqualTo(1));
 
