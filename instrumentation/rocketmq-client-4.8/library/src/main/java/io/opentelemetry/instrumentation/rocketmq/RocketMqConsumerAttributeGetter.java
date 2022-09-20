@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.SocketAddress;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -50,7 +51,8 @@ enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<Messag
   @Nullable
   @Override
   public String url(MessageExt request) {
-    return null;
+    SocketAddress storeHost = request.getStoreHost();
+    return storeHost.toString().replace("/", "");
   }
 
   @Nullable

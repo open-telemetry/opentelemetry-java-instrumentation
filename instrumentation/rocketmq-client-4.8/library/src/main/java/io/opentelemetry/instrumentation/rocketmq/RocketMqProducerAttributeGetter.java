@@ -55,7 +55,7 @@ enum RocketMqProducerAttributeGetter
   @Nullable
   @Override
   public String url(SendMessageContext sendMessageContext) {
-    return null;
+    return sendMessageContext.getBrokerAddr();
   }
 
   @Nullable
