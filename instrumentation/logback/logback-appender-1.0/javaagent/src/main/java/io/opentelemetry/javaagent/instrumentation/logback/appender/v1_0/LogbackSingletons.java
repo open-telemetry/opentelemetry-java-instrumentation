@@ -24,7 +24,7 @@ public final class LogbackSingletons {
     boolean captureCodeAttributes =
         config.getBoolean(
             "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
-    boolean captureMarkerAttributes =
+    boolean captureMarkerAttribute =
         config.getBoolean(
             "otel.instrumentation.logback-appender.experimental.capture-marker-attributes", false);
     List<String> captureMdcAttributes =
@@ -37,7 +37,7 @@ public final class LogbackSingletons {
             captureExperimentalAttributes,
             captureMdcAttributes,
             captureCodeAttributes,
-            captureMarkerAttributes);
+            captureMarkerAttribute);
   }
 
   public static LoggingEventMapper mapper() {

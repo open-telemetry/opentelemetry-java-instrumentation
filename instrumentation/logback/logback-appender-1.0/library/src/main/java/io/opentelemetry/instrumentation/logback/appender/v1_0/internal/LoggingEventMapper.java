@@ -38,17 +38,17 @@ public final class LoggingEventMapper {
   private final List<String> captureMdcAttributes;
   private final boolean captureAllMdcAttributes;
   private final boolean captureCodeAttributes;
-  private final boolean captureMarkerAttributes;
+  private final boolean captureMarkerAttribute;
 
   public LoggingEventMapper(
       boolean captureExperimentalAttributes,
       List<String> captureMdcAttributes,
       boolean captureCodeAttributes,
-      boolean captureMarkerAttributes) {
+      boolean captureMarkerAttribute) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureCodeAttributes = captureCodeAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
-    this.captureMarkerAttributes = captureMarkerAttributes;
+    this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
@@ -131,7 +131,7 @@ public final class LoggingEventMapper {
       }
     }
 
-    if (captureMarkerAttributes) {
+    if (captureMarkerAttribute) {
       Marker marker = loggingEvent.getMarker();
       if (marker != null) {
         String markerName = marker.getName();
