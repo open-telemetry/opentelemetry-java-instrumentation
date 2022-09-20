@@ -16,8 +16,8 @@ enum RocketMqProducerExperimentalAttributeExtractor
     implements AttributesExtractor<SendMessageContext, Void> {
   INSTANCE;
 
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_TAGS =
-      AttributeKey.stringKey("messaging.rocketmq.tags");
+  private static final AttributeKey<String> MESSAGING_ROCKETMQ_MESSAGE_TAG =
+      AttributeKey.stringKey("messaging.rocketmq.message_tag");
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_BROKER_ADDRESS =
       AttributeKey.stringKey("messaging.rocketmq.broker_address");
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_SEND_RESULT =
@@ -29,7 +29,7 @@ enum RocketMqProducerExperimentalAttributeExtractor
     if (request.getMessage() != null) {
       String tags = request.getMessage().getTags();
       if (tags != null) {
-        attributes.put(MESSAGING_ROCKETMQ_TAGS, tags);
+        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, tags);
       }
     }
     String brokerAddr = request.getBrokerAddr();
