@@ -60,7 +60,9 @@ enum RabbitReceiveAttributesGetter
   @Nullable
   @Override
   public String url(ReceiveRequest request) {
-    return null;
+    String host = request.getConnection().getAddress().getHostAddress();
+    Integer port = request.getConnection().getPort();
+    return host + ":" + port;
   }
 
   @Nullable

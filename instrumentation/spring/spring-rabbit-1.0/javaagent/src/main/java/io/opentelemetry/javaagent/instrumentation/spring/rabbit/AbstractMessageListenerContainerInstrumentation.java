@@ -10,7 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.rabbitmq.client.Channel;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -40,18 +42,25 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
 
   @SuppressWarnings("unused")
   public static class InvokeListenerAdvice {
+
+    public static ContextKey RABBIT_CHANNEL_CONTEXT_KEY = ContextKey.named("opentelemetry-rabbit-channel");
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
+        @Advice.Argument(0) Object channel,
         @Advice.Argument(1) Object data,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (!(data instanceof Message)) {
+      if (!(channel instanceof Channel) && !(data instanceof Message)) {
         return;
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       Message message = (Message) data;
       if (instrumenter().shouldStart(parentContext, message)) {
+        parentContext = parentContext.with(RABBIT_CHANNEL_CONTEXT_KEY, channel);
+        scope = parentContext.makeCurrent();
+
         context = instrumenter().start(parentContext, message);
         scope = context.makeCurrent();
       }

@@ -50,7 +50,9 @@ enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelA
   @Nullable
   @Override
   public String url(ChannelAndMethod channelAndMethod) {
-    return null;
+    String host = channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
+    Integer port = channelAndMethod.getChannel().getConnection().getPort();
+    return host + ":" + port;
   }
 
   @Nullable

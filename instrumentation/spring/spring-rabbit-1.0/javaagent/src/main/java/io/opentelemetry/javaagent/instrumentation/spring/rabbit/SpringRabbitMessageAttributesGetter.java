@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.RABBIT_CHANNEL_CONTEXT_KEY;
+
+import com.rabbitmq.client.Channel;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
@@ -50,6 +54,16 @@ enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Me
   @Override
   @Nullable
   public String url(Message message) {
+    Context current = Context.current();
+    if (current != null) {
+      Object o = current.get(RABBIT_CHANNEL_CONTEXT_KEY);
+      if (o != null) {
+        Channel channel = (Channel) o;
+        String host = channel.getConnection().getAddress().getHostAddress();
+        Integer port = channel.getConnection().getPort();
+        return host + ":" + port;
+      }
+    }
     return null;
   }
 
