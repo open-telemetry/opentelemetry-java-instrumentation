@@ -95,7 +95,7 @@ class Log4j1Test extends AgentInstrumentationSpecification {
   }
 
   // this used to be a problem in early Java 17 and Java 18 versions too
-  @IgnoreIf({ System.getProperty("java.version").startsWith("19.") })
+  @IgnoreIf({ System.getProperty("java.version").startsWith("19") })
   def "test mdc"() {
     when:
     MDC.put("key1", "val1")
