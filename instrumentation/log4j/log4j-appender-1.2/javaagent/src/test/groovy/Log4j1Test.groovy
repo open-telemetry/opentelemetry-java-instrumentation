@@ -9,6 +9,7 @@ import io.opentelemetry.sdk.logs.data.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.log4j.Logger
 import org.apache.log4j.MDC
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 import static org.assertj.core.api.Assertions.assertThat
@@ -93,6 +94,8 @@ class Log4j1Test extends AgentInstrumentationSpecification {
     severityText = args[2]
   }
 
+  // this used to be a problem in early Java 17 and Java 18 versions too
+  @IgnoreIf({ System.getProperty("java.version").startsWith("19.") })
   def "test mdc"() {
     when:
     MDC.put("key1", "val1")
