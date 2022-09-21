@@ -85,7 +85,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
             BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.PARENT);
+        // perform the callback with the client span active (instead of the parent) since this
+        // callback occurs after the connection is made
+        callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.CLIENT);
       }
     }
   }
