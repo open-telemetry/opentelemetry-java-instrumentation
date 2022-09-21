@@ -176,6 +176,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
 
     cleanup:
     bootstrap.destroy()
+    middleBootstrap.destroy()
     consumerBootstrap.destroy()
   }
 }

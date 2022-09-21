@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7
 
-import io.opentelemetry.instrumentation.test.LibraryTestTrait
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 
-class DubboTraceChainTest extends AbstractDubboTraceChainTest implements LibraryTestTrait {
+class DubboTraceChainTest extends AbstractDubboTraceChainTest implements AgentTestTrait {
 }
