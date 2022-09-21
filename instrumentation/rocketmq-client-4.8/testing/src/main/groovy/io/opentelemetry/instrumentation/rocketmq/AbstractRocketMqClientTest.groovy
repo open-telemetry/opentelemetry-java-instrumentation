@@ -103,7 +103,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "messaging.rocketmq.tags" "TagA"
+            "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
             "messaging.payload" String
@@ -120,7 +120,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "messaging.rocketmq.tags" "TagA"
+            "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
@@ -161,7 +161,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "messaging.rocketmq.tags" "TagA"
+            "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
             "messaging.payload" String
@@ -178,7 +178,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "messaging.rocketmq.tags" "TagA"
+            "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
@@ -267,7 +267,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "messaging.rocketmq.tags" "TagA"
+            "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
@@ -286,7 +286,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "messaging.rocketmq.tags" "TagB"
+            "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagB"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
@@ -331,7 +331,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION" sharedTopic
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "messaging.rocketmq.tags" "TagA"
+            "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
             "messaging.header.test_message_header" { it == ["test"] }
@@ -348,7 +348,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "messaging.rocketmq.tags" "TagA"
+            "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
