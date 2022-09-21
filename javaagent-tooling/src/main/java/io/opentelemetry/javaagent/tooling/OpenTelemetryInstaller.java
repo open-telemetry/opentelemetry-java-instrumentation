@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitt
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.tooling.config.ConfigurationFileLoader;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
@@ -31,11 +30,9 @@ public final class OpenTelemetryInstaller {
    *
    * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
-  static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk() {
+  public static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk() {
     AutoConfiguredOpenTelemetrySdkBuilder builder =
-        AutoConfiguredOpenTelemetrySdk.builder()
-            .setResultAsGlobal(true)
-            .addPropertiesSupplier(new ConfigurationFileLoader());
+        AutoConfiguredOpenTelemetrySdk.builder().setResultAsGlobal(true);
 
     ClassLoader classLoader = AgentInitializer.getExtensionsClassLoader();
     if (classLoader != null) {
