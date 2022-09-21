@@ -156,14 +156,16 @@ Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/o
 
 - [Jack Berg](https://github.com/jack-berg), New Relic
 - [John Watson](https://github.com/jkwatson), Verta.ai
-- [Pavol Loffay](https://github.com/pavolloffay), Traceable.ai
 
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 
 - [Lauri Tulmin](https://github.com/laurit), Splunk
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
-- [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
+
+Emeritus maintainers:
+
+- [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 
 Learn more about roles in
 the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md).
