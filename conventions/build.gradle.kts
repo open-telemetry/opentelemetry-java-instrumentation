@@ -40,7 +40,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.9.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.11.0")
   implementation("com.google.guava:guava:31.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
@@ -57,7 +57,7 @@ dependencies {
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.3.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.1")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.0"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.23.1")
