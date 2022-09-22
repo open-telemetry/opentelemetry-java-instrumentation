@@ -47,7 +47,7 @@ val CORE_DEPENDENCIES = listOf(
   "com.google.auto.value:auto-value-annotations:1.9",
   "com.google.errorprone:error_prone_annotations:2.14.0",
   "com.google.errorprone:error_prone_core:2.14.0",
-  "com.google.errorprone:error_prone_test_helpers:2.14.0",
+  "com.google.errorprone:error_prone_test_helpers:2.15.0",
   // When updating, also update conventions/build.gradle.kts
   "net.bytebuddy:byte-buddy:1.12.17",
   "net.bytebuddy:byte-buddy-dep:1.12.17",
@@ -55,7 +55,7 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy-gradle-plugin:1.12.17",
   "org.openjdk.jmh:jmh-core:1.35",
   "org.openjdk.jmh:jmh-generator-bytecode:1.35",
-  "org.mockito:mockito-core:4.7.0",
+  "org.mockito:mockito-core:4.8.0",
   "org.mockito:mockito-junit-jupiter:4.7.0",
   "org.mockito:mockito-inline:4.7.0",
   "org.slf4j:slf4j-api:1.7.36",
