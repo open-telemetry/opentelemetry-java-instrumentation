@@ -55,15 +55,15 @@ public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyTransformer(
-        (builder, typeDescription, classLoader, module) -> {
-          if (module != null && module.isNamed()) {
+        (builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+          if (javaModule != null && javaModule.isNamed()) {
             // using Java8BytecodeBridge because it's in the unnamed module in the bootstrap
             // loader, and that's where the rmi instrumentation helper classes will end up
             JavaModule helperModule = JavaModule.ofType(Java8BytecodeBridge.class);
             // expose sun.rmi.server package to unnamed module
             ClassInjector.UsingInstrumentation.redefineModule(
                 InstrumentationHolder.getInstrumentation(),
-                module,
+                javaModule,
                 Collections.emptySet(),
                 Collections.singletonMap("sun.rmi.server", Collections.singleton(helperModule)),
                 Collections.emptyMap(),
@@ -72,7 +72,9 @@ public class ExposeRmiModuleInstrumentation implements TypeInstrumentation {
 
             instrumented.set(true);
             logger.log(
-                FINE, "Exposed package \"sun.rmi.server\" in module {0} to unnamed module", module);
+                FINE,
+                "Exposed package \"sun.rmi.server\" in module {0} to unnamed module",
+                javaModule);
           }
           return builder;
         });

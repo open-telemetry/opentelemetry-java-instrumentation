@@ -93,7 +93,7 @@ public class ClassLoaderMatcher {
                 helperResourceBuilder.getResources(),
                 Thread.currentThread().getContextClassLoader(),
                 null)
-            .transform(null, null, classLoader, null);
+            .transform(null, null, classLoader, null, null);
       }
     } catch (RuntimeException e) {
       mismatches = ReferenceMatcher.add(mismatches, new Mismatch.HelperClassesInjectionError());
