@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -19,7 +20,11 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class HttpClientAttributesExtractorTest {
 
@@ -139,15 +144,22 @@ class HttpClientAttributesExtractorTest {
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));
   }
-
-  @Test
-  public void stripBasicAuthTest() {
+  @ParameterizedTest
+  @MethodSource("stripUrlArguments")
+  public void stripBasicAuthTest(String url, String expectedResult) {
     Map<String, String> request = new HashMap<>();
-    request.put("url", "https://user1:secret@github.com");
+    request.put("url", url);
 
-    stripRequestTest(request, "https://github.com");
+    stripRequestTest(request, expectedResult);
   }
 
+  private static Stream<Arguments> stripUrlArguments() {
+    return Stream.of(
+        arguments("https://user1:secret@github.com", "https://github.com"),
+        arguments("https://user1:secret@github.com?foo=b@r", "https://github.com?foo=b@r"),
+        arguments("user1:secret@github.com", "github.com")
+    );
+  }
   @Test
   public void stripBasicAuthWithQueryParamTest() {
     Map<String, String> request = new HashMap<>();
