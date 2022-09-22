@@ -54,9 +54,9 @@ Same settings as above for new release branches (`release/**`), except:
 
 ### `dependabot/**/*`
 
-* Status checks that are required:
+* Require status checks to pass before merging: unchecked
 
-  EasyCLA
+  So that dependabot can rebase its PR branches
 
 * Allow force pushes > Everyone
 
