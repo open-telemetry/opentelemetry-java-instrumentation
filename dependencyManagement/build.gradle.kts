@@ -62,7 +62,7 @@ val CORE_DEPENDENCIES = listOf(
   "org.slf4j:slf4j-simple:1.7.36",
   "org.slf4j:log4j-over-slf4j:1.7.36",
   "org.slf4j:jcl-over-slf4j:1.7.36",
-  "org.slf4j:jul-to-slf4j:1.7.36"
+  "org.slf4j:jul-to-slf4j:2.0.2"
 )
 
 // See the comment above about why we keep this rather large list.
