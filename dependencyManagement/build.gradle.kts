@@ -58,7 +58,7 @@ val CORE_DEPENDENCIES = listOf(
   "org.mockito:mockito-core:4.7.0",
   "org.mockito:mockito-junit-jupiter:4.7.0",
   "org.mockito:mockito-inline:4.7.0",
-  "org.slf4j:slf4j-api:1.7.36",
+  "org.slf4j:slf4j-api:2.0.2",
   "org.slf4j:slf4j-simple:1.7.36",
   "org.slf4j:log4j-over-slf4j:1.7.36",
   "org.slf4j:jcl-over-slf4j:1.7.36",
