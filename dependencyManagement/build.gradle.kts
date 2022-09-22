@@ -40,43 +40,29 @@ val DEPENDENCY_BOMS = listOf(
   "org.testcontainers:testcontainers-bom:1.17.3",
 )
 
-val DEPENDENCY_SETS = listOf(
-  DependencySet(
-    "com.google.auto.service",
-    "1.0.1",
-    listOf("auto-service", "auto-service-annotations")
-  ),
-  DependencySet(
-    "com.google.auto.value",
-    "1.9",
-    listOf("auto-value", "auto-value-annotations")
-  ),
-  DependencySet(
-    "com.google.errorprone",
-    "2.14.0",
-    listOf("error_prone_annotations", "error_prone_core", "error_prone_test_helpers")
-  ),
-  DependencySet(
-    "net.bytebuddy",
-    // When updating, also update conventions/build.gradle.kts
-    "1.12.10",
-    listOf("byte-buddy", "byte-buddy-dep", "byte-buddy-agent", "byte-buddy-gradle-plugin")
-  ),
-  DependencySet(
-    "org.openjdk.jmh",
-    "1.35",
-    listOf("jmh-core", "jmh-generator-bytecode")
-  ),
-  DependencySet(
-    "org.mockito",
-    "4.7.0",
-    listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
-  ),
-  DependencySet(
-    "org.slf4j",
-    "1.7.36",
-    listOf("slf4j-api", "slf4j-simple", "log4j-over-slf4j", "jcl-over-slf4j", "jul-to-slf4j")
-  ),
+val CORE_DEPENDENCIES = listOf(
+  "com.google.auto.service:auto-service:1.0.1",
+  "com.google.auto.service:auto-service-annotations:1.0.1",
+  "com.google.auto.value:auto-value:1.9",
+  "com.google.auto.value:auto-value-annotations:1.9",
+  "com.google.errorprone:error_prone_annotations:2.14.0",
+  "com.google.errorprone:error_prone_core:2.14.0",
+  "com.google.errorprone:error_prone_test_helpers:2.14.0",
+  // When updating, also update conventions/build.gradle.kts
+  "net.bytebuddy:byte-buddy:1.12.17",
+  "net.bytebuddy:byte-buddy-dep:1.12.17",
+  "net.bytebuddy:byte-buddy-agent:1.12.17",
+  "net.bytebuddy:byte-buddy-gradle-plugin:1.12.17",
+  "org.openjdk.jmh:jmh-core:1.35",
+  "org.openjdk.jmh:jmh-generator-bytecode:1.35",
+  "org.mockito:mockito-core:4.7.0",
+  "org.mockito:mockito-junit-jupiter:4.7.0",
+  "org.mockito:mockito-inline:4.7.0",
+  "org.slf4j:slf4j-api:1.7.36",
+  "org.slf4j:slf4j-simple:1.7.36",
+  "org.slf4j:log4j-over-slf4j:1.7.36",
+  "org.slf4j:jcl-over-slf4j:1.7.36",
+  "org.slf4j:jul-to-slf4j:1.7.36"
 )
 
 // See the comment above about why we keep this rather large list.
@@ -130,11 +116,10 @@ dependencies {
     dependencyVersions[split[0]] = split[2]
   }
   constraints {
-    for (set in DEPENDENCY_SETS) {
-      for (module in set.modules) {
-        api("${set.group}:${module}:${set.version}")
-        dependencyVersions[set.group] = set.version
-      }
+    for (dependency in CORE_DEPENDENCIES) {
+      api(dependency)
+      val split = dependency.split(':')
+      dependencyVersions[split[0]] = split[2]
     }
     for (dependency in DEPENDENCIES) {
       api(dependency)
