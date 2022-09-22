@@ -8,18 +8,22 @@ registries:
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
+    rebase-strategy: "disabled"
     schedule:
       interval: "daily"
   - package-ecosystem: "gradle"
     directory: "/dependencyManagement"
+    rebase-strategy: "disabled"
     schedule:
       interval: "daily"
   - package-ecosystem: "gradle"
     directory: "/conventions"
+    rebase-strategy: "disabled"
     schedule:
       interval: "daily"
   - package-ecosystem: "gradle"
     directory: "/gradle-plugins"
+    rebase-strategy: "disabled"
     schedule:
       interval: "daily"
   - package-ecosystem: "gradle"
@@ -28,5 +32,6 @@ updates:
       - dependency-name: "com.gradle*"
     registries:
       - gradle-plugin-portal
+    rebase-strategy: "disabled"
     schedule:
       interval: "daily"
