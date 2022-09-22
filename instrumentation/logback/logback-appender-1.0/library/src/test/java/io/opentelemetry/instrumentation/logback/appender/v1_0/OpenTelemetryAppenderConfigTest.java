@@ -30,6 +30,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 class OpenTelemetryAppenderConfigTest {
 
@@ -101,7 +103,9 @@ class OpenTelemetryAppenderConfigTest {
   @Test
   void logWithExtras() {
     Instant start = Instant.now();
-    logger.info("log message 1", new IllegalStateException("Error!"));
+    String markerName = "aMarker";
+    Marker marker = MarkerFactory.getMarker(markerName);
+    logger.info(marker, "log message 1", new IllegalStateException("Error!"));
 
     List<LogData> logDataList = logExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
@@ -114,7 +118,8 @@ class OpenTelemetryAppenderConfigTest {
         .isLessThan(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
-    assertThat(logData.getAttributes().size()).isEqualTo(3 + 4); // 4 code attributes
+    assertThat(logData.getAttributes().size())
+        .isEqualTo(3 + 4 + 1); // 3 exception attributes, 4 code attributes, 1 marker attribute
     assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE))
         .isEqualTo(IllegalStateException.class.getName());
     assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE))
@@ -135,6 +140,9 @@ class OpenTelemetryAppenderConfigTest {
 
     Long lineNumber = logData.getAttributes().get(SemanticAttributes.CODE_LINENO);
     assertThat(lineNumber).isGreaterThan(1);
+
+    String logMarker = logData.getAttributes().get(AttributeKey.stringKey("logback.marker"));
+    assertThat(logMarker).isEqualTo(markerName);
   }
 
   @Test

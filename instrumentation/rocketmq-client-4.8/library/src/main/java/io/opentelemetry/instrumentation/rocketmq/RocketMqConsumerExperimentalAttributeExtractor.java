@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -17,8 +18,6 @@ enum RocketMqConsumerExperimentalAttributeExtractor
     implements AttributesExtractor<MessageExt, Void> {
   INSTANCE;
 
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_TAGS =
-      AttributeKey.stringKey("messaging.rocketmq.tags");
   private static final AttributeKey<Long> MESSAGING_ROCKETMQ_QUEUE_ID =
       AttributeKey.longKey("messaging.rocketmq.queue_id");
   private static final AttributeKey<Long> MESSAGING_ROCKETMQ_QUEUE_OFFSET =
@@ -30,7 +29,7 @@ enum RocketMqConsumerExperimentalAttributeExtractor
   public void onStart(AttributesBuilder attributes, Context parentContext, MessageExt msg) {
     String tags = msg.getTags();
     if (tags != null) {
-      attributes.put(MESSAGING_ROCKETMQ_TAGS, tags);
+      attributes.put(SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG, tags);
     }
     attributes.put(MESSAGING_ROCKETMQ_QUEUE_ID, msg.getQueueId());
     attributes.put(MESSAGING_ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());

@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Marker;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -31,18 +32,23 @@ public final class LoggingEventMapper {
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
+  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("logback.marker");
+
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
   private final boolean captureAllMdcAttributes;
   private final boolean captureCodeAttributes;
+  private final boolean captureMarkerAttribute;
 
   public LoggingEventMapper(
       boolean captureExperimentalAttributes,
       List<String> captureMdcAttributes,
-      boolean captureCodeAttributes) {
+      boolean captureCodeAttributes,
+      boolean captureMarkerAttribute) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureCodeAttributes = captureCodeAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
+    this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
@@ -122,6 +128,14 @@ public final class LoggingEventMapper {
         if (lineNumber > 0) {
           attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
         }
+      }
+    }
+
+    if (captureMarkerAttribute) {
+      Marker marker = loggingEvent.getMarker();
+      if (marker != null) {
+        String markerName = marker.getName();
+        attributes.put(LOG_MARKER, markerName);
       }
     }
 
