@@ -11,21 +11,34 @@ updates:
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+
   - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
     directory: "/dependencyManagement"
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 10
+
   - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
     directory: "/conventions"
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 10
+
   - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
     directory: "/gradle-plugins"
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 10
+
   - package-ecosystem: "gradle"
     directory: "/"
     allow:
