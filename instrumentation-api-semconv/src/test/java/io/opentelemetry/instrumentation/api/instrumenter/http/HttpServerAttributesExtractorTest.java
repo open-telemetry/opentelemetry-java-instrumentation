@@ -49,11 +49,6 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    public String serverName(Map<String, String> request) {
-      return request.get("serverName");
-    }
-
-    @Override
     public List<String> requestHeader(Map<String, String> request, String name) {
       String values = request.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
@@ -89,7 +84,6 @@ class HttpServerAttributesExtractorTest {
     request.put("header.content-length", "10");
     request.put("flavor", "http/2");
     request.put("route", "/repositories/{id}");
-    request.put("serverName", "server");
     request.put("header.user-agent", "okhttp 3.x");
     request.put("header.host", "github.com");
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
@@ -116,11 +110,9 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(SemanticAttributes.HTTP_HOST, "github.com"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
-            entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
@@ -131,17 +123,14 @@ class HttpServerAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
-            entry(SemanticAttributes.HTTP_HOST, "github.com"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
             entry(SemanticAttributes.HTTP_USER_AGENT, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_CLIENT_IP, "1.1.1.1"),
             entry(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 10L),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom_request_header"),
                 asList("123", "456")),
-            entry(SemanticAttributes.HTTP_SERVER_NAME, "server"),
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_STATUS_CODE, 202L),
             entry(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 20L),

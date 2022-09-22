@@ -78,10 +78,4 @@ final class GrizzlyHttpAttributesGetter
   public String scheme(HttpRequestPacket request) {
     return request.isSecure() ? "https" : "http";
   }
-
-  @Nullable
-  @Override
-  public String serverName(HttpRequestPacket request) {
-    return null;
-  }
 }

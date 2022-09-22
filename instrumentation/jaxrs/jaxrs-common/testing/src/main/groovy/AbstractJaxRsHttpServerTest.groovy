@@ -268,13 +268,12 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         hasNoParent()
       }
       attributes {
-        "net.host.name" fullUrl.host
-        "net.host.port" fullUrl.port
+        "$SemanticAttributes.NET_HOST_NAME" fullUrl.host
+        "$SemanticAttributes.NET_HOST_PORT" fullUrl.port
         "net.sock.peer.addr" "127.0.0.1"
         "net.sock.peer.port" Long
         "net.sock.host.addr" "127.0.0.1"
         "$SemanticAttributes.HTTP_SCHEME" fullUrl.getScheme()
-        "$SemanticAttributes.HTTP_HOST" fullUrl.getHost() + ":" + fullUrl.getPort()
         "$SemanticAttributes.HTTP_TARGET" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
         "$SemanticAttributes.HTTP_METHOD" method
         "$SemanticAttributes.HTTP_STATUS_CODE" statusCode

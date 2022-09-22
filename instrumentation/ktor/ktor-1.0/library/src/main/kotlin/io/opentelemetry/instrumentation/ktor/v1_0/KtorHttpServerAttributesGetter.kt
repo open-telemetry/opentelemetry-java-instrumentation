@@ -50,8 +50,4 @@ internal enum class KtorHttpServerAttributesGetter :
   override fun scheme(request: ApplicationRequest): String {
     return request.origin.scheme
   }
-
-  override fun serverName(request: ApplicationRequest): String? {
-    return null
-  }
 }
