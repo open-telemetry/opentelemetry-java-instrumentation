@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
-import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
+import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 
 enum RmiServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod> {
   INSTANCE;

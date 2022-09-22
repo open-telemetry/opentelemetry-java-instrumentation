@@ -33,10 +33,4 @@ public final class OkHttpNetAttributesGetter
   public Integer peerPort(Request request, @Nullable Response response) {
     return request.url().port();
   }
-
-  @Override
-  @Nullable
-  public String peerIp(Request request, @Nullable Response response) {
-    return null;
-  }
 }

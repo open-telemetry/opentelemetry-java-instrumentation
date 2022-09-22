@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux;
 
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
-public class SpringWebfluxConfig {
+public final class SpringWebfluxConfig {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       InstrumentationConfig.get()
@@ -16,4 +16,6 @@ public class SpringWebfluxConfig {
   public static boolean captureExperimentalSpanAttributes() {
     return CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
   }
+
+  private SpringWebfluxConfig() {}
 }

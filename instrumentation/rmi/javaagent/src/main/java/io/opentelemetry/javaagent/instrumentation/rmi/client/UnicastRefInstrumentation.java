@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -22,9 +21,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class UnicastRefInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("sun.rmi.server.UnicastRef"));
+    return named("sun.rmi.server.UnicastRef");
   }
 
   @Override

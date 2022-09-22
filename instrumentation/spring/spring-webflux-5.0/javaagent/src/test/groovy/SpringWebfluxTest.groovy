@@ -81,9 +81,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -92,6 +93,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -148,9 +151,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -159,6 +163,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -235,9 +241,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -246,6 +253,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -300,9 +309,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           status UNSET
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/notfoundgreet"
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -311,6 +321,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" "/**"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -344,9 +356,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/echo"
             "$SemanticAttributes.HTTP_METHOD" "POST"
@@ -355,6 +368,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" "/echo"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -393,9 +408,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -404,6 +420,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -457,9 +475,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/double-greet-redirect"
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -468,17 +487,16 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" "/double-greet-redirect"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
-          name "RedirectComponent.lambda"
+          name "RedirectComponent\$\$Lambda\$.handle"
           kind INTERNAL
           childOf span(0)
           attributes {
-            "spring-webflux.handler.type" { String tagVal ->
-              return (tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                || tagVal.contains("Lambda"))
-            }
+            "spring-webflux.handler.type" { it.startsWith("server.RedirectComponent\$\$Lambda\$") }
           }
         }
       }
@@ -489,9 +507,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/double-greet"
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -500,6 +519,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" "/double-greet"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -536,9 +557,10 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             hasNoParent()
             attributes {
               "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-              "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-              "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-              "$SemanticAttributes.NET_PEER_PORT" Long
+              "net.sock.peer.addr" "127.0.0.1"
+              "net.sock.peer.port" Long
+              "net.sock.host.addr" "127.0.0.1"
+              "net.sock.host.port" Long
               "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
               "$SemanticAttributes.HTTP_TARGET" urlPath
               "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -547,6 +569,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.HTTP_FLAVOR" "1.1"
               "$SemanticAttributes.HTTP_USER_AGENT" String
               "$SemanticAttributes.HTTP_ROUTE" urlPathWithVariables
+              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             }
           }
           span(1) {

@@ -6,8 +6,8 @@
 package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.extension.annotations.SpanAttribute;
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 

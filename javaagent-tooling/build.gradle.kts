@@ -27,7 +27,8 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-metric-incubator")
+  // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 
   // Exporters with dependencies
   implementation("io.opentelemetry:opentelemetry-exporter-jaeger")
@@ -88,6 +89,11 @@ tasks {
   withType<Test>().configureEach {
     environment("OTEL_TRACES_EXPORTER", "none")
     environment("OTEL_METRICS_EXPORTER", "none")
+
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
   // TODO this should live in jmh-conventions

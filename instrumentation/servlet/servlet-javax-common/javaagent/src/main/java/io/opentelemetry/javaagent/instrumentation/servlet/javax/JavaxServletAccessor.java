@@ -26,16 +26,6 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
-  public String getRequestServerName(HttpServletRequest request) {
-    return request.getServerName();
-  }
-
-  @Override
-  public int getRequestServerPort(HttpServletRequest request) {
-    return request.getServerPort();
-  }
-
-  @Override
   public String getRequestUri(HttpServletRequest request) {
     return request.getRequestURI();
   }
@@ -63,6 +53,16 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   @Override
   public String getRequestMethod(HttpServletRequest request) {
     return request.getMethod();
+  }
+
+  @Override
+  public String getRequestServerName(HttpServletRequest request) {
+    return request.getServerName();
+  }
+
+  @Override
+  public Integer getRequestServerPort(HttpServletRequest request) {
+    return request.getServerPort();
   }
 
   @Override
@@ -109,11 +109,6 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   @Override
   public Principal getRequestUserPrincipal(HttpServletRequest request) {
     return request.getUserPrincipal();
-  }
-
-  @Override
-  public int getRequestContentLength(HttpServletRequest request) {
-    return request.getContentLength();
   }
 
   @Override

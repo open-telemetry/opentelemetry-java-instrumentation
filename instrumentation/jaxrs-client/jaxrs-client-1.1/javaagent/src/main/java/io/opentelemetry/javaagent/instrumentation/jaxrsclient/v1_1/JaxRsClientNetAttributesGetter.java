@@ -27,16 +27,6 @@ final class JaxRsClientNetAttributesGetter
 
   @Override
   public Integer peerPort(ClientRequest request, @Nullable ClientResponse response) {
-    int port = request.getURI().getPort();
-    if (port != -1) {
-      return port;
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
+    return request.getURI().getPort();
   }
 }

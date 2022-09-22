@@ -15,13 +15,39 @@ muzzle {
 }
 
 dependencies {
-  library("ch.qos.logback:logback-classic:0.9.16")
+  // pin the version strictly to avoid overriding by dependencyManagement versions
+  compileOnly("ch.qos.logback:logback-classic") {
+    version {
+      strictly("1.0.0")
+    }
+  }
+  compileOnly("org.slf4j:slf4j-api") {
+    version {
+      strictly("1.5.8")
+    }
+  }
+
+  if (findProperty("testLatestDeps") as Boolean) {
+    testImplementation("ch.qos.logback:logback-classic:+")
+  } else {
+    testImplementation("ch.qos.logback:logback-classic") {
+      version {
+        strictly("1.0.0")
+      }
+    }
+    testImplementation("org.slf4j:slf4j-api") {
+      version {
+        strictly("1.7.36")
+      }
+    }
+  }
 
   compileOnly(project(":instrumentation-appender-api-internal"))
   compileOnly(project(":javaagent-bootstrap"))
 
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
+  testImplementation("io.opentelemetry:opentelemetry-sdk-logs-testing")
   testImplementation("org.awaitility:awaitility")
 }
 
@@ -29,4 +55,5 @@ tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+  jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
 }

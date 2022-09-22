@@ -24,7 +24,19 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getAddress(
+  public String peerName(HttpClientConfig request, @Nullable HttpClientResponse response) {
+    return getHost(request);
+  }
+
+  @Nullable
+  @Override
+  public Integer peerPort(HttpClientConfig request, @Nullable HttpClientResponse response) {
+    return getPort(request);
+  }
+
+  @Nullable
+  @Override
+  protected InetSocketAddress getPeerSocketAddress(
       HttpClientConfig request, @Nullable HttpClientResponse response) {
 
     // we're making use of the fact that HttpClientOperations is both a Connection and an
@@ -37,5 +49,29 @@ final class ReactorNettyNetClientAttributesGetter
       }
     }
     return null;
+  }
+
+  @Nullable
+  private static String getHost(HttpClientConfig request) {
+    String baseUrl = request.baseUrl();
+    String uri = request.uri();
+
+    if (baseUrl != null && uri.startsWith("/")) {
+      return UrlParser.getHost(baseUrl);
+    } else {
+      return UrlParser.getHost(uri);
+    }
+  }
+
+  @Nullable
+  private static Integer getPort(HttpClientConfig request) {
+    String baseUrl = request.baseUrl();
+    String uri = request.uri();
+
+    if (baseUrl != null && uri.startsWith("/")) {
+      return UrlParser.getPort(baseUrl);
+    } else {
+      return UrlParser.getPort(uri);
+    }
   }
 }

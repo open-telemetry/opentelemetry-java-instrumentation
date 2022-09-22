@@ -64,9 +64,10 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_PORT" Long
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
+            "net.sock.host.port" Long
             "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
             "$SemanticAttributes.HTTP_TARGET" "/listProducts"
             "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -75,6 +76,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(1) {
@@ -155,9 +157,10 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             childOf(span(0))
             attributes {
               "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-              "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-              "$SemanticAttributes.NET_PEER_PORT" Long
-              "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+              "net.sock.peer.addr" "127.0.0.1"
+              "net.sock.peer.port" Long
+              "net.sock.host.addr" "127.0.0.1"
+              "net.sock.host.port" Long
               "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:${port}" }
               "$SemanticAttributes.HTTP_TARGET" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
               "$SemanticAttributes.HTTP_METHOD" "GET"
@@ -166,6 +169,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.HTTP_FLAVOR" "1.1"
               "$SemanticAttributes.HTTP_USER_AGENT" String
               "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
+              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId
             }
           }

@@ -34,7 +34,7 @@ class AwsSpan {
         "http.url" String
         "net.peer.name" String
         "net.transport" IP_TCP
-        "net.peer.port" { it == null || Number }
+        "net.peer.port" { it == null || it instanceof Number }
       }
     }
   }
@@ -60,9 +60,11 @@ class AwsSpan {
         "http.method" "POST"
         "http.status_code" 200
         "http.url" String
-        "http.user_agent" { it == null || String }
+        "http.user_agent" { it == null || it instanceof String }
+        "http.request_content_length" { it == null || it instanceof Long }
+        "http.response_content_length" { it == null || it instanceof Long }
         "net.peer.name" String
-        "net.peer.port" { it == null || Number }
+        "net.peer.port" { it == null || it instanceof Number }
         "net.transport" IP_TCP
       }
     }
@@ -88,7 +90,7 @@ class AwsSpan {
         "http.status_code" 200
         "http.url" String
         "net.peer.name" String
-        "net.peer.port" { it == null || Number }
+        "net.peer.port" { it == null || it instanceof Number }
         "net.transport" IP_TCP
       }
     }

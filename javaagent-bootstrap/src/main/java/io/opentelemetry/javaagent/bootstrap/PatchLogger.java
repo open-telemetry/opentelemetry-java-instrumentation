@@ -11,8 +11,6 @@ import java.util.function.Supplier;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Dependencies of the agent sometimes call java.util.logging.Logger.getLogger(). This can have the
@@ -20,7 +18,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Shadow rewrites will redirect those calls to this class, which will return a safe PatchLogger.
  *
- * <p>This also has the desired outcome of redirecting all logging to a single destination (SLF4J).
+ * <p>This also has the desired outcome of redirecting all logging to a single destination, as
+ * configured by the {@code LoggingCustomizer} implementation.
  */
 public class PatchLogger {
 
@@ -28,7 +27,7 @@ public class PatchLogger {
 
   public static final PatchLogger global = new PatchLogger(GLOBAL_LOGGER_NAME);
 
-  private final Logger slf4jLogger;
+  private final InternalLogger internalLogger;
 
   private ResourceBundle resourceBundle;
 
@@ -41,55 +40,50 @@ public class PatchLogger {
   }
 
   private PatchLogger(String name) {
-    this(LoggerFactory.getLogger(name));
+    this(InternalLogger.getLogger(name));
   }
 
   // visible for testing
-  PatchLogger(Logger slf4jLogger) {
-    this.slf4jLogger = slf4jLogger;
-  }
-
-  // visible for testing
-  Logger getSlf4jLogger() {
-    return slf4jLogger;
+  PatchLogger(InternalLogger internalLogger) {
+    this.internalLogger = internalLogger;
   }
 
   public String getName() {
-    return slf4jLogger.getName();
+    return internalLogger.name();
   }
 
   public void severe(String msg) {
-    slf4jLogger.error(msg);
+    internalLogger.log(InternalLogger.Level.ERROR, msg, null);
   }
 
   public void severe(Supplier<String> msgSupplier) {
-    if (slf4jLogger.isErrorEnabled()) {
-      slf4jLogger.error(msgSupplier.get());
+    if (internalLogger.isLoggable(InternalLogger.Level.ERROR)) {
+      internalLogger.log(InternalLogger.Level.ERROR, msgSupplier.get(), null);
     }
   }
 
   public void warning(String msg) {
-    slf4jLogger.warn(msg);
+    internalLogger.log(InternalLogger.Level.WARN, msg, null);
   }
 
   public void warning(Supplier<String> msgSupplier) {
-    if (slf4jLogger.isWarnEnabled()) {
-      slf4jLogger.warn(msgSupplier.get());
+    if (internalLogger.isLoggable(InternalLogger.Level.WARN)) {
+      internalLogger.log(InternalLogger.Level.WARN, msgSupplier.get(), null);
     }
   }
 
   public void info(String msg) {
-    slf4jLogger.info(msg);
+    internalLogger.log(InternalLogger.Level.INFO, msg, null);
   }
 
   public void info(Supplier<String> msgSupplier) {
-    if (slf4jLogger.isInfoEnabled()) {
-      slf4jLogger.info(msgSupplier.get());
+    if (internalLogger.isLoggable(InternalLogger.Level.INFO)) {
+      internalLogger.log(InternalLogger.Level.INFO, msgSupplier.get(), null);
     }
   }
 
   public void config(String msg) {
-    slf4jLogger.info(msg);
+    info(msg);
   }
 
   public void config(Supplier<String> msgSupplier) {
@@ -97,27 +91,27 @@ public class PatchLogger {
   }
 
   public void fine(String msg) {
-    slf4jLogger.debug(msg);
+    internalLogger.log(InternalLogger.Level.DEBUG, msg, null);
   }
 
   public void fine(Supplier<String> msgSupplier) {
-    if (slf4jLogger.isDebugEnabled()) {
-      slf4jLogger.debug(msgSupplier.get());
+    if (internalLogger.isLoggable(InternalLogger.Level.DEBUG)) {
+      internalLogger.log(InternalLogger.Level.DEBUG, msgSupplier.get(), null);
     }
   }
 
   public void finer(String msg) {
-    slf4jLogger.trace(msg);
+    internalLogger.log(InternalLogger.Level.TRACE, msg, null);
   }
 
   public void finer(Supplier<String> msgSupplier) {
-    if (slf4jLogger.isTraceEnabled()) {
-      slf4jLogger.trace(msgSupplier.get());
+    if (internalLogger.isLoggable(InternalLogger.Level.TRACE)) {
+      internalLogger.log(InternalLogger.Level.TRACE, msgSupplier.get(), null);
     }
   }
 
   public void finest(String msg) {
-    slf4jLogger.trace(msg);
+    finer(msg);
   }
 
   public void finest(Supplier<String> msgSupplier) {
@@ -125,167 +119,79 @@ public class PatchLogger {
   }
 
   public void log(LogRecord record) {
-    Level level = record.getLevel();
-    if (level.intValue() >= Level.SEVERE.intValue()) {
-      if (slf4jLogger.isErrorEnabled()) {
-        slf4jLogger.error(getMessage(record), record.getThrown());
-      }
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
-      if (slf4jLogger.isWarnEnabled()) {
-        slf4jLogger.warn(getMessage(record), record.getThrown());
-      }
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
-      if (slf4jLogger.isInfoEnabled()) {
-        slf4jLogger.info(getMessage(record), record.getThrown());
-      }
-    } else if (level.intValue() >= Level.FINE.intValue()) {
-      if (slf4jLogger.isDebugEnabled()) {
-        slf4jLogger.debug(getMessage(record), record.getThrown());
-      }
-    } else {
-      if (slf4jLogger.isTraceEnabled()) {
-        slf4jLogger.trace(getMessage(record), record.getThrown());
-      }
+    InternalLogger.Level internalLevel = toInternalLevel(record.getLevel());
+    if (internalLogger.isLoggable(internalLevel)) {
+      internalLogger.log(internalLevel, getMessage(record), record.getThrown());
     }
   }
 
   public void log(Level level, String msg) {
-    if (level.intValue() >= Level.SEVERE.intValue()) {
-      slf4jLogger.error(msg);
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
-      slf4jLogger.warn(msg);
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
-      slf4jLogger.info(msg);
-    } else if (level.intValue() >= Level.FINE.intValue()) {
-      slf4jLogger.debug(msg);
-    } else {
-      slf4jLogger.trace(msg);
-    }
+    internalLogger.log(toInternalLevel(level), msg, null);
   }
 
   public void log(Level level, String msg, Object param1) {
-    if (level.intValue() >= Level.SEVERE.intValue()) {
-      if (slf4jLogger.isErrorEnabled()) {
-        slf4jLogger.error(MessageFormat.format(msg, param1));
-      }
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
-      if (slf4jLogger.isWarnEnabled()) {
-        slf4jLogger.warn(MessageFormat.format(msg, param1));
-      }
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
-      if (slf4jLogger.isInfoEnabled()) {
-        slf4jLogger.info(MessageFormat.format(msg, param1));
-      }
-    } else if (level.intValue() >= Level.FINE.intValue()) {
-      if (slf4jLogger.isDebugEnabled()) {
-        slf4jLogger.debug(MessageFormat.format(msg, param1));
-      }
-    } else {
-      if (slf4jLogger.isTraceEnabled()) {
-        slf4jLogger.trace(MessageFormat.format(msg, param1));
-      }
+    InternalLogger.Level internalLevel = toInternalLevel(level);
+    if (internalLogger.isLoggable(internalLevel)) {
+      internalLogger.log(internalLevel, MessageFormat.format(msg, param1), null);
     }
   }
 
   public void log(Level level, String msg, Object[] params) {
-    if (level.intValue() >= Level.SEVERE.intValue()) {
-      if (slf4jLogger.isErrorEnabled()) {
-        slf4jLogger.error(MessageFormat.format(msg, params));
-      }
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
-      if (slf4jLogger.isWarnEnabled()) {
-        slf4jLogger.warn(MessageFormat.format(msg, params));
-      }
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
-      if (slf4jLogger.isInfoEnabled()) {
-        slf4jLogger.info(MessageFormat.format(msg, params));
-      }
-    } else if (level.intValue() >= Level.FINE.intValue()) {
-      if (slf4jLogger.isDebugEnabled()) {
-        slf4jLogger.debug(MessageFormat.format(msg, params));
-      }
-    } else {
-      if (slf4jLogger.isTraceEnabled()) {
-        slf4jLogger.trace(MessageFormat.format(msg, params));
-      }
+    InternalLogger.Level internalLevel = toInternalLevel(level);
+    if (internalLogger.isLoggable(internalLevel)) {
+      internalLogger.log(internalLevel, MessageFormat.format(msg, params), null);
     }
   }
 
   public void log(Level level, String msg, Throwable thrown) {
-    if (level.intValue() >= Level.SEVERE.intValue()) {
-      slf4jLogger.error(msg, thrown);
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
-      slf4jLogger.warn(msg, thrown);
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
-      slf4jLogger.info(msg, thrown);
-    } else if (level.intValue() >= Level.FINE.intValue()) {
-      slf4jLogger.debug(msg, thrown);
-    } else {
-      slf4jLogger.trace(msg, thrown);
-    }
+    internalLogger.log(toInternalLevel(level), msg, thrown);
   }
 
   public void log(Level level, Supplier<String> msgSupplier) {
-    if (!isLoggable(level)) {
-      return;
-    }
-    if (level.intValue() >= Level.SEVERE.intValue()) {
-      slf4jLogger.error(msgSupplier.get());
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
-      slf4jLogger.warn(msgSupplier.get());
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
-      slf4jLogger.info(msgSupplier.get());
-    } else if (level.intValue() >= Level.FINE.intValue()) {
-      slf4jLogger.debug(msgSupplier.get());
-    } else {
-      slf4jLogger.trace(msgSupplier.get());
+    InternalLogger.Level internalLevel = toInternalLevel(level);
+    if (internalLogger.isLoggable(internalLevel)) {
+      internalLogger.log(internalLevel, msgSupplier.get(), null);
     }
   }
 
   public void log(Level level, Throwable thrown, Supplier<String> msgSupplier) {
-    if (!isLoggable(level)) {
-      return;
-    }
-    if (level.intValue() >= Level.SEVERE.intValue()) {
-      slf4jLogger.error(msgSupplier.get(), thrown);
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
-      slf4jLogger.warn(msgSupplier.get(), thrown);
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
-      slf4jLogger.info(msgSupplier.get(), thrown);
-    } else if (level.intValue() >= Level.FINE.intValue()) {
-      slf4jLogger.debug(msgSupplier.get(), thrown);
-    } else {
-      slf4jLogger.trace(msgSupplier.get(), thrown);
+    InternalLogger.Level internalLevel = toInternalLevel(level);
+    if (internalLogger.isLoggable(internalLevel)) {
+      internalLogger.log(internalLevel, msgSupplier.get(), thrown);
     }
   }
 
   public boolean isLoggable(Level level) {
-    if (level.intValue() >= Level.SEVERE.intValue()) {
-      return slf4jLogger.isErrorEnabled();
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
-      return slf4jLogger.isWarnEnabled();
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
-      return slf4jLogger.isInfoEnabled();
-    } else if (level.intValue() >= Level.FINE.intValue()) {
-      return slf4jLogger.isDebugEnabled();
-    } else {
-      return slf4jLogger.isTraceEnabled();
-    }
+    return internalLogger.isLoggable(toInternalLevel(level));
   }
 
   public Level getLevel() {
-    if (slf4jLogger.isErrorEnabled()) {
+    if (internalLogger.isLoggable(InternalLogger.Level.ERROR)) {
       return Level.SEVERE;
-    } else if (slf4jLogger.isWarnEnabled()) {
+    } else if (internalLogger.isLoggable(InternalLogger.Level.WARN)) {
       return Level.WARNING;
-    } else if (slf4jLogger.isInfoEnabled()) {
+    } else if (internalLogger.isLoggable(InternalLogger.Level.INFO)) {
       return Level.CONFIG;
-    } else if (slf4jLogger.isDebugEnabled()) {
+    } else if (internalLogger.isLoggable(InternalLogger.Level.DEBUG)) {
       return Level.FINE;
-    } else if (slf4jLogger.isTraceEnabled()) {
+    } else if (internalLogger.isLoggable(InternalLogger.Level.TRACE)) {
       return Level.FINEST;
     } else {
       return Level.OFF;
+    }
+  }
+
+  private static InternalLogger.Level toInternalLevel(Level level) {
+    if (level.intValue() >= Level.SEVERE.intValue()) {
+      return InternalLogger.Level.ERROR;
+    } else if (level.intValue() >= Level.WARNING.intValue()) {
+      return InternalLogger.Level.WARN;
+    } else if (level.intValue() >= Level.CONFIG.intValue()) {
+      return InternalLogger.Level.INFO;
+    } else if (level.intValue() >= Level.FINE.intValue()) {
+      return InternalLogger.Level.DEBUG;
+    } else {
+      return InternalLogger.Level.TRACE;
     }
   }
 

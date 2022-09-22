@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.jms.JmsMessageAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.jms.MessagePropertyGetter;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
@@ -28,7 +29,10 @@ public final class SpringJmsSingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operation))
-        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation))
+        .addAttributesExtractor(
+            MessagingAttributesExtractor.builder(getter, operation)
+                .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+                .build())
         .buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
   }
 

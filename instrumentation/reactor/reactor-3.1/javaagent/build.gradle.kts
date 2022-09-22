@@ -28,13 +28,13 @@ dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
+  testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
+
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
   testImplementation(project(":instrumentation-annotations-support-testing"))
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
+  testImplementation(project(":instrumentation-annotations"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
-
-  // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
-  latestDepTestLibrary("io.micrometer:micrometer-core:1.+")
 }
 
 testing {
@@ -42,7 +42,7 @@ testing {
     val testInitialization by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-        implementation("io.opentelemetry:opentelemetry-extension-annotations")
+        implementation(project(":instrumentation-annotations"))
         implementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
       }
     }

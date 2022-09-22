@@ -27,16 +27,6 @@ final class GoogleHttpClientNetAttributesGetter
 
   @Override
   public Integer peerPort(HttpRequest request, @Nullable HttpResponse response) {
-    int port = request.getUrl().getPort();
-    if (port != -1) {
-      return port;
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest request, @Nullable HttpResponse response) {
-    return null;
+    return request.getUrl().getPort();
   }
 }

@@ -30,7 +30,7 @@ that can be used if you prefer that over using the Java agent:
 * [RxJava 2.0](../instrumentation/rxjava/rxjava-2.0/library)
 * [RxJava 3.0](../instrumentation/rxjava/rxjava-3.0/library)
 * [Spring RestTemplate](../instrumentation/spring/spring-web-3.1/library)
-* [Spring Web MVC](../instrumentation/spring/spring-webmvc-3.1/library)
+* [Spring Web MVC](../instrumentation/spring/spring-webmvc-5.3/library)
 * [Spring WebFlux Client](../instrumentation/spring/spring-webflux-5.0/library)
 * [Vibur DBCP](../instrumentation/vibur-dbcp-11.0/library)
 

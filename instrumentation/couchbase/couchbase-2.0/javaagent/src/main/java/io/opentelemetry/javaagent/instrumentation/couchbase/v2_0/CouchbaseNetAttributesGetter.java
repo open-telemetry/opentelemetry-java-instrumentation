@@ -5,16 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public class CouchbaseNetAttributesGetter
-    implements NetClientAttributesGetter<CouchbaseRequestInfo, Void> {
+    extends InetSocketAddressNetClientAttributesGetter<CouchbaseRequestInfo, Void> {
   @Nullable
   @Override
   public String transport(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
-    return couchbaseRequest.getPeerName() != null
+    return couchbaseRequest.getPeerAddress() != null
         ? SemanticAttributes.NetTransportValues.IP_TCP
         : null;
   }
@@ -22,18 +24,23 @@ public class CouchbaseNetAttributesGetter
   @Nullable
   @Override
   public String peerName(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
-    return couchbaseRequest.getPeerName();
+    return null;
   }
 
   @Nullable
   @Override
   public Integer peerPort(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
-    return couchbaseRequest.getPeerPort();
+    return null;
   }
 
   @Nullable
   @Override
-  public String peerIp(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
+  protected InetSocketAddress getPeerSocketAddress(
+      CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
+    SocketAddress peerAddress = couchbaseRequest.getPeerAddress();
+    if (peerAddress instanceof InetSocketAddress) {
+      return (InetSocketAddress) peerAddress;
+    }
     return null;
   }
 }

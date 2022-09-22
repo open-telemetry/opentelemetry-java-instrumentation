@@ -13,6 +13,7 @@ import org.springframework.http.client.ClientHttpResponse;
 
 final class SpringWebNetAttributesGetter
     implements NetClientAttributesGetter<HttpRequest, ClientHttpResponse> {
+
   @Override
   public String transport(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
@@ -27,11 +28,5 @@ final class SpringWebNetAttributesGetter
   @Override
   public Integer peerPort(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
     return httpRequest.getURI().getPort();
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
-    return null;
   }
 }

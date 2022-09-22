@@ -53,6 +53,24 @@ class CodeSpanNameExtractorTest {
     assertEquals(getClass().getSimpleName() + "$1.doSomething", spanName);
   }
 
+  @Test
+  void shouldExtractFullSpanNameForLambda() {
+    // given
+    Runnable lambda = () -> {};
+    Object request = new Object();
+
+    willReturn(lambda.getClass()).given(getter).codeClass(request);
+    willReturn("doSomething").given(getter).methodName(request);
+
+    SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
+
+    // when
+    String spanName = underTest.extract(request);
+
+    // then
+    assertEquals(getClass().getSimpleName() + "$$Lambda$.doSomething", spanName);
+  }
+
   static class TestClass {}
 
   static class AnonymousBaseClass {}

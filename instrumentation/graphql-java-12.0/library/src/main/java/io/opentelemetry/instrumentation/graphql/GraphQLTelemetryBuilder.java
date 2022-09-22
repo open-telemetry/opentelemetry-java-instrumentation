@@ -19,17 +19,6 @@ public final class GraphQLTelemetryBuilder {
     this.openTelemetry = openTelemetry;
   }
 
-  /**
-   * Sets whether experimental attributes should be set to spans. These attributes may be changed or
-   * removed in the future, so only enable this if you know you do not require attributes filled by
-   * this instrumentation to be stable across versions.
-   */
-  @Deprecated
-  public GraphQLTelemetryBuilder setCaptureExperimentalSpanAttributes(
-      boolean captureExperimentalSpanAttributes) {
-    return this;
-  }
-
   /** Sets whether sensitive information should be removed from queries. Default is {@code true}. */
   public GraphQLTelemetryBuilder setSanitizeQuery(boolean sanitizeQuery) {
     this.sanitizeQuery = sanitizeQuery;

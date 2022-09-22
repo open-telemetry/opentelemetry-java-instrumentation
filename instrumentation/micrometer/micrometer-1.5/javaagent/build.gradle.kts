@@ -14,10 +14,9 @@ muzzle {
 dependencies {
   library("io.micrometer:micrometer-core:1.5.0")
 
-  implementation("io.opentelemetry:opentelemetry-micrometer1-shim") {
-    // just get the instrumentation, without micrometer itself
-    exclude("io.micrometer", "micrometer-core")
-  }
+  implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
+
+  testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
 }
 
 tasks {

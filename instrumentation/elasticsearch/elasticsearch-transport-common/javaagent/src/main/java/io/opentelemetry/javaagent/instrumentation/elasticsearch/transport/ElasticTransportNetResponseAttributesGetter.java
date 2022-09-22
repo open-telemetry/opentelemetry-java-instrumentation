@@ -21,26 +21,38 @@ public class ElasticTransportNetResponseAttributesGetter
   @Override
   @Nullable
   public String peerName(ElasticTransportRequest request, @Nullable ActionResponse response) {
-    if (response != null && response.remoteAddress() != null) {
-      return response.remoteAddress().getHost();
-    }
     return null;
   }
 
   @Override
   @Nullable
   public Integer peerPort(ElasticTransportRequest request, @Nullable ActionResponse response) {
-    if (response != null && response.remoteAddress() != null) {
-      return response.remoteAddress().getPort();
-    }
     return null;
   }
 
   @Override
   @Nullable
-  public String peerIp(ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String sockPeerAddr(ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().getAddress();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerName(ElasticTransportRequest request, @Nullable ActionResponse response) {
+    if (response != null && response.remoteAddress() != null) {
+      return response.remoteAddress().getHost();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(ElasticTransportRequest request, @Nullable ActionResponse response) {
+    if (response != null && response.remoteAddress() != null) {
+      return response.remoteAddress().getPort();
     }
     return null;
   }

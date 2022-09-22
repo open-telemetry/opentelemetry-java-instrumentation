@@ -136,6 +136,7 @@ testing {
       implementation("org.junit.jupiter:junit-jupiter-params")
       runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
       runtimeOnly("org.junit.vintage:junit-vintage-engine")
+      implementation("org.junit-pioneer:junit-pioneer")
 
 
       implementation("org.assertj:assertj-core")
@@ -234,7 +235,7 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   if (otelJava.minJavaVersionSupported.get().compareTo(version) > 0) {
     return false
   }
-  if (otelJava.maxJavaVersionForTests.isPresent() && otelJava.maxJavaVersionForTests.get().compareTo(version) < 0) {
+  if (otelJava.maxJavaVersionForTests.isPresent && otelJava.maxJavaVersionForTests.get().compareTo(version) < 0) {
     return false
   }
   return true
@@ -352,8 +353,8 @@ checkstyle {
 
 idea {
   module {
-    setDownloadJavadoc(false)
-    setDownloadSources(false)
+    isDownloadJavadoc = false
+    isDownloadSources = false
   }
 }
 
@@ -364,7 +365,7 @@ when (projectDir.name) {
     // https://github.com/gradle/gradle/issues/847
     // In otel.publish-conventions, we set the maven group, which is what matters, to the correct
     // value.
-    group = "io.opentelemetry.${projectDir.parentFile.name}"
+    group = "io.opentelemetry.dummy.${projectDir.parentFile.name}"
   }
 }
 

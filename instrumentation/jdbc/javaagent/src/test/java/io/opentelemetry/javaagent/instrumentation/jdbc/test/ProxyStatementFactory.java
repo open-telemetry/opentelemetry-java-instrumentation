@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.sql.Statement;
 
-public class ProxyStatementFactory {
+public final class ProxyStatementFactory {
 
   public static Statement proxyStatement(Statement statement) throws Exception {
     TestClassLoader classLoader = new TestClassLoader(ProxyStatementFactory.class.getClassLoader());
@@ -33,4 +33,6 @@ public class ProxyStatementFactory {
 
     return proxyStatement;
   }
+
+  private ProxyStatementFactory() {}
 }

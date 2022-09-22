@@ -16,7 +16,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
+import java.util.List;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.common.message.MessageExt;
 
@@ -26,6 +29,7 @@ class RocketMqInstrumenterFactory {
 
   static Instrumenter<SendMessageContext, Void> createProducerInstrumenter(
       OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled) {
 
@@ -37,7 +41,8 @@ class RocketMqInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
-            .addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation));
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(getter, operation, capturedHeaders));
     if (captureExperimentalSpanAttributes) {
       instrumenterBuilder.addAttributesExtractor(
           RocketMqProducerExperimentalAttributeExtractor.INSTANCE);
@@ -52,6 +57,7 @@ class RocketMqInstrumenterFactory {
 
   static RocketMqConsumerInstrumenter createConsumerInstrumenter(
       OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled) {
 
@@ -63,14 +69,23 @@ class RocketMqInstrumenterFactory {
 
     return new RocketMqConsumerInstrumenter(
         createProcessInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes, propagationEnabled, false),
+            openTelemetry,
+            capturedHeaders,
+            captureExperimentalSpanAttributes,
+            propagationEnabled,
+            false),
         createProcessInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes, propagationEnabled, true),
+            openTelemetry,
+            capturedHeaders,
+            captureExperimentalSpanAttributes,
+            propagationEnabled,
+            true),
         batchReceiveInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer()));
   }
 
   private static Instrumenter<MessageExt, Void> createProcessInstrumenter(
       OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled,
       boolean batch) {
@@ -84,7 +99,8 @@ class RocketMqInstrumenterFactory {
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operation));
 
-    builder.addAttributesExtractor(MessagingAttributesExtractor.create(getter, operation));
+    builder.addAttributesExtractor(
+        buildMessagingAttributesExtractor(getter, operation, capturedHeaders));
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(RocketMqConsumerExperimentalAttributeExtractor.INSTANCE);
     }
@@ -95,7 +111,7 @@ class RocketMqInstrumenterFactory {
 
     if (batch) {
       SpanLinksExtractor<MessageExt> spanLinksExtractor =
-          SpanLinksExtractor.extractFromRequest(
+          new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
               TextMapExtractAdapter.INSTANCE);
 
@@ -107,7 +123,18 @@ class RocketMqInstrumenterFactory {
     }
   }
 
+  private static <T> MessagingAttributesExtractor<T, Void> buildMessagingAttributesExtractor(
+      MessagingAttributesGetter<T, Void> getter,
+      MessageOperation operation,
+      List<String> capturedHeaders) {
+    return MessagingAttributesExtractor.builder(getter, operation)
+        .setCapturedHeaders(capturedHeaders)
+        .build();
+  }
+
   private static String spanNameOnReceive(Void unused) {
     return "multiple_sources receive";
   }
+
+  private RocketMqInstrumenterFactory() {}
 }

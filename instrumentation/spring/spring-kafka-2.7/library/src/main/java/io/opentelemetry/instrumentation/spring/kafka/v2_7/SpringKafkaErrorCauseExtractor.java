@@ -16,6 +16,6 @@ enum SpringKafkaErrorCauseExtractor implements ErrorCauseExtractor {
     if (error instanceof ListenerExecutionFailedException && error.getCause() != null) {
       error = error.getCause();
     }
-    return ErrorCauseExtractor.jdk().extract(error);
+    return ErrorCauseExtractor.getDefault().extract(error);
   }
 }

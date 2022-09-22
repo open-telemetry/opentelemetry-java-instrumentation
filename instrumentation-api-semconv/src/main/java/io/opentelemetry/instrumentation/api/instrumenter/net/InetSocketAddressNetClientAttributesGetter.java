@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -20,32 +21,27 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
     implements NetClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
-  public abstract InetSocketAddress getAddress(REQUEST request, @Nullable RESPONSE response);
+  protected abstract InetSocketAddress getPeerSocketAddress(
+      REQUEST request, @Nullable RESPONSE response);
 
-  @Override
   @Nullable
-  public final String peerName(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  @Override
+  public String sockFamily(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
-    return address.getHostString();
+    InetAddress remoteAddress = address.getAddress();
+    if (remoteAddress instanceof Inet6Address) {
+      return "inet6";
+    }
+    return null;
   }
 
   @Override
   @Nullable
-  public final Integer peerPort(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
-    if (address == null) {
-      return null;
-    }
-    return address.getPort();
-  }
-
-  @Override
-  @Nullable
-  public final String peerIp(REQUEST request, @Nullable RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  public final String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getPeerSocketAddress(request, response);
     if (address == null) {
       return null;
     }
@@ -54,5 +50,25 @@ public abstract class InetSocketAddressNetClientAttributesGetter<REQUEST, RESPON
       return remoteAddress.getHostAddress();
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getPeerSocketAddress(request, response);
+    if (address == null) {
+      return null;
+    }
+    return address.getHostString();
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    InetSocketAddress address = getPeerSocketAddress(request, response);
+    if (address == null) {
+      return null;
+    }
+    return address.getPort();
   }
 }

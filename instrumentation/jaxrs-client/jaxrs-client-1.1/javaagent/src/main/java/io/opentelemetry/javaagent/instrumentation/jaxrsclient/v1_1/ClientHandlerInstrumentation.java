@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.JaxRsClientSingletons.instrumenter;
@@ -39,8 +38,8 @@ public class ClientHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handle")
-            .and(takesArgument(0, extendsClass(named("com.sun.jersey.api.client.ClientRequest"))))
-            .and(returns(extendsClass(named("com.sun.jersey.api.client.ClientResponse")))),
+            .and(takesArgument(0, named("com.sun.jersey.api.client.ClientRequest")))
+            .and(returns(named("com.sun.jersey.api.client.ClientResponse"))),
         this.getClass().getName() + "$HandleAdvice");
   }
 

@@ -1,7 +1,5 @@
 plugins {
-  id("java-platform")
-
-  id("otel.publish-conventions")
+  id("otel.bom-conventions")
 }
 
 description = "OpenTelemetry Instrumentation Bill of Materials (Alpha)"
@@ -17,17 +15,7 @@ val otelVersion: String by project
 dependencies {
   api(platform("io.opentelemetry:opentelemetry-bom:${otelVersion}"))
   api(platform("io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha"))
+  api(platform(project(":bom")))
 }
 
-dependencies {
-  constraints {
-    rootProject.subprojects {
-      val proj = this
-      if (!proj.name.startsWith("bom") && proj.name != "javaagent") {
-        proj.plugins.withId("maven-publish") {
-          api(proj)
-        }
-      }
-    }
-  }
-}
+otelBom.projectFilter.set { it.findProperty("otel.stable") != "true" }

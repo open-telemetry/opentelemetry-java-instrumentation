@@ -46,3 +46,9 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}

@@ -9,8 +9,9 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
 import spock.lang.Unroll
+
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
@@ -267,8 +268,11 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         hasNoParent()
       }
       attributes {
-        "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$SemanticAttributes.NET_PEER_PORT" Long
+        "net.host.name" fullUrl.host
+        "net.host.port" fullUrl.port
+        "net.sock.peer.addr" "127.0.0.1"
+        "net.sock.peer.port" Long
+        "net.sock.host.addr" "127.0.0.1"
         "$SemanticAttributes.HTTP_SCHEME" fullUrl.getScheme()
         "$SemanticAttributes.HTTP_HOST" fullUrl.getHost() + ":" + fullUrl.getPort()
         "$SemanticAttributes.HTTP_TARGET" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")

@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitt
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.tooling.config.ConfigurationFileLoader;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
@@ -17,7 +18,7 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.util.Arrays;
 
-public class OpenTelemetryInstaller {
+public final class OpenTelemetryInstaller {
 
   /**
    * Install the {@link OpenTelemetrySdk} using autoconfigure, and return the {@link
@@ -25,13 +26,11 @@ public class OpenTelemetryInstaller {
    *
    * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
-  @SuppressWarnings("deprecation") // Config usage, to be removed
-  static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(
-      io.opentelemetry.instrumentation.api.config.Config config) {
+  static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk() {
     AutoConfiguredOpenTelemetrySdkBuilder builder =
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal(true)
-            .addPropertiesSupplier(config::getAllProperties);
+            .addPropertiesSupplier(new ConfigurationFileLoader());
 
     ClassLoader classLoader = AgentInitializer.getExtensionsClassLoader();
     if (classLoader != null) {
@@ -58,4 +57,6 @@ public class OpenTelemetryInstaller {
 
     return autoConfiguredSdk;
   }
+
+  private OpenTelemetryInstaller() {}
 }

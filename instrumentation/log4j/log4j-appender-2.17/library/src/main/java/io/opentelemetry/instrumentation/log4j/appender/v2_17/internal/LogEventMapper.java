@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
+import io.opentelemetry.instrumentation.api.appender.internal.LogRecordBuilder;
 import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -57,7 +57,7 @@ public final class LogEventMapper<T> {
   }
 
   /**
-   * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
+   * Map the {@link LogEvent} data model onto the {@link LogRecordBuilder}. Unmapped fields include:
    *
    * <ul>
    *   <li>Fully qualified class name - {@link LogEvent#getLoggerFqcn()}
@@ -69,7 +69,7 @@ public final class LogEventMapper<T> {
    * </ul>
    */
   public void mapLogEvent(
-      LogBuilder builder,
+      LogRecordBuilder builder,
       Message message,
       Level level,
       @Nullable Throwable throwable,
@@ -96,13 +96,13 @@ public final class LogEventMapper<T> {
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
     }
 
-    builder.setAttributes(attributes.build());
+    builder.setAllAttributes(attributes.build());
 
     builder.setContext(Context.current());
   }
 
   // visible for testing
-  void captureMessage(LogBuilder builder, AttributesBuilder attributes, Message message) {
+  void captureMessage(LogRecordBuilder builder, AttributesBuilder attributes, Message message) {
     if (message == null) {
       return;
     }

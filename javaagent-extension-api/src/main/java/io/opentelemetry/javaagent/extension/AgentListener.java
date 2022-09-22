@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.extension;
 
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
@@ -22,25 +23,6 @@ public interface AgentListener extends Ordered {
   /**
    * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed
    * on an {@link Instrumentation}.
-   *
-   * @deprecated Implement {{@link #afterAgent(AutoConfiguredOpenTelemetrySdk)}} instead.
    */
-  @Deprecated
-  default void afterAgent(
-      io.opentelemetry.instrumentation.api.config.Config config,
-      AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in a future release;"
-            + " implement AgentListener#afterAgent(AutoConfiguredOpenTelemetrySdk) instead");
-  }
-
-  /**
-   * Runs after instrumentations are added to {@link AgentBuilder} and after the agent is installed
-   * on an {@link Instrumentation}.
-   */
-  @SuppressWarnings("deprecation") // Config usage, to be removed
-  default void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    afterAgent(
-        io.opentelemetry.instrumentation.api.config.Config.get(), autoConfiguredOpenTelemetrySdk);
-  }
+  void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk);
 }

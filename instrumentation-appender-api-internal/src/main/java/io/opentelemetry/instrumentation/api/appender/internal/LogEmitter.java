@@ -11,7 +11,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * A {@link LogEmitter} is the entry point into a log pipeline.
  *
  * <p>Obtain a log builder via {@link #logBuilder()}, add properties using the setters, and emit it
- * via {@link LogBuilder#emit()}.
+ * via {@link LogRecordBuilder#emit()}.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -19,6 +19,6 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public interface LogEmitter {
 
-  /** Return a new {@link LogBuilder} to emit a log. */
-  LogBuilder logBuilder();
+  /** Return a new {@link LogRecordBuilder} to emit a log. */
+  LogRecordBuilder logBuilder();
 }

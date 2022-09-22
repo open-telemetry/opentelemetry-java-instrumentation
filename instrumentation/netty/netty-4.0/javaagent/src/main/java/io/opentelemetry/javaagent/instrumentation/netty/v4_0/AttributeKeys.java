@@ -58,4 +58,6 @@ public class AttributeKeys {
     ConcurrentMap<String, AttributeKey<?>> classLoaderMap = mapSupplier.get(AttributeKey.class);
     return (AttributeKey<T>) classLoaderMap.computeIfAbsent(key, AttributeKey::new);
   }
+
+  private AttributeKeys() {}
 }

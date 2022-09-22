@@ -551,19 +551,32 @@ public abstract class AbstractHttpServerTest<SERVER> {
                 .containsEntry(
                     SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
           }
-          if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+
+          // TODO: Move to test knob rather than always treating as optional
+          if (attrs.get(SemanticAttributes.NET_HOST_NAME) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_NAME, "localhost");
+          }
+          if (attrs.get(SemanticAttributes.NET_HOST_PORT) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_PORT, port);
+          }
+          if (attrs.get(AttributeKey.longKey("net.sock.peer.port")) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.NET_PEER_PORT,
+                    AttributeKey.longKey("net.sock.peer.port"),
                     value ->
                         assertThat(value)
                             .isInstanceOf(Long.class)
                             .isNotEqualTo(Long.valueOf(port)));
           }
-          if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)
-              || attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
+          if (attrs.get(AttributeKey.stringKey("net.sock.peer.addr")) != null) {
             assertThat(attrs)
-                .containsEntry(SemanticAttributes.NET_PEER_IP, options.peerIp.apply(endpoint));
+                .containsEntry(
+                    AttributeKey.stringKey("net.sock.peer.addr"),
+                    options.sockPeerAddr.apply(endpoint));
+          }
+          if (attrs.get(AttributeKey.stringKey("net.sock.host.addr")) != null) {
+            assertThat(attrs)
+                .containsEntry(AttributeKey.stringKey("net.sock.host.addr"), "127.0.0.1");
           }
 
           assertThat(attrs)
@@ -595,19 +608,17 @@ public abstract class AbstractHttpServerTest<SERVER> {
                         + (endpoint == QUERY_PARAM ? "?" + endpoint.body : ""));
           }
 
-          if (httpAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)
-              || attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
+          if (attrs.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
                     SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-                    entry -> assertThat(entry).isInstanceOf(Long.class));
+                    entry -> assertThat(entry).isNotNegative());
           }
-          if (httpAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)
-              || attrs.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH) != null) {
+          if (attrs.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
                     SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                    entry -> assertThat(entry).isInstanceOf(Long.class));
+                    entry -> assertThat(entry).isNotNegative());
           }
           if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
             assertThat(attrs)
@@ -615,10 +626,8 @@ public abstract class AbstractHttpServerTest<SERVER> {
                     SemanticAttributes.HTTP_SERVER_NAME,
                     entry -> assertThat(entry).isInstanceOf(String.class));
           }
-          if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
-            if (expectedRoute != null) {
-              assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
-            }
+          if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE) && expectedRoute != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
           }
 
           if (endpoint == CAPTURE_HEADERS) {

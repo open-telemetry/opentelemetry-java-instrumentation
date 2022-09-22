@@ -55,19 +55,16 @@ public enum JdbcConnectionUrlParser {
         if (!path.isEmpty()) {
           builder.db(path);
         }
-
         if (uri.getHost() != null) {
           builder.host(uri.getHost());
         }
-
         if (uri.getPort() > 0) {
           builder.port(uri.getPort());
         }
-
-        return builder.system(uri.getScheme());
       } catch (Exception e) {
-        return builder;
+        logger.log(FINE, e.getMessage(), e);
       }
+      return builder;
     }
   },
 
@@ -629,13 +626,13 @@ public enum JdbcConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystemValues.H2).subtype("tcp");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).subtype("tcp");
       } else if (h2Url.startsWith("ssl:")) {
         DbInfo dbInfo = builder.build();
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystemValues.H2).subtype("ssl");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).subtype("ssl");
       } else {
         builder.subtype("file").host(null).port(null);
         int propLoc = h2Url.indexOf(";");
@@ -688,22 +685,22 @@ public enum JdbcConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system("hsqldb").subtype("hsql");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).subtype("hsql");
       } else if (hsqlUrl.startsWith("hsqls:")) {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system("hsqldb").subtype("hsqls");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).subtype("hsqls");
       } else if (hsqlUrl.startsWith("http:")) {
         if (dbInfo.getPort() == null) {
           builder.port(80);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system("hsqldb").subtype("http");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).subtype("http");
       } else if (hsqlUrl.startsWith("https:")) {
         if (dbInfo.getPort() == null) {
           builder.port(443);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system("hsqldb").subtype("https");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).subtype("https");
       } else {
         builder.subtype("mem").host(null).port(null);
         instance = hsqlUrl;
@@ -791,6 +788,35 @@ public enum JdbcConnectionUrlParser {
         builder.host(host);
       }
       return builder.name(instance);
+    }
+  },
+
+  DATADIRECT("datadirect", "tibcosoftware") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      int typeEndIndex = jdbcUrl.indexOf(':');
+      int subtypeEndIndex = jdbcUrl.indexOf(':', typeEndIndex + 1);
+
+      if (subtypeEndIndex == -1) {
+        return builder;
+      }
+
+      String subtype = jdbcUrl.substring(typeEndIndex + 1, subtypeEndIndex);
+      builder.subtype(subtype);
+
+      if (subtype.equals("sqlserver")) {
+        builder.system(DbSystemValues.MSSQL);
+      } else if (subtype.equals("oracle")) {
+        builder.system(DbSystemValues.ORACLE);
+      } else if (subtype.equals("mysql")) {
+        builder.system(DbSystemValues.MYSQL);
+      } else if (subtype.equals("postgresql")) {
+        builder.system(DbSystemValues.POSTGRESQL);
+      } else if (subtype.equals("db2")) {
+        builder.system(DbSystemValues.DB2);
+      }
+
+      return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
     }
   };
 
@@ -969,6 +995,8 @@ public enum JdbcConnectionUrlParser {
       case "microsoft":
       case "sqlserver": // Microsoft SQL Server
         return DbSystemValues.MSSQL;
+      case "sap": // SAP Hana
+        return DbSystemValues.HANADB;
       default:
         return DbSystemValues.OTHER_SQL; // Unknown DBMS
     }

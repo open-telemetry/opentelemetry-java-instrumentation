@@ -6,9 +6,6 @@
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.Callable
-import java.util.concurrent.CompletionStage
-import java.util.concurrent.TimeUnit
 import org.redisson.Redisson
 import org.redisson.api.RBucket
 import org.redisson.api.RFuture
@@ -19,6 +16,10 @@ import org.redisson.config.Config
 import org.redisson.config.SingleServerConfig
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
+
+import java.util.concurrent.Callable
+import java.util.concurrent.CompletionStage
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
@@ -77,10 +78,10 @@ abstract class AbstractRedissonAsyncClientTest extends AgentInstrumentationSpeci
           name "SET"
           kind CLIENT
           attributes {
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" "localhost"
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION" "SET"
           }
@@ -117,10 +118,10 @@ abstract class AbstractRedissonAsyncClientTest extends AgentInstrumentationSpeci
           kind CLIENT
           childOf(span(0))
           attributes {
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" "localhost"
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
-            "$SemanticAttributes.NET_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "SADD set1 ?"
             "$SemanticAttributes.DB_OPERATION" "SADD"
           }

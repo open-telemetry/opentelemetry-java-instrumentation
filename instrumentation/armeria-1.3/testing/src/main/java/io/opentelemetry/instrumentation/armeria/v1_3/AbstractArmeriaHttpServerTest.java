@@ -194,8 +194,6 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
     options.setHttpAttributes(
         endpoint -> {
           Set<AttributeKey<?>> keys = new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          keys.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
-          keys.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
           keys.add(SemanticAttributes.HTTP_SERVER_NAME);
           return keys;
         });

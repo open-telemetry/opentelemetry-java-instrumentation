@@ -30,19 +30,7 @@ final class OkHttp2HttpAttributesGetter implements HttpClientAttributesGetter<Re
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  public Integer statusCode(Request request, Response response) {
+  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
     return response.code();
   }
 
@@ -62,17 +50,6 @@ final class OkHttp2HttpAttributesGetter implements HttpClientAttributesGetter<Re
       case SPDY_3:
         return SemanticAttributes.HttpFlavorValues.SPDY;
     }
-    return null;
-  }
-
-  @Override
-  public Long responseContentLength(Request request, Response response) {
-    return response.body().contentLength();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(Request request, Response response) {
     return null;
   }
 

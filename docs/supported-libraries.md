@@ -60,7 +60,7 @@ These are the supported libraries and frameworks:
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                         | 1.6+                          |
 | [Guava ListenableFuture](https://guava.dev/releases/snapshot/api/docs/com/google/common/util/concurrent/ListenableFuture.html)    | 10.0+                         |
 | [GWT](http://www.gwtproject.org/)                                                                                                 | 2.0+                          |
-| [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                           | 3.3+                          |
+| [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                           | 3.3+ (not including 6.x yet)  |
 | [HikariCP](https://github.com/brettwooldridge/HikariCP)                                                                           | 3.0+                          |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                 | Java 8+                       |
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                     | 1.4+                          |
@@ -135,7 +135,7 @@ These are the application servers that the smoke tests are run against:
 | [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
 | [TomEE](https://tomee.apache.org/)                                                        | 7.x, 8.x                    | OpenJDK 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
 | [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.x, 21.x                  | OpenJDK 8         | Ubuntu 18, Windows Server 2019 |
-| [Websphere Traditional](https://www.ibm.com/cloud/websphere-application-server)           | 8.5.5.x, 9.0.x              | IBM JDK 8         | Red Hat Enterprise Linux 8.4   |
+| [Websphere Traditional](https://www.ibm.com/uk-en/cloud/websphere-application-server)     | 8.5.5.x, 9.0.x              | IBM JDK 8         | Red Hat Enterprise Linux 8.4   |
 | [WildFly](https://www.wildfly.org/)                                                       | 13.x                        | OpenJDK 8         | Ubuntu 18, Windows Server 2019 |
 | [WildFly](https://www.wildfly.org/)                                                       | 17.x, 21.x, 25.x            | OpenJDK 8, 11, 17 | Ubuntu 18, Windows Server 2019 |
 

@@ -9,8 +9,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.javaagent.extension.Ordered;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,11 +30,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * java.util.ServiceLoader} for more details.
  */
 public abstract class InstrumentationModule implements Ordered {
-
-  @SuppressWarnings("deprecation") // Config usage, to be removed
-  private static final boolean DEFAULT_ENABLED =
-      io.opentelemetry.instrumentation.api.config.Config.get()
-          .getBoolean("otel.instrumentation.common.default-enabled", true);
 
   private final Set<String> instrumentationNames;
 
@@ -85,20 +80,9 @@ public abstract class InstrumentationModule implements Ordered {
   /**
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
-   *
-   * @deprecated Use {@link #defaultEnabled(ConfigProperties)} instead.
-   */
-  @Deprecated
-  public boolean defaultEnabled() {
-    return DEFAULT_ENABLED;
-  }
-
-  /**
-   * Allows instrumentation modules to disable themselves by default, or to additionally disable
-   * themselves on some other condition.
    */
   public boolean defaultEnabled(ConfigProperties config) {
-    return defaultEnabled();
+    return config.getBoolean("otel.instrumentation.common.default-enabled", true);
   }
 
   /**

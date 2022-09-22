@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.testing.exporter;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class AgentTestingExporterFactory {
+public final class AgentTestingExporterFactory {
 
   static final OtlpInMemorySpanExporter spanExporter = new OtlpInMemorySpanExporter();
   static final OtlpInMemoryMetricExporter metricExporter = new OtlpInMemoryMetricExporter();
@@ -38,4 +38,6 @@ public class AgentTestingExporterFactory {
   public static boolean forceFlushCalled() {
     return AgentTestingCustomizer.spanProcessor.forceFlushCalled;
   }
+
+  private AgentTestingExporterFactory() {}
 }
