@@ -71,7 +71,8 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
 
   def "test apache dubbo base #dubbo"() {
     setup:
-    def port = PortUtils.findOpenPort()
+    def port = PortUtils.findOpenPorts(2)
+    def middlePort = port + 1
     def protocolConfig = new ProtocolConfig()
     protocolConfig.setPort(port)
 
