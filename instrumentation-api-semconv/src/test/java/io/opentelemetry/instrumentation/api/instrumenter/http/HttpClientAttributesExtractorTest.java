@@ -20,8 +20,8 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -116,9 +116,10 @@ class HttpClientAttributesExtractorTest {
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));
   }
+
   @ParameterizedTest
   @MethodSource("stripUrlArguments")
-  public void stripBasicAuthTest(String url, String expectedResult) {
+  void stripBasicAuthTest(String url, String expectedResult) {
     Map<String, String> request = new HashMap<>();
     request.put("url", url);
 
@@ -128,24 +129,12 @@ class HttpClientAttributesExtractorTest {
   private static Stream<Arguments> stripUrlArguments() {
     return Stream.of(
         arguments("https://user1:secret@github.com", "https://github.com"),
+        arguments("https://user1:secret@github.com/path/", "https://github.com/path/"),
+        arguments("https://user1:secret@github.com#test.html", "https://github.com#test.html"),
         arguments("https://user1:secret@github.com?foo=b@r", "https://github.com?foo=b@r"),
-        arguments("user1:secret@github.com", "github.com")
-    );
-  }
-  @Test
-  public void stripBasicAuthWithQueryParamTest() {
-    Map<String, String> request = new HashMap<>();
-    request.put("url", "https://user1:secret@github.com?foo=b@r");
-
-    stripRequestTest(request, "https://github.com?foo=b@r");
-  }
-
-  @Test
-  public void stripBasicAuthWithoutSchemeTest() {
-    Map<String, String> request = new HashMap<>();
-    request.put("url", "user1:secret@github.com");
-
-    stripRequestTest(request, "github.com");
+        arguments(
+            "https://user1:secret@github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
+        arguments("user1:secret@github.com", "github.com"));
   }
 
   private static void stripRequestTest(Map<String, String> request, String expected) {
