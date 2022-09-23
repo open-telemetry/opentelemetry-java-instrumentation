@@ -61,6 +61,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     configureMQProducer(producer)
     consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", tracingMessageListener)
     configureMQPushConsumer(consumer)
+
+    // for RocketMQ 5.x wait a bit to ensure that consumer is properly started up
+    if (Boolean.getBoolean("testLatestDeps")) {
+      Thread.sleep(30_000)
+    }
   }
 
   def cleanupSpec() {
