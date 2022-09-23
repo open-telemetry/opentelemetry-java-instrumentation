@@ -35,6 +35,10 @@ final class TracingFilter implements Filter {
     }
 
     RpcContext rpcContext = RpcContext.getContext();
+    if (rpcContext.getUrl() == null) {
+      return invoker.invoke(invocation);
+    }
+
     boolean isServer = rpcContext.isProviderSide();
     Instrumenter<DubboRequest, Result> instrumenter =
         isServer ? serverInstrumenter : clientInstrumenter;
