@@ -82,7 +82,6 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
       .protocol(protocolConfig)
       .start()
 
-    def middlePort = PortUtils.findOpenPort()
     def middleProtocolConfig = new ProtocolConfig()
     middleProtocolConfig.setPort(middlePort)
 
