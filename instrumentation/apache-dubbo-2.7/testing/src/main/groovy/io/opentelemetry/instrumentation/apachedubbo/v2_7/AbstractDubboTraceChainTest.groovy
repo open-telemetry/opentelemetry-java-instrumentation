@@ -106,10 +106,8 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
 
     when:
     GenericService genericService = middleReference.get()
-    def o = new Object[1]
-    o[0] = "hello"
     def response = runWithSpan("parent") {
-      genericService.$invoke("hello", [String.getName()] as String[], o)
+      genericService.$invoke("hello", [String.getName()] as String[], ["hello"] as Object[])
     }
 
     then:
