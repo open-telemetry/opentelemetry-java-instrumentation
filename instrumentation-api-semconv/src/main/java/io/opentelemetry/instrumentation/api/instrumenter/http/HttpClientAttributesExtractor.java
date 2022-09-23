@@ -63,22 +63,40 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       return url;
     }
 
+    int schemeEndIndex = url.indexOf(':');
+
+    if (schemeEndIndex == -1) {
+      // not a valid url
+      return null;
+    }
+
+    int len = url.length();
+    if (len <= schemeEndIndex + 2
+        || url.charAt(schemeEndIndex + 1) != '/'
+        || url.charAt(schemeEndIndex + 2) != '/') {
+      // has no authority component
+      return null;
+    }
+
+    // look for the end of the host:
+    //   ':' ==> start of port, or
+    //   '/', '?', '#' ==> start of path
+    int index;
+    for (index = schemeEndIndex + 3; index < len; index++) {
+      char c = url.charAt(index);
+      if (c == '/' || c == '?' || c == '#') {
+        break;
+      }
+    }
+
     int atIndex = url.indexOf("@");
     int questionMarkIndex = url.indexOf("?");
 
     // '@' char is present and is not a query param
-    if (atIndex == -1 || (questionMarkIndex != -1 && atIndex > questionMarkIndex)) {
+    if (atIndex == -1 || (questionMarkIndex != -1 && atIndex > index)) {
       return url;
     }
-
-    int doubleSlash = url.indexOf("//");
-
-    // No scheme present
-    if (doubleSlash == -1) {
-      return url.substring(atIndex + 1);
-    } else {
-      return url.substring(0, doubleSlash + 2) + url.substring(atIndex + 1);
-    }
+    return url.substring(0, schemeEndIndex + 3) + url.substring(atIndex + 1);
   }
 
   @Override
