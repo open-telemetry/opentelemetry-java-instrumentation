@@ -23,4 +23,6 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
+
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
