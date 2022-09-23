@@ -57,7 +57,7 @@ val CORE_DEPENDENCIES = listOf(
   "org.openjdk.jmh:jmh-generator-bytecode:1.35",
   "org.mockito:mockito-core:4.8.0",
   "org.mockito:mockito-junit-jupiter:4.8.0",
-  "org.mockito:mockito-inline:4.7.0",
+  "org.mockito:mockito-inline:4.8.0",
   "org.slf4j:slf4j-api:1.7.36",
   "org.slf4j:slf4j-simple:1.7.36",
   "org.slf4j:log4j-over-slf4j:1.7.36",
