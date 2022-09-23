@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation("org.yaml:snakeyaml:1.30")
+  implementation("org.yaml:snakeyaml")
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 
