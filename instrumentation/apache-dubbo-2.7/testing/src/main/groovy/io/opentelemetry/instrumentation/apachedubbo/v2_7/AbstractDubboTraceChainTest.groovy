@@ -69,7 +69,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
     return service
   }
 
-  def "test apache dubbo base #dubbo"() {
+  def "test that context is propagated correctly in chained dubbo calls"() {
     setup:
     def port = PortUtils.findOpenPorts(2)
     def middlePort = port + 1
