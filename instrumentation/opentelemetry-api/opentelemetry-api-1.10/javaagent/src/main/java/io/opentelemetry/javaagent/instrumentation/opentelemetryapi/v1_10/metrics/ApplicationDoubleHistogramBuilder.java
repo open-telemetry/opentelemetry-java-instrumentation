@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import application.io.opentelemetry.api.metrics.DoubleHistogram;
 import application.io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
 final class ApplicationDoubleHistogramBuilder implements DoubleHistogramBuilder {
 
@@ -19,12 +20,14 @@ final class ApplicationDoubleHistogramBuilder implements DoubleHistogramBuilder 
   }
 
   @Override
+  @CanIgnoreReturnValue
   public DoubleHistogramBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public DoubleHistogramBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;

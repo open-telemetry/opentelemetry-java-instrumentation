@@ -18,6 +18,7 @@ import java.io.StringWriter;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
@@ -35,10 +36,13 @@ public final class LogEventMapper<T> {
   private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
       Cache.bounded(100);
 
+  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("log4j.marker");
+
   private final ContextDataAccessor<T> contextDataAccessor;
 
   private final boolean captureExperimentalAttributes;
   private final boolean captureMapMessageAttributes;
+  private final boolean captureMarkerAttribute;
   private final List<String> captureContextDataAttributes;
   private final boolean captureAllContextDataAttributes;
 
@@ -46,11 +50,13 @@ public final class LogEventMapper<T> {
       ContextDataAccessor<T> contextDataAccessor,
       boolean captureExperimentalAttributes,
       boolean captureMapMessageAttributes,
+      boolean captureMarkerAttribute,
       List<String> captureContextDataAttributes) {
 
     this.contextDataAccessor = contextDataAccessor;
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
+    this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
@@ -72,12 +78,20 @@ public final class LogEventMapper<T> {
       LogRecordBuilder builder,
       Message message,
       Level level,
+      @Nullable Marker marker,
       @Nullable Throwable throwable,
       T contextData) {
 
     AttributesBuilder attributes = Attributes.builder();
 
     captureMessage(builder, attributes, message);
+
+    if (captureMarkerAttribute) {
+      if (marker != null) {
+        String markerName = marker.getName();
+        attributes.put(LOG_MARKER, markerName);
+      }
+    }
 
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));

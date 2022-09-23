@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
@@ -33,6 +34,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     return new ServletInstrumenterBuilder<>();
   }
 
+  @CanIgnoreReturnValue
   public ServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer) {
     contextCustomizers.add(contextCustomizer);

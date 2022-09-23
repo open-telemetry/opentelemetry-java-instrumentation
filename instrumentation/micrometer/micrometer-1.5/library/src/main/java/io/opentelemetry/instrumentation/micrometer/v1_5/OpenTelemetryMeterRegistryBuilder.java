@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.config.NamingConvention;
@@ -27,12 +28,14 @@ public final class OpenTelemetryMeterRegistryBuilder {
   }
 
   /** Sets a custom {@link Clock}. Useful for testing. */
+  @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setClock(Clock clock) {
     this.clock = clock;
     return this;
   }
 
   /** Sets the base time unit. */
+  @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setBaseTimeUnit(TimeUnit baseTimeUnit) {
     this.baseTimeUnit = baseTimeUnit;
     return this;
@@ -45,6 +48,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
    *
    * <p>Set this to {@code true} if you are using the Prometheus metrics exporter.
    */
+  @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setPrometheusMode(boolean prometheusMode) {
     this.prometheusMode = prometheusMode;
     return this;

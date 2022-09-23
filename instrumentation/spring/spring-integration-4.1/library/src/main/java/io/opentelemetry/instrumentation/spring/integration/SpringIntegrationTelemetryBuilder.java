@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.integration;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -37,6 +38,7 @@ public final class SpringIntegrationTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @CanIgnoreReturnValue
   public SpringIntegrationTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<MessageWithChannel, Void> attributesExtractor) {
     additionalAttributeExtractors.add(attributesExtractor);
@@ -48,6 +50,7 @@ public final class SpringIntegrationTelemetryBuilder {
    *
    * @param capturedHeaders A list of messaging header names.
    */
+  @CanIgnoreReturnValue
   public SpringIntegrationTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
     this.capturedHeaders = capturedHeaders;
     return this;
@@ -57,6 +60,7 @@ public final class SpringIntegrationTelemetryBuilder {
    * Sets whether additional {@link SpanKind#PRODUCER PRODUCER} span should be emitted by this
    * instrumentation.
    */
+  @CanIgnoreReturnValue
   public SpringIntegrationTelemetryBuilder setProducerSpanEnabled(boolean producerSpanEnabled) {
     this.producerSpanEnabled = producerSpanEnabled;
     return this;

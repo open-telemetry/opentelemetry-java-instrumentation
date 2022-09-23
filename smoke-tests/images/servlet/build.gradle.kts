@@ -17,18 +17,17 @@ val extraTag = findProperty("extraTag")
 // Dockerfile name, args key passes raw arguments to docker build
 val targets = mapOf(
   "jetty" to listOf(
-    // TODO (trask) remove Java 18 test once Java 19 is GA
-    ImageTarget(listOf("9.4.39"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), mapOf("sourceVersion" to "9.4.39.v20210325")),
+    ImageTarget(listOf("9.4.39"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("sourceVersion" to "9.4.39.v20210325")),
     ImageTarget(listOf("9.4.39"), listOf("openj9"), listOf("8", "11", "16"), mapOf("sourceVersion" to "9.4.39.v20210325")),
-    ImageTarget(listOf("10.0.7"), listOf("hotspot"), listOf("11", "17", "18", "19"), mapOf("sourceVersion" to "10.0.7")),
+    ImageTarget(listOf("10.0.7"), listOf("hotspot"), listOf("11", "17", "19", "20"), mapOf("sourceVersion" to "10.0.7")),
     ImageTarget(listOf("10.0.7"), listOf("openj9"), listOf("11", "16"), mapOf("sourceVersion" to "10.0.7")),
-    ImageTarget(listOf("11.0.7"), listOf("hotspot"), listOf("11", "17", "18", "19"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
+    ImageTarget(listOf("11.0.7"), listOf("hotspot"), listOf("11", "17", "19", "20"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
     ImageTarget(listOf("11.0.7"), listOf("openj9"), listOf("11", "16"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0")
   ),
   "liberty" to listOf(
     // running configure.sh is failing while building the image with Java 17
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "16"), mapOf("release" to "2020-11-11_0736")),
-    // running configure.sh is failing while building the image with Java 18
+    // running configure.sh is failing while building the image with Java 19
     ImageTarget(listOf("21.0.0.10"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900")),
     ImageTarget(listOf("21.0.0.10"), listOf("openj9"), listOf("8", "11", "16"), mapOf("release" to "2021-09-20_1900"))
   ),
@@ -37,22 +36,20 @@ val targets = mapOf(
     ImageTarget(listOf("5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11"))
   ),
   "tomcat" to listOf(
-    // TODO (trask) remove Java 18 test once Java 19 is GA
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
-    ImageTarget(listOf("8.5.72"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), mapOf("majorVersion" to "8")),
+    ImageTarget(listOf("8.5.72"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "8")),
     ImageTarget(listOf("8.5.72"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "8")),
-    ImageTarget(listOf("9.0.54"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), mapOf("majorVersion" to "9")),
+    ImageTarget(listOf("9.0.54"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "9")),
     ImageTarget(listOf("9.0.54"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("10.0.12"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(listOf("10.0.12"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "10"), "servlet-5.0"),
     ImageTarget(listOf("10.0.12"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "10"), "servlet-5.0")
   ),
   "tomee" to listOf(
-    // TODO (trask) remove Java 18 test once Java 19 is GA
     ImageTarget(listOf("7.0.9"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("8.0.8"), listOf("hotspot"), listOf("8", "11", "17", "18", "19")),
+    ImageTarget(listOf("8.0.8"), listOf("hotspot"), listOf("8", "11", "17", "19", "20")),
     ImageTarget(listOf("8.0.8"), listOf("openj9"), listOf("8", "11", "16")),
-    ImageTarget(listOf("9.0.0-M7"), listOf("hotspot"), listOf("8", "11", "17", "18", "19"), war = "servlet-5.0"),
+    ImageTarget(listOf("9.0.0-M7"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), war = "servlet-5.0"),
     ImageTarget(listOf("9.0.0-M7"), listOf("openj9"), listOf("8", "11", "16"), war = "servlet-5.0")
   ),
   "websphere" to listOf(
@@ -61,9 +58,8 @@ val targets = mapOf(
     ImageTarget(listOf("8.5.5.19", "9.0.5.9"), listOf("openj9"), listOf("8"), windows = false)
   ),
   "wildfly" to listOf(
-    // TODO (trask) remove Java 18 test once Java 19 is GA
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("hotspot"), listOf("8", "11", "17", "18", "19")),
+    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("hotspot"), listOf("8", "11", "17", "19", "20")),
     ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("openj9"), listOf("8", "11", "16"))
   )
 )
@@ -138,7 +134,7 @@ fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfil
   val image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   val jdkImage = if (vm == "hotspot") {
-    if (jdk == "19") {
+    if (jdk == "19" || jdk == "20") {
       "openjdk:$jdk"
     } else {
       "eclipse-temurin:$jdk"

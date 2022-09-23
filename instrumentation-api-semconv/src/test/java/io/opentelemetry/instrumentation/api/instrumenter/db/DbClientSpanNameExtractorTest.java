@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.db;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.junit.jupiter.api.Test;
@@ -24,8 +24,8 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(sqlAttributesGetter.rawStatement(dbRequest)).willReturn("SELECT * from table");
-    given(sqlAttributesGetter.name(dbRequest)).willReturn("database");
+    when(sqlAttributesGetter.rawStatement(dbRequest)).thenReturn("SELECT * from table");
+    when(sqlAttributesGetter.name(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
@@ -41,8 +41,8 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(sqlAttributesGetter.rawStatement(dbRequest)).willReturn("SELECT * from another.table");
-    given(sqlAttributesGetter.name(dbRequest)).willReturn("database");
+    when(sqlAttributesGetter.rawStatement(dbRequest)).thenReturn("SELECT * from another.table");
+    when(sqlAttributesGetter.name(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
@@ -58,7 +58,7 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(sqlAttributesGetter.rawStatement(dbRequest)).willReturn("SELECT * from table");
+    when(sqlAttributesGetter.rawStatement(dbRequest)).thenReturn("SELECT * from table");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
@@ -74,8 +74,8 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(dbAttributesGetter.operation(dbRequest)).willReturn("SELECT");
-    given(dbAttributesGetter.name(dbRequest)).willReturn("database");
+    when(dbAttributesGetter.operation(dbRequest)).thenReturn("SELECT");
+    when(dbAttributesGetter.name(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
@@ -91,7 +91,7 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(dbAttributesGetter.operation(dbRequest)).willReturn("SELECT");
+    when(dbAttributesGetter.operation(dbRequest)).thenReturn("SELECT");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
@@ -107,7 +107,7 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(dbAttributesGetter.name(dbRequest)).willReturn("database");
+    when(dbAttributesGetter.name(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 

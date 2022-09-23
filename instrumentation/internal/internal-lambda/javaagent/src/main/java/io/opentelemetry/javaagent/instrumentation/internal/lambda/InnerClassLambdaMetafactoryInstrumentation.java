@@ -33,7 +33,7 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyTransformer(
-        (builder, typeDescription, classLoader, module) ->
+        (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
             builder.visit(
                 new AsmVisitorWrapper() {
                   @Override

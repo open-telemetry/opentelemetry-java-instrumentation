@@ -5,14 +5,19 @@
 
 package base;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.BrokerConfig;
@@ -23,7 +28,6 @@ import org.apache.rocketmq.namesrv.NamesrvController;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.apache.rocketmq.test.util.MQAdmin;
 import org.junit.Assert;
 
 public final class IntegrationTestBase {
@@ -128,7 +132,31 @@ public final class IntegrationTestBase {
   }
 
   public static void initTopic(String topic, String nsAddr, String clusterName) {
-    MQAdmin.createTopic(nsAddr, clusterName, topic, 20);
+    try {
+      // RocketMQ 4.x
+      Class<?> mqAdmin = Class.forName("org.apache.rocketmq.test.util.MQAdmin");
+      Method createTopic =
+          mqAdmin.getMethod("createTopic", String.class, String.class, String.class, int.class);
+      createTopic.invoke(null, nsAddr, clusterName, topic, 20);
+    } catch (ClassNotFoundException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | IllegalAccessException e) {
+
+      // RocketMQ 5.x
+      try {
+        Class<?> mqAdmin = Class.forName("org.apache.rocketmq.test.util.MQAdminTestUtils");
+        Method createTopic =
+            mqAdmin.getMethod(
+                "createTopic", String.class, String.class, String.class, int.class, Map.class);
+        createTopic.invoke(null, nsAddr, clusterName, topic, 20, emptyMap());
+      } catch (ClassNotFoundException
+          | InvocationTargetException
+          | NoSuchMethodException
+          | IllegalAccessException ex) {
+        throw new LinkageError("Could not initialize topic", ex);
+      }
+    }
   }
 
   private IntegrationTestBase() {}

@@ -26,6 +26,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 class LogbackTest extends AgentInstrumentationSpecification {
 
@@ -217,6 +219,25 @@ class LogbackTest extends AgentInstrumentationSpecification {
                     .hasEntrySatisfying(
                         SemanticAttributes.CODE_LINENO, value -> assertThat(value).isPositive())
                     .containsEntry(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+  }
+
+  @Test
+  public void testMarker() {
+
+    String markerName = "aMarker";
+    Marker marker = MarkerFactory.getMarker(markerName);
+
+    abcLogger.info(marker, "Message");
+
+    await().untilAsserted(() -> assertThat(testing.logs().size()).isEqualTo(1));
+
+    LogData log = getLogs().get(0);
+
+    assertThat(log)
+        .hasAttributesSatisfying(
+            attributes ->
+                assertThat(attributes)
+                    .containsEntry(AttributeKey.stringKey("logback.marker"), markerName));
   }
 
   private static void performLogging(

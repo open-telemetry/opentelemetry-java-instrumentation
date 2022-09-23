@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_0;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -39,6 +40,7 @@ public final class RestletTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @CanIgnoreReturnValue
   public RestletTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<Request, Response> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
@@ -50,6 +52,7 @@ public final class RestletTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public RestletTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
@@ -60,6 +63,7 @@ public final class RestletTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public RestletTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
