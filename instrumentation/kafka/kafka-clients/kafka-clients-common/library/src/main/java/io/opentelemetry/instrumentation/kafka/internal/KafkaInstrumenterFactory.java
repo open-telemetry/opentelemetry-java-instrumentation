@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafka.internal;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
@@ -43,27 +44,32 @@ public final class KafkaInstrumenterFactory {
     this.instrumentationName = instrumentationName;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setErrorCauseExtractor(ErrorCauseExtractor errorCauseExtractor) {
     this.errorCauseExtractor = errorCauseExtractor;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setCapturedHeaders(List<String> capturedHeaders) {
     this.capturedHeaders = capturedHeaders;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setPropagationEnabled(boolean propagationEnabled) {
     this.propagationEnabled = propagationEnabled;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;

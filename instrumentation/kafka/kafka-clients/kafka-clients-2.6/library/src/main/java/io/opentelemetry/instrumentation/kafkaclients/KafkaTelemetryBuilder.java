@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
@@ -33,12 +34,14 @@ public final class KafkaTelemetryBuilder {
     this.openTelemetry = Objects.requireNonNull(openTelemetry);
   }
 
+  @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addProducerAttributesExtractors(
       AttributesExtractor<ProducerRecord<?, ?>, Void> extractor) {
     producerAttributesExtractors.add(extractor);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerAttributesExtractors(
       AttributesExtractor<ConsumerRecord<?, ?>, Void> extractor) {
     consumerAttributesExtractors.add(extractor);
@@ -50,6 +53,7 @@ public final class KafkaTelemetryBuilder {
    *
    * @param capturedHeaders A list of messaging header names.
    */
+  @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
     this.capturedHeaders = capturedHeaders;
     return this;
@@ -60,6 +64,7 @@ public final class KafkaTelemetryBuilder {
    * removed in the future, so only enable this if you know you do not require attributes filled by
    * this instrumentation to be stable across versions.
    */
+  @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
@@ -70,6 +75,7 @@ public final class KafkaTelemetryBuilder {
    * Sets whether the producer context should be propagated from the producer span to the consumer
    * span. Enabled by default.
    */
+  @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
     this.propagationEnabled = propagationEnabled;
     return this;

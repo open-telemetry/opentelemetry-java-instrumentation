@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.List;
 
 /** A builder of {@link MessagingAttributesExtractor}. */
@@ -31,6 +32,7 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    *
    * @param capturedHeaders A list of messaging header names.
    */
+  @CanIgnoreReturnValue
   public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedHeaders(
       List<String> capturedHeaders) {
     this.capturedHeaders = capturedHeaders;
