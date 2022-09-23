@@ -3,19 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.logs.data.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.log4j.Logger
 import org.apache.log4j.MDC
-import spock.lang.IgnoreIf
+import org.apache.log4j.helpers.Loader
 import spock.lang.Unroll
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.awaitility.Awaitility.await
 
 class Log4j1Test extends AgentInstrumentationSpecification {
+
+  static {
+    // this is needed because log4j1 incorrectly thinks the initial releases of Java 10-19
+    // (which have no '.' in their versions since there is no minor version) are Java 1.1,
+    // which is before ThreadLocal was introduced and so log4j1 disables MDC functionality
+    // (and the MDC tests below fail)
+    Loader.java1 = false
+  }
 
   private static final Logger logger = Logger.getLogger("abc")
 
@@ -94,8 +103,6 @@ class Log4j1Test extends AgentInstrumentationSpecification {
     severityText = args[2]
   }
 
-  // this used to be a problem in early Java 17 and Java 18 versions too
-  @IgnoreIf({ System.getProperty("java.version").startsWith("19") })
   def "test mdc"() {
     when:
     MDC.put("key1", "val1")
