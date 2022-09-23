@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.AbstractMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -14,6 +15,7 @@ public final class VirtualFieldMappingsBuilderImpl implements VirtualFieldMappin
   private final Set<Map.Entry<String, String>> entrySet = new HashSet<>();
 
   @Override
+  @CanIgnoreReturnValue
   public VirtualFieldMappingsBuilder register(String typeName, String fieldTypeName) {
     entrySet.add(new AbstractMap.SimpleImmutableEntry<>(typeName, fieldTypeName));
     return this;

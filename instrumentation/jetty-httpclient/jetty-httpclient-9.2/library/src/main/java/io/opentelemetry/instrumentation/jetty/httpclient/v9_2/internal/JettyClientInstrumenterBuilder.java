@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -39,17 +40,20 @@ public final class JettyClientInstrumenterBuilder {
     this.openTelemetry = openTelemetry;
   }
 
+  @CanIgnoreReturnValue
   public JettyClientInstrumenterBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JettyClientInstrumenterBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JettyClientInstrumenterBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;

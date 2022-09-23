@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import application.io.opentelemetry.api.metrics.LongHistogram;
 import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
 final class ApplicationLongHistogramBuilder implements LongHistogramBuilder {
 
@@ -17,12 +18,14 @@ final class ApplicationLongHistogramBuilder implements LongHistogramBuilder {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public LongHistogramBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public LongHistogramBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;

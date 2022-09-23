@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.graphql;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 
 /** A builder of {@link GraphQLTelemetry}. */
@@ -20,6 +21,7 @@ public final class GraphQLTelemetryBuilder {
   }
 
   /** Sets whether sensitive information should be removed from queries. Default is {@code true}. */
+  @CanIgnoreReturnValue
   public GraphQLTelemetryBuilder setSanitizeQuery(boolean sanitizeQuery) {
     this.sanitizeQuery = sanitizeQuery;
     return this;

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.db;
 
 import static java.util.Objects.requireNonNull;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -30,6 +31,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * @param dbTableAttribute The {@link AttributeKey} under which the table extracted by the {@link
    *     SqlClientAttributesExtractor} will be stored.
    */
+  @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
       AttributeKey<String> dbTableAttribute) {
     this.dbTableAttribute = requireNonNull(dbTableAttribute);
@@ -41,6 +43,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * SqlClientAttributesExtractor} should be sanitized. If set to {@code true}, all parameters that
    * can potentially contain sensitive information will be masked. Enabled by default.
    */
+  @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
       boolean statementSanitizationEnabled) {
     this.statementSanitizationEnabled = statementSanitizationEnabled;

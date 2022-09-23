@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -40,6 +41,7 @@ public final class SpringWebMvcTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpServletRequest, HttpServletResponse> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
@@ -51,6 +53,7 @@ public final class SpringWebMvcTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
@@ -61,6 +64,7 @@ public final class SpringWebMvcTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;

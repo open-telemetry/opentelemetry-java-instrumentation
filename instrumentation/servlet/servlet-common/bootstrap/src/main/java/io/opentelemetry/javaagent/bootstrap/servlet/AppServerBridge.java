@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import javax.annotation.Nullable;
@@ -98,6 +99,7 @@ public class AppServerBridge {
      *
      * @return this builder.
      */
+    @CanIgnoreReturnValue
     public Builder recordException() {
       recordException = true;
       return this;
@@ -110,6 +112,7 @@ public class AppServerBridge {
      *
      * @return this builder.
      */
+    @CanIgnoreReturnValue
     public Builder captureServletAttributes() {
       captureServletAttributes = true;
       return this;

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.sdk.appender.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitter;
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterBuilder;
 
@@ -17,12 +18,14 @@ final class DelegatingLogEmitterBuilder implements LogEmitterBuilder {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public LogEmitterBuilder setSchemaUrl(String schemaUrl) {
     delegate.setSchemaUrl(schemaUrl);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public LogEmitterBuilder setInstrumentationVersion(String instrumentationVersion) {
     delegate.setInstrumentationVersion(instrumentationVersion);
     return this;

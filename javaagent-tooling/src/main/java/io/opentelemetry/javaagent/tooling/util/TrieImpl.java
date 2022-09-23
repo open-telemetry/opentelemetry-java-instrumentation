@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.util;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -64,6 +65,7 @@ final class TrieImpl<V> implements Trie<V> {
     private final NodeBuilder<V> root = new NodeBuilder<>();
 
     @Override
+    @CanIgnoreReturnValue
     public Builder<V> put(CharSequence str, V value) {
       put(root, str, 0, value);
       return this;

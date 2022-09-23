@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -53,12 +54,14 @@ public final class RatpackTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
+  @CanIgnoreReturnValue
   public RatpackTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public RatpackTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
     additionalHttpClientExtractors.add(attributesExtractor);
@@ -70,6 +73,7 @@ public final class RatpackTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedServerRequestHeaders(List<String> requestHeaders) {
     httpServerAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
@@ -80,6 +84,7 @@ public final class RatpackTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedServerResponseHeaders(List<String> responseHeaders) {
     httpServerAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
@@ -90,6 +95,7 @@ public final class RatpackTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedClientRequestHeaders(List<String> requestHeaders) {
     httpClientAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
@@ -100,6 +106,7 @@ public final class RatpackTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
     httpClientAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;

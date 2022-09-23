@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -46,41 +47,49 @@ public final class DbConnectionPoolMetricsAssertions {
     this.poolName = poolName;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableMinIdleConnections() {
     testMinIdleConnections = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableMaxIdleConnections() {
     testMaxIdleConnections = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableMaxConnections() {
     testMaxConnections = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disablePendingRequests() {
     testPendingRequests = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableConnectionTimeouts() {
     testConnectionTimeouts = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableCreateTime() {
     testCreateTime = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableWaitTime() {
     testWaitTime = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableUseTime() {
     testUseTime = false;
     return this;

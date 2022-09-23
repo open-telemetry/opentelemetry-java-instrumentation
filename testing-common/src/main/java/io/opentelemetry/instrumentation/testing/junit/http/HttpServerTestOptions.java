@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Arrays;
@@ -55,90 +56,107 @@ public final class HttpServerTestOptions {
 
   HttpServerTestOptions() {}
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setHttpAttributes(
       Function<ServerEndpoint, Set<AttributeKey<?>>> httpAttributes) {
     this.httpAttributes = httpAttributes;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setExpectedServerSpanNameMapper(
       BiFunction<ServerEndpoint, String, String> expectedServerSpanNameMapper) {
     this.expectedServerSpanNameMapper = expectedServerSpanNameMapper;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setExpectedHttpRoute(
       Function<ServerEndpoint, String> expectedHttpRoute) {
     this.expectedHttpRoute = expectedHttpRoute;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setSockPeerAddr(Function<ServerEndpoint, String> sockPeerAddr) {
     this.sockPeerAddr = sockPeerAddr;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setContextPath(String contextPath) {
     this.contextPath = contextPath;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setExpectedException(Throwable expectedException) {
     this.expectedException = expectedException;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setHasHandlerSpan(Predicate<ServerEndpoint> hasHandlerSpan) {
     this.hasHandlerSpan = hasHandlerSpan;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setHasResponseSpan(Predicate<ServerEndpoint> hasResponseSpan) {
     this.hasResponseSpan = hasResponseSpan;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setHasErrorPageSpans(Predicate<ServerEndpoint> hasErrorPageSpans) {
     this.hasErrorPageSpans = hasErrorPageSpans;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setHasExceptionOnServerSpan(
       Predicate<ServerEndpoint> hasExceptionOnServerSpan) {
     this.hasExceptionOnServerSpan = hasExceptionOnServerSpan;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setTestRedirect(boolean testRedirect) {
     this.testRedirect = testRedirect;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setTestError(boolean testError) {
     this.testError = testError;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setTestErrorBody(boolean testErrorBody) {
     this.testErrorBody = testErrorBody;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setTestException(boolean testException) {
     this.testException = testException;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setTestNotFound(boolean testNotFound) {
     this.testNotFound = testNotFound;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setTestPathParam(boolean testPathParam) {
     this.testPathParam = testPathParam;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setTestCaptureHttpHeaders(boolean testCaptureHttpHeaders) {
     this.testCaptureHttpHeaders = testCaptureHttpHeaders;
     return this;
@@ -150,6 +168,7 @@ public final class HttpServerTestOptions {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public HttpServerTestOptions setTestCaptureRequestParameters(
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;

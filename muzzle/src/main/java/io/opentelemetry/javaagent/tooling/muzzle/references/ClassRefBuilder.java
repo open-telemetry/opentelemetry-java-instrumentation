@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle.references;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -41,25 +42,30 @@ public final class ClassRefBuilder {
     this.className = className;
   }
 
+  @CanIgnoreReturnValue
   public ClassRefBuilder setSuperClassName(String superName) {
     this.superClassName = superName;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public ClassRefBuilder addInterfaceNames(Collection<String> interfaceNames) {
     this.interfaceNames.addAll(interfaceNames);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public ClassRefBuilder addInterfaceName(String interfaceName) {
     interfaceNames.add(interfaceName);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public ClassRefBuilder addSource(String sourceName) {
     return addSource(sourceName, 0);
   }
 
+  @CanIgnoreReturnValue
   public ClassRefBuilder addSource(String sourceName, int line) {
     if (COLLECT_SOURCES) {
       sources.add(new Source(sourceName, line));
@@ -67,11 +73,13 @@ public final class ClassRefBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public ClassRefBuilder addFlag(Flag flag) {
     flags.add(flag);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public ClassRefBuilder addField(
       Source[] fieldSources,
       Flag[] fieldFlags,
@@ -95,6 +103,7 @@ public final class ClassRefBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
   public ClassRefBuilder addMethod(
       Source[] methodSources,
       Flag[] methodFlags,

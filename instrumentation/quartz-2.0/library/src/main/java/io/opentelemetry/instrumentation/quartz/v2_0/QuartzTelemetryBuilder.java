@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -35,6 +36,7 @@ public final class QuartzTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
+  @CanIgnoreReturnValue
   public QuartzTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super JobExecutionContext, ? super Void> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
@@ -46,6 +48,7 @@ public final class QuartzTelemetryBuilder {
    * removed in the future, so only enable this if you know you do not require attributes filled by
    * this instrumentation to be stable across versions
    */
+  @CanIgnoreReturnValue
   public QuartzTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
