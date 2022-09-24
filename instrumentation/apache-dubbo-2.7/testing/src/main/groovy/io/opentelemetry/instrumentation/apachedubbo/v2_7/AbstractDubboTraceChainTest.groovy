@@ -21,14 +21,11 @@ import org.apache.dubbo.config.RegistryConfig
 import org.apache.dubbo.config.ServiceConfig
 import org.apache.dubbo.config.bootstrap.DubboBootstrap
 import org.apache.dubbo.rpc.service.GenericService
-import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 
-// TODO (trask) fix the test on latest version of dubbo
-@IgnoreIf({ Boolean.getBoolean("testLatestDeps") })
 @Unroll
 abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification {
 
