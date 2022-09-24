@@ -35,7 +35,13 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
    * The primary server name of the matched virtual host. This should be obtained via configuration,
    * not from the Host header. If no such configuration can be obtained, this method should return
    * {@code null}.
+   *
+   * @deprecated This method is deprecated and will be removed in the next release.
    */
   @Nullable
-  String serverName(REQUEST request);
+  @Deprecated
+  default String serverName(REQUEST request) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in the next release");
+  }
 }

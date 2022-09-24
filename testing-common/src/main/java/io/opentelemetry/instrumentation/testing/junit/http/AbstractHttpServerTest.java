@@ -632,10 +632,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_USER_AGENT, TEST_USER_AGENT);
 
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_SCHEME, "http");
-          assertThat(attrs)
-              .hasEntrySatisfying(
-                  SemanticAttributes.HTTP_HOST,
-                  entry -> assertThat(entry).isIn("localhost", "localhost:" + port));
           if (endpoint != INDEXED_CHILD) {
             assertThat(attrs)
                 .containsEntry(
@@ -655,12 +651,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
                 .hasEntrySatisfying(
                     SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                     entry -> assertThat(entry).isNotNegative());
-          }
-          if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
-            assertThat(attrs)
-                .hasEntrySatisfying(
-                    SemanticAttributes.HTTP_SERVER_NAME,
-                    entry -> assertThat(entry).isInstanceOf(String.class));
           }
           if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE) && expectedRoute != null) {
             assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);

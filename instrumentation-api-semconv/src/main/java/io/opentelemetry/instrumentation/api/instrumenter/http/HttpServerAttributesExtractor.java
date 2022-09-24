@@ -76,10 +76,8 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     String forwardedProto = forwardedProto(request);
     String value = forwardedProto != null ? forwardedProto : getter.scheme(request);
     internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
-    internalSet(attributes, SemanticAttributes.HTTP_HOST, host(request));
     internalSet(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
-    internalSet(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
   }
 
@@ -93,11 +91,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
     super.onEnd(attributes, context, request, response, error);
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
-  }
-
-  @Nullable
-  private String host(REQUEST request) {
-    return firstHeaderValue(getter.requestHeader(request, "host"));
   }
 
   @Nullable

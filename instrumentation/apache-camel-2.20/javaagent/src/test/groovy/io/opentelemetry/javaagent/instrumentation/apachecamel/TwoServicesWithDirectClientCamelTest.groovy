@@ -126,7 +126,6 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "127.0.0.1:$portTwo"
             "$SemanticAttributes.HTTP_TARGET" "/serviceTwo"
             "$SemanticAttributes.HTTP_USER_AGENT" "Jakarta Commons-HttpClient/3.1"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"

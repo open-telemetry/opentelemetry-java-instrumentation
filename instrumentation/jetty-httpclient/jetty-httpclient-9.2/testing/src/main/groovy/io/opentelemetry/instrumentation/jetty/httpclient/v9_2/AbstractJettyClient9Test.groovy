@@ -124,7 +124,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,
       SemanticAttributes.HTTP_TARGET,
-      SemanticAttributes.HTTP_HOST
     ]
     super.httpAttributes(uri) + extra
   }

@@ -48,7 +48,6 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" "/param/asdf1234"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200

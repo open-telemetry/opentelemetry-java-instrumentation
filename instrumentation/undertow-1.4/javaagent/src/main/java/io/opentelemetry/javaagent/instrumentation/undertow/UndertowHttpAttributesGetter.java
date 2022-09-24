@@ -104,12 +104,6 @@ public class UndertowHttpAttributesGetter
     return null;
   }
 
-  @Override
-  @Nullable
-  public String serverName(HttpServerExchange exchange) {
-    return null;
-  }
-
   @Nullable
   static String toJsonString(Map<String, String> m) {
     return new JSONObject(m).toString();
