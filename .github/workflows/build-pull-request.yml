@@ -8,6 +8,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  spotless:
+    uses: ./.github/workflows/reusable-spotless.yml
+    with:
+      cache-read-only: true
+
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
     with:
