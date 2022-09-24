@@ -68,6 +68,7 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         uses: gradle/gradle-build-action@v2
         with:
+          # spotless is checked separately since it's a common source of failure
           arguments: >
             check
             -x spotlessCheck
