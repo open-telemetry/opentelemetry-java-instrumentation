@@ -35,7 +35,8 @@ jobs:
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
         uses: actions/setup-java@v3
         with:
-          distribution: ${{ matrix.vm == 'hotspot' && 'temurin' || 'adopt-openj9'}}
+          # using zulu because it has "ea" builds available that we can test against
+          distribution: ${{ matrix.vm == 'hotspot' && 'zulu' || 'adopt-openj9'}}
           java-version: ${{ matrix.test-java-version }}
 
       - name: Set up JDK for running Gradle
