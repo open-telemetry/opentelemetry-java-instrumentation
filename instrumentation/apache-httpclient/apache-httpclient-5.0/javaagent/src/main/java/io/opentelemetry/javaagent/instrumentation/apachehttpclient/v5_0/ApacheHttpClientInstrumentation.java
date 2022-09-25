@@ -92,7 +92,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      HttpRequest httpRequest = (HttpRequest) httpContext.getAttribute(HttpCoreContext.HTTP_REQUEST);
+      HttpRequest httpRequest =
+          (HttpRequest) httpContext.getAttribute(HttpCoreContext.HTTP_REQUEST);
       ApacheHttpClientHelper.doMethodExit(context, httpRequest, result, throwable);
     }
   }
