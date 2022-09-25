@@ -152,7 +152,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         throws HttpException, IOException {
       if (instrumenter().shouldStart(parentContext, request)) {
         wrappedFutureCallback.context = instrumenter().start(parentContext, request);
-        wrappedFutureCallback.httpRequest = request;
       }
 
       delegate.sendRequest(request, entityDetails, context);
@@ -168,7 +167,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
-    private volatile HttpRequest httpRequest;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
@@ -187,7 +185,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
+      instrumenter().end(context, getRequestFromHttpContext(), getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -209,7 +207,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), ex);
+      instrumenter().end(context, getRequestFromHttpContext(), getResponseFromHttpContext(), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -232,7 +230,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
+      instrumenter().end(context, getRequestFromHttpContext(), getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         cancelDelegate();
@@ -260,6 +258,11 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (delegate != null) {
         delegate.cancelled();
       }
+    }
+
+    @Nullable
+    private HttpRequest getRequestFromHttpContext() {
+      return (HttpRequest) httpContext.getAttribute(HttpCoreContext.HTTP_REQUEST);
     }
 
     @Nullable
