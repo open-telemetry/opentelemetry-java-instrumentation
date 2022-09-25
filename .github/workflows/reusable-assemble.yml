@@ -29,9 +29,6 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Start deadlock detector
-        run: .github/scripts/deadlock-detector.sh
-
       - name: Assemble
         uses: gradle/gradle-build-action@v2
         env:
@@ -73,24 +70,3 @@ jobs:
             echo $(git diff)
             exit 1
           fi
-
-      - name: Upload deadlock detector artifacts if any
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: deadlock-detector-assemble
-          path: /tmp/deadlock-detector-*
-          if-no-files-found: ignore
-
-      - name: Upload jvm crash dump files if any
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: javacore-assemble
-          path: |
-            **/hs_err_pid*.log
-            **/javacore.*.txt
-            **/Snap.*.trc
-            **/core.*.dmp
-            **/jitdump.*.dmp
-          if-no-files-found: ignore
