@@ -72,10 +72,4 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   public String route(Request request) {
     return null;
   }
-
-  @Override
-  @Nullable
-  public String serverName(Request request) {
-    return null;
-  }
 }

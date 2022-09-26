@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 
@@ -16,6 +17,7 @@ final class SpanStatusBuilderImpl implements SpanStatusBuilder {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public SpanStatusBuilder setStatus(StatusCode statusCode, String description) {
     span.setStatus(statusCode, description);
     return this;

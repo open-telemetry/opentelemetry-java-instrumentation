@@ -12,3 +12,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:rocketmq-client-4.8:testing"))
 }
+
+tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+}

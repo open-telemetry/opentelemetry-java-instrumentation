@@ -26,10 +26,10 @@ configurations.named("compileOnly") {
 dependencies {
   implementation("com.google.guava:guava:31.1-jre")
   // we need to use byte buddy variant that does not shade asm
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.10") {
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.17") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")
   }
-  implementation("net.bytebuddy:byte-buddy-dep:1.12.10")
+  implementation("net.bytebuddy:byte-buddy-dep:1.12.17")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
@@ -37,9 +37,9 @@ dependencies {
 
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
 
-  testImplementation("org.assertj:assertj-core:3.22.0")
+  testImplementation("org.assertj:assertj-core:3.23.1")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.0"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")

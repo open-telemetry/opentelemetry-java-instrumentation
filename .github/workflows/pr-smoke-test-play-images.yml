@@ -15,8 +15,8 @@ jobs:
       # Play doesn't support Java 16+ yet
       # https://github.com/playframework/playframework/pull/10819
       skip-java-17: true
-      skip-java-18: true
       skip-java-19: true
+      skip-java-20: true
 
   build-java-15:
     runs-on: ubuntu-latest

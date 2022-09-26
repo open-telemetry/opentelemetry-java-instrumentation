@@ -91,7 +91,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -151,7 +150,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" "$route?$queryString"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -206,7 +204,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -271,7 +268,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           }
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
@@ -340,7 +336,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -390,7 +385,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -472,7 +466,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           errorEvent(JasperException, String)
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
@@ -523,7 +516,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/$staticFile"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200

@@ -12,14 +12,14 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import org.springframework.batch.core.JobExecution;
 
 public class JobSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      ConfigPropertiesUtil.getBoolean(
-          "otel.instrumentation.spring-batch.experimental-span-attributes", false);
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes", false);
 
   private static final Instrumenter<JobExecution, Void> INSTRUMENTER;
 

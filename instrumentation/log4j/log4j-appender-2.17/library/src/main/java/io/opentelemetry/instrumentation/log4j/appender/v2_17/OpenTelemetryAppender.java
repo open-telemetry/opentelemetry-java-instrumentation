@@ -59,6 +59,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
+    @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
 
     /**
@@ -74,6 +75,16 @@ public class OpenTelemetryAppender extends AbstractAppender {
     /** Sets whether log4j {@link MapMessage} attributes should be copied to logs. */
     public B setCaptureMapMessageAttributes(boolean captureMapMessageAttributes) {
       this.captureMapMessageAttributes = captureMapMessageAttributes;
+      return asBuilder();
+    }
+
+    /**
+     * Sets whether the marker attribute should be set to logs.
+     *
+     * @param captureMarkerAttribute To enable or disable the marker attribute
+     */
+    public B setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
+      this.captureMarkerAttribute = captureMarkerAttribute;
       return asBuilder();
     }
 
@@ -93,6 +104,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           getPropertyArray(),
           captureExperimentalAttributes,
           captureMapMessageAttributes,
+          captureMarkerAttribute,
           captureContextDataAttributes);
     }
   }
@@ -105,6 +117,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       Property[] properties,
       boolean captureExperimentalAttributes,
       boolean captureMapMessageAttributes,
+      boolean captureMarkerAttribute,
       String captureContextDataAttributes) {
 
     super(name, filter, layout, ignoreExceptions, properties);
@@ -113,6 +126,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
             captureMapMessageAttributes,
+            captureMarkerAttribute,
             splitAndFilterBlanksAndNulls(captureContextDataAttributes));
   }
 
@@ -136,7 +150,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
         logEmitterProviderHolder.get().logEmitterBuilder(instrumentationName).build().logBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
     mapper.mapLogEvent(
-        builder, event.getMessage(), event.getLevel(), event.getThrown(), contextData);
+        builder,
+        event.getMessage(),
+        event.getLevel(),
+        event.getMarker(),
+        event.getThrown(),
+        contextData);
 
     Instant timestamp = event.getInstant();
     if (timestamp != null) {

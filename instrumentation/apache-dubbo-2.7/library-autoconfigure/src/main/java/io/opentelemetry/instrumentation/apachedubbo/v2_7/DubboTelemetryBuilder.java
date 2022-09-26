@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetClientAttributesGetter;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNetServerAttributesGetter;
@@ -46,6 +47,7 @@ public final class DubboTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @CanIgnoreReturnValue
   public DubboTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<DubboRequest, Result> attributesExtractor) {
     attributesExtractors.add(attributesExtractor);

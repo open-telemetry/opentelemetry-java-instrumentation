@@ -22,15 +22,13 @@ class ConfigurationFileTest extends Specification {
   @Shared
   public File tmpDir
 
-  ConfigurationFileLoader loader = new ConfigurationFileLoader()
-
   def "should use env property"() {
     given:
     def path = createFile("config", "property1=val-env")
     environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", path)
 
     when:
-    def properties = loader.get()
+    def properties = ConfigurationFileLoader.loadConfigFile()
 
     then:
     properties.get("property1") == "val-env"
@@ -42,7 +40,7 @@ class ConfigurationFileTest extends Specification {
     System.setProperty("otel.javaagent.configuration-file", path)
 
     when:
-    def properties = loader.get()
+    def properties = ConfigurationFileLoader.loadConfigFile()
 
     then:
     properties.get("property1") == "val-sys"
@@ -57,7 +55,7 @@ class ConfigurationFileTest extends Specification {
     System.setProperty("otel.javaagent.configuration-file", pathSys)
 
     when:
-    def properties = loader.get()
+    def properties = ConfigurationFileLoader.loadConfigFile()
 
     then:
     properties.get("property1") == "val-sys"
@@ -69,7 +67,7 @@ class ConfigurationFileTest extends Specification {
     environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", "somePath")
 
     when:
-    def properties = loader.get()
+    def properties = ConfigurationFileLoader.loadConfigFile()
 
     then:
     properties.isEmpty()
@@ -77,7 +75,7 @@ class ConfigurationFileTest extends Specification {
 
   def "should return empty properties if property is not set"() {
     when:
-    def properties = loader.get()
+    def properties = ConfigurationFileLoader.loadConfigFile()
 
     then:
     properties.isEmpty()

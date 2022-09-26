@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
 import java.util.Collections;
@@ -167,7 +168,8 @@ public class HelperInjector implements Transformer {
       DynamicType.Builder<?> builder,
       TypeDescription typeDescription,
       ClassLoader classLoader,
-      JavaModule module) {
+      JavaModule javaModule,
+      ProtectionDomain protectionDomain) {
     if (!helperClassNames.isEmpty()) {
       injectHelperClasses(typeDescription, classLoader);
     }

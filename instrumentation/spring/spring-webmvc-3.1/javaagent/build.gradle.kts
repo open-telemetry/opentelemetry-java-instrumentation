@@ -17,8 +17,6 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
@@ -36,7 +34,7 @@ dependencies {
   testImplementation("javax.validation:validation-api:1.1.0.Final")
   testImplementation("org.hibernate:hibernate-validator:5.4.2.Final")
 
-  testImplementation("org.spockframework:spock-spring:${versions["org.spockframework"]}")
+  testImplementation("org.spockframework:spock-spring")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")
