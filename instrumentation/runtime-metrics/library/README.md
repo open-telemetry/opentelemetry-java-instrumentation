@@ -50,12 +50,12 @@ rules:
   - bean: java.lang:type=Threading
     mapping:
       ThreadCount:
-        metric: jvm.thread.count
+        metric: my.own.jvm.thread.count
         type: updowncounter
         desc: The current number of threads
         unit: 1
 ```
-MBeans are identified by unique [ObjectNames](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html). In the example above, the object name `java.lang:type=Threading` identifies one of the standard JVM MBeans, which can be used to access a number of internal JVM statistics related to threads. For that MBean, we specify its attribute `ThreadCount` which reflects the number of currently active (alive) threads. The values of this attribute will be reported by a metric named `jvm.thread.count`. The declared OpenTelemetry type of the metric is declared as `updowncounter` which indicates that the value is a sum which can go up or down over time. Metric description and/or unit can also be specified.
+MBeans are identified by unique [ObjectNames](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html). In the example above, the object name `java.lang:type=Threading` identifies one of the standard JVM MBeans, which can be used to access a number of internal JVM statistics related to threads. For that MBean, we specify its attribute `ThreadCount` which reflects the number of currently active (alive) threads. The values of this attribute will be reported by a metric named `my.own.jvm.thread.count`. The declared OpenTelemetry type of the metric is declared as `updowncounter` which indicates that the value is a sum which can go up or down over time. Metric description and/or unit can also be specified.
 
 All metrics reported by the service are backed by
 [asynchronous instruments](https://opentelemetry.io/docs/reference/specification/metrics/api/#synchronous-and-asynchronous-instruments) which can be a
@@ -74,17 +74,17 @@ rules:
   - bean: java.lang:type=Memory
     mapping:
       HeapMemoryUsage.used:
-        metric: jvm.heap.used
+        metric: my.own.jvm.heap.used
         type: updowncounter
         desc: The current heap size
-        unit: B
+        unit: By
       HeapMemoryUsage.max:
-        metric: jvm.heap.max
+        metric: my.own.jvm.heap.max
         type: updowncounter
         desc: The maximum allowed heap size
-        unit: B
+        unit: By
 ```
-The MBean responsible for memory statistics, identified by ObjectName `java.lang:type=Memory` has an attribute named `HeapMemoryUsage`, which is of a `CompositeType`. This type represents a collection of fields with values (very much like the traditional `struct` data type). To access individual fields of the structure we use a dot which separates the MBean attribute name from the field name. The values are reported in bytes, which here we indicate by `B`. In the above example, the current heap size and the maximum allowed heap size will be reported as two metrics, named `jvm.heap.used`, and `jvm.heap.max`.
+The MBean responsible for memory statistics, identified by ObjectName `java.lang:type=Memory` has an attribute named `HeapMemoryUsage`, which is of a `CompositeType`. This type represents a collection of fields with values (very much like the traditional `struct` data type). To access individual fields of the structure we use a dot which separates the MBean attribute name from the field name. The values are reported in bytes, which here we indicate by `By`. In the above example, the current heap size and the maximum allowed heap size will be reported as two metrics, named `my.own.jvm.heap.used`, and `my.own.jvm.heap.max`.
 
 ### Measurement Attributes
 
@@ -99,15 +99,15 @@ rules:
       type: attrib(Type)
     mapping:
       Usage.used:
-        metric: jvm.memory.pool.used
+        metric: my.own.jvm.memory.pool.used
         type: updowncounter
         desc: Pool memory currently used
-        unit: B
+        unit: By
       Usage.max:
-        metric: jvm.memory.pool.max
+        metric: my.own.jvm.memory.pool.max
         type: updowncounter
         desc: Maximum obtainable memory pool size
-        unit: B
+        unit: By
 ```
 
 The ObjectName pattern will match a number of MBeans, each for a different memory pool. The number and names of available memory pools, however, will be known only at runtime. To report values for all actual memory pools using only two metrics, we use metric attributes (referenced by the configuration file as `label`s). The first metric attribute, named `pool` will have its value derived from the ObjectName parameter `name` - which corresponds to the memory pool name. The second metric attribute, named `type` will get its value from the corresponding MBean attribute named `Type`. The values of this attribute are strings `HEAP` or `NON_HEAP` classifying the corresponding memory pool. Here the definition of the metric attributes is shared by both metrics, but it is also possible to define them at the individual metric level.
@@ -121,6 +121,8 @@ Using the above rule, when running on HotSpot JVM for Java 11, the following com
  - {pool="Metaspace", type="NON_HEAP"}
  - {pool="CodeHeap 'non-nmethods'", type="NON_HEAP"}
  - {pool="G1 Survivor Space", type="HEAP"}
+
+**Note**: Heap and memory pool metrics above are given just as examples. The Java Agent already reports such metrics, no additional configuration is needed from the users.
 
 ### Mapping multiple MBean attributes to the same metric
 
@@ -139,13 +141,13 @@ rules:
         label:
           direction: in
         desc: The number of transmitted bytes
-        unit: B
+        unit: By
       bytesSent:
         metric: catalina.traffic
         label:
           direction: out
         desc: The number of transmitted bytes
-        unit: B
+        unit: By
 ```
 The referenced MBean has two attributes of interest, `bytesReceived`, and `bytesSent`. We want them to be reported by just one metric, but keeping the values separate by using metric attribute `direction`. This is achieved by specifying the same metric name `catalina.traffic` when mapping the MBean attributes to metrics. There will be two metric attributes provided: `handler`, which has a shared definition, and `direction`, which has its value (`in` or `out`) declared directly, depending on the MBean attribute providing the metric value.
 
@@ -164,7 +166,7 @@ rules:
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
     label:
       threadId: param(thread-id)
-    prefix: kafka.streams.
+    prefix: my.kafka.streams.
     unit: ms
     mapping:
       commit-latency-avg:
@@ -182,7 +184,7 @@ rules:
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
     label:
       threadId: param(thread-id)
-    prefix: kafka.streams.
+    prefix: my.kafka.streams.
     unit: /s
     type: gauge
     mapping:
@@ -194,7 +196,7 @@ rules:
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
     label:
       threadId: param(thread-id)
-    prefix: kafka.streams.totals.
+    prefix: my.kafka.streams.totals.
     unit: 1
     type: counter
     mapping:
@@ -204,8 +206,8 @@ rules:
       task-created-total:
       task-closed-total:
 ```
-Because we declared metric prefix (here `kafka.streams.`) and did not specify actual metric names, the metric names will be generated automatically, by appending the corresponding MBean attribute name to the prefix.
-Thus, the above definitions will create several metrics, named `kafka.streams.commit-latency-avg`, `kafka.streams.commit-latency-max`, and so on. For the first configuration rule, the default unit has been changed to `ms`, which remains in effect for all attribute mappings listed within the rule, unless they define their own unit. Similarly, the second configuration rule defines the unit as `/s`, valid for all the rates reported.
+Because we declared metric prefix (here `my.kafka.streams.`) and did not specify actual metric names, the metric names will be generated automatically, by appending the corresponding MBean attribute name to the prefix.
+Thus, the above definitions will create several metrics, named `my.kafka.streams.commit-latency-avg`, `my.kafka.streams.commit-latency-max`, and so on. For the first configuration rule, the default unit has been changed to `ms`, which remains in effect for all attribute mappings listed within the rule, unless they define their own unit. Similarly, the second configuration rule defines the unit as `/s`, valid for all the rates reported.
 
 The metric descriptions will remain undefined, unless they are provided by the queried MBeans.
 
