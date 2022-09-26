@@ -27,6 +27,7 @@ plugins {
 dependencyResolutionManagement {
   repositories {
     mavenCentral()
+    maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots") }
     mavenLocal()
   }
 }
@@ -111,8 +112,6 @@ include(":bom")
 include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-semconv")
-include(":instrumentation-appender-api-internal")
-include(":instrumentation-appender-sdk-internal")
 include(":instrumentation-annotations")
 include(":instrumentation-annotations-support")
 include(":instrumentation-annotations-support-testing")
@@ -360,6 +359,7 @@ include(":instrumentation:okhttp:okhttp-3.0:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-logs-1.19:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-api:javaagent")

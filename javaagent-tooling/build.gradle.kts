@@ -14,11 +14,10 @@ dependencies {
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-annotations-support"))
-  implementation(project(":instrumentation-appender-api-internal"))
-  implementation(project(":instrumentation-appender-sdk-internal"))
   implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
+  implementation("io.opentelemetry:opentelemetry-api-logs")
   implementation("io.opentelemetry:opentelemetry-sdk")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry:opentelemetry-sdk-metrics")

@@ -11,10 +11,10 @@ import ch.qos.logback.classic.spi.ThrowableProxy;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.LoggerProvider;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
-import io.opentelemetry.instrumentation.api.appender.internal.LogRecordBuilder;
-import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -53,13 +53,13 @@ public final class LoggingEventMapper {
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
-  public void emit(LogEmitterProvider logEmitterProvider, ILoggingEvent event) {
+  public void emit(LoggerProvider logEmitterProvider, ILoggingEvent event) {
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
     LogRecordBuilder builder =
-        logEmitterProvider.logEmitterBuilder(instrumentationName).build().logBuilder();
+        logEmitterProvider.loggerBuilder(instrumentationName).build().logRecordBuilder();
     mapLoggingEvent(builder, event);
     builder.emit();
   }
@@ -169,7 +169,7 @@ public final class LoggingEventMapper {
 
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
     // TODO (trask) extract method for recording exception into
-    // instrumentation-appender-api-internal
+    // io.opentelemetry:opentelemetry-api-logs
     attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
     attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
     StringWriter writer = new StringWriter();

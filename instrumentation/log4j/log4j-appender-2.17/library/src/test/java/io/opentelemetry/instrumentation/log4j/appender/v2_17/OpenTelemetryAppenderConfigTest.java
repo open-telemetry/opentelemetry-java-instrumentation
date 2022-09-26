@@ -9,13 +9,13 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
+import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogData;
-import io.opentelemetry.sdk.logs.data.Severity;
 import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
 import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
 import io.opentelemetry.sdk.resources.Resource;
@@ -49,14 +49,14 @@ class OpenTelemetryAppenderConfigTest {
     resource = Resource.getDefault();
     instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
 
-    SdkLogEmitterProvider logEmitterProvider =
-        SdkLogEmitterProvider.builder()
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
             .setResource(resource)
             .addLogProcessor(SimpleLogProcessor.create(logExporter))
             .build();
 
     OpenTelemetryAppender.resetSdkLogEmitterProviderForTest();
-    OpenTelemetryAppender.setSdkLogEmitterProvider(logEmitterProvider);
+    OpenTelemetryAppender.setSdkLogEmitterProvider(loggerProvider);
   }
 
   @BeforeEach

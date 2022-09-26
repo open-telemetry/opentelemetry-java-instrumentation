@@ -12,7 +12,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelVersion = "1.18.0"
+val otelVersion = "1.19.0"
 
 rootProject.extra["otelVersion"] = otelVersion
 
@@ -34,8 +34,8 @@ val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.13.4",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:${otelVersion}",
-  "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
+  "io.opentelemetry:opentelemetry-bom:${otelVersion}-SNAPSHOT",
+  "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha-SNAPSHOT",
   "org.junit:junit-bom:5.9.1",
   "org.testcontainers:testcontainers-bom:1.17.3",
 )

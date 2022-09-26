@@ -9,20 +9,18 @@ import static java.util.Collections.emptyList;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
+import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
-import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.slf4j.MDC;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
-  private static final LogEmitterProviderHolder logEmitterProviderHolder =
-      new LogEmitterProviderHolder();
+  private static final AtomicReference<LoggerProvider> loggerProviderRef =
+      new AtomicReference<>(LoggerProvider.noop());
 
   private volatile boolean captureExperimentalAttributes = false;
   private volatile boolean captureCodeAttributes = false;
@@ -46,18 +44,18 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   @Override
   protected void append(ILoggingEvent event) {
-    mapper.emit(logEmitterProviderHolder.get(), event);
+    mapper.emit(loggerProviderRef.get(), event);
   }
 
   /**
    * This should be called once as early as possible in your application initialization logic, often
    * in a {@code static} block in your main class. It should only be called once - an attempt to
-   * call it a second time will result in an error. If trying to set the {@link
-   * SdkLogEmitterProvider} multiple times in tests, use {@link
-   * OpenTelemetryAppender#resetSdkLogEmitterProviderForTest()} between them.
+   * call it a second time will result in an error. If trying to set the {@link LoggerProvider}
+   * multiple times in tests, use {@link OpenTelemetryAppender#resetSdkLogEmitterProviderForTest()}
+   * between them.
    */
-  public static void setSdkLogEmitterProvider(SdkLogEmitterProvider sdkLogEmitterProvider) {
-    logEmitterProviderHolder.set(DelegatingLogEmitterProvider.from(sdkLogEmitterProvider));
+  public static void setSdkLogEmitterProvider(LoggerProvider loggerProvider) {
+    loggerProviderRef.set(loggerProvider);
   }
 
   /**
@@ -100,11 +98,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
-   * Unsets the global {@link LogEmitterProvider}. This is only meant to be used from tests which
-   * need to reconfigure {@link LogEmitterProvider}.
+   * Unsets the global {@link LoggerProvider}. This is only meant to be used from tests which need
+   * to reconfigure {@link LoggerProvider}.
    */
   public static void resetSdkLogEmitterProviderForTest() {
-    logEmitterProviderHolder.resetForTest();
+    loggerProviderRef.set(LoggerProvider.noop());
   }
 
   // copied from SDK's DefaultConfigProperties
