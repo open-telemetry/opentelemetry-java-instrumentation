@@ -102,7 +102,7 @@ val DEPENDENCIES = listOf(
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.7.4",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.yaml:snakeyaml:1.32"
+  "org.yaml:snakeyaml:1.33"
 )
 
 javaPlatform {
