@@ -154,6 +154,9 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" String
+            "net.sock.peer.port" Long
+            "net.sock.peer.name" String
           }
         }
         span(4) {
