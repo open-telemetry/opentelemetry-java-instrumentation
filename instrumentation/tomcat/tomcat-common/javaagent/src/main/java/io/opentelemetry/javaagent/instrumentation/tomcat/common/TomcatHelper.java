@@ -71,7 +71,8 @@ public class TomcatHelper<REQUEST, RESPONSE> {
   static String messageBytesToString(MessageBytes messageBytes) {
     // on tomcat 10.1.0 MessageBytes.toString() has a side effect. Calling it caches the string
     // value and changes type of the MessageBytes from T_BYTES to T_STR which breaks request
-    // processing in CoyoteAdapter.postParseRequest.
+    // processing in CoyoteAdapter.postParseRequest when it is called on MessageBytes from
+    // request.requestURI().
     if (messageBytes.getType() == MessageBytes.T_BYTES) {
       return messageBytes.getByteChunk().toString();
     }
