@@ -78,8 +78,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       return url;
     }
 
-    // look for the end of the host:
-    //   ':' ==> start of port, or
+    // look for the end of the authority component:
     //   '/', '?', '#' ==> start of path
     int index;
     for (index = schemeEndIndex + 3; index < len; index++) {
