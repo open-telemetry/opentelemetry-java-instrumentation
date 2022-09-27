@@ -89,7 +89,6 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
           parentSpanId(span(1).spanId)
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" "/api/firstModule/unit/unitOne"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" String

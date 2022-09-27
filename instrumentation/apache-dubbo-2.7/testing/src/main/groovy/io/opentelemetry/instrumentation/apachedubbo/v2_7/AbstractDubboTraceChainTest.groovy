@@ -59,12 +59,12 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
     return service
   }
 
-  ServiceConfig configureMiddleServer(GenericService genericService) {
+  ServiceConfig configureMiddleServer(ReferenceConfig<HelloService> referenceConfig) {
     def registerConfig = new RegistryConfig()
     registerConfig.setAddress("N/A")
     ServiceConfig<MiddleServiceImpl> service = new ServiceConfig<>()
     service.setInterface(MiddleService)
-    service.setRef(new MiddleServiceImpl(genericService))
+    service.setRef(new MiddleServiceImpl(referenceConfig))
     service.setRegistry(registerConfig)
     return service
   }
@@ -89,7 +89,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
     DubboBootstrap middleBootstrap = DubboBootstrap.newInstance()
     middleBootstrap.application(new ApplicationConfig("dubbo-demo-middle"))
       .reference(reference)
-      .service(configureMiddleServer(reference.get()))
+      .service(configureMiddleServer(reference))
       .protocol(middleProtocolConfig)
       .start()
 
@@ -154,6 +154,9 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" { it == null || String }
+            "net.sock.peer.port" { it == null || Long }
+            "net.sock.peer.name" { it == null || String }
           }
         }
         span(4) {

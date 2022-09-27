@@ -6,18 +6,20 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.impl;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService;
+import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.rpc.service.GenericService;
 
 public class MiddleServiceImpl implements MiddleService {
 
-  private final GenericService genericService;
+  private final ReferenceConfig<?> referenceConfig;
 
-  public MiddleServiceImpl(GenericService genericService) {
-    this.genericService = genericService;
+  public MiddleServiceImpl(ReferenceConfig<?> referenceConfig) {
+    this.referenceConfig = referenceConfig;
   }
 
   @Override
   public String hello(String hello) {
+    GenericService genericService = (GenericService) referenceConfig.get();
     return genericService
         .$invoke("hello", new String[] {String.class.getName()}, new Object[] {hello})
         .toString();

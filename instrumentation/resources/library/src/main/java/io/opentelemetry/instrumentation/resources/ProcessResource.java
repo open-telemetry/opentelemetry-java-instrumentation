@@ -61,9 +61,9 @@ public final class ProcessResource {
     if (javaHome != null) {
       StringBuilder executablePath = new StringBuilder(javaHome);
       executablePath
-          .append(File.pathSeparatorChar)
+          .append(File.separatorChar)
           .append("bin")
-          .append(File.pathSeparatorChar)
+          .append(File.separatorChar)
           .append("java");
       if (osName != null && osName.toLowerCase().startsWith("windows")) {
         executablePath.append(".exe");

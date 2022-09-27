@@ -71,10 +71,4 @@ public class LibertyDispatcherHttpAttributesGetter
   public String route(LibertyRequest libertyRequest) {
     return null;
   }
-
-  @Override
-  @Nullable
-  public String serverName(LibertyRequest libertyRequest) {
-    return null;
-  }
 }
