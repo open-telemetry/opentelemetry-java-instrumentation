@@ -5,7 +5,7 @@
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.sdk.logs.data.Severity
+import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.log4j.Logger
 import org.apache.log4j.MDC
