@@ -23,7 +23,8 @@ import java.util.logging.Logger;
 
 class OtlpInMemoryLogRecordExporter implements LogRecordExporter {
 
-  private static final Logger logger = Logger.getLogger(OtlpInMemoryLogRecordExporter.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(OtlpInMemoryLogRecordExporter.class.getName());
 
   private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
 
