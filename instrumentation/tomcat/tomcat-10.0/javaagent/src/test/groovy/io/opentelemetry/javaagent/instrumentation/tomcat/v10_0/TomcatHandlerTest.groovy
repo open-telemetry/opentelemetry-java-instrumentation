@@ -105,7 +105,7 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
 class ErrorHandlerValve extends ErrorReportValve {
   @Override
   protected void report(Request request, Response response, Throwable t) {
-    if (response.getStatus() < 400 || response.getContentWritten() > 0 || !response.setErrorReported()) {
+    if (response.getStatus() < 400 || response.getContentWritten() > 0 || !response.isError()) {
       return
     }
     try {
