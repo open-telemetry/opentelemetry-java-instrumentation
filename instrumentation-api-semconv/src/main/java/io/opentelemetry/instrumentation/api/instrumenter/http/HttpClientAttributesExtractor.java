@@ -75,7 +75,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         || url.charAt(schemeEndIndex + 1) != '/'
         || url.charAt(schemeEndIndex + 2) != '/') {
       // has no authority component
-      return null;
+      return url;
     }
 
     // look for the end of the host:
