@@ -67,7 +67,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     if (schemeEndIndex == -1) {
       // not a valid url
-      return null;
+      return url;
     }
 
     int len = url.length();
