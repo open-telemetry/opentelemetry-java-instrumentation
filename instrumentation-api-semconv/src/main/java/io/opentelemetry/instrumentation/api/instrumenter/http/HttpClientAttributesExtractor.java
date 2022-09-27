@@ -89,7 +89,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       }
     }
 
-    int atIndex = url.indexOf("@");
+    int atIndex = url.lastIndexOf("@", index - 1);
     int questionMarkIndex = url.indexOf("?");
 
     // '@' char is present and is not a query param
