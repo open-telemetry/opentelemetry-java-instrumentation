@@ -33,43 +33,18 @@ public final class ExperimentalConfig {
   }
 
   public boolean controllerTelemetryEnabled() {
-    // TODO: remove that `suppress...` flag after 1.13 release
-    DeprecatedConfigPropertyWarning.warnIfUsed(
-        config,
-        "otel.instrumentation.common.experimental.suppress-controller-spans",
-        "otel.instrumentation.common.experimental.controller-telemetry.enabled");
-    boolean suppressControllerSpans =
-        config.getBoolean(
-            "otel.instrumentation.common.experimental.suppress-controller-spans", false);
     return config.getBoolean(
-        "otel.instrumentation.common.experimental.controller-telemetry.enabled",
-        !suppressControllerSpans);
+        "otel.instrumentation.common.experimental.controller-telemetry.enabled", true);
   }
 
   public boolean viewTelemetryEnabled() {
-    // TODO: remove that `suppress...` flag after 1.13 release
-    DeprecatedConfigPropertyWarning.warnIfUsed(
-        config,
-        "otel.instrumentation.common.experimental.suppress-view-spans",
-        "otel.instrumentation.common.experimental.view-telemetry.enabled");
-    boolean suppressViewSpans =
-        config.getBoolean("otel.instrumentation.common.experimental.suppress-view-spans", false);
     return config.getBoolean(
-        "otel.instrumentation.common.experimental.view-telemetry.enabled", !suppressViewSpans);
+        "otel.instrumentation.common.experimental.view-telemetry.enabled", true);
   }
 
   public boolean messagingReceiveInstrumentationEnabled() {
-    // TODO: remove that `suppress...` flag after 1.13 release
-    DeprecatedConfigPropertyWarning.warnIfUsed(
-        config,
-        "otel.instrumentation.common.experimental.suppress-messaging-receive-spans",
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
-    boolean receiveSpansSuppressed =
-        config.getBoolean(
-            "otel.instrumentation.common.experimental.suppress-messaging-receive-spans", true);
     return config.getBoolean(
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
-        !receiveSpansSuppressed);
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
   }
 
   public List<String> getMessagingHeaders() {
