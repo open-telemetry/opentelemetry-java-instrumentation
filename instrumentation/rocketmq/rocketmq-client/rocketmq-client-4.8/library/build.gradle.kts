@@ -10,7 +10,7 @@ dependencies {
 
   testLibrary("org.apache.rocketmq:rocketmq-test:4.8.0")
 
-  testImplementation(project(":instrumentation:rocketmq:rocketmq-clients:rocketmq-client-4.8:testing"))
+  testImplementation(project(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:testing"))
 }
 
 tasks.withType<Test>().configureEach {

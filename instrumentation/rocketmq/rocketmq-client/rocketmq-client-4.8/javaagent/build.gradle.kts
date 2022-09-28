@@ -14,9 +14,9 @@ muzzle {
 dependencies {
   library("org.apache.rocketmq:rocketmq-client:4.8.0")
 
-  implementation(project(":instrumentation:rocketmq:rocketmq-clients:rocketmq-client-4.8:library"))
+  implementation(project(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:library"))
 
-  testImplementation(project(":instrumentation:rocketmq:rocketmq-clients:rocketmq-client-4.8:testing"))
+  testImplementation(project(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:testing"))
 
   testLibrary("org.apache.rocketmq:rocketmq-test:4.8.0")
 }

@@ -24,7 +24,7 @@ that can be used if you prefer that over using the Java agent:
 * [Oracle UCP](../instrumentation/oracle-ucp-11.2/library)
 * [OSHI](../instrumentation/oshi/library)
 * [Reactor](../instrumentation/reactor/reactor-3.1/library)
-* [RocketMQ](../instrumentation/rocketmq/rocketmq-clients/rocketmq-client-4.8/library)
+* [RocketMQ](../instrumentation/rocketmq/rocketmq-client/rocketmq-client-4.8/library)
 * [Runtime metrics](../instrumentation/runtime-metrics/library)
 * [RxJava 1.0](../instrumentation/rxjava/rxjava-1.0/library)
 * [RxJava 2.0](../instrumentation/rxjava/rxjava-2.0/library)
