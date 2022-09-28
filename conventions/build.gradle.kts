@@ -30,7 +30,8 @@ dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
 
-  implementation("io.opentelemetry.instrumentation:gradle-plugins:1.9.1-alpha")
+  // dependencySubstitution is applied to this dependency (see seetings.gradle.kts)
+  implementation("io.opentelemetry.instrumentation:gradle-plugins")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
