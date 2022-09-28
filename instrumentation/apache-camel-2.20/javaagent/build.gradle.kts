@@ -73,3 +73,11 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 }
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
+}

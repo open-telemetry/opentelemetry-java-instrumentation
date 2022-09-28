@@ -59,18 +59,18 @@ val CORE_DEPENDENCIES = listOf(
   "org.mockito:mockito-core:4.8.0",
   "org.mockito:mockito-junit-jupiter:4.8.0",
   "org.mockito:mockito-inline:4.8.0",
-  "org.slf4j:slf4j-api:1.7.36",
-  "org.slf4j:slf4j-simple:1.7.36",
-  "org.slf4j:log4j-over-slf4j:1.7.36",
-  "org.slf4j:jcl-over-slf4j:1.7.36",
-  "org.slf4j:jul-to-slf4j:1.7.36"
+  "org.slf4j:slf4j-api:2.0.2",
+  "org.slf4j:slf4j-simple:2.0.2",
+  "org.slf4j:log4j-over-slf4j:2.0.2",
+  "org.slf4j:jcl-over-slf4j:2.0.2",
+  "org.slf4j:jul-to-slf4j:2.0.2"
 )
 
 // See the comment above about why we keep this rather large list.
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "ch.qos.logback:logback-classic:1.2.11",
+  "ch.qos.logback:logback-classic:1.3.1", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",

@@ -9,14 +9,12 @@ plugins {
 
 group = "io.opentelemetry.javaagent"
 
-val agentSlf4jVersion = "2.0.0"
-
 dependencies {
   compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
 
-  implementation("org.slf4j:slf4j-api:$agentSlf4jVersion")
-  implementation("org.slf4j:slf4j-simple:$agentSlf4jVersion")
+  implementation("org.slf4j:slf4j-api")
+  implementation("org.slf4j:slf4j-simple")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")

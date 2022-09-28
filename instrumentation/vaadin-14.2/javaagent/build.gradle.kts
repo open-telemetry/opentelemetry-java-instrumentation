@@ -46,7 +46,7 @@ tasks {
     if (findProperty("testLatestDeps") as Boolean) {
       dependsOn(vaadin14LatestTest)
     }
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
 
@@ -71,4 +71,44 @@ dependencies {
   // TODO https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6551
   // add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:+")
   add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:23.1.+")
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
+}
+
+configurations.named("vaadin142TestRuntimeClasspath") {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
+}
+
+configurations.named("vaadin14LatestTestRuntimeClasspath") {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
+}
+
+configurations.named("vaadin16TestRuntimeClasspath") {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
+}
+
+configurations.named("latestDepTestRuntimeClasspath") {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
 }
