@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
-import static io.opentelemetry.instrumentation.runtimemetrics.Threads.DAEMON_KEY;
+import static io.opentelemetry.instrumentation.runtimemetrics.Threads.DAEMON;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.ThreadMXBean;
@@ -50,16 +50,11 @@ class ThreadsTest {
                                         point ->
                                             point
                                                 .hasValue(2)
-                                                .hasAttributes(
-                                                    Attributes.builder()
-                                                        .put(DAEMON_KEY, true)
-                                                        .build()),
+                                                .hasAttributesSatisfying(equalTo(DAEMON, true)),
                                         point ->
                                             point
                                                 .hasValue(5)
-                                                .hasAttributes(
-                                                    Attributes.builder()
-                                                        .put(DAEMON_KEY, false)
-                                                        .build())))));
+                                                .hasAttributesSatisfying(
+                                                    equalTo(DAEMON, false))))));
   }
 }
