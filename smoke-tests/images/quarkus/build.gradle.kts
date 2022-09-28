@@ -54,4 +54,8 @@ tasks {
   withType<JibTask>().configureEach {
     dependsOn(quarkusBuild)
   }
+
+  sourcesJar {
+    dependsOn(quarkusGenerateCode)
+  }
 }
