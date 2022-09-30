@@ -38,6 +38,7 @@ val DEPENDENCY_BOMS = listOf(
   "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
   "org.junit:junit-bom:5.9.1",
   "org.testcontainers:testcontainers-bom:1.17.3",
+  "org.spockframework:spock-bom:2.3-groovy-4.0"
 )
 
 val CORE_DEPENDENCIES = listOf(
@@ -95,9 +96,6 @@ val DEPENDENCIES = listOf(
   "org.codehaus.mojo:animal-sniffer-annotations:1.22",
   "org.junit-pioneer:junit-pioneer:1.7.1",
   "org.objenesis:objenesis:3.3",
-  "org.spockframework:spock-core:2.2-groovy-4.0",
-  "org.spockframework:spock-junit4:2.2-groovy-4.0",
-  "org.spockframework:spock-spring:2.2-groovy-4.0",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.7.4",
