@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -159,7 +160,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;
-    private final HttpContext httpContext;
+    @Nullable private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
@@ -182,7 +183,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      instrumenter().end(context, httpRequest, getResponse(httpContext), null);
+      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -204,7 +205,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponse(httpContext), ex);
+      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -227,7 +228,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponse(httpContext), null);
+      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         cancelDelegate();
@@ -257,8 +258,12 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
     }
 
-    private static HttpResponse getResponse(HttpContext context) {
-      return (HttpResponse) context.getAttribute(HttpCoreContext.HTTP_RESPONSE);
+    @Nullable
+    private HttpResponse getResponseFromHttpContext() {
+      if (httpContext == null) {
+        return null;
+      }
+      return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }
 }

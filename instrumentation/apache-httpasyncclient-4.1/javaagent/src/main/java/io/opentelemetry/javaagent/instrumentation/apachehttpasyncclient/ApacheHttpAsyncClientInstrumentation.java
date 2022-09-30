@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -171,7 +172,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         return;
       }
 
-      instrumenter().end(context, otelRequest, getResponse(httpContext), null);
+      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -193,7 +194,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
 
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponse(httpContext), ex);
+      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -216,7 +217,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponse(httpContext), null);
+      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         cancelDelegate();
@@ -246,8 +247,12 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
     }
 
-    private static HttpResponse getResponse(HttpContext context) {
-      return (HttpResponse) context.getAttribute(HttpCoreContext.HTTP_RESPONSE);
+    @Nullable
+    private HttpResponse getResponseFromHttpContext() {
+      if (httpContext == null) {
+        return null;
+      }
+      return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }
 }
