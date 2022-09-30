@@ -149,7 +149,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;
-    private final HttpContext httpContext;
+    @Nullable private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
