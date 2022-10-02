@@ -16,6 +16,8 @@ public class HeliosConfiguration {
   public static final String HELIOS_ENVIRONMENT_ENV_VAR = "HS_ENVIRONMENT";
   public static final String HELIOS_SERVICE_NAME_ENV_VAR = "HS_SERVICE_NAME";
   public static final String HELIOS_TOKEN_ENV_VAR = "HS_TOKEN";
+  public static final String HELIOS_COLLECTOR_ENDPOINT_ENV_VAR = "HS_COLLECTOR_ENDPOINT";
+  public static final String DEFAULT_COLLECTOR_ENDPOINT = "https://collector.heliosphere.io/traces";
 
   public static String getEnvironmentName() {
     return System.getenv(HELIOS_ENVIRONMENT_ENV_VAR);
@@ -31,5 +33,10 @@ public class HeliosConfiguration {
 
   public static String getHsToken() {
     return System.getenv(HELIOS_TOKEN_ENV_VAR);
+  }
+
+  public static String getCollectorEndpoint() {
+    String result = System.getenv(HELIOS_COLLECTOR_ENDPOINT_ENV_VAR);
+    return result == null ? DEFAULT_COLLECTOR_ENDPOINT : result;
   }
 }
