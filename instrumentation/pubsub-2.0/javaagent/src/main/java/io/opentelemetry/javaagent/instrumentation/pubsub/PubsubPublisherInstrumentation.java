@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.pubsub.PubsubSingletons
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -35,9 +36,10 @@ public class PubsubPublisherInstrumentation implements TypeInstrumentation {
   public static class PubsubPublisherAddAttributesAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnterHandle(
+        @Advice.This Publisher publisher,
         @Advice.Argument(value = 0, readOnly = false) PubsubMessage pubsubMessage) {
       Context parentContext = Java8BytecodeBridge.currentContext();
-      startAndInjectSpan(parentContext, pubsubMessage);
+      startAndInjectSpan(parentContext, pubsubMessage, publisher);
     }
   }
 }
