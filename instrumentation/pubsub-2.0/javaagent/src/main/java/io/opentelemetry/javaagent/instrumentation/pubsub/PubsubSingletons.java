@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pubsub;
 
+import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -13,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,12 +47,7 @@ public class PubsubSingletons {
 
   private static Instrumenter<PubsubMessage, Void> createPublisherInstrumenter() {
     SpanNameExtractor publisherSpanNameExtractor =
-        new SpanNameExtractor() {
-          @Override
-          public String extract(Object o) {
-            return publisherSpanName;
-          }
-        };
+        o -> publisherSpanName;
 
     return Instrumenter.<PubsubMessage, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, publisherSpanNameExtractor)
@@ -60,19 +57,14 @@ public class PubsubSingletons {
   public static Instrumenter<PubsubMessage, Void> createSubscriberInstrumenter() {
 
     SpanNameExtractor subscriberSpanNameExtractor =
-        new SpanNameExtractor() {
-          @Override
-          public String extract(Object o) {
-            return subscriberSpanName;
-          }
-        };
+        o -> subscriberSpanName;
 
     return Instrumenter.<PubsubMessage, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, subscriberSpanNameExtractor)
         .newInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public static void startAndInjectSpan(Context parentContext, PubsubMessage pubsubMessage) {
+  public static void startAndInjectSpan(Context parentContext, PubsubMessage pubsubMessage, Publisher publisher) {
     if (!publisherInstrumenter().shouldStart(parentContext, pubsubMessage)) {
       return;
     }
@@ -83,6 +75,10 @@ public class PubsubSingletons {
     Context context = publisherInstrumenter().start(parentContext, pubsubMessage);
     Span span = Java8BytecodeBridge.spanFromContext(context);
     span.setAttribute(MESSAGE_PAYLOAD_ATTRIBUTE, new String(pubsubMessage.getData().toByteArray()));
+    span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "pubsub");
+    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
+    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, publisher.getTopicNameString());
+
     GlobalOpenTelemetry.get()
         .getPropagators()
         .getTextMapPropagator()
