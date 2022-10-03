@@ -43,6 +43,14 @@ public class OpenTelemetryInstaller {
     }
 
     setHeliosSystemProperties();
+    System.out.println(
+        String.format("Helios tracing initialized (service: {1}, token: {2}*****, environment: {3})",
+            new Object[] {
+                getServiceName(),
+                getHsToken().substring(0, 3),
+                getEnvironmentName()
+            })
+    );
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = builder.build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
 
