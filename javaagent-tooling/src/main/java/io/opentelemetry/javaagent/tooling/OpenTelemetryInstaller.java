@@ -46,16 +46,9 @@ public class OpenTelemetryInstaller {
     }
 
     setHeliosSystemProperties();
-    System.out.println(
-        String.format("Helios tracing initialized (service: {1}, token: {2}*****, environment: {3})",
-            new Object[] {
-                getServiceName(),
-                getHsToken().substring(0, 3),
-                getEnvironmentName()
-            })
-    );
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = builder.build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
+    printInitializationMessage();
 
     OpenTelemetrySdkAccess.internalSetForceFlush(
         (timeout, unit) -> {
@@ -81,6 +74,25 @@ public class OpenTelemetryInstaller {
       System.setProperty("otel.exporter.otlp.headers", String.format("Authorization=%s", hsToken));
       System.setProperty("otel.exporter.otlp.traces.endpoint", getCollectorEndpoint());
       System.setProperty("otel.exporter.otlp.traces.protocol", "http/protobuf");
+    }
+  }
+
+  static void printInitializationMessage() {
+    String hsToken = getHsToken();
+    if (hsToken != null) {
+      String serviceName = getServiceName();
+      String environmentName = getEnvironmentName();
+      if (serviceName != null) {
+        System.out.println(
+            String.format(
+                "Helios tracing initialized (service: {1}, token: {2}*****, environment: {3})",
+                new Object[] {
+                    serviceName,
+                    hsToken.substring(0, 3),
+                    environmentName
+                })
+        );
+      }
     }
   }
 }
