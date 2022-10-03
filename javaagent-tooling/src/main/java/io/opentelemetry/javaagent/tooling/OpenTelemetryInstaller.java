@@ -86,12 +86,7 @@ public class OpenTelemetryInstaller {
         System.out.println(
             String.format(
                 "Helios tracing initialized (service: {1}, token: {2}*****, environment: {3})",
-                new Object[] {
-                    serviceName,
-                    hsToken.substring(0, 3),
-                    environmentName
-                })
-        );
+                new Object[] {serviceName, hsToken.substring(0, 3), environmentName}));
       }
     }
   }
