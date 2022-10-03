@@ -14,6 +14,8 @@ import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.util.Collections;
@@ -27,6 +29,15 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
     autoConfigurationCustomizer.addTracerProviderCustomizer(
         AgentTracerProviderConfigurer::configure);
+    autoConfigurationCustomizer.addMeterProviderCustomizer(
+        AgentTracerProviderConfigurer::configureMeterProvider);
+    autoConfigurationCustomizer.addMetricExporterCustomizer(
+        (metricExporter, configProperties) -> new NoopMeterExporter());
+  }
+
+  private static SdkMeterProviderBuilder configureMeterProvider(
+      SdkMeterProviderBuilder meterProviderBuilder, ConfigProperties configProperties) {
+    return SdkMeterProvider.builder();
   }
 
   private static SdkTracerProviderBuilder configure(
