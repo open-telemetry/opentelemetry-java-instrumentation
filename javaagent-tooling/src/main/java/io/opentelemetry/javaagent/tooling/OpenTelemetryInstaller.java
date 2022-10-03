@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getCollectorEndpoint;
-import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getHsToken;
 import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getEnvironmentName;
+import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getHsToken;
 import static io.opentelemetry.javaagent.tooling.HeliosConfiguration.getServiceName;
 
 import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
