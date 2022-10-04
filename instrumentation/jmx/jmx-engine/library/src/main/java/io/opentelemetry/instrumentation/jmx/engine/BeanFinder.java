@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,14 +25,14 @@ class BeanFinder {
   private final MetricRegistrar registrar;
   private MetricConfiguration conf;
   private final ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
-  private final long exportInterval;
+  private final long discoveryDelay;
   private final long maxDelay;
   private long delay = 1000; // number of milliseconds until first attempt to discover MBeans
 
-  BeanFinder(MetricRegistrar registrar, ConfigProperties configProperties) {
+  BeanFinder(MetricRegistrar registrar, long discoveryDelay) {
     this.registrar = registrar;
-    this.exportInterval = configProperties.getLong("otel.metric.export.interval", 60000);
-    this.maxDelay = Math.max(60000, exportInterval);
+    this.discoveryDelay = Math.max(1000, discoveryDelay); // Enforce sanity
+    this.maxDelay = Math.max(60000, discoveryDelay);
   }
 
   void discoverBeans(MetricConfiguration conf) {
@@ -44,7 +43,8 @@ class BeanFinder {
           @Override
           public void run() {
             refreshState();
-            delay = Math.min(delay + exportInterval, maxDelay);
+            // Use discoveryDelay as the increment for the actual delay
+            delay = Math.min(delay + discoveryDelay, maxDelay);
             exec.schedule(this, delay, TimeUnit.MILLISECONDS);
           }
         },

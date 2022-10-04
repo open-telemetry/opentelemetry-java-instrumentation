@@ -41,12 +41,13 @@ public class AttributeValueExtractor implements LabelExtractor {
    * @throws IllegalArgumentException if the attribute name is malformed
    */
   public static AttributeValueExtractor fromName(String rawName) {
+    if (rawName.isEmpty()) {
+      throw new IllegalArgumentException("Empty attribute name");
+    }
+
     // Check if a CompositeType value is expected
     int k = rawName.indexOf('.');
     if (k < 0) {
-      if (rawName.isEmpty()) {
-        throw new IllegalArgumentException("Empty attribute name");
-      }
       return new AttributeValueExtractor(rawName);
     }
 

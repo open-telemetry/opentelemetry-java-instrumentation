@@ -8,13 +8,15 @@ available within the instrumented application. The required MBeans and correspon
 The selected JMX metrics are reported using the Java Agent internal SDK. This means that they share the configuration and metric exporter with other metrics collected by the agent and are controlled by the same properties, for example `otel.metric.export.interval` or `otel.metrics.exporter`.
 The Open Telemetry resource description for the metrics reported by JMX Metric Insight will be the same as for other metrics exported by the SDK, while the instrumentation scope will be `io.opentelemetry.jmx`.
 
+To control the time interval between MBean detection attempts, one can use the `otel.jmx.discovery.delay` property, which defines the number of milliseconds to elapse between the first and the next detection cycle. JMX Metric Insight may dynamically adjust the time interval between further attempts, but it guarantees that the MBean discovery will run perpetually.
+
 ## Predefined metrics
 
 JMX Metric Insight comes with a number of predefined configurations containing curated sets of JMX metrics for popular application servers or frameworks. To enable collection for the predefined metrics, specify a list of targets as the value for the `otel.jmx.target.system` property. For example
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.target.system=kafka-broker,kafka-consumer \
+     -Dotel.jmx.target.system=jetty,kafka-broker \
      ... \
      -jar myapp.jar
 ```
@@ -24,8 +26,6 @@ No targets are enabled by default. The supported target environments are listed 
  - [activemq](activemq.md)
  - [jetty](jetty.md)
  - [kafka-broker](kafka-broker.md)
- - [kafka-consumer](kafka-consumer.md)
- - [kafka-producer](kafka-producer.md)
  - [tomcat](tomcat.md)
  - [wildfly](wildfly.md)
  - [hadoop](hadoop.md)

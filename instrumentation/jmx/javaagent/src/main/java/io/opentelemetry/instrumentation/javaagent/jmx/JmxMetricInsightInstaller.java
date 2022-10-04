@@ -29,10 +29,23 @@ public class JmxMetricInsightInstaller implements AgentListener {
     ConfigProperties config = autoConfiguredSdk.getConfig();
 
     if (config.getBoolean("otel.jmx.enabled", true)) {
-      JmxMetricInsight service = JmxMetricInsight.createService(GlobalOpenTelemetry.get(), config);
+      JmxMetricInsight service =
+          JmxMetricInsight.createService(GlobalOpenTelemetry.get(), beanDiscoveryDelay(config));
       MetricConfiguration conf = buildMetricConfiguration();
       service.start(conf);
     }
+  }
+
+  private static long beanDiscoveryDelay(ConfigProperties configProperties) {
+    Long discoveryDelay = configProperties.getLong("otel.jmx.discovery.delay");
+    if (discoveryDelay != null) {
+      return discoveryDelay;
+    }
+
+    // If discovery delay has not been configured, have a peek at the metric export interval.
+    // It makes sense for both of these values to be similar.
+    long exportInterval = configProperties.getLong("otel.metric.export.interval", 60000);
+    return exportInterval;
   }
 
   private static String resourceFor(String platform) {
