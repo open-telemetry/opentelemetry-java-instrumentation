@@ -3,13 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common;
+package io.opentelemetry.instrumentation.netty.common.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.time.Instant;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class Timer implements ImplicitContextKeyed {
 
   private static final ContextKey<Timer> KEY = ContextKey.named("opentelemetry-timer-key");

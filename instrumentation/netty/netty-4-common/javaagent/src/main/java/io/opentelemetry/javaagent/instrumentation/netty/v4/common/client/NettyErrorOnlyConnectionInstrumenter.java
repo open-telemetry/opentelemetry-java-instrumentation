@@ -9,8 +9,8 @@ import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
-import io.opentelemetry.javaagent.instrumentation.netty.common.Timer;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
+import io.opentelemetry.instrumentation.netty.common.internal.Timer;
 import javax.annotation.Nullable;
 
 final class NettyErrorOnlyConnectionInstrumenter implements NettyConnectionInstrumenter {

@@ -17,9 +17,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.netty.common.internal.HttpClientSpanKeyAttributesExtractor;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.instrumentation.netty.common.HttpClientSpanKeyAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
 
 public final class NettyClientInstrumenterFactory {
