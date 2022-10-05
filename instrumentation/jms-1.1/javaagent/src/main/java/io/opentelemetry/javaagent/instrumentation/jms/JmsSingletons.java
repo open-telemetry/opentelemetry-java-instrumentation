@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperat
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class JmsSingletons {
@@ -47,6 +48,10 @@ public final class JmsSingletons {
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(buildMessagingAttributesExtractor(getter, operation))
         .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+        .addSpanLinksExtractor(
+            new PropagatorBasedSpanLinksExtractor<>(
+                GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
+                MessagePropertyGetter.INSTANCE))
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
