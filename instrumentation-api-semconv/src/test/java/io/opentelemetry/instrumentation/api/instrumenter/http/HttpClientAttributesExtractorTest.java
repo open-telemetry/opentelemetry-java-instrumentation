@@ -136,7 +136,8 @@ class HttpClientAttributesExtractorTest {
             "https://user1:secret@github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
         arguments("https://github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
         arguments("https://github.com#t@st.html", "https://github.com#t@st.html"),
-        arguments("user1:secret@github.com", "user1:secret@github.com"));
+        arguments("user1:secret@github.com", "user1:secret@github.com"),
+        arguments("https://github.com@", "https://github.com@"));
   }
 
   private static void stripRequestTest(Map<String, String> request, String expected) {
