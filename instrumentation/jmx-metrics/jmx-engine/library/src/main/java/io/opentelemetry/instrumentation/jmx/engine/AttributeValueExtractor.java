@@ -163,7 +163,7 @@ public class AttributeValueExtractor implements LabelExtractor {
    * @param server the MBeanServer to use
    * @param objectName the ObjectName specifying the MBean to use, it should not be a pattern
    * @param logger the logger to use, may be null. Typically we want to log any issues with the
-   *     attributes during MBean discovery, but once the attribute is successfuly detected and
+   *     attributes during MBean discovery, but once the attribute is successfully detected and
    *     confirmed to be eligble for metric evaluation, any further attribute extraction
    *     malfunctions will be silent to avoid flooding the log.
    * @return the attribute value, if found, or null if an error occurred
