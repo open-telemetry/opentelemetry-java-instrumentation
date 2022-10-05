@@ -50,11 +50,9 @@ dependencies {
   add("version35TestImplementation", "io.vertx:vertx-jdbc-client:$vertxVersion")
   add("version35TestImplementation", "io.vertx:vertx-circuit-breaker:$vertxVersion")
 
-  // concurrency tests are failing with 4.3.4
-  // tracking at https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6790
-  add("latestDepTestImplementation", "io.vertx:vertx-web:4.3.3")
-  add("latestDepTestImplementation", "io.vertx:vertx-rx-java2:4.3.3")
-  add("latestDepTestImplementation", "io.vertx:vertx-web-client:4.3.3")
-  add("latestDepTestImplementation", "io.vertx:vertx-jdbc-client:4.3.3")
-  add("latestDepTestImplementation", "io.vertx:vertx-circuit-breaker:4.3.3")
+  add("latestDepTestImplementation", "io.vertx:vertx-web:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-rx-java2:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-web-client:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-jdbc-client:4.+")
+  add("latestDepTestImplementation", "io.vertx:vertx-circuit-breaker:4.+")
 }
