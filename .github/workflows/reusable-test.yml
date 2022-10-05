@@ -23,12 +23,12 @@ jobs:
     strategy:
       matrix:
         test-java-version:
-          - 8
-          - 11
-          - 17
-          - 19
+#          - 8
+#          - 11
+#          - 17
+          - 18
         vm:
-          - hotspot
+#          - hotspot
           - openj9
         exclude:
           - test-java-version: 19
@@ -68,7 +68,13 @@ jobs:
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: check -PtestJavaVersion=${{ matrix.test-java-version }} -PtestJavaVM=${{ matrix.vm }} -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+          arguments: >
+            check
+            -PtestJavaVersion=${{ matrix.test-java-version }}
+            -PtestJavaVM=${{ matrix.vm }}
+            -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
+            -Porg.gradle.java.installations.auto-download=false 
+            ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
           # gradle enterprise is used for the build cache
@@ -93,4 +99,6 @@ jobs:
             **/Snap.*.trc
             **/core.*.dmp
             **/jitdump.*.dmp
+            **/issue15730.log
+            **/issue15730.vlog
           if-no-files-found: ignore

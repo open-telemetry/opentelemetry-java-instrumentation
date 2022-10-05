@@ -73,11 +73,13 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
+  jvmArgs("-Xjit:{java/util/Collections.unmodifiableCollection*}(traceBC,traceILGen,log=issue15730.log),verbose,vlog=issue15730.vlog")
+
   // disable tests on openj9 18 because they often crash JIT compiler
-  val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
-  val testOnOpenJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
-    ?: false
-  if (testOnOpenJ9 && testJavaVersion?.majorVersion == "18") {
-    enabled = false
-  }
+//  val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
+//  val testOnOpenJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
+//    ?: false
+//  if (testOnOpenJ9 && testJavaVersion?.majorVersion == "18") {
+//    enabled = false
+//  }
 }
