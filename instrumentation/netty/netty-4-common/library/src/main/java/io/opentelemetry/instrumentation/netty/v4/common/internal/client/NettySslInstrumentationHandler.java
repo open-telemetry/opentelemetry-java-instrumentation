@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
+package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler;
@@ -16,6 +16,10 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.SocketAddress;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 // inspired by reactor-netty SslProvider.SslReadHandler
 public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 

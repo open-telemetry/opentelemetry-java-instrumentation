@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
+package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -12,6 +12,10 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class ConnectionCompleteListener implements GenericFutureListener<Future<Void>> {
   private final NettyConnectionInstrumenter instrumenter;
   private final Context context;

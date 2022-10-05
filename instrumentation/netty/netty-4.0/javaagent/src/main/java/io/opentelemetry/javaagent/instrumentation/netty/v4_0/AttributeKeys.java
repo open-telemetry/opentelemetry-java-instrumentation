@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
