@@ -90,7 +90,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     int atIndex = url.lastIndexOf("@", index - 1);
 
-    if (atIndex == -1 || atIndex == url.length() - 1) {
+    if (atIndex == -1 || atIndex == len - 1) {
       return url;
     }
     return url.substring(0, schemeEndIndex + 3) + url.substring(atIndex + 1);
