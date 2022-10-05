@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.common;
+package io.opentelemetry.instrumentation.netty.common.internal;
 
 import static io.opentelemetry.context.ContextKey.named;
 
@@ -12,6 +12,10 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class NettyErrorHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<NettyErrorHolder> KEY = named("opentelemetry-netty-error");
