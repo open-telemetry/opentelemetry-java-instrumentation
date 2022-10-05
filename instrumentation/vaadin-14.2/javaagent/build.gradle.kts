@@ -73,42 +73,19 @@ dependencies {
   add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:23.1.+")
 }
 
-configurations.testRuntimeClasspath {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
-  }
-}
-
-configurations.named("vaadin142TestRuntimeClasspath") {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
-  }
-}
-
-configurations.named("vaadin14LatestTestRuntimeClasspath") {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
-  }
-}
-
-configurations.named("vaadin16TestRuntimeClasspath") {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
-  }
-}
-
-configurations.named("latestDepTestRuntimeClasspath") {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
-  }
+configurations {
+  listOf(testRuntimeClasspath,
+    named("vaadin142TestRuntimeClasspath"),
+    named("vaadin14LatestTestRuntimeClasspath"),
+    named("vaadin16TestRuntimeClasspath"),
+    named("latestDepTestRuntimeClasspath"))
+    .forEach {
+      it.configure {
+        resolutionStrategy {
+          // requires old logback (and therefore also old slf4j)
+          force("ch.qos.logback:logback-classic:1.2.11")
+          force("org.slf4j:slf4j-api:1.7.36")
+        }
+      }
+    }
 }
