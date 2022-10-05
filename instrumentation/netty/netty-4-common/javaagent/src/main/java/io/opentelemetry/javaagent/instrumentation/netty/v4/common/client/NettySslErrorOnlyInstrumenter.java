@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.javaagent.instrumentation.netty.common.Timer;
+import io.opentelemetry.instrumentation.netty.common.internal.Timer;
 import javax.annotation.Nullable;
 
 final class NettySslErrorOnlyInstrumenter implements NettySslInstrumenter {
