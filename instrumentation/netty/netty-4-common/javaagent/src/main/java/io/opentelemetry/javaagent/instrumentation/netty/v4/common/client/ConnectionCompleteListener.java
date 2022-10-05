@@ -10,7 +10,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 
 public class ConnectionCompleteListener implements GenericFutureListener<Future<Void>> {
   private final NettyConnectionInstrumenter instrumenter;
