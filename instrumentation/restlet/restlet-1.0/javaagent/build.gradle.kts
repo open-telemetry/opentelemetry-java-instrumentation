@@ -6,7 +6,9 @@ muzzle {
   pass {
     group.set("org.restlet")
     module.set("org.restlet")
-    versions.set("[1.0.0, 1.2-M1)")
+    // TODO: rename this module to restlet-1.1
+    versions.set("[1.1.0, 1.2-M1)")
+    extraDependency("com.noelios.restlet:com.noelios.restlet")
     assertInverse.set(true)
   }
 }
