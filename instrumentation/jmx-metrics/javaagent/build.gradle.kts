@@ -3,8 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":instrumentation:jmx-metrics:jmx-engine:library"))
-  implementation(project(":instrumentation:jmx-metrics:jmx-yaml:library"))
+  implementation(project(":instrumentation:jmx-metrics:library"))
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 }

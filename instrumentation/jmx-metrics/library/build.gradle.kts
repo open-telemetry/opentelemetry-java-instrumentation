@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+  implementation("org.yaml:snakeyaml")
 
   testImplementation(project(":testing-common"))
 }
