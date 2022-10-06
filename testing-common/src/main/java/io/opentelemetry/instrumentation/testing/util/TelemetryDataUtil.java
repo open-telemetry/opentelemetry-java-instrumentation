@@ -78,7 +78,10 @@ public final class TelemetryDataUtil {
     for (List<SpanData> trace : completeTraces) {
       for (SpanData span : trace) {
         if (!span.getInstrumentationScopeInfo().getName().equals("test")) {
-          assertThat(span.getInstrumentationScopeInfo().getVersion()).isNotNull();
+          assertThat(span.getInstrumentationScopeInfo().getVersion())
+              .as(
+                  "Instrumentation version was empty; make sure that the instrumentation name matches the gradle module name")
+              .isNotNull();
         }
       }
     }
