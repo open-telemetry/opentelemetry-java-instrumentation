@@ -72,6 +72,7 @@ public final class ReactorNettySingletons {
 
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
+            GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             connectionTelemetryEnabled,
             false,

@@ -3,22 +3,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
-
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons.HTTP_REQUEST;
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons.instrumenter;
+package io.opentelemetry.instrumentation.netty.v4_1.internal.client;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
+
+  public static final AttributeKey<HttpRequestAndChannel> HTTP_REQUEST =
+      AttributeKey.valueOf(HttpClientRequestTracingHandler.class, "http-client-request");
+
+  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+
+  public HttpClientRequestTracingHandler(
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+    this.instrumenter = instrumenter;
+  }
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
@@ -27,13 +41,13 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       return;
     }
 
-    Context parentContext = ctx.channel().attr(AttributeKeys.WRITE_CONTEXT).getAndRemove();
+    Context parentContext = ctx.channel().attr(AttributeKeys.WRITE_CONTEXT).getAndSet(null);
     if (parentContext == null) {
       parentContext = Context.current();
     }
 
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, ctx.channel());
-    if (!instrumenter().shouldStart(parentContext, request) || isAwsRequest(request)) {
+    if (!instrumenter.shouldStart(parentContext, request) || isAwsRequest(request)) {
       ctx.write(msg, prm);
       return;
     }
@@ -42,7 +56,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
     Attribute<HttpRequestAndChannel> requestAttr = ctx.channel().attr(HTTP_REQUEST);
 
-    Context context = instrumenter().start(parentContext, request);
+    Context context = instrumenter.start(parentContext, request);
     parentContextAttr.set(parentContext);
     contextAttr.set(context);
     requestAttr.set(request);
@@ -51,8 +65,8 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       ctx.write(msg, prm);
       // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
-      instrumenter().end(contextAttr.getAndRemove(), requestAttr.getAndRemove(), null, throwable);
-      parentContextAttr.remove();
+      instrumenter.end(contextAttr.getAndSet(null), requestAttr.getAndSet(null), null, throwable);
+      parentContextAttr.set(null);
       throw throwable;
     }
   }

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4_1.server;
+package io.opentelemetry.instrumentation.netty.v4_1.internal.server;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.NettyServerSingletons.instrumenter;
+import static io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerRequestTracingHandler.HTTP_REQUEST;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -16,14 +16,30 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
+
+  static final AttributeKey<HttpResponse> HTTP_RESPONSE =
+      AttributeKey.valueOf(HttpServerResponseTracingHandler.class, "http-server-response");
+
+  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+
+  public HttpServerResponseTracingHandler(
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+    this.instrumenter = instrumenter;
+  }
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
@@ -59,14 +75,14 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
             future ->
                 end(
                     ctx.channel(),
-                    ctx.channel().attr(NettyServerSingletons.HTTP_RESPONSE).getAndRemove(),
+                    ctx.channel().attr(HTTP_RESPONSE).getAndSet(null),
                     writePromise));
       }
     } else {
       writePromise = prm;
       if (msg instanceof HttpResponse) {
         // Headers before body has been sent, store them to use when finishing the span.
-        ctx.channel().attr(NettyServerSingletons.HTTP_RESPONSE).set((HttpResponse) msg);
+        ctx.channel().attr(HTTP_RESPONSE).set((HttpResponse) msg);
       }
     }
 
@@ -78,17 +94,16 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     }
   }
 
-  private static void end(Channel channel, HttpResponse response, ChannelFuture future) {
+  private void end(Channel channel, HttpResponse response, ChannelFuture future) {
     Throwable error = future.isSuccess() ? null : future.cause();
     end(channel, response, error);
   }
 
   // make sure to remove the server context on end() call
-  private static void end(
-      Channel channel, @Nullable HttpResponse response, @Nullable Throwable error) {
-    Context context = channel.attr(AttributeKeys.SERVER_CONTEXT).getAndRemove();
-    HttpRequestAndChannel request = channel.attr(NettyServerSingletons.HTTP_REQUEST).getAndRemove();
+  private void end(Channel channel, @Nullable HttpResponse response, @Nullable Throwable error) {
+    Context context = channel.attr(AttributeKeys.SERVER_CONTEXT).getAndSet(null);
+    HttpRequestAndChannel request = channel.attr(HTTP_REQUEST).getAndSet(null);
     error = NettyErrorHolder.getOrDefault(context, error);
-    instrumenter().end(context, request, response, error);
+    instrumenter.end(context, request, response, error);
   }
 }
