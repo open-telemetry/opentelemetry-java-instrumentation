@@ -3,10 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4.common;
+package io.opentelemetry.instrumentation.netty.v4.common.internal;
 
 import io.netty.channel.ChannelHandler;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class HttpSchemeUtil {
 
   private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
