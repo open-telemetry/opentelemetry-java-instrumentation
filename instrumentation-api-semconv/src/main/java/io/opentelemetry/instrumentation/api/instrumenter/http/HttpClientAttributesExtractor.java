@@ -81,14 +81,18 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     // look for the end of the authority component:
     //   '/', '?', '#' ==> start of path
     int index;
+    int atIndex = -1;
     for (index = schemeEndIndex + 3; index < len; index++) {
       char c = url.charAt(index);
+
+      if (c == '@') {
+        atIndex = index;
+      }
+
       if (c == '/' || c == '?' || c == '#') {
         break;
       }
     }
-
-    int atIndex = url.lastIndexOf("@", index - 1);
 
     if (atIndex == -1 || atIndex == url.length() - 1) {
       return url;
