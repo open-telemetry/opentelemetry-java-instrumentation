@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4.common.server;
+package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -15,13 +15,19 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
+import java.util.List;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class NettyServerInstrumenterFactory {
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> create(
-      String instrumentationName) {
+      String instrumentationName,
+      List<String> capturedRequestHeaders,
+      List<String> capturedResponseHeaders) {
 
     NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
 
@@ -32,8 +38,8 @@ public final class NettyServerInstrumenterFactory {
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(
             HttpServerAttributesExtractor.builder(httpAttributesGetter)
-                .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-                .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                .setCapturedRequestHeaders(capturedRequestHeaders)
+                .setCapturedResponseHeaders(capturedResponseHeaders)
                 .build())
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new NettyNetServerAttributesGetter()))

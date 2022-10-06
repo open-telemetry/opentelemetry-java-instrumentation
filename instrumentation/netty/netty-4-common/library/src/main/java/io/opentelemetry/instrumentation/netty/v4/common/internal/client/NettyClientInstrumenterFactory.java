@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4.common.client;
+package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
@@ -19,20 +19,36 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.HttpClientSpanKeyAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class NettyClientInstrumenterFactory {
 
   private final String instrumentationName;
   private final boolean connectionTelemetryEnabled;
   private final boolean sslTelemetryEnabled;
+  private final List<String> capturedRequestHeaders;
+  private final List<String> capturedResponseHeaders;
+  private final Map<String, String> peerServiceMapping;
 
   public NettyClientInstrumenterFactory(
-      String instrumentationName, boolean connectionTelemetryEnabled, boolean sslTelemetryEnabled) {
+      String instrumentationName,
+      boolean connectionTelemetryEnabled,
+      boolean sslTelemetryEnabled,
+      List<String> capturedRequestHeaders,
+      List<String> capturedResponseHeaders,
+      Map<String, String> peerServiceMapping) {
     this.instrumentationName = instrumentationName;
     this.connectionTelemetryEnabled = connectionTelemetryEnabled;
     this.sslTelemetryEnabled = sslTelemetryEnabled;
+    this.capturedRequestHeaders = capturedRequestHeaders;
+    this.capturedResponseHeaders = capturedResponseHeaders;
+    this.peerServiceMapping = peerServiceMapping;
   }
 
   public Instrumenter<HttpRequestAndChannel, HttpResponse> createHttpInstrumenter() {
@@ -47,13 +63,12 @@ public final class NettyClientInstrumenterFactory {
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesGetter))
         .addAttributesExtractor(
             HttpClientAttributesExtractor.builder(httpClientAttributesGetter)
-                .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                .setCapturedRequestHeaders(capturedRequestHeaders)
+                .setCapturedResponseHeaders(capturedResponseHeaders)
                 .build())
         .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractor(
-            PeerServiceAttributesExtractor.create(
-                netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+            PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping))
         .addOperationMetrics(HttpClientMetrics.get())
         .buildClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
   }
@@ -66,8 +81,7 @@ public final class NettyClientInstrumenterFactory {
                 GlobalOpenTelemetry.get(), instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()));
+                PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping));
     if (!connectionTelemetryEnabled) {
       // when the connection telemetry is not enabled, netty creates CONNECT spans whenever a
       // connection error occurs - because there is no HTTP span in that scenario, if raw netty
@@ -97,8 +111,7 @@ public final class NettyClientInstrumenterFactory {
                 GlobalOpenTelemetry.get(), instrumentationName, NettySslRequest::spanName)
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping))
             .buildInstrumenter(
                 sslTelemetryEnabled
                     ? SpanKindExtractor.alwaysInternal()
