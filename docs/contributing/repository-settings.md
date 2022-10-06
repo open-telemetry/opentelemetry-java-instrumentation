@@ -7,6 +7,8 @@ to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-n
 
 * Allow squash merging > Default to pull request title and description
 
+* Allow auto-merge
+
 * Automatically delete head branches: CHECKED
 
   So that bot PR branches will be deleted.
