@@ -32,5 +32,7 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
+  jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
 }
