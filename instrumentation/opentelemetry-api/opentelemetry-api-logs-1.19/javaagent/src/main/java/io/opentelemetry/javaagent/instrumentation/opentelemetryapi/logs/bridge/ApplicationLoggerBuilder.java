@@ -19,6 +19,13 @@ final class ApplicationLoggerBuilder implements LoggerBuilder {
 
   @Override
   @CanIgnoreReturnValue
+  public LoggerBuilder setEventDomain(String eventDomain) {
+    agentBuilder.setEventDomain(eventDomain);
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
   public LoggerBuilder setSchemaUrl(String schemaUrl) {
     agentBuilder.setSchemaUrl(schemaUrl);
     return this;

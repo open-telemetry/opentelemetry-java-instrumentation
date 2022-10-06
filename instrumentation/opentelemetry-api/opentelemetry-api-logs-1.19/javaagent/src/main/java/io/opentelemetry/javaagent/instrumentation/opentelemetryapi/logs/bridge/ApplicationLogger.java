@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.logs.bridge;
 
+import application.io.opentelemetry.api.logs.EventBuilder;
 import application.io.opentelemetry.api.logs.LogRecordBuilder;
 import application.io.opentelemetry.api.logs.Logger;
 
@@ -14,6 +15,11 @@ class ApplicationLogger implements Logger {
 
   ApplicationLogger(io.opentelemetry.api.logs.Logger agentLogger) {
     this.agentLogger = agentLogger;
+  }
+
+  @Override
+  public EventBuilder eventBuilder(String eventName) {
+    return new ApplicationLogRecordBuilder(agentLogger.eventBuilder(eventName));
   }
 
   @Override

@@ -53,6 +53,7 @@ final class MetricsView {
     return view;
   }
 
+  @SuppressWarnings("deprecation") // TODO: evaluate strategy for NET_HOST_IP
   private static Set<AttributeKey> buildServerFallbackView() {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes

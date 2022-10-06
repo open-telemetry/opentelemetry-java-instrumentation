@@ -9,6 +9,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -55,8 +56,8 @@ class OpenTelemetryAppenderConfigTest {
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
 
-    OpenTelemetryAppender.resetSdkLogEmitterProviderForTest();
-    OpenTelemetryAppender.setSdkLogEmitterProvider(loggerProvider);
+    GlobalLoggerProvider.resetForTest();
+    GlobalLoggerProvider.set(loggerProvider);
   }
 
   @BeforeEach
