@@ -67,8 +67,10 @@ tasks {
 }
 
 configurations {
-  listOf(testRuntimeClasspath,
-    named("testNoReceiveTelemetryRuntimeClasspath"))
+  listOf(
+    testRuntimeClasspath,
+    named("testNoReceiveTelemetryRuntimeClasspath")
+  )
     .forEach {
       it.configure {
         resolutionStrategy {
