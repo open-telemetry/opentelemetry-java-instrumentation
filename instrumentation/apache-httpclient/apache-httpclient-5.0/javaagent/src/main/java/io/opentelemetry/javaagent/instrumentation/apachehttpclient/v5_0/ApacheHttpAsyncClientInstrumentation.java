@@ -33,6 +33,7 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.nio.AsyncRequestProducer;
 import org.apache.hc.core5.http.nio.DataStreamChannel;
 import org.apache.hc.core5.http.nio.RequestChannel;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 
@@ -68,10 +69,13 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) AsyncRequestProducer requestProducer,
-        @Advice.Argument(3) HttpContext httpContext,
+        @Advice.Argument(value = 3, readOnly = false) HttpContext httpContext,
         @Advice.Argument(value = 4, readOnly = false) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
+      if (httpContext == null) {
+        httpContext = new BasicHttpContext();
+      }
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
