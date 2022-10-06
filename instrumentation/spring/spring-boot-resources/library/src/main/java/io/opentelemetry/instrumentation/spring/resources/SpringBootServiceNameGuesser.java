@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
+import static java.util.logging.Level.FINE;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
@@ -90,7 +92,7 @@ public class SpringBootServiceNameGuesser implements ConditionalResourceProvider
         .findFirst()
         .map(
             serviceName -> {
-              logger.log(Level.FINER, "Guessed Spring Boot service name: {0}", serviceName);
+              logger.log(FINE, "Auto-detected Spring Boot service name: {0}", serviceName);
               return Resource.builder().put(ResourceAttributes.SERVICE_NAME, serviceName).build();
             })
         .orElseGet(Resource::empty);

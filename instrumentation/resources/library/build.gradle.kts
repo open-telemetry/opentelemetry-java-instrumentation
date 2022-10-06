@@ -1,19 +1,17 @@
 plugins {
   id("otel.library-instrumentation")
-  id("otel.animalsniffer-conventions")
 }
 
-val mrJarVersions = listOf(11)
+val mrJarVersions = listOf(9, 11)
 
 dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-common")
   implementation("io.opentelemetry:opentelemetry-semconv")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
 
-  compileOnly("org.codehaus.mojo:animal-sniffer-annotations")
-
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
+  testImplementation("com.google.auto.service:auto-service-annotations")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api")
 }
