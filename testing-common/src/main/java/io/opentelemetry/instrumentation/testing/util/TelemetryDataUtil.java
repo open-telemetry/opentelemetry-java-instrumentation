@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.util;
 
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
@@ -72,6 +73,17 @@ public final class TelemetryDataUtil {
               + allTraces.size()
               + " total trace(s): "
               + allTraces);
+    }
+    // TODO (trask) is there a better location for this assertion?
+    for (List<SpanData> trace : completeTraces) {
+      for (SpanData span : trace) {
+        if (!span.getInstrumentationScopeInfo().getName().equals("test")) {
+          assertThat(span.getInstrumentationScopeInfo().getVersion())
+              .as(
+                  "Instrumentation version was empty; make sure that the instrumentation name matches the gradle module name")
+              .isNotNull();
+        }
+      }
     }
     return completeTraces;
   }

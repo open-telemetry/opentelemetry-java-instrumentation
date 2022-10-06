@@ -132,26 +132,6 @@ tasks.register("printMuzzleReferences") {
   }
 }
 
-val projectRepositories = mutableListOf<RemoteRepository>().apply {
-  // Manually add mavenCentral until https://github.com/gradle/gradle/issues/17295
-  // Adding mavenLocal is much more complicated but hopefully isn't required for normal usage of
-  // Muzzle.
-  add(
-    RemoteRepository.Builder(
-      "MavenCentral", "default", "https://repo.maven.apache.org/maven2/")
-      .build())
-  for (repository in repositories) {
-    if (repository is MavenArtifactRepository) {
-      add(
-        RemoteRepository.Builder(
-          repository.getName(),
-          "default",
-          repository.url.toString())
-          .build())
-    }
-  }
-}.toList()
-
 val hasRelevantTask = gradle.startParameter.taskNames.any {
   // removing leading ':' if present
   val taskName = it.removePrefix(":")
@@ -167,18 +147,21 @@ if (hasRelevantTask) {
   afterEvaluate {
     var runAfter = muzzle
 
+    // the project repositories need to be retrieved after evaluation, before that the list is just empty
+    val projectRepositories = getProjectRepositories(project)
+
     for (muzzleDirective in muzzleConfig.directives.get()) {
-      logger.info("configured ${muzzleDirective}")
+      logger.info("configured $muzzleDirective")
 
       if (muzzleDirective.coreJdk.get()) {
         runAfter = addMuzzleTask(muzzleDirective, null, runAfter)
       } else {
-        for (singleVersion in muzzleDirectiveToArtifacts(muzzleDirective, system, session)) {
+        for (singleVersion in muzzleDirectiveToArtifacts(muzzleDirective, system, session, projectRepositories)) {
           runAfter = addMuzzleTask(muzzleDirective, singleVersion, runAfter)
         }
         if (muzzleDirective.assertInverse.get()) {
-          for (inverseDirective in inverseOf(muzzleDirective, system, session)) {
-            for (singleVersion in muzzleDirectiveToArtifacts(inverseDirective, system, session)) {
+          for (inverseDirective in inverseOf(muzzleDirective, system, session, projectRepositories)) {
+            for (singleVersion in muzzleDirectiveToArtifacts(inverseDirective, system, session, projectRepositories)) {
               runAfter = addMuzzleTask(inverseDirective, singleVersion, runAfter)
             }
           }
@@ -186,6 +169,18 @@ if (hasRelevantTask) {
       }
     }
   }
+}
+
+fun getProjectRepositories(project: Project): List<RemoteRepository> {
+  return project.repositories
+    .filterIsInstance<MavenArtifactRepository>()
+    .map {
+      RemoteRepository.Builder(
+        it.name,
+        "default",
+        it.url.toString())
+        .build()
+    }
 }
 
 fun createInstrumentationClassloader(): ClassLoader {
@@ -309,7 +304,7 @@ fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoade
   return classpathLoader(muzzleTaskConfiguration + files(muzzleBootstrapShadowJar), ClassLoader.getPlatformClassLoader())
 }
 
-fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession): Set<MuzzleDirective> {
+fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Set<MuzzleDirective> {
   val inverseDirectives = mutableSetOf<MuzzleDirective>()
 
   val allVersionsArtifact = DefaultArtifact(
@@ -325,7 +320,6 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
     "jar",
     muzzleDirective.versions.get())
 
-  val repos = projectRepositories
   val allRangeRequest = VersionRangeRequest().apply {
     repositories = repos
     artifact = allVersionsArtifact
@@ -374,7 +368,7 @@ fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>) = seque
   }
 }.distinct().take(RANGE_COUNT_LIMIT)
 
-fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession) = sequence<Artifact> {
+fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>) = sequence<Artifact> {
   val directiveArtifact: Artifact = DefaultArtifact(
     muzzleDirective.group.get(),
     muzzleDirective.module.get(),
@@ -383,7 +377,7 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
     muzzleDirective.versions.get())
 
   val rangeRequest = VersionRangeRequest().apply {
-    repositories = projectRepositories
+    repositories = repos
     artifact = directiveArtifact
   }
   val rangeResult = system.resolveVersionRange(session, rangeRequest)

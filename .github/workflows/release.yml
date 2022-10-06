@@ -3,6 +3,9 @@ on:
   workflow_dispatch:
 
 jobs:
+  spotless:
+    uses: ./.github/workflows/reusable-spotless.yml
+
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
 

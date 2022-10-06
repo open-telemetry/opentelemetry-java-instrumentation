@@ -117,7 +117,7 @@ public abstract class AbstractQuartzTest {
   public static class SuccessfulJob implements Job {
     @Override
     public void execute(JobExecutionContext context) {
-      GlobalOpenTelemetry.getTracer("jobtracer").spanBuilder("child").startSpan().end();
+      GlobalOpenTelemetry.getTracer("test").spanBuilder("child").startSpan().end();
       // ensure that JobExecutionContext is serializable
       try {
         new ObjectOutputStream(new ByteArrayOutputStream()).writeObject(context);

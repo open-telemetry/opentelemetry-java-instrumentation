@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import java.lang.management.ManagementFactory;
@@ -32,7 +33,7 @@ public final class Threads {
   // Visible for testing
   static final Threads INSTANCE = new Threads();
 
-  static final String DAEMON_KEY = "daemon";
+  static final AttributeKey<Boolean> DAEMON = AttributeKey.booleanKey("daemon");
 
   /** Register observers for java runtime class metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
@@ -51,10 +52,10 @@ public final class Threads {
             observableMeasurement -> {
               observableMeasurement.record(
                   threadBean.getDaemonThreadCount(),
-                  Attributes.builder().put(DAEMON_KEY, true).build());
+                  Attributes.builder().put(DAEMON, true).build());
               observableMeasurement.record(
                   threadBean.getThreadCount() - threadBean.getDaemonThreadCount(),
-                  Attributes.builder().put(DAEMON_KEY, false).build());
+                  Attributes.builder().put(DAEMON, false).build());
             });
   }
 

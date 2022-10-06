@@ -160,10 +160,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private Context doStart(Context parentContext, REQUEST request, @Nullable Instant startTime) {
     SpanKind spanKind = spanKindExtractor.extract(request);
     SpanBuilder spanBuilder =
-        tracer
-            .spanBuilder(spanNameExtractor.extract(request))
-            .setSpanKind(spanKind)
-            .setParent(parentContext);
+        tracer.spanBuilder(spanNameExtractor.extract(request)).setSpanKind(spanKind);
 
     if (startTime != null) {
       spanBuilder.setStartTimestamp(startTime);
@@ -181,22 +178,28 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Context context = parentContext;
 
-    spanBuilder.setAllAttributes(attributes);
-    Span span = spanBuilder.startSpan();
-    context = context.with(span);
-
+    // context customizers run before span start, so that they can have access to the parent span
+    // context, and so that their additions to the context will be visible to span processors
     for (ContextCustomizer<? super REQUEST> contextCustomizer : contextCustomizers) {
       context = contextCustomizer.onStart(context, request, attributes);
     }
 
+    boolean localRoot = LocalRootSpan.isLocalRoot(context);
+
+    spanBuilder.setAllAttributes(attributes);
+    Span span = spanBuilder.setParent(context).startSpan();
+    context = context.with(span);
+
     if (!operationListeners.isEmpty()) {
+      // operation listeners run after span start, so that they have access to the current span
+      // for capturing exemplars
       long startNanos = getNanos(startTime);
       for (OperationListener operationListener : operationListeners) {
         context = operationListener.onStart(context, attributes, startNanos);
       }
     }
 
-    if (LocalRootSpan.isLocalRoot(parentContext)) {
+    if (localRoot) {
       context = LocalRootSpan.store(context, span);
     }
 

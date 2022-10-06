@@ -7,6 +7,13 @@ on:
   workflow_dispatch:
 
 jobs:
+  spotless:
+    uses: ./.github/workflows/reusable-spotless.yml
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
     secrets:
