@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperat
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.ArrayList;
@@ -29,17 +30,14 @@ public final class RabbitSingletons {
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.rabbitmq.experimental-span-attributes", false);
   private static final String instrumentationName = "io.opentelemetry.rabbitmq-2.7";
-  private static final Instrumenter<ChannelAndMethod, Void> channelInstrumenter;
-  private static final Instrumenter<ReceiveRequest, GetResponse> receiveInstrumenter;
-  private static final Instrumenter<DeliveryRequest, Void> deliverInstrumenter;
+  private static final Instrumenter<ChannelAndMethod, Void> channelInstrumenter =
+      createChannelInstrumenter();
+  private static final Instrumenter<ReceiveRequest, GetResponse> receiveInstrumenter =
+      createReceiveInstrumenter();
+  private static final Instrumenter<DeliveryRequest, Void> deliverInstrumenter =
+      createDeliverInstrumenter();
   static final ContextKey<RabbitChannelAndMethodHolder> CHANNEL_AND_METHOD_CONTEXT_KEY =
       ContextKey.named("opentelemetry-rabbitmq-channel-and-method-context-key");
-
-  static {
-    channelInstrumenter = createChannelInstrumenter();
-    receiveInstrumenter = createReceiveInstrumenter();
-    deliverInstrumenter = createDeliverInstrumenter();
-  }
 
   public static Instrumenter<ChannelAndMethod, Void> channelInstrumenter() {
     return channelInstrumenter;
@@ -82,7 +80,12 @@ public final class RabbitSingletons {
     return Instrumenter.<ReceiveRequest, GetResponse>builder(
             GlobalOpenTelemetry.get(), instrumentationName, ReceiveRequest::spanName)
         .addAttributesExtractors(extractors)
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+        .addSpanLinksExtractor(
+            new PropagatorBasedSpanLinksExtractor<>(
+                GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
+                ReceiveRequestTextMapGetter.INSTANCE))
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<DeliveryRequest, Void> createDeliverInstrumenter() {
