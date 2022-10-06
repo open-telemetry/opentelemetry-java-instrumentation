@@ -13,5 +13,13 @@ dependencies {
   testImplementation("com.fasterxml.jackson.module:jackson-module-afterburner")
 }
 
-// Requires old Guava. Can't use enforcedPlatform since predates BOM
-configurations.testRuntimeClasspath.resolutionStrategy.force("com.google.guava:guava:19.0")
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // Requires old Guava. Can't use enforcedPlatform since predates BOM
+    force("com.google.guava:guava:19.0")
+
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
+}
