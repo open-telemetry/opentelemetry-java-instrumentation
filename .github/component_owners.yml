@@ -1,0 +1,8 @@
+# this file is used by .github/workflows/assign-reviewers.yml
+components:
+  CHANGELOG.md:
+    - theletterf
+  docs:
+    - theletterf
+  README.md:
+    - theletterf
