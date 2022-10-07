@@ -53,13 +53,13 @@ public final class LoggingEventMapper {
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
-  public void emit(LoggerProvider logEmitterProvider, ILoggingEvent event) {
+  public void emit(LoggerProvider loggerProvider, ILoggingEvent event) {
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
     LogRecordBuilder builder =
-        logEmitterProvider.loggerBuilder(instrumentationName).build().logRecordBuilder();
+        loggerProvider.loggerBuilder(instrumentationName).build().logRecordBuilder();
     mapLoggingEvent(builder, event);
     builder.emit();
   }

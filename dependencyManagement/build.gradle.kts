@@ -34,8 +34,8 @@ val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.13.4",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:${otelVersion}-SNAPSHOT",
-  "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha-SNAPSHOT",
+  "io.opentelemetry:opentelemetry-bom:${otelVersion}",
+  "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
   "org.junit:junit-bom:5.9.1",
   "org.testcontainers:testcontainers-bom:1.17.5",
   "org.spockframework:spock-bom:2.3-groovy-4.0"

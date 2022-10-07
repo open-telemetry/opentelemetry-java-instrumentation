@@ -48,14 +48,14 @@ class OpenTelemetryAppenderConfigTest {
     resource = Resource.getDefault();
     instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
 
-    SdkLoggerProvider logEmitterProvider =
+    SdkLoggerProvider loggerProvider =
         SdkLoggerProvider.builder()
             .setResource(resource)
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
 
     GlobalLoggerProvider.resetForTest();
-    GlobalLoggerProvider.set(logEmitterProvider);
+    GlobalLoggerProvider.set(loggerProvider);
   }
 
   @BeforeEach
