@@ -10,6 +10,8 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
@@ -132,7 +134,6 @@ class PeerServiceAttributesExtractorTest {
         new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
     when(netAttributesExtractor.peerName(any(), any())).thenReturn("example.com");
-    when(netAttributesExtractor.sockPeerName(any(), any())).thenReturn("unmatched.com");
 
     Context context = Context.root();
 
@@ -146,5 +147,6 @@ class PeerServiceAttributesExtractorTest {
     assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
+    verify(netAttributesExtractor, never()).sockPeerName(any(), any());
   }
 }
