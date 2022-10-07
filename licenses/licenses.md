@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2022-09-28 14:05:54 PDT_
+_2022-10-07 17:47:15 CDT_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18` 
@@ -37,192 +37,188 @@ _2022-09-28 14:05:54 PDT_
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**7** **Group:** `io.opentelemetry` **Name:** `opentelemetry-api` **Version:** `1.19.0-SNAPSHOT` 
+**7** **Group:** `io.opentelemetry` **Name:** `opentelemetry-api` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**8** **Group:** `io.opentelemetry` **Name:** `opentelemetry-api-logs` **Version:** `1.19.0-alpha-SNAPSHOT` 
+**8** **Group:** `io.opentelemetry` **Name:** `opentelemetry-api-logs` **Version:** `1.19.0-alpha` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**9** **Group:** `io.opentelemetry` **Name:** `opentelemetry-context` **Version:** `1.19.0-SNAPSHOT` 
+**9** **Group:** `io.opentelemetry` **Name:** `opentelemetry-context` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**10** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-common` **Version:** `1.19.0-SNAPSHOT` 
+**10** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-common` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**11** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-jaeger` **Version:** `1.19.0-SNAPSHOT` 
+**11** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-jaeger` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**12** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-logging` **Version:** `1.19.0-SNAPSHOT` 
+**12** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-logging` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**13** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-logging-otlp` **Version:** `1.19.0-SNAPSHOT` 
+**13** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-logging-otlp` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**14** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-otlp` **Version:** `1.19.0-SNAPSHOT` 
+**14** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-otlp` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**15** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-otlp-common` **Version:** `1.19.0-SNAPSHOT` 
+**15** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-otlp-common` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**16** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-otlp-logs` **Version:** `1.19.0-alpha-SNAPSHOT` 
+**16** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-otlp-logs` **Version:** `1.19.0-alpha` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**17** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-prometheus` **Version:** `1.19.0-alpha-SNAPSHOT` 
+**17** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-prometheus` **Version:** `1.19.0-alpha` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**18** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-zipkin` **Version:** `1.19.0-SNAPSHOT` 
+**18** **Group:** `io.opentelemetry` **Name:** `opentelemetry-exporter-zipkin` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**19** **Group:** `io.opentelemetry` **Name:** `opentelemetry-extension-aws` **Version:** `1.19.0-SNAPSHOT` 
+**19** **Group:** `io.opentelemetry` **Name:** `opentelemetry-extension-aws` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**20** **Group:** `io.opentelemetry` **Name:** `opentelemetry-extension-kotlin` **Version:** `1.19.0-SNAPSHOT` 
+**20** **Group:** `io.opentelemetry` **Name:** `opentelemetry-extension-kotlin` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**21** **Group:** `io.opentelemetry` **Name:** `opentelemetry-extension-trace-propagators` **Version:** `1.19.0-SNAPSHOT` 
+**21** **Group:** `io.opentelemetry` **Name:** `opentelemetry-extension-trace-propagators` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**22** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk` **Version:** `1.19.0-SNAPSHOT` 
+**22** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**23** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-common` **Version:** `1.19.0-SNAPSHOT` 
+**23** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-common` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**24** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-autoconfigure` **Version:** `1.19.0-alpha-SNAPSHOT` 
+**24** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-autoconfigure` **Version:** `1.19.0-alpha` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**25** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-autoconfigure-spi` **Version:** `1.19.0-SNAPSHOT` 
+**25** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-autoconfigure-spi` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**26** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-incubator` **Version:** `1.19.0-alpha-SNAPSHOT` 
+**26** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-incubator` **Version:** `1.19.0-alpha` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**27** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-jaeger-remote-sampler` **Version:** `1.19.0-SNAPSHOT` 
+**27** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-jaeger-remote-sampler` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**28** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-extension-resources` **Version:** `1.19.0-SNAPSHOT` 
+**28** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-logs` **Version:** `1.19.0-alpha` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**29** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-logs` **Version:** `1.19.0-alpha-SNAPSHOT` 
+**29** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-metrics` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**30** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-metrics` **Version:** `1.19.0-SNAPSHOT` 
+**30** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-trace` **Version:** `1.19.0` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**31** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-trace` **Version:** `1.19.0-SNAPSHOT` 
-> - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
-> - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
-
-**32** **Group:** `io.opentelemetry` **Name:** `opentelemetry-semconv` **Version:** `1.19.0-alpha-SNAPSHOT` 
+**31** **Group:** `io.opentelemetry` **Name:** `opentelemetry-semconv` **Version:** `1.19.0-alpha` 
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**33** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-reporter` **Version:** `2.16.3` 
+**32** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-reporter` **Version:** `2.16.3` 
 > - **Manifest Project URL**: [https://zipkin.io/](https://zipkin.io/)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-reporter-2.16.3.jar/META-INF/LICENSE](zipkin-reporter-2.16.3.jar/META-INF/LICENSE)
 
-**34** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-sender-okhttp3` **Version:** `2.16.3` 
+**33** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-sender-okhttp3` **Version:** `2.16.3` 
 > - **Manifest Project URL**: [https://zipkin.io/](https://zipkin.io/)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-sender-okhttp3-2.16.3.jar/META-INF/LICENSE](zipkin-sender-okhttp3-2.16.3.jar/META-INF/LICENSE)
 
-**35** **Group:** `io.zipkin.zipkin2` **Name:** `zipkin` **Version:** `2.23.2` 
+**34** **Group:** `io.zipkin.zipkin2` **Name:** `zipkin` **Version:** `2.23.2` 
 > - **Manifest Project URL**: [http://zipkin.io/](http://zipkin.io/)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.23.2.jar/META-INF/LICENSE](zipkin-2.23.2.jar/META-INF/LICENSE)
 
-**36** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.12.17` 
+**35** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.12.17` 
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [byte-buddy-dep-1.12.17.jar/META-INF/LICENSE](byte-buddy-dep-1.12.17.jar/META-INF/LICENSE) 
     - [byte-buddy-dep-1.12.17.jar/META-INF/NOTICE](byte-buddy-dep-1.12.17.jar/META-INF/NOTICE)
 
-**37** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0` 
+**36** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0` 
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**38** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib` **Version:** `1.6.20` 
+**37** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib` **Version:** `1.6.20` 
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**39** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-common` **Version:** `1.6.20` 
+**38** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-common` **Version:** `1.6.20` 
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**40** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-jdk7` **Version:** `1.6.10` 
+**39** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-jdk7` **Version:** `1.6.10` 
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**41** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-jdk8` **Version:** `1.6.10` 
+**40** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-jdk8` **Version:** `1.6.10` 
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**42** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.3` 
+**41** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.3` 
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**43** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.3` 
+**42** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.3` 
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**44** **Group:** `org.yaml` **Name:** `snakeyaml` **Version:** `1.33` 
+**43** **Group:** `org.yaml` **Name:** `snakeyaml` **Version:** `1.33` 
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml](https://bitbucket.org/snakeyaml/snakeyaml)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## MIT License
 
-**45** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.2` 
+**44** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.2` 
 > - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
-**46** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.2` 
+**45** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.2` 
 > - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
 ## The 3-Clause BSD License
 
-**47** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.3` 
+**46** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.3` 
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**48** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.3` 
+**47** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.3` 
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -231,6 +227,6 @@ _2022-09-28 14:05:54 PDT_
 
 ## Unknown
 
-**49** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.0.0` 
+**48** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.0.0` 
 
 
