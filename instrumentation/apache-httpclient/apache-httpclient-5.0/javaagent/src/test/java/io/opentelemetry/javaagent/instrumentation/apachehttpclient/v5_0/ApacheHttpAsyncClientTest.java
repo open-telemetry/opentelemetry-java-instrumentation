@@ -19,6 +19,7 @@ import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
 import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http2.HttpVersionPolicy;
 import org.apache.hc.core5.io.CloseMode;
 import org.junit.jupiter.api.AfterAll;
@@ -72,6 +73,19 @@ class ApacheHttpAsyncClientTest {
     }
   }
 
+  @Nested
+  class ApacheClientNullContextTest extends AbstractTest {
+    @Override
+    SimpleHttpRequest createRequest(String method, URI uri) {
+      return new SimpleHttpRequest(method, uri);
+    }
+
+    @Override
+    protected HttpContext getContext() {
+      return null;
+    }
+  }
+
   abstract class AbstractTest extends AbstractApacheHttpClientTest<SimpleHttpRequest> {
     @Override
     protected SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -88,12 +102,12 @@ class ApacheHttpAsyncClientTest {
 
     @Override
     HttpResponse executeRequest(SimpleHttpRequest request, URI uri) throws Exception {
-      return client.execute(request, null).get();
+      return client.execute(request, getContext(), null).get();
     }
 
     @Override
     void executeRequestWithCallback(SimpleHttpRequest request, URI uri, RequestResult result) {
-      client.execute(request, new ResponseCallback(result));
+      client.execute(request, getContext(), new ResponseCallback(result));
     }
 
     @Override
