@@ -26,13 +26,13 @@ public class JdkHttpNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  public String peerName(HttpRequest httpRequest) {
     return httpRequest.uri().getHost();
   }
 
   @Override
   @Nullable
-  public Integer peerPort(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  public Integer peerPort(HttpRequest httpRequest) {
     int port = httpRequest.uri().getPort();
     if (port != -1) {
       return port;

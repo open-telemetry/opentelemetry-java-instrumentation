@@ -21,12 +21,12 @@ final class JedisNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(JedisRequest jedisRequest, @Nullable Void unused) {
+  public String peerName(JedisRequest jedisRequest) {
     return jedisRequest.getConnection().getHost();
   }
 
   @Override
-  public Integer peerPort(JedisRequest jedisRequest, @Nullable Void unused) {
+  public Integer peerPort(JedisRequest jedisRequest) {
     return jedisRequest.getConnection().getPort();
   }
 

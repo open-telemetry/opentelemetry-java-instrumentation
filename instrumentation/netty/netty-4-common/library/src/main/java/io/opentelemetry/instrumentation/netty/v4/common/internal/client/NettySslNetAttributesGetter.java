@@ -23,13 +23,13 @@ final class NettySslNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(NettySslRequest nettySslRequest, @Nullable Void unused) {
+  public String peerName(NettySslRequest nettySslRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(NettySslRequest nettySslRequest, @Nullable Void unused) {
+  public Integer peerPort(NettySslRequest nettySslRequest) {
     return null;
   }
 

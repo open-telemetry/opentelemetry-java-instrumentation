@@ -25,12 +25,12 @@ public final class SpringWebfluxNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(ClientRequest request, @Nullable ClientResponse response) {
+  public String peerName(ClientRequest request) {
     return request.url().getHost();
   }
 
   @Override
-  public Integer peerPort(ClientRequest request, @Nullable ClientResponse response) {
+  public Integer peerPort(ClientRequest request) {
     return request.url().getPort();
   }
 }

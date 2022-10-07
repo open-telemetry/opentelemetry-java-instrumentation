@@ -23,13 +23,13 @@ final class CassandraNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+  public String peerName(CassandraRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+  public Integer peerPort(CassandraRequest request) {
     return null;
   }
 

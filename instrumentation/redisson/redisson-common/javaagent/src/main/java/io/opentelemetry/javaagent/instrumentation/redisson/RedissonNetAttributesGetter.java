@@ -20,13 +20,13 @@ final class RedissonNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(RedissonRequest redissonRequest, @Nullable Void unused) {
+  public String peerName(RedissonRequest redissonRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(RedissonRequest redissonRequest, @Nullable Void unused) {
+  public Integer peerPort(RedissonRequest redissonRequest) {
     return null;
   }
 

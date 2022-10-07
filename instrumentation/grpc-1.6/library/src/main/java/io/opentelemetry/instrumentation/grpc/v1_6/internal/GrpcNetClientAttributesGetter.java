@@ -27,12 +27,12 @@ public final class GrpcNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(GrpcRequest grpcRequest, @Nullable Status status) {
+  public String peerName(GrpcRequest grpcRequest) {
     return grpcRequest.getLogicalHost();
   }
 
   @Override
-  public Integer peerPort(GrpcRequest grpcRequest, @Nullable Status status) {
+  public Integer peerPort(GrpcRequest grpcRequest) {
     return grpcRequest.getLogicalPort();
   }
 
