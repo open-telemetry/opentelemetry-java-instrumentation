@@ -94,4 +94,57 @@ class PeerServiceAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
   }
+
+  @Test
+  void shouldSetSockPeerNameIfItMatchesAndNoPeerNameProvided() {
+    // given
+    Map<String, String> peerServiceMapping = new HashMap<>();
+    peerServiceMapping.put("example.com", "myService");
+    peerServiceMapping.put("1.2.3.4", "someOtherService");
+
+    PeerServiceAttributesExtractor<String, String> underTest =
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
+
+    when(netAttributesExtractor.sockPeerName(any(), any())).thenReturn("example.com");
+
+    Context context = Context.root();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, "request");
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, "request", "response", null);
+
+    // then
+    assertThat(startAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
+  }
+
+  @Test
+  void shouldSetNoSockPeerNameIfPeerNameMatches() {
+    // given
+    Map<String, String> peerServiceMapping = new HashMap<>();
+    peerServiceMapping.put("example.com", "myService");
+    peerServiceMapping.put("unmatched.com", "someOtherService");
+
+    PeerServiceAttributesExtractor<String, String> underTest =
+        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
+
+    when(netAttributesExtractor.peerName(any(), any())).thenReturn("example.com");
+    when(netAttributesExtractor.sockPeerName(any(), any())).thenReturn("unmatched.com");
+
+    Context context = Context.root();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, "request");
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, "request", "response", null);
+
+    // then
+    assertThat(startAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
+  }
 }
