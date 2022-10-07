@@ -14,6 +14,7 @@ dependencies {
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-annotations-support"))
+  implementation(project(":instrumentation:resources"))
   implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
@@ -25,7 +26,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
   // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
   implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 

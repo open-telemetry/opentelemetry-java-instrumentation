@@ -7,16 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
-import io.opentelemetry.sdk.extension.resources.ContainerResource;
-import io.opentelemetry.sdk.extension.resources.ContainerResourceProvider;
-import io.opentelemetry.sdk.extension.resources.HostResource;
-import io.opentelemetry.sdk.extension.resources.HostResourceProvider;
-import io.opentelemetry.sdk.extension.resources.OsResource;
-import io.opentelemetry.sdk.extension.resources.OsResourceProvider;
-import io.opentelemetry.sdk.extension.resources.ProcessResource;
-import io.opentelemetry.sdk.extension.resources.ProcessResourceProvider;
-import io.opentelemetry.sdk.extension.resources.ProcessRuntimeResource;
-import io.opentelemetry.sdk.extension.resources.ProcessRuntimeResourceProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(OtelResourceProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.springboot.resource", name = "enabled", matchIfMissing = true)
+@SuppressWarnings("deprecation") // TODO: io.opentelemetry.instrumentation:opentelemetry-resources
 public class OtelResourceAutoConfiguration {
 
   @Bean
@@ -36,32 +27,32 @@ public class OtelResourceAutoConfiguration {
   }
 
   @Bean
-  @ConditionalOnClass(OsResource.class)
+  @ConditionalOnClass(io.opentelemetry.sdk.extension.resources.OsResource.class)
   public ResourceProvider otelOsResourceProvider() {
-    return new OsResourceProvider();
+    return new io.opentelemetry.sdk.extension.resources.OsResourceProvider();
   }
 
   @Bean
-  @ConditionalOnClass(ProcessResource.class)
+  @ConditionalOnClass(io.opentelemetry.sdk.extension.resources.ProcessResource.class)
   public ResourceProvider otelProcessResourceProvider() {
-    return new ProcessResourceProvider();
+    return new io.opentelemetry.sdk.extension.resources.ProcessResourceProvider();
   }
 
   @Bean
-  @ConditionalOnClass(ProcessRuntimeResource.class)
+  @ConditionalOnClass(io.opentelemetry.sdk.extension.resources.ProcessRuntimeResource.class)
   public ResourceProvider otelProcessRuntimeResourceProvider() {
-    return new ProcessRuntimeResourceProvider();
+    return new io.opentelemetry.sdk.extension.resources.ProcessRuntimeResourceProvider();
   }
 
   @Bean
-  @ConditionalOnClass(HostResource.class)
+  @ConditionalOnClass(io.opentelemetry.sdk.extension.resources.HostResource.class)
   public ResourceProvider otelHostResourceProvider() {
-    return new HostResourceProvider();
+    return new io.opentelemetry.sdk.extension.resources.HostResourceProvider();
   }
 
   @Bean
-  @ConditionalOnClass(ContainerResource.class)
+  @ConditionalOnClass(io.opentelemetry.sdk.extension.resources.ContainerResource.class)
   public ResourceProvider otelContainerResourceProvider() {
-    return new ContainerResourceProvider();
+    return new io.opentelemetry.sdk.extension.resources.ContainerResourceProvider();
   }
 }
