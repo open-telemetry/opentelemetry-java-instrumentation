@@ -94,9 +94,9 @@ A more advanced example shows how to report similar metrics related to individua
 ---
 rules:
   - bean: java.lang:name=*,type=MemoryPool
-    label:
+    attribute:
       pool: param(name)
-      type: attr(Type)
+      type: beanattr(Type)
     mapping:
       Usage.used:
         metric: my.own.jvm.memory.pool.used
@@ -110,7 +110,7 @@ rules:
         unit: By
 ```
 
-The ObjectName pattern will match a number of MBeans, each for a different memory pool. The number and names of available memory pools, however, will be known only at runtime. To report values for all actual memory pools using only two metrics, we use metric attributes (referenced by the configuration file as `label` elements). The first metric attribute, named `pool` will have its value derived from the ObjectName parameter `name` - which corresponds to the memory pool name. The second metric attribute, named `type` will get its value from the corresponding MBean attribute named `Type`. The values of this attribute are strings `HEAP` or `NON_HEAP` classifying the corresponding memory pool. Here the definition of the metric attributes is shared by both metrics, but it is also possible to define them at the individual metric level.
+The ObjectName pattern will match a number of MBeans, each for a different memory pool. The number and names of available memory pools, however, will be known only at runtime. To report values for all actual memory pools using only two metrics, we use metric attributes (referenced by the configuration file as `attribute` elements). The first metric attribute, named `pool` will have its value derived from the ObjectName parameter `name` - which corresponds to the memory pool name. The second metric attribute, named `type` will get its value from the corresponding MBean attribute named `Type`. The values of this attribute are strings `HEAP` or `NON_HEAP` classifying the corresponding memory pool. Here the definition of the metric attributes is shared by both metrics, but it is also possible to define them at the individual metric level.
 
 Using the above rule, when running on HotSpot JVM for Java 11, the following combinations of metric attributes will be reported.
  - {pool="Compressed Class Space", type="NON_HEAP"}
@@ -132,19 +132,19 @@ Sometimes it is desired to merge several MBean attributes into a single metric, 
 ---
 rules:
   - bean: Catalina:type=GlobalRequestProcessor,name=*
-    label:
+    attribute:
       handler: param(name)
     type: counter
     mapping:
       bytesReceived:
         metric: catalina.traffic
-        label:
+        attribute:
           direction: in
         desc: The number of transmitted bytes
         unit: By
       bytesSent:
         metric: catalina.traffic
-        label:
+        attribute:
           direction: out
         desc: The number of transmitted bytes
         unit: By
@@ -164,7 +164,7 @@ While it is possible to define MBeans based metrics with fine details, sometimes
 ---
 rules:
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
-    label:
+    attribute:
       threadId: param(thread-id)
     prefix: my.kafka.streams.
     unit: ms
@@ -182,7 +182,7 @@ rules:
       poll-records-max:
         unit: 1
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
-    label:
+    attribute:
       threadId: param(thread-id)
     prefix: my.kafka.streams.
     unit: /s
@@ -194,7 +194,7 @@ rules:
       task-closed-rate:
       skipped-records-rate:
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
-    label:
+    attribute:
       threadId: param(thread-id)
     prefix: my.kafka.streams.totals.
     unit: 1
@@ -207,7 +207,7 @@ rules:
       task-closed-total:
 ```
 Because we declared metric prefix (here `my.kafka.streams.`) and did not specify actual metric names, the metric names will be generated automatically, by appending the corresponding MBean attribute name to the prefix.
-Thus, the above definitions will create several metrics, named `my.kafka.streams.commit-latency-avg`, `my.kafka.streams.commit-latency-max`, and so on. For the first configuration rule, the default unit has been changed to `ms`, which remains in effect for all attribute mappings listed within the rule, unless they define their own unit. Similarly, the second configuration rule defines the unit as `/s`, valid for all the rates reported.
+Thus, the above definitions will create several metrics, named `my.kafka.streams.commit-latency-avg`, `my.kafka.streams.commit-latency-max`, and so on. For the first configuration rule, the default unit has been changed to `ms`, which remains in effect for all MBean attribute mappings listed within the rule, unless they define their own unit. Similarly, the second configuration rule defines the unit as `/s`, valid for all the rates reported.
 
 The metric descriptions will remain undefined, unless they are provided by the queried MBeans.
 
@@ -217,51 +217,51 @@ Here is the general description of the accepted configuration file syntax. The w
 
 ```yaml
 ---
-rules:                           # start of list of configuration rules
-  - bean: <OBJECTNAME>           # can contain wildcards
-    label:                       # optional metric attributes, they apply to all metrics below
-      <LABEL1>: param(<PARAM>)   # <PARAM> is used as the key to extract value from actual ObjectName
-      <LABEL2>: attr(<ATTR>)     # <ATTR> is used as the attribute name to extract value from MBean
-    prefix: <METRIC_NAME_PREFIX> # optional, useful for avoiding specifying metric names below
-    unit: <UNIT>                 # optional, redefines the default unit for the whole rule
-    type: <TYPE>                 # optional, redefines the default type for the whole rule
+rules:                                # start of list of configuration rules
+  - bean: <OBJECTNAME>                # can contain wildcards
+    attribute:                        # optional metric attributes, they apply to all metrics below
+      <ATTRIBUTE1>: param(<PARAM>)    # <PARAM> is used as the key to extract value from actual ObjectName
+      <ATTRIBUTE2>: beanattr(<ATTR>)  # <ATTR> is used as the MBean attribute name to extract the value
+    prefix: <METRIC_NAME_PREFIX>      # optional, useful for avoiding specifying metric names below
+    unit: <UNIT>                      # optional, redefines the default unit for the whole rule
+    type: <TYPE>                      # optional, redefines the default type for the whole rule
     mapping:
-      <ATTRIBUTE1>:              # an MBean attribute name defining the metric value
-        metric: <METRIC_NAME1>   # metric name will be <METRIC_NAME_PREFIX><METRIC_NAME1>
-        type: <TYPE>             # optional, the default type is gauge
-        desc: <DESCRIPTION1>     # optional
-        unit: <UNIT1>            # optional
-        label:                   # optional, will be used in addition to the shared labels above
-          <LABEL3>: <STRING>     # direct value for the label
-      <ATTRIBUTE2>:              # use a.b to get access into CompositeData
-        metric: <METRIC_NAME2>   # optional, the default is the MBean attribute name
-        unit: <UNIT2>            # optional
-      <ATTRIBUTE3>:              # metric name will be <METRIC_NAME_PREFIX><ATTRIBUTE3>
-      <ATTRIBUTE4>:              # metric name will be <METRIC_NAME_PREFIX><ATTRIBUTE4>
-  - beans:                       # alternatively, if multiple object names are needed
-      - <OBJECTNAME1>            # at least one object name must be specified
+      <BEANATTR1>:                    # an MBean attribute name defining the metric value
+        metric: <METRIC_NAME1>        # metric name will be <METRIC_NAME_PREFIX><METRIC_NAME1>
+        type: <TYPE>                  # optional, the default type is gauge
+        desc: <DESCRIPTION1>          # optional
+        unit: <UNIT1>                 # optional
+        attribute:                    # optional, will be used in addition to the shared metric attributes above
+          <ATTRIBUTE3>: <STRING>      # direct value for the metric attribute
+      <BEANATTR2>:                    # use a.b to get access into CompositeData
+        metric: <METRIC_NAME2>        # optional, the default is the MBean attribute name
+        unit: <UNIT2>                 # optional
+      <BEANATTR3>:                    # metric name will be <METRIC_NAME_PREFIX><BEANATTR3>
+      <BEANATTR4>:                    # metric name will be <METRIC_NAME_PREFIX><BEANATTR4>
+  - beans:                            # alternatively, if multiple object names are needed
+      - <OBJECTNAME1>                 # at least one object name must be specified
       - <OBJECTNAME2>
     mapping:
-      <ATTRIBUTE5>:              # an MBean attribute name defining the metric value
-        metric: <METRIC_NAME5>   # metric name will be <METRIC_NAME5>
-        type: updowncounter      # optional
-      <ATTRIBUTE6>:              # metric name will be <ATTRIBUTE6>
+      <BEANATTR5>:                    # an MBean attribute name defining the metric value
+        metric: <METRIC_NAME5>        # metric name will be <METRIC_NAME5>
+        type: updowncounter           # optional
+      <BEANATTR6>:                    # metric name will be <BEANATTR6>
 ```
 The following table explains the used terms with more details.
 
 | Syntactic Element | Description |
 | ---------------- | --------------- |
 | OBJECTNAME | A syntactically valid string representing an ObjectName (see [ObjectName constructor](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-)). |
-| LABEL | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/reference/specification/common/#attribute) key. |
-| ATTR | A non-empty string used as a name of the MBean attribute. The attribute value must be a String, otherwise the specified label (metric attribute) will not be used. |
-| PARAM | A non-empty string used as a property key for the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified label will not be used. |
+| ATTRIBUTE | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/reference/specification/common/#attribute) key. |
+| ATTR | A non-empty string used as a name of the MBean attribute. The MBean attribute value must be a String, otherwise the specified metric attribute will not be used. |
+| PARAM | A non-empty string used as a property key for the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified metric attribute will not be used. |
 | METRIC_NAME_PREFIX | Any non-empty string which will be prepended to the specified metric (instrument) names. |
 | METRIC_NAME | Any non-empty string. The string, prefixed by the optional prefix (see above) must satisfy [instrument naming rule](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-naming-rule). |
 | TYPE | One of `counter`, `updowncounter`, or `gauge`. The default is `gauge`. This value is case insensitive. |
 | DESCRIPTION | Any string to be used as human-readable [description](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-description) of the metric. If the description is not provided by the rule, an attempt will be made to extract one automatically from the corresponding MBean. |
 | UNIT | A string identifying the [unit](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-unit) of measurements reported by the metric. Enclose the string in single or double quotes if using unit annotations. |
-| STRING | Any string to be used directly as the label value. |
-| ATTRIBUTE | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). |
+| STRING | Any string to be used directly as the metric attribute value. |
+| BEANATTR | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). |
 
 ## Assumptions and Limitations
 
