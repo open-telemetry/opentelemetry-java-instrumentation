@@ -25,13 +25,13 @@ public class JettyHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(Request request, @Nullable Response response) {
+  public String peerName(Request request) {
     return request.getHost();
   }
 
   @Override
   @Nullable
-  public Integer peerPort(Request request, @Nullable Response response) {
+  public Integer peerPort(Request request) {
     return request.getPort();
   }
 }

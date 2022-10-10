@@ -25,12 +25,12 @@ public final class OkHttpNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(Request request, @Nullable Response response) {
+  public String peerName(Request request) {
     return request.url().host();
   }
 
   @Override
-  public Integer peerPort(Request request, @Nullable Response response) {
+  public Integer peerPort(Request request) {
     return request.url().port();
   }
 }

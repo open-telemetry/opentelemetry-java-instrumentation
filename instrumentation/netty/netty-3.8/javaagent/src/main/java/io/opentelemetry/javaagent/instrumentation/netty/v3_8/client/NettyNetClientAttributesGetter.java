@@ -27,15 +27,13 @@ final class NettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse httpResponse) {
+  public String peerName(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse httpResponse) {
+  public Integer peerPort(HttpRequestAndChannel requestAndChannel) {
     return null;
   }
 

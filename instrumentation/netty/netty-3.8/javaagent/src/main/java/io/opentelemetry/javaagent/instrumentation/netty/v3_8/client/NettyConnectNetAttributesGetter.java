@@ -26,7 +26,7 @@ final class NettyConnectNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(NettyConnectionRequest request, @Nullable Channel channel) {
+  public String peerName(NettyConnectionRequest request) {
     SocketAddress requestedAddress = request.remoteAddressOnStart();
     if (requestedAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) requestedAddress).getHostString();
@@ -36,7 +36,7 @@ final class NettyConnectNetAttributesGetter
 
   @Nullable
   @Override
-  public Integer peerPort(NettyConnectionRequest request, @Nullable Channel channel) {
+  public Integer peerPort(NettyConnectionRequest request) {
     SocketAddress requestedAddress = request.remoteAddressOnStart();
     if (requestedAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) requestedAddress).getPort();

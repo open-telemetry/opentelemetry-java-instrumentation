@@ -22,13 +22,13 @@ final class LettuceNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(OpenTelemetryEndpoint openTelemetryEndpoint, @Nullable Void unused) {
+  public String peerName(OpenTelemetryEndpoint openTelemetryEndpoint) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(OpenTelemetryEndpoint openTelemetryEndpoint, @Nullable Void unused) {
+  public Integer peerPort(OpenTelemetryEndpoint openTelemetryEndpoint) {
     return null;
   }
 

@@ -26,12 +26,12 @@ public final class DubboNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(DubboRequest request, @Nullable Result result) {
+  public String peerName(DubboRequest request) {
     return request.url().getHost();
   }
 
   @Override
-  public Integer peerPort(DubboRequest request, @Nullable Result result) {
+  public Integer peerPort(DubboRequest request) {
     return request.url().getPort();
   }
 

@@ -21,13 +21,13 @@ public class Elasticsearch6TransportNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String peerName(ElasticTransportRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public Integer peerPort(ElasticTransportRequest request) {
     return null;
   }
 
