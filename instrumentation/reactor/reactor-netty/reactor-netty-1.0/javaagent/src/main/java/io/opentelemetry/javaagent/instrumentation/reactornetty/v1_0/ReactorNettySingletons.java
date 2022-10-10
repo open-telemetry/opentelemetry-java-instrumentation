@@ -76,8 +76,6 @@ public final class ReactorNettySingletons {
             INSTRUMENTATION_NAME,
             connectionTelemetryEnabled,
             false,
-            CommonConfig.get().getClientRequestHeaders(),
-            CommonConfig.get().getClientResponseHeaders(),
             CommonConfig.get().getPeerServiceMapping());
     CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
   }

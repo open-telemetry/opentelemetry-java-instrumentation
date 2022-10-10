@@ -10,7 +10,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.netty.channel.socket.DatagramChannel;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;

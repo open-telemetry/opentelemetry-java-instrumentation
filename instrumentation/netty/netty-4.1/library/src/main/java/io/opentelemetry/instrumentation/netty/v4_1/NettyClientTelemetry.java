@@ -11,8 +11,7 @@ import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
+import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
@@ -22,8 +21,8 @@ public final class NettyClientTelemetry {
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
 
-  NettyClientTelemetry(NettyClientInstrumenterFactory nettyClientInstrumenterFactory) {
-    this.instrumenter = nettyClientInstrumenterFactory.createHttpInstrumenter();
+  NettyClientTelemetry(Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+    this.instrumenter = instrumenter;
   }
 
   /** Returns a new {@link NettyClientTelemetry} configured with the given {@link OpenTelemetry}. */

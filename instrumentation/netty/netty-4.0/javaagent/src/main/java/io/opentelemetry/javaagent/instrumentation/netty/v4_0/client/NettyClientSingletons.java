@@ -8,13 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigPropertyWarning;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import java.util.Collections;
 
 public final class NettyClientSingletons {
 
@@ -47,10 +48,12 @@ public final class NettyClientSingletons {
             "io.opentelemetry.netty-4.0",
             connectionTelemetryEnabled,
             sslTelemetryEnabled,
+            CommonConfig.get().getPeerServiceMapping());
+    INSTRUMENTER =
+        factory.createHttpInstrumenter(
             CommonConfig.get().getClientRequestHeaders(),
             CommonConfig.get().getClientResponseHeaders(),
-            CommonConfig.get().getPeerServiceMapping());
-    INSTRUMENTER = factory.createHttpInstrumenter();
+            Collections.emptyList());
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
   }

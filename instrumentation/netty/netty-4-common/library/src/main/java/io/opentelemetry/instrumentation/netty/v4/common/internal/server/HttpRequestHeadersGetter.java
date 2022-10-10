@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import javax.annotation.Nullable;
 
 enum HttpRequestHeadersGetter implements TextMapGetter<HttpRequestAndChannel> {

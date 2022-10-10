@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.netty.v4.common.internal.HttpSche
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
 import javax.annotation.Nullable;
 
