@@ -3,19 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.netty.v4_1;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -26,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /*
 Netty does not actually support proper http pipelining and has no way to correlate incoming response
@@ -37,25 +32,14 @@ does not wreak havoc on Netty channel.
 public class SingleNettyConnection implements SingleConnection {
   private final String host;
   private final int port;
+  private final Consumer<Channel> channelConsumer;
   private final Channel channel;
 
-  public SingleNettyConnection(String host, int port) {
+  public SingleNettyConnection(
+      Bootstrap bootstrap, String host, int port, Consumer<Channel> channelConsumer) {
     this.host = host;
     this.port = port;
-    EventLoopGroup group = new NioEventLoopGroup();
-    Bootstrap bootstrap = new Bootstrap();
-    bootstrap
-        .group(group)
-        .channel(NioSocketChannel.class)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-        .handler(
-            new ChannelInitializer<SocketChannel>() {
-              @Override
-              protected void initChannel(SocketChannel socketChannel) {
-                ChannelPipeline pipeline = socketChannel.pipeline();
-                pipeline.addLast(new HttpClientCodec());
-              }
-            });
+    this.channelConsumer = channelConsumer;
 
     ChannelFuture channelFuture = bootstrap.connect(host, port);
     channelFuture.awaitUninterruptibly();
@@ -70,6 +54,7 @@ public class SingleNettyConnection implements SingleConnection {
   public synchronized int doRequest(String path, Map<String, String> headers)
       throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Integer> result = new CompletableFuture<>();
+    channelConsumer.accept(channel);
 
     channel.pipeline().addLast(new ClientHandler(result));
 
