@@ -22,7 +22,7 @@ public abstract class AbstractOpenCensusShimTest {
 
   @Test
   void testCrossOtelOcBoundary() {
-    Tracer tracer = testing().getOpenTelemetry().getTracer("unidentified");
+    Tracer tracer = testing().getOpenTelemetry().getTracer("opencensus-shim", "0.0.0");
     Span span = tracer.spanBuilder("test-span").setSpanKind(SpanKind.INTERNAL).startSpan();
     Scope scope = span.makeCurrent();
     try {

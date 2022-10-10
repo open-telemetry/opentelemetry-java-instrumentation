@@ -15,7 +15,7 @@ import java.util.List;
 public class OpencensusShimInstrumentationModule extends InstrumentationModule {
 
   public OpencensusShimInstrumentationModule() {
-    super("opencensusshim", "io.opentelemetry.opencensusshim");
+    super("opencensus-shim", "io.opentelemetry.opencensusshim");
   }
 
   @Override
