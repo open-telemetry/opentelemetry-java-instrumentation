@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons.connectionInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
