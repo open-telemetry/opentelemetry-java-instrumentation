@@ -488,6 +488,9 @@ hideFromDependabot(":instrumentation:vibur-dbcp-11.0:library")
 hideFromDependabot(":instrumentation:vibur-dbcp-11.0:testing")
 hideFromDependabot(":instrumentation:wicket-8.0:javaagent")
 
+include(":instrumentation:opencensus-shim:javaagent")
+include(":instrumentation:opencensus-shim:testing")
+
 // benchmark
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
