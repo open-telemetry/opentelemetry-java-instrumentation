@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -253,7 +252,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     then:
     // The first one returns the removed tracing handler
-    pipeline.remove(HttpClientTracingHandler.getName()) != null
+    pipeline.remove("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler") != null
   }
 
   def "when a handler is added to the netty pipeline we add ONLY ONE tracing handler"() {
@@ -264,9 +263,9 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     when:
     pipeline.addLast("name", new HttpClientCodec())
     // The first one returns the removed tracing handler
-    pipeline.remove(HttpClientTracingHandler.getName())
+    pipeline.remove("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler")
     // There is only one
-    pipeline.remove(HttpClientTracingHandler.getName()) == null
+    pipeline.remove("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler") == null
 
     then:
     thrown NoSuchElementException
@@ -283,7 +282,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     then:
     // The first one returns the removed tracing handler
-    null != pipeline.remove(HttpClientTracingHandler.getName())
+    null != pipeline.remove("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler")
     null != pipeline.remove("some_handler")
     null != pipeline.remove("a_traced_handler")
   }
@@ -311,9 +310,9 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     channel.pipeline().addLast(new TracedHandlerFromInitializerHandler())
 
     then:
-    null != channel.pipeline().get(HttpClientTracingHandler.getName())
+    null != channel.pipeline().get("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler")
     null != channel.pipeline().remove("added_in_initializer")
-    null == channel.pipeline().get(HttpClientTracingHandler.getName())
+    null == channel.pipeline().get("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler")
   }
 
   def "request with trace annotated method #method"() {

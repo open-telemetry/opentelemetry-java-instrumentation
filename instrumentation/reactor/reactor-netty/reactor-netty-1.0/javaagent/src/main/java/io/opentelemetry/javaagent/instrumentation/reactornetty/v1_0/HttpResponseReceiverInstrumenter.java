@@ -11,8 +11,8 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.React
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
