@@ -54,7 +54,50 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
-    internalSet(attributes, SemanticAttributes.HTTP_URL, getter.url(request));
+    internalSet(attributes, SemanticAttributes.HTTP_URL, stripSensitiveData(getter.url(request)));
+  }
+
+  @Nullable
+  private static String stripSensitiveData(@Nullable String url) {
+    if (url == null || url.isEmpty()) {
+      return url;
+    }
+
+    int schemeEndIndex = url.indexOf(':');
+
+    if (schemeEndIndex == -1) {
+      // not a valid url
+      return url;
+    }
+
+    int len = url.length();
+    if (len <= schemeEndIndex + 2
+        || url.charAt(schemeEndIndex + 1) != '/'
+        || url.charAt(schemeEndIndex + 2) != '/') {
+      // has no authority component
+      return url;
+    }
+
+    // look for the end of the authority component:
+    //   '/', '?', '#' ==> start of path
+    int index;
+    int atIndex = -1;
+    for (index = schemeEndIndex + 3; index < len; index++) {
+      char c = url.charAt(index);
+
+      if (c == '@') {
+        atIndex = index;
+      }
+
+      if (c == '/' || c == '?' || c == '#') {
+        break;
+      }
+    }
+
+    if (atIndex == -1 || atIndex == len - 1) {
+      return url;
+    }
+    return url.substring(0, schemeEndIndex + 3) + url.substring(atIndex + 1);
   }
 
   @Override
