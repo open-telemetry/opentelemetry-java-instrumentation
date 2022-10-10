@@ -4,7 +4,6 @@ plugins {
 
 repositories {
   mavenCentral()
-  maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots") }
   maven("https://maven.restlet.talend.com/")
   mavenLocal()
 }
