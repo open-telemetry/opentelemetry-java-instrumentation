@@ -74,8 +74,6 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION" "GET"
             "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
-            "$SemanticAttributes.NET_PEER_PORT" httpHost.port
           }
         }
         span(1) {
@@ -148,8 +146,6 @@ class ElasticsearchRest6Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION" "GET"
             "$SemanticAttributes.DB_STATEMENT" "GET _cluster/health"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" httpHost.hostName
-            "$SemanticAttributes.NET_PEER_PORT" httpHost.port
           }
         }
         span(2) {

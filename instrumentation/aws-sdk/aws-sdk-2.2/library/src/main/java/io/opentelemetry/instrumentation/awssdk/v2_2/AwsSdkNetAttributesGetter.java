@@ -22,14 +22,14 @@ class AwsSdkNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+  public String peerName(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.host();
   }
 
   @Override
-  public Integer peerPort(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+  public Integer peerPort(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.port();

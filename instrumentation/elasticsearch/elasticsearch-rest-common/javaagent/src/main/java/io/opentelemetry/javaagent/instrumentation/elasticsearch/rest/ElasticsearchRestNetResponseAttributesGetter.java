@@ -21,28 +21,13 @@ final class ElasticsearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(ElasticsearchRestRequest request, @Nullable Response response) {
-    if (response != null) {
-      return response.getHost().getHostName();
-    }
+  public String peerName(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Integer peerPort(ElasticsearchRestRequest request, @Nullable Response response) {
-    if (response != null) {
-      return response.getHost().getPort();
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String sockPeerAddr(ElasticsearchRestRequest request, @Nullable Response response) {
-    if (response != null && response.getHost().getAddress() != null) {
-      return response.getHost().getAddress().getHostAddress();
-    }
+  public Integer peerPort(ElasticsearchRestRequest request) {
     return null;
   }
 
@@ -52,6 +37,15 @@ final class ElasticsearchRestNetResponseAttributesGetter
       ElasticsearchRestRequest elasticsearchRestRequest, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() instanceof Inet6Address) {
       return "inet6";
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String sockPeerAddr(ElasticsearchRestRequest request, @Nullable Response response) {
+    if (response != null && response.getHost().getAddress() != null) {
+      return response.getHost().getAddress().getHostAddress();
     }
     return null;
   }

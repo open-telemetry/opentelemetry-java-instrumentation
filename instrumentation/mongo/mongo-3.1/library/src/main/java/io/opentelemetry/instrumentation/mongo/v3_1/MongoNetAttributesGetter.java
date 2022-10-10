@@ -19,7 +19,7 @@ class MongoNetAttributesGetter implements NetClientAttributesGetter<CommandStart
 
   @Nullable
   @Override
-  public String peerName(CommandStartedEvent event, @Nullable Void unused) {
+  public String peerName(CommandStartedEvent event) {
     if (event.getConnectionDescription() != null
         && event.getConnectionDescription().getServerAddress() != null) {
       return event.getConnectionDescription().getServerAddress().getHost();
@@ -29,7 +29,7 @@ class MongoNetAttributesGetter implements NetClientAttributesGetter<CommandStart
 
   @Nullable
   @Override
-  public Integer peerPort(CommandStartedEvent event, @Nullable Void unused) {
+  public Integer peerPort(CommandStartedEvent event) {
     if (event.getConnectionDescription() != null
         && event.getConnectionDescription().getServerAddress() != null) {
       return event.getConnectionDescription().getServerAddress().getPort();

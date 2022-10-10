@@ -30,13 +30,13 @@ class InetSocketAddressNetClientAttributesGetterTest {
             }
 
             @Override
-            public String peerName(InetSocketAddress request, InetSocketAddress response) {
+            public String peerName(InetSocketAddress request) {
               // net.peer.name and net.peer.port are tested in NetClientAttributesExtractorTest
               return null;
             }
 
             @Override
-            public Integer peerPort(InetSocketAddress request, InetSocketAddress response) {
+            public Integer peerPort(InetSocketAddress request) {
               // net.peer.name and net.peer.port are tested in NetClientAttributesExtractorTest
               return null;
             }

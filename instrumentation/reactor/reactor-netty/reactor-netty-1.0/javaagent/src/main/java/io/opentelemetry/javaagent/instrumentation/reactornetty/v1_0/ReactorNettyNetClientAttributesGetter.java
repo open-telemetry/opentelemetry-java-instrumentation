@@ -24,13 +24,13 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(HttpClientConfig request, @Nullable HttpClientResponse response) {
+  public String peerName(HttpClientConfig request) {
     return getHost(request);
   }
 
   @Nullable
   @Override
-  public Integer peerPort(HttpClientConfig request, @Nullable HttpClientResponse response) {
+  public Integer peerPort(HttpClientConfig request) {
     return getPort(request);
   }
 

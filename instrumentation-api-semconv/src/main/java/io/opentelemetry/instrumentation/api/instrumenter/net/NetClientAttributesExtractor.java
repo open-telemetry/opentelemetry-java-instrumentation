@@ -37,7 +37,16 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    String peerName = getter.peerName(request);
+    Integer peerPort = getter.peerPort(request);
+    if (peerName != null) {
+      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
+      if (peerPort != null && peerPort > 0) {
+        internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+      }
+    }
+  }
 
   @Override
   public void onEnd(
@@ -49,14 +58,8 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
 
-    String peerName = getter.peerName(request, response);
-    Integer peerPort = getter.peerPort(request, response);
-    if (peerName != null) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
-      if (peerPort != null && peerPort > 0) {
-        internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
-      }
-    }
+    String peerName = getter.peerName(request);
+    Integer peerPort = getter.peerPort(request);
 
     String sockPeerAddr = getter.sockPeerAddr(request, response);
     if (sockPeerAddr != null && !sockPeerAddr.equals(peerName)) {

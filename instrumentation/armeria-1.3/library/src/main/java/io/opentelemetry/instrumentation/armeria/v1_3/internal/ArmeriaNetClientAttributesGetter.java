@@ -28,12 +28,12 @@ public final class ArmeriaNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public String peerName(RequestContext ctx) {
     return request(ctx).uri().getHost();
   }
 
   @Override
-  public Integer peerPort(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public Integer peerPort(RequestContext ctx) {
     return request(ctx).uri().getPort();
   }
 

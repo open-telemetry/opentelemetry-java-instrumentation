@@ -54,7 +54,7 @@ class PeerServiceAttributesExtractorTest {
     PeerServiceAttributesExtractor<String, String> underTest =
         new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
-    when(netAttributesExtractor.peerName(any(), any())).thenReturn("example2.com");
+    when(netAttributesExtractor.peerName(any())).thenReturn("example2.com");
 
     Context context = Context.root();
 
@@ -79,7 +79,7 @@ class PeerServiceAttributesExtractorTest {
     PeerServiceAttributesExtractor<String, String> underTest =
         new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceMapping);
 
-    when(netAttributesExtractor.peerName(any(), any())).thenReturn("example.com");
+    when(netAttributesExtractor.peerName(any())).thenReturn("example.com");
 
     Context context = Context.root();
 
