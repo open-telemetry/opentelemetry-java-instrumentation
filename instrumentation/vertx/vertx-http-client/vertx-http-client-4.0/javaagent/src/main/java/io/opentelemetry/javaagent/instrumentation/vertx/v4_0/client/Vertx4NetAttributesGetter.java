@@ -23,12 +23,12 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String peerName(HttpClientRequest request) {
     return request.getHost();
   }
 
   @Override
-  public Integer peerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public Integer peerPort(HttpClientRequest request) {
     return request.getPort();
   }
 

@@ -25,12 +25,12 @@ public final class RatpackHttpNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(RequestSpec request, @Nullable HttpResponse response) {
+  public String peerName(RequestSpec request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(RequestSpec request, @Nullable HttpResponse response) {
+  public Integer peerPort(RequestSpec request) {
     return request.getUri().getPort();
   }
 }

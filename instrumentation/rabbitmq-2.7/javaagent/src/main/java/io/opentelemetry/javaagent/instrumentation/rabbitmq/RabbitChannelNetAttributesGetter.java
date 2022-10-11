@@ -20,13 +20,13 @@ public class RabbitChannelNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public String peerName(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public Integer peerPort(ChannelAndMethod channelAndMethod) {
     return null;
   }
 

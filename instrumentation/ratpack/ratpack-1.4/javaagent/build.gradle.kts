@@ -14,6 +14,7 @@ dependencies {
   library("io.ratpack:ratpack-core:1.4.0")
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  implementation(project(":instrumentation:netty:netty-4.1:library"))
 
   testImplementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
 

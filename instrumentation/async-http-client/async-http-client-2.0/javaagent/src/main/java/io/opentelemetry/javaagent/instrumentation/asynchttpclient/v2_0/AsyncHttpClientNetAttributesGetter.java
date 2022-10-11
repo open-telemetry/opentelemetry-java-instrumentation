@@ -21,12 +21,12 @@ final class AsyncHttpClientNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(RequestContext requestContext, @Nullable Response response) {
+  public String peerName(RequestContext requestContext) {
     return requestContext.getRequest().getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(RequestContext requestContext, @Nullable Response response) {
+  public Integer peerPort(RequestContext requestContext) {
     return requestContext.getRequest().getUri().getPort();
   }
 

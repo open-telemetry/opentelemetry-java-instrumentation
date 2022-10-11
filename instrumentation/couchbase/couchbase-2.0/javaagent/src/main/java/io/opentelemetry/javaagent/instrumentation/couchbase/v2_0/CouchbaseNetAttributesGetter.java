@@ -23,13 +23,13 @@ public class CouchbaseNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
+  public String peerName(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
+  public Integer peerPort(CouchbaseRequestInfo couchbaseRequest) {
     return null;
   }
 

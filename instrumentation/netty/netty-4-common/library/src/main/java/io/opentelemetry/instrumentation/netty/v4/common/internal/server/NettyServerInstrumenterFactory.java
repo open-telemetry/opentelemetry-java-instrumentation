@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
 
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
 
 /**
@@ -25,6 +25,7 @@ import java.util.List;
 public final class NettyServerInstrumenterFactory {
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> create(
+      OpenTelemetry openTelemetry,
       String instrumentationName,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders) {
@@ -32,9 +33,7 @@ public final class NettyServerInstrumenterFactory {
     NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
 
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
-            GlobalOpenTelemetry.get(),
-            instrumentationName,
-            HttpSpanNameExtractor.create(httpAttributesGetter))
+            openTelemetry, instrumentationName, HttpSpanNameExtractor.create(httpAttributesGetter))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(
             HttpServerAttributesExtractor.builder(httpAttributesGetter)
