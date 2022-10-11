@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.netty.v4_1;
 
 import io.netty.channel.Channel;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,7 +33,7 @@ public class Netty41ClientTest extends AbstractNetty41ClientTest {
   @Override
   protected void configureChannel(Channel channel) {
     // Current context must be propagated to the channel
-    NettyClientTelemetry.setChannelContext(channel);
+    NettyClientTelemetry.setChannelContext(channel, Context.current());
   }
 
   @Override

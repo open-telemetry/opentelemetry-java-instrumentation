@@ -68,10 +68,10 @@ public final class NettyClientTelemetry {
   }
 
   /**
-   * Propagate the current context to the {@link Channel}. This MUST be called before each HTTP
+   * Propagate the {@link Context} to the {@link Channel}. This MUST be called before each HTTP
    * request executed on a {@link Channel}.
    */
-  public static void setChannelContext(Channel channel) {
-    channel.attr(AttributeKeys.WRITE_CONTEXT).compareAndSet(null, Context.current());
+  public static void setChannelContext(Channel channel, Context context) {
+    channel.attr(AttributeKeys.WRITE_CONTEXT).compareAndSet(null, context);
   }
 }
