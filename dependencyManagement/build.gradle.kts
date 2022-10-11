@@ -50,7 +50,7 @@ val CORE_DEPENDENCIES = listOf(
   "com.google.errorprone:error_prone_core:2.15.0",
   "com.google.errorprone:error_prone_test_helpers:2.15.0",
   // When updating, also update conventions/build.gradle.kts
-  "net.bytebuddy:byte-buddy:1.12.17",
+  "net.bytebuddy:byte-buddy:1.12.18",
   "net.bytebuddy:byte-buddy-dep:1.12.17",
   "net.bytebuddy:byte-buddy-agent:1.12.17",
   "net.bytebuddy:byte-buddy-gradle-plugin:1.12.17",
