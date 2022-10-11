@@ -53,7 +53,7 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy:1.12.17",
   "net.bytebuddy:byte-buddy-dep:1.12.17",
   "net.bytebuddy:byte-buddy-agent:1.12.17",
-  "net.bytebuddy:byte-buddy-gradle-plugin:1.12.17",
+  "net.bytebuddy:byte-buddy-gradle-plugin:1.12.18",
   "org.openjdk.jmh:jmh-core:1.35",
   "org.openjdk.jmh:jmh-generator-bytecode:1.35",
   "org.mockito:mockito-core:4.8.0",
