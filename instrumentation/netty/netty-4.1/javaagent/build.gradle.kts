@@ -30,6 +30,7 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-4-common:library"))
   implementation(project(":instrumentation:netty:netty-common:library"))
 
+  testImplementation(project(":instrumentation:netty:netty-4.1:testing"))
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
 
