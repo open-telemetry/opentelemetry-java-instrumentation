@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.netty.v4_1;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -33,13 +35,13 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     if (msg instanceof FullHttpResponse) {
       ctx.pipeline().remove(this);
       FullHttpResponse response = (FullHttpResponse) msg;
-      responseCode.complete(response.getStatus().code());
+      responseCode.complete(response.status().code());
     } else if (msg instanceof HttpResponse) {
       // Headers before body have been received, store them to use when finishing the span.
       ctx.channel().attr(HTTP_RESPONSE).set((HttpResponse) msg);
     } else if (msg instanceof LastHttpContent) {
       ctx.pipeline().remove(this);
-      responseCode.complete(ctx.channel().attr(HTTP_RESPONSE).get().getStatus().code());
+      responseCode.complete(ctx.channel().attr(HTTP_RESPONSE).get().status().code());
     }
   }
 

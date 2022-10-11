@@ -5,13 +5,16 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
@@ -62,5 +65,13 @@ public final class NettyClientTelemetry {
           ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
       createCombinedHandler() {
     return new HttpClientTracingHandler(instrumenter);
+  }
+
+  /**
+   * Propagate the {@link Context} to the {@link Channel}. This MUST be called before each HTTP
+   * request executed on a {@link Channel}.
+   */
+  public static void setChannelContext(Channel channel, Context context) {
+    channel.attr(AttributeKeys.WRITE_CONTEXT).compareAndSet(null, context);
   }
 }
