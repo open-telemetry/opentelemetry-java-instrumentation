@@ -83,9 +83,11 @@ class Netty41ClientTest extends AgentInstrumentationSpecification {
         }
         span(1) {
           kind SpanKind.CLIENT
+          childOf span(0)
         }
         span(2) {
           kind SpanKind.SERVER
+          childOf span(1)
         }
       }
     }
@@ -106,9 +108,11 @@ class Netty41ClientTest extends AgentInstrumentationSpecification {
         }
         span(1) {
           kind SpanKind.CLIENT
+          childOf span(0)
         }
         span(2) {
           kind SpanKind.SERVER
+          childOf span(1)
         }
       }
       trace(1, 3) {
@@ -119,9 +123,11 @@ class Netty41ClientTest extends AgentInstrumentationSpecification {
         }
         span(1) {
           kind SpanKind.CLIENT
+          childOf span(0)
         }
         span(2) {
           kind SpanKind.SERVER
+          childOf span(1)
         }
       }
     }
