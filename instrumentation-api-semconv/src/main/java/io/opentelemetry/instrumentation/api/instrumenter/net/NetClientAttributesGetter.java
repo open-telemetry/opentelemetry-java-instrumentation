@@ -20,20 +20,38 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   String transport(REQUEST request, @Nullable RESPONSE response);
 
+  /**
+   * Logical remote hostname.
+   *
+   * @deprecated This method is deprecated and will be removed in the next release.
+   */
+  @Deprecated
   @Nullable
-  String peerName(REQUEST request, @Nullable RESPONSE response);
-
-  @Nullable
-  Integer peerPort(REQUEST request, @Nullable RESPONSE response);
-
-  @Nullable
-  default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
-    return null;
+  default String peerName(REQUEST request, @Nullable RESPONSE response) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in the next release");
   }
 
   @Nullable
-  default Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    return null;
+  default String peerName(REQUEST request) {
+    return peerName(request, null);
+  }
+
+  /**
+   * Logical remote port number.
+   *
+   * @deprecated This method is deprecated and will be removed in the next release.
+   */
+  @Deprecated
+  @Nullable
+  default Integer peerPort(REQUEST request, @Nullable RESPONSE response) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in the next release");
+  }
+
+  @Nullable
+  default Integer peerPort(REQUEST request) {
+    return peerPort(request, null);
   }
 
   @Nullable
@@ -42,7 +60,17 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   }
 
   @Nullable
+  default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
   default String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
+  default Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
     return null;
   }
 }

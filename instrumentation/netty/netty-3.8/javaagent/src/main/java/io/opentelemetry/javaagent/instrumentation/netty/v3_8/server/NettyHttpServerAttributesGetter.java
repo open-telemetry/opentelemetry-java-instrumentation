@@ -62,10 +62,4 @@ final class NettyHttpServerAttributesGetter
   public String scheme(HttpRequestAndChannel requestAndChannel) {
     return getScheme(requestAndChannel);
   }
-
-  @Override
-  @Nullable
-  public String serverName(HttpRequestAndChannel requestAndChannel) {
-    return null;
-  }
 }

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.finatra
 
 import com.twitter.finatra.http.HttpServer
-import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
@@ -15,12 +14,13 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerTestOptions,
   ServerEndpoint
 }
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
-
-import java.util.concurrent.Executors
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.junit.jupiter.api.extension.RegisterExtension
 
+import java.util.concurrent.Executors
 import java.util.function.Predicate
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -68,7 +68,12 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
         "FinatraController"
       )
       .hasKind(SpanKind.INTERNAL)
-      .hasAttributes(Attributes.empty())
+      .hasAttributesSatisfyingExactly(
+        equalTo(
+          SemanticAttributes.CODE_NAMESPACE,
+          "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController"
+        )
+      )
 
     if (endpoint == ServerEndpoint.EXCEPTION) {
       span

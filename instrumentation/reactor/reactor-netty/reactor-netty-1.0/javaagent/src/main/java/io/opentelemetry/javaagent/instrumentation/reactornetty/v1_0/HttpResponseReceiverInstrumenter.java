@@ -11,8 +11,8 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.React
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry;
 import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -117,7 +117,7 @@ public final class HttpResponseReceiverInstrumenter {
       // if this span was suppressed and context is null, propagate parentContext - this will allow
       // netty spans to be suppressed too
       Context nettyParentContext = context == null ? contextHolder.parentContext : context;
-      connection.channel().attr(AttributeKeys.WRITE_CONTEXT).set(nettyParentContext);
+      NettyClientTelemetry.setChannelContext(connection.channel(), nettyParentContext);
     }
   }
 

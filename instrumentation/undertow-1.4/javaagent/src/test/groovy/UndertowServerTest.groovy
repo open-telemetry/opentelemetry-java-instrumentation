@@ -138,21 +138,22 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           }
 
           attributes {
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
             "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
-            "$SemanticAttributes.HTTP_HOST" uri.getHost() + ":" + uri.getPort()
             "$SemanticAttributes.HTTP_TARGET" uri.getPath()
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
-            "$SemanticAttributes.HTTP_HOST" "localhost:${port}"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/sendResponse"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" uri.host
+            "$SemanticAttributes.NET_HOST_PORT" uri.port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
         span(1) {
@@ -191,21 +192,22 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           errorEvent(Exception, "exception after sending response", 2)
 
           attributes {
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
             "$SemanticAttributes.HTTP_SCHEME" uri.getScheme()
-            "$SemanticAttributes.HTTP_HOST" uri.getHost() + ":" + uri.getPort()
             "$SemanticAttributes.HTTP_TARGET" uri.getPath()
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
-            "$SemanticAttributes.HTTP_HOST" "localhost:${port}"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
             "$SemanticAttributes.HTTP_TARGET" "/sendResponseWithException"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" uri.host
+            "$SemanticAttributes.NET_HOST_PORT" uri.port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
         span(1) {

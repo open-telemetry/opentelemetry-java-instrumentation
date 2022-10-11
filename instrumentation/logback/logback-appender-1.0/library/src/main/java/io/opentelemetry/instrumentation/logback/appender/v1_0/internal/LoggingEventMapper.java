@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Marker;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -31,14 +32,23 @@ public final class LoggingEventMapper {
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
+  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("logback.marker");
+
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
   private final boolean captureAllMdcAttributes;
+  private final boolean captureCodeAttributes;
+  private final boolean captureMarkerAttribute;
 
   public LoggingEventMapper(
-      boolean captureExperimentalAttributes, List<String> captureMdcAttributes) {
+      boolean captureExperimentalAttributes,
+      List<String> captureMdcAttributes,
+      boolean captureCodeAttributes,
+      boolean captureMarkerAttribute) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
+    this.captureCodeAttributes = captureCodeAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
+    this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
@@ -102,6 +112,31 @@ public final class LoggingEventMapper {
       Thread currentThread = Thread.currentThread();
       attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+    }
+
+    if (captureCodeAttributes) {
+      StackTraceElement[] callerData = loggingEvent.getCallerData();
+      if (callerData != null && callerData.length > 0) {
+        StackTraceElement firstStackElement = callerData[0];
+        String fileName = firstStackElement.getFileName();
+        if (fileName != null) {
+          attributes.put(SemanticAttributes.CODE_FILEPATH, fileName);
+        }
+        attributes.put(SemanticAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
+        attributes.put(SemanticAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
+        int lineNumber = firstStackElement.getLineNumber();
+        if (lineNumber > 0) {
+          attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
+        }
+      }
+    }
+
+    if (captureMarkerAttribute) {
+      Marker marker = loggingEvent.getMarker();
+      if (marker != null) {
+        String markerName = marker.getName();
+        attributes.put(LOG_MARKER, markerName);
+      }
     }
 
     builder.setAllAttributes(attributes.build());

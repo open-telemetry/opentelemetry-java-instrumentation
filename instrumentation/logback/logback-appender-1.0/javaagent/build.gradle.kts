@@ -47,6 +47,7 @@ dependencies {
 
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
+  testImplementation("io.opentelemetry:opentelemetry-sdk-logs-testing")
   testImplementation("org.awaitility:awaitility")
 }
 
@@ -54,4 +55,6 @@ tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+  jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
+  jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-marker-attribute=true")
 }

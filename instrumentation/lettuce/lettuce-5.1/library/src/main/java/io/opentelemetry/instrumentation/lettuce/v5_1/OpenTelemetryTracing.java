@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.RedisCommand;
@@ -178,6 +179,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span name(String name) {
       if (span != null) {
         span.updateName(name);
@@ -189,6 +191,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
         fillEndpoint((OpenTelemetryEndpoint) endpoint);
@@ -209,6 +212,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     // Added and called in 6.0+
     // @Override
+    @CanIgnoreReturnValue
     @SuppressWarnings("UnusedMethod")
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       start();
@@ -248,6 +252,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     // Not called by Lettuce in 6.0+ (though we call it ourselves above).
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
       span = spanBuilder.startSpan();
       if (name != null) {
@@ -271,6 +276,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span annotate(String value) {
       if (span != null) {
         span.addEvent(value);
@@ -285,6 +291,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span tag(String key, String value) {
       if (key.equals("redis.args")) {
         args = value;
@@ -299,6 +306,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span error(Throwable throwable) {
       if (span != null) {
         span.recordException(throwable);

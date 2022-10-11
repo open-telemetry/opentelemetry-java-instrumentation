@@ -15,6 +15,6 @@ public class JsfErrorCauseExtractor implements ErrorCauseExtractor {
     while (error.getCause() != null && error instanceof FacesException) {
       error = error.getCause();
     }
-    return ErrorCauseExtractor.jdk().extract(error);
+    return ErrorCauseExtractor.getDefault().extract(error);
   }
 }

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
@@ -182,6 +184,19 @@ class OpenTelemetryAppenderConfigTest {
     assertThat(logData.getBody().asString()).isEqualTo("val2");
     assertThat(logData.getAttributes().size()).isEqualTo(1);
     assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
+  }
+
+  @Test
+  void testCaptureMarkerAttribute() {
+    String markerName = "aMarker";
+    Marker marker = MarkerManager.getMarker(markerName);
+
+    logger.info(marker, "Message");
+
+    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    LogData logData = logDataList.get(0);
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.marker")))
+        .isEqualTo(markerName);
   }
 
   @Test

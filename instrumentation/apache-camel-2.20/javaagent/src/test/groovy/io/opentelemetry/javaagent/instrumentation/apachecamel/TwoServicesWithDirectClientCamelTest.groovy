@@ -126,15 +126,16 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "127.0.0.1:$portTwo"
             "$SemanticAttributes.HTTP_TARGET" "/serviceTwo"
-            "net.sock.peer.port" Number
-            "net.sock.peer.addr" "127.0.0.1"
             "$SemanticAttributes.HTTP_USER_AGENT" "Jakarta Commons-HttpClient/3.1"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_ROUTE" "/serviceTwo"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "net.host.name" "127.0.0.1"
+            "net.host.port" portTwo
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
           }
         }
         it.span(5) {

@@ -174,6 +174,7 @@ public class WeakConcurrentMap<K, V>
     private K key;
     private int hashCode;
 
+    @SuppressWarnings("CanIgnoreReturnValueSuggester")
     LookupKey<K> withValue(K key) {
       this.key = key;
       hashCode = System.identityHashCode(key);

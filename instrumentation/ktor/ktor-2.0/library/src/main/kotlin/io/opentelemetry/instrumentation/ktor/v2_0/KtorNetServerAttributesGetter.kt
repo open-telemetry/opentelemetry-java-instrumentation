@@ -15,15 +15,19 @@ internal class KtorNetServerAttributesGetter : NetServerAttributesGetter<Applica
     return SemanticAttributes.NetTransportValues.IP_TCP
   }
 
-  override fun sockPeerPort(request: ApplicationRequest): Int? {
-    return null
-  }
-
   override fun sockPeerAddr(request: ApplicationRequest): String? {
     val remote = request.local.remoteHost
-    if (remote != null && "unknown" != remote && isIpAddress(remote)) {
+    if ("unknown" != remote && isIpAddress(remote)) {
       return remote
     }
     return null
+  }
+
+  override fun hostName(request: ApplicationRequest): String {
+    return request.local.host
+  }
+
+  override fun hostPort(request: ApplicationRequest): Int {
+    return request.local.port
   }
 }

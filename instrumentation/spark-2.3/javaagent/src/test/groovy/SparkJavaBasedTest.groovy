@@ -47,17 +47,19 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" "/param/asdf1234"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_ROUTE" "/param/:param"
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
       }

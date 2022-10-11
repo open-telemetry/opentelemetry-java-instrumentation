@@ -7,17 +7,18 @@ package io.opentelemetry.instrumentation.kafka.internal;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.Collections;
 import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -32,7 +33,7 @@ public final class KafkaInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
-  private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
+  private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
@@ -43,27 +44,32 @@ public final class KafkaInstrumenterFactory {
     this.instrumentationName = instrumentationName;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setErrorCauseExtractor(ErrorCauseExtractor errorCauseExtractor) {
     this.errorCauseExtractor = errorCauseExtractor;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setCapturedHeaders(List<String> capturedHeaders) {
     this.capturedHeaders = capturedHeaders;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setPropagationEnabled(boolean propagationEnabled) {
     this.propagationEnabled = propagationEnabled;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
@@ -135,7 +141,7 @@ public final class KafkaInstrumenterFactory {
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
-          SpanLinksExtractor.extractFromRequest(
+          new PropagatorBasedSpanLinksExtractor<ConsumerRecord<?, ?>>(
               openTelemetry.getPropagators().getTextMapPropagator(),
               KafkaConsumerRecordGetter.INSTANCE));
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());

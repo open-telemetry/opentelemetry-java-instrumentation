@@ -39,7 +39,7 @@ class HelperInjectionTest extends Specification {
     thrown ClassNotFoundException
 
     when:
-    injector.transform(null, null, emptyLoader.get(), null)
+    injector.transform(null, null, emptyLoader.get(), null, null)
     HelperInjector.loadHelperClass(emptyLoader.get(), helperClassName)
     emptyLoader.get().loadClass(helperClassName)
     then:
@@ -73,7 +73,7 @@ class HelperInjectionTest extends Specification {
 
     when:
     def bootstrapClassloader = null
-    injector.transform(null, null, bootstrapClassloader, null)
+    injector.transform(null, null, bootstrapClassloader, null, null)
     Class<?> helperClass = bootstrapChild.loadClass(helperClassName)
     then:
     helperClass.getClassLoader() == bootstrapClassloader

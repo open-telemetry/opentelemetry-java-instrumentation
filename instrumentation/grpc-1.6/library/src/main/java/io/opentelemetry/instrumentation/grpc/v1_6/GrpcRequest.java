@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import java.net.SocketAddress;
+import java.net.URI;
 import javax.annotation.Nullable;
 
 public final class GrpcRequest {
@@ -16,15 +17,32 @@ public final class GrpcRequest {
 
   @Nullable private volatile Metadata metadata;
 
-  @Nullable private volatile SocketAddress remoteAddress;
+  @Nullable private volatile String logicalHost;
+  private volatile int logicalPort = -1;
+  @Nullable private volatile SocketAddress peerSocketAddress;
 
   GrpcRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
-      @Nullable SocketAddress remoteAddress) {
+      @Nullable SocketAddress peerSocketAddress,
+      @Nullable String authority) {
     this.method = method;
     this.metadata = metadata;
-    this.remoteAddress = remoteAddress;
+    this.peerSocketAddress = peerSocketAddress;
+    setLogicalAddress(authority);
+  }
+
+  private void setLogicalAddress(@Nullable String authority) {
+    if (authority == null) {
+      return;
+    }
+    try {
+      URI uri = new URI(null, authority, null, null, null);
+      logicalHost = uri.getHost();
+      logicalPort = uri.getPort();
+    } catch (Throwable e) {
+      // do nothing
+    }
   }
 
   public MethodDescriptor<?, ?> getMethod() {
@@ -41,11 +59,20 @@ public final class GrpcRequest {
   }
 
   @Nullable
-  public SocketAddress getRemoteAddress() {
-    return remoteAddress;
+  public String getLogicalHost() {
+    return logicalHost;
   }
 
-  void setRemoteAddress(SocketAddress remoteAddress) {
-    this.remoteAddress = remoteAddress;
+  public int getLogicalPort() {
+    return logicalPort;
+  }
+
+  @Nullable
+  public SocketAddress getPeerSocketAddress() {
+    return peerSocketAddress;
+  }
+
+  void setPeerSocketAddress(SocketAddress peerSocketAddress) {
+    this.peerSocketAddress = peerSocketAddress;
   }
 }

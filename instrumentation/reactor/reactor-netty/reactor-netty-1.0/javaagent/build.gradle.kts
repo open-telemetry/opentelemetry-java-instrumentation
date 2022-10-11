@@ -24,6 +24,9 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  implementation(project(":instrumentation:netty:netty-4.1:library"))
+  implementation(project(":instrumentation:netty:netty-4-common:library"))
+  implementation(project(":instrumentation:netty:netty-common:library"))
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   library("io.projectreactor.netty:reactor-netty-http:1.0.0")

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import application.io.opentelemetry.api.metrics.LongGaugeBuilder;
 import application.io.opentelemetry.api.metrics.ObservableLongGauge;
 import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.function.Consumer;
 
 final class ApplicationLongGaugeBuilder implements LongGaugeBuilder {
@@ -19,12 +20,14 @@ final class ApplicationLongGaugeBuilder implements LongGaugeBuilder {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public LongGaugeBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public LongGaugeBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;

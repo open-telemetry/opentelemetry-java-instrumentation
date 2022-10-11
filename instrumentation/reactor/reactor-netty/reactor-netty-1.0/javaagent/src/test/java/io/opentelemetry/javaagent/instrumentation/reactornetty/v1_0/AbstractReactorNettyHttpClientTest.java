@@ -102,6 +102,7 @@ abstract class AbstractReactorNettyHttpClientTest
     options.disableTestRedirects();
     options.enableTestReadTimeout();
     options.setUserAgent(USER_AGENT);
+    options.enableTestCallbackWithImplicitParent();
 
     options.setClientSpanErrorMapper(
         (uri, exception) -> {
@@ -115,23 +116,23 @@ abstract class AbstractReactorNettyHttpClientTest
           return exception;
         });
 
-    options.setHttpAttributes(
-        uri -> {
-          // unopened port or non routable address
-          if ("http://localhost:61/".equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())) {
-            return emptySet();
-          }
+    options.setHttpAttributes(this::getHttpAttributes);
+  }
 
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          if (uri.toString().contains("/read-timeout")) {
-            attributes.remove(SemanticAttributes.NET_PEER_NAME);
-            attributes.remove(SemanticAttributes.NET_PEER_PORT);
-            attributes.remove(SemanticAttributes.HTTP_FLAVOR);
-          }
-          return attributes;
-        });
+  protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
+    // unopened port or non routable address
+    if ("http://localhost:61/".equals(uri.toString())
+        || "https://192.0.2.1/".equals(uri.toString())) {
+      return emptySet();
+    }
+
+    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+    if (uri.toString().contains("/read-timeout")) {
+      attributes.remove(SemanticAttributes.NET_PEER_NAME);
+      attributes.remove(SemanticAttributes.NET_PEER_PORT);
+      attributes.remove(SemanticAttributes.HTTP_FLAVOR);
+    }
+    return attributes;
   }
 
   @Test
@@ -179,7 +180,7 @@ abstract class AbstractReactorNettyHttpClientTest
               span -> span.hasName("HTTP GET").hasKind(CLIENT).hasParent(parentSpan),
               span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
 
-          assertSameSpan(parentSpan, onRequestSpan);
+          assertSameSpan(nettyClientSpan, onRequestSpan);
           assertSameSpan(nettyClientSpan, afterRequestSpan);
           assertSameSpan(nettyClientSpan, onResponseSpan);
           assertSameSpan(parentSpan, afterResponseSpan);

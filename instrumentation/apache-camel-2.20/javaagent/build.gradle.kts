@@ -12,7 +12,6 @@ muzzle {
 }
 
 val camelversion = "2.20.1" // first version that the tests pass on
-val versions: Map<String, String> by project
 
 dependencies {
   library("org.apache.camel:camel-core:$camelversion")
@@ -43,7 +42,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
 
-  testImplementation("org.spockframework:spock-spring:${versions["org.spockframework"]}")
+  testImplementation("org.spockframework:spock-spring")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
 
@@ -72,5 +71,13 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
   }
 }

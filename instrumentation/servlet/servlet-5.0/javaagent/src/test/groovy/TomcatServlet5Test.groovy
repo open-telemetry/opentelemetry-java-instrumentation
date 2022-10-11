@@ -233,7 +233,7 @@ abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> 
 class ErrorHandlerValve extends ErrorReportValve {
   @Override
   protected void report(Request request, Response response, Throwable t) {
-    if (response.getStatus() < 400 || response.getContentWritten() > 0 || !response.setErrorReported()) {
+    if (response.getStatus() < 400 || response.getContentWritten() > 0 || !response.isError()) {
       return
     }
     try {

@@ -1,6 +1,5 @@
 plugins {
-  id("otel.java-conventions")
-  id("otel.publish-conventions")
+  id("otel.library-instrumentation")
 }
 
 // Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration.custom-starter
@@ -13,7 +12,7 @@ val springBootVersion = versions["org.springframework.boot"]
 dependencies {
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
-  implementation("javax.validation:validation-api:2.0.1.Final")
+  implementation("javax.validation:validation-api")
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))

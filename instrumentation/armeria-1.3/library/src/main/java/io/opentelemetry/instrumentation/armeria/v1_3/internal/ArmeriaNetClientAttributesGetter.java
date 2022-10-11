@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
+import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
@@ -25,13 +26,34 @@ public final class ArmeriaNetClientAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String peerName(RequestContext ctx) {
+    return request(ctx).uri().getHost();
+  }
+
+  @Override
+  public Integer peerPort(RequestContext ctx) {
+    return request(ctx).uri().getPort();
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getAddress(RequestContext ctx, @Nullable RequestLog requestLog) {
+  protected InetSocketAddress getPeerSocketAddress(
+      RequestContext ctx, @Nullable RequestLog requestLog) {
     SocketAddress address = ctx.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }
     return null;
+  }
+
+  private static HttpRequest request(RequestContext ctx) {
+    HttpRequest request = ctx.request();
+    if (request == null) {
+      throw new IllegalStateException(
+          "Context always has a request in decorators, this exception indicates a programming bug.");
+    }
+    return request;
   }
 }

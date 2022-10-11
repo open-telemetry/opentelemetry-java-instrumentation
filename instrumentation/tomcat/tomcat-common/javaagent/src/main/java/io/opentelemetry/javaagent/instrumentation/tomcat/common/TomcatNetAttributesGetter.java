@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
+import static io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper.messageBytesToString;
+
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
@@ -19,6 +21,24 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String hostName(Request request) {
+    return messageBytesToString(request.serverName());
+  }
+
+  @Override
+  public Integer hostPort(Request request) {
+    return request.getServerPort();
+  }
+
+  @Override
+  @Nullable
+  public String sockPeerAddr(Request request) {
+    request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
+    return messageBytesToString(request.remoteAddr());
+  }
+
   @Override
   @Nullable
   public Integer sockPeerPort(Request request) {
@@ -26,10 +46,17 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
     return request.getRemotePort();
   }
 
-  @Override
   @Nullable
-  public String sockPeerAddr(Request request) {
-    request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
-    return request.remoteAddr().toString();
+  @Override
+  public String sockHostAddr(Request request) {
+    request.action(ActionCode.REQ_LOCAL_ADDR_ATTRIBUTE, request);
+    return messageBytesToString(request.localAddr());
+  }
+
+  @Nullable
+  @Override
+  public Integer sockHostPort(Request request) {
+    request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);
+    return request.getLocalPort();
   }
 }

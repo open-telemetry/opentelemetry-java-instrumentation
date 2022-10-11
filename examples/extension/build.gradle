@@ -13,8 +13,8 @@ plugins {
   id "com.github.johnrengelman.shadow" version "7.1.2"
   id "com.diffplug.spotless" version "6.3.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.18.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "1.18.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.19.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "1.19.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -27,8 +27,8 @@ ext {
     opentelemetryAlpha         : "1.18.0-alpha",
 
     // these lines are managed by .github/scripts/update-version.sh
-    opentelemetryJavaagent     : "1.18.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "1.18.0-alpha-SNAPSHOT",
+    opentelemetryJavaagent     : "1.19.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "1.19.0-alpha-SNAPSHOT",
   ]
 
   deps = [
@@ -67,7 +67,7 @@ dependencies {
   runtime all necessary classes are provided by javaagent itself.
    */
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:${versions.opentelemetry}")
-  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:${versions.opentelemetryJavaagent}")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
 
   //Provides @AutoService annotation that makes registration of our SPI implementations much easier

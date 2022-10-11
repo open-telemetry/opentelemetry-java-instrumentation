@@ -77,7 +77,7 @@ public class AgentStarterImpl implements AgentStarter {
     if (loggingCustomizers.hasNext()) {
       loggingCustomizer = loggingCustomizers.next();
     } else {
-      loggingCustomizer = new DefaultLoggingCustomizer();
+      loggingCustomizer = NoopLoggingCustomizer.INSTANCE;
     }
 
     Throwable startupError = null;

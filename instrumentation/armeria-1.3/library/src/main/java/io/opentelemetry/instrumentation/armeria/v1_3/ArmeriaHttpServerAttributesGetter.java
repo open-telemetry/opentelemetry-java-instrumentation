@@ -68,15 +68,6 @@ enum ArmeriaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public String serverName(RequestContext ctx) {
-    if (ctx instanceof ServiceRequestContext) {
-      return ((ServiceRequestContext) ctx).config().virtualHost().defaultHostname();
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String route(RequestContext ctx) {
     if (ctx instanceof ServiceRequestContext) {
       return ((ServiceRequestContext) ctx).config().route().patternString();

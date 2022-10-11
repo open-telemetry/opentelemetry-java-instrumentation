@@ -21,8 +21,33 @@ public interface NetServerAttributesGetter<REQUEST> {
   String transport(REQUEST request);
 
   @Nullable
-  Integer sockPeerPort(REQUEST request);
+  String hostName(REQUEST request);
 
   @Nullable
-  String sockPeerAddr(REQUEST request);
+  Integer hostPort(REQUEST request);
+
+  @Nullable
+  default String sockFamily(REQUEST request) {
+    return null;
+  }
+
+  @Nullable
+  default String sockPeerAddr(REQUEST request) {
+    return null;
+  }
+
+  @Nullable
+  default Integer sockPeerPort(REQUEST request) {
+    return null;
+  }
+
+  @Nullable
+  default String sockHostAddr(REQUEST request) {
+    return null;
+  }
+
+  @Nullable
+  default Integer sockHostPort(REQUEST request) {
+    return null;
+  }
 }

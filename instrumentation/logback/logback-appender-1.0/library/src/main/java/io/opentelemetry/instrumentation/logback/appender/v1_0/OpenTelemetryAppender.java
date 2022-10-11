@@ -25,6 +25,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       new LogEmitterProviderHolder();
 
   private volatile boolean captureExperimentalAttributes = false;
+  private volatile boolean captureCodeAttributes = false;
+  private volatile boolean captureMarkerAttribute = false;
   private volatile List<String> captureMdcAttributes = emptyList();
 
   private volatile LoggingEventMapper mapper;
@@ -33,7 +35,12 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   @Override
   public void start() {
-    mapper = new LoggingEventMapper(captureExperimentalAttributes, captureMdcAttributes);
+    mapper =
+        new LoggingEventMapper(
+            captureExperimentalAttributes,
+            captureMdcAttributes,
+            captureCodeAttributes,
+            captureMarkerAttribute);
     super.start();
   }
 
@@ -60,6 +67,27 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
+  }
+
+  /**
+   * Sets whether the code attributes (file name, class name, method name and line number) should be
+   * set to logs. Enabling these attributes can potentially impact performance (see
+   * https://logback.qos.ch/manual/layouts.html).
+   *
+   * @param captureCodeAttributes To enable or disable the code attributes (file name, class name,
+   *     method name and line number)
+   */
+  public void setCaptureCodeAttributes(boolean captureCodeAttributes) {
+    this.captureCodeAttributes = captureCodeAttributes;
+  }
+
+  /**
+   * Sets whether the marker attribute should be set to logs.
+   *
+   * @param captureMarkerAttribute To enable or disable the marker attribute
+   */
+  public void setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
+    this.captureMarkerAttribute = captureMarkerAttribute;
   }
 
   /** Configures the {@link MDC} attributes that will be copied to logs. */

@@ -22,7 +22,19 @@ final class LettuceNetAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getAddress(
+  public String peerName(OpenTelemetryEndpoint openTelemetryEndpoint) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer peerPort(OpenTelemetryEndpoint openTelemetryEndpoint) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  protected InetSocketAddress getPeerSocketAddress(
       OpenTelemetryEndpoint openTelemetryEndpoint, @Nullable Void unused) {
     return openTelemetryEndpoint.address;
   }

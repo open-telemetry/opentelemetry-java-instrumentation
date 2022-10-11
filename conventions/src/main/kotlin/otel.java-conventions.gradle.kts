@@ -124,6 +124,7 @@ dependencies {
   components.all<NettyAlignmentRule>()
 
   compileOnly("com.google.code.findbugs:jsr305")
+  compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:2.2.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.9"))
@@ -136,6 +137,7 @@ testing {
       implementation("org.junit.jupiter:junit-jupiter-params")
       runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
       runtimeOnly("org.junit.vintage:junit-vintage-engine")
+      implementation("org.junit-pioneer:junit-pioneer")
 
 
       implementation("org.assertj:assertj-core")
@@ -201,7 +203,10 @@ tasks {
       charSet = "UTF-8"
       breakIterator(true)
 
-      links("https://docs.oracle.com/javase/8/docs/api/")
+      // TODO (trask) revisit to see if url is fixed
+      // currently broken because https://docs.oracle.com/javase/8/docs/api/element-list is missing
+      // and redirects
+      // links("https://docs.oracle.com/javase/8/docs/api/")
 
       addStringOption("Xdoclint:none", "-quiet")
       // non-standard option to fail on warnings, see https://bugs.openjdk.java.net/browse/JDK-8200363

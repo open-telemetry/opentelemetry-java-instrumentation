@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.rxjava.v3_1_1;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 public final class TracingAssemblyBuilder {
   private boolean captureExperimentalSpanAttributes;
 
   TracingAssemblyBuilder() {}
 
+  @CanIgnoreReturnValue
   public TracingAssemblyBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
