@@ -9,8 +9,10 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 
+import com.google.common.collect.Sets;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -35,7 +37,9 @@ import io.netty.util.CharsetUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
+import java.util.Collections;
 
 public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
@@ -47,9 +51,10 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setTestException(false);
-    // netty instrumentation collects route but doesn't use it for span names
-    options.setExpectedHttpRoute(unused -> null);
-    options.setExpectedServerSpanNameMapper((endpoint, method) -> "HTTP " + method);
+    options.setHttpAttributes(
+        unused ->
+            Sets.difference(
+                DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
   }
 
   @Override
