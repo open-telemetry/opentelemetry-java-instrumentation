@@ -43,7 +43,10 @@ jobs:
           sed -Ei "s/^javaAnnotationsVersion: [0-9.]+$/javaAnnotationsVersion: ${VERSION}-alpha/" content/en/docs/instrumentation/java/automatic/annotations.md
 
       - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+        run: |
+          # cannot run the use-cla-approved-github-bot.sh script here since in a different repo
+          git config user.name opentelemetrybot
+          git config user.email 107717825+opentelemetrybot@users.noreply.github.com
 
       - name: Create pull request against opentelemetry.io
         env:
