@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.19.0 (2022-10-12)
+
 ### Migration notes
 
 - Deprecated `HttpServerAttributesGetter.serverName()`, and removed `http.host` and
