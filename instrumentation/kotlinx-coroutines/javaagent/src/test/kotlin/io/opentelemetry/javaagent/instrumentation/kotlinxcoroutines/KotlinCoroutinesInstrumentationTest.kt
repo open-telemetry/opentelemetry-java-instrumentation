@@ -9,8 +9,9 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
-import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -48,7 +49,6 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -326,42 +326,40 @@ class KotlinCoroutinesInstrumentationTest {
     // should have the same iteration number (attribute "iter").
     // The traces are in some random order, so let's keep track and make sure we see
     // each iteration # exactly once
-    val assertions = mutableListOf<Consumer<List<SpanData>>>()
+    val assertions = mutableListOf<Consumer<TraceAssert>>()
     for (i in 0 until numIters) {
       assertions.add { trace ->
-        assertThat(trace).satisfiesExactlyInAnyOrder(
-          Consumer {
-            assertThat(it)
-              .hasName("a")
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("a")
               .hasNoParent()
           },
-          Consumer { span ->
-            assertThat(span)
-              .hasName("a2")
-              .hasParent(trace.single { it != span })
+          {
+            it.hasName("a2")
+              .hasParent(trace.getSpan(0))
           }
         )
       }
+    }
+    for (i in 0 until numIters) {
       assertions.add { trace ->
-        assertThat(trace).satisfiesExactlyInAnyOrder(
-          Consumer {
-            assertThat(it)
-              .hasName("b")
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("b")
               .hasNoParent()
           },
-          Consumer { span ->
-            assertThat(span)
-              .hasName("b2")
-              .hasParent(trace.single { it != span })
+          {
+            it.hasName("b2")
+              .hasParent(trace.getSpan(0))
           }
         )
       }
     }
 
-    await().atMost(Duration.ofSeconds(30)).untilAsserted {
-      val traces = testing.waitForTraces(assertions.size)
-      assertThat(traces).satisfiesExactlyInAnyOrder(*assertions.toTypedArray())
-    }
+    testing.waitAndAssertSortedTraces(
+      orderByRootSpanName("a", "b"),
+      *assertions.toTypedArray()
+    )
   }
 
   @ParameterizedTest
