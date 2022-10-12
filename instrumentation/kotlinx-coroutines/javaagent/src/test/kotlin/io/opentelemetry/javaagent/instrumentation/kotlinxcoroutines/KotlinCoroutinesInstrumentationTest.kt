@@ -69,7 +69,8 @@ class KotlinCoroutinesInstrumentationTest {
     singleThread.shutdown()
   }
 
-  @RegisterExtension val testing = AgentInstrumentationExtension.create()
+  @RegisterExtension
+  val testing = AgentInstrumentationExtension.create()
 
   val tracer = testing.openTelemetry.getTracer("test")
 
@@ -328,30 +329,30 @@ class KotlinCoroutinesInstrumentationTest {
     val assertions = mutableListOf<Consumer<List<SpanData>>>()
     for (i in 0 until numIters) {
       assertions.add { trace ->
-        assertThat(trace).satisfiesExactly(
+        assertThat(trace).satisfiesExactlyInAnyOrder(
           Consumer {
             assertThat(it)
               .hasName("a")
               .hasNoParent()
           },
-          Consumer {
-            assertThat(it)
+          Consumer { span ->
+            assertThat(span)
               .hasName("a2")
-              .hasParent(trace.get(0))
+              .hasParent(trace.single { it != span })
           }
         )
       }
       assertions.add { trace ->
-        assertThat(trace).satisfiesExactly(
+        assertThat(trace).satisfiesExactlyInAnyOrder(
           Consumer {
             assertThat(it)
               .hasName("b")
               .hasNoParent()
           },
-          Consumer {
-            assertThat(it)
+          Consumer { span ->
+            assertThat(span)
               .hasName("b2")
-              .hasParent(trace.get(0))
+              .hasParent(trace.single { it != span })
           }
         )
       }
