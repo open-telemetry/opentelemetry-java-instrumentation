@@ -72,6 +72,6 @@ public final class NettyClientTelemetry {
    * request executed on a {@link Channel}.
    */
   public static void setChannelContext(Channel channel, Context context) {
-    channel.attr(AttributeKeys.WRITE_CONTEXT).compareAndSet(null, context);
+    channel.attr(AttributeKeys.WRITE_CONTEXT).set(context);
   }
 }
