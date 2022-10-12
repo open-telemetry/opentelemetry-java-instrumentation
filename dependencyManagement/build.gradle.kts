@@ -12,7 +12,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelVersion = "1.18.0"
+val otelVersion = "1.19.0"
 
 rootProject.extra["otelVersion"] = otelVersion
 
