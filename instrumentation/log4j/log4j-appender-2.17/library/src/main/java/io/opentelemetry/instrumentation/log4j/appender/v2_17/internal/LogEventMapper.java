@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogRecordBuilder;
-import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -183,7 +183,7 @@ public final class LogEventMapper<T> {
 
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
     // TODO (trask) extract method for recording exception into
-    // instrumentation-appender-api-internal
+    // io.opentelemetry:opentelemetry-api-logs
     attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
     attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
     StringWriter writer = new StringWriter();

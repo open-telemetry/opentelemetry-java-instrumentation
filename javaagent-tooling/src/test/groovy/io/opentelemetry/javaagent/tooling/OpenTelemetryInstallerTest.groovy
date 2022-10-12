@@ -7,19 +7,19 @@ package io.opentelemetry.javaagent.tooling
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider
+import io.opentelemetry.api.logs.GlobalLoggerProvider
 import spock.lang.Specification
 
 class OpenTelemetryInstallerTest extends Specification {
 
   void setup() {
     GlobalOpenTelemetry.resetForTest()
-    AgentLogEmitterProvider.resetForTest()
+    GlobalLoggerProvider.resetForTest()
   }
 
   void cleanup() {
     GlobalOpenTelemetry.resetForTest()
-    AgentLogEmitterProvider.resetForTest()
+    GlobalLoggerProvider.resetForTest()
   }
 
   def "should initialize GlobalOpenTelemetry"() {

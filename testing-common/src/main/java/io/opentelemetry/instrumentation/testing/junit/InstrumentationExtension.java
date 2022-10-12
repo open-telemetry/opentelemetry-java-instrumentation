@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.testing.util.ContextStorageCloser;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.logs.data.LogData;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -76,8 +76,8 @@ public abstract class InstrumentationExtension
   }
 
   /** Return a list of all captured logs. */
-  public List<LogData> logs() {
-    return testRunner.getExportedLogs();
+  public List<LogRecordData> logRecords() {
+    return testRunner.getExportedLogRecords();
   }
 
   /**

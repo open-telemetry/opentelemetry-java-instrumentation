@@ -13,7 +13,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.logs.data.LogData;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -122,7 +122,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public List<LogData> getExportedLogs() {
+  public List<LogRecordData> getExportedLogRecords() {
     // no logs support yet
     return Collections.emptyList();
   }

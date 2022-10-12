@@ -57,7 +57,7 @@ final class MetricsView {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>(alwaysInclude);
-    view.add(SemanticAttributes.NET_HOST_IP);
+    view.add(SemanticAttributes.NET_SOCK_HOST_ADDR);
     view.add(SemanticAttributes.NET_TRANSPORT);
     return view;
   }

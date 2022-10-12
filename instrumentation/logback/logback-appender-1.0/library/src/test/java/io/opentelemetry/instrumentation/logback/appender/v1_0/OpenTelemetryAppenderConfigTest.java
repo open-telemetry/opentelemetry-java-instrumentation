@@ -8,15 +8,16 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
-import io.opentelemetry.sdk.logs.data.LogData;
-import io.opentelemetry.sdk.logs.data.Severity;
-import io.opentelemetry.sdk.logs.export.InMemoryLogExporter;
-import io.opentelemetry.sdk.logs.export.SimpleLogProcessor;
+import io.opentelemetry.sdk.logs.SdkLoggerProvider;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.logs.export.InMemoryLogRecordExporter;
+import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -37,38 +38,38 @@ class OpenTelemetryAppenderConfigTest {
 
   private static final Logger logger = LoggerFactory.getLogger("TestLogger");
 
-  private static InMemoryLogExporter logExporter;
+  private static InMemoryLogRecordExporter logRecordExporter;
   private static Resource resource;
   private static InstrumentationScopeInfo instrumentationScopeInfo;
 
   @BeforeAll
   static void setupAll() {
-    logExporter = InMemoryLogExporter.create();
+    logRecordExporter = InMemoryLogRecordExporter.create();
     resource = Resource.getDefault();
     instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
 
-    SdkLogEmitterProvider logEmitterProvider =
-        SdkLogEmitterProvider.builder()
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
             .setResource(resource)
-            .addLogProcessor(SimpleLogProcessor.create(logExporter))
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
             .build();
 
-    OpenTelemetryAppender.resetSdkLogEmitterProviderForTest();
-    OpenTelemetryAppender.setSdkLogEmitterProvider(logEmitterProvider);
+    GlobalLoggerProvider.resetForTest();
+    GlobalLoggerProvider.set(loggerProvider);
   }
 
   @BeforeEach
   void setup() {
-    logExporter.reset();
+    logRecordExporter.reset();
   }
 
   @Test
   void logNoSpan() {
     logger.info("log message 1");
 
-    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogData logData = logDataList.get(0);
+    LogRecordData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
@@ -83,7 +84,7 @@ class OpenTelemetryAppenderConfigTest {
 
     Span span2 = runWithSpan("span2", () -> logger.info("log message 3"));
 
-    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(3);
     assertThat(logDataList.get(0).getSpanContext()).isEqualTo(span1.getSpanContext());
     assertThat(logDataList.get(1).getSpanContext()).isEqualTo(SpanContext.getInvalid());
@@ -107,9 +108,9 @@ class OpenTelemetryAppenderConfigTest {
     Marker marker = MarkerFactory.getMarker(markerName);
     logger.info(marker, "log message 1", new IllegalStateException("Error!"));
 
-    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogData logData = logDataList.get(0);
+    LogRecordData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
@@ -155,9 +156,9 @@ class OpenTelemetryAppenderConfigTest {
       MDC.clear();
     }
 
-    List<LogData> logDataList = logExporter.getFinishedLogItems();
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogData logData = logDataList.get(0);
+    LogRecordData logData = logDataList.get(0);
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");

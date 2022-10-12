@@ -51,19 +51,17 @@ The following demonstrates how you might configure the appender in your `log4j.x
 </Configuration>
 ```
 
-Next, associate the `OpenTelemetryAppender` configured via `log4j2.xml` with
-an `SdkLogEmitterProvider` in your application:
+Next, configure `GlobalLoggerProvider` with an `SdkLoggerProvider` in your application.
 
 ```
-SdkLogEmitterProvider logEmitterProvider =
-  SdkLogEmitterProvider.builder()
+SdkLoggerProvider sdkLoggerProvider =
+  SdkLoggerProvider.builder()
     .setResource(Resource.create(...))
     .addLogProcessor(...)
     .build();
-OpenTelemetryAppender.setSdkLogEmitterProvider(logEmitterProvider);
+GlobalLoggerProvider.set(sdkLoggerProvider);
 ```
 
 In this example Log4j2 log events will be sent to both the console appender and
-the `OpenTelemetryAppender`, which will drop the logs until
-`OpenTelemetryAppender.setSdkLogEmitterProvider(..)` is called. Once initialized, logs will be
-emitted to a `LogEmitter` obtained from the `SdkLogEmitterProvider`.
+the `OpenTelemetryAppender`, which will drop the logs until `GlobalLoggerProvider.set(..)` is
+called. Once initialized, logs will be emitted to a `Logger` obtained from the `SdkLoggerProvider`.

@@ -42,7 +42,7 @@ dependencies {
     }
   }
 
-  compileOnly(project(":instrumentation-appender-api-internal"))
+  compileOnly("io.opentelemetry:opentelemetry-api-logs")
   compileOnly(project(":javaagent-bootstrap"))
 
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
