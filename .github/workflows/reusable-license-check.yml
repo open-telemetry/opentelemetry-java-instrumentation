@@ -1,4 +1,4 @@
-name: Reusable - Assemble
+name: Reusable - License check
 
 on:
   workflow_call:
@@ -18,7 +18,7 @@ on:
         required: false
 
 jobs:
-  assemble:
+  license-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -29,27 +29,33 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Assemble
+      - name: Generate license report
         uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
-          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: assemble -x javadoc ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          # currently ignoring inputs.no-build-cache and always running with --no-build-cache
+          # see https://github.com/jk1/Gradle-License-Report/issues/231
+          arguments: generateLicenseReport --no-build-cache
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
 
-      - name: Check for jApiCmp diffs
+      - name: Check licenses
         run: |
-          if git diff --quiet
+          # add any untracked folders that may have been added by generateLicenseReport
+          git add licenses
+          # there's always going to one line difference due to the timestamp included in the report
+          if [[ $(git diff --cached --shortstat licenses) == " 1 file changed, 1 insertion(+), 1 deletion(-)" ]]
           then
-            echo "No diff detected."
+            echo "Licenses are up-to-date."
           else
-            echo "Diff detected - did you run './gradlew jApiCmp'?"
-            echo $(git diff --name-only)
-            echo $(git diff)
+            echo "Licenses are not up-to-date, please run './gradlew generateLicenseReport' locally and commit."
+            echo
+            echo "$(git diff --cached --stat licenses)"
+            echo
+            echo "$(git diff --cached licenses)"
             exit 1
           fi

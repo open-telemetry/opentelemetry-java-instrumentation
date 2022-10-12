@@ -15,6 +15,13 @@ jobs:
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
+  license-check:
+    uses: ./.github/workflows/reusable-license-check.yml
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
     secrets:
@@ -77,6 +84,8 @@ jobs:
     needs:
       # intentionally not blocking snapshot publishing on test-latest-deps, muzzle,
       # markdown-link-check, or misspell-check
+      - spotless
+      - license-check
       - assemble
       - test
       - smoke-test

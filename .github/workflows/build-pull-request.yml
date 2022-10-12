@@ -13,6 +13,11 @@ jobs:
     with:
       cache-read-only: true
 
+  license-check:
+    uses: ./.github/workflows/reusable-license-check.yml
+    with:
+      cache-read-only: true
+
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
     with:
@@ -75,6 +80,8 @@ jobs:
     # (muzzle can also fail when a new library version is released to maven central
     # but that happens much less often)
     needs:
+      - spotless
+      - license-check
       - assemble
       - test
       - smoke-test
