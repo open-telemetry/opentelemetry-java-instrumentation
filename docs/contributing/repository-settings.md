@@ -11,7 +11,7 @@ to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-n
 
 * Automatically delete head branches: CHECKED
 
-  So that bot PR branches will be deleted.
+  So automation PR branches will be deleted.
 
 ## Actions > General
 
@@ -26,7 +26,7 @@ to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-n
 (In addition
 to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
-### `main` and `release/*`
+### `main`
 
 * Require branches to be up to date before merging: UNCHECKED
 
@@ -37,14 +37,13 @@ to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-n
   * EasyCLA
   * required-status-check
 
-### `v*` (old release branches)
+### `release/*`
 
-Same settings as above for new release branches (`release/**`), except:
+Same settings as above for `main`, except:
 
-* Status checks that are required:
+* Restrict pushes that create matching branches: UNCHECKED
 
-  * EasyCLA
-  * accept-pr
+  So release automation can create release branches.
 
 ### `gh-pages`
 
@@ -56,24 +55,24 @@ Same settings as above for new release branches (`release/**`), except:
 
 ### `dependabot/**/*` and `opentelemetrybot/**/*`
 
-* Require status checks to pass before merging: unchecked
+* Require status checks to pass before merging: UNCHECKED
 
-  So the bots can push directly to these branches in order to submit PRs
+  So bots can rebase their PR branches
+
+* Restrict who can push to matching branches: UNCHECKED
+
+  So bots can create PR branches in the first place
 
 * Allow force pushes > Everyone
 
-  So that dependabot can rebase its PR branches
+  So bots can rebase their PR branches
 
 * Allow deletions: CHECKED
 
-  So that PR branches can be deleted
+  So bot PR branches can be deleted after merging
 
 ### `**/**`
 
 * Status checks that are required:
 
   EasyCLA
-
-* Allow deletions: CHECKED
-
-  So that automation PR branches can be deleted
