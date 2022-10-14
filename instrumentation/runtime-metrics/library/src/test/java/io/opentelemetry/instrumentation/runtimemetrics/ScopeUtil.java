@@ -17,7 +17,8 @@ class ScopeUtil {
               Optional.ofNullable(
                       EmbeddedInstrumentationProperties.findVersion(
                           "io.opentelemetry.runtime-metrics"))
-                  .orElse("unknown"))
+                  .orElseThrow(
+                      () -> new IllegalStateException("Unable to find instrumentation version")))
           .build();
 
   private ScopeUtil() {}
