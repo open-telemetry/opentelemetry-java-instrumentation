@@ -6,6 +6,9 @@ jobs:
   spotless:
     uses: ./.github/workflows/reusable-spotless.yml
 
+  license-check:
+    uses: ./.github/workflows/reusable-license-check.yml
+
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
 
@@ -32,6 +35,8 @@ jobs:
 
   release:
     needs:
+      - spotless
+      - license-check
       - assemble
       - test
       - smoke-test
