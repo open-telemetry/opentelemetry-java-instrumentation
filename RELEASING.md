@@ -18,7 +18,8 @@ the second Monday of the month (roughly a few of days after the monthly minor re
 
 ## Preparing a new major or minor release
 
-* Close the release milestone if there is one.
+* Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
+  if there is one.
 * Merge a pull request to `main` updating the `CHANGELOG.md`.
   * The heading for the unreleased entries should be `## Unreleased`.
   * Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change log.
