@@ -14,6 +14,13 @@ jobs:
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
+  license-check:
+    uses: ./.github/workflows/reusable-license-check.yml
+    with:
+      no-build-cache: true
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
     with:
@@ -60,6 +67,8 @@ jobs:
 
   open-issue-on-failure:
     needs:
+      - spotless
+      - license-check
       - assemble
       - test
       - test-latest-deps
