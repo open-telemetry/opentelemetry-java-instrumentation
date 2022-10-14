@@ -23,7 +23,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-// I can't begin to describe how much I dislike all this :(
 public final class ContextExtractor implements Context {
 
   private static final Field otelSpanField;
