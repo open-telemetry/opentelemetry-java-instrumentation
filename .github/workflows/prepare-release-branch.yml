@@ -62,7 +62,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           message="Prepare release $VERSION"
-          branch="prepare-release-${VERSION}"
+          branch="opentelemetrybot/prepare-release-${VERSION}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
@@ -111,7 +111,7 @@ jobs:
         run: |
           message="Update version to $NEXT_VERSION"
           body="Update version to \`$NEXT_VERSION\`."
-          branch="update-version-to-${NEXT_VERSION}"
+          branch="opentelemetrybot/update-version-to-${NEXT_VERSION}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
