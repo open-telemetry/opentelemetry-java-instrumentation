@@ -61,6 +61,7 @@ dependencies {
   latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.0.+") { // see jaxrs-3.0-resteasy-3.1 module
     exclude("org.jboss.resteasy", "resteasy-client")
   }
+  latestDepTestLibrary("io.undertow:undertow-servlet:2.2.+") // 2.3 switches to Servlet 5 / Jakarta namespace
 }
 
 tasks {
