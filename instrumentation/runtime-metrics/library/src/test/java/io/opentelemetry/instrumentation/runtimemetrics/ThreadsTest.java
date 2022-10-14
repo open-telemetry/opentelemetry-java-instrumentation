@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
+import static io.opentelemetry.instrumentation.runtimemetrics.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.instrumentation.runtimemetrics.Threads.DAEMON;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -41,6 +42,7 @@ class ThreadsTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of executing threads")
                         .hasUnit("1")
                         .hasLongSumSatisfying(

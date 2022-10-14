@@ -42,7 +42,7 @@ public final class Threads {
 
   // Visible for testing
   void registerObservers(OpenTelemetry openTelemetry, ThreadMXBean threadBean) {
-    Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");
+    Meter meter = RuntimeMetricsUtil.getMeter(openTelemetry);
 
     meter
         .upDownCounterBuilder("process.runtime.jvm.threads.count")

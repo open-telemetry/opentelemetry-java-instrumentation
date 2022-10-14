@@ -36,7 +36,7 @@ public final class GarbageCollector {
   /** Register observers for java runtime garbage collector metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
     List<GarbageCollectorMXBean> garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
-    Meter meter = openTelemetry.getMeterProvider().get(GarbageCollector.class.getName());
+    Meter meter = RuntimeMetricsUtil.getMeter(openTelemetry);
     List<Attributes> labelSets = new ArrayList<>(garbageCollectors.size());
     for (GarbageCollectorMXBean gc : garbageCollectors) {
       labelSets.add(Attributes.of(GC_KEY, gc.getName()));
