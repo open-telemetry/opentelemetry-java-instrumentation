@@ -29,7 +29,7 @@ public class PubsubSingletons {
   private static final String MAP_DATA_FIELD_NAME = "mapData";
   private static final String DELEGATE_DATA_FIELD_NAME = "delegate";
 
-  public static final String instrumentationName = "io.opentelemetry.pubsub-1.101.0";
+  public static final String instrumentationName = "io.opentelemetry.pubsub-1.0";
 
   public static final String publisherSpanName = "pubsub.publish";
   public static final String subscriberSpanName = "pubsub.subscribe";
@@ -97,6 +97,10 @@ public class PubsubSingletons {
       return;
     }
     Context current = subscriberInstrumenter.start(newContext, pubsubMessage);
+    Span span = Java8BytecodeBridge.spanFromContext(current);
+    span.setAttribute(MESSAGE_PAYLOAD_ATTRIBUTE, new String(pubsubMessage.getData().toByteArray()));
+    span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "pubsub");
+    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
     subscriberInstrumenter.end(current, pubsubMessage, null, null);
   }
 
