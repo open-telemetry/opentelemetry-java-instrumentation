@@ -38,7 +38,9 @@ final class NettyServerSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .build())
             .addAttributesExtractor(
-                NetServerAttributesExtractor.create(new NettyNetServerAttributesGetter()))
+                NetServerAttributesExtractor.create(
+                    new NettyNetServerAttributesGetter(),
+                    httpServerAttributesGetter::requestHeader))
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
