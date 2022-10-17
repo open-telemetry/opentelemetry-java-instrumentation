@@ -11,8 +11,6 @@ spotless {
     target("src/**/*.java")
   }
   kotlinGradle {
-    // not sure why it's not using the indent settings from .editorconfig
-    ktlint().editorConfigOverride(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
     target("**/*.gradle.kts")
   }
 }
