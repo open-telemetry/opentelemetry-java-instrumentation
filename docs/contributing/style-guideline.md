@@ -126,3 +126,11 @@ plugins {
   id("otel.nullaway-conventions")
 }
 ```
+
+## java.util.Optional usage
+
+`Optional` is not generally used in this project, following the reasoning from
+https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12.
+
+It is ok to use `Optional` in places where it does not leak into public API signatures and where
+performance is not critical.
