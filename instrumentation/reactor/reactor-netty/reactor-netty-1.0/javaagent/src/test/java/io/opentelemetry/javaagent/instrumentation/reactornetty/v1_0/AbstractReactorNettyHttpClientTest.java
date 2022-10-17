@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -17,6 +18,7 @@ import io.netty.resolver.AddressResolverGroup;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -27,6 +29,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -258,6 +261,55 @@ abstract class AbstractReactorNettyHttpClientTest
 
     testing.waitForTraces(count);
     assertThat(uniqueChannelHashes).hasSize(1);
+  }
+
+  @Test
+  void shouldEndSpanOnMonoTimeout() {
+    HttpClient httpClient = createHttpClient();
+
+    URI uri = resolveAddress("/read-timeout");
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () ->
+                        httpClient
+                            .get()
+                            .uri(uri)
+                            .responseSingle(
+                                (resp, content) -> {
+                                  // Make sure to consume content since that's when we close the
+                                  // span.
+                                  return content.map(unused -> resp);
+                                })
+                            // apply Mono timeout that is way shorter than HTTP request timeout
+                            .timeout(Duration.ofSeconds(1))
+                            .block()));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown),
+                span ->
+                    span.hasName("HTTP GET")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
+                            equalTo(SemanticAttributes.HTTP_USER_AGENT, USER_AGENT),
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, uri.getPort())),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(1))));
   }
 
   private static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {
