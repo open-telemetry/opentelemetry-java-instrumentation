@@ -41,7 +41,8 @@ public final class NettyServerInstrumenterFactory {
                 .setCapturedResponseHeaders(capturedResponseHeaders)
                 .build())
         .addAttributesExtractor(
-            NetServerAttributesExtractor.create(new NettyNetServerAttributesGetter()))
+            NetServerAttributesExtractor.create(
+                new NettyNetServerAttributesGetter(), httpAttributesGetter::requestHeader))
         .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer((context, request, attributes) -> NettyErrorHolder.init(context))
         .addContextCustomizer(HttpRouteHolder.get())
