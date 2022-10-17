@@ -184,7 +184,8 @@ public final class ArmeriaTelemetryBuilder {
             statusExtractorTransformer.apply(
                 HttpSpanStatusExtractor.create(serverAttributesGetter)))
         .addAttributesExtractor(
-            NetServerAttributesExtractor.create(new ArmeriaNetServerAttributesGetter()))
+            NetServerAttributesExtractor.create(
+                new ArmeriaNetServerAttributesGetter(), serverAttributesGetter::requestHeader))
         .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
         .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer(HttpRouteHolder.get());
