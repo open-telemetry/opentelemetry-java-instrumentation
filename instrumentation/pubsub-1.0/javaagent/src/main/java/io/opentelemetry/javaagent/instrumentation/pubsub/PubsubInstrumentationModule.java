@@ -14,7 +14,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public final class PubsubInstrumentationModule extends InstrumentationModule {
   public PubsubInstrumentationModule() {
-    super(PubsubSingletons.instrumentationName, "pubsub-1.101.0");
+    super(PubsubSingletons.instrumentationName, "pubsub-1.0");
   }
 
   @Override
