@@ -583,7 +583,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
             assertThat(attrs).doesNotContainKey(AttributeKey.longKey("net.sock.peer.port"));
             assertThat(attrs).doesNotContainKey(AttributeKey.stringKey("net.sock.peer.addr"));
             assertThat(attrs).doesNotContainKey(AttributeKey.stringKey("net.sock.host.addr"));
-
           }
 
           assertThat(attrs)
