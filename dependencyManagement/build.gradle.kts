@@ -17,7 +17,7 @@ val otelVersion = "1.19.0"
 rootProject.extra["otelVersion"] = otelVersion
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.5"
+val groovyVersion = "4.0.6"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -57,7 +57,7 @@ val CORE_DEPENDENCIES = listOf(
   "org.openjdk.jmh:jmh-core:1.35",
   "org.openjdk.jmh:jmh-generator-bytecode:1.35",
   "org.mockito:mockito-core:4.8.0",
-  "org.mockito:mockito-junit-jupiter:4.8.0",
+  "org.mockito:mockito-junit-jupiter:4.8.1",
   "org.mockito:mockito-inline:4.8.0",
   "org.slf4j:slf4j-api:2.0.2",
   "org.slf4j:slf4j-simple:2.0.2",
