@@ -577,6 +577,13 @@ public abstract class AbstractHttpServerTest<SERVER> {
               assertThat(attrs)
                   .containsEntry(AttributeKey.stringKey("net.sock.host.addr"), "127.0.0.1");
             }
+          } else {
+            assertThat(attrs).doesNotContainKey(SemanticAttributes.NET_HOST_NAME);
+            assertThat(attrs).doesNotContainKey(SemanticAttributes.NET_HOST_PORT);
+            assertThat(attrs).doesNotContainKey(AttributeKey.longKey("net.sock.peer.port"));
+            assertThat(attrs).doesNotContainKey(AttributeKey.stringKey("net.sock.peer.addr"));
+            assertThat(attrs).doesNotContainKey(AttributeKey.stringKey("net.sock.host.addr"));
+
           }
 
           assertThat(attrs)

@@ -104,6 +104,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     "127.0.0.1"
   }
 
+  boolean hasNetAttributes() {
+    true
+  }
+
   boolean testNotFound() {
     true
   }
@@ -202,6 +206,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       options.sockPeerAddr = { endpoint ->
         HttpServerTest.this.sockPeerAddr(endpoint)
       }
+      options.hasNetAttributes = hasNetAttributes()
 
       options.testRedirect = testRedirect()
       options.testError = testError()
