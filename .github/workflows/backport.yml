@@ -20,6 +20,12 @@ jobs:
         with:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
+          # this is the personal access token used for "git push" below
+          # not using secrets.GITHUB_TOKEN because it cannot create or update workflow files, and so
+          # backporting a commit with workflow file changes will fail on "git push", e.g.
+          # "refusing to allow a GitHub App to create or update workflow
+          #           `.github/workflows/release.yml` without `workflows` permission"
+          token: ${{ secrets.BOT_TOKEN }}
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -27,6 +33,7 @@ jobs:
       - name: Create pull request
         env:
           NUMBER: ${{ github.event.inputs.number }}
+          # this is the personal access token used for "gh pr create" below
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
