@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
@@ -51,7 +50,8 @@ public final class ArmeriaTelemetryBuilder {
           HttpClientAttributesExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
   private final HttpServerAttributesExtractorBuilder<RequestContext, RequestLog>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(
+              ArmeriaHttpServerAttributesGetter.INSTANCE, new ArmeriaNetServerAttributesGetter());
 
   private Function<
           SpanStatusExtractor<RequestContext, RequestLog>,
@@ -183,9 +183,6 @@ public final class ArmeriaTelemetryBuilder {
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
                 HttpSpanStatusExtractor.create(serverAttributesGetter)))
-        .addAttributesExtractor(
-            NetServerAttributesExtractor.create(
-                new ArmeriaNetServerAttributesGetter(), serverAttributesGetter::requestHeader))
         .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
         .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer(HttpRouteHolder.get());

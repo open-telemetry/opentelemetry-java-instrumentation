@@ -15,6 +15,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 class HttpServerAttributesExtractorTest {
 
-  static class TestHttpServerAttributesExtractor
+  static class TestHttpServerAttributesGetter
       implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
@@ -74,6 +75,27 @@ class HttpServerAttributesExtractorTest {
     }
   }
 
+  static class TestNetServerAttributesGetter
+      implements NetServerAttributesGetter<Map<String, String>> {
+    @Nullable
+    @Override
+    public String transport(Map<String, String> stringStringMap) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String hostName(Map<String, String> stringStringMap) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public Integer hostPort(Map<String, String> stringStringMap) {
+      return null;
+    }
+  }
+
   @Test
   void normal() {
     Map<String, String> request = new HashMap<>();
@@ -98,7 +120,8 @@ class HttpServerAttributesExtractorTest {
 
     HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         new HttpServerAttributesExtractor<>(
-            new TestHttpServerAttributesExtractor(),
+            new TestHttpServerAttributesGetter(),
+            new TestNetServerAttributesGetter(),
             singletonList("Custom-Request-Header"),
             singletonList("Custom-Response-Header"),
             routeFromContext);
@@ -145,7 +168,8 @@ class HttpServerAttributesExtractorTest {
     request.put("header.x-forwarded-for", "1.1.1.1");
 
     HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesExtractor())
+        HttpServerAttributesExtractor.builder(
+                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();
@@ -166,7 +190,8 @@ class HttpServerAttributesExtractorTest {
     request.put("header.x-forwarded-proto", "https");
 
     HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesExtractor())
+        HttpServerAttributesExtractor.builder(
+                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
             .setCapturedResponseHeaders(emptyList())
             .build();

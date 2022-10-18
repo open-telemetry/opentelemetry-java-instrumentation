@@ -14,7 +14,7 @@ import java.lang.invoke.MethodHandles;
 import javax.annotation.Nullable;
 import org.restlet.Request;
 
-final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
+public final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
 
   private static final Class<?> HTTP_REQUEST_CLASS;
   private static final MethodHandle GET_HTTP_CALL;
