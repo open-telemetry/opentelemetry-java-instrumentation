@@ -29,6 +29,5 @@ abstract class AbstractHttpServerInstrumentationTest
           Collections.emptySet()
       }
     )
-    options.setHasNetAttributes(false);
   }
 }

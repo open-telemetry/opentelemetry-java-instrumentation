@@ -552,37 +552,29 @@ public abstract class AbstractHttpServerTest<SERVER> {
                     SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
           }
 
-          if (options.hasNetAttributes) {
-            assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_NAME, "localhost");
-            // TODO: Move others below to test knob also rather than always treating as optional
-            if (attrs.get(SemanticAttributes.NET_HOST_PORT) != null) {
-              assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_PORT, port);
-            }
-            if (attrs.get(AttributeKey.longKey("net.sock.peer.port")) != null) {
-              assertThat(attrs)
-                  .hasEntrySatisfying(
-                      AttributeKey.longKey("net.sock.peer.port"),
-                      value ->
-                          assertThat(value)
-                              .isInstanceOf(Long.class)
-                              .isNotEqualTo(Long.valueOf(port)));
-            }
-            if (attrs.get(AttributeKey.stringKey("net.sock.peer.addr")) != null) {
-              assertThat(attrs)
-                  .containsEntry(
-                      AttributeKey.stringKey("net.sock.peer.addr"),
-                      options.sockPeerAddr.apply(endpoint));
-            }
-            if (attrs.get(AttributeKey.stringKey("net.sock.host.addr")) != null) {
-              assertThat(attrs)
-                  .containsEntry(AttributeKey.stringKey("net.sock.host.addr"), "127.0.0.1");
-            }
-          } else {
-            assertThat(attrs).doesNotContainKey(SemanticAttributes.NET_HOST_NAME);
-            assertThat(attrs).doesNotContainKey(SemanticAttributes.NET_HOST_PORT);
-            assertThat(attrs).doesNotContainKey(AttributeKey.longKey("net.sock.peer.port"));
-            assertThat(attrs).doesNotContainKey(AttributeKey.stringKey("net.sock.peer.addr"));
-            assertThat(attrs).doesNotContainKey(AttributeKey.stringKey("net.sock.host.addr"));
+          assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_NAME, "localhost");
+          // TODO: Move to test knob rather than always treating as optional
+          if (attrs.get(SemanticAttributes.NET_HOST_PORT) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_PORT, port);
+          }
+          if (attrs.get(AttributeKey.longKey("net.sock.peer.port")) != null) {
+            assertThat(attrs)
+                .hasEntrySatisfying(
+                    AttributeKey.longKey("net.sock.peer.port"),
+                    value ->
+                        assertThat(value)
+                            .isInstanceOf(Long.class)
+                            .isNotEqualTo(Long.valueOf(port)));
+          }
+          if (attrs.get(AttributeKey.stringKey("net.sock.peer.addr")) != null) {
+            assertThat(attrs)
+                .containsEntry(
+                    AttributeKey.stringKey("net.sock.peer.addr"),
+                    options.sockPeerAddr.apply(endpoint));
+          }
+          if (attrs.get(AttributeKey.stringKey("net.sock.host.addr")) != null) {
+            assertThat(attrs)
+                .containsEntry(AttributeKey.stringKey("net.sock.host.addr"), "127.0.0.1");
           }
 
           assertThat(attrs)

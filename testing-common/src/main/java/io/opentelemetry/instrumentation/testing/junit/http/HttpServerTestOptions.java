@@ -43,8 +43,6 @@ public final class HttpServerTestOptions {
 
   Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
 
-  boolean hasNetAttributes = true;
-
   boolean testRedirect = true;
   boolean testError = true;
   boolean testErrorBody = true;
@@ -117,12 +115,6 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setHasExceptionOnServerSpan(
       Predicate<ServerEndpoint> hasExceptionOnServerSpan) {
     this.hasExceptionOnServerSpan = hasExceptionOnServerSpan;
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public HttpServerTestOptions setHasNetAttributes(boolean hasNetAttributes) {
-    this.hasNetAttributes = hasNetAttributes;
     return this;
   }
 

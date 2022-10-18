@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.testing;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import javax.annotation.Nullable;
 
-// only needed so that HttpServerAttributesExtractor can be added to the HTTP server instrumenter,
-// and http.route is properly set
+// only needed so that HttpServerAttributesExtractor can be added to the HTTP server instrumenter
 enum MockNetServerAttributesGetter implements NetServerAttributesGetter<String> {
   INSTANCE;
 
