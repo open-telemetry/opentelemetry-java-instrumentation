@@ -28,6 +28,8 @@ jobs:
         env:
           NUMBER: ${{ github.event.inputs.number }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # note: the token needs `workflows` permission in case of backporting workflow yaml files
+          # refusing to allow a GitHub App to create or update workflow `.github/workflows/release.yml` without `workflows` permission
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
