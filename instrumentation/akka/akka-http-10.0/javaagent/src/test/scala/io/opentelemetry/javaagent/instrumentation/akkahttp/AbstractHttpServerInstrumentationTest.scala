@@ -25,6 +25,7 @@ abstract class AbstractHttpServerInstrumentationTest
       options: HttpServerTestOptions
   ): Unit = {
     options.setTestCaptureHttpHeaders(false)
+    options.setTestCaptureHttpHeadersAsJson(true)
     options.setHttpAttributes(
       new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
         override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] =

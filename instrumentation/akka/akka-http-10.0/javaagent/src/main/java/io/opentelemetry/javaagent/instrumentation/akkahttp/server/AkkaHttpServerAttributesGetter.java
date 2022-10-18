@@ -5,13 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
+import akka.http.scaladsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import scala.Option;
+import scala.collection.JavaConverters;
 
 class AkkaHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequest, HttpResponse> {
@@ -24,6 +27,14 @@ class AkkaHttpServerAttributesGetter
   @Override
   public List<String> requestHeader(HttpRequest request, String name) {
     return AkkaHttpUtil.requestHeader(request, name);
+  }
+
+  @Override
+  @Nullable
+  public String requestHeaders(HttpRequest request, HttpResponse unused) {
+    return AkkaHttpUtil.toJsonString(
+        JavaConverters.seqAsJavaListConverter(request.headers()).asJava().stream()
+            .collect(Collectors.toMap(HttpHeader::name, HttpHeader::value)));
   }
 
   @Override
@@ -59,6 +70,14 @@ class AkkaHttpServerAttributesGetter
   @Override
   public List<String> responseHeader(HttpRequest request, HttpResponse httpResponse, String name) {
     return AkkaHttpUtil.responseHeader(httpResponse, name);
+  }
+
+  @Override
+  @Nullable
+  public String responseHeaders(HttpRequest unused, HttpResponse httpResponse) {
+    return AkkaHttpUtil.toJsonString(
+        JavaConverters.seqAsJavaListConverter(httpResponse.headers()).asJava().stream()
+            .collect(Collectors.toMap(HttpHeader::name, HttpHeader::value)));
   }
 
   @Override
