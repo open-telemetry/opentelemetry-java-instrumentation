@@ -14,6 +14,10 @@ import java.lang.invoke.MethodHandles;
 import javax.annotation.Nullable;
 import org.restlet.Request;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class RestletNetAttributesGetter implements NetServerAttributesGetter<Request> {
 
   private static final Class<?> HTTP_REQUEST_CLASS;
