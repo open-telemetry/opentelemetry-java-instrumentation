@@ -41,6 +41,10 @@ and deadlocks.
     e.g. `release/v1.9.x`, then enter the pull request number that you want to backport,
     then click the "Run workflow" button below that.
   * Review and merge the backport pull request that it generates.
+  * Note: if the PR contains any changes to workflow files, it will have to be manually backported,
+    because the default `GITHUB_TOKEN` does not have permission to update workflow files (and the
+    `opentelemetrybot` token doesn't have write permission to this repository at all, so while it
+    can be used to open a PR, it can't be used to push to a local branch).
 * Merge a pull request to the release branch updating the `CHANGELOG.md`.
   * The heading for the unreleased entries should be `## Unreleased`.
 * Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-patch-release.yml).
