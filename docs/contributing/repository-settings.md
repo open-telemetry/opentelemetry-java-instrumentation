@@ -21,7 +21,7 @@ to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-n
   To reduce friction for new contributors
   (the default is "Require approval for first-time contributors").
 
-## Branch protections
+## Brances > Branch protection rules
 
 (In addition
 to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
@@ -76,3 +76,7 @@ Same settings as above for `main`, except:
 * Status checks that are required:
 
   EasyCLA
+
+## Tags > Protected tags
+
+### `v*`
