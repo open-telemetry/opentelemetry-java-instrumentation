@@ -40,10 +40,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent"))
 
   latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:+")
-  // FIXME: latest akka 2.7.0-M2 isn't compatible with latest akka-http
-  // change back to latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:+") when there is a
-  // new release of akka-http
-  latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:2.7.0-M1")
+  latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:+")
 }
 
 tasks.withType<Test>().configureEach {

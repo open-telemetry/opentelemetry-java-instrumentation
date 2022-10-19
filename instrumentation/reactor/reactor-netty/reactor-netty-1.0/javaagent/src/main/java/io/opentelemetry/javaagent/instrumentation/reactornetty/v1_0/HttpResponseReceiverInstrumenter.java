@@ -13,6 +13,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry;
 import io.opentelemetry.instrumentation.reactor.ContextPropagationOperator;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -58,8 +59,20 @@ public final class HttpResponseReceiverInstrumenter {
   }
 
   static final class ContextHolder {
+
+    private static final AtomicReferenceFieldUpdater<ContextHolder, Context> contextUpdater =
+        AtomicReferenceFieldUpdater.newUpdater(ContextHolder.class, Context.class, "context");
+
     volatile Context parentContext;
     volatile Context context;
+
+    void setContext(Context context) {
+      contextUpdater.set(this, context);
+    }
+
+    Context getAndRemoveContext() {
+      return contextUpdater.getAndSet(this, null);
+    }
   }
 
   static final class StartOperation
@@ -76,23 +89,33 @@ public final class HttpResponseReceiverInstrumenter {
     @Override
     public Mono<? extends Connection> apply(Mono<? extends Connection> mono) {
       return Mono.defer(
-          () -> {
-            Context parentContext = Context.current();
-            contextHolder.parentContext = parentContext;
-            if (!instrumenter().shouldStart(parentContext, config)) {
-              // make context accessible via the reactor ContextView - the doOn* callbacks
-              // instrumentation uses this to set the proper context for callbacks
-              return mono.contextWrite(ctx -> ctx.put(CLIENT_PARENT_CONTEXT_KEY, parentContext));
-            }
+              () -> {
+                Context parentContext = Context.current();
+                contextHolder.parentContext = parentContext;
+                if (!instrumenter().shouldStart(parentContext, config)) {
+                  // make context accessible via the reactor ContextView - the doOn* callbacks
+                  // instrumentation uses this to set the proper context for callbacks
+                  return mono.contextWrite(
+                      ctx -> ctx.put(CLIENT_PARENT_CONTEXT_KEY, parentContext));
+                }
 
-            Context context = instrumenter().start(parentContext, config);
-            contextHolder.context = context;
-            return ContextPropagationOperator.runWithContext(mono, context)
-                // make contexts accessible via the reactor ContextView - the doOn* callbacks
-                // instrumentation uses the parent context to set the proper context for callbacks
-                .contextWrite(ctx -> ctx.put(CLIENT_PARENT_CONTEXT_KEY, parentContext))
-                .contextWrite(ctx -> ctx.put(CLIENT_CONTEXT_KEY, context));
-          });
+                Context context = instrumenter().start(parentContext, config);
+                contextHolder.setContext(context);
+                return ContextPropagationOperator.runWithContext(mono, context)
+                    // make contexts accessible via the reactor ContextView - the doOn* callbacks
+                    // instrumentation uses the parent context to set the proper context for
+                    // callbacks
+                    .contextWrite(ctx -> ctx.put(CLIENT_PARENT_CONTEXT_KEY, parentContext))
+                    .contextWrite(ctx -> ctx.put(CLIENT_CONTEXT_KEY, context));
+              })
+          .doOnCancel(
+              () -> {
+                Context context = contextHolder.getAndRemoveContext();
+                if (context == null) {
+                  return;
+                }
+                instrumenter().end(context, config, null, null);
+              });
     }
   }
 
@@ -134,7 +157,7 @@ public final class HttpResponseReceiverInstrumenter {
 
     @Override
     public void accept(HttpClientRequest httpClientRequest, Throwable error) {
-      Context context = contextHolder.context;
+      Context context = contextHolder.getAndRemoveContext();
       if (context == null) {
         return;
       }
@@ -155,7 +178,7 @@ public final class HttpResponseReceiverInstrumenter {
 
     @Override
     public void accept(HttpClientResponse response, Throwable error) {
-      Context context = contextHolder.context;
+      Context context = contextHolder.getAndRemoveContext();
       if (context == null) {
         return;
       }
@@ -175,7 +198,7 @@ public final class HttpResponseReceiverInstrumenter {
 
     @Override
     public void accept(HttpClientResponse response, Connection connection) {
-      Context context = contextHolder.context;
+      Context context = contextHolder.getAndRemoveContext();
       if (context == null) {
         return;
       }
