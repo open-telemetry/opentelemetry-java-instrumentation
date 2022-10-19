@@ -13,3 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: dyladan/component-owners@main
+        with:
+          # this repository is using this action to request doc review
+          assign-owners: false
