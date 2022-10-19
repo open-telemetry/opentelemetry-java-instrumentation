@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.ratpack.internal.RatpackHttpNetAttributesGetter;
 import io.opentelemetry.instrumentation.ratpack.internal.RatpackNetAttributesGetter;
 import java.util.ArrayList;
@@ -41,7 +40,8 @@ public final class RatpackTelemetryBuilder {
           HttpClientAttributesExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(
+              RatpackHttpAttributesGetter.INSTANCE, new RatpackNetAttributesGetter());
 
   private final List<AttributesExtractor<? super RequestSpec, ? super HttpResponse>>
       additionalHttpClientExtractors = new ArrayList<>();
@@ -114,14 +114,12 @@ public final class RatpackTelemetryBuilder {
 
   /** Returns a new {@link RatpackTelemetry} with the configuration of this builder. */
   public RatpackTelemetry build() {
-    RatpackNetAttributesGetter netAttributes = new RatpackNetAttributesGetter();
     RatpackHttpAttributesGetter httpAttributes = RatpackHttpAttributesGetter.INSTANCE;
 
     Instrumenter<Request, Response> instrumenter =
         Instrumenter.<Request, Response>builder(
                 openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributes))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
-            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributes))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpServerMetrics.get())
