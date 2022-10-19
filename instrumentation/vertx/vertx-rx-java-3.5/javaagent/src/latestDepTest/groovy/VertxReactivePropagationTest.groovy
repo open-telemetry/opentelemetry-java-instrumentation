@@ -67,7 +67,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/listProducts"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -159,7 +160,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "net.sock.peer.addr" "127.0.0.1"
               "net.sock.peer.port" Long
               "net.sock.host.addr" "127.0.0.1"
-              "net.sock.host.port" Long
+              "net.host.name" "localhost"
+              "net.host.port" Long
               "$SemanticAttributes.HTTP_TARGET" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
               "$SemanticAttributes.HTTP_METHOD" "GET"
               "$SemanticAttributes.HTTP_STATUS_CODE" 200

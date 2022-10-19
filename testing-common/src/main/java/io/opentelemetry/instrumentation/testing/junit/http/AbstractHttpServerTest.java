@@ -552,10 +552,8 @@ public abstract class AbstractHttpServerTest<SERVER> {
                     SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
           }
 
+          assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_NAME, "localhost");
           // TODO: Move to test knob rather than always treating as optional
-          if (attrs.get(SemanticAttributes.NET_HOST_NAME) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_NAME, "localhost");
-          }
           if (attrs.get(SemanticAttributes.NET_HOST_PORT) != null) {
             assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_PORT, port);
           }

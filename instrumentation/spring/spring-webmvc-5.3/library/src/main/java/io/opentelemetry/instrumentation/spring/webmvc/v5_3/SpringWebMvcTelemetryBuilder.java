@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +30,8 @@ public final class SpringWebMvcTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final HttpServerAttributesExtractorBuilder<HttpServletRequest, HttpServletResponse>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(
+              SpringWebMvcHttpAttributesGetter.INSTANCE, SpringWebMvcNetAttributesGetter.INSTANCE);
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -85,8 +85,6 @@ public final class SpringWebMvcTelemetryBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-            .addAttributesExtractor(
-                NetServerAttributesExtractor.create(SpringWebMvcNetAttributesGetter.INSTANCE))
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get())
