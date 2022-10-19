@@ -27,78 +27,78 @@ import org.junit.jupiter.api.Test;
 class HttpServerAttributesExtractorTest {
 
   static class TestHttpServerAttributesGetter
-      implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>> {
+      implements HttpServerAttributesGetter<Map<String, Object>, Map<String, Object>> {
 
     @Override
-    public String method(Map<String, String> request) {
-      return request.get("method");
+    public String method(Map<String, Object> request) {
+      return (String) request.get("method");
     }
 
     @Override
-    public String target(Map<String, String> request) {
-      return request.get("target");
+    public String target(Map<String, Object> request) {
+      return (String) request.get("target");
     }
 
     @Override
-    public String route(Map<String, String> request) {
-      return request.get("route");
+    public String route(Map<String, Object> request) {
+      return (String) request.get("route");
     }
 
     @Override
-    public String scheme(Map<String, String> request) {
-      return request.get("scheme");
+    public String scheme(Map<String, Object> request) {
+      return (String) request.get("scheme");
     }
 
     @Override
-    public List<String> requestHeader(Map<String, String> request, String name) {
-      String values = request.get("header." + name);
+    public List<String> requestHeader(Map<String, Object> request, String name) {
+      String values = (String) request.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
 
     @Override
     public Integer statusCode(
-        Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
-      String value = response.get("statusCode");
+        Map<String, Object> request, Map<String, Object> response, @Nullable Throwable error) {
+      String value = (String) response.get("statusCode");
       return value == null ? null : Integer.parseInt(value);
     }
 
     @Override
-    public String flavor(Map<String, String> request) {
-      return request.get("flavor");
+    public String flavor(Map<String, Object> request) {
+      return (String) request.get("flavor");
     }
 
     @Override
     public List<String> responseHeader(
-        Map<String, String> request, Map<String, String> response, String name) {
-      String values = response.get("header." + name);
+        Map<String, Object> request, Map<String, Object> response, String name) {
+      String values = (String) response.get("header." + name);
       return values == null ? emptyList() : asList(values.split(","));
     }
   }
 
   static class TestNetServerAttributesGetter
-      implements NetServerAttributesGetter<Map<String, String>> {
+      implements NetServerAttributesGetter<Map<String, Object>> {
     @Nullable
     @Override
-    public String transport(Map<String, String> stringStringMap) {
-      return null;
+    public String transport(Map<String, Object> request) {
+      return (String) request.get("transport");
     }
 
     @Nullable
     @Override
-    public String hostName(Map<String, String> stringStringMap) {
-      return null;
+    public String hostName(Map<String, Object> request) {
+      return (String) request.get("hostName");
     }
 
     @Nullable
     @Override
-    public Integer hostPort(Map<String, String> stringStringMap) {
-      return null;
+    public Integer hostPort(Map<String, Object> request) {
+      return (Integer) request.get("hostPort");
     }
   }
 
   @Test
   void normal() {
-    Map<String, String> request = new HashMap<>();
+    Map<String, Object> request = new HashMap<>();
     request.put("method", "POST");
     request.put("url", "http://github.com");
     request.put("target", "/repositories/1");
@@ -111,14 +111,14 @@ class HttpServerAttributesExtractorTest {
     request.put("header.forwarded", "for=1.1.1.1;proto=https");
     request.put("header.custom-request-header", "123,456");
 
-    Map<String, String> response = new HashMap<>();
+    Map<String, Object> response = new HashMap<>();
     response.put("statusCode", "202");
     response.put("header.content-length", "20");
     response.put("header.custom-response-header", "654,321");
 
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
-    HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         new HttpServerAttributesExtractor<>(
             new TestHttpServerAttributesGetter(),
             new TestNetServerAttributesGetter(),
@@ -130,6 +130,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), request);
     assertThat(attributes.build())
         .containsOnly(
+            entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
             entry(SemanticAttributes.HTTP_FLAVOR, "http/2"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
@@ -144,6 +145,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, response, null);
     assertThat(attributes.build())
         .containsOnly(
+            entry(SemanticAttributes.NET_HOST_NAME, "github.com"),
             entry(SemanticAttributes.HTTP_METHOD, "POST"),
             entry(SemanticAttributes.HTTP_SCHEME, "https"),
             entry(SemanticAttributes.HTTP_TARGET, "/repositories/1"),
@@ -164,10 +166,10 @@ class HttpServerAttributesExtractorTest {
 
   @Test
   void extractClientIpFromX_Forwarded_For() {
-    Map<String, String> request = new HashMap<>();
+    Map<String, Object> request = new HashMap<>();
     request.put("header.x-forwarded-for", "1.1.1.1");
 
-    HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         HttpServerAttributesExtractor.builder(
                 new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
@@ -186,10 +188,10 @@ class HttpServerAttributesExtractorTest {
 
   @Test
   void extractClientIpFromX_Forwarded_Proto() {
-    Map<String, String> request = new HashMap<>();
+    Map<String, Object> request = new HashMap<>();
     request.put("header.x-forwarded-proto", "https");
 
-    HttpServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         HttpServerAttributesExtractor.builder(
                 new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
@@ -202,5 +204,47 @@ class HttpServerAttributesExtractorTest {
 
     extractor.onEnd(attributes, Context.root(), request, null, null);
     assertThat(attributes.build()).containsOnly(entry(SemanticAttributes.HTTP_SCHEME, "https"));
+  }
+
+  @Test
+  void extractNetHostAndPortFromHostHeader() {
+    Map<String, Object> request = new HashMap<>();
+    request.put("header.host", "thehost:777");
+
+    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+        HttpServerAttributesExtractor.builder(
+                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+            .setCapturedRequestHeaders(emptyList())
+            .setCapturedResponseHeaders(emptyList())
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_HOST_NAME, "thehost"),
+            entry(SemanticAttributes.NET_HOST_PORT, 777L));
+  }
+
+  @Test
+  void extractNetHostAndPortFromNetAttributesGetter() {
+    Map<String, Object> request = new HashMap<>();
+    request.put("header.host", "notthehost:77777"); // this should have lower precedence
+    request.put("hostName", "thehost");
+    request.put("hostPort", 777);
+
+    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+        HttpServerAttributesExtractor.builder(
+                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+            .setCapturedRequestHeaders(emptyList())
+            .setCapturedResponseHeaders(emptyList())
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_HOST_NAME, "thehost"),
+            entry(SemanticAttributes.NET_HOST_PORT, 777L));
   }
 }
