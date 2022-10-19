@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
 import akka.actor.ActorSystem
+import akka.http.javadsl.model.headers.RawHeader
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.HttpMethods.GET
@@ -45,6 +46,10 @@ object AkkaHttpTestAsyncWebServer {
                   })
                   resp.withEntity("")
                 case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
+                case CAPTURE_HEADERS_AS_JSON =>
+                  resp
+                    .withHeaders(RawHeader.create("X-Test-Response", "xxx"))
+                    .withEntity(CAPTURE_HEADERS_AS_JSON.getBody)
                 case REDIRECT =>
                   resp.withHeaders(headers.Location(endpoint.getBody))
                 case ERROR     => resp.withEntity(endpoint.getBody)

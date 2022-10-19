@@ -46,6 +46,8 @@ dependencies {
   library("com.typesafe.akka:akka-http_2.11:10.0.0")
   library("com.typesafe.akka:akka-stream_2.11:2.4.14")
 
+  implementation("org.json:json:20220320")
+
   // these instrumentations are not needed for the tests to pass
   // they are here to test for context leaks
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.5:javaagent"))
