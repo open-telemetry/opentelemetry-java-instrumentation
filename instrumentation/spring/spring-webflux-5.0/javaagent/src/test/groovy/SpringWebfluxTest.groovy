@@ -84,7 +84,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -153,7 +154,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -242,7 +244,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -309,7 +312,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/notfoundgreet"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 404
@@ -355,7 +359,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/echo"
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" 202
@@ -406,7 +411,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" urlPath
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
@@ -472,7 +478,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/double-greet-redirect"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 307
@@ -503,7 +510,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             "net.sock.peer.addr" "127.0.0.1"
             "net.sock.peer.port" Long
             "net.sock.host.addr" "127.0.0.1"
-            "net.sock.host.port" Long
+            "net.host.name" "localhost"
+            "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/double-greet"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -552,7 +560,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
               "net.sock.peer.addr" "127.0.0.1"
               "net.sock.peer.port" Long
               "net.sock.host.addr" "127.0.0.1"
-              "net.sock.host.port" Long
+              "net.host.name" "localhost"
+              "net.host.port" Long
               "$SemanticAttributes.HTTP_TARGET" urlPath
               "$SemanticAttributes.HTTP_METHOD" "GET"
               "$SemanticAttributes.HTTP_STATUS_CODE" 200
