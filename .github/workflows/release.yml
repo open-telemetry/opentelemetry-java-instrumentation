@@ -241,7 +241,7 @@ jobs:
         run: |
           message="Copy change log updates from $GITHUB_REF_NAME"
           body="Copy log updates from \`$GITHUB_REF_NAME\`."
-          branch="copy-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
+          branch="opentelemetrybot/copy-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
 
           if [[ $VERSION == *.0 ]]; then
             if git diff --quiet; then

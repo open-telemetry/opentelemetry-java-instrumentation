@@ -54,11 +54,11 @@ Same settings as above for new release branches (`release/**`), except:
   [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
   job.
 
-### `dependabot/**/*`
+### `dependabot/**/*` and `opentelemetrybot/**/*`
 
 * Require status checks to pass before merging: unchecked
 
-  So that dependabot can rebase its PR branches
+  So the bots can push directly to these branches in order to submit PRs
 
 * Allow force pushes > Everyone
 
@@ -66,7 +66,7 @@ Same settings as above for new release branches (`release/**`), except:
 
 * Allow deletions: CHECKED
 
-  So that dependabot PR branches can be deleted
+  So that PR branches can be deleted
 
 ### `**/**`
 
