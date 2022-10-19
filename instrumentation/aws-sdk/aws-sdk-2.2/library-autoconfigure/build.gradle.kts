@@ -17,7 +17,9 @@ dependencies {
   latestDepTestLibrary("software.amazon.awssdk:dynamodb:+")
   latestDepTestLibrary("software.amazon.awssdk:ec2:+")
   latestDepTestLibrary("software.amazon.awssdk:kinesis:+")
-  latestDepTestLibrary("software.amazon.awssdk:rds:+")
+  // TODO (trask) remove this once software.amazon.awssdk:rds:2.17.293 is fully published
+  // (or our cache miss expires?)
+  latestDepTestLibrary("software.amazon.awssdk:rds:2.17.292")
   latestDepTestLibrary("software.amazon.awssdk:s3:+")
   latestDepTestLibrary("software.amazon.awssdk:sqs:+")
 }
