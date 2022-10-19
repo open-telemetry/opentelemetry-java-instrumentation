@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.19.1 (2022-10-19)
 
 ### 🛠️ Bug fixes
 
