@@ -33,7 +33,8 @@ class JarServiceNameProviderTest {
   @Test
   void createResource_empty() {
     JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(() -> new String[0], prop -> null, file -> false);
+        new JarServiceNameProvider(
+            () -> new String[0], prop -> null, JarServiceNameProviderTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -44,7 +45,7 @@ class JarServiceNameProviderTest {
   void createResource_noJarFileInArgs() {
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar"};
     JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(() -> args, prop -> null, file -> false);
+        new JarServiceNameProvider(() -> args, prop -> null, JarServiceNameProviderTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -56,7 +57,7 @@ class JarServiceNameProviderTest {
     String[] args =
         new String[] {"-Dtest=42", "-Xmx666m", "-jar", "/path/to/app/my-service.jar", "abc", "def"};
     JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(() -> args, prop -> null, file -> false);
+        new JarServiceNameProvider(() -> args, prop -> null, JarServiceNameProviderTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -69,7 +70,7 @@ class JarServiceNameProviderTest {
   void createResource_processHandleJarWithoutExtension() {
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", "/path/to/app/my-service"};
     JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(() -> args, prop -> null, file -> false);
+        new JarServiceNameProvider(() -> args, prop -> null, JarServiceNameProviderTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -107,5 +108,9 @@ class JarServiceNameProviderTest {
           arguments(
               "/path to app/with spaces/my-service 1 2 3", "/path to app/with spaces/my-service"));
     }
+  }
+
+  private static boolean failPath(Path file) {
+    throw new AssertionError("Unexpected call to Files.isRegularFile()");
   }
 }

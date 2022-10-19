@@ -36,7 +36,7 @@ public final class JarServiceNameProvider implements ConditionalResourceProvider
 
   @SuppressWarnings("unused") // SPI
   public JarServiceNameProvider() {
-    this(ProcessArguments::getProcessArguments, System::getProperty, Files::exists);
+    this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
   }
 
   // visible for tests
