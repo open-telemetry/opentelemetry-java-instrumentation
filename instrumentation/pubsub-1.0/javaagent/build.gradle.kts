@@ -7,5 +7,5 @@ muzzle {
 
 dependencies {
 
-  library("com.google.cloud:google-cloud-pubsub:1.101.0")
+  library("com.google.cloud:google-cloud-pubsub:1.120.21")
 }

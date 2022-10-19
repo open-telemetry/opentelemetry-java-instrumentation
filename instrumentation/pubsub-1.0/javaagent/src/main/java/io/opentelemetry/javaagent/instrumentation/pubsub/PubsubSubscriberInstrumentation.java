@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.pubsub.v1.PubsubMessage;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -41,8 +42,9 @@ public class PubsubSubscriberInstrumentation implements TypeInstrumentation {
   public static class PubsubSubscriberAddAttributesAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnterHandle(
-        @Advice.Argument(value = 0, readOnly = false) PubsubMessage pubsubMessage) {
-      PubsubSingletons.buildAndFinishSpan(Context.current(), pubsubMessage);
+        @Advice.Argument(value = 0, readOnly = false) PubsubMessage pubsubMessage,
+        @Advice.Argument(value = 1, readOnly = false) AckReplyConsumer consumer) {
+      PubsubSingletons.buildAndFinishSpan(Context.current(), pubsubMessage, consumer);
     }
   }
 }

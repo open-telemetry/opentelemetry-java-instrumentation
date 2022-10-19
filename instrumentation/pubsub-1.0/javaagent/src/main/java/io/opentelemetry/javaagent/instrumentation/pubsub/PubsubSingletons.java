@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pubsub;
 
+import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -26,10 +27,16 @@ public class PubsubSingletons {
 
   private static final String MESSAGE_PAYLOAD_ATTRIBUTE = "messaging.payload";
   private static final String ATTRIBUTES_FIELD_NAME = "attributes_";
+
+  private static final String ACK_PROCESSOR_FIELD_NAME = "ackProcessor";
+
+  private static final String THIS_MESSAGE_DISPATCHER_FIELD_NAME = "this$0";
+
+  private static final String SUBSCRIPTION_PATH_FIELD_NAME = "subscription";
   private static final String MAP_DATA_FIELD_NAME = "mapData";
   private static final String DELEGATE_DATA_FIELD_NAME = "delegate";
 
-  public static final String instrumentationName = "io.opentelemetry.pubsub-1.101.0";
+  public static final String instrumentationName = "io.opentelemetry.pubsub-1.0";
 
   public static final String publisherSpanName = "pubsub.publish";
   public static final String subscriberSpanName = "pubsub.subscribe";
@@ -85,7 +92,8 @@ public class PubsubSingletons {
     publisherInstrumenter().end(context, pubsubMessage, null, null);
   }
 
-  public static void buildAndFinishSpan(Context context, PubsubMessage pubsubMessage) {
+  public static void buildAndFinishSpan(
+      Context context, PubsubMessage pubsubMessage, AckReplyConsumer consumer) {
     Context linkedContext =
         GlobalOpenTelemetry.get()
             .getPropagators()
@@ -97,6 +105,14 @@ public class PubsubSingletons {
       return;
     }
     Context current = subscriberInstrumenter.start(newContext, pubsubMessage);
+    Span span = Java8BytecodeBridge.spanFromContext(current);
+    span.setAttribute(MESSAGE_PAYLOAD_ATTRIBUTE, new String(pubsubMessage.getData().toByteArray()));
+    span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "pubsub");
+    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
+
+    String subscriptionPath = (String) extractSubscriptionPath(consumer);
+    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, subscriptionPath);
+
     subscriberInstrumenter.end(current, pubsubMessage, null, null);
   }
 
@@ -108,6 +124,24 @@ public class PubsubSingletons {
         Object delegate = extractAttributeFromObject(mapDataObject, DELEGATE_DATA_FIELD_NAME);
         if (delegate != null) {
           return delegate;
+        }
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  public static Object extractSubscriptionPath(AckReplyConsumer consumer) {
+    Object thisMessageDispatcher =
+        extractAttributeFromObject(consumer, THIS_MESSAGE_DISPATCHER_FIELD_NAME);
+    if (thisMessageDispatcher != null) {
+      Object ackProcessor =
+          extractAttributeFromObject(thisMessageDispatcher, ACK_PROCESSOR_FIELD_NAME);
+      if (ackProcessor != null) {
+        Object subscriptionPath =
+            extractAttributeFromObject(ackProcessor, SUBSCRIPTION_PATH_FIELD_NAME);
+        if (subscriptionPath != null) {
+          return subscriptionPath;
         }
       }
     }
