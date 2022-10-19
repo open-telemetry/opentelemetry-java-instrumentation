@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Capture `net.host.name` on netty SERVER spans
+  ([#6892](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6892))
+
 ## Version 1.19.0 (2022-10-12)
 
 ### Migration notes
