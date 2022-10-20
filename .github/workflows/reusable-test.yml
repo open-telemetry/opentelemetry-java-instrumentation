@@ -27,11 +27,14 @@ jobs:
           - 11
           - 17
           - 19
+          - 20
         vm:
           - hotspot
           - openj9
         exclude:
           - test-java-version: 19
+            vm: openj9
+          - test-java-version: 20
             vm: openj9
       fail-fast: false
     steps:
