@@ -27,14 +27,11 @@ jobs:
           - 11
           - 17
           - 19
-          - 20
         vm:
           - hotspot
           - openj9
         exclude:
           - test-java-version: 19
-            vm: openj9
-          - test-java-version: 20
             vm: openj9
       fail-fast: false
     steps:
@@ -44,7 +41,7 @@ jobs:
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
         uses: actions/setup-java@v3
         with:
-          # using zulu because it has "ea" builds available that we can test against
+          # using zulu because new releases get published quickly
           distribution: ${{ matrix.vm == 'hotspot' && 'zulu' || 'adopt-openj9'}}
           java-version: ${{ matrix.test-java-version }}
 
