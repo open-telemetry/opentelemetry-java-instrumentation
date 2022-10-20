@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-/** A {@link ResourceProvider} that will attempt to guess the application name from the jar name. */
+/** A {@link ResourceProvider} that will attempt to detect the application name from the jar name. */
 @AutoService(ResourceProvider.class)
 public final class JarServiceNameProvider implements ConditionalResourceProvider {
 
