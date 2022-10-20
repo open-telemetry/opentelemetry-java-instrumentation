@@ -50,22 +50,22 @@ import org.yaml.snakeyaml.Yaml;
  * </ul>
  */
 @AutoService(ResourceProvider.class)
-public class SpringBootServiceNameGuesser implements ConditionalResourceProvider {
+public class SpringBootServiceNameDetector implements ConditionalResourceProvider {
 
   private static final Logger logger =
-      Logger.getLogger(SpringBootServiceNameGuesser.class.getName());
+      Logger.getLogger(SpringBootServiceNameDetector.class.getName());
   private static final String COMMANDLINE_ARG_PREFIX = "--spring.application.name=";
   private static final Pattern COMMANDLINE_PATTERN =
       Pattern.compile("--spring\\.application\\.name=([a-zA-Z.\\-_]+)");
   private final SystemHelper system;
 
   @SuppressWarnings("unused")
-  public SpringBootServiceNameGuesser() {
+  public SpringBootServiceNameDetector() {
     this(new SystemHelper());
   }
 
   // Exists for testing
-  SpringBootServiceNameGuesser(SystemHelper system) {
+  SpringBootServiceNameDetector(SystemHelper system) {
     this.system = system;
   }
 
@@ -154,7 +154,7 @@ public class SpringBootServiceNameGuesser implements ConditionalResourceProvider
   @Nullable
   private String findByClasspathApplicationYaml() {
     String result =
-        loadFromClasspath("application.yml", SpringBootServiceNameGuesser::parseNameFromYaml);
+        loadFromClasspath("application.yml", SpringBootServiceNameDetector::parseNameFromYaml);
     logger.log(Level.FINER, "Checking application.yml in classpath: {0}", result);
     return result;
   }
@@ -237,7 +237,7 @@ public class SpringBootServiceNameGuesser implements ConditionalResourceProvider
   @Nullable
   private String readNameFromAppProperties() {
     return loadFromClasspath(
-        "application.properties", SpringBootServiceNameGuesser::getAppNamePropertyFromStream);
+        "application.properties", SpringBootServiceNameDetector::getAppNamePropertyFromStream);
   }
 
   @Nullable

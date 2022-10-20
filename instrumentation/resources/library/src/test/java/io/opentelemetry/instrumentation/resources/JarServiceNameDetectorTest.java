@@ -12,6 +12,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -26,15 +27,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class JarServiceNameProviderTest {
+class JarServiceNameDetectorTest {
 
   @Mock ConfigProperties config;
 
   @Test
   void createResource_empty() {
-    JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(
-            () -> new String[0], prop -> null, JarServiceNameProviderTest::failPath);
+    JarServiceNameDetector serviceNameProvider =
+        new JarServiceNameDetector(
+            () -> new String[0], prop -> null, JarServiceNameDetectorTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -44,8 +45,8 @@ class JarServiceNameProviderTest {
   @Test
   void createResource_noJarFileInArgs() {
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar"};
-    JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(() -> args, prop -> null, JarServiceNameProviderTest::failPath);
+    JarServiceNameDetector serviceNameProvider =
+        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -54,10 +55,10 @@ class JarServiceNameProviderTest {
 
   @Test
   void createResource_processHandleJar() {
-    String[] args =
-        new String[] {"-Dtest=42", "-Xmx666m", "-jar", "/path/to/app/my-service.jar", "abc", "def"};
-    JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(() -> args, prop -> null, JarServiceNameProviderTest::failPath);
+    String path = Paths.get("path", "to", "app", "my-service.jar").toString();
+    String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", path, "abc", "def"};
+    JarServiceNameDetector serviceNameProvider =
+        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -68,9 +69,10 @@ class JarServiceNameProviderTest {
 
   @Test
   void createResource_processHandleJarWithoutExtension() {
-    String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", "/path/to/app/my-service"};
-    JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(() -> args, prop -> null, JarServiceNameProviderTest::failPath);
+    String path = Paths.get("path", "to", "app", "my-service.jar").toString();
+    String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", path};
+    JarServiceNameDetector serviceNameProvider =
+        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -81,13 +83,13 @@ class JarServiceNameProviderTest {
 
   @ParameterizedTest
   @ArgumentsSource(SunCommandLineProvider.class)
-  void createResource_sunCommandLine(String commandLine, String jarPath) {
+  void createResource_sunCommandLine(String commandLine, Path jarPath) {
     Function<String, String> getProperty =
         key -> "sun.java.command".equals(key) ? commandLine : null;
-    Predicate<Path> fileExists = file -> jarPath.equals(file.toString());
+    Predicate<Path> fileExists = jarPath::equals;
 
-    JarServiceNameProvider serviceNameProvider =
-        new JarServiceNameProvider(() -> new String[0], getProperty, fileExists);
+    JarServiceNameDetector serviceNameProvider =
+        new JarServiceNameDetector(() -> new String[0], getProperty, fileExists);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -100,13 +102,13 @@ class JarServiceNameProviderTest {
 
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      Path path = Paths.get("path", "to", "my-service.jar");
+      Path pathWithSpaces = Paths.get("path to app", "with spaces", "my-service.jar");
+      Path pathWithoutExtension = Paths.get("path to app", "with spaces", "my-service");
       return Stream.of(
-          arguments("/path/to/my-service.jar", "/path/to/my-service.jar"),
-          arguments(
-              "/path to app/with spaces/my-service.jar 1 2 3",
-              "/path to app/with spaces/my-service.jar"),
-          arguments(
-              "/path to app/with spaces/my-service 1 2 3", "/path to app/with spaces/my-service"));
+          arguments(path.toString(), path),
+          arguments(pathWithSpaces + " 1 2 3", pathWithSpaces),
+          arguments(pathWithoutExtension + " 1 2 3", pathWithoutExtension));
     }
   }
 

@@ -24,23 +24,25 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-/** A {@link ResourceProvider} that will attempt to detect the application name from the jar name. */
+/**
+ * A {@link ResourceProvider} that will attempt to detect the application name from the jar name.
+ */
 @AutoService(ResourceProvider.class)
-public final class JarServiceNameProvider implements ConditionalResourceProvider {
+public final class JarServiceNameDetector implements ConditionalResourceProvider {
 
-  private static final Logger logger = Logger.getLogger(JarServiceNameProvider.class.getName());
+  private static final Logger logger = Logger.getLogger(JarServiceNameDetector.class.getName());
 
   private final Supplier<String[]> getProcessHandleArguments;
   private final Function<String, String> getSystemProperty;
   private final Predicate<Path> fileExists;
 
   @SuppressWarnings("unused") // SPI
-  public JarServiceNameProvider() {
+  public JarServiceNameDetector() {
     this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
   }
 
   // visible for tests
-  JarServiceNameProvider(
+  JarServiceNameDetector(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
       Predicate<Path> fileExists) {
@@ -116,7 +118,7 @@ public final class JarServiceNameProvider implements ConditionalResourceProvider
 
   @Override
   public int order() {
-    // make it run later than the SpringBootServiceNameGuesser
+    // make it run later than the SpringBootServiceNameDetector
     return 1000;
   }
 }
