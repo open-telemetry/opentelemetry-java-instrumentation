@@ -172,7 +172,7 @@ if (hasRelevantTask) {
 }
 
 fun getProjectRepositories(project: Project): List<RemoteRepository> {
-  return project.repositories
+  val projectRepositories = project.repositories
     .filterIsInstance<MavenArtifactRepository>()
     .map {
       RemoteRepository.Builder(
@@ -181,6 +181,17 @@ fun getProjectRepositories(project: Project): List<RemoteRepository> {
         it.url.toString())
         .build()
     }
+  // dependencyResolutionManagement.repositories are not being added to project.repositories,
+  // they need to be queries separately
+  if (projectRepositories.isEmpty()) {
+    // Manually add mavenCentral until https://github.com/gradle/gradle/issues/17295
+    // Adding mavenLocal is much more complicated but hopefully isn't required for normal usage of
+    // Muzzle.
+    return listOf(RemoteRepository.Builder(
+      "MavenCentral", "default", "https://repo.maven.apache.org/maven2/")
+      .build())
+  }
+  return projectRepositories
 }
 
 fun createInstrumentationClassloader(): ClassLoader {
