@@ -2,6 +2,10 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+repositories {
+  mavenCentral()
+}
+
 muzzle {
   pass {
     group.set("org.apache.dubbo")
