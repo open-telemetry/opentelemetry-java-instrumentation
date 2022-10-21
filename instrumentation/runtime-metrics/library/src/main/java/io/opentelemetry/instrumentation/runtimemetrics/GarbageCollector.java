@@ -56,7 +56,7 @@ public final class GarbageCollector {
         .counterBuilder("runtime.jvm.gc.count")
         .setDescription(
             "The number of collections that have occurred for a given JVM garbage collector.")
-        .setUnit("collections")
+        .setUnit("{collections}")
         .buildWithCallback(
             resultLongObserver -> {
               for (int i = 0; i < garbageCollectors.size(); i++) {
