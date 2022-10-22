@@ -52,9 +52,9 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION" "SET"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.name" { it == "localhost" || it == "127.0.0.1" }
-            "net.sock.peer.port" port
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == "localhost" || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
           }
         }
       }
@@ -79,9 +79,9 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION" "SET"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.name" { it == "localhost" || it == "127.0.0.1" }
-            "net.sock.peer.port" port
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == "localhost" || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
           }
         }
       }
@@ -94,9 +94,9 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" "GET foo"
             "$SemanticAttributes.DB_OPERATION" "GET"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.name" { it == "localhost" || it == "127.0.0.1" }
-            "net.sock.peer.port" port
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == "localhost" || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
           }
         }
       }
@@ -121,9 +121,9 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION" "SET"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.name" { it == "localhost" || it == "127.0.0.1" }
-            "net.sock.peer.port" port
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == "localhost" || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
           }
         }
       }
@@ -136,9 +136,9 @@ class Jedis40ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
             "$SemanticAttributes.DB_OPERATION" "RANDOMKEY"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.name" { it == "localhost" || it == "127.0.0.1" }
-            "net.sock.peer.port" port
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == "localhost" || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
           }
         }
       }

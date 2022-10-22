@@ -134,8 +134,8 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "net.host.name" "127.0.0.1"
             "net.host.port" portTwo
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
           }
         }
         it.span(5) {

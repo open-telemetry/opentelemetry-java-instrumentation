@@ -81,9 +81,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "net.host.name" "localhost"
             "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" urlPath
@@ -151,9 +151,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "net.host.name" "localhost"
             "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" urlPath
@@ -241,9 +241,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "net.host.name" "localhost"
             "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" urlPath
@@ -309,9 +309,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           status UNSET
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "net.host.name" "localhost"
             "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/notfoundgreet"
@@ -356,9 +356,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "net.host.name" "localhost"
             "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/echo"
@@ -408,9 +408,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "net.host.name" "localhost"
             "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" urlPath
@@ -475,9 +475,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "net.host.name" "localhost"
             "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/double-greet-redirect"
@@ -507,9 +507,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "net.host.name" "localhost"
             "net.host.port" Long
             "$SemanticAttributes.HTTP_TARGET" "/double-greet"
@@ -557,9 +557,9 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
             hasNoParent()
             attributes {
               "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-              "net.sock.peer.addr" "127.0.0.1"
-              "net.sock.peer.port" Long
-              "net.sock.host.addr" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+              "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
               "net.host.name" "localhost"
               "net.host.port" Long
               "$SemanticAttributes.HTTP_TARGET" urlPath
