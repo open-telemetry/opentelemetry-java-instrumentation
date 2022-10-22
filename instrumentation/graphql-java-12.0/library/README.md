@@ -1,4 +1,4 @@
-# Manual Instrumentation for GraphQL Java
+# Library Instrumentation for GraphQL Java versions 12.0+
 
 Provides OpenTelemetry instrumentation for [GraphQL Java](https://www.graphql-java.com/).
 
@@ -6,13 +6,12 @@ Provides OpenTelemetry instrumentation for [GraphQL Java](https://www.graphql-ja
 
 ### Add these dependencies to your project:
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.13.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-graphql-java-12.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>

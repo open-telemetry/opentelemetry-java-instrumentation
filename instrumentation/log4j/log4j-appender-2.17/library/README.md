@@ -1,34 +1,36 @@
-# Log4j2 Appender
+# Appender Instrumentation for Log4j2 versions 2.17+
 
 This module provides a Log4j2 [appender](https://logging.apache.org/log4j/2.x/manual/appenders.html)
 which forwards Log4j2 log events to the
 [OpenTelemetry Log SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk/logs).
 
-To use it, add the following modules to your application's classpath.
+## Quickstart
 
-Replace `OPENTELEMETRY_VERSION` with the latest
-stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation).
+### Add these dependencies to your project:
 
-**Maven**
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-log4j-appender-2.17).
+
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-log4j-appender-2.17</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
+    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```
 
-**Gradle**
+For Gradle, add to your dependencies:
 
-```kotlin
-dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.17:OPENTELEMETRY_VERSION")
-}
+```groovy
+runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.17:OPENTELEMETRY_VERSION")
 ```
+
+### Usage
 
 The following demonstrates how you might configure the appender in your `log4j.xml` configuration:
 

@@ -4,6 +4,7 @@ This repository also publishes standalone instrumentation for several libraries 
 that can be used if you prefer that over using the Java agent:
 
 * [Apache Dubbo](../instrumentation/apache-dubbo-2.7/library-autoconfigure)
+* [Apache Kafka](../instrumentation/kafka/kafka-clients/kafka-clients-2.6/library)
 * [Armeria](../instrumentation/armeria-1.3/library)
 * [AWS Lambda](../instrumentation/aws-lambda/aws-lambda-core-1.0/library)
 * [AWS SDK 1.11](../instrumentation/aws-sdk/aws-sdk-1.11/library)

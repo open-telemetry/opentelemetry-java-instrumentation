@@ -1,15 +1,17 @@
-# Logback Appender
+# Appender instrumentation for Logback versions 1.0+
 
 This module provides a Logback [appender](https://logback.qos.ch/manual/appenders.html) which
 forwards Logback log events to the
 [OpenTelemetry Log SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk/logs).
 
-To use it, add the following modules to your application's classpath.
+## Quickstart
 
-Replace `OPENTELEMETRY_VERSION` with the latest
-stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation).
+### Add these dependencies to your project:
 
-**Maven**
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-logback-appender-1.0).
+
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
 <dependencies>
@@ -17,17 +19,18 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-logback-appender-1.0</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
+    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```
 
-**Gradle**
+For Gradle, add to your dependencies:
 
-```kotlin
-dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:OPENTELEMETRY_VERSION")
-}
+```groovy
+runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:OPENTELEMETRY_VERSION")
 ```
+
+### Usage
 
 The following demonstrates how you might configure the appender in your `logback.xml` configuration:
 

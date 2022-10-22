@@ -1,4 +1,4 @@
-# Manual Instrumentation for Spring Webflux
+# Library Instrumentation for Spring Webflux versions 5.0+
 
 Provides OpenTelemetry instrumentation for Spring's `WebClient`.
 
@@ -9,10 +9,10 @@ Provides OpenTelemetry instrumentation for Spring's `WebClient`.
 Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 5.0`
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
-`Minimum version: 1.8.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-spring-webflux-5.0).
 
-For Maven add to your `pom.xml`:
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
 <dependencies>
@@ -42,7 +42,7 @@ For Maven add to your `pom.xml`:
 </dependencies>
 ```
 
-For Gradle add to your dependencies:
+For Gradle, add to your dependencies:
 
 ```groovy
 // opentelemetry instrumentation

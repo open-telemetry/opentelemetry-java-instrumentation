@@ -1,4 +1,4 @@
-# Manual Instrumentation for Oracle UCP
+# Library Instrumentation for Oracle UCP versions 11.2+
 
 Provides OpenTelemetry instrumentation for [Oracle UCP](https://docs.oracle.com/database/121/JJUCP/).
 
@@ -6,13 +6,12 @@ Provides OpenTelemetry instrumentation for [Oracle UCP](https://docs.oracle.com/
 
 ### Add these dependencies to your project:
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.15.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-oracle-ucp-11.2).
 
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
