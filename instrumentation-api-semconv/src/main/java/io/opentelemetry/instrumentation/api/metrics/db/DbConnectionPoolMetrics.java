@@ -58,7 +58,7 @@ public final class DbConnectionPoolMetrics {
   public ObservableLongMeasurement connections() {
     return meter
         .upDownCounterBuilder("db.client.connections.usage")
-        .setUnit("connections")
+        .setUnit("{connections}")
         .setDescription(
             "The number of connections that are currently in state described by the state attribute.")
         .buildObserver();
@@ -67,7 +67,7 @@ public final class DbConnectionPoolMetrics {
   public ObservableLongMeasurement minIdleConnections() {
     return meter
         .upDownCounterBuilder("db.client.connections.idle.min")
-        .setUnit("connections")
+        .setUnit("{connections}")
         .setDescription("The minimum number of idle open connections allowed.")
         .buildObserver();
   }
@@ -75,7 +75,7 @@ public final class DbConnectionPoolMetrics {
   public ObservableLongMeasurement maxIdleConnections() {
     return meter
         .upDownCounterBuilder("db.client.connections.idle.max")
-        .setUnit("connections")
+        .setUnit("{connections}")
         .setDescription("The maximum number of idle open connections allowed.")
         .buildObserver();
   }
@@ -83,7 +83,7 @@ public final class DbConnectionPoolMetrics {
   public ObservableLongMeasurement maxConnections() {
     return meter
         .upDownCounterBuilder("db.client.connections.max")
-        .setUnit("connections")
+        .setUnit("{connections}")
         .setDescription("The maximum number of open connections allowed.")
         .buildObserver();
   }
@@ -91,7 +91,7 @@ public final class DbConnectionPoolMetrics {
   public ObservableLongMeasurement pendingRequestsForConnection() {
     return meter
         .upDownCounterBuilder("db.client.connections.pending_requests")
-        .setUnit("requests")
+        .setUnit("{requests}")
         .setDescription(
             "The number of pending requests for an open connection, cumulative for the entire pool.")
         .buildObserver();

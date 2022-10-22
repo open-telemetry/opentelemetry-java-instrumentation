@@ -132,7 +132,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyUsageMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("connections")
+        .hasUnit("{connections}")
         .hasDescription(
             "The number of connections that are currently in state described by the state attribute.")
         .hasLongSumSatisfying(
@@ -156,7 +156,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyMaxConnectionsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("connections")
+        .hasUnit("{connections}")
         .hasDescription("The maximum number of open connections allowed.")
         .hasLongSumSatisfying(this::verifyPoolName);
   }
@@ -170,7 +170,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyMinIdleConnectionsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("connections")
+        .hasUnit("{connections}")
         .hasDescription("The minimum number of idle open connections allowed.")
         .hasLongSumSatisfying(this::verifyPoolName);
   }
@@ -184,7 +184,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyMaxIdleConnectionsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("connections")
+        .hasUnit("{connections}")
         .hasDescription("The maximum number of idle open connections allowed.")
         .hasLongSumSatisfying(this::verifyPoolName);
   }
@@ -203,7 +203,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyPendingRequestsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("requests")
+        .hasUnit("{requests}")
         .hasDescription(
             "The number of pending requests for an open connection, cumulative for the entire pool.")
         .hasLongSumSatisfying(this::verifyPoolName);
@@ -218,7 +218,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyTimeoutsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("timeouts")
+        .hasUnit("{timeouts}")
         .hasDescription(
             "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
         .hasLongSumSatisfying(

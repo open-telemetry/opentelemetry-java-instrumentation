@@ -79,7 +79,7 @@ class HttpServerMetricsTest {
                     .hasName("http.server.active_requests")
                     .hasDescription(
                         "The number of concurrent HTTP requests that are currently in-flight")
-                    .hasUnit("requests")
+                    .hasUnit("{requests}")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.hasPointsSatisfying(

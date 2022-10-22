@@ -76,7 +76,7 @@ public class SystemMetrics {
     meter
         .counterBuilder("system.network.packets")
         .setDescription("System network packets")
-        .setUnit("packets")
+        .setUnit("{packets}")
         .buildWithCallback(
             r -> {
               for (NetworkIF networkIf : hal.getNetworkIFs()) {
@@ -92,7 +92,7 @@ public class SystemMetrics {
     meter
         .counterBuilder("system.network.errors")
         .setDescription("System network errors")
-        .setUnit("errors")
+        .setUnit("{errors}")
         .buildWithCallback(
             r -> {
               for (NetworkIF networkIf : hal.getNetworkIFs()) {
@@ -123,7 +123,7 @@ public class SystemMetrics {
     meter
         .counterBuilder("system.disk.operations")
         .setDescription("System disk operations")
-        .setUnit("operations")
+        .setUnit("{operations}")
         .buildWithCallback(
             r -> {
               for (HWDiskStore diskStore : hal.getDiskStores()) {

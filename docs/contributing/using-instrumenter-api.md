@@ -349,7 +349,7 @@ class MyOperationMetrics implements OperationListener {
   MyOperationMetrics(Meter meter) {
     activeRequests = meter
         .upDownCounterBuilder("mylib.active_requests")
-        .setUnit("requests")
+        .setUnit("{requests}")
         .build();
   }
 
