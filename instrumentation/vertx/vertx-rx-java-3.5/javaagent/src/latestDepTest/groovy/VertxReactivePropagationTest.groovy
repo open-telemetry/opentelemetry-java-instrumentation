@@ -67,8 +67,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
-            "net.host.name" "localhost"
-            "net.host.port" Long
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" Long
             "$SemanticAttributes.HTTP_TARGET" "/listProducts"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -160,8 +160,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
               "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
               "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
-              "net.host.name" "localhost"
-              "net.host.port" Long
+              "$SemanticAttributes.NET_HOST_NAME" "localhost"
+              "$SemanticAttributes.NET_HOST_PORT" Long
               "$SemanticAttributes.HTTP_TARGET" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
               "$SemanticAttributes.HTTP_METHOD" "GET"
               "$SemanticAttributes.HTTP_STATUS_CODE" 200

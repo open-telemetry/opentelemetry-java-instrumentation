@@ -132,8 +132,8 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" Long
             "$SemanticAttributes.HTTP_ROUTE" "/serviceTwo"
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.host.name" "127.0.0.1"
-            "net.host.port" portTwo
+            "$SemanticAttributes.NET_HOST_NAME" "127.0.0.1"
+            "$SemanticAttributes.NET_HOST_PORT" portTwo
             "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
           }
