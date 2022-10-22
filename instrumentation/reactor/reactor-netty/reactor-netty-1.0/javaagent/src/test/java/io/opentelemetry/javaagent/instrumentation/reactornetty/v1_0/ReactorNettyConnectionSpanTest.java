@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
@@ -88,7 +87,7 @@ class ReactorNettyConnectionSpanTest {
                                 AbstractLongAssert::isNotNegative),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpPort()),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)
@@ -105,7 +104,7 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpPort()),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }
@@ -175,7 +174,7 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, PortUtils.UNUSABLE_PORT),
                             satisfies(
-                                stringKey("net.sock.peer.addr"),
+                                SemanticAttributes.NET_SOCK_PEER_ADDR,
                                 val -> val.isIn(null, "127.0.0.1")))));
   }
 }

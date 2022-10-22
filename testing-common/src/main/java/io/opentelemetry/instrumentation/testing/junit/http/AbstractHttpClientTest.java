@@ -988,14 +988,14 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
 
                 // TODO: Move to test knob rather than always treating as optional
-                if (attrs.get(AttributeKey.stringKey("net.sock.peer.addr")) != null) {
+                if (attrs.get(SemanticAttributes.NET_SOCK_PEER_ADDR) != null) {
                   assertThat(attrs)
-                      .containsEntry(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1");
+                      .containsEntry(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1");
                 }
-                if (attrs.get(AttributeKey.stringKey("net.sock.peer.port")) != null) {
+                if (attrs.get(SemanticAttributes.NET_SOCK_PEER_PORT) != null) {
                   assertThat(attrs)
                       .containsEntry(
-                          AttributeKey.longKey("net.sock.peer.port"),
+                          SemanticAttributes.NET_SOCK_PEER_PORT,
                           "https".equals(uri.getScheme()) ? server.httpsPort() : server.httpPort());
                 }
               }

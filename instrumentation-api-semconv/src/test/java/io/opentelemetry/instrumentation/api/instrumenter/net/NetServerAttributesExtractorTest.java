@@ -105,11 +105,11 @@ class NetServerAttributesExtractorTest {
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L),
-            entry(NetAttributes.NET_SOCK_FAMILY, "inet6"),
-            entry(NetAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(NetAttributes.NET_SOCK_PEER_PORT, 42L),
-            entry(NetAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"),
-            entry(NetAttributes.NET_SOCK_HOST_PORT, 8080L));
+            entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
+            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
+            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 42L),
+            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"),
+            entry(SemanticAttributes.NET_SOCK_HOST_PORT, 8080L));
 
     assertThat(endAttributes.build()).isEmpty();
   }
@@ -191,8 +191,8 @@ class NetServerAttributesExtractorTest {
             entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
             entry(SemanticAttributes.NET_HOST_PORT, 80L),
-            entry(NetAttributes.NET_SOCK_FAMILY, "inet6"),
-            entry(NetAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
+            entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
+            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
 
     assertThat(endAttributes.build()).isEmpty();
   }
@@ -221,8 +221,8 @@ class NetServerAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
-            entry(NetAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(NetAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
+            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
+            entry(SemanticAttributes.NET_SOCK_HOST_ADDR, "4:3:2:1::"));
 
     assertThat(endAttributes.build()).isEmpty();
   }
@@ -233,7 +233,7 @@ class NetServerAttributesExtractorTest {
     Map<String, String> map = new HashMap<>();
     map.put("hostName", "opentelemetry.io");
     map.put("sockPeerAddr", "1.2.3.4");
-    map.put("sockFamily", NetAttributes.SOCK_FAMILY_INET);
+    map.put("sockFamily", SemanticAttributes.NetSockFamilyValues.INET);
 
     Context context = Context.root();
 
@@ -248,7 +248,7 @@ class NetServerAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "opentelemetry.io"),
-            entry(NetAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"));
+            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"));
 
     assertThat(endAttributes.build()).isEmpty();
   }
