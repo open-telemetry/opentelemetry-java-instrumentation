@@ -59,7 +59,7 @@ public final class BufferPools {
     meter
         .upDownCounterBuilder("process.runtime.jvm.buffer.count")
         .setDescription("The number of buffers in the pool")
-        .setUnit("buffers")
+        .setUnit("{buffers}")
         .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getCount));
   }
 

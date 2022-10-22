@@ -42,7 +42,7 @@ public abstract class AbstractLongTaskTimerTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test long task timer")
-                            .hasUnit("tasks")
+                            .hasUnit("{tasks}")
                             .hasLongSumSatisfying(
                                 sum ->
                                     sum.isNotMonotonic()
