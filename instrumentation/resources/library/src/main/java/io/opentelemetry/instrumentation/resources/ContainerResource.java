@@ -16,7 +16,6 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 /** Factory for {@link Resource} retrieving Container ID information. */
 public final class ContainerResource {
@@ -25,7 +24,6 @@ public final class ContainerResource {
   private static final String UNIQUE_HOST_NAME_FILE_NAME = "/proc/self/cgroup";
   private static final Resource INSTANCE = buildSingleton(UNIQUE_HOST_NAME_FILE_NAME);
 
-  @IgnoreJRERequirement
   private static Resource buildSingleton(String uniqueHostNameFileName) {
     // can't initialize this statically without running afoul of animalSniffer on paths
     return buildResource(Paths.get(uniqueHostNameFileName));
@@ -52,7 +50,6 @@ public final class ContainerResource {
    *
    * @return containerId
    */
-  @IgnoreJRERequirement
   private static Optional<String> extractContainerId(Path cgroupFilePath) {
     if (!Files.exists(cgroupFilePath) || !Files.isReadable(cgroupFilePath)) {
       return Optional.empty();
