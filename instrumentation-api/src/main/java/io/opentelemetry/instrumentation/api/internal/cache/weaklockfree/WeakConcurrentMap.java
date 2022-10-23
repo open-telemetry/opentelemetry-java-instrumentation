@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -74,7 +75,9 @@ public class WeakConcurrentMap<K, V>
 
   private final boolean reuseKeys;
 
-  /** @param cleanerThread {@code true} if a thread should be started that removes stale entries. */
+  /**
+   * @param cleanerThread {@code true} if a thread should be started that removes stale entries.
+   */
   public WeakConcurrentMap(boolean cleanerThread) {
     this(cleanerThread, isPersistentClassLoader(LookupKey.class.getClassLoader()));
   }
@@ -152,7 +155,9 @@ public class WeakConcurrentMap<K, V>
     lookupKey.reset();
   }
 
-  /** @return The cleaner thread or {@code null} if no such thread was set. */
+  /**
+   * @return The cleaner thread or {@code null} if no such thread was set.
+   */
   public Thread getCleanerThread() {
     return thread;
   }
@@ -169,6 +174,7 @@ public class WeakConcurrentMap<K, V>
     private K key;
     private int hashCode;
 
+    @SuppressWarnings("CanIgnoreReturnValueSuggester")
     LookupKey<K> withValue(K key) {
       this.key = key;
       hashCode = System.identityHashCode(key);
@@ -237,6 +243,12 @@ public class WeakConcurrentMap<K, V>
     public V putIfAbsent(K key, V value) {
       expungeStaleEntries();
       return super.putIfAbsent(key, value);
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+      expungeStaleEntries();
+      return super.computeIfAbsent(key, mappingFunction);
     }
 
     @Override

@@ -23,4 +23,6 @@ public class ApacheHttpClientHelper {
       // ended in WrappingStatusSettingResponseHandler
     }
   }
+
+  private ApacheHttpClientHelper() {}
 }

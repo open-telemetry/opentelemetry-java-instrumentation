@@ -53,5 +53,13 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps"))
     jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
+}
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

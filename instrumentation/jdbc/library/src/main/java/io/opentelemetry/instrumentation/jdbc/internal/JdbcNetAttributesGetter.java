@@ -22,19 +22,13 @@ public final class JdbcNetAttributesGetter implements NetClientAttributesGetter<
 
   @Nullable
   @Override
-  public String peerName(DbRequest request, @Nullable Void unused) {
+  public String peerName(DbRequest request) {
     return request.getDbInfo().getHost();
   }
 
   @Nullable
   @Override
-  public Integer peerPort(DbRequest request, @Nullable Void unused) {
+  public Integer peerPort(DbRequest request) {
     return request.getDbInfo().getPort();
-  }
-
-  @Nullable
-  @Override
-  public String peerIp(DbRequest request, @Nullable Void unused) {
-    return null;
   }
 }

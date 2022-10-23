@@ -20,7 +20,6 @@ final class MetricsView {
 
   private static final Set<AttributeKey> alwaysInclude = buildAlwaysInclude();
   private static final Set<AttributeKey> clientView = buildClientView();
-  private static final Set<AttributeKey> clientFallbackView = buildClientFallbackView();
   private static final Set<AttributeKey> serverView = buildServerView();
   private static final Set<AttributeKey> serverFallbackView = buildServerFallbackView();
 
@@ -31,6 +30,7 @@ final class MetricsView {
     view.add(SemanticAttributes.RPC_SYSTEM);
     view.add(SemanticAttributes.RPC_SERVICE);
     view.add(SemanticAttributes.RPC_METHOD);
+    view.add(SemanticAttributes.RPC_GRPC_STATUS_CODE);
     return view;
   }
 
@@ -39,16 +39,6 @@ final class MetricsView {
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>(alwaysInclude);
     view.add(SemanticAttributes.NET_PEER_NAME);
-    view.add(SemanticAttributes.NET_PEER_PORT);
-    view.add(SemanticAttributes.NET_TRANSPORT);
-    return view;
-  }
-
-  private static Set<AttributeKey> buildClientFallbackView() {
-    // the list of rpc client metrics attributes is from
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
-    Set<AttributeKey> view = new HashSet<>(alwaysInclude);
-    view.add(SemanticAttributes.NET_PEER_IP);
     view.add(SemanticAttributes.NET_PEER_PORT);
     view.add(SemanticAttributes.NET_TRANSPORT);
     return view;
@@ -67,7 +57,7 @@ final class MetricsView {
     // the list of rpc server metrics attributes is from
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#attributes
     Set<AttributeKey> view = new HashSet<>(alwaysInclude);
-    view.add(SemanticAttributes.NET_HOST_IP);
+    view.add(SemanticAttributes.NET_SOCK_HOST_ADDR);
     view.add(SemanticAttributes.NET_TRANSPORT);
     return view;
   }
@@ -78,11 +68,7 @@ final class MetricsView {
   }
 
   static Attributes applyClientView(Attributes startAttributes, Attributes endAttributes) {
-    Set<AttributeKey> fullSet = clientView;
-    if (!containsAttribute(SemanticAttributes.NET_PEER_NAME, startAttributes, endAttributes)) {
-      fullSet = clientFallbackView;
-    }
-    return applyView(fullSet, startAttributes, endAttributes);
+    return applyView(clientView, startAttributes, endAttributes);
   }
 
   static Attributes applyServerView(Attributes startAttributes, Attributes endAttributes) {
@@ -112,4 +98,6 @@ final class MetricsView {
               }
             });
   }
+
+  private MetricsView() {}
 }

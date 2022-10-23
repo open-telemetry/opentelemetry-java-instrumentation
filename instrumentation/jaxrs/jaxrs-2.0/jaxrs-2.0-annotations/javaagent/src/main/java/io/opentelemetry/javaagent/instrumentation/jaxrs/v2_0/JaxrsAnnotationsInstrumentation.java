@@ -24,6 +24,9 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.AsyncResponseData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.CompletionStageFinishCallback;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionStage;
 import javax.ws.rs.Path;
@@ -74,7 +77,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method method,
         @Advice.AllArguments Object[] args,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelHandlerData") HandlerData handlerData,
+        @Advice.Local("otelHandlerData") Jaxrs2HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
@@ -102,7 +105,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      handlerData = new HandlerData(target.getClass(), method);
+      handlerData = new Jaxrs2HandlerData(target.getClass(), method);
 
       HttpRouteHolder.updateHttpRoute(
           parentContext,
@@ -127,7 +130,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelHandlerData") HandlerData handlerData,
+        @Advice.Local("otelHandlerData") Jaxrs2HandlerData handlerData,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
@@ -148,18 +151,13 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
       CompletionStage<?> asyncReturnValue =
           returnValue instanceof CompletionStage ? (CompletionStage<?>) returnValue : null;
-
-      if (asyncResponse != null && !asyncResponse.isSuspended()) {
-        // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
-        VirtualField.find(AsyncResponse.class, AsyncResponseData.class).set(asyncResponse, null);
-      }
       if (asyncReturnValue != null) {
         // span finished by CompletionStageFinishCallback
         asyncReturnValue =
             asyncReturnValue.handle(
                 new CompletionStageFinishCallback<>(instrumenter(), context, handlerData));
       }
-      if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
+      if (asyncResponse == null && asyncReturnValue == null) {
         instrumenter().end(context, handlerData, null, null);
       }
       // else span finished by AsyncResponse*Advice

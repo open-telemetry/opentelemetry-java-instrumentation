@@ -29,7 +29,8 @@ class WebMvcFilterAutoConfigurationTest {
         .withPropertyValues("otel.springboot.web.enabled=true")
         .run(
             context ->
-                assertThat(context.getBean("otelWebMvcTracingFilter", Filter.class)).isNotNull());
+                assertThat(context.getBean("otelWebMvcInstrumentationFilter", Filter.class))
+                    .isNotNull());
   }
 
   @Test
@@ -37,7 +38,9 @@ class WebMvcFilterAutoConfigurationTest {
   void disabledProperty() {
     this.contextRunner
         .withPropertyValues("otel.springboot.web.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelWebMvcTracingFilter")).isFalse());
+        .run(
+            context ->
+                assertThat(context.containsBean("otelWebMvcInstrumentationFilter")).isFalse());
   }
 
   @Test
@@ -45,6 +48,7 @@ class WebMvcFilterAutoConfigurationTest {
   void noProperty() {
     this.contextRunner.run(
         context ->
-            assertThat(context.getBean("otelWebMvcTracingFilter", Filter.class)).isNotNull());
+            assertThat(context.getBean("otelWebMvcInstrumentationFilter", Filter.class))
+                .isNotNull());
   }
 }

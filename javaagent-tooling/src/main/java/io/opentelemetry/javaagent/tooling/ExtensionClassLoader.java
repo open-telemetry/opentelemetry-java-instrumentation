@@ -16,6 +16,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -23,11 +24,11 @@ import java.util.jar.JarFile;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 
 /**
- * This class creates a classloader which encapsulates arbitrary extensions for Otel Java
+ * This class creates a class loader which encapsulates arbitrary extensions for Otel Java
  * instrumentation agent. Such extensions may include SDK components (exporters or propagators) and
  * additional instrumentations. They have to be isolated and shaded to reduce interference with the
  * user application and to make it compatible with shaded SDK used by the agent. Thus each extension
- * jar gets a separate classloader and all of them are aggregated with the help of {@link
+ * jar gets a separate class loader and all of them are aggregated with the help of {@link
  * MultipleParentClassLoader}.
  */
 // TODO find a way to initialize logging before using this class
@@ -36,9 +37,8 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 public class ExtensionClassLoader extends URLClassLoader {
   public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
 
-  // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
-  // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
-  // configure the logging levels
+  // NOTE it's important not to use logging in this class, because this class is used before logging
+  // is initialized
 
   static {
     ClassLoader.registerAsParallelCapable();
@@ -114,27 +114,38 @@ public class ExtensionClassLoader extends URLClassLoader {
     return new ExtensionClassLoader(new URL[] {extensionUrl}, parent);
   }
 
-  private static List<URL> parseLocation(String locationName, File javaagentFile) {
-    List<URL> result = new ArrayList<>();
-
+  // visible for testing
+  static List<URL> parseLocation(String locationName, File javaagentFile) {
     if (locationName == null) {
-      return result;
+      return Collections.emptyList();
+    }
+
+    List<URL> result = new ArrayList<>();
+    for (String location : locationName.split(",")) {
+      parseLocation(location, javaagentFile, result);
+    }
+
+    return result;
+  }
+
+  private static void parseLocation(String locationName, File javaagentFile, List<URL> locations) {
+    if (locationName.isEmpty()) {
+      return;
     }
 
     File location = new File(locationName);
     if (isJar(location)) {
-      addFileUrl(result, location);
+      addFileUrl(locations, location);
     } else if (location.isDirectory()) {
       File[] files = location.listFiles(ExtensionClassLoader::isJar);
       if (files != null) {
         for (File file : files) {
-          if (!file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())) {
-            addFileUrl(result, file);
+          if (isJar(file) && !file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())) {
+            addFileUrl(locations, file);
           }
         }
       }
     }
-    return result;
   }
 
   private static boolean isJar(File f) {

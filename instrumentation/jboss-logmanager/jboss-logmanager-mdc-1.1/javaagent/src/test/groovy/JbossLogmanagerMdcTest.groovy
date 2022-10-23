@@ -15,7 +15,7 @@ import java.util.logging.LogRecord
 class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
   class LogHandler extends Handler {
     public List<ExtLogRecord> logRecords
-    
+
     LogHandler(LinkedList<ExtLogRecord> logRecords) {
       this.logRecords = logRecords
     }
@@ -31,7 +31,7 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
 
     @Override
     void close() throws SecurityException {
-    }   
+    }
   }
   def "no ids when no span"() {
     given:
@@ -76,10 +76,20 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     then:
 
     logRecords.size() == 3
+
+    // The method getMdcCopy exists only in jboss-logmanager 1.3+
+    def hasGetMdcCopy = logRecords.get(0).metaClass.getMetaMethod("getMdcCopy") != null
+
     logRecords.get(2).message == "log message 1"
     logRecords.get(2).getMdc("trace_id") == span1.spanContext.traceId
     logRecords.get(2).getMdc("span_id") == span1.spanContext.spanId
     logRecords.get(2).getMdc("trace_flags") == "01"
+
+    if (hasGetMdcCopy) {
+      assert logRecords.get(2).getMdcCopy().get("trace_id") == span1.spanContext.traceId
+      assert logRecords.get(2).getMdcCopy().get("span_id") == span1.spanContext.spanId
+      assert logRecords.get(2).getMdcCopy().get("trace_flags") == "01"
+    }
 
     logRecords.get(1).message == "log message 2"
     logRecords.get(1).getMdc("trace_id") == null
@@ -90,6 +100,12 @@ class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     logRecords.get(0).getMdc("trace_id") == span2.spanContext.traceId
     logRecords.get(0).getMdc("span_id") == span2.spanContext.spanId
     logRecords.get(0).getMdc("trace_flags") == "01"
+
+    if (hasGetMdcCopy) {
+      assert logRecords.get(0).getMdcCopy().get("trace_id") == span2.spanContext.traceId
+      assert logRecords.get(0).getMdcCopy().get("span_id") == span2.spanContext.spanId
+      assert logRecords.get(0).getMdcCopy().get("trace_flags") == "01"
+    }
 
     cleanup:
     logRecords.clear()

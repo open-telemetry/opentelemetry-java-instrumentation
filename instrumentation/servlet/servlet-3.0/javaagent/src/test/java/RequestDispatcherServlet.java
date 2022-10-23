@@ -40,4 +40,6 @@ public class RequestDispatcherServlet {
       dispatcher.include(req, resp);
     }
   }
+
+  private RequestDispatcherServlet() {}
 }

@@ -21,4 +21,6 @@ public class TestSparkJavaApplication {
 
     Spark.awaitInitialization();
   }
+
+  private TestSparkJavaApplication() {}
 }

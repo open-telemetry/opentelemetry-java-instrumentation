@@ -52,9 +52,9 @@ See [Running the tests](docs/contributing/running-tests.md)
 
 See [Writing instrumentation](docs/contributing/writing-instrumentation.md)
 
-### Understanding the javaagent components
+### Understanding the javaagent structure
 
-See [Understanding the javaagent components](docs/contributing/javaagent-jar-components.md)
+See [Understanding the javaagent structure](docs/contributing/javaagent-structure.md)
 
 ### Understanding the javaagent instrumentation testing components
 

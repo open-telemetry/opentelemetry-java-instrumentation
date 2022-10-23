@@ -8,16 +8,16 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.BySpanKey;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.DelegateBySpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressor.Noop;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.BySpanKey;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.DelegateBySpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanSuppressors.Noop;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 enum SpanSuppressionStrategy {
   /** Do not suppress spans at all. */
@@ -74,9 +74,10 @@ enum SpanSuppressionStrategy {
 
   abstract SpanSuppressor create(Set<SpanKey> spanKeys);
 
-  static SpanSuppressionStrategy fromConfig(Config config) {
-    String value =
-        config.getString("otel.instrumentation.experimental.span-suppression-strategy", "semconv");
+  static SpanSuppressionStrategy fromConfig(@Nullable String value) {
+    if (value == null) {
+      value = "semconv";
+    }
     switch (value.toLowerCase(Locale.ROOT)) {
       case "none":
         return NONE;

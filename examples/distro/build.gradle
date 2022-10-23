@@ -6,9 +6,15 @@ buildscript {
     maven {
       url "https://plugins.gradle.org/m2/"
     }
+    maven {
+      name = "sonatype"
+      url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+    }
   }
   dependencies {
     classpath "com.diffplug.spotless:spotless-plugin-gradle:6.3.0"
+    classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
+    classpath "io.opentelemetry.instrumentation:gradle-plugins:1.18.0-alpha-SNAPSHOT"
   }
 }
 
@@ -20,22 +26,24 @@ subprojects {
 
   ext {
     versions = [
-      opentelemetry              : "1.12.0",
-      opentelemetryAlpha         : "1.12.0-alpha",
-      opentelemetryJavaagent     : "1.15.0-SNAPSHOT",
-      opentelemetryJavaagentAlpha: "1.15.0-alpha-SNAPSHOT",
-      bytebuddy                  : "1.10.18",
-      guava                      : "30.1-jre"
+      // these lines are managed by .github/scripts/update-sdk-version.sh
+      opentelemetry              : "1.18.0",
+      opentelemetryAlpha         : "1.18.0-alpha",
+
+      // these lines are managed by .github/scripts/update-version.sh
+      opentelemetryJavaagent     : "1.20.0-SNAPSHOT",
+      opentelemetryJavaagentAlpha: "1.20.0-alpha-SNAPSHOT",
+
+      bytebuddy                  : "1.12.10",
+      autoservice                : "1.0.1"
     ]
 
     deps = [
       bytebuddy           : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
       autoservice         : [
-        "com.google.auto.service:auto-service:1.0-rc7",
-        "com.google.auto:auto-common:0.8",
-        "com.google.guava:guava:${versions.guava}",
-      ],
-      autoValueAnnotations: "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
+              "com.google.auto.service:auto-service:${versions.autoservice}",
+              "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
+      ]
     ]
   }
 
@@ -57,8 +65,9 @@ subprojects {
 
   dependencies {
     testImplementation("org.mockito:mockito-core:3.3.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
+    testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
   }
 
   tasks {

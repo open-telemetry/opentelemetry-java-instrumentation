@@ -27,6 +27,16 @@ public class Servlet3Accessor extends JavaxServletAccessor<HttpServletResponse> 
   }
 
   @Override
+  public String getRequestLocalAddr(HttpServletRequest request) {
+    return request.getLocalAddr();
+  }
+
+  @Override
+  public Integer getRequestLocalPort(HttpServletRequest request) {
+    return request.getLocalPort();
+  }
+
+  @Override
   public void addRequestAsyncListener(
       HttpServletRequest request,
       ServletAsyncListener<HttpServletResponse> listener,
@@ -41,11 +51,6 @@ public class Servlet3Accessor extends JavaxServletAccessor<HttpServletResponse> 
   @Override
   public int getResponseStatus(HttpServletResponse response) {
     return response.getStatus();
-  }
-
-  @Override
-  public String getResponseHeader(HttpServletResponse response, String name) {
-    return response.getHeader(name);
   }
 
   @Override

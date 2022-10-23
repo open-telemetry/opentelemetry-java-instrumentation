@@ -8,6 +8,8 @@ RUN apt update && apt install -y git
 WORKDIR /app
 RUN git clone http://github.com/spring-petclinic/spring-petclinic-rest.git
 WORKDIR /app/spring-petclinic-rest
+# We have to pin the version because upstream petclinic has breaking api changes after this commit
+RUN git checkout 8aa4d49
 RUN ./mvnw package -Dmaven.test.skip=true
 RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
 

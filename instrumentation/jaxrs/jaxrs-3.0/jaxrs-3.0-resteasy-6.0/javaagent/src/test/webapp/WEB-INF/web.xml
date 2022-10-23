@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="5.0" metadata-complete="false"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="https://jakarta.ee/xml/ns/jakartaee"
+  xsi:schemaLocation= "https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd">
+
+  <listener>
+    <listener-class>ResteasyStartupListener</listener-class>
+  </listener>
+</web-app>

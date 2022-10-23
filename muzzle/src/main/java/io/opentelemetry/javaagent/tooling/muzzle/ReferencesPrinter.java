@@ -20,7 +20,7 @@ public final class ReferencesPrinter {
   private static final String INDENT = "  ";
 
   /**
-   * For all {@link InstrumentationModule}s found in the current thread's context classloader this
+   * For all {@link InstrumentationModule}s found in the current thread's context class loader this
    * method prints references returned by the {@link
    * InstrumentationModuleMuzzle#getMuzzleReferences()} method to the standard output.
    */

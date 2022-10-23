@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -35,16 +33,7 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request));
-
-    String peerIp = getter.peerIp(request);
-
-    internalSet(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
-
-    Integer peerPort = getter.peerPort(request);
-    if (peerPort != null && peerPort > 0) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
-    }
+    InternalNetServerAttributesExtractor.onStart(getter, attributes, request, null);
   }
 
   @Override

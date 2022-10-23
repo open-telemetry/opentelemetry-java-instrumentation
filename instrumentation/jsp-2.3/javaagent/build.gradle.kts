@@ -46,6 +46,7 @@ tasks.withType<Test>().configureEach {
 
   // required on jdk17
   jvmArgs("--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED")
+  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
   // TODO run tests both with and without experimental span attributes

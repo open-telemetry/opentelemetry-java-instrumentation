@@ -1,0 +1,79 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
+
+import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
+import static java.util.Objects.requireNonNull;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
+import java.io.IOException;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.core.Ordered;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+final class WebMvcTelemetryProducingFilter extends OncePerRequestFilter implements Ordered {
+
+  private final Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter;
+  private final HttpRouteSupport httpRouteSupport = new HttpRouteSupport();
+
+  WebMvcTelemetryProducingFilter(
+      Instrumenter<HttpServletRequest, HttpServletResponse> instrumenter) {
+    this.instrumenter = instrumenter;
+  }
+
+  @Override
+  public void afterPropertiesSet() {
+    // don't do anything, in particular do not call initFilterBean()
+  }
+
+  @Override
+  protected void initFilterBean() {
+    // FilterConfig must be non-null at this point
+    httpRouteSupport.onFilterInit(requireNonNull(getFilterConfig()));
+  }
+
+  @Override
+  public void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
+
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
+    Context context = instrumenter.start(parentContext, request);
+    Throwable error = null;
+    try (Scope ignored = context.makeCurrent()) {
+      filterChain.doFilter(request, response);
+    } catch (Throwable t) {
+      error = t;
+      throw t;
+    } finally {
+      if (httpRouteSupport.hasMappings()) {
+        HttpRouteHolder.updateHttpRoute(
+            context, CONTROLLER, httpRouteSupport::getHttpRoute, request);
+      }
+      instrumenter.end(context, request, response, error);
+    }
+  }
+
+  @Override
+  public void destroy() {}
+
+  @Override
+  public int getOrder() {
+    // Run after all HIGHEST_PRECEDENCE items
+    return Ordered.HIGHEST_PRECEDENCE + 1;
+  }
+}

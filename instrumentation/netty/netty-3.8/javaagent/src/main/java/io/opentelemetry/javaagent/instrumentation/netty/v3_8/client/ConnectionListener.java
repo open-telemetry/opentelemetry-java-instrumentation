@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.Netty
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
-import io.opentelemetry.javaagent.instrumentation.netty.common.Timer;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
+import io.opentelemetry.instrumentation.netty.common.internal.Timer;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 

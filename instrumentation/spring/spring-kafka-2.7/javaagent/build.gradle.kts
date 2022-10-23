@@ -17,6 +17,7 @@ dependencies {
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
+  implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
 
   library("org.springframework.kafka:spring-kafka:2.7.0")
 
@@ -63,4 +64,20 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+}
+
+configurations {
+  listOf(
+    testRuntimeClasspath,
+    named("testNoReceiveTelemetryRuntimeClasspath")
+  )
+    .forEach {
+      it.configure {
+        resolutionStrategy {
+          // requires old logback (and therefore also old slf4j)
+          force("ch.qos.logback:logback-classic:1.2.11")
+          force("org.slf4j:slf4j-api:1.7.36")
+        }
+      }
+    }
 }

@@ -21,22 +21,12 @@ final class JaxRsClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(ClientRequest request, @Nullable ClientResponse response) {
+  public String peerName(ClientRequest request) {
     return request.getURI().getHost();
   }
 
   @Override
-  public Integer peerPort(ClientRequest request, @Nullable ClientResponse response) {
-    int port = request.getURI().getPort();
-    if (port != -1) {
-      return port;
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(ClientRequest request, @Nullable ClientResponse response) {
-    return null;
+  public Integer peerPort(ClientRequest request) {
+    return request.getURI().getPort();
   }
 }

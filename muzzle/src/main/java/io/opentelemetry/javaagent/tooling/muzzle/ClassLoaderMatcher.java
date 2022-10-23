@@ -24,7 +24,7 @@ import java.util.Set;
 public class ClassLoaderMatcher {
 
   /**
-   * For all {@link InstrumentationModule}s found in the current thread's context classloader calls
+   * For all {@link InstrumentationModule}s found in the current thread's context class loader calls
    * {@link #matches(InstrumentationModule, ClassLoader, boolean)} and returns the aggregated
    * result.
    *
@@ -93,7 +93,7 @@ public class ClassLoaderMatcher {
                 helperResourceBuilder.getResources(),
                 Thread.currentThread().getContextClassLoader(),
                 null)
-            .transform(null, null, classLoader, null);
+            .transform(null, null, classLoader, null, null);
       }
     } catch (RuntimeException e) {
       mismatches = ReferenceMatcher.add(mismatches, new Mismatch.HelperClassesInjectionError());

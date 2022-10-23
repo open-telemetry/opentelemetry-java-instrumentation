@@ -21,7 +21,10 @@ dependencies {
 tasks {
   // extract wildfly dist, path is used from arquillian.xml
   val setupServer by registering(Copy::class) {
-    from(zipTree(testServer.singleFile))
+    inputs.files(testServer)
+    from({
+      zipTree(testServer.singleFile)
+    })
     into(file("build/server/"))
   }
 
@@ -62,4 +65,10 @@ tasks {
       classpath = classpath.plus(files("$buildDir/tmp/logback-classic-modified.jar"))
     }
   }
+}
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

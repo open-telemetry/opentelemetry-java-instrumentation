@@ -88,17 +88,19 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name route
           kind SERVER
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
         span(1) {
@@ -156,17 +158,19 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name route
           kind SERVER
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
         span(1) {
@@ -203,17 +207,19 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name route
           kind SERVER
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
         span(1) {
@@ -298,17 +304,19 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name route
           kind SERVER
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
         span(1) {
@@ -379,17 +387,19 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(JasperException, String)
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
         span(1) {
@@ -439,17 +449,19 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           kind SERVER
           status UNSET
           attributes {
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" Long
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 404
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.HTTP_ROUTE" route
+            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.port" Long
+            "net.sock.host.addr" "127.0.0.1"
           }
         }
         span(1) {

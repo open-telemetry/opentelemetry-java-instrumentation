@@ -15,9 +15,10 @@ import reactor.util.context.ContextView;
 
 public final class DecoratorFunctions {
 
-  // ignore our own callbacks - or already decorated functions
+  // ignore already decorated functions
   public static boolean shouldDecorate(Class<?> callbackClass) {
-    return !callbackClass.getName().startsWith("io.opentelemetry.javaagent");
+    return callbackClass != OnMessageDecorator.class
+        && callbackClass != OnMessageErrorDecorator.class;
   }
 
   public static final class OnMessageDecorator<M extends HttpClientInfos>

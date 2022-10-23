@@ -19,7 +19,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:graphql-java-12.0:testing"))
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.graphql.experimental-span-attributes=true")
-}

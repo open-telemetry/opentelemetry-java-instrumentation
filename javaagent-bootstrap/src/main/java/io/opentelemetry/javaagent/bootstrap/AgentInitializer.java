@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  *
  * <p>This class is loaded and called by {@code io.opentelemetry.javaagent.OpenTelemetryAgent}
  *
- * <p>The intention is for this class to be loaded by bootstrap classloader to make sure we have
+ * <p>The intention is for this class to be loaded by bootstrap class loader to make sure we have
  * unimpeded access to the rest of agent parts.
  */
 public final class AgentInitializer {
@@ -91,11 +91,11 @@ public final class AgentInitializer {
   }
 
   /**
-   * Create the agent classloader. This must be called after the bootstrap jar has been appended to
+   * Create the agent class loader. This must be called after the bootstrap jar has been appended to
    * the bootstrap classpath.
    *
-   * @param innerJarFilename Filename of internal jar to use for the classpath of the agent
-   *     classloader
+   * @param innerJarFilename Filename of internal jar to use for the classpath of the agent class
+   *     loader
    * @return Agent Classloader
    */
   private static ClassLoader createAgentClassLoader(String innerJarFilename, File javaagentFile) {

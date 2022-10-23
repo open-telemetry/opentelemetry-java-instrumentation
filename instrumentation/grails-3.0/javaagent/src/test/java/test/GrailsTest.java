@@ -22,7 +22,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,19 +66,22 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
   static class TestApplication extends GrailsAutoConfiguration {
     static ConfigurableApplicationContext start(int port, String contextPath) {
       GrailsApp grailsApp = new GrailsApp(TestApplication.class);
-      // context path configuration property name changes between spring boot versions
-      String contextPathKey;
-      try {
-        Method method = ServerProperties.class.getDeclaredMethod("getServlet");
-        contextPathKey = "server.servlet.contextPath";
-      } catch (NoSuchMethodException ignore) {
-        contextPathKey = "server.context-path";
-      }
       Map<String, Object> properties = new HashMap<>();
       properties.put("server.port", port);
-      properties.put(contextPathKey, contextPath);
+      properties.put(getContextPathKey(), contextPath);
       grailsApp.setDefaultProperties(properties);
       return grailsApp.run();
+    }
+
+    @SuppressWarnings("ReturnValueIgnored")
+    private static String getContextPathKey() {
+      // context path configuration property name changes between spring boot versions
+      try {
+        ServerProperties.class.getDeclaredMethod("getServlet");
+        return "server.servlet.contextPath";
+      } catch (NoSuchMethodException ignore) {
+        return "server.context-path";
+      }
     }
 
     @SuppressWarnings("rawtypes")

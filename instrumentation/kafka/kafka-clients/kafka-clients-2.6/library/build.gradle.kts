@@ -10,13 +10,14 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
 
   testImplementation("org.testcontainers:kafka")
+  testImplementation("org.testcontainers:junit-jupiter")
+
+  testCompileOnly("com.google.auto.value:auto-value-annotations")
+  testAnnotationProcessor("com.google.auto.value:auto-value")
 }
 
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }
 }

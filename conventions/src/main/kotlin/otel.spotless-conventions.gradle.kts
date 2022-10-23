@@ -25,12 +25,14 @@ spotless {
   }
   plugins.withId("org.jetbrains.kotlin.jvm") {
     kotlin {
-      ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
+      // not sure why it's not using the indent settings from .editorconfig
+      ktlint().editorConfigOverride(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports,package-name"))
       licenseHeaderFile(rootProject.file("buildscripts/spotless.license.java"), "(package|import|class|// Includes work from:)")
     }
   }
   kotlinGradle {
-    ktlint().userData(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
+    // not sure why it's not using the indent settings from .editorconfig
+    ktlint().editorConfigOverride(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
   }
   format("misc") {
     // not using "**/..." to help keep spotless fast

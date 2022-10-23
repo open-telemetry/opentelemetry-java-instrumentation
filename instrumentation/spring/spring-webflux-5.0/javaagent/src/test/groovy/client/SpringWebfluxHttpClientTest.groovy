@@ -81,6 +81,11 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   }
 
   @Override
+  boolean testCallbackWithImplicitParent() {
+    true
+  }
+
+  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
     attributes.remove(SemanticAttributes.HTTP_FLAVOR)

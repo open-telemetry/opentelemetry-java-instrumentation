@@ -6,13 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class HibernateInstrumenterFactory {
   static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get().getBoolean("otel.instrumentation.hibernate.experimental-span-attributes", false);
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.hibernate.experimental-span-attributes", false);
 
   public static Instrumenter<HibernateOperation, Void> createInstrumenter(
       String instrumentationName) {
@@ -24,7 +25,7 @@ public final class HibernateInstrumenterFactory {
       instrumenterBuilder.addAttributesExtractor(new HibernateExperimentalAttributesExtractor());
     }
 
-    return instrumenterBuilder.newInstrumenter();
+    return instrumenterBuilder.buildInstrumenter();
   }
 
   private HibernateInstrumenterFactory() {}

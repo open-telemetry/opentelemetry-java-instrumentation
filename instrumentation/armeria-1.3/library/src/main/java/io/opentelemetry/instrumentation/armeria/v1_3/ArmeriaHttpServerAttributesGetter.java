@@ -43,23 +43,7 @@ enum ArmeriaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public Long requestContentLength(RequestContext ctx, @Nullable RequestLog requestLog) {
-    if (requestLog == null) {
-      return null;
-    }
-    return requestLog.requestLength();
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      RequestContext ctx, @Nullable RequestLog requestLog) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Integer statusCode(RequestContext ctx, RequestLog requestLog) {
+  public Integer statusCode(RequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
       return status.code();
@@ -78,28 +62,8 @@ enum ArmeriaHttpServerAttributesGetter
   }
 
   @Override
-  public Long responseContentLength(RequestContext ctx, RequestLog requestLog) {
-    return requestLog.responseLength();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(RequestContext ctx, RequestLog requestLog) {
-    return null;
-  }
-
-  @Override
   public List<String> responseHeader(RequestContext ctx, RequestLog requestLog, String name) {
     return requestLog.responseHeaders().getAll(name);
-  }
-
-  @Override
-  @Nullable
-  public String serverName(RequestContext ctx) {
-    if (ctx instanceof ServiceRequestContext) {
-      return ((ServiceRequestContext) ctx).config().virtualHost().defaultHostname();
-    }
-    return null;
   }
 
   @Override

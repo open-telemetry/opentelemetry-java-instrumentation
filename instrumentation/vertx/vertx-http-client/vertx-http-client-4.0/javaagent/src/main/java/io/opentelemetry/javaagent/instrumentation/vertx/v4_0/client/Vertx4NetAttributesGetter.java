@@ -5,14 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.net.SocketAddress;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class Vertx4NetAttributesGetter
-    implements NetClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
+    extends InetSocketAddressNetClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
 
   @Override
   public String transport(HttpClientRequest request, @Nullable HttpClientResponse response) {
@@ -21,18 +23,26 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String peerName(HttpClientRequest request) {
     return request.getHost();
   }
 
   @Override
-  public Integer peerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public Integer peerPort(HttpClientRequest request) {
     return request.getPort();
   }
 
   @Nullable
   @Override
-  public String peerIp(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  protected InetSocketAddress getPeerSocketAddress(
+      HttpClientRequest request, @Nullable HttpClientResponse response) {
+    if (response == null) {
+      return null;
+    }
+    SocketAddress address = response.netSocket().remoteAddress();
+    if (address instanceof InetSocketAddress) {
+      return (InetSocketAddress) address;
+    }
     return null;
   }
 }

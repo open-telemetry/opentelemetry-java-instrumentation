@@ -8,6 +8,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  spotless:
+    uses: ./.github/workflows/reusable-spotless.yml
+    with:
+      cache-read-only: true
+
+  license-check:
+    uses: ./.github/workflows/reusable-license-check.yml
+    with:
+      cache-read-only: true
+
   assemble:
     uses: ./.github/workflows/reusable-assemble.yml
     with:
@@ -19,29 +29,15 @@ jobs:
       cache-read-only: true
 
   test-latest-deps:
-    # test-latest-deps is not included in the PR workflow by default
-    # because any time a new library version is released to maven central
-    # it can fail due to test code incompatibility with the new library version,
-    # or due to slight changes in emitted telemetry, which can be confusing for contributors
-    # (muzzle can also fail when a new library version is released to maven central
-    # but that happens much less often)
-    #
-    # the condition is on the steps below instead of here on the job, because skipping the job
-    # causes the job to show up as canceled in the GitHub UI which prevents the build section from
-    # collapsing when everything (else) is green
-    #
-    # and the name is updated when the steps below are skipped which makes what's happening clearer
-    # in the GitHub UI
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
-      skip: ${{ !contains(github.event.pull_request.labels.*.name, 'test latest deps') }}
       cache-read-only: true
 
   smoke-test:
     uses: ./.github/workflows/reusable-smoke-test.yml
     with:
       # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
-      skip-windows: true
+      skip-windows: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
       cache-read-only: true
 
   muzzle:
@@ -56,7 +52,7 @@ jobs:
   gradle-plugins:
     uses: ./.github/workflows/reusable-gradle-plugins.yml
     with:
-      no-build-cache: true
+      cache-read-only: true
 
   examples:
     uses: ./.github/workflows/reusable-examples.yml
@@ -77,7 +73,15 @@ jobs:
     uses: ./.github/workflows/reusable-misspell-check.yml
 
   required-status-check:
+    # test-latest-deps is not included in the required status checks
+    # because any time a new library version is released to maven central
+    # it can fail due to test code incompatibility with the new library version,
+    # or due to slight changes in emitted telemetry
+    # (muzzle can also fail when a new library version is released to maven central
+    # but that happens much less often)
     needs:
+      - spotless
+      - license-check
       - assemble
       - test
       - smoke-test

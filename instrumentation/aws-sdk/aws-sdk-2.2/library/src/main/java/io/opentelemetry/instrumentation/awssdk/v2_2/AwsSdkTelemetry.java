@@ -39,12 +39,16 @@ public class AwsSdkTelemetry {
     return new AwsSdkTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> tracer;
+  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
+  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
   AwsSdkTelemetry(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
-    this.tracer =
-        AwsSdkInstrumenterFactory.createInstrumenter(
+    this.requestInstrumenter =
+        AwsSdkInstrumenterFactory.requestInstrumenter(
+            openTelemetry, captureExperimentalSpanAttributes);
+    this.consumerInstrumenter =
+        AwsSdkInstrumenterFactory.consumerInstrumenter(
             openTelemetry, captureExperimentalSpanAttributes);
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
@@ -54,6 +58,7 @@ public class AwsSdkTelemetry {
    * ClientOverrideConfiguration.Builder#addExecutionInterceptor(ExecutionInterceptor)}.
    */
   public ExecutionInterceptor newExecutionInterceptor() {
-    return new TracingExecutionInterceptor(tracer, captureExperimentalSpanAttributes);
+    return new TracingExecutionInterceptor(
+        requestInstrumenter, consumerInstrumenter, captureExperimentalSpanAttributes);
   }
 }

@@ -1,12 +1,17 @@
 # Repository settings
 
-(In addition to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
+(In addition
+to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
-## General
+## General > Pull Requests
+
+* Allow squash merging > Default to pull request title and description
+
+* Allow auto-merge
 
 * Automatically delete head branches: CHECKED
 
-  So that bot PR branches will be deleted.
+  So automation PR branches will be deleted.
 
 ## Actions > General
 
@@ -18,9 +23,10 @@
 
 ## Branch protections
 
-(In addition to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
+(In addition
+to https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md)
 
-### `main` and `release/*`
+### `main`
 
 * Require branches to be up to date before merging: UNCHECKED
 
@@ -31,14 +37,13 @@
   * EasyCLA
   * required-status-check
 
-### `v*` (old release branches)
+### `release/*`
 
-Same settings as above for new release branches (`release/**`), except:
+Same settings as above for `main`, except:
 
-* Status checks that are required:
+* Restrict pushes that create matching branches: UNCHECKED
 
-  * EasyCLA
-  * accept-pr
+  So release automation can create release branches.
 
 ### `gh-pages`
 
@@ -48,12 +53,26 @@ Same settings as above for new release branches (`release/**`), except:
   [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
   job.
 
+### `dependabot/**/*` and `opentelemetrybot/**/*`
+
+* Require status checks to pass before merging: UNCHECKED
+
+  So bots can rebase their PR branches
+
+* Restrict who can push to matching branches: UNCHECKED
+
+  So bots can create PR branches in the first place
+
+* Allow force pushes > Everyone
+
+  So bots can rebase their PR branches
+
+* Allow deletions: CHECKED
+
+  So bot PR branches can be deleted after merging
+
 ### `**/**`
 
 * Status checks that are required:
 
   EasyCLA
-
-* Allow deletions: CHECKED
-
-  So that bot PR branches can be deleted

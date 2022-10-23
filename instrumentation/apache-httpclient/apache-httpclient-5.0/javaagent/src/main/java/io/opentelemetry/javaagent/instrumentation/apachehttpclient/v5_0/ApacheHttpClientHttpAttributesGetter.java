@@ -69,20 +69,7 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(HttpRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpRequest request, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  public Integer statusCode(HttpRequest request, HttpResponse response) {
+  public Integer statusCode(HttpRequest request, HttpResponse response, @Nullable Throwable error) {
     return response.getCode();
   }
 
@@ -109,18 +96,6 @@ final class ApacheHttpClientHttpAttributesGetter
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
     logger.log(Level.FINE, "unexpected http protocol version: {0}", protocolVersion);
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(HttpRequest request, HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(HttpRequest request, HttpResponse response) {
     return null;
   }
 

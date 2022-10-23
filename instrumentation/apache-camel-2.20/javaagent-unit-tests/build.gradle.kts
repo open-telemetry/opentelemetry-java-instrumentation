@@ -5,6 +5,7 @@ plugins {
 dependencies {
   testImplementation(project(":instrumentation:apache-camel-2.20:javaagent"))
   testImplementation(project(":instrumentation-api-semconv"))
+  testImplementation(project(":javaagent-extension-api"))
 
   testImplementation("org.apache.camel:camel-core:2.20.1")
   testImplementation("org.apache.camel:camel-aws:2.20.1")

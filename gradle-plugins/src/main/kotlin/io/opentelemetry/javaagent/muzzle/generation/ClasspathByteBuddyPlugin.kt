@@ -5,21 +5,21 @@
 
 package io.opentelemetry.javaagent.muzzle.generation
 
-import java.io.File
-import java.net.URL
-import java.net.URLClassLoader
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.build.Plugin
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.DynamicType
+import java.io.File
+import java.net.URL
+import java.net.URLClassLoader
 
 /**
  * Starting from version 1.10.15, ByteBuddy gradle plugin transformations require that plugin
  * classes are given as class instances instead of a class name string. To be able to still use a
  * plugin implementation that is not a buildscript dependency, this reimplements the previous logic
  * by taking a delegate class name and class path as arguments and loading the plugin class from the
- * provided classloader when the plugin is instantiated.
+ * provided class loader when the plugin is instantiated.
  */
 class ClasspathByteBuddyPlugin(
   classPath: Iterable<File>,

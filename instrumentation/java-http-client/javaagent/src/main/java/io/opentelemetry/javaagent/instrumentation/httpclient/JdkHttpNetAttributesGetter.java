@@ -26,13 +26,13 @@ public class JdkHttpNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  public String peerName(HttpRequest httpRequest) {
     return httpRequest.uri().getHost();
   }
 
   @Override
   @Nullable
-  public Integer peerPort(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  public Integer peerPort(HttpRequest httpRequest) {
     int port = httpRequest.uri().getPort();
     if (port != -1) {
       return port;
@@ -50,11 +50,5 @@ public class JdkHttpNetAttributesGetter
         logger.log(FINE, "no default port mapping for scheme: {0}", scheme);
         return null;
     }
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
-    return null;
   }
 }

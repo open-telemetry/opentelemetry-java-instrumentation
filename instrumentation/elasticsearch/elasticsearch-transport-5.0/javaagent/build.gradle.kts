@@ -26,7 +26,7 @@ muzzle {
 dependencies {
   compileOnly("org.elasticsearch.client:transport:5.0.0")
 
-  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:library"))
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent"))
 
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent"))

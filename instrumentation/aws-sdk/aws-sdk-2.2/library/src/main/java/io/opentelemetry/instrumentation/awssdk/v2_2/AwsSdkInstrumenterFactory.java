@@ -32,6 +32,7 @@ final class AwsSdkInstrumenterFactory {
       netAttributesExtractor = NetClientAttributesExtractor.create(netAttributesGetter);
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
+  private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
       defaultAttributesExtractors =
@@ -45,8 +46,26 @@ final class AwsSdkInstrumenterFactory {
               netAttributesExtractor,
               experimentalAttributesExtractor);
 
-  static Instrumenter<ExecutionAttributes, SdkHttpResponse> createInstrumenter(
+  static Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
+
+    return createInstrumenter(
+        openTelemetry,
+        captureExperimentalSpanAttributes,
+        AwsSdkInstrumenterFactory.spanKindExtractor);
+  }
+
+  static Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter(
+      OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
+
+    return createInstrumenter(
+        openTelemetry, captureExperimentalSpanAttributes, SpanKindExtractor.alwaysConsumer());
+  }
+
+  private static Instrumenter<ExecutionAttributes, SdkHttpResponse> createInstrumenter(
+      OpenTelemetry openTelemetry,
+      boolean captureExperimentalSpanAttributes,
+      SpanKindExtractor<ExecutionAttributes> spanKindExtractor) {
 
     return Instrumenter.<ExecutionAttributes, SdkHttpResponse>builder(
             openTelemetry, INSTRUMENTATION_NAME, AwsSdkInstrumenterFactory::spanName)
@@ -54,7 +73,7 @@ final class AwsSdkInstrumenterFactory {
             captureExperimentalSpanAttributes
                 ? extendedAttributesExtractors
                 : defaultAttributesExtractors)
-        .newInstrumenter(SpanKindExtractor.alwaysClient());
+        .buildInstrumenter(spanKindExtractor);
   }
 
   private static String spanName(ExecutionAttributes attributes) {

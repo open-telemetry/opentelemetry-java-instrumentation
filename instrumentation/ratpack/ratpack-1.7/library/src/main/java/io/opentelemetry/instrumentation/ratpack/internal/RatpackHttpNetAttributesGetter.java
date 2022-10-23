@@ -17,6 +17,7 @@ import ratpack.http.client.RequestSpec;
  */
 public final class RatpackHttpNetAttributesGetter
     implements NetClientAttributesGetter<RequestSpec, HttpResponse> {
+
   @Override
   public String transport(RequestSpec request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
@@ -24,18 +25,12 @@ public final class RatpackHttpNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(RequestSpec request, @Nullable HttpResponse response) {
+  public String peerName(RequestSpec request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(RequestSpec request, @Nullable HttpResponse response) {
+  public Integer peerPort(RequestSpec request) {
     return request.getUri().getPort();
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(RequestSpec request, @Nullable HttpResponse response) {
-    return null;
   }
 }

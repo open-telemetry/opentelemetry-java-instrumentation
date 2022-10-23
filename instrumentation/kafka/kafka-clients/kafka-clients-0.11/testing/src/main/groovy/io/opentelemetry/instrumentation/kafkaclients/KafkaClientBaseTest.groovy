@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.kafkaclients
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import org.testcontainers.utility.DockerImageName
+
 import java.time.Duration
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
@@ -46,7 +48,7 @@ abstract class KafkaClientBaseTest extends InstrumentationSpecification {
   static TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, 0)
 
   def setupSpec() {
-    kafka = new KafkaContainer()
+    kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
       .withLogConsumer(new Slf4jLogConsumer(logger))
       .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
       .withStartupTimeout(Duration.ofMinutes(1))

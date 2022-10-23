@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -19,7 +20,7 @@ public class UrlClassLoaderInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean defaultEnabled() {
+  public boolean defaultEnabled(ConfigProperties config) {
     // internal instrumentations are always enabled by default
     return true;
   }

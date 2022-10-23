@@ -18,8 +18,8 @@ dependencies {
 
   testLibrary("io.ktor:ktor-server-netty:1.0.0")
 
-  latestDepTestLibrary("io.ktor:ktor-server-core:1.+")
-  latestDepTestLibrary("io.ktor:ktor-server-netty:1.+")
+  latestDepTestLibrary("io.ktor:ktor-server-core:1.+") // see ktor-2.0 module
+  latestDepTestLibrary("io.ktor:ktor-server-netty:1.+") // see ktor-2.0 module
 }
 
 tasks {

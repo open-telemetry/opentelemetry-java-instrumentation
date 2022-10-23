@@ -1,5 +1,7 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
-  id("com.github.johnrengelman.shadow") version "7.1.2"
+  id("com.github.johnrengelman.shadow")
 }
 
 apply from: "$rootDir/gradle/shadow.gradle"
@@ -7,32 +9,97 @@ apply from: "$rootDir/gradle/shadow.gradle"
 def relocatePackages = ext.relocatePackages
 
 configurations {
-  customShadow
+  // this configuration collects libs that will be placed in the bootstrap classloader
+  bootstrapLibs {
+    canBeResolved = true
+    canBeConsumed = false
+  }
+  // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
+  javaagentLibs {
+    canBeResolved = true
+    canBeConsumed = false
+  }
+  // this configuration stores the upstream agent dep that's extended by this project
+  upstreamAgent {
+    canBeResolved = true
+    canBeConsumed = false
+  }
 }
 
 dependencies {
-  customShadow project(path: ":custom", configuration: "shadow")
-  customShadow project(path: ":instrumentation", configuration: "shadow")
-  implementation "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}"
+  bootstrapLibs(project(":bootstrap"))
+
+  javaagentLibs(project(":custom"))
+  javaagentLibs(project(":instrumentation:servlet-3"))
+
+  upstreamAgent("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
 }
 
-CopySpec isolateSpec() {
+CopySpec isolateClasses(Iterable<File> jars) {
   return copySpec {
-    configurations.customShadow.files.each {
+    jars.forEach {
       from(zipTree(it)) {
         into("inst")
-        rename("(^.*)\\.class\$", "\$1.classdata")
+        rename("^(.*)\\.class\$", "\$1.classdata")
+        // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+        rename("^LICENSE\$", "LICENSE.renamed")
+        exclude("META-INF/INDEX.LIST")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.SF")
       }
     }
   }
 }
 
-
 tasks {
+  jar {
+    enabled = false
+  }
+
+  // building the final javaagent jar is done in 3 steps:
+
+  // 1. all distro specific javaagent libs are relocated
+  task relocateJavaagentLibs(type: ShadowJar) {
+    configurations = [project.configurations.javaagentLibs]
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+
+    archiveFileName.set("javaagentLibs-relocated.jar")
+
+    mergeServiceFiles()
+    exclude("**/module-info.class")
+    relocatePackages(it)
+
+    // exclude known bootstrap dependencies - they can't appear in the inst/ directory
+    dependencies {
+      exclude("org.slf4j:slf4j-api")
+      exclude("io.opentelemetry:opentelemetry-api")
+      exclude("io.opentelemetry:opentelemetry-api-logs")
+      exclude("io.opentelemetry:opentelemetry-context")
+      exclude("io.opentelemetry:opentelemetry-semconv")
+    }
+  }
+
+  // 2. the distro javaagent libs are then isolated - moved to the inst/ directory
+  // having a separate task for isolating javaagent libs is required to avoid duplicates with the upstream javaagent
+  // duplicatesStrategy in shadowJar won't be applied when adding files with with(CopySpec) because each CopySpec has
+  // its own duplicatesStrategy
+  task isolateJavaagentLibs(type: Copy) {
+    dependsOn(tasks.relocateJavaagentLibs)
+    with isolateClasses(tasks.relocateJavaagentLibs.outputs.files)
+
+    into("$buildDir/isolated/javaagentLibs")
+  }
+
+  // 3. the relocated and isolated javaagent libs are merged together with the bootstrap libs (which undergo relocation
+  // in this task) and the upstream javaagent jar; duplicates are removed
   shadowJar {
-    dependsOn ':custom:shadowJar'
-    dependsOn ':instrumentation:shadowJar'
-    with isolateSpec()
+    configurations = [project.configurations.bootstrapLibs, project.configurations.upstreamAgent]
+
+    dependsOn(tasks.isolateJavaagentLibs)
+    from(tasks.isolateJavaagentLibs.outputs)
+
+    archiveClassifier.set("all")
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -40,7 +107,6 @@ tasks {
       include("inst/META-INF/services/*")
     }
     exclude("**/module-info.class")
-
     relocatePackages(it)
 
     manifest {

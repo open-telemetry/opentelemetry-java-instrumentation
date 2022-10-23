@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.tooling.bytebuddy;
 
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class BadAdvice {
+
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void throwAnException(@Advice.Return(readOnly = false) boolean returnVal) {
     returnVal = true;

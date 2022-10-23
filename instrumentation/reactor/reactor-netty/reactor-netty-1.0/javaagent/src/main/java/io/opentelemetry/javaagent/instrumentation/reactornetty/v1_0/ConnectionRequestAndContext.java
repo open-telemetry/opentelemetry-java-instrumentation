@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 
 @AutoValue
 public abstract class ConnectionRequestAndContext {

@@ -124,6 +124,7 @@ dependencies {
   components.all<NettyAlignmentRule>()
 
   compileOnly("com.google.code.findbugs:jsr305")
+  compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:2.2.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.9"))
@@ -136,6 +137,7 @@ testing {
       implementation("org.junit.jupiter:junit-jupiter-params")
       runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
       runtimeOnly("org.junit.vintage:junit-vintage-engine")
+      implementation("org.junit-pioneer:junit-pioneer")
 
 
       implementation("org.assertj:assertj-core")
@@ -146,7 +148,7 @@ testing {
 
       implementation("org.objenesis:objenesis")
       implementation("org.spockframework:spock-core") {
-        with (this as ExternalDependency) {
+        with(this as ExternalDependency) {
           // exclude optional dependencies
           exclude(group = "cglib", module = "cglib-nodep")
           exclude(group = "net.bytebuddy", module = "byte-buddy")
@@ -157,7 +159,7 @@ testing {
         }
       }
       implementation("org.spockframework:spock-junit4") {
-        with (this as ExternalDependency) {
+        with(this as ExternalDependency) {
           // spock-core is already added as dependency
           // exclude it here to avoid pulling in optional dependencies
           exclude(group = "org.spockframework", module = "spock-core")
@@ -201,7 +203,10 @@ tasks {
       charSet = "UTF-8"
       breakIterator(true)
 
-      links("https://docs.oracle.com/javase/8/docs/api/")
+      // TODO (trask) revisit to see if url is fixed
+      // currently broken because https://docs.oracle.com/javase/8/docs/api/element-list is missing
+      // and redirects
+      // links("https://docs.oracle.com/javase/8/docs/api/")
 
       addStringOption("Xdoclint:none", "-quiet")
       // non-standard option to fail on warnings, see https://bugs.openjdk.java.net/browse/JDK-8200363
@@ -234,7 +239,7 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   if (otelJava.minJavaVersionSupported.get().compareTo(version) > 0) {
     return false
   }
-  if (otelJava.maxJavaVersionForTests.isPresent() && otelJava.maxJavaVersionForTests.get().compareTo(version) < 0) {
+  if (otelJava.maxJavaVersionForTests.isPresent && otelJava.maxJavaVersionForTests.get().compareTo(version) < 0) {
     return false
   }
   return true
@@ -352,8 +357,8 @@ checkstyle {
 
 idea {
   module {
-    setDownloadJavadoc(false)
-    setDownloadSources(false)
+    isDownloadJavadoc = false
+    isDownloadSources = false
   }
 }
 
@@ -364,7 +369,7 @@ when (projectDir.name) {
     // https://github.com/gradle/gradle/issues/847
     // In otel.publish-conventions, we set the maven group, which is what matters, to the correct
     // value.
-    group = "io.opentelemetry.${projectDir.parentFile.name}"
+    group = "io.opentelemetry.dummy.${projectDir.parentFile.name}"
   }
 }
 
@@ -376,8 +381,8 @@ configurations.configureEach {
     dependencySubstitution {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")).using(project(":instrumentation-api-semconv"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")).using(project(":instrumentation-api-annotation-support"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")).using(project(":instrumentation-appender-api-internal"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")).using(project(":instrumentation-annotations"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")).using(project(":instrumentation-annotations-support"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))

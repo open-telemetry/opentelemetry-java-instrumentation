@@ -9,10 +9,10 @@ import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import com.zaxxer.hikari.metrics.PoolStats;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.BatchCallback;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.metrics.db.DbConnectionPoolMetrics;
-import java.util.Arrays;
-import java.util.List;
 import javax.annotation.Nullable;
 
 final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory {
@@ -38,17 +38,32 @@ final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory 
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
 
-    List<ObservableLongUpDownCounter> observableInstruments =
-        Arrays.asList(
-            metrics.usedConnections(poolStats::getActiveConnections),
-            metrics.idleConnections(poolStats::getIdleConnections),
-            metrics.minIdleConnections(poolStats::getMinConnections),
-            metrics.maxConnections(poolStats::getMaxConnections),
-            metrics.pendingRequestsForConnection(poolStats::getPendingThreads));
+    ObservableLongMeasurement connections = metrics.connections();
+    ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
+    ObservableLongMeasurement maxConnections = metrics.maxConnections();
+    ObservableLongMeasurement pendingRequestsForConnection = metrics.pendingRequestsForConnection();
+
+    Attributes attributes = metrics.getAttributes();
+    Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
+    Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
+
+    BatchCallback callback =
+        metrics.batchCallback(
+            () -> {
+              connections.record(poolStats.getActiveConnections(), usedConnectionsAttributes);
+              connections.record(poolStats.getIdleConnections(), idleConnectionsAttributes);
+              minIdleConnections.record(poolStats.getMinConnections(), attributes);
+              maxConnections.record(poolStats.getMaxConnections(), attributes);
+              pendingRequestsForConnection.record(poolStats.getPendingThreads(), attributes);
+            },
+            connections,
+            minIdleConnections,
+            maxConnections,
+            pendingRequestsForConnection);
 
     return new OpenTelemetryMetricsTracker(
         userMetricsTracker,
-        observableInstruments,
+        callback,
         metrics.connectionTimeouts(),
         metrics.connectionCreateTime(),
         metrics.connectionWaitTime(),

@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   library("org.apache.logging.log4j:log4j-core:2.17.0")
 
-  compileOnly(project(":instrumentation-appender-api-internal"))
+  compileOnly("io.opentelemetry:opentelemetry-api-logs")
   compileOnly(project(":javaagent-bootstrap"))
 
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
@@ -40,4 +40,5 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-context-data-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 }

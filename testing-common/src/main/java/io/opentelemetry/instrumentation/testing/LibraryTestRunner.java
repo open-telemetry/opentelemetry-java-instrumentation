@@ -13,10 +13,11 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.logs.data.LogData;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
@@ -40,6 +41,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   private static final OpenTelemetrySdk openTelemetry;
   private static final InMemorySpanExporter testSpanExporter;
   private static final InMemoryMetricExporter testMetricExporter;
+  private static final MetricReader metricReader;
   private static boolean forceFlushCalled;
 
   static {
@@ -47,6 +49,13 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
     testSpanExporter = InMemorySpanExporter.create();
     testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
+
+    metricReader =
+        PeriodicMetricReader.builder(testMetricExporter)
+            // Set really long interval. We'll call forceFlush when we need the metrics
+            // instead of collecting them periodically.
+            .setInterval(Duration.ofNanos(Long.MAX_VALUE))
+            .build();
 
     openTelemetry =
         OpenTelemetrySdk.builder()
@@ -56,13 +65,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
                     .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
                     .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
                     .build())
-            .setMeterProvider(
-                SdkMeterProvider.builder()
-                    .registerMetricReader(
-                        PeriodicMetricReader.builder(testMetricExporter)
-                            .setInterval(Duration.ofMillis(100))
-                            .build())
-                    .build())
+            .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metricReader).build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
             .buildAndRegisterGlobal();
   }
@@ -114,11 +117,12 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   @Override
   public List<MetricData> getExportedMetrics() {
+    metricReader.forceFlush().join(10, TimeUnit.SECONDS);
     return testMetricExporter.getFinishedMetricItems();
   }
 
   @Override
-  public List<LogData> getExportedLogs() {
+  public List<LogRecordData> getExportedLogRecords() {
     // no logs support yet
     return Collections.emptyList();
   }

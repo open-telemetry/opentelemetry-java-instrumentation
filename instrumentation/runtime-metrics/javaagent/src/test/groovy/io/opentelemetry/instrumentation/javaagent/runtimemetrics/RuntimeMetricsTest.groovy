@@ -19,13 +19,19 @@ class RuntimeMetricsTest extends AgentInstrumentationSpecification {
       assert getMetrics().any { it.name == "process.runtime.jvm.classes.loaded" }
       assert getMetrics().any { it.name == "process.runtime.jvm.classes.unloaded" }
       assert getMetrics().any { it.name == "process.runtime.jvm.classes.current_loaded" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.system.cpu.load_1m" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.system.cpu.utilization" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.cpu.utilization" }
       assert getMetrics().any { it.name == "runtime.jvm.gc.time" }
       assert getMetrics().any { it.name == "runtime.jvm.gc.count" }
       assert getMetrics().any { it.name == "process.runtime.jvm.memory.init" }
       assert getMetrics().any { it.name == "process.runtime.jvm.memory.usage" }
       assert getMetrics().any { it.name == "process.runtime.jvm.memory.committed" }
-      assert getMetrics().any { it.name == "process.runtime.jvm.memory.max" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.memory.limit" }
       assert getMetrics().any { it.name == "process.runtime.jvm.threads.count" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.buffer.limit" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.buffer.count" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.buffer.usage" }
     }
   }
 }

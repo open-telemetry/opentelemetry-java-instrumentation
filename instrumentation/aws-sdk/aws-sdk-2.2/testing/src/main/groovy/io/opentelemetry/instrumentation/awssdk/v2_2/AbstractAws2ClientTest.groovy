@@ -57,6 +57,7 @@ import java.util.concurrent.Future
 
 import static com.google.common.collect.ImmutableMap.of
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
@@ -168,6 +169,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
             "$SemanticAttributes.RPC_METHOD" "CreateTable"
@@ -203,6 +206,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
@@ -239,6 +244,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -341,7 +348,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "$service.$operation"
-          kind CLIENT
+          kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
@@ -352,6 +359,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -431,7 +440,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "$service.$operation"
-          kind CLIENT
+          kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
@@ -442,6 +451,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"

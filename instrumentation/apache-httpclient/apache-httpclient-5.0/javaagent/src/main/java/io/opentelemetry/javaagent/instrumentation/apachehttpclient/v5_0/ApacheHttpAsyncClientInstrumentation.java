@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,6 +33,7 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.nio.AsyncRequestProducer;
 import org.apache.hc.core5.http.nio.DataStreamChannel;
 import org.apache.hc.core5.http.nio.RequestChannel;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 
@@ -67,10 +69,13 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) AsyncRequestProducer requestProducer,
-        @Advice.Argument(3) HttpContext httpContext,
+        @Advice.Argument(value = 3, readOnly = false) HttpContext httpContext,
         @Advice.Argument(value = 4, readOnly = false) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
+      if (httpContext == null) {
+        httpContext = new BasicHttpContext();
+      }
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
@@ -182,7 +187,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      instrumenter().end(context, httpRequest, getResponse(httpContext), null);
+      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -204,7 +209,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponse(httpContext), ex);
+      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -227,7 +232,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponse(httpContext), null);
+      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         cancelDelegate();
@@ -257,8 +262,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
     }
 
-    private static HttpResponse getResponse(HttpContext context) {
-      return (HttpResponse) context.getAttribute(HttpCoreContext.HTTP_RESPONSE);
+    @Nullable
+    private HttpResponse getResponseFromHttpContext() {
+      return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }
 }

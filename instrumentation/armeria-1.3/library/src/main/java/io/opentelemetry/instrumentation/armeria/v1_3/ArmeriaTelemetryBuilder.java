@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
@@ -13,7 +14,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
@@ -25,7 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,13 +42,16 @@ public final class ArmeriaTelemetryBuilder {
 
   private final List<AttributesExtractor<? super RequestContext, ? super RequestLog>>
       additionalExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<? super ClientRequestContext, ? super RequestLog>>
+      additionalClientExtractors = new ArrayList<>();
 
   private final HttpClientAttributesExtractorBuilder<RequestContext, RequestLog>
       httpClientAttributesExtractorBuilder =
           HttpClientAttributesExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
   private final HttpServerAttributesExtractorBuilder<RequestContext, RequestLog>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(
+              ArmeriaHttpServerAttributesGetter.INSTANCE, new ArmeriaNetServerAttributesGetter());
 
   private Function<
           SpanStatusExtractor<RequestContext, RequestLog>,
@@ -59,6 +62,7 @@ public final class ArmeriaTelemetryBuilder {
     this.openTelemetry = openTelemetry;
   }
 
+  @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setStatusExtractor(
       Function<
               SpanStatusExtractor<RequestContext, RequestLog>,
@@ -72,13 +76,27 @@ public final class ArmeriaTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
+  @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
   }
 
+  /**
+   * Adds an extra client-only {@link AttributesExtractor} to invoke to set attributes to
+   * instrumented items. The {@link AttributesExtractor} will be executed after all default
+   * extractors.
+   */
+  @CanIgnoreReturnValue
+  public ArmeriaTelemetryBuilder addClientAttributeExtractor(
+      AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
+    additionalClientExtractors.add(attributesExtractor);
+    return this;
+  }
+
   /** Sets the {@code peer.service} attribute for http client spans. */
+  @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setPeerService(String peerService) {
     this.peerService = peerService;
     return this;
@@ -89,6 +107,7 @@ public final class ArmeriaTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedClientRequestHeaders(List<String> requestHeaders) {
     httpClientAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
@@ -99,6 +118,7 @@ public final class ArmeriaTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
     httpClientAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
@@ -109,6 +129,7 @@ public final class ArmeriaTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedServerRequestHeaders(List<String> requestHeaders) {
     httpServerAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
@@ -119,6 +140,7 @@ public final class ArmeriaTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedServerResponseHeaders(List<String> responseHeaders) {
     httpServerAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
@@ -155,13 +177,12 @@ public final class ArmeriaTelemetryBuilder {
                 HttpSpanStatusExtractor.create(clientAttributesGetter)))
         .addAttributesExtractor(netClientAttributesExtractor)
         .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
+        .addAttributesExtractors(additionalClientExtractors)
         .addOperationMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
                 HttpSpanStatusExtractor.create(serverAttributesGetter)))
-        .addAttributesExtractor(
-            NetServerAttributesExtractor.create(new ArmeriaNetServerAttributesGetter()))
         .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
         .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer(HttpRouteHolder.get());
@@ -169,13 +190,10 @@ public final class ArmeriaTelemetryBuilder {
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
           AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
-    } else {
-      clientInstrumenterBuilder.addAttributesExtractor(
-          PeerServiceAttributesExtractor.create(netClientAttributesGetter));
     }
 
     return new ArmeriaTelemetry(
-        clientInstrumenterBuilder.newClientInstrumenter(ClientRequestContextSetter.INSTANCE),
-        serverInstrumenterBuilder.newServerInstrumenter(RequestContextGetter.INSTANCE));
+        clientInstrumenterBuilder.buildClientInstrumenter(ClientRequestContextSetter.INSTANCE),
+        serverInstrumenterBuilder.buildServerInstrumenter(RequestContextGetter.INSTANCE));
   }
 }

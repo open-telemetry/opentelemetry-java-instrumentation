@@ -17,17 +17,26 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRecordGetter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
+import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
+import java.lang.reflect.Proxy;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.logging.Logger;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.metrics.MetricsReporter;
 
 public final class KafkaTelemetry {
   private static final Logger logger = Logger.getLogger(KafkaTelemetry.class.getName());
@@ -67,13 +76,84 @@ public final class KafkaTelemetry {
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
+  @SuppressWarnings("unchecked")
   public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
-    return new TracingProducer<>(producer, this);
+    return (Producer<K, V>)
+        Proxy.newProxyInstance(
+            KafkaTelemetry.class.getClassLoader(),
+            new Class<?>[] {Producer.class},
+            (proxy, method, args) -> {
+              // Future<RecordMetadata> send(ProducerRecord<K, V> record)
+              // Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback)
+              if ("send".equals(method.getName())
+                  && method.getParameterCount() >= 1
+                  && method.getParameterTypes()[0] == ProducerRecord.class) {
+                ProducerRecord<K, V> record = (ProducerRecord<K, V>) args[0];
+                Callback callback =
+                    method.getParameterCount() >= 2
+                            && method.getParameterTypes()[1] == Callback.class
+                        ? (Callback) args[1]
+                        : null;
+                return buildAndInjectSpan(record, callback, producer::send);
+              }
+              return method.invoke(producer, args);
+            });
   }
 
   /** Returns a decorated {@link Consumer} that consumes spans for each received message. */
+  @SuppressWarnings("unchecked")
   public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
-    return new TracingConsumer<>(consumer, this);
+    return (Consumer<K, V>)
+        Proxy.newProxyInstance(
+            KafkaTelemetry.class.getClassLoader(),
+            new Class<?>[] {Consumer.class},
+            (proxy, method, args) -> {
+              Object result = method.invoke(consumer, args);
+              // ConsumerRecords<K, V> poll(long timeout)
+              // ConsumerRecords<K, V> poll(Duration duration)
+              if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
+                buildAndFinishSpan((ConsumerRecords) result);
+              }
+              return result;
+            });
+  }
+
+  /**
+   * Produces a set of kafka client config properties (consumer or producer) to register a {@link
+   * MetricsReporter} that records metrics to an {@code openTelemetry} instance. Add these resulting
+   * properties to the configuration map used to initialize a {@link KafkaConsumer} or {@link
+   * KafkaProducer}.
+   *
+   * <p>For producers:
+   *
+   * <pre>{@code
+   * //    Map<String, Object> config = new HashMap<>();
+   * //    config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
+   * //    config.putAll(kafkaTelemetry.metricConfigProperties());
+   * //    try (KafkaProducer<?, ?> producer = new KafkaProducer<>(config)) { ... }
+   * }</pre>
+   *
+   * <p>For consumers:
+   *
+   * <pre>{@code
+   * //    Map<String, Object> config = new HashMap<>();
+   * //    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
+   * //    config.putAll(kafkaTelemetry.metricConfigProperties());
+   * //    try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(config)) { ... }
+   * }</pre>
+   *
+   * @return the kafka client properties
+   */
+  public Map<String, ?> metricConfigProperties() {
+    Map<String, Object> config = new HashMap<>();
+    config.put(
+        CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
+        OpenTelemetryMetricsReporter.class.getName());
+    config.put(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, openTelemetry);
+    config.put(
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
+        KafkaTelemetryBuilder.INSTRUMENTATION_NAME);
+    return Collections.unmodifiableMap(config);
   }
 
   /**

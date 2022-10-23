@@ -83,7 +83,9 @@ class ContextPropagationOperatorInstrumentationTest {
             () -> {
               Span span =
                   testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
-              Mono<String> outer = Mono.defer(() -> new TracedWithSpan().mono(Mono.just("Value")));
+              Mono<String> outer =
+                  Mono.defer(
+                      () -> new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("Value")));
               return ContextPropagationOperator.runWithContext(outer, Context.current().with(span))
                   .doFinally(unused -> span.end());
             });
@@ -107,7 +109,9 @@ class ContextPropagationOperatorInstrumentationTest {
             () -> {
               Span span =
                   testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
-              Flux<String> outer = Flux.defer(() -> new TracedWithSpan().flux(Flux.just("Value")));
+              Flux<String> outer =
+                  Flux.defer(
+                      () -> new ExtensionAnnotationsTracedWithSpan().flux(Flux.just("Value")));
               return ContextPropagationOperator.runWithContext(outer, Context.current().with(span))
                   .doFinally(unused -> span.end());
             });
@@ -137,7 +141,7 @@ class ContextPropagationOperatorInstrumentationTest {
                       unused -> {
                         // usual trick to force this to run under new TracingSubscriber with context
                         // written in the next call
-                        return new TracedWithSpan().mono(Mono.just("Value"));
+                        return new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("Value"));
                       })
                   .subscriberContext(
                       ctx ->

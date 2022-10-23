@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
+import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 
 public final class ExternalAnnotationSingletons {
 
@@ -26,7 +26,7 @@ public final class ExternalAnnotationSingletons {
                 "io.opentelemetry.external-annotations",
                 CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {

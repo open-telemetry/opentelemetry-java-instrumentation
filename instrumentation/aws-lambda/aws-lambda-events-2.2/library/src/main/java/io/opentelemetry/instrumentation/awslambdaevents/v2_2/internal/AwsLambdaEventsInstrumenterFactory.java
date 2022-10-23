@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFun
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class AwsLambdaEventsInstrumenterFactory {
+public final class AwsLambdaEventsInstrumenterFactory {
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
     return new AwsLambdaFunctionInstrumenter(
@@ -26,10 +26,9 @@ public class AwsLambdaEventsInstrumenterFactory {
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-events-2.2",
                 AwsLambdaEventsInstrumenterFactory::spanName)
-            .addAttributesExtractors(
-                new AwsLambdaFunctionAttributesExtractor(),
-                new ApiGatewayProxyAttributesExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysServer()));
+            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
+            .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor())
+            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {
@@ -39,4 +38,6 @@ public class AwsLambdaEventsInstrumenterFactory {
     }
     return name == null ? input.getAwsContext().getFunctionName() : name;
   }
+
+  private AwsLambdaEventsInstrumenterFactory() {}
 }

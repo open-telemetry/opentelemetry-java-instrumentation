@@ -14,4 +14,6 @@ public class OuterClass {
   @Retention(RUNTIME)
   @Target(METHOD)
   public @interface InterestingMethod {}
+
+  private OuterClass() {}
 }

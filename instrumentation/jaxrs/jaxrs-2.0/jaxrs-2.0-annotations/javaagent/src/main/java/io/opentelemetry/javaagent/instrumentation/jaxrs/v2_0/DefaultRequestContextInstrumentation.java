@@ -12,6 +12,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
@@ -38,7 +40,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void createGenericSpan(
         @Advice.This ContainerRequestContext requestContext,
-        @Local("otelHandlerData") HandlerData handlerData,
+        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
       if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null) {
@@ -60,7 +62,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      handlerData = new HandlerData(filterClass, method);
+      handlerData = new Jaxrs2HandlerData(filterClass, method);
 
       HttpRouteHolder.updateHttpRoute(
           parentContext,
@@ -78,7 +80,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Local("otelHandlerData") HandlerData handlerData,
+        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
         @Local("otelContext") Context context,
         @Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {

@@ -14,14 +14,10 @@ import com.linecorp.armeria.common.HttpMethod;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.util.Exceptions;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +30,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   private AtomicBoolean decoratorCalled;
 
   private WebClient client;
+  private WebClient clientWithReadTimeout;
 
   @BeforeEach
   void setupClient() {
@@ -46,6 +43,12 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
                           decoratorCalled.set(true);
                           return delegate.execute(ctx, req);
                         })
+                    .factory(ClientFactory.builder().connectTimeout(connectTimeout()).build()))
+            .build();
+    clientWithReadTimeout =
+        configureClient(
+                WebClient.builder()
+                    .responseTimeout(READ_TIMEOUT)
                     .factory(ClientFactory.builder().connectTimeout(connectTimeout()).build()))
             .build();
   }
@@ -62,7 +65,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   protected final int sendRequest(
       HttpRequest request, String method, URI uri, Map<String, String> headers) {
     try {
-      return client.execute(request).aggregate().join().status().code();
+      return getClient(uri).execute(request).aggregate().join().status().code();
     } catch (CompletionException e) {
       return Exceptions.throwUnsafely(e.getCause());
     }
@@ -75,12 +78,19 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
       URI uri,
       Map<String, String> headers,
       RequestResult requestResult) {
-    client
+    getClient(uri)
         .execute(request)
         .aggregate()
         .whenComplete(
             (response, throwable) ->
                 requestResult.complete(() -> response.status().code(), throwable));
+  }
+
+  private WebClient getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout;
+    }
+    return client;
   }
 
   @Override
@@ -89,12 +99,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     options.disableTestRedirects();
     // armeria requests can't be reused
     options.disableTestReusedRequest();
-
-    Set<AttributeKey<?>> extra = new HashSet<>();
-    extra.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
-    extra.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
-    extra.addAll(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    options.setHttpAttributes(unused -> extra);
+    options.enableTestReadTimeout();
   }
 
   @Test

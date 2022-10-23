@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import java.security.ProtectionDomain;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.TypeConstantAdjustment;
 import net.bytebuddy.description.type.TypeDescription;
@@ -31,7 +32,8 @@ final class ConstantAdjuster implements AgentBuilder.Transformer {
       DynamicType.Builder<?> builder,
       TypeDescription typeDescription,
       ClassLoader classLoader,
-      JavaModule module) {
+      JavaModule javaModule,
+      ProtectionDomain protectionDomain) {
     return builder.visit(TypeConstantAdjustment.INSTANCE);
   }
 }

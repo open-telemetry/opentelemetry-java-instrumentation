@@ -27,36 +27,9 @@ final class NettyHttpServerAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  public Integer statusCode(HttpRequestAndChannel requestAndChannel, HttpResponse response) {
+  public Integer statusCode(
+      HttpRequestAndChannel requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().getCode();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(
-      HttpRequestAndChannel requestAndChannel, HttpResponse response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      HttpRequestAndChannel requestAndChannel, HttpResponse response) {
-    return null;
   }
 
   @Override
@@ -88,11 +61,5 @@ final class NettyHttpServerAttributesGetter
   @Override
   public String scheme(HttpRequestAndChannel requestAndChannel) {
     return getScheme(requestAndChannel);
-  }
-
-  @Override
-  @Nullable
-  public String serverName(HttpRequestAndChannel requestAndChannel) {
-    return null;
   }
 }

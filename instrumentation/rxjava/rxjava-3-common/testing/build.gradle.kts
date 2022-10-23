@@ -7,6 +7,7 @@ dependencies {
 
   api("io.reactivex.rxjava3:rxjava:3.0.12")
 
+  implementation(project(":instrumentation-annotations"))
   implementation("io.opentelemetry:opentelemetry-extension-annotations")
   implementation("com.google.guava:guava")
   implementation("org.apache.groovy:groovy")

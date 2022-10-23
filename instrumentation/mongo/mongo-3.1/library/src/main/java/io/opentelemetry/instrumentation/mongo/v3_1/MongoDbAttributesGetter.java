@@ -10,7 +10,6 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -20,6 +19,8 @@ import javax.annotation.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
+import org.bson.codecs.BsonDocumentCodec;
+import org.bson.codecs.EncoderContext;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
@@ -36,10 +37,12 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
             .orElse(null);
   }
 
+  private final boolean statementSanitizationEnabled;
   private final int maxNormalizedQueryLength;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
-  MongoDbAttributesGetter(int maxNormalizedQueryLength) {
+  MongoDbAttributesGetter(boolean statementSanitizationEnabled, int maxNormalizedQueryLength) {
+    this.statementSanitizationEnabled = statementSanitizationEnabled;
     this.maxNormalizedQueryLength = maxNormalizedQueryLength;
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
   }
@@ -90,20 +93,24 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return event.getCommandName();
   }
 
-  // TODO(anuraaga): Migrate off of StringWriter to avoid synchronization.
-  // accessible to tests
   String sanitizeStatement(BsonDocument command) {
-    StringWriter stringWriter = new StringWriter(128);
+    StringBuilderWriter stringWriter = new StringBuilderWriter(128);
     // jsonWriterSettings is generally not null but could be due to security manager or unknown
     // API incompatibilities, which we can't detect by Muzzle because we use reflection.
     JsonWriter jsonWriter =
         jsonWriterSettings != null
             ? new JsonWriter(stringWriter, jsonWriterSettings)
             : new JsonWriter(stringWriter);
-    writeScrubbed(command, jsonWriter, /* isRoot= */ true);
+
+    if (statementSanitizationEnabled) {
+      writeScrubbed(command, jsonWriter, /* isRoot= */ true);
+    } else {
+      new BsonDocumentCodec().encode(jsonWriter, command, EncoderContext.builder().build());
+    }
+
     // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
     // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
-    StringBuffer buf = stringWriter.getBuffer();
+    StringBuilder buf = stringWriter.getBuilder();
     if (buf.length() <= maxNormalizedQueryLength) {
       return buf.toString();
     }

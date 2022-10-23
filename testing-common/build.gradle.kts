@@ -37,28 +37,27 @@ dependencies {
   api("io.opentelemetry:opentelemetry-semconv")
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
+  api("io.opentelemetry:opentelemetry-sdk-logs-testing")
   api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-logs")
   api(project(":instrumentation-api"))
 
   api("org.assertj:assertj-core")
-
   // Needs to be api dependency due to Spock restriction.
   api("org.awaitility:awaitility")
-
   api("com.google.guava:guava")
+  api("org.mockito:mockito-core")
+  api("org.slf4j:slf4j-api")
 
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry.proto:opentelemetry-proto")
 
   implementation("net.bytebuddy:byte-buddy")
-  implementation("org.slf4j:slf4j-api")
   implementation("ch.qos.logback:logback-classic")
   implementation("org.slf4j:log4j-over-slf4j")
   implementation("org.slf4j:jcl-over-slf4j")
   implementation("org.slf4j:jul-to-slf4j")
-  implementation("io.opentelemetry:opentelemetry-extension-annotations")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
 
   annotationProcessor("com.google.auto.service:auto-service")

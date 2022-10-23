@@ -37,7 +37,7 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     cassandra = new GenericContainer("cassandra:3")
-      // limit memory usage
+    // limit memory usage
       .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
       .withExposedPorts(9042)
       .withLogConsumer(new Slf4jLogConsumer(logger))
@@ -147,9 +147,9 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$SemanticAttributes.NET_PEER_NAME" "localhost"
-        "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
-        "$SemanticAttributes.NET_PEER_PORT" cassandraPort
+        "net.sock.peer.addr" "127.0.0.1"
+        "net.sock.peer.name" "localhost"
+        "net.sock.peer.port" cassandraPort
         "$SemanticAttributes.DB_SYSTEM" "cassandra"
         "$SemanticAttributes.DB_NAME" keyspace
         "$SemanticAttributes.DB_STATEMENT" statement

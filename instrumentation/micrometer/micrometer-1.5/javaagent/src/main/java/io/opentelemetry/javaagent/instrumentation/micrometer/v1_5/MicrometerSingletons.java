@@ -7,15 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.micrometer1shim.OpenTelemetryMeterRegistry;
+import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class MicrometerSingletons {
 
   private static final MeterRegistry METER_REGISTRY;
 
   static {
-    Config config = Config.get();
+    InstrumentationConfig config = InstrumentationConfig.get();
     METER_REGISTRY =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
             .setPrometheusMode(

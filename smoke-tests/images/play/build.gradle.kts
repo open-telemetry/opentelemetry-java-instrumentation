@@ -21,14 +21,6 @@ play {
   injectedRoutesGenerator.set(true)
 }
 
-repositories {
-  mavenCentral()
-  maven {
-    setName("lightbend-maven-releases")
-    setUrl("https://repo.lightbend.com/lightbend/maven-release")
-  }
-}
-
 dependencies {
   implementation("com.typesafe.play:play-guice_$scalaVer:$playVer")
   implementation("com.typesafe.play:play-logback_$scalaVer:$playVer")

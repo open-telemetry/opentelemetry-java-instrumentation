@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.Objects.requireNonNull;
+
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
@@ -15,12 +18,11 @@ import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,7 +38,9 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final SpanSuppressionStrategy spanSuppressionStrategy =
-      SpanSuppressionStrategy.fromConfig(Config.get());
+      SpanSuppressionStrategy.fromConfig(
+          ConfigPropertiesUtil.getString(
+              "otel.instrumentation.experimental.span-suppression-strategy"));
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -54,7 +58,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
-  ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
+  ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   boolean enabled = true;
 
   InstrumenterBuilder(
@@ -75,9 +79,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * @param instrumentationVersion is the version of the instrumentation library, not the version of
    *     the instrument<b>ed</b> library.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setInstrumentationVersion(
       String instrumentationVersion) {
-    this.instrumentationVersion = instrumentationVersion;
+    this.instrumentationVersion = requireNonNull(instrumentationVersion, "instrumentationVersion");
     return this;
   }
 
@@ -85,49 +90,46 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Sets the OpenTelemetry schema URL that will be associated with all telemetry produced by this
    * {@link Instrumenter}.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setSchemaUrl(String schemaUrl) {
-    this.schemaUrl = schemaUrl;
+    this.schemaUrl = requireNonNull(schemaUrl, "schemaUrl");
     return this;
   }
 
   /**
    * Sets the {@link SpanStatusExtractor} that will determine the {@link StatusCode} for a response.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setSpanStatusExtractor(
       SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor) {
-    this.spanStatusExtractor = spanStatusExtractor;
+    this.spanStatusExtractor = requireNonNull(spanStatusExtractor, "spanStatusExtractor");
     return this;
   }
 
   /**
    * Adds a {@link AttributesExtractor} that will extract attributes from requests and responses.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
-    this.attributesExtractors.add(attributesExtractor);
+    this.attributesExtractors.add(requireNonNull(attributesExtractor, "attributesExtractor"));
     return this;
   }
 
   /** Adds {@link AttributesExtractor}s that will extract attributes from requests and responses. */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
       Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
           attributesExtractors) {
-    attributesExtractors.forEach(this.attributesExtractors::add);
+    attributesExtractors.forEach(this::addAttributesExtractor);
     return this;
   }
 
-  /** Adds {@link AttributesExtractor}s that will extract attributes from requests and responses. */
-  @SafeVarargs
-  @SuppressWarnings("varargs")
-  public final InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
-      AttributesExtractor<? super REQUEST, ? super RESPONSE>... attributesExtractors) {
-    return addAttributesExtractors(Arrays.asList(attributesExtractors));
-  }
-
   /** Adds a {@link SpanLinksExtractor} that will extract span links from requests. */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinksExtractor(
       SpanLinksExtractor<REQUEST> spanLinksExtractor) {
-    spanLinksExtractors.add(spanLinksExtractor);
+    spanLinksExtractors.add(requireNonNull(spanLinksExtractor, "spanLinksExtractor"));
     return this;
   }
 
@@ -135,9 +137,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Adds a {@link ContextCustomizer} that will customize the context during {@link
    * Instrumenter#start(Context, Object)}.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super REQUEST> contextCustomizer) {
-    contextCustomizers.add(contextCustomizer);
+    contextCustomizers.add(requireNonNull(contextCustomizer, "contextCustomizer"));
     return this;
   }
 
@@ -145,8 +148,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Adds a {@link OperationListener} that will be called when an instrumented operation starts and
    * ends.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addOperationListener(OperationListener listener) {
-    operationListeners.add(listener);
+    operationListeners.add(requireNonNull(listener, "operationListener"));
     return this;
   }
 
@@ -154,8 +158,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Adds a {@link OperationMetrics} that will produce a {@link OperationListener} capturing the
    * requests processing metrics.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addOperationMetrics(OperationMetrics factory) {
-    operationMetrics.add(factory);
+    operationMetrics.add(requireNonNull(factory, "operationMetrics"));
     return this;
   }
 
@@ -163,27 +168,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Sets the {@link ErrorCauseExtractor} that will extract the root cause of an error thrown during
    * request processing.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setErrorCauseExtractor(
       ErrorCauseExtractor errorCauseExtractor) {
-    this.errorCauseExtractor = errorCauseExtractor;
-    return this;
-  }
-
-  /**
-   * Sets the {@link TimeExtractor} that will extract the timestamp marking the start and the end of
-   * request processing. If unset, the constructed {@link Instrumenter} will defer determining the
-   * start and end timestamps to the OpenTelemetry SDK.
-   *
-   * <p>Note: if metrics are generated by the {@link Instrumenter}, the start and end times from the
-   * {@link TimeExtractor} will be used to generate any duration metrics, but the internal metric
-   * timestamp (when it occurred) will always be stamped with "now" when the metric is recorded
-   * (i.e. there is no way to back date a metric recording).
-   *
-   * @deprecated Setting operation start and end times is not currently supported.
-   */
-  @Deprecated
-  public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractor(
-      TimeExtractor<REQUEST, RESPONSE> timeExtractor) {
+    this.errorCauseExtractor = requireNonNull(errorCauseExtractor, "errorCauseExtractor");
     return this;
   }
 
@@ -191,6 +179,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Allows enabling/disabling the {@link Instrumenter} based on the {@code enabled} value passed as
    * parameter. All instrumenters are enabled by default.
    */
+  @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setEnabled(boolean enabled) {
     this.enabled = enabled;
     return this;
@@ -200,27 +189,29 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#CLIENT client} spans
    * and inject context into requests.
    */
-  public Instrumenter<REQUEST, RESPONSE> newClientInstrumenter(TextMapSetter<REQUEST> setter) {
-    return newInstrumenter(
-        InstrumenterConstructor.propagatingToDownstream(setter), SpanKindExtractor.alwaysClient());
+  public Instrumenter<REQUEST, RESPONSE> buildClientInstrumenter(TextMapSetter<REQUEST> setter) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingToDownstream(requireNonNull(setter, "setter")),
+        SpanKindExtractor.alwaysClient());
   }
 
   /**
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#SERVER server} spans
    * and extract context from requests.
    */
-  public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
-    return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(getter), SpanKindExtractor.alwaysServer());
+  public Instrumenter<REQUEST, RESPONSE> buildServerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingFromUpstream(requireNonNull(getter, "getter")),
+        SpanKindExtractor.alwaysServer());
   }
 
   /**
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#PRODUCER producer}
    * spans and inject context into requests.
    */
-  public Instrumenter<REQUEST, RESPONSE> newProducerInstrumenter(TextMapSetter<REQUEST> setter) {
-    return newInstrumenter(
-        InstrumenterConstructor.propagatingToDownstream(setter),
+  public Instrumenter<REQUEST, RESPONSE> buildProducerInstrumenter(TextMapSetter<REQUEST> setter) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingToDownstream(requireNonNull(setter, "setter")),
         SpanKindExtractor.alwaysProducer());
   }
 
@@ -228,9 +219,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#CONSUMER consumer}
    * spans and extract context from requests.
    */
-  public Instrumenter<REQUEST, RESPONSE> newConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
-    return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(getter),
+  public Instrumenter<REQUEST, RESPONSE> buildConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return buildInstrumenter(
+        InstrumenterConstructor.propagatingFromUpstream(requireNonNull(getter, "getter")),
         SpanKindExtractor.alwaysConsumer());
   }
 
@@ -238,20 +229,22 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link Instrumenter} which will create {@linkplain SpanKind#INTERNAL internal}
    * spans and do no context propagation.
    */
-  public Instrumenter<REQUEST, RESPONSE> newInstrumenter() {
-    return newInstrumenter(InstrumenterConstructor.internal(), SpanKindExtractor.alwaysInternal());
+  public Instrumenter<REQUEST, RESPONSE> buildInstrumenter() {
+    return buildInstrumenter(
+        InstrumenterConstructor.internal(), SpanKindExtractor.alwaysInternal());
   }
 
   /**
    * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
    * {@link SpanKindExtractor} and do no context propagation.
    */
-  public Instrumenter<REQUEST, RESPONSE> newInstrumenter(
+  public Instrumenter<REQUEST, RESPONSE> buildInstrumenter(
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
-    return newInstrumenter(InstrumenterConstructor.internal(), spanKindExtractor);
+    return buildInstrumenter(
+        InstrumenterConstructor.internal(), requireNonNull(spanKindExtractor, "spanKindExtractor"));
   }
 
-  private Instrumenter<REQUEST, RESPONSE> newInstrumenter(
+  private Instrumenter<REQUEST, RESPONSE> buildInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
     this.spanKindExtractor = spanKindExtractor;
@@ -320,12 +313,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> propagatingToDownstream(
         TextMapSetter<RQ> setter) {
-      return builder -> new ClientInstrumenter<>(builder, setter);
+      return builder -> new PropagatingToDownstreamInstrumenter<>(builder, setter);
     }
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> propagatingFromUpstream(
         TextMapGetter<RQ> getter) {
-      return builder -> new ServerInstrumenter<>(builder, getter);
+      return builder -> new PropagatingFromUpstreamInstrumenter<>(builder, getter);
     }
   }
 }

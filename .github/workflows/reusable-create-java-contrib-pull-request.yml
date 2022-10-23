@@ -1,0 +1,69 @@
+name: Reusable - Create Java contrib pull request
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+    secrets:
+      BOT_TOKEN:
+        required: true
+  # to help with partial release build failures
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: true
+
+jobs:
+  create-java-contrib-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: opentelemetrybot/opentelemetry-java-contrib
+          # this is the personal access token used for "git push" below
+          token: ${{ secrets.BOT_TOKEN }}
+
+      - name: Initialize pull request branch
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git remote add upstream https://github.com/open-telemetry/opentelemetry-java-contrib.git
+          git fetch upstream
+          git checkout -b update-opentelemetry-sdk-to-${VERSION} upstream/main
+
+      - name: Update version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: ./.github/scripts/update-sdk-version.sh $VERSION
+
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - name: Create pull request against opentelemetry-java-contrib
+        env:
+          # this is the personal access token used for "gh pr create" below
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          message="Update the SDK and instrumentation versions to $VERSION"
+          body=$(cat << EOF
+          Update the SDK and instrumentation versions to \`$VERSION\`.
+          
+          Note: you will likely need to re-run the checks on this PR in an hour or so, once the
+          updated dependencies are visible in maven central.
+          EOF
+          )
+
+          # gh pr create doesn't have a way to explicitly specify different head and base
+          # repositories currently, but it will implicitly pick up the head from a different
+          # repository if you set up a tracking branch
+
+          git commit -a -m "$message"
+          git push --set-upstream origin HEAD:update-opentelemetry-sdk-to-${VERSION}
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --repo open-telemetry/opentelemetry-java-contrib \
+                       --base main

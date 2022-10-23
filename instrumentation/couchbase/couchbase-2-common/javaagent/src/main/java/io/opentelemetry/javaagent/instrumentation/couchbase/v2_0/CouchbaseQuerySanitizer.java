@@ -8,12 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 import io.opentelemetry.instrumentation.api.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
 public final class CouchbaseQuerySanitizer {
+
+  private static final SqlStatementSanitizer sanitizer =
+      SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+
   @Nullable private static final Class<?> QUERY_CLASS;
   @Nullable private static final Class<?> STATEMENT_CLASS;
   @Nullable private static final Class<?> N1QL_QUERY_CLASS;
@@ -116,7 +121,7 @@ public final class CouchbaseQuerySanitizer {
   }
 
   private static SqlStatementInfo sanitizeString(String query) {
-    return SqlStatementSanitizer.sanitize(query, SqlDialect.COUCHBASE);
+    return sanitizer.sanitize(query, SqlDialect.COUCHBASE);
   }
 
   private CouchbaseQuerySanitizer() {}

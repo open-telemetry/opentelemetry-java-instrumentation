@@ -5,6 +5,11 @@
 
 # this should be run on the release branch
 
+# NOTE if you need to run this script locally, you will need to first:
+#   git fetch upstream main
+#   git push origin upstream/main:main
+#   export GITHUB_REPOSITORY=open-telemetry/opentelemetry-java-instrumentation
+
 from_version=$1
 
 # get the date of the first commit that was not in the from_version
@@ -67,7 +72,7 @@ query($q: String!, $endCursor: String) {
   }
 }
 ' --jq '.data.search.edges.[].node.body' \
-  | grep -oE "#[0-9]{4,}|$GITHUB_REPOSITORY/issues/[0-9]{4,}" \
+  | grep -oE "#[0-9]{4,}$|#[0-9]{4,}[^0-9<]|$GITHUB_REPOSITORY/issues/[0-9]{4,}" \
   | grep -oE "[0-9]{4,}" \
   | xargs -I{} gh issue view {} --json 'author,url' --jq '[.author.login,.url]' \
   | grep -v '/pull/' \
@@ -80,4 +85,5 @@ echo $contributors1 $contributors2 \
   | grep -v linux-foundation-easycla \
   | grep -v github-actions \
   | grep -v dependabot \
+  | grep -v opentelemetrybot \
   | sed 's/^/@/'

@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.sdk.logs.data.Severity
+import io.opentelemetry.api.logs.Severity
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.apache.logging.log4j.MarkerManager
 import org.apache.logging.log4j.ThreadContext
 import org.apache.logging.log4j.message.StringMapMessage
 import org.apache.logging.log4j.message.StructuredDataMessage
@@ -49,26 +50,26 @@ class Log4j2Test extends AgentInstrumentationSpecification {
       await()
         .untilAsserted(
           () -> {
-            assertThat(logs).hasSize(1)
+            assertThat(logRecords).hasSize(1)
           })
-      def log = logs.get(0)
+      def log = logRecords.get(0)
       assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
       assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
       assertThat(log.getSeverityText()).isEqualTo(severityText)
       if (exception) {
         assertThat(log.getAttributes().size()).isEqualTo(5)
-        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isEqualTo(IllegalStateException.getName())
-        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isEqualTo("hello")
-        assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(Log4j2Test.name)
+        OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.getName())
+        OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.EXCEPTION_MESSAGE, "hello")
+        OpenTelemetryAssertions.assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).contains(Log4j2Test.name)
       } else {
         assertThat(log.getAttributes().size()).isEqualTo(2)
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE)).isNull()
         assertThat(log.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE)).isNull()
       }
-      assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
-      assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
+      OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
+      OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
       if (parent) {
         assertThat(log.getSpanContext()).isEqualTo(traces.get(0).get(0).getSpanContext())
       } else {
@@ -76,7 +77,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
       }
     } else {
       Thread.sleep(500) // sleep a bit just to make sure no log is captured
-      logs.size() == 0
+      logRecords.size() == 0
     }
 
     where:
@@ -111,18 +112,18 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     await()
       .untilAsserted(
         () -> {
-          assertThat(logs).hasSize(1)
+          assertThat(logRecords).hasSize(1)
         })
-    def log = logs.get(0)
+    def log = logRecords.get(0)
     assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
     assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(4)
-    assertThat(log.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key1"))).isEqualTo("val1")
-    assertThat(log.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key2"))).isEqualTo("val2")
-    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
-    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("log4j.context_data.key1", "val1")
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("log4j.context_data.key2", "val2")
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
   }
 
   def "test string map message"() {
@@ -137,18 +138,18 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     await()
       .untilAsserted(
         () -> {
-          assertThat(logs).hasSize(1)
+          assertThat(logRecords).hasSize(1)
         })
-    def log = logs.get(0)
+    def log = logRecords.get(0)
     assertThat(log.getBody().asString()).isEmpty()
     assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(4)
-    assertThat(log.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1")
-    assertThat(log.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2")
-    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
-    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("key1", "val1")
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("key2", "val2")
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
   }
 
   def "test string map message with special attribute"() {
@@ -163,17 +164,17 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     await()
       .untilAsserted(
         () -> {
-          assertThat(logs).hasSize(1)
+          assertThat(logRecords).hasSize(1)
         })
-    def log = logs.get(0)
+    def log = logRecords.get(0)
     assertThat(log.getBody().asString()).isEqualTo("val2")
     assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(3)
-    assertThat(log.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1")
-    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
-    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("key1", "val1")
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
   }
 
   def "test structured data map message"() {
@@ -188,17 +189,35 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     await()
       .untilAsserted(
         () -> {
-          assertThat(logs).hasSize(1)
+          assertThat(logRecords).hasSize(1)
         })
-    def log = logs.get(0)
+    def log = logRecords.get(0)
     assertThat(log.getBody().asString()).isEqualTo("a message")
     assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(4)
-    assertThat(log.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1")
-    assertThat(log.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2")
-    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_NAME)).isEqualTo(Thread.currentThread().getName())
-    assertThat(log.getAttributes().get(SemanticAttributes.THREAD_ID)).isEqualTo(Thread.currentThread().getId())
+    OpenTelemetryAssertions.assertThat(log.getAttributes())
+        .containsEntry("key1","val1")
+        .containsEntry("key2", "val2")
+        .containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
+        .containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
+  }
+
+  @Unroll
+  def "marker test"() {
+    def markerName = "aMarker"
+    def marker = MarkerManager.getMarker(markerName)
+    when:
+    logger.info(marker, "message")
+
+    then:
+    await()
+      .untilAsserted(
+        () -> {
+          assertThat(logRecords).hasSize(1)
+          def log = logRecords.get(0)
+          OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("log4j.marker", markerName)
+        })
   }
 }

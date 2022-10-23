@@ -8,6 +8,6 @@ import io.opentelemetry.instrumentation.test.LibraryTestTrait
 class SpringCloudStreamProducerTest extends AbstractSpringCloudStreamProducerTest implements LibraryTestTrait {
   @Override
   Class<?> additionalContextClass() {
-    GlobalInterceptorSpringConfig
+    GlobalInterceptorWithProducerSpanSpringConfig
   }
 }

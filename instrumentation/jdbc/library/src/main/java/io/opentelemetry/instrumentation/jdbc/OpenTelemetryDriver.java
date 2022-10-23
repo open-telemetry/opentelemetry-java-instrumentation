@@ -23,9 +23,9 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;

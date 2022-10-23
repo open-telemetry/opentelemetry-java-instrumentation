@@ -12,7 +12,7 @@ class RedisCommandSanitizerTest extends Specification {
   @Unroll
   def "should sanitize #expected"() {
     when:
-    def sanitized = RedisCommandSanitizer.sanitize(command, args)
+    def sanitized = RedisCommandSanitizer.create(true).sanitize(command, args)
 
     then:
     sanitized == expected
@@ -90,7 +90,7 @@ class RedisCommandSanitizerTest extends Specification {
     def args = ["arg1", "arg 2"]
 
     when:
-    def sanitized = RedisCommandSanitizer.sanitize(command, args)
+    def sanitized = RedisCommandSanitizer.create(true).sanitize(command, args)
 
     then:
     sanitized == command + " " + args.join(" ")
@@ -140,7 +140,7 @@ class RedisCommandSanitizerTest extends Specification {
 
   def "should mask all arguments of an unknown command"() {
     when:
-    def sanitized = RedisCommandSanitizer.sanitize("NEWAUTH", ["password", "secret"])
+    def sanitized = RedisCommandSanitizer.create(true).sanitize("NEWAUTH", ["password", "secret"])
 
     then:
     sanitized == "NEWAUTH ? ?"

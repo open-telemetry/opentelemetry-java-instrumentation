@@ -6,7 +6,6 @@
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
-import static com.google.common.net.InetAddresses.isInetAddress
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
@@ -47,9 +46,9 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           childOf span(1)
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it == "localhost" }
-            "$SemanticAttributes.NET_PEER_IP" { isInetAddress(it as String) }
-            "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
+            "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "net.sock.peer.port" Long
+            "net.sock.family" { it == null || it == "inet6" }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }
@@ -60,10 +59,9 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           childOf span(1)
           kind PRODUCER
           attributes {
-            // "localhost" on linux, null on windows
-            "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
-            "$SemanticAttributes.NET_PEER_IP" { isInetAddress(it as String) }
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "net.sock.peer.port" Long
+            "net.sock.family" { it == null || it == "inet6" }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
@@ -115,10 +113,9 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           name "basic.ack"
           kind CLIENT
           attributes {
-            // "localhost" on linux, null on windows
-            "$SemanticAttributes.NET_PEER_NAME" { it == "localhost" || it == null }
-            "$SemanticAttributes.NET_PEER_IP" { isInetAddress(it as String) }
-            "$SemanticAttributes.NET_PEER_PORT" Long
+            "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "net.sock.peer.port" Long
+            "net.sock.family" { it == null || it == "inet6" }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }

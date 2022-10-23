@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
 import io.undertow.server.HttpServerExchange;
@@ -32,8 +32,11 @@ public final class UndertowSingletons {
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(
+                HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                    .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
+                    .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .build())
             .addContextCustomizer(HttpRouteHolder.get())
             .addContextCustomizer(
                 (context, request, attributes) -> {
@@ -47,7 +50,7 @@ public final class UndertowSingletons {
                       .init(context);
                 })
             .addOperationMetrics(HttpServerMetrics.get())
-            .newServerInstrumenter(UndertowExchangeGetter.INSTANCE);
+            .buildServerInstrumenter(UndertowExchangeGetter.INSTANCE);
   }
 
   private static final UndertowHelper HELPER = new UndertowHelper(INSTRUMENTER);

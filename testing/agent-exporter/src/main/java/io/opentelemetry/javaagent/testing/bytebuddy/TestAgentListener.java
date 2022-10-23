@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.testing.bytebuddy;
 
 import static java.util.logging.Level.SEVERE;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
 import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.GlobalIgnoredTypesConfigurer;
@@ -49,7 +49,6 @@ public class TestAgentListener implements AgentBuilder.Listener {
   }
 
   private static Trie<IgnoreAllow> buildOtherConfiguredIgnores() {
-    Config config = Config.builder().build();
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         SafeServiceLoader.loadOrdered(IgnoredTypesConfigurer.class)) {
@@ -58,7 +57,7 @@ public class TestAgentListener implements AgentBuilder.Listener {
           || configurer instanceof GlobalIgnoredTypesConfigurer) {
         continue;
       }
-      configurer.configure(config, builder);
+      configurer.configure(builder, EmptyConfigProperties.INSTANCE);
     }
     return builder.buildIgnoredTypesTrie();
   }

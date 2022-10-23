@@ -32,7 +32,7 @@ dependencies {
     isTransitive = false
   }
 
-  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:library"))
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
@@ -56,4 +56,8 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

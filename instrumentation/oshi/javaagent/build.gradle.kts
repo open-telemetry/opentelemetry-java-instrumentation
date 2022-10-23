@@ -16,7 +16,6 @@ dependencies {
   implementation(project(":instrumentation:oshi:library"))
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  compileOnly(project(":javaagent-tooling"))
 
   library("com.github.oshi:oshi-core:5.3.1")
 

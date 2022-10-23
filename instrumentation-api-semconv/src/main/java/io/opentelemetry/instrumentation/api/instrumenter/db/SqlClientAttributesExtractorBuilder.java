@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.api.instrumenter.db;
 
 import static java.util.Objects.requireNonNull;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 /** A builder of {@link SqlClientAttributesExtractor}. */
@@ -15,6 +17,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final SqlClientAttributesGetter<REQUEST> getter;
   AttributeKey<String> dbTableAttribute = SemanticAttributes.DB_SQL_TABLE;
+  boolean statementSanitizationEnabled = true;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST> getter) {
     this.getter = getter;
@@ -28,9 +31,22 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * @param dbTableAttribute The {@link AttributeKey} under which the table extracted by the {@link
    *     SqlClientAttributesExtractor} will be stored.
    */
+  @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
       AttributeKey<String> dbTableAttribute) {
     this.dbTableAttribute = requireNonNull(dbTableAttribute);
+    return this;
+  }
+
+  /**
+   * Sets whether the {@code db.statement} attribute extracted by the constructed {@link
+   * SqlClientAttributesExtractor} should be sanitized. If set to {@code true}, all parameters that
+   * can potentially contain sensitive information will be masked. Enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
+      boolean statementSanitizationEnabled) {
+    this.statementSanitizationEnabled = statementSanitizationEnabled;
     return this;
   }
 
@@ -39,6 +55,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * SqlClientAttributesExtractorBuilder}.
    */
   public SqlClientAttributesExtractor<REQUEST, RESPONSE> build() {
-    return new SqlClientAttributesExtractor<>(getter, dbTableAttribute);
+    return new SqlClientAttributesExtractor<>(
+        getter, dbTableAttribute, SqlStatementSanitizer.create(statementSanitizationEnabled));
   }
 }

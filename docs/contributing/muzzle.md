@@ -31,7 +31,7 @@ encounters a reference to a non-instrumentation class (determined by `Instrument
 and the `InstrumentationModule#isHelperClass(String)` predicate). Aside from references, the
 collection process also builds a graph of dependencies between internal instrumentation helper
 classes - this dependency graph is later used to construct a list of helper classes that will be
-injected to the application classloader (`InstrumentationModuleMuzzle#getMuzzleHelperClassNames()`).
+injected to the application class loader (`InstrumentationModuleMuzzle#getMuzzleHelperClassNames()`).
 Muzzle also automatically generates the `InstrumentationModuleMuzzle#registerMuzzleVirtualFields()`
 method. All collected references are then used to generate
 an `InstrumentationModuleMuzzle#getMuzzleReferences` method.
@@ -53,7 +53,7 @@ actual application classpath types the whole instrumentation is discarded.
 
 It is worth noting that because the muzzle check is expensive, it is only performed after a match
 has been made by the `InstrumentationModule#classLoaderMatcher()` and `TypeInstrumentation#typeMatcher()`
-matchers. The result of muzzle matcher is cached per classloader, so that it is only executed
+matchers. The result of muzzle matcher is cached per class loader, so that it is only executed
 once for the whole instrumentation module.
 
 The source code of the runtime muzzle matcher is located in the `muzzle` module.

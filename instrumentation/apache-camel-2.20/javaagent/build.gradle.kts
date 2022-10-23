@@ -6,12 +6,12 @@ muzzle {
   pass {
     group.set("org.apache.camel")
     module.set("camel-core")
-    versions.set("[2.20.1,3)")
+    versions.set("[2.19,3)")
+    assertInverse.set(true)
   }
 }
 
-val camelversion = "2.20.1"
-val versions: Map<String, String> by project
+val camelversion = "2.20.1" // first version that the tests pass on
 
 dependencies {
   library("org.apache.camel:camel-core:$camelversion")
@@ -42,7 +42,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
 
-  testImplementation("org.spockframework:spock-spring:${versions["org.spockframework"]}")
+  testImplementation("org.spockframework:spock-spring")
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
 
@@ -67,5 +67,17 @@ tasks {
 
     // TODO: fix camel instrumentation so that it uses semantic attributes extractors
     jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=span-kind")
+
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
   }
 }

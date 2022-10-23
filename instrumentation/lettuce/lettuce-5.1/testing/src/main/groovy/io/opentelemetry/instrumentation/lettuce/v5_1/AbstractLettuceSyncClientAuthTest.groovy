@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecification {
   public static final int DB_INDEX = 0
-  public static final String loopback = "127.0.0.1"
 
   private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
@@ -45,7 +44,7 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
     String host = redisServer.getHost()
     String dbAddr = host + ":" + port + "/" + DB_INDEX
     String embeddedDbUri = "redis://" + dbAddr
-    expectedHostAttributeValue = host == loopback ? null : host
+    expectedHostAttributeValue = host == "127.0.0.1" ? null : host
 
     redisClient = createClient(embeddedDbUri)
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
@@ -69,9 +68,9 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_PEER_IP" loopback
-            "$SemanticAttributes.NET_PEER_PORT" port
+            "net.sock.peer.addr" "127.0.0.1"
+            "net.sock.peer.name" expectedHostAttributeValue
+            "net.sock.peer.port" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "AUTH ?"
           }

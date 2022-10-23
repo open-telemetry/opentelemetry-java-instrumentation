@@ -15,9 +15,10 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
-import io.opentelemetry.instrumentation.api.util.ClassAndMethod;
+import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.lang.reflect.Method;
 import java.util.Set;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -72,7 +73,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Origin("#r") Class<?> returnType,
+        @Advice.Origin Method method,
         @Advice.Local("otelMethod") ClassAndMethod classAndMethod,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
@@ -81,7 +82,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       scope.close();
 
       returnValue =
-          AsyncOperationEndSupport.create(instrumenter(), Void.class, returnType)
+          AsyncOperationEndSupport.create(instrumenter(), Void.class, method.getReturnType())
               .asyncEnd(context, classAndMethod, returnValue, throwable);
     }
   }
