@@ -100,8 +100,8 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           kind PRODUCER
           childOf span(0)
           attributes {
-            "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
-            "net.sock.peer.port" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION" "<default>"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
@@ -161,8 +161,8 @@ class ContextPropagationTest extends AgentInstrumentationSpecification {
           name "basic.ack"
           kind CLIENT
           attributes {
-            "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
-            "net.sock.peer.port" Long
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }

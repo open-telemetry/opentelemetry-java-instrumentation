@@ -157,7 +157,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     [
       SemanticAttributes.HTTP_ROUTE,
       SemanticAttributes.NET_TRANSPORT,
-      AttributeKey.stringKey("net.sock.peer.port")
+      SemanticAttributes.NET_SOCK_PEER_PORT
     ] as Set
   }
 
