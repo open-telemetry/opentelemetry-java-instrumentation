@@ -7,10 +7,14 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
 final class TracingSendMessageHookImpl implements SendMessageHook {
+
+  private static final VirtualField<SendMessageContext, Context> contextField =
+      VirtualField.find(SendMessageContext.class, Context.class);
 
   private final Instrumenter<SendMessageContext, Void> instrumenter;
 
@@ -32,7 +36,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     if (!instrumenter.shouldStart(parentContext, context)) {
       return;
     }
-    context.setMqTraceContext(instrumenter.start(parentContext, context));
+    contextField.set(context, instrumenter.start(parentContext, context));
   }
 
   @Override
@@ -40,9 +44,9 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     if (context == null) {
       return;
     }
-    if (context.getMqTraceContext() instanceof Context
+    Context otelContext = contextField.get(context);
+    if (otelContext != null
         && (context.getSendResult() != null || context.getException() != null)) {
-      Context otelContext = (Context) context.getMqTraceContext();
       instrumenter.end(otelContext, context, null, context.getException());
     }
   }

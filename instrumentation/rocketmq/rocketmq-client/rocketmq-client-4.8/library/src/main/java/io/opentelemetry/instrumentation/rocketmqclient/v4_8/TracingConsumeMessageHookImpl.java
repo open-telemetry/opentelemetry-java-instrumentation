@@ -6,10 +6,14 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 
 final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
+
+  private static final VirtualField<ConsumeMessageContext, ContextAndScope> contextAndScopeField =
+      VirtualField.find(ConsumeMessageContext.class, ContextAndScope.class);
 
   private final RocketMqConsumerInstrumenter instrumenter;
 
@@ -30,12 +34,13 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     Context parentContext = Context.current();
     Context newContext = instrumenter.start(parentContext, context.getMsgList());
 
-    // it's safe to store the scope in the rocketMq trace context, both before() and after() methods
-    // are always called from the same thread; see:
+    // it's safe to store the scope in the rocketMq message context, both before() and after()
+    // methods are always called from the same thread; see:
     // - ConsumeMessageConcurrentlyService$ConsumeRequest#run()
     // - ConsumeMessageOrderlyService$ConsumeRequest#run()
     if (newContext != parentContext) {
-      context.setMqTraceContext(ContextAndScope.create(newContext, newContext.makeCurrent()));
+      contextAndScopeField.set(
+          context, ContextAndScope.create(newContext, newContext.makeCurrent()));
     }
   }
 
@@ -44,8 +49,8 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context == null || context.getMsgList() == null || context.getMsgList().isEmpty()) {
       return;
     }
-    if (context.getMqTraceContext() instanceof ContextAndScope) {
-      ContextAndScope contextAndScope = (ContextAndScope) context.getMqTraceContext();
+    ContextAndScope contextAndScope = contextAndScopeField.get(context);
+    if (contextAndScope != null) {
       contextAndScope.close();
       instrumenter.end(contextAndScope.getContext(), context.getMsgList());
     }
