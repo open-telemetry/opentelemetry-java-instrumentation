@@ -25,19 +25,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class SpringBootServiceNameGuesserTest {
+class SpringBootServiceNameDetectorTest {
 
   static final String PROPS = "application.properties";
   static final String APPLICATION_YML = "application.yml";
   @Mock ConfigProperties config;
-  @Mock SpringBootServiceNameGuesser.SystemHelper system;
+  @Mock SpringBootServiceNameDetector.SystemHelper system;
 
   @Test
   void findByEnvVar() {
     String expected = "fur-city";
     when(system.getenv("SPRING_APPLICATION_NAME")).thenReturn(expected);
 
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
 
     Resource result = guesser.createResource(config);
     expectServiceName(result, expected);
@@ -46,7 +46,7 @@ class SpringBootServiceNameGuesserTest {
   @Test
   void classpathApplicationProperties() {
     when(system.openClasspathResource(PROPS)).thenCallRealMethod();
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "dog-store");
   }
@@ -57,7 +57,7 @@ class SpringBootServiceNameGuesserTest {
     try {
       writeString(propsPath, "spring.application.name=fish-tank\n");
       when(system.openFile(PROPS)).thenCallRealMethod();
-      SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+      SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
       Resource result = guesser.createResource(config);
       expectServiceName(result, "fish-tank");
     } finally {
@@ -68,7 +68,7 @@ class SpringBootServiceNameGuesserTest {
   @Test
   void classpathApplicationYaml() {
     when(system.openClasspathResource(APPLICATION_YML)).thenCallRealMethod();
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "cat-store");
   }
@@ -81,7 +81,7 @@ class SpringBootServiceNameGuesserTest {
       String content = readString(Paths.get(url.toURI()));
       writeString(yamlPath, content);
       when(system.openFile(APPLICATION_YML)).thenCallRealMethod();
-      SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+      SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
       Resource result = guesser.createResource(config);
       expectServiceName(result, "cat-store");
     } finally {
@@ -99,7 +99,7 @@ class SpringBootServiceNameGuesserTest {
               "--spring.application.name=tiger-town",
               "--quiet=never"
             });
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "tiger-town");
   }
@@ -108,20 +108,20 @@ class SpringBootServiceNameGuesserTest {
   void getFromCommandlineArgsWithSystemProperty() throws Exception {
     when(system.getProperty("sun.java.command"))
         .thenReturn("/bin/java sweet-spring.jar --spring.application.name=bullpen --quiet=never");
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
     expectServiceName(result, "bullpen");
   }
 
   @Test
   void shouldApply() {
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     assertThat(guesser.shouldApply(config, Resource.getDefault())).isTrue();
   }
 
   @Test
   void shouldNotApplyWhenResourceHasServiceName() {
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource resource =
         Resource.getDefault().merge(Resource.create(Attributes.of(SERVICE_NAME, "test-service")));
     assertThat(guesser.shouldApply(config, resource)).isFalse();
@@ -129,14 +129,14 @@ class SpringBootServiceNameGuesserTest {
 
   @Test
   void shouldNotApplyIfConfigHasServiceName() {
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     when(config.getString("otel.service.name")).thenReturn("test-service");
     assertThat(guesser.shouldApply(config, Resource.getDefault())).isFalse();
   }
 
   @Test
   void shouldNotApplyIfConfigHasServiceNameResourceAttribute() {
-    SpringBootServiceNameGuesser guesser = new SpringBootServiceNameGuesser(system);
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     when(config.getMap("otel.resource.attributes"))
         .thenReturn(singletonMap(SERVICE_NAME.getKey(), "test-service"));
     assertThat(guesser.shouldApply(config, Resource.getDefault())).isFalse();

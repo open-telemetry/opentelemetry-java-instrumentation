@@ -18,7 +18,6 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
@@ -204,9 +203,9 @@ public abstract class AbstractGrpcStreamingTest {
                                     SemanticAttributes.NetTransportValues.IP_TCP),
                                 equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
                                 equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1"),
+                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
                                 satisfies(
-                                    AttributeKey.longKey("net.sock.peer.port"),
+                                    SemanticAttributes.NET_SOCK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0]))));
     testing()

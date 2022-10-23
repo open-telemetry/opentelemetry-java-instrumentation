@@ -24,6 +24,7 @@ dependencies {
 
 tasks {
   test {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
   }
 }

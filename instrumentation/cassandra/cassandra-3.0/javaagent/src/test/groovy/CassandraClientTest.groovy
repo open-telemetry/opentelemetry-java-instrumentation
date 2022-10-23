@@ -147,9 +147,9 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "net.sock.peer.addr" "127.0.0.1"
-        "net.sock.peer.name" "localhost"
-        "net.sock.peer.port" cassandraPort
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+        "$SemanticAttributes.NET_SOCK_PEER_NAME" "localhost"
+        "$SemanticAttributes.NET_SOCK_PEER_PORT" cassandraPort
         "$SemanticAttributes.DB_SYSTEM" "cassandra"
         "$SemanticAttributes.DB_NAME" keyspace
         "$SemanticAttributes.DB_STATEMENT" statement
