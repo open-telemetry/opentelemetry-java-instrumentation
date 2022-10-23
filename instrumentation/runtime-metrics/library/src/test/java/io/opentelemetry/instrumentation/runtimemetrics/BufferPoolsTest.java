@@ -102,7 +102,7 @@ public class BufferPoolsTest {
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("The number of buffers in the pool")
-                        .hasUnit("buffers")
+                        .hasUnit("{buffers}")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.hasPointsSatisfying(
