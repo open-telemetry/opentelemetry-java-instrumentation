@@ -26,16 +26,17 @@ dependencies {
   testImplementation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   latestDepTestLibrary("software.amazon.awssdk:aws-json-protocol:2.17.+")
-  latestDepTestLibrary("software.amazon.awssdk:aws-core:2.17.+")
-  latestDepTestLibrary("software.amazon.awssdk:dynamodb:2.17.+")
-  latestDepTestLibrary("software.amazon.awssdk:ec2:2.17.+")
-  latestDepTestLibrary("software.amazon.awssdk:kinesis:2.17.+")
-  latestDepTestLibrary("software.amazon.awssdk:rds:2.17.+")
-  latestDepTestLibrary("software.amazon.awssdk:s3:2.17.+")
-  latestDepTestLibrary("software.amazon.awssdk:sqs:2.17.+")
+  latestDepTestLibrary("software.amazon.awssdk:aws-core:+")
+  latestDepTestLibrary("software.amazon.awssdk:dynamodb:+")
+  latestDepTestLibrary("software.amazon.awssdk:ec2:+")
+  latestDepTestLibrary("software.amazon.awssdk:kinesis:+")
+  latestDepTestLibrary("software.amazon.awssdk:rds:+")
+  latestDepTestLibrary("software.amazon.awssdk:s3:+")
+  latestDepTestLibrary("software.amazon.awssdk:sqs:+")
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
 }
