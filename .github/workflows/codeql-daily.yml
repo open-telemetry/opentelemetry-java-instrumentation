@@ -24,9 +24,6 @@ jobs:
           languages: java
 
       - uses: gradle/gradle-build-action@v2
-        env:
-          # see https://github.com/github/codeql-action/issues/972
-          JAVA_TOOL_OPTIONS: "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"
         with:
           # skipping build cache is needed so that all modules will be analyzed
           arguments: assemble --no-build-cache
