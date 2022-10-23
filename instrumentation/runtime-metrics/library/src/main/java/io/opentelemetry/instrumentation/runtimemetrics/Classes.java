@@ -39,7 +39,7 @@ public final class Classes {
 
   // Visible for testing
   void registerObservers(OpenTelemetry openTelemetry, ClassLoadingMXBean classBean) {
-    Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");
+    Meter meter = RuntimeMetricsUtil.getMeter(openTelemetry);
 
     meter
         .counterBuilder("process.runtime.jvm.classes.loaded")

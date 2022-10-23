@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
+import static io.opentelemetry.instrumentation.runtimemetrics.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +43,7 @@ class CpuTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Average CPU load of the whole system for the last minute")
                         .hasUnit("1")
                         .hasDoubleGaugeSatisfying(
@@ -53,6 +55,7 @@ class CpuTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Recent cpu utilization for the whole system")
                         .hasUnit("1")
                         .hasDoubleGaugeSatisfying(
@@ -64,6 +67,7 @@ class CpuTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Recent cpu utilization for the process")
                         .hasUnit("1")
                         .hasDoubleGaugeSatisfying(
