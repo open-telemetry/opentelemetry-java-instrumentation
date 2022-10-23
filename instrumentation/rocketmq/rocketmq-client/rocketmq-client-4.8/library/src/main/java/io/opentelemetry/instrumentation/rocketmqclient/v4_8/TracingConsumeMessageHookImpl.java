@@ -34,6 +34,10 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     Context parentContext = Context.current();
     Context newContext = instrumenter.start(parentContext, context.getMsgList());
 
+    // it's safe to store the scope in the rocketMq message context, both before() and after()
+    // methods are always called from the same thread; see:
+    // - ConsumeMessageConcurrentlyService$ConsumeRequest#run()
+    // - ConsumeMessageOrderlyService$ConsumeRequest#run()
     if (newContext != parentContext) {
       contextAndScopeField.set(
           context, ContextAndScope.create(newContext, newContext.makeCurrent()));
