@@ -16,14 +16,15 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -414,9 +415,9 @@ class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabb
       attributes {
         // listener does not have access to net attributes
         if (rabbitCommand != "basic.deliver") {
-          "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
-          "net.sock.peer.port" Long
-          "net.sock.family" { it == null || it == "inet6" }
+          "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+          "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+          "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
         }
 
         "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"

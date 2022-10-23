@@ -45,9 +45,9 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
           childOf span(0)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.name" expectedHostAttributeValue
-            "net.sock.peer.port" port
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET a ?"
           }
@@ -64,9 +64,9 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
           childOf span(0)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.name" expectedHostAttributeValue
-            "net.sock.peer.port" port
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET a"
           }

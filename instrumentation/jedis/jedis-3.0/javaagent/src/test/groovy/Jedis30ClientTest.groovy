@@ -53,7 +53,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION" "SET"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
@@ -80,7 +80,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION" "SET"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
@@ -95,7 +95,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION" "GET"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
@@ -122,7 +122,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION" "SET"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
@@ -137,7 +137,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_OPERATION" "RANDOMKEY"
             "$SemanticAttributes.NET_PEER_NAME" "localhost"
             "$SemanticAttributes.NET_PEER_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }

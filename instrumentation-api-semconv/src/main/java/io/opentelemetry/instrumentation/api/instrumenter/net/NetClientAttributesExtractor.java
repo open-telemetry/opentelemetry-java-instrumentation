@@ -63,21 +63,21 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
     String sockPeerAddr = getter.sockPeerAddr(request, response);
     if (sockPeerAddr != null && !sockPeerAddr.equals(peerName)) {
-      internalSet(attributes, NetAttributes.NET_SOCK_PEER_ADDR, sockPeerAddr);
+      internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_ADDR, sockPeerAddr);
 
       Integer sockPeerPort = getter.sockPeerPort(request, response);
       if (sockPeerPort != null && sockPeerPort > 0 && !sockPeerPort.equals(peerPort)) {
-        internalSet(attributes, NetAttributes.NET_SOCK_PEER_PORT, (long) sockPeerPort);
+        internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_PORT, (long) sockPeerPort);
       }
 
       String sockFamily = getter.sockFamily(request, response);
-      if (sockFamily != null && !NetAttributes.SOCK_FAMILY_INET.equals(sockFamily)) {
-        internalSet(attributes, NetAttributes.NET_SOCK_FAMILY, sockFamily);
+      if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
+        internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
       }
 
       String sockPeerName = getter.sockPeerName(request, response);
       if (sockPeerName != null && !sockPeerName.equals(peerName)) {
-        internalSet(attributes, NetAttributes.NET_SOCK_PEER_NAME, sockPeerName);
+        internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_NAME, sockPeerName);
       }
     }
   }
