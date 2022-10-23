@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.openfeign
 
 import feign.Feign
-
-
 import feign.Target
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait

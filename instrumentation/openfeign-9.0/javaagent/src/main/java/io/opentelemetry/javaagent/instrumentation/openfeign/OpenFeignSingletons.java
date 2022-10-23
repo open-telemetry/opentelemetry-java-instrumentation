@@ -12,9 +12,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 
-public class OpenFeignInstrumentationSingletons {
+public class OpenFeignSingletons {
 
-  private OpenFeignInstrumentationSingletons() {}
+  private OpenFeignSingletons() {}
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.openfeign-9.0";
   private static final Instrumenter<ExecuteAndDecodeRequest, Response> INSTRUMENTER;
@@ -28,10 +28,10 @@ public class OpenFeignInstrumentationSingletons {
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.create(OpenFeignHttpClientAttributesGetter.INSTANCE))
             .addAttributesExtractor(
-                NetClientAttributesExtractor.create(OpenFeignHttpClientAttributesGetter.INSTANCE))
+                NetClientAttributesExtractor.create(OpenFeignNetClientAttributesGetter.INSTANCE))
             .addContextCustomizer(
                 (context, request, startAttributes) -> OpenFeignResponseHolder.init(context))
-            .newClientInstrumenter(OpenFeignTextMapSetter.INSTANCE);
+            .buildClientInstrumenter(OpenFeignTextMapSetter.INSTANCE);
   }
 
   public static Instrumenter<ExecuteAndDecodeRequest, Response> instrumenter() {
