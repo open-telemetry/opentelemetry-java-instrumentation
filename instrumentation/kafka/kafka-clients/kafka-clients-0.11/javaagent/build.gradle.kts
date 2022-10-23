@@ -39,7 +39,7 @@ tasks {
       includeTestsMatching("KafkaClientPropagationDisabledTest")
     }
     include("**/KafkaClientPropagationDisabledTest.*")
-    jvmArgs("-Dotel.instrumentation.kafka.client-propagation.enabled=false")
+    jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
