@@ -53,8 +53,6 @@ public final class HttpClientTestOptions {
   boolean testReadTimeout = false;
   boolean testRemoteConnection = true;
   boolean testHttps = true;
-  boolean testCausality = true;
-  boolean testCausalityWithCallback = true;
   boolean testCallback = true;
   boolean testCallbackWithParent = true;
   boolean testCallbackWithImplicitParent = false;
@@ -153,18 +151,6 @@ public final class HttpClientTestOptions {
   @CanIgnoreReturnValue
   public HttpClientTestOptions disableTestHttps() {
     testHttps = false;
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestCausality() {
-    testCausality = false;
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestCausalityWithCallback() {
-    testCausalityWithCallback = false;
     return this;
   }
 
