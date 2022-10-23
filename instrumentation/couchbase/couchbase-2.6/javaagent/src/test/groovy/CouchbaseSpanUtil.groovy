@@ -36,9 +36,9 @@ class CouchbaseSpanUtil {
 
         "$SemanticAttributes.NET_TRANSPORT" { it == null || it == IP_TCP }
         // Because of caching, not all requests hit the server so these attributes may be absent
-        "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
-        "net.sock.peer.name" { it == "localhost" || it == "127.0.0.1" || it == null }
-        "net.sock.peer.port" { it == null || it instanceof Number }
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+        "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == null }
+        "$SemanticAttributes.NET_SOCK_PEER_PORT" { it == null || it instanceof Number }
 
         // Because of caching, not all requests hit the server so this tag may be absent
         "couchbase.local.address" { it == null || it instanceof String }

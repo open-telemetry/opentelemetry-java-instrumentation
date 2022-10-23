@@ -85,12 +85,12 @@ class InetSocketAddressNetServerAttributesGetterTest {
     AttributesBuilder builder = Attributes.builder();
     builder.put(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
     if (!request.isIpv4()) {
-      builder.put(NetAttributes.NET_SOCK_FAMILY, "inet6");
+      builder.put(SemanticAttributes.NET_SOCK_FAMILY, "inet6");
     }
-    builder.put(NetAttributes.NET_SOCK_PEER_ADDR, request.peer.getAddress().getHostAddress());
-    builder.put(NetAttributes.NET_SOCK_PEER_PORT, 123L);
-    builder.put(NetAttributes.NET_SOCK_HOST_ADDR, request.host.getAddress().getHostAddress());
-    builder.put(NetAttributes.NET_SOCK_HOST_PORT, 456L);
+    builder.put(SemanticAttributes.NET_SOCK_PEER_ADDR, request.peer.getAddress().getHostAddress());
+    builder.put(SemanticAttributes.NET_SOCK_PEER_PORT, 123L);
+    builder.put(SemanticAttributes.NET_SOCK_HOST_ADDR, request.host.getAddress().getHostAddress());
+    builder.put(SemanticAttributes.NET_SOCK_HOST_PORT, 456L);
 
     assertThat(startAttributes.build()).isEqualTo(builder.build());
 
