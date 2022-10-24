@@ -14,7 +14,7 @@ enum MapSetter implements TextMapSetter<PublishingMessageImpl> {
 
   @Override
   public void set(@Nullable PublishingMessageImpl carrier, String key, String value) {
-    if (null == carrier) {
+    if (carrier == null) {
       return;
     }
     carrier.setTraceContext(value);

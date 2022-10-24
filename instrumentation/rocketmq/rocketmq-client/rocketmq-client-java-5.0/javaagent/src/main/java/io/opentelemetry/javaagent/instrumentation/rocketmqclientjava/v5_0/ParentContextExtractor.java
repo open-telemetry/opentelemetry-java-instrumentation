@@ -40,7 +40,6 @@ public final class ParentContextExtractor {
 
     @Override
     public String get(Map<String, String> carrier, String key) {
-      assert carrier != null;
       return carrier.get(key);
     }
   }
