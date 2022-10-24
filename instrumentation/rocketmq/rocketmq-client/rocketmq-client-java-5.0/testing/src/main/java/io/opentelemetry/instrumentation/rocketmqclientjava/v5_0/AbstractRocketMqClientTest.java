@@ -36,6 +36,7 @@ public abstract class AbstractRocketMqClientTest {
 
   protected abstract InstrumentationExtension testing();
 
+  // TODO(aaron-ai): replace it by the official image.
   private static final String IMAGE_NAME = "aaronai/rocketmq-proxy-it:v1.0.0";
 
   // We still need this container type to do fixed-port-mapping.
