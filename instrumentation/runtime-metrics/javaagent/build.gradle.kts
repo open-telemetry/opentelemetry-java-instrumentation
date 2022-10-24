@@ -7,9 +7,3 @@ dependencies {
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 }
-
-tasks {
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.runtime-metrics.experimental-metrics.enabled=true")
-  }
-}
