@@ -5,10 +5,11 @@
 
 package io.opentelemetry.opencensusshim;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+
 import io.opencensus.trace.AttributeValue;
 import io.opencensus.trace.Tracing;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
@@ -22,7 +23,7 @@ public abstract class AbstractOpenCensusShimTest {
 
   @Test
   void testCrossOtelOcBoundary() {
-    Tracer tracer = testing().getOpenTelemetry().getTracer("opencensus-shim", "0.0.0");
+    Tracer tracer = testing().getOpenTelemetry().getTracer("test");
     Span span = tracer.spanBuilder("test-span").setSpanKind(SpanKind.INTERNAL).startSpan();
     Scope scope = span.makeCurrent();
     try {
@@ -51,7 +52,7 @@ public abstract class AbstractOpenCensusShimTest {
                         spanAssert
                             .hasName("internal")
                             .hasParentSpanId(span.getSpanContext().getSpanId())
-                            .hasAttributes(
-                                Attributes.of(AttributeKey.booleanKey("internal-only"), true))));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(AttributeKey.booleanKey("internal-only"), true))));
   }
 }
