@@ -1,4 +1,4 @@
-# Library Instrumentation for Vibur DBCP versions 11.0+
+# Library Instrumentation for Vibur DBCP version 11.0 and higher
 
 Provides OpenTelemetry instrumentation for [Vibur DBCP](https://www.vibur.org/).
 

@@ -1,4 +1,4 @@
-# Library Instrumentation for HikariCP versions 3.0+
+# Library Instrumentation for HikariCP version 3.0 and higher
 
 Provides OpenTelemetry instrumentation for [HikariCP](https://github.com/brettwooldridge/HikariCP).
 

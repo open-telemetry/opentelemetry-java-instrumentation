@@ -1,4 +1,4 @@
-# Library Instrumentation for Ktor versions 2.0+
+# Library Instrumentation for Ktor version 2.0 and higher
 
 This package contains libraries to help instrument Ktor. Currently, only server instrumentation is supported.
 

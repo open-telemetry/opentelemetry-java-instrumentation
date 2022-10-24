@@ -1,4 +1,4 @@
-# Library Instrumentation for OkHttp versions 3.0+
+# Library Instrumentation for OkHttp version 3.0 and higher
 
 Provides OpenTelemetry instrumentation for [okhttp3](https://square.github.io/okhttp/).
 

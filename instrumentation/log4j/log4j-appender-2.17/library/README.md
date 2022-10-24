@@ -1,4 +1,4 @@
-# Appender Instrumentation for Log4j2 versions 2.17+
+# Appender Instrumentation for Log4j2 version 2.17 and higher
 
 This module provides a Log4j2 [appender](https://logging.apache.org/log4j/2.x/manual/appenders.html)
 which forwards Log4j2 log events to the

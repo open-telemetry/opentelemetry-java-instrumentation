@@ -1,4 +1,4 @@
-# Library Instrumentation for C3P0 versions 0.9+
+# Library Instrumentation for C3P0 version 0.9 and higher
 
 Provides OpenTelemetry instrumentation for [C3P0](https://www.mchange.com/projects/c3p0/).
 

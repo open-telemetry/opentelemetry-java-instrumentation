@@ -1,4 +1,4 @@
-# ContextData Instrumentation for Log4j2 versions 2.17+
+# ContextData Instrumentation for Log4j2 version 2.17 and higher
 
 This module provides a Log4j2 `ContextDataProvider` that injects trace context from active spans
 into log context.

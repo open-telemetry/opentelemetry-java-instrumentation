@@ -1,4 +1,4 @@
-# Library instrumentation for Kafka Clients versions 2.6+
+# Library instrumentation for Kafka Clients version 2.6 and higher
 
 ## Quickstart
 

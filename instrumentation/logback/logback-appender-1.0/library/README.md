@@ -1,4 +1,4 @@
-# Appender instrumentation for Logback versions 1.0+
+# Appender Instrumentation for Logback version 1.0 and higher
 
 This module provides a Logback [appender](https://logback.qos.ch/manual/appenders.html) which
 forwards Logback log events to the

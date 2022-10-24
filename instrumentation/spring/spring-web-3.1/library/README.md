@@ -1,4 +1,4 @@
-# Library Instrumentation for Spring Web versions 3.1+
+# Library Instrumentation for Spring Web version 3.1 and higher
 
 Provides OpenTelemetry instrumentation for Spring's RestTemplate.
 

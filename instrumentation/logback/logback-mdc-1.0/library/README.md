@@ -1,4 +1,4 @@
-# MDC Instrumentation for Logback versions 1.0+
+# MDC Instrumentation for Logback version 1.0 and higher
 
 This module integrates instrumentation with Logback by injecting the trace ID and span ID from a
 mounted span using a custom Logback appender.

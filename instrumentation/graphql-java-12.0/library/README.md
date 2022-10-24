@@ -1,4 +1,4 @@
-# Library Instrumentation for GraphQL Java versions 12.0+
+# Library Instrumentation for GraphQL Java version 12.0 and higher
 
 Provides OpenTelemetry instrumentation for [GraphQL Java](https://www.graphql-java.com/).
 

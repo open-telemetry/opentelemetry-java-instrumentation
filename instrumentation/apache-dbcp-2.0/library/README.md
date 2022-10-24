@@ -1,4 +1,4 @@
-# Library Instrumentation for Apache DBCP versions 2.0+
+# Library Instrumentation for Apache DBCP version 2.0 and higher
 
 Provides OpenTelemetry instrumentation for [Apache DBCP](https://commons.apache.org/proper/commons-dbcp/).
 

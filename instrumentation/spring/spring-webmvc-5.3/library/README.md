@@ -1,4 +1,4 @@
-# Library Instrumentation for Spring Web MVC versions 5.3+
+# Library Instrumentation for Spring Web MVC version 5.3 and higher
 
 Provides OpenTelemetry instrumentation for Spring WebMVC controllers.
 

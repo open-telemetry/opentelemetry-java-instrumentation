@@ -1,4 +1,4 @@
-# Library Instrumentation for Spring Webflux versions 5.0+
+# Library Instrumentation for Spring Webflux version 5.0 and higher
 
 Provides OpenTelemetry instrumentation for Spring's `WebClient`.
 

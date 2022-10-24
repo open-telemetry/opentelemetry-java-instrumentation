@@ -1,4 +1,4 @@
-# Library Instrumentation for Oracle UCP versions 11.2+
+# Library Instrumentation for Oracle UCP version 11.2 and higher
 
 Provides OpenTelemetry instrumentation for [Oracle UCP](https://docs.oracle.com/database/121/JJUCP/).
 
