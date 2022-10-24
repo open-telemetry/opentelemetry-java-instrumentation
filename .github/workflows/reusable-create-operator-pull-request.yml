@@ -31,7 +31,7 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           git remote add upstream https://github.com/open-telemetry/opentelemetry-operator.git
-          git fetch upstream
+          git fetch upstream main
           git checkout -b update-opentelemetry-javaagent-to-${VERSION} upstream/main
 
       - name: Update version

@@ -31,7 +31,7 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           git remote add upstream https://github.com/open-telemetry/opentelemetry.io.git
-          git fetch upstream
+          git fetch upstream main
           git checkout -b update-opentelemetry-java-instrumentation-to-${VERSION} upstream/main
           git submodule update
 
