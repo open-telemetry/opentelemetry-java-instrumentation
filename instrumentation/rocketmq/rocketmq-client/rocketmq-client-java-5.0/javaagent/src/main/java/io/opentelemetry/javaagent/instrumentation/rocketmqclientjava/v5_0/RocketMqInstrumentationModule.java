@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclientjava.v5_0;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -20,6 +20,7 @@ public final class RocketMqInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new RocketMqProducerInstrumentation());
+    return asList(
+        new RocketMqPublishingMessageImplInstrumentation(), new RocketMqProducerInstrumentation());
   }
 }

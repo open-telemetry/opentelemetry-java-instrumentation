@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
@@ -67,8 +68,14 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
       for (int i = 0; i < count; i++) {
         PublishingMessageImpl message = messages.get(i);
 
-        // Try to extract parent context from message.
-        Context parentContext = ParentContextExtractor.fromMessage(message);
+        // Try to extract parent context.
+        VirtualField<PublishingMessageImpl, Context> virtualField =
+            VirtualField.find(PublishingMessageImpl.class, Context.class);
+        Context parentContext = virtualField.get(message);
+        if (parentContext == null) {
+          parentContext = Context.current();
+        }
+
         Span span = Span.fromContext(parentContext);
         if (!span.getSpanContext().isValid()) {
           parentContext = Context.current();
