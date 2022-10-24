@@ -1,4 +1,4 @@
-# Library Instrumentation for Spring Web MVC
+# Library Instrumentation for Spring Web MVC version 5.3 and higher
 
 Provides OpenTelemetry instrumentation for Spring WebMVC controllers.
 
@@ -9,8 +9,8 @@ Provides OpenTelemetry instrumentation for Spring WebMVC controllers.
 Replace `SPRING_VERSION` with the version of spring you're using.
  - `Minimum version: 5.3`
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
- - `Minimum version: 1.17.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-spring-webmvc-5.3).
 
 For Maven add the following to your `pom.xml`:
 

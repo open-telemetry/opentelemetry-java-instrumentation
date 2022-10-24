@@ -13,8 +13,7 @@ the [opentelemetry-spring-boot-starter](../starters/spring-boot-starter/README.m
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
  - Minimum version: `1.17.0`
 
-
-For Maven add to your `pom.xml`:
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
 <dependencies>
@@ -43,7 +42,7 @@ For Maven add to your `pom.xml`:
 </dependencies>
 ```
 
-For Gradle add to your dependencies:
+For Gradle, add to your dependencies:
 
 ```groovy
 //opentelemetry spring auto-configuration
@@ -66,7 +65,7 @@ Replace `SPRING_VERSION` with the version of spring you're using.
 Replace `SPRING_WEBFLUX_VERSION` with the version of spring-webflux you're using.
  - Minimum version: `5.0`
 
-For Maven add to your `pom.xml`:
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
 <dependencies>
@@ -122,7 +121,7 @@ For Maven add to your `pom.xml`:
 </dependencies>
 ```
 
-For Gradle add to your dependencies:
+For Gradle, add to your dependencies:
 
 ```groovy
 //opentelemetry exporter

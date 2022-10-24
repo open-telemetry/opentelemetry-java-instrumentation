@@ -1,4 +1,4 @@
-# Manual Instrumentation for Spring-Web
+# Library Instrumentation for Spring Web version 3.1 and higher
 
 Provides OpenTelemetry instrumentation for Spring's RestTemplate.
 
@@ -9,14 +9,12 @@ Provides OpenTelemetry instrumentation for Spring's RestTemplate.
 Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 3.1`
 
-Replace `OPENTELEMETRY_VERSION` with the latest
-stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
-`Minimum version: 1.4.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-spring-web-3.1).
 
-For Maven add to your `pom.xml`:
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <!-- opentelemetry -->
   <dependency>
@@ -43,7 +41,7 @@ For Maven add to your `pom.xml`:
 </dependencies>
 ```
 
-For Gradle add to your dependencies:
+For Gradle, add to your dependencies:
 
 ```groovy
 implementation("io.opentelemetry.instrumentation:opentelemetry-spring-web-3.1:OPENTELEMETRY_VERSION")
