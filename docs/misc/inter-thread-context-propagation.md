@@ -8,10 +8,10 @@ Executor pool = Executors.newFixedThreadPool(10)
 
 public void doGet(HttpServletRequest request, HttpServletResponse response) {
     Future f1 = pool.submit(() -> {
-        return userRepository.queryShippingAddress(requet)
+        return userRepository.queryShippingAddress(request)
     })
     Future f2 = pool.submit(() -> {
-        return warehouse.currentState(requet)
+        return warehouse.currentState(request)
     })
     writeResponse(response, f1.get(), f2.get())
 }
@@ -23,7 +23,7 @@ Executor pool = Executors.newFixedThreadPool(10)
 public void doGet(HttpServletRequest request, HttpServletResponse response) {
     final AsyncContext acontext = request.startAsync();
     acontext.start(() -> {
-            String address = userRepository.queryShippingAddress(requet)
+            String address = userRepository.queryShippingAddress(request)
             HttpServletResponse response = acontext.getResponse();
             writeResponse(response, address)
             acontext.complete();
@@ -52,7 +52,7 @@ on that thread for the duration of the execution. This can be illustrated by the
 ```
     var job = () -> {
         try(Scope scope = this.context.makeCurrent()) {
-            return userRepository.queryShippingAddress(requet)
+            return userRepository.queryShippingAddress(request)
         }}
     job.context = Context.current()
     Future f1 = pool.submit()

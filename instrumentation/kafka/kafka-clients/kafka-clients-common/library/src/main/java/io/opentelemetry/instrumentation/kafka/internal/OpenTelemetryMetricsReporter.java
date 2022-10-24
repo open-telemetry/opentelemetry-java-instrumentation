@@ -49,7 +49,7 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
   private static final List<RegisteredObservable> registeredObservables = new ArrayList<>();
 
   /**
-   * Reset for test by reseting the {@link #meter} to {@code null} and closing all registered
+   * Reset for test by resetting the {@link #meter} to {@code null} and closing all registered
    * instruments.
    */
   static void resetForTest() {
