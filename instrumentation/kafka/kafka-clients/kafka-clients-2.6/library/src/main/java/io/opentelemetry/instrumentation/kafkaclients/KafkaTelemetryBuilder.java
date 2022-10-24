@@ -72,8 +72,11 @@ public final class KafkaTelemetryBuilder {
   }
 
   /**
-   * Sets whether the producer context should be propagated from the producer span to the consumer
-   * span. Enabled by default.
+   * Set whether to propagate trace context in producers. Enabled by default.
+   *
+   * <p>You will need to disable this if there are kafka consumers using kafka-clients version prior
+   * to 0.11, since those old versions do not support headers, and attaching trace context
+   * propagation headers upstream causes those consumers to fail when reading the messages.
    */
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
@@ -85,13 +88,13 @@ public final class KafkaTelemetryBuilder {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-            .setPropagationEnabled(propagationEnabled);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes);
 
     return new KafkaTelemetry(
         openTelemetry,
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerOperationInstrumenter(
-            MessageOperation.RECEIVE, consumerAttributesExtractors));
+            MessageOperation.RECEIVE, consumerAttributesExtractors),
+        propagationEnabled);
   }
 }

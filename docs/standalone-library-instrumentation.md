@@ -34,9 +34,3 @@ that can be used if you prefer that over using the Java agent:
 * [Spring Web MVC](../instrumentation/spring/spring-webmvc-5.3/library)
 * [Spring WebFlux Client](../instrumentation/spring/spring-webflux-5.0/library)
 * [Vibur DBCP](../instrumentation/vibur-dbcp-11.0/library)
-
-And some libraries are publishing their own OpenTelemetry instrumentation (yay!), e.g.
-
-* [http4k](https://www.http4k.org/guide/reference/opentelemetry/)
-
-If you know of additional libraries that are publishing their own OpenTelemetry instrumentation, please let us know!

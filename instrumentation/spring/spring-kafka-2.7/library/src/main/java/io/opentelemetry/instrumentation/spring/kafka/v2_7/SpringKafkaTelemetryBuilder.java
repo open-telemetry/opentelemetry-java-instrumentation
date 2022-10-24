@@ -20,7 +20,6 @@ public final class SpringKafkaTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
-  private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
 
   SpringKafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -40,9 +39,14 @@ public final class SpringKafkaTelemetryBuilder {
     return this;
   }
 
+  /**
+   * @deprecated if you have a need for this configuration option please open an issue in the <a
+   *     href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues">opentelemetry-java-instrumentation</a>
+   *     repository.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public SpringKafkaTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
-    this.propagationEnabled = propagationEnabled;
     return this;
   }
 
@@ -62,7 +66,6 @@ public final class SpringKafkaTelemetryBuilder {
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-            .setPropagationEnabled(propagationEnabled)
             .setMessagingReceiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled)
             .setErrorCauseExtractor(SpringKafkaErrorCauseExtractor.INSTANCE);
 

@@ -89,7 +89,8 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
       context = producerInstrumenter().start(parentContext, record);
       scope = context.makeCurrent();
 
-      if (KafkaSingletons.isPropagationEnabled() && KafkaPropagation.shouldPropagate(apiVersions)) {
+      if (KafkaSingletons.isProducerPropagationEnabled()
+          && KafkaPropagation.shouldPropagate(apiVersions)) {
         record = KafkaPropagation.propagateContext(context, record);
       }
 

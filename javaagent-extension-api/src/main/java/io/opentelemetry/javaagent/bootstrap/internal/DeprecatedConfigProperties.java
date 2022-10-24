@@ -13,20 +13,24 @@ import java.util.logging.Logger;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class DeprecatedConfigPropertyWarning {
+public final class DeprecatedConfigProperties {
 
-  private static final Logger logger =
-      Logger.getLogger(DeprecatedConfigPropertyWarning.class.getName());
+  private static final Logger logger = Logger.getLogger(DeprecatedConfigProperties.class.getName());
 
-  public static void warnIfUsed(
-      InstrumentationConfig config, String deprecatedPropertyName, String newPropertyName) {
+  public static boolean getBoolean(
+      InstrumentationConfig config,
+      String deprecatedPropertyName,
+      String newPropertyName,
+      boolean defaultValue) {
     if (config.getString(deprecatedPropertyName) != null) {
       logger.log(
           WARNING,
           "Deprecated property \"{0}\" was used; use the \"{1}\" property instead",
           new Object[] {deprecatedPropertyName, newPropertyName});
     }
+    boolean value = config.getBoolean(deprecatedPropertyName, defaultValue);
+    return config.getBoolean(newPropertyName, value);
   }
 
-  private DeprecatedConfigPropertyWarning() {}
+  private DeprecatedConfigProperties() {}
 }

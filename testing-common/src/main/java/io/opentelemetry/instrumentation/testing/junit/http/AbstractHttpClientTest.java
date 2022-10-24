@@ -183,12 +183,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     if (!testHttps()) {
       options.disableTestHttps();
     }
-    if (!testCausality()) {
-      options.disableTestCausality();
-    }
-    if (!testCausalityWithCallback()) {
-      options.disableTestCausalityWithCallback();
-    }
     if (!testCallback()) {
       options.disableTestCallback();
     }
@@ -704,8 +698,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    */
   @Test
   void highConcurrency() {
-    assumeTrue(options.testCausality);
-
     int count = 50;
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -777,8 +769,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void highConcurrencyWithCallback() {
-    assumeTrue(options.testCausality);
-    assumeTrue(options.testCausalityWithCallback);
     assumeTrue(options.testCallback);
     assumeTrue(options.testCallbackWithParent);
 
@@ -1118,14 +1108,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   protected boolean testHttps() {
-    return true;
-  }
-
-  protected boolean testCausality() {
-    return true;
-  }
-
-  protected boolean testCausalityWithCallback() {
     return true;
   }
 
