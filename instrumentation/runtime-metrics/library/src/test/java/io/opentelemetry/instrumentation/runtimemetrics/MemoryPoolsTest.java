@@ -245,13 +245,15 @@ class MemoryPoolsTest {
     verify(measurement, never()).record(eq(-1), any());
   }
 
-
   @Test
   void callback_NullUsage() {
     when(heapPoolBean.getCollectionUsage()).thenReturn(null);
 
     Consumer<ObservableLongMeasurement> callback =
-        MemoryPools.callback(Collections.singletonList(heapPoolBean), MemoryPoolMXBean::getCollectionUsage, MemoryUsage::getUsed);
+        MemoryPools.callback(
+            Collections.singletonList(heapPoolBean),
+            MemoryPoolMXBean::getCollectionUsage,
+            MemoryUsage::getUsed);
     callback.accept(measurement);
     verify(measurement, never()).record(anyLong(), any());
   }

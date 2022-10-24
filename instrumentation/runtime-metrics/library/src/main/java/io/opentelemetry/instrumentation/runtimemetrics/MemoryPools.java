@@ -113,7 +113,7 @@ public final class MemoryPools {
         if (memoryUsage == null) {
           // JVM may return null in special cases for MemoryPoolMXBean.getUsage() and
           // MemoryPoolMXBean.getCollectionUsage()
-          return;
+          continue;
         }
         long value = valueExtractor.apply(memoryUsage);
         if (value != -1) {
