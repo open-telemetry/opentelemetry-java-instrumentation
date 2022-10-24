@@ -20,7 +20,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
  * attributes</a>. This class is designed with SQL (or SQL-like) database clients in mind.
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
- * <code>{@linkplain SemanticAttributes#DB_SQL_TABLE db.sql.table}</code> attrubute. The raw SQL
+ * <code>{@linkplain SemanticAttributes#DB_SQL_TABLE db.sql.table}</code> attribute. The raw SQL
  * statements returned by the {@link SqlClientAttributesGetter#rawStatement(Object)} method are
  * sanitized before use, all statement parameters are removed.
  */

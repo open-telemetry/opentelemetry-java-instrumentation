@@ -192,7 +192,7 @@ public abstract class InstrumentationExtension
     return testRunner.forceFlushCalled();
   }
 
-  /** Returns the {@link OpenTelemetrySdk} initialied for library tests. */
+  /** Returns the {@link OpenTelemetrySdk} initialized for library tests. */
   public OpenTelemetrySdk getOpenTelemetrySdk() {
     if (testRunner instanceof LibraryTestRunner) {
       return ((LibraryTestRunner) testRunner).getOpenTelemetrySdk();
