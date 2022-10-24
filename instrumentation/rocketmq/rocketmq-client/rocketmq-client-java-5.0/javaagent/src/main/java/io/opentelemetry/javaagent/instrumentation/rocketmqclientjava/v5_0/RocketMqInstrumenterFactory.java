@@ -10,7 +10,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
@@ -25,7 +24,7 @@ final class RocketMqInstrumenterFactory {
   private RocketMqInstrumenterFactory() {}
 
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> createProducerInstrumenter(
-      OpenTelemetry openTelemetry, List<String> capturedHeaders, boolean propagationEnabled) {
+      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
 
     RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.SEND;
@@ -47,10 +46,7 @@ final class RocketMqInstrumenterFactory {
                   }
                 });
 
-    if (propagationEnabled) {
-      return instrumenterBuilder.buildProducerInstrumenter(MapSetter.INSTANCE);
-    }
-    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
+    return instrumenterBuilder.buildProducerInstrumenter(MapSetter.INSTANCE);
   }
 
   private static <T, R> MessagingAttributesExtractor<T, R> buildMessagingAttributesExtractor(
