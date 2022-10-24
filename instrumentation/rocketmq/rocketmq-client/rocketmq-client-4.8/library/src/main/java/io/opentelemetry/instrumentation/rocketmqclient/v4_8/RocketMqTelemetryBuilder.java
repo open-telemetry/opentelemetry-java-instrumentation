@@ -39,7 +39,12 @@ public final class RocketMqTelemetryBuilder {
   /**
    * Sets whether the trace context should be written from producers / read from consumers for
    * propagating through messaging.
+   *
+   * @deprecated if you have a need for this configuration option please open an issue in the <a
+   *     href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues">opentelemetry-java-instrumentation</a>
+   *     repository.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RocketMqTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
     this.propagationEnabled = propagationEnabled;
