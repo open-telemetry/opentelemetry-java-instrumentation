@@ -17,9 +17,6 @@ public final class SpringKafkaSingletons {
           .setCaptureExperimentalSpanAttributes(
               InstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-          .setPropagationEnabled(
-              InstrumentationConfig.get()
-                  .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true))
           .setMessagingReceiveInstrumentationEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .build();
