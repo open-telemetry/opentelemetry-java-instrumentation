@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimemetrics;
 import static io.opentelemetry.instrumentation.runtimemetrics.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -22,6 +23,7 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
@@ -241,5 +243,16 @@ class MemoryPoolsTest {
     verify(measurement)
         .record(1, Attributes.builder().put("pool", "heap_pool").put("type", "heap").build());
     verify(measurement, never()).record(eq(-1), any());
+  }
+
+
+  @Test
+  void callback_NullUsage() {
+    when(heapPoolBean.getCollectionUsage()).thenReturn(null);
+
+    Consumer<ObservableLongMeasurement> callback =
+        MemoryPools.callback(Collections.singletonList(heapPoolBean), MemoryPoolMXBean::getCollectionUsage, MemoryUsage::getUsed);
+    callback.accept(measurement);
+    verify(measurement, never()).record(anyLong(), any());
   }
 }

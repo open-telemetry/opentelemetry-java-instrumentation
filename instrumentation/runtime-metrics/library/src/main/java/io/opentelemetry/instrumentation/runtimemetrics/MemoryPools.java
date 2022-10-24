@@ -110,6 +110,11 @@ public final class MemoryPools {
       for (int i = 0; i < poolBeans.size(); i++) {
         Attributes attributes = attributeSets.get(i);
         MemoryUsage memoryUsage = memoryUsageExtractor.apply(poolBeans.get(i));
+        if (memoryUsage == null) {
+          // JVM may return null in special cases for MemoryPoolMXBean.getUsage() and
+          // MemoryPoolMXBean.getCollectionUsage()
+          return;
+        }
         long value = valueExtractor.apply(memoryUsage);
         if (value != -1) {
           measurement.record(value, attributes);
