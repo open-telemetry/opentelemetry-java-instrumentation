@@ -51,11 +51,11 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(3, List.class))
             .and(takesArgument(4, List.class))
             .and(takesArgument(5, int.class)),
-        RocketMqProducerInstrumentation.class.getName() + "$StartAdvice");
+        RocketMqProducerInstrumentation.class.getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class StartAdvice {
+  public static class SendAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) SettableFuture<List<SendReceiptImpl>> future0,
