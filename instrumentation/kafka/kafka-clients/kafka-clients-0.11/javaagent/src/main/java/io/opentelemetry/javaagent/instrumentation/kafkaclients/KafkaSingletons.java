@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
+import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.Map;
@@ -20,9 +21,12 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 public final class KafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
-  private static final boolean PROPAGATION_ENABLED =
-      InstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true);
+  private static final boolean PRODUCER_PROPAGATION_ENABLED =
+      DeprecatedConfigProperties.getBoolean(
+          InstrumentationConfig.get(),
+          "otel.instrumentation.kafka.client-propagation.enabled",
+          "otel.instrumentation.kafka.producer-propagation.enabled",
+          true);
   private static final boolean METRICS_ENABLED =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
@@ -38,7 +42,6 @@ public final class KafkaSingletons {
             .setCaptureExperimentalSpanAttributes(
                 InstrumentationConfig.get()
                     .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-            .setPropagationEnabled(PROPAGATION_ENABLED)
             .setMessagingReceiveInstrumentationEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
     PRODUCER_INSTRUMENTER = instrumenterFactory.createProducerInstrumenter();
@@ -46,8 +49,8 @@ public final class KafkaSingletons {
     CONSUMER_PROCESS_INSTRUMENTER = instrumenterFactory.createConsumerProcessInstrumenter();
   }
 
-  public static boolean isPropagationEnabled() {
-    return PROPAGATION_ENABLED;
+  public static boolean isProducerPropagationEnabled() {
+    return PRODUCER_PROPAGATION_ENABLED;
   }
 
   public static Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter() {

@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyCli
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigPropertyWarning;
+import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.Collections;
 
@@ -24,15 +24,12 @@ public final class NettyClientSingletons {
 
   static {
     InstrumentationConfig config = InstrumentationConfig.get();
-    DeprecatedConfigPropertyWarning.warnIfUsed(
-        config,
-        "otel.instrumentation.netty.always-create-connect-span",
-        "otel.instrumentation.netty.connection-telemetry.enabled");
-    boolean alwaysCreateConnectSpan =
-        config.getBoolean("otel.instrumentation.netty.always-create-connect-span", false);
     connectionTelemetryEnabled =
-        config.getBoolean(
-            "otel.instrumentation.netty.connection-telemetry.enabled", alwaysCreateConnectSpan);
+        DeprecatedConfigProperties.getBoolean(
+            config,
+            "otel.instrumentation.netty.always-create-connect-span",
+            "otel.instrumentation.netty.connection-telemetry.enabled",
+            false);
     sslTelemetryEnabled =
         config.getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
   }
