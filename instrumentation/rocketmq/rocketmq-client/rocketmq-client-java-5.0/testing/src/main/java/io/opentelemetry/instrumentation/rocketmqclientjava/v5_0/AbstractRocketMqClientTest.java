@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclientjava.v5_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION_KIND;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_ID;
@@ -88,19 +89,19 @@ public abstract class AbstractRocketMqClientTest {
                       spanDataAssert ->
                           spanDataAssert
                               .hasName(topic + " send")
-                              .hasAttribute(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag)
-                              .hasAttribute(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys))
-                              .hasAttribute(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL)
-                              .hasAttribute(
-                                  MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length)
-                              .hasAttribute(MESSAGING_SYSTEM, "rocketmq")
-                              .hasAttribute(
-                                  MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString())
                               .hasStatus(StatusData.unset())
-                              .hasAttribute(
-                                  MESSAGING_DESTINATION_KIND,
-                                  SemanticAttributes.MessagingDestinationKindValues.TOPIC)
-                              .hasAttribute(MESSAGING_DESTINATION, topic)));
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
+                                  equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
+                                  equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
+                                  equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
+                                  equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                  equalTo(
+                                      MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
+                                  equalTo(
+                                      MESSAGING_DESTINATION_KIND,
+                                      SemanticAttributes.MessagingDestinationKindValues.TOPIC),
+                                  equalTo(MESSAGING_DESTINATION, topic))));
     }
   }
 }
