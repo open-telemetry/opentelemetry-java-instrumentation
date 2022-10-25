@@ -1,4 +1,4 @@
-# Library Instrumentation for Apache RocketMQ Remoting-based Client version 4.0.0+
+# Library Instrumentation for Apache RocketMQ Remoting-based Client 4.0.0+
 
 Provides OpenTelemetry instrumentation for [Apache RocketMQ](https://rocketmq.apache.org/) remoting-based client.
 
@@ -28,7 +28,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-rocketmq-client-4
 
 ### Usage
 
-Remoting-based Client of RocketMQ provides the native interceptor to register the message hook in the instrumentation library.
+The instrumentation library provides the implementation of `SendMessageHook` and `ConsumeMessageHook` to provide OpenTelemetry-based spans and context propagation.
 
 ```java
 RocketMqTelemetry rocketMqTelemetry;
