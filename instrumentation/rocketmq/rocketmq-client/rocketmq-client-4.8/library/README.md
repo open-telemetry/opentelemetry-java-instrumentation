@@ -22,7 +22,7 @@ For Maven, add the following to your `pom.xml` dependencies:
 </dependencies>
 ```
 
-For Gradle, add to your dependencies:
+For Gradle, add the following to your dependencies:
 
 ```groovy
 implementation("io.opentelemetry.instrumentation:opentelemetry-rocketmq-client-4.8:OPENTELEMETRY_VERSION")
