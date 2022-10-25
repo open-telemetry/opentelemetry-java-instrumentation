@@ -1,18 +1,16 @@
 # Library Instrumentation for Apache RocketMQ Remoting-based Client version 4.0.0+
 
-Provides OpenTelemetry instrumentation for [Apache RocketMQ](https://rocketmq.apache.org/) Remoting-based Client.
+Provides OpenTelemetry instrumentation for [Apache RocketMQ](https://rocketmq.apache.org/) remoting-based client.
 
 ## Quickstart
 
 ### Add the following dependencies to your project:
 
-Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-rocketmq-client-4.8).
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-rocketmq-client-4.8).
 
 For Maven, add the following to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
@@ -38,10 +36,8 @@ RocketMqTelemetry rocketMqTelemetry;
 void configure(OpenTelemetry openTelemetry, DefaultMQProducerImpl producer, DefaultMQPushConsumerImpl pushConsumer) {
   rocketMqTelemetry = RocketMqTelemetry.create(openTelemetry);
   // For producer.
-  SendMessageHook sendMessageHook = rocketMqTelemetry.newTracingSendMessageHook();
-  producer.registerSendMessageHook(sendMessageHook);
+  producer.registerSendMessageHook(rocketMqTelemetry.newTracingSendMessageHook());
   // For push consumer.
-  ConsumeMessageHook consumeMessageHook = rocketMqTelemetry.newTracingConsumeMessageHook();
-  pushConsumer.registerConsumeMessageHook(consumeMessageHook);
+  pushConsumer.registerConsumeMessageHook(rocketMqTelemetry.newTracingConsumeMessageHook());
 }
 ```
