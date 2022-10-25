@@ -13,6 +13,7 @@ plugins {
 
   id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
+  id("org.owasp.dependencycheck")
 }
 
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
