@@ -6,8 +6,8 @@ Provides OpenTelemetry instrumentation for [Apache RocketMQ](https://rocketmq.ap
 
 ### Add the following dependencies to your project:
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). Minimum version is 1.1.0.
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-rocketmq-client-4.8).
 
 For Maven, add the following to your `pom.xml` dependencies:
 
