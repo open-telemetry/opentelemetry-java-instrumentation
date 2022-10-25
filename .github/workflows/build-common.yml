@@ -86,6 +86,28 @@ jobs:
             exit 1
           fi
 
+  project-root-duplicates-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check project-root-duplicates
+        run: |
+          if cmp build.gradle.kts .github/project-root-duplicates/build.gradle.kts
+          then
+            echo "project-root-duplicates are up-to-date."
+          else
+            echo "project-root-duplicates are not up-to-date, please run 'cp build.gradle.kts .github/project-root-duplicates/' and locally and commit."
+            exit 1
+          fi
+          if cmp settings.gradle.kts .github/project-root-duplicates/settings.gradle.kts
+          then
+            echo "project-root-duplicates are up-to-date."
+          else
+            echo "project-root-duplicates are not up-to-date, please run 'cp settings.gradle.kts .github/project-root-duplicates/' and locally and commit."
+            exit 1
+          fi
+
   assemble:
     runs-on: ubuntu-latest
     steps:
