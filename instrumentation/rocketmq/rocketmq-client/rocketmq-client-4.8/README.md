@@ -1,4 +1,4 @@
-# Settings for the Apache RocketMQ client instrumentation
+# Settings for the Apache RocketMQ Remoting-based client instrumentation
 
 | System property | Type | Default | Description |
 |---|---|---|---|
