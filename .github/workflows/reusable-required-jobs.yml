@@ -1,0 +1,85 @@
+name: Reusable - Required jobs
+
+on:
+  workflow_call:
+    inputs:
+      cache-read-only:
+        type: boolean
+        required: false
+      no-build-cache:
+        type: boolean
+        required: false
+      skip-windows-smoke-tests:
+        type: boolean
+        required: false
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY:
+        required: false
+      GE_CACHE_USERNAME:
+        required: false
+      GE_CACHE_PASSWORD:
+        required: false
+
+jobs:
+  spotless:
+    uses: ./.github/workflows/reusable-spotless.yml
+    with:
+      cache-read-only: ${{ inputs.cache-read-only }}
+      no-build-cache: ${{ inputs.no-build-cache }}
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  license-check:
+    uses: ./.github/workflows/reusable-license-check.yml
+    with:
+      cache-read-only: ${{ inputs.cache-read-only }}
+      no-build-cache: ${{ inputs.no-build-cache }}
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  assemble:
+    uses: ./.github/workflows/reusable-assemble.yml
+    with:
+      cache-read-only: ${{ inputs.cache-read-only }}
+      no-build-cache: ${{ inputs.no-build-cache }}
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      cache-read-only: ${{ inputs.cache-read-only }}
+      no-build-cache: ${{ inputs.no-build-cache }}
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  smoke-test:
+    uses: ./.github/workflows/reusable-smoke-test.yml
+    with:
+      cache-read-only: ${{ inputs.cache-read-only }}
+      no-build-cache: ${{ inputs.no-build-cache }}
+      skip-windows: ${{ inputs.skip-windows-smoke-tests }}
+    secrets:
+      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
+      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+
+  gradle-plugins:
+    uses: ./.github/workflows/reusable-gradle-plugins.yml
+    with:
+      cache-read-only: ${{ inputs.cache-read-only }}
+      no-build-cache: ${{ inputs.no-build-cache }}
+
+  examples:
+    uses: ./.github/workflows/reusable-examples.yml
+    with:
+      cache-read-only: ${{ inputs.cache-read-only }}
+      no-build-cache: ${{ inputs.no-build-cache }}
