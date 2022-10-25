@@ -11,11 +11,6 @@ pluginManagement {
     id("org.xbib.gradle.plugin.jflex") version "1.6.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
   }
-
-  repositories {
-    gradlePluginPortal()
-    mavenCentral()
-  }
 }
 
 plugins {
