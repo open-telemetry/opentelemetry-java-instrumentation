@@ -12,7 +12,7 @@ jobs:
   assign-reviewers:
     runs-on: ubuntu-latest
     steps:
-      - uses: trask/component-owners@main
+      - uses: trask/component-owners@refs/heads/support-file-extensions
         with:
           # this repository is using this action to request doc review
           assign-owners: false
