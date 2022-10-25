@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  required-jobs:
-    uses: ./.github/workflows/reusable-required-jobs.yml
+  common:
+    uses: ./.github/workflows/reusable-common.yml
     with:
       no-build-cache: true
     secrets:
@@ -29,7 +29,7 @@ jobs:
 
   open-issue-on-failure:
     needs:
-      - required-jobs
+      - common
       - test-latest-deps
     if: failure()
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

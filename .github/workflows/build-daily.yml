@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  required-jobs:
-    uses: ./.github/workflows/reusable-required-jobs.yml
+  common:
+    uses: ./.github/workflows/reusable-common.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
@@ -32,7 +32,7 @@ jobs:
 
   open-issue-on-failure:
     needs:
-      - required-jobs
+      - common
       - test-latest-deps
       - muzzle
       - markdown-link-check

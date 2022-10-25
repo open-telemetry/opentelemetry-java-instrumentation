@@ -1,4 +1,4 @@
-name: Reusable - Required jobs
+name: Reusable - Common
 
 on:
   workflow_call:

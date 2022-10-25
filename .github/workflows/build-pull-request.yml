@@ -8,8 +8,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  required-jobs:
-    uses: ./.github/workflows/reusable-required-jobs.yml
+  common:
+    uses: ./.github/workflows/reusable-common.yml
     with:
       # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
@@ -50,16 +50,12 @@ jobs:
     # (muzzle can also fail when a new library version is released to maven central
     # but that happens much less often)
     needs:
-      - required-jobs
+      - common
       - muzzle
     runs-on: ubuntu-latest
     if: always()
     steps:
       - if: |
-          needs.assemble.result != 'success' ||
-          needs.test.result != 'success' ||
-          needs.smoke-test.result != 'success' ||
-          (!startsWith(github.base_ref, 'release/') && needs.muzzle.result != 'success') ||
-          needs.gradle-plugins.result != 'success' ||
-          needs.examples.result != 'success'
+          needs.common.result != 'success' ||
+          (!startsWith(github.base_ref, 'release/') && needs.muzzle.result != 'success')
         run: exit 1
