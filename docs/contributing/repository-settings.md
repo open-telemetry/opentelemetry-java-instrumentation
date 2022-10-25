@@ -53,7 +53,7 @@ Same settings as above for `main`, except:
   [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
   job.
 
-### `dependabot/**/*` and `opentelemetrybot/**/*`
+### `dependabot/**/**` and `opentelemetrybot/*`
 
 * Require status checks to pass before merging: UNCHECKED
 
