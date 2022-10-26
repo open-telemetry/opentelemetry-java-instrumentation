@@ -357,6 +357,7 @@ checkstyle {
 }
 
 dependencyCheck {
+  skipConfigurations.add("compileOnly")
   failBuildOnCVSS = 7f
 }
 
