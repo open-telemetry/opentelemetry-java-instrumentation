@@ -1,3 +1,5 @@
+# the benefit of this over dependabot is that this also analyzes transitive dependencies
+# while dependabot (at least currently) only analyzes top-level dependencies
 name: OWASP dependency check (daily)
 
 on:
