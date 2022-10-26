@@ -356,6 +356,10 @@ checkstyle {
   maxWarnings = 0
 }
 
+dependencyCheck {
+  failBuildOnCVSS = 7f
+}
+
 idea {
   module {
     isDownloadJavadoc = false
