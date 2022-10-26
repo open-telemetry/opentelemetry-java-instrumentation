@@ -6,8 +6,6 @@ on:
   schedule:
     - cron: '30 1 * * *'
   workflow_dispatch:
-  # DEBUGGING
-  pull_request:
 
 jobs:
   analyze:
