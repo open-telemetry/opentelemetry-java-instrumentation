@@ -44,6 +44,13 @@ jobs:
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
 
+  gradle-wrapper-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: gradle/wrapper-validation-action@v1.0.5
+
   license-check:
     runs-on: ubuntu-latest
     steps:
