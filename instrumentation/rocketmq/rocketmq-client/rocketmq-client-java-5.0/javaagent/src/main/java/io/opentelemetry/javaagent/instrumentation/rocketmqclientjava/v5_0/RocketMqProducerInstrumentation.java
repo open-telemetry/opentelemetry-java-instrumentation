@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclientjava.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -41,6 +42,7 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("send0"))
+            .and(isPrivate())
             .and(takesArguments(6))
             .and(
                 takesArgument(
