@@ -8,7 +8,7 @@ on:
 
 jobs:
   common:
-    uses: ./.github/workflows/reusable-common.yml
+    uses: ./.github/workflows/build-common.yml
     with:
       no-build-cache: true
     secrets:

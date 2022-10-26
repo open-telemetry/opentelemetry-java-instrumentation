@@ -9,7 +9,7 @@ on:
 
 jobs:
   common:
-    uses: ./.github/workflows/reusable-common.yml
+    uses: ./.github/workflows/build-common.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
