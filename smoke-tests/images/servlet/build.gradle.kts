@@ -134,7 +134,11 @@ fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfil
   val image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   val jdkImage = if (vm == "hotspot") {
-    if (jdk == "19" || jdk == "20") {
+    if (jdk == "20") {
+      // "The only tags which will continue to receive updates beyond July 2022 will be Early Access
+      // builds (which are sourced from jdk.java.net), as those are not published/supported by any
+      // of the above projects."
+      // (see https://hub.docker.com/_/openjdk)
       "openjdk:$jdk"
     } else {
       "eclipse-temurin:$jdk"
