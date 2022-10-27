@@ -42,7 +42,7 @@ updates:
   - package-ecosystem: "gradle"
     # need to scope gradle dependency updates down in this repo because most of the instrumentations
     # intentionally test against old library versions
-    directory: ".github/dependabot-symlinks"
+    directory: "/.github/dependabot-symlinks"
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
