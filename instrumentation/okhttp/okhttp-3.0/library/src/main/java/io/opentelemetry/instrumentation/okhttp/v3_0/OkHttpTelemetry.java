@@ -66,7 +66,10 @@ public final class OkHttpTelemetry {
    * @return a {@link Call.Factory} for creating new {@link Call} instances.
    */
   public Call.Factory newCallFactory(OkHttpClient baseClient) {
-    OkHttpClient tracingClient = baseClient.newBuilder().addInterceptor(newInterceptor()).build();
+    OkHttpClient.Builder builder = baseClient.newBuilder();
+    // add our interceptor before other interceptors
+    builder.interceptors().add(0, newInterceptor());
+    OkHttpClient tracingClient = builder.build();
     return new TracingCallFactory(tracingClient);
   }
 }
