@@ -6,13 +6,16 @@
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -28,6 +32,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.internal.http.HttpMethod;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request> {
 
@@ -122,6 +127,64 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
           }
 
           return attributes;
+        });
+  }
+
+  private static class TestInterceptor implements Interceptor {
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+      // make copy of the request
+      Request request = chain.request().newBuilder().build();
+
+      return chain.proceed(request);
+    }
+  }
+
+  @Test
+  void requestWithCustomInterceptor() throws Throwable {
+    String method = "GET";
+    URI uri = resolveAddress("/success");
+
+    RequestResult result = new RequestResult(() -> testing.runWithSpan("child", () -> {}));
+    OkHttpClient.Builder builder = getClientBuilder(false);
+    builder.addInterceptor(new TestInterceptor());
+    Call.Factory testClient = createCallFactory(builder);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Request request = buildRequest(method, uri, Collections.emptyMap());
+          testClient
+              .newCall(request)
+              .enqueue(
+                  new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                      result.complete(e);
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) {
+                      try (ResponseBody ignored = response.body()) {
+                        result.complete(response.code());
+                      }
+                    }
+                  });
+        });
+
+    assertThat(result.get()).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span -> span.hasName("HTTP GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+              span ->
+                  span.hasName("test-http-server")
+                      .hasKind(SpanKind.SERVER)
+                      .hasParent(trace.getSpan(1)),
+              span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
   }
 }
