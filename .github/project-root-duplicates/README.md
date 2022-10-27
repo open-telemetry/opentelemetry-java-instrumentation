@@ -1,5 +1,5 @@
 This directory and the two symlinks in it are used by the
-[dependabot configuration](../.github/dependabot.yml), because we can't include the root directory
+[dependabot configuration](../dependabot.yml), because we can't include the root directory
 in the dependabot scanning since then it will pick up all of the old library versions that we
 intentionally compile and test against.
 
