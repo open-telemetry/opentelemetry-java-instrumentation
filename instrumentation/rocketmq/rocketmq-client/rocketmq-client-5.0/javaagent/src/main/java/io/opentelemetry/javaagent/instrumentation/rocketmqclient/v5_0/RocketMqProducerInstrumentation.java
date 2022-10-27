@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -66,7 +65,7 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
       Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter =
           RocketMqSingletons.producerInstrumenter();
       int count = messages.size();
-      List<SettableFuture<SendReceiptImpl>> futures = FutureConverter.covert(future0, count);
+      List<SettableFuture<SendReceiptImpl>> futures = FutureConverter.convert(future0, count);
       for (int i = 0; i < count; i++) {
         PublishingMessageImpl message = messages.get(i);
 
@@ -90,52 +89,13 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
         Context context = instrumenter.start(parentContext, message);
         Futures.addCallback(
             future,
-            new SpanFinishingCallback<>(instrumenter, context, message),
+            new SpanFinishingCallback(instrumenter, context, message),
             MoreExecutors.directExecutor());
       }
     }
   }
 
-  /** Future converter, which covert future of list into list of future. */
-  public static class FutureConverter {
-
-    private FutureConverter() {}
-
-    public static <T> List<SettableFuture<T>> covert(SettableFuture<List<T>> future, int num) {
-      List<SettableFuture<T>> futures = new ArrayList<>(num);
-      for (int i = 0; i < num; i++) {
-        SettableFuture<T> f = SettableFuture.create();
-        futures.add(f);
-      }
-      ListFutureCallback<T> futureCallback = new ListFutureCallback<>(futures);
-      Futures.addCallback(future, futureCallback, MoreExecutors.directExecutor());
-      return futures;
-    }
-  }
-
-  public static class ListFutureCallback<T> implements FutureCallback<List<T>> {
-    private final List<SettableFuture<T>> futures;
-
-    public ListFutureCallback(List<SettableFuture<T>> futures) {
-      this.futures = futures;
-    }
-
-    @Override
-    public void onSuccess(List<T> result) {
-      for (int i = 0; i < result.size(); i++) {
-        futures.get(i).set(result.get(i));
-      }
-    }
-
-    @Override
-    public void onFailure(Throwable t) {
-      for (SettableFuture<T> future : futures) {
-        future.setException(t);
-      }
-    }
-  }
-
-  public static class SpanFinishingCallback<T> implements FutureCallback<T> {
+  public static class SpanFinishingCallback implements FutureCallback<SendReceiptImpl> {
     private final Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter;
     private final Context context;
     private final PublishingMessageImpl message;
@@ -150,8 +110,7 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
     }
 
     @Override
-    public void onSuccess(T result) {
-      SendReceiptImpl sendReceipt = (SendReceiptImpl) result;
+    public void onSuccess(SendReceiptImpl sendReceipt) {
       instrumenter.end(context, message, sendReceipt, null);
     }
 
