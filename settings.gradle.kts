@@ -84,7 +84,9 @@ buildCache {
 
 rootProject.name = "opentelemetry-java-instrumentation"
 
-includeBuild("conventions")
+// this is only split out due to a dependabot limitation
+// for details see .github/project-root-duplicates/README.md
+apply(from = "include-conventions.gradle.kts")
 
 include(":custom-checks")
 
