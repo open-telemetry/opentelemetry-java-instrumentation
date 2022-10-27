@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -70,9 +69,7 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
         PublishingMessageImpl message = messages.get(i);
 
         // Try to extract parent context.
-        VirtualField<PublishingMessageImpl, Context> virtualField =
-            VirtualField.find(PublishingMessageImpl.class, Context.class);
-        Context parentContext = virtualField.get(message);
+        Context parentContext = VirtualFieldStore.getContextByMessage(message);
         if (parentContext == null) {
           parentContext = Context.current();
         }

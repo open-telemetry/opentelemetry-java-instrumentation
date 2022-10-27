@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
@@ -61,13 +60,7 @@ final class RocketMqPublishingMessageImplInstrumentation implements TypeInstrume
      */
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This PublishingMessageImpl message) {
-      VirtualField<PublishingMessageImpl, Context> virtualField =
-          VirtualField.find(PublishingMessageImpl.class, Context.class);
-      Context context = virtualField.get(message);
-      if (context == null) {
-        context = Context.current();
-        virtualField.set(message, context);
-      }
+      VirtualFieldStore.setContextByMessage(message, Context.current());
     }
   }
 
@@ -82,9 +75,7 @@ final class RocketMqPublishingMessageImplInstrumentation implements TypeInstrume
         return;
       }
       PublishingMessageImpl message = (PublishingMessageImpl) messageImpl;
-      VirtualField<PublishingMessageImpl, Map<String, String>> virtualField =
-          VirtualField.find(PublishingMessageImpl.class, Map.class);
-      Map<String, String> extraProperties = virtualField.get(message);
+      Map<String, String> extraProperties = VirtualFieldStore.getExtraPropertiesByMessage(message);
       if (extraProperties != null) {
         properties.putAll(extraProperties);
       }

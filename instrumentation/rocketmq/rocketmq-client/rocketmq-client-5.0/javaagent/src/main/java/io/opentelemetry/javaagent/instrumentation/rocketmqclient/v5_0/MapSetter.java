@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -20,12 +19,10 @@ enum MapSetter implements TextMapSetter<PublishingMessageImpl> {
     if (message == null) {
       return;
     }
-    VirtualField<PublishingMessageImpl, Map<String, String>> virtualField =
-        VirtualField.find(PublishingMessageImpl.class, Map.class);
-    Map<String, String> extraProperties = virtualField.get(message);
+    Map<String, String> extraProperties = VirtualFieldStore.getExtraPropertiesByMessage(message);
     if (extraProperties == null) {
       extraProperties = new HashMap<>();
-      virtualField.set(message, extraProperties);
+      VirtualFieldStore.setExtraPropertiesByMessage(message, extraProperties);
     }
     extraProperties.put(key, value);
   }
