@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.opensearch.client")
     module.set("opensearch-rest-client")
-    versions.set("[2.0,)")
+    versions.set("[1.0,)")
     assertInverse.set(true)
   }
 
