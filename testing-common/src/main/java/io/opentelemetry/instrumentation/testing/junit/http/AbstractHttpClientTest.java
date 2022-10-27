@@ -140,7 +140,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return READ_TIMEOUT;
   }
 
-  private InstrumentationTestRunner testing;
+  protected InstrumentationTestRunner testing;
   private HttpClientTestServer server;
 
   private final HttpClientTestOptions options = new HttpClientTestOptions();
