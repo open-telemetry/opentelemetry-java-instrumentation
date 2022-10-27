@@ -359,7 +359,7 @@ checkstyle {
 dependencyCheck {
   skipConfigurations = listOf("errorprone", "checkstyle", "annotationProcessor")
   suppressionFile = "buildscripts/dependency-check-suppressions.xml"
-  failBuildOnCVSS = 7f
+  failBuildOnCVSS = 7.0f // fail on high or critical CVE
 }
 
 idea {
