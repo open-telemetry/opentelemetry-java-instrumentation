@@ -1,4 +1,4 @@
-# Library Instrumentation for Apache RocketMQ Remoting-based Client 4.0.0+
+# Library Instrumentation for Apache RocketMQ remoting-based client 4.0.0+
 
 Provides OpenTelemetry instrumentation for [Apache RocketMQ](https://rocketmq.apache.org/) remoting-based client.
 
