@@ -9,10 +9,10 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 /**
- * LabelExtractors are responsible for obtaining values for populating Labels, i.e. Measurement
- * attributes.
+ * MetricAttributeExtractors are responsible for obtaining values for populating metric attributes,
+ * i.e. measurement attributes.
  */
-public interface LabelExtractor {
+public interface MetricAttributeExtractor {
 
   String extractValue(MBeanServer server, ObjectName objectName);
 }

@@ -11,8 +11,8 @@ rules:
        unit: '{messages}'
 
  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec
-   label:
-     type: fetch
+   metricAttribute:
+     type: const(fetch)
    mapping:
      Count:
        metric: kafka.request.count
@@ -21,8 +21,8 @@ rules:
        unit: '{requests}'
 
  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec
-   label:
-     type: produce
+   metricAttribute:
+     type: const(produce)
    mapping:
      Count:
        metric: kafka.request.count
@@ -31,8 +31,8 @@ rules:
        unit: '{requests}'
 
  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
-   label:
-     type: fetch
+   metricAttribute:
+     type: const(fetch)
    mapping:
      Count:
        metric: kafka.request.failed
@@ -41,8 +41,8 @@ rules:
        unit: '{requests}'
 
  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec
-   label:
-     type: produce
+   metricAttribute:
+     type: const(produce)
    mapping:
      Count:
        metric: kafka.request.failed
@@ -54,7 +54,7 @@ rules:
      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce
      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer
      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchFollower
-   label:
+   metricAttribute:
      type: param(request)
    unit: ms
    mapping:
@@ -80,8 +80,8 @@ rules:
        unit: '{requests}'
 
  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec
-   label:
-     direction: in
+   metricAttribute:
+     direction: const(in)
    mapping:
      Count:
        metric: kafka.network.io
@@ -90,8 +90,8 @@ rules:
        unit: By
 
  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec
-   label:
-     direction: out
+   metricAttribute:
+     direction: const(out)
    mapping:
      Count:
        metric: kafka.network.io
@@ -102,7 +102,7 @@ rules:
  - beans:
      - kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,delayedOperation=Produce
      - kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,delayedOperation=Fetch
-   label:
+   metricAttribute:
      type: param(delayedOperation)
    mapping:
      Value:
@@ -136,8 +136,8 @@ rules:
        unit: '{partitions}'
 
  - bean: kafka.server:type=ReplicaManager,name=IsrShrinksPerSec
-   label:
-     operation: shrink
+   metricAttribute:
+     operation: const(shrink)
    mapping:
      Count:
        metric: kafka.isr.operation.count
@@ -146,8 +146,8 @@ rules:
        unit: '{operations}'
 
  - bean: kafka.server:type=ReplicaManager,name=IsrExpandsPerSec
-   label:
-     operation: expand
+   metricAttribute:
+     operation: const(expand)
    mapping:
      Count:
        metric: kafka.isr.operation.count

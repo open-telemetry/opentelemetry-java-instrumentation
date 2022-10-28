@@ -17,31 +17,32 @@ public class MetricExtractor {
   private final MetricBanner banner;
 
   // Defines the way to access the metric value (a number)
-  private final AttributeValueExtractor attributeExtractor;
+  private final BeanAttributeExtractor attributeExtractor;
 
   // Defines the Measurement attributes to be used when reporting the metric value.
-  // We call them labels to avoid confusion with MBean attributes
-  private final MetricLabel[] labels;
+  private final MetricAttribute[] attributes;
 
   private volatile DetectionStatus status;
 
   public MetricExtractor(
-      AttributeValueExtractor attributeExtractor, MetricBanner banner, MetricLabel... labels) {
+      BeanAttributeExtractor attributeExtractor,
+      MetricBanner banner,
+      MetricAttribute... attributes) {
     this.attributeExtractor = attributeExtractor;
     this.banner = banner;
-    this.labels = labels;
+    this.attributes = attributes;
   }
 
   MetricBanner getBanner() {
     return banner;
   }
 
-  AttributeValueExtractor getMetricValueExtractor() {
+  BeanAttributeExtractor getMetricValueExtractor() {
     return attributeExtractor;
   }
 
-  MetricLabel[] getLabels() {
-    return labels;
+  MetricAttribute[] getAttributes() {
+    return attributes;
   }
 
   void setStatus(DetectionStatus status) {

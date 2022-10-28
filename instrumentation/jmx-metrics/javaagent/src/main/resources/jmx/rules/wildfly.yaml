@@ -1,7 +1,7 @@
 ---
 rules:
  - bean: jboss.as:deployment=*,subsystem=undertow
-   label:
+   metricAttribute:
      deployment: param(deployment)
    prefix: wildfly.session.
    type: counter
@@ -13,7 +13,7 @@ rules:
      expiredSessions:
      rejectedSessions:
  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
-   label:
+   metricAttribute:
      server: param(server)
      listener: param(http-listener)
    prefix: wildfly.request.
@@ -25,7 +25,7 @@ rules:
        unit: ns
      errorCount:
  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
-   label:
+   metricAttribute:
      server: param(server)
      listener: param(http-listener)
    type: counter
@@ -34,27 +34,27 @@ rules:
      bytesSent:
        metric: wildfly.network.io
        desc: Total number of bytes transferred
-       label:
-         direction: out
+       metricAttribute:
+         direction: const(out)
      bytesReceived:
        metric: wildfly.network.io
        desc: Total number of bytes transferred
-       label:
-         direction: in
+       metricAttribute:
+         direction: const(in)
  - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
    unit: 1
-   label:
+   metricAttribute:
      data_source: param(data-source)
    mapping:
      ActiveCount:
        metric: wildfly.db.client.connections.usage
-       label:
-         state: used
+       metricAttribute:
+         state: const(used)
        desc: The number of open jdbc connections
      IdleCount:
        metric: wildfly.db.client.connections.usage
-       label:
-         state: idle
+       metricAttribute:
+         state: const(idle)
        desc: The number of open jdbc connections
      WaitCount:
        metric: wildfly.db.client.connections.WaitCount
@@ -68,16 +68,16 @@ rules:
        metric: transaction.NumberOfTransactions
      numberOfApplicationRollbacks:
        metric: rollback.count
-       label:
-         cause: application
+       metricAttribute:
+         cause: const(application)
        desc: The total number of transactions rolled back
      numberOfResourceRollbacks:
        metric: rollback.count
-       label:
-         cause: resource
+       metricAttribute:
+         cause: const(resource)
        desc: The total number of transactions rolled back
      numberOfSystemRollbacks:
        metric: rollback.count
-       label:
-         cause: system
+       metricAttribute:
+         cause: const(system)
        desc: The total number of transactions rolled back

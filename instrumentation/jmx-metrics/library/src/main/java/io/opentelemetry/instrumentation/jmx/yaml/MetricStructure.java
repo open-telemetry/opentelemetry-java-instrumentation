@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.yaml;
 
+import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
 import io.opentelemetry.instrumentation.jmx.engine.MetricBanner;
-import io.opentelemetry.instrumentation.jmx.engine.MetricLabel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,26 +14,26 @@ import java.util.Map;
 /**
  * An abstract class containing skeletal info about Metrics:
  * <li>the metric type
- * <li>the metric attributes (labels)
+ * <li>the metric attributes
  * <li>the unit
  *
- *     <p>Known subclasses are JMXRule and Metric.
+ *     <p>Known subclasses are JmxRule and Metric.
  */
 abstract class MetricStructure {
 
   // Used by the YAML parser
   //    type: TYPE
-  //    label:
+  //    metricAttribute:
   //      KEY1: SPECIFICATION1
   //      KEY2: SPECIFICATION2
   //    unit: UNIT
 
   private String type; // unused, for YAML parser only
-  private Map<String, String> label; // unused, for YAML parser only
+  private Map<String, String> metricAttribute; // unused, for YAML parser only
   private String unit;
 
   private MetricBanner.Type metricType;
-  private List<MetricLabel> labels;
+  private List<MetricAttribute> metricAttributes;
 
   public String getType() {
     return type;
@@ -60,30 +60,31 @@ abstract class MetricStructure {
   }
 
   /**
-   * When the YAML parser sets the labels, convert them immediately to MetricLabels. Any errors
-   * during conversion will show in the context of the parsed YAML file.
+   * When the YAML parser sets the metric attributes (as Strings), convert them immediately to
+   * MetricAttribute objects. Any errors during conversion will show in the context of the parsed
+   * YAML file.
    *
-   * @param label the mapping of metric attribute keys to evaluating snippets
+   * @param map the mapping of metric attribute keys to evaluating snippets
    */
-  public void setLabel(Map<String, String> label) {
-    this.label = label;
-    // pre-build the Labels
-    List<MetricLabel> labelList = new ArrayList<>();
-    addLabels(labelList, label);
-    this.labels = labelList;
+  public void setMetricAttribute(Map<String, String> map) {
+    this.metricAttribute = map;
+    // pre-build the MetricAttributes
+    List<MetricAttribute> attrList = new ArrayList<>();
+    addMetricAttributes(attrList, map);
+    this.metricAttributes = attrList;
   }
 
   // Used only for testing
-  public Map<String, String> getLabel() {
-    return label;
+  public Map<String, String> getMetricAttribute() {
+    return metricAttribute;
   }
 
   public MetricBanner.Type getMetricType() {
     return metricType;
   }
 
-  protected List<MetricLabel> getLabels() {
-    return labels;
+  protected List<MetricAttribute> getAttributeList() {
+    return metricAttributes;
   }
 
   protected void requireNonEmpty(String s, String msg) {
@@ -92,23 +93,25 @@ abstract class MetricStructure {
     }
   }
 
-  private static void addLabels(List<MetricLabel> list, Map<String, String> tagMap) {
-    if (tagMap != null) {
-      for (String key : tagMap.keySet()) {
-        String target = tagMap.get(key);
+  private static void addMetricAttributes(
+      List<MetricAttribute> list, Map<String, String> metricAttributeMap) {
+    if (metricAttributeMap != null) {
+      for (String key : metricAttributeMap.keySet()) {
+        String target = metricAttributeMap.get(key);
         if (target == null) {
-          throw new IllegalStateException("nothing specified for label key '" + key + "'");
+          throw new IllegalStateException(
+              "nothing specified for metric attribute key '" + key + "'");
         }
-        list.add(buildLabel(key, target.trim()));
+        list.add(buildMetricAttribute(key, target.trim()));
       }
     }
   }
 
-  private static MetricLabel buildLabel(String key, String target) {
+  private static MetricAttribute buildMetricAttribute(String key, String target) {
     // The recognized forms of target are:
     //  - param(STRING)
-    //  - attr(STRING)
-    //  - STRING
+    //  - beanattr(STRING)
+    //  - const(STRING)
     // where STRING is the name of the corresponding parameter key, attribute name,
     // or the direct value to use
     int k = target.indexOf(')');
@@ -116,15 +119,21 @@ abstract class MetricStructure {
     // Check for one of the cases as above
     if (target.startsWith("param(")) {
       if (k > 0) {
-        return new MetricLabel(key, MetricLabel.fromParameter(target.substring(6, k).trim()));
+        return new MetricAttribute(
+            key, MetricAttribute.fromObjectNameParameter(target.substring(6, k).trim()));
       }
-    } else if (target.startsWith("attr(")) {
+    } else if (target.startsWith("beanattr(")) {
       if (k > 0) {
-        return new MetricLabel(key, MetricLabel.fromAttribute(target.substring(5, k).trim()));
+        return new MetricAttribute(
+            key, MetricAttribute.fromBeanAttribute(target.substring(9, k).trim()));
       }
-    } else if (k < 0) {
-      return new MetricLabel(key, MetricLabel.fromConstant(target));
+    } else if (target.startsWith("const(")) {
+      if (k > 0) {
+        return new MetricAttribute(
+            key, MetricAttribute.fromConstant(target.substring(6, k).trim()));
+      }
     }
-    throw new IllegalArgumentException("Invalid label specification for '" + key + "'");
+
+    throw new IllegalArgumentException("Invalid metric attribute specification for '" + key + "'");
   }
 }

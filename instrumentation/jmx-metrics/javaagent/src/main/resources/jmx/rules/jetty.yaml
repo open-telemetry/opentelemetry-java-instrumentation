@@ -5,7 +5,7 @@ rules:
     unit: s
     prefix: jetty.session.
     type: updowncounter
-    label:
+    metricAttribute:
       resource: param(context)
     mapping:
       sessionsCreated:
@@ -38,7 +38,7 @@ rules:
 
   - bean: org.eclipse.jetty.io:context=*,type=managedselector,id=*
     prefix: jetty.io.
-    label:
+    metricAttribute:
       resource: param(context)
       id: param(id)
     mapping:

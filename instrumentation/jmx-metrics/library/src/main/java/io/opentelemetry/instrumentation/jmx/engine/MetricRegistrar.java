@@ -144,8 +144,8 @@ class MetricRegistrar {
           Number metricValue =
               extractor.getMetricValueExtractor().extractNumericalAttribute(server, objectName);
           if (metricValue != null) {
-            // get the labels
-            Attributes attr = createLabels(server, objectName, extractor);
+            // get the metric attributes
+            Attributes attr = createMetricAttributes(server, objectName, extractor);
             measurement.record(metricValue.doubleValue(), attr);
           }
         }
@@ -166,8 +166,8 @@ class MetricRegistrar {
           Number metricValue =
               extractor.getMetricValueExtractor().extractNumericalAttribute(server, objectName);
           if (metricValue != null) {
-            // get the labels
-            Attributes attr = createLabels(server, objectName, extractor);
+            // get the metric attributes
+            Attributes attr = createMetricAttributes(server, objectName, extractor);
             measurement.record(metricValue.longValue(), attr);
           }
         }
@@ -176,17 +176,17 @@ class MetricRegistrar {
   }
 
   /*
-   * An auxiliary method for collecting labels (Measurement attributes) to go along
+   * An auxiliary method for collecting measurement attributes to go along
    * the metric values
    */
-  static Attributes createLabels(
+  static Attributes createMetricAttributes(
       MBeanServer server, ObjectName objectName, MetricExtractor extractor) {
-    MetricLabel[] labels = extractor.getLabels();
+    MetricAttribute[] metricAttributes = extractor.getAttributes();
     AttributesBuilder attrBuilder = Attributes.builder();
-    for (MetricLabel label : labels) {
-      String labelValue = label.extractLabelValue(server, objectName);
-      if (labelValue != null) {
-        attrBuilder = attrBuilder.put(label.getLabelName(), labelValue);
+    for (MetricAttribute metricAttribute : metricAttributes) {
+      String attributeValue = metricAttribute.acquireAttributeValue(server, objectName);
+      if (attributeValue != null) {
+        attrBuilder = attrBuilder.put(metricAttribute.getAttributeName(), attributeValue);
       }
     }
     return attrBuilder.build();

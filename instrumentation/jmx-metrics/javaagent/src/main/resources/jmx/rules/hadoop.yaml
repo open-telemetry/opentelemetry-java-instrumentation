@@ -3,7 +3,7 @@ rules:
  - bean: Hadoop:service=NameNode,name=FSNamesystem
    unit: 1
    prefix: hadoop.
-   label:
+   metricAttribute:
      node_name: param(tag.Hostname)
    mapping:
      CapacityUsed:
@@ -35,8 +35,8 @@ rules:
        type: updowncounter
        unit: '{volumes}'
        desc: Total number of volume failures across all data nodes
-       label:
-         direction: sent
+       metricAttribute:
+         direction: const(sent)
      FilesTotal:
        metric: file.FilesTotal
        type: updowncounter
@@ -52,12 +52,12 @@ rules:
        type: updowncounter
        unit: '{nodes}'
        desc: The Number of data nodes
-       label:
-         state: live
+       metricAttribute:
+         state: const(live)
      NumDeadDataNodes:
        metric: datenode.Count
        type: updowncounter
        unit: '{nodes}'
        desc: The Number of data nodes
-       label:
-         state: dead
+       metricAttribute:
+         state: const(dead)

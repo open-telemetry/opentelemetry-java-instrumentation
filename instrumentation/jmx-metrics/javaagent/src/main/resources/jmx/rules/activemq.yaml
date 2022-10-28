@@ -4,7 +4,7 @@ rules:
   - beans:
       - org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=*
       - org.apache.activemq:type=Broker,brokerName=*,destinationType=Topic,destinationName=*
-    label:
+    metricAttribute:
       destination: param(destinationName)
       broker: param(brokerName)
     prefix: activemq.
@@ -49,6 +49,8 @@ rules:
         desc: The average time a message was held on this destination
 
   - bean: org.apache.activemq:type=Broker,brokerName=*
+    metricAttribute:
+      broker: param(brokerName)
     prefix: activemq.
     unit: '%'
     type: gauge

@@ -3,7 +3,7 @@ rules:
  - bean: Catalina:type=GlobalRequestProcessor,name=*
    unit: 1
    prefix: http.server.tomcat.
-   label:
+   metricAttribute:
      name: param(name)
    mapping:
      errorCount:
@@ -29,20 +29,20 @@ rules:
        type: counter
        unit: By
        desc: The number of bytes transmitted
-       label:
-         direction: received
+       metricAttribute:
+         direction: const(received)
      bytesSent:
        metric: traffic
        type: counter
        unit: By
        desc: The number of bytes transmitted
-       label:
-         direction: sent
+       metricAttribute:
+         direction: const(sent)
  - bean: Catalina:type=Manager,host=localhost,context=*
    unit: 1
    prefix: http.server.tomcat.
    type: updowncounter
-   label:
+   metricAttribute:
      context: param(context)
    mapping:
      activeSessions:
@@ -52,16 +52,16 @@ rules:
    unit: '{threads}'
    prefix: http.server.tomcat.
    type: updowncounter
-   label:
+   metricAttribute:
      name: param(name)
    mapping:
      currentThreadCount:
        metric: threads
        desc: Thread Count of the Thread Pool
-       label:
-         state: idle
+       metricAttribute:
+         state: const(idle)
      currentThreadsBusy:
        metric: threads
        desc: Thread Count of the Thread Pool
-       label:
-         state: busy
+       metricAttribute:
+         state: const(busy)

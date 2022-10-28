@@ -22,9 +22,9 @@ import javax.management.openmbean.TabularData;
  * A class responsible for extracting attribute values from MBeans. Objects of this class are
  * immutable.
  */
-public class AttributeValueExtractor implements LabelExtractor {
+public class BeanAttributeExtractor implements MetricAttributeExtractor {
 
-  private static final Logger logger = Logger.getLogger(AttributeValueExtractor.class.getName());
+  private static final Logger logger = Logger.getLogger(BeanAttributeExtractor.class.getName());
 
   // The attribute name to be used during value extraction from MBean
   private final String baseName;
@@ -37,10 +37,10 @@ public class AttributeValueExtractor implements LabelExtractor {
    * Verify the attribute name and create a corresponding extractor object.
    *
    * @param rawName the attribute name, can be a reference to composite values
-   * @return the corresponding LabelValueExtractor
+   * @return the corresponding BeanAttributeExtractor
    * @throws IllegalArgumentException if the attribute name is malformed
    */
-  public static AttributeValueExtractor fromName(String rawName) {
+  public static BeanAttributeExtractor fromName(String rawName) {
     if (rawName.isEmpty()) {
       throw new IllegalArgumentException("Empty attribute name");
     }
@@ -48,7 +48,7 @@ public class AttributeValueExtractor implements LabelExtractor {
     // Check if a CompositeType value is expected
     int k = rawName.indexOf('.');
     if (k < 0) {
-      return new AttributeValueExtractor(rawName);
+      return new BeanAttributeExtractor(rawName);
     }
 
     // Set up extraction from CompositeType values
@@ -65,12 +65,12 @@ public class AttributeValueExtractor implements LabelExtractor {
         throw new IllegalArgumentException("Invalid attribute name '" + rawName + "'");
       }
     }
-    return new AttributeValueExtractor(baseName, components);
+    return new BeanAttributeExtractor(baseName, components);
   }
 
-  public AttributeValueExtractor(String baseName, String... nameChain) {
+  public BeanAttributeExtractor(String baseName, String... nameChain) {
     if (baseName == null || nameChain == null) {
-      throw new IllegalArgumentException("null argument for AttributeValueExtractor");
+      throw new IllegalArgumentException("null argument for BeanAttributeExtractor");
     }
     this.baseName = baseName;
     this.nameChain = nameChain;

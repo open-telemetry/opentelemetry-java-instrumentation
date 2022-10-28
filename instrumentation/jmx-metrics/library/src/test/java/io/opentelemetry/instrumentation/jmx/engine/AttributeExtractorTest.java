@@ -102,7 +102,7 @@ class AttributeExtractorTest {
 
   @Test
   void testByteAttribute() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("ByteAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("ByteAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info == null).isFalse();
     assertThat(info.usesDoubleValues()).isFalse();
@@ -110,7 +110,7 @@ class AttributeExtractorTest {
 
   @Test
   void testByteAttributeValue() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("ByteAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("ByteAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
     assertThat(number == null).isFalse();
     assertThat(number.longValue() == 10).isTrue();
@@ -118,7 +118,7 @@ class AttributeExtractorTest {
 
   @Test
   void testShortAttribute() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("ShortAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("ShortAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info == null).isFalse();
     assertThat(info.usesDoubleValues()).isFalse();
@@ -126,7 +126,7 @@ class AttributeExtractorTest {
 
   @Test
   void testShortAttributeValue() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("ShortAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("ShortAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
     assertThat(number == null).isFalse();
     assertThat(number.longValue() == 11).isTrue();
@@ -134,7 +134,7 @@ class AttributeExtractorTest {
 
   @Test
   void testIntAttribute() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("IntAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("IntAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info == null).isFalse();
     assertThat(info.usesDoubleValues()).isFalse();
@@ -142,7 +142,7 @@ class AttributeExtractorTest {
 
   @Test
   void testIntAttributeValue() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("IntAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("IntAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
     assertThat(number == null).isFalse();
     assertThat(number.longValue() == 12).isTrue();
@@ -150,7 +150,7 @@ class AttributeExtractorTest {
 
   @Test
   void testLongAttribute() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("LongAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("LongAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info == null).isFalse();
     assertThat(info.usesDoubleValues()).isFalse();
@@ -158,7 +158,7 @@ class AttributeExtractorTest {
 
   @Test
   void testLongAttributeValue() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("LongAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("LongAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
     assertThat(number == null).isFalse();
     assertThat(number.longValue() == 13).isTrue();
@@ -166,7 +166,7 @@ class AttributeExtractorTest {
 
   @Test
   void testFloatAttribute() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("FloatAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("FloatAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info == null).isFalse();
     assertThat(info.usesDoubleValues()).isTrue();
@@ -174,7 +174,7 @@ class AttributeExtractorTest {
 
   @Test
   void testFloatAttributeValue() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("FloatAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("FloatAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
     assertThat(number == null).isFalse();
     assertThat(number.doubleValue() == 14.0).isTrue(); // accurate representation
@@ -182,7 +182,7 @@ class AttributeExtractorTest {
 
   @Test
   void testDoubleAttribute() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("DoubleAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("DoubleAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info == null).isFalse();
     assertThat(info.usesDoubleValues()).isTrue();
@@ -190,7 +190,7 @@ class AttributeExtractorTest {
 
   @Test
   void testDoubleAttributeValue() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("DoubleAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("DoubleAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
     assertThat(number == null).isFalse();
     assertThat(number.doubleValue() == 15.0).isTrue(); // accurate representation
@@ -198,7 +198,7 @@ class AttributeExtractorTest {
 
   @Test
   void testStringAttribute() throws Exception {
-    AttributeValueExtractor extractor = new AttributeValueExtractor("StringAttribute");
+    BeanAttributeExtractor extractor = new BeanAttributeExtractor("StringAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info == null).isTrue();
   }

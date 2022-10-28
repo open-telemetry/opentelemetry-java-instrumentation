@@ -42,9 +42,9 @@ class RuleParserTest {
           + "  - beans:\n"
           + "      - OBJECT:NAME1=*\n"
           + "      - OBJECT:NAME2=*\n"
-          + "    label:\n"
+          + "    metricAttribute:\n"
           + "      LABEL_KEY1: param(PARAMETER)\n"
-          + "      LABEL_KEY2: attr(ATTRIBUTE)\n"
+          + "      LABEL_KEY2: beanattr(ATTRIBUTE)\n"
           + "    prefix: METRIC_NAME_PREFIX\n"
           + "    mapping:\n"
           + "      ATTRIBUTE1:\n"
@@ -52,8 +52,8 @@ class RuleParserTest {
           + "        type: Gauge\n"
           + "        desc: DESCRIPTION1\n"
           + "        unit: UNIT1\n"
-          + "        label:\n"
-          + "          LABEL_KEY3: CONSTANT\n"
+          + "        metricAttribute:\n"
+          + "          LABEL_KEY3: const(CONSTANT)\n"
           + "      ATTRIBUTE2:\n"
           + "        metric: METRIC_NAME2\n"
           + "        desc: DESCRIPTION2\n"
@@ -77,7 +77,7 @@ class RuleParserTest {
 
     JmxRule def1 = defs.get(0);
     assertThat(def1.getBeans().size() == 2).isTrue();
-    assertThat(def1.getLabel().size() == 2).isTrue();
+    assertThat(def1.getMetricAttribute().size() == 2).isTrue();
     Map<String, Metric> attr = def1.getMapping();
     assertThat(attr == null).isFalse();
     assertThat(attr.size() == 4).isTrue();
@@ -87,9 +87,9 @@ class RuleParserTest {
     assertThat("METRIC_NAME1".equals(m1.getMetric())).isTrue();
     assertThat(m1.getMetricType() == MetricBanner.Type.GAUGE).isTrue();
     assertThat("UNIT1".equals(m1.getUnit())).isTrue();
-    assertThat(m1.getLabel() == null).isFalse();
-    assertThat(m1.getLabel().size() == 1).isTrue();
-    assertThat("CONSTANT".equals(m1.getLabel().get("LABEL_KEY3"))).isTrue();
+    assertThat(m1.getMetricAttribute() == null).isFalse();
+    assertThat(m1.getMetricAttribute().size() == 1).isTrue();
+    assertThat("const(CONSTANT)".equals(m1.getMetricAttribute().get("LABEL_KEY3"))).isTrue();
   }
 
   private static final String CONF3 =
@@ -114,7 +114,7 @@ class RuleParserTest {
 
     JmxRule def1 = defs.get(0);
     assertThat(def1.getBean() == null).isFalse();
-    assertThat(def1.getLabel() == null).isTrue();
+    assertThat(def1.getMetricAttribute() == null).isTrue();
     Map<String, Metric> attr = def1.getMapping();
     assertThat(attr.size() == 5).isTrue();
 
@@ -131,9 +131,9 @@ class RuleParserTest {
       "---\n"
           + "rules:\n"
           + "  - bean: my-test:type=4\n"
-          + "    label:\n"
+          + "    metricAttribute:\n"
           + "      LABEL_KEY1: param(PARAMETER)\n"
-          + "      LABEL_KEY2: attr(ATTRIBUTE)\n"
+          + "      LABEL_KEY2: beanattr(ATTRIBUTE)\n"
           + "    prefix: PREFIX.\n"
           + "    type: upDownCounter\n"
           + "    unit: DEFAULT_UNIT\n"
@@ -143,8 +143,8 @@ class RuleParserTest {
           + "        type: counter\n"
           + "        desc: DESCRIPTION1\n"
           + "        unit: UNIT1\n"
-          + "        label:\n"
-          + "          LABEL_KEY3: CONSTANT\n"
+          + "        metricAttribute:\n"
+          + "          LABEL_KEY3: const(CONSTANT)\n"
           + "      ATTRIBUTE2:\n"
           + "        metric: METRIC_NAME2\n"
           + "        desc: DESCRIPTION2\n"
@@ -165,9 +165,9 @@ class RuleParserTest {
     assertThat(metricDef.getMetricExtractors().length == 3).isTrue();
 
     MetricExtractor m1 = metricDef.getMetricExtractors()[0];
-    AttributeValueExtractor a1 = m1.getMetricValueExtractor();
+    BeanAttributeExtractor a1 = m1.getMetricValueExtractor();
     assertThat("A.b".equals(a1.getAttributeName())).isTrue();
-    assertThat(m1.getLabels().length == 3).isTrue();
+    assertThat(m1.getAttributes().length == 3).isTrue();
     MetricBanner mb1 = m1.getBanner();
     assertThat("PREFIX.METRIC_NAME1".equals(mb1.getMetricName())).isTrue();
     assertThat("DESCRIPTION1".equals(mb1.getDescription())).isTrue();
@@ -175,7 +175,7 @@ class RuleParserTest {
     assertThat(MetricBanner.Type.COUNTER == mb1.getType()).isTrue();
 
     MetricExtractor m3 = metricDef.getMetricExtractors()[2];
-    AttributeValueExtractor a3 = m3.getMetricValueExtractor();
+    BeanAttributeExtractor a3 = m3.getMetricValueExtractor();
     assertThat("ATTRIBUTE3".equals(a3.getAttributeName())).isTrue();
     MetricBanner mb3 = m3.getBanner();
     assertThat("PREFIX.ATTRIBUTE3".equals(mb3.getMetricName())).isTrue();
@@ -205,25 +205,25 @@ class RuleParserTest {
     assertThat(metricDef.getMetricExtractors().length == 1).isTrue();
 
     MetricExtractor m1 = metricDef.getMetricExtractors()[0];
-    AttributeValueExtractor a1 = m1.getMetricValueExtractor();
+    BeanAttributeExtractor a1 = m1.getMetricValueExtractor();
     assertThat("ATTRIBUTE".equals(a1.getAttributeName())).isTrue();
-    assertThat(m1.getLabels().length == 0).isTrue();
+    assertThat(m1.getAttributes().length == 0).isTrue();
     MetricBanner mb1 = m1.getBanner();
     assertThat("ATTRIBUTE".equals(mb1.getMetricName())).isTrue();
     assertThat(MetricBanner.Type.GAUGE == mb1.getType()).isTrue();
     assertThat(null == mb1.getUnit()).isTrue();
   }
 
-  private static final String CONF6 = // merging label sets with same keys
+  private static final String CONF6 = // merging metric attribute sets with same keys
       "---                                   # keep stupid spotlessJava at bay\n"
           + "rules:\n"
           + "  - bean: my-test:type=6\n"
-          + "    label:\n"
-          + "      key1: value1\n"
+          + "    metricAttribute:\n"
+          + "      key1: const(value1)\n"
           + "    mapping:\n"
           + "      ATTRIBUTE:\n"
-          + "        label:\n"
-          + "          key1: value2\n";
+          + "        metricAttribute:\n"
+          + "          key1: const(value2)\n";
 
   @Test
   void testConf6() throws Exception {
@@ -239,26 +239,26 @@ class RuleParserTest {
     assertThat(metricDef.getMetricExtractors().length == 1).isTrue();
 
     MetricExtractor m1 = metricDef.getMetricExtractors()[0];
-    AttributeValueExtractor a1 = m1.getMetricValueExtractor();
+    BeanAttributeExtractor a1 = m1.getMetricValueExtractor();
     assertThat("ATTRIBUTE".equals(a1.getAttributeName())).isTrue();
-    // MetricLabel set at the metric level should override the one set at the definition level
-    assertThat(m1.getLabels().length == 1).isTrue();
-    MetricLabel l1 = m1.getLabels()[0];
-    assertThat("value2".equals(l1.extractLabelValue(null, null))).isTrue();
+    // MetricAttribute set at the metric level should override the one set at the definition level
+    assertThat(m1.getAttributes().length == 1).isTrue();
+    MetricAttribute l1 = m1.getAttributes()[0];
+    assertThat("value2".equals(l1.acquireAttributeValue(null, null))).isTrue();
     MetricBanner mb1 = m1.getBanner();
     assertThat("ATTRIBUTE".equals(mb1.getMetricName())).isTrue();
   }
 
-  private static final String CONF7 = // merging label sets with different keys
+  private static final String CONF7 =
       "---                                   # keep stupid spotlessJava at bay\n"
           + "rules:\n"
           + "  - bean: my-test:type=7\n"
-          + "    label:\n"
-          + "      key1: value1\n"
+          + "    metricAttribute:\n"
+          + "      key1: const(value1)\n"
           + "    mapping:\n"
           + "      ATTRIBUTE:\n"
-          + "        label:\n"
-          + "          key2: value2\n";
+          + "        metricAttribute:\n"
+          + "          key2: const(value2)\n";
 
   @Test
   void testConf7() throws Exception {
@@ -273,10 +273,11 @@ class RuleParserTest {
     assertThat(metricDef == null).isFalse();
     assertThat(metricDef.getMetricExtractors().length == 1).isTrue();
 
+    // Test that the MBean attribute is correctly parsed
     MetricExtractor m1 = metricDef.getMetricExtractors()[0];
-    AttributeValueExtractor a1 = m1.getMetricValueExtractor();
+    BeanAttributeExtractor a1 = m1.getMetricValueExtractor();
     assertThat("ATTRIBUTE".equals(a1.getAttributeName())).isTrue();
-    assertThat(m1.getLabels().length == 2).isTrue();
+    assertThat(m1.getAttributes().length == 2).isTrue();
     MetricBanner mb1 = m1.getBanner();
     assertThat("ATTRIBUTE".equals(mb1.getMetricName())).isTrue();
   }
@@ -362,8 +363,8 @@ class RuleParserTest {
             + "  - bean: domain:name=you\n"
             + "    mapping:\n"
             + "      ATTRIB:\n"
-            + "        label:\n"
-            + "          LABEL: attrib(something)\n"
+            + "        metricAttribute:\n"
+            + "          LABEL: something\n"
             + "        metric: METRIC_NAME\n";
     runNegativeTest(yaml);
   }
@@ -389,8 +390,8 @@ class RuleParserTest {
             + "  - bean: domain:name=you\n"
             + "    mapping:\n"
             + "      ATTRIB:\n"
-            + "        label:\n"
-            + "          LABEL: attr(.used)\n"
+            + "        metricAttribute:\n"
+            + "          LABEL: beanattr(.used)\n"
             + "        metric: METRIC_NAME\n";
     runNegativeTest(yaml);
   }
@@ -403,8 +404,8 @@ class RuleParserTest {
             + "  - bean: domain:name=you\n"
             + "    mapping:\n"
             + "      ATTRIB:\n"
-            + "        label:\n"
-            + "          LABEL: attr( )\n"
+            + "        metricAttribute:\n"
+            + "          LABEL: beanattr( )\n"
             + "        metric: METRIC_NAME\n";
     runNegativeTest(yaml);
   }
@@ -417,7 +418,7 @@ class RuleParserTest {
             + "  - bean: domain:name=you\n"
             + "    mapping:\n"
             + "      ATTRIB:\n"
-            + "        label:\n"
+            + "        metricAttribute:\n"
             + "          LABEL: param( )\n"
             + "        metric: METRIC_NAME\n";
     runNegativeTest(yaml);
@@ -455,8 +456,8 @@ class RuleParserTest {
             + "rules:\n"
             + "  - bean: domain:name=you\n"
             + "    mapping:\n"
-            + "      label:     # not valid here\n"
-            + "        key: value\n"
+            + "      metricAttribute:     # not valid here\n"
+            + "        key: const(value)\n"
             + "      A:\n"
             + "        metric: METRIC_NAME\n";
     runNegativeTest(yaml);

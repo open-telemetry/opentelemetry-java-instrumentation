@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.jmx.yaml;
 
-import io.opentelemetry.instrumentation.jmx.engine.AttributeValueExtractor;
+import io.opentelemetry.instrumentation.jmx.engine.BeanAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.BeanPack;
+import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
 import io.opentelemetry.instrumentation.jmx.engine.MetricBanner;
 import io.opentelemetry.instrumentation.jmx.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.engine.MetricExtractor;
-import io.opentelemetry.instrumentation.jmx.engine.MetricLabel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -99,11 +99,11 @@ public class JmxRule extends MetricStructure {
     }
 
     // Make sure that all attribute names are well-formed by creating the corresponding
-    // AttributeValueExtractors
+    // BeanAttributeExtractors
     Set<String> attrNames = mapping.keySet();
     for (String attributeName : attrNames) {
-      // check if AttributeValueExtractors can be built without exceptions
-      AttributeValueExtractor.fromName(attributeName);
+      // check if BeanAttributeExtractors can be built without exceptions
+      BeanAttributeExtractor.fromName(attributeName);
     }
     return mapping;
   }
@@ -150,45 +150,47 @@ public class JmxRule extends MetricStructure {
       } else {
         banner = m.buildMetricBanner(prefix, attributeName, getUnit(), getMetricType());
       }
-      AttributeValueExtractor attrExtractor = AttributeValueExtractor.fromName(attributeName);
+      BeanAttributeExtractor attrExtractor = BeanAttributeExtractor.fromName(attributeName);
 
-      List<MetricLabel> labelList;
-      List<MetricLabel> ownLabels = getLabels();
-      if (ownLabels != null && m != null && m.getLabels() != null) {
-        // MetricLabels have been specified at two levels, need to combine them
-        labelList = combineLabels(ownLabels, m.getLabels());
-      } else if (ownLabels != null) {
-        labelList = ownLabels;
-      } else if (m != null && m.getLabels() != null) {
-        // Get the labels from the metric
-        labelList = m.getLabels();
+      List<MetricAttribute> attributeList;
+      List<MetricAttribute> ownAttributes = getAttributeList();
+      if (ownAttributes != null && m != null && m.getAttributeList() != null) {
+        // MetricAttributes have been specified at two levels, need to combine them
+        attributeList = combineMetricAttributes(ownAttributes, m.getAttributeList());
+      } else if (ownAttributes != null) {
+        attributeList = ownAttributes;
+      } else if (m != null && m.getAttributeList() != null) {
+        // Get the attributes from the metric
+        attributeList = m.getAttributeList();
       } else {
-        // There are no labels at all
-        labelList = new ArrayList<MetricLabel>();
+        // There are no attributes at all
+        attributeList = new ArrayList<MetricAttribute>();
       }
 
       MetricExtractor metricExtractor =
           new MetricExtractor(
-              attrExtractor, banner, labelList.toArray(new MetricLabel[labelList.size()]));
+              attrExtractor,
+              banner,
+              attributeList.toArray(new MetricAttribute[attributeList.size()]));
       metricExtractors[n++] = metricExtractor;
     }
 
     return new MetricDef(pack, metricExtractors);
   }
 
-  private static List<MetricLabel> combineLabels(
-      List<MetricLabel> ownLabels, List<MetricLabel> metricLabels) {
-    Map<String, MetricLabel> set = new HashMap<>();
-    for (MetricLabel ownLabel : ownLabels) {
-      set.put(ownLabel.getLabelName(), ownLabel);
+  private static List<MetricAttribute> combineMetricAttributes(
+      List<MetricAttribute> ownAttributes, List<MetricAttribute> metricAttributes) {
+    Map<String, MetricAttribute> set = new HashMap<>();
+    for (MetricAttribute ownAttribute : ownAttributes) {
+      set.put(ownAttribute.getAttributeName(), ownAttribute);
     }
 
-    // Let the metric level defined labels override own lables
-    for (MetricLabel metricLabel : metricLabels) {
-      set.put(metricLabel.getLabelName(), metricLabel);
+    // Let the metric level defined attributes override own attributes
+    for (MetricAttribute metricAttribute : metricAttributes) {
+      set.put(metricAttribute.getAttributeName(), metricAttribute);
     }
 
-    List<MetricLabel> result = new ArrayList<MetricLabel>();
+    List<MetricAttribute> result = new ArrayList<MetricAttribute>();
     result.addAll(set.values());
     return result;
   }

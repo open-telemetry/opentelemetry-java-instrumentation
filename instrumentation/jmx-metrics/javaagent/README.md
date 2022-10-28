@@ -94,7 +94,7 @@ A more advanced example shows how to report similar metrics related to individua
 ---
 rules:
   - bean: java.lang:name=*,type=MemoryPool
-    attribute:
+    metricAttribute:
       pool: param(name)
       type: beanattr(Type)
     mapping:
@@ -110,7 +110,7 @@ rules:
         unit: By
 ```
 
-The ObjectName pattern will match a number of MBeans, each for a different memory pool. The number and names of available memory pools, however, will be known only at runtime. To report values for all actual memory pools using only two metrics, we use metric attributes (referenced by the configuration file as `attribute` elements). The first metric attribute, named `pool` will have its value derived from the ObjectName parameter `name` - which corresponds to the memory pool name. The second metric attribute, named `type` will get its value from the corresponding MBean attribute named `Type`. The values of this attribute are strings `HEAP` or `NON_HEAP` classifying the corresponding memory pool. Here the definition of the metric attributes is shared by both metrics, but it is also possible to define them at the individual metric level.
+The ObjectName pattern will match a number of MBeans, each for a different memory pool. The number and names of available memory pools, however, will be known only at runtime. To report values for all actual memory pools using only two metrics, we use metric attributes (referenced by the configuration file as `metricAttribute` elements). The first metric attribute, named `pool` will have its value derived from the ObjectName parameter `name` - which corresponds to the memory pool name. The second metric attribute, named `type` will get its value from the corresponding MBean attribute named `Type`. The values of this attribute are strings `HEAP` or `NON_HEAP` classifying the corresponding memory pool. Here the definition of the metric attributes is shared by both metrics, but it is also possible to define them at the individual metric level.
 
 Using the above rule, when running on HotSpot JVM for Java 11, the following combinations of metric attributes will be reported.
  - {pool="Compressed Class Space", type="NON_HEAP"}
@@ -132,29 +132,29 @@ Sometimes it is desired to merge several MBean attributes into a single metric, 
 ---
 rules:
   - bean: Catalina:type=GlobalRequestProcessor,name=*
-    attribute:
+    metricAttribute:
       handler: param(name)
     type: counter
     mapping:
       bytesReceived:
         metric: catalina.traffic
-        attribute:
-          direction: in
+        metricAttribute:
+          direction: const(in)
         desc: The number of transmitted bytes
         unit: By
       bytesSent:
         metric: catalina.traffic
-        attribute:
-          direction: out
+        metricAttribute:
+          direction: const(out)
         desc: The number of transmitted bytes
         unit: By
 ```
-The referenced MBean has two attributes of interest, `bytesReceived`, and `bytesSent`. We want them to be reported by just one metric, but keeping the values separate by using metric attribute `direction`. This is achieved by specifying the same metric name `catalina.traffic` when mapping the MBean attributes to metrics. There will be two metric attributes provided: `handler`, which has a shared definition, and `direction`, which has its value (`in` or `out`) declared directly, depending on the MBean attribute providing the metric value.
+The referenced MBean has two attributes of interest, `bytesReceived`, and `bytesSent`. We want them to be reported by just one metric, but keeping the values separate by using metric attribute `direction`. This is achieved by specifying the same metric name `catalina.traffic` when mapping the MBean attributes to metrics. There will be two metric attributes provided: `handler`, which has a shared definition, and `direction`, which has its value (`in` or `out`) declared directly as constants, depending on the MBean attribute providing the metric value.
 
 Keep in mind that when defining a metric multiple times like this, its type, unit and description must be exactly the same. Otherwise there will be complaints about attempts to redefine a metric in a non-compatible way.
 The example also demonstrates that when specifying a number of MBean attribute mappings within the same rule, the metric type can be declared only once (outside of the `mapping` section).
 
-Even when not reusing the metric name, special care also has to be taken when using ObjectName patterns (or specifying multiple ObjectNames - see the General Syntax section at the bottom of the page). Different ObjectNames matching the pattern must result in using different metric attributes. Otherwise the same metric will be reported multiple times (using different values), which will likely clobber the previous values.
+Even when not reusing the metric name, special care also has to be taken when using ObjectName patterns (or specifying multiple ObjectNames - see the General Syntax section at the bottom of the page). Different ObjectNames matching the pattern must result in using different metric attribute values. Otherwise the same metric will be reported multiple times (using different metric values), which will likely clobber the previous values.
 
 ### Making shortcuts
 
@@ -164,7 +164,7 @@ While it is possible to define MBeans based metrics with fine details, sometimes
 ---
 rules:
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
-    attribute:
+    metricAttribute:
       threadId: param(thread-id)
     prefix: my.kafka.streams.
     unit: ms
@@ -182,7 +182,7 @@ rules:
       poll-records-max:
         unit: 1
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
-    attribute:
+    metricAttribute:
       threadId: param(thread-id)
     prefix: my.kafka.streams.
     unit: /s
@@ -194,7 +194,7 @@ rules:
       task-closed-rate:
       skipped-records-rate:
   - bean: kafka.streams:type=stream-thread-metrics,thread-id=*
-    attribute:
+    metricAttribute:
       threadId: param(thread-id)
     prefix: my.kafka.streams.totals.
     unit: 1
@@ -219,7 +219,7 @@ Here is the general description of the accepted configuration file syntax. The w
 ---
 rules:                                # start of list of configuration rules
   - bean: <OBJECTNAME>                # can contain wildcards
-    attribute:                        # optional metric attributes, they apply to all metrics below
+    metricAttribute:                  # optional metric attributes, they apply to all metrics below
       <ATTRIBUTE1>: param(<PARAM>)    # <PARAM> is used as the key to extract value from actual ObjectName
       <ATTRIBUTE2>: beanattr(<ATTR>)  # <ATTR> is used as the MBean attribute name to extract the value
     prefix: <METRIC_NAME_PREFIX>      # optional, useful for avoiding specifying metric names below
@@ -231,8 +231,8 @@ rules:                                # start of list of configuration rules
         type: <TYPE>                  # optional, the default type is gauge
         desc: <DESCRIPTION1>          # optional
         unit: <UNIT1>                 # optional
-        attribute:                    # optional, will be used in addition to the shared metric attributes above
-          <ATTRIBUTE3>: <STRING>      # direct value for the metric attribute
+        metricAttribute:              # optional, will be used in addition to the shared metric attributes above
+          <ATTRIBUTE3>: const(<STR>)  # direct value for the metric attribute
       <BEANATTR2>:                    # use a.b to get access into CompositeData
         metric: <METRIC_NAME2>        # optional, the default is the MBean attribute name
         unit: <UNIT2>                 # optional
@@ -254,13 +254,13 @@ The following table explains the used terms with more details.
 | OBJECTNAME | A syntactically valid string representing an ObjectName (see [ObjectName constructor](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-)). |
 | ATTRIBUTE | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/reference/specification/common/#attribute) key. |
 | ATTR | A non-empty string used as a name of the MBean attribute. The MBean attribute value must be a String, otherwise the specified metric attribute will not be used. |
-| PARAM | A non-empty string used as a property key for the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified metric attribute will not be used. |
+| PARAM | A non-empty string used as a property key in the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified metric attribute will not be used. |
 | METRIC_NAME_PREFIX | Any non-empty string which will be prepended to the specified metric (instrument) names. |
 | METRIC_NAME | Any non-empty string. The string, prefixed by the optional prefix (see above) must satisfy [instrument naming rule](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-naming-rule). |
 | TYPE | One of `counter`, `updowncounter`, or `gauge`. The default is `gauge`. This value is case insensitive. |
 | DESCRIPTION | Any string to be used as human-readable [description](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-description) of the metric. If the description is not provided by the rule, an attempt will be made to extract one automatically from the corresponding MBean. |
 | UNIT | A string identifying the [unit](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-unit) of measurements reported by the metric. Enclose the string in single or double quotes if using unit annotations. |
-| STRING | Any string to be used directly as the metric attribute value. |
+| STR | Any string to be used directly as the metric attribute value. |
 | BEANATTR | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). |
 
 ## Assumptions and Limitations
