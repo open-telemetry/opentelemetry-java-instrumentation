@@ -13,6 +13,7 @@ plugins {
 
   id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
+  id("org.owasp.dependencycheck")
 }
 
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
@@ -353,6 +354,12 @@ checkstyle {
   // this version should match the version of google_checks.xml used as basis for above configuration
   toolVersion = "8.37"
   maxWarnings = 0
+}
+
+dependencyCheck {
+  skipConfigurations = listOf("errorprone", "checkstyle", "annotationProcessor")
+  suppressionFile = "buildscripts/dependency-check-suppressions.xml"
+  failBuildOnCVSS = 7.0f // fail on high or critical CVE
 }
 
 idea {
