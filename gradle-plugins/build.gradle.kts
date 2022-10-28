@@ -145,7 +145,6 @@ afterEvaluate {
   if (System.getenv("CI") != null && signingKey != null) {
     signing {
       useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
-      sign(publishing.publications["pluginMaven"])
     }
   }
 }
