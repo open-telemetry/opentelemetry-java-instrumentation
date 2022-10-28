@@ -17,6 +17,10 @@ muzzle {
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   library("org.opensearch.client:opensearch-rest-client:1.3.6")
 
