@@ -28,6 +28,7 @@ public final class CommonConfig {
   private final List<String> clientResponseHeaders;
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
+  private final List<String> grpcRequestMetadata;
   private final boolean statementSanitizationEnabled;
 
   CommonConfig(InstrumentationConfig config) {
@@ -41,17 +42,18 @@ public final class CommonConfig {
         config.getList("otel.instrumentation.http.capture-headers.server.request", emptyList());
     serverResponseHeaders =
         config.getList("otel.instrumentation.http.capture-headers.server.response", emptyList());
+    grpcRequestMetadata =
+        config.getList("otel.instrumentation.grpc.capture-metadata.request", emptyList());
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
+
   }
 
   public Map<String, String> getPeerServiceMapping() {
     return peerServiceMapping;
   }
 
-  public List<String> getClientRequestHeaders() {
-    return clientRequestHeaders;
-  }
+  public List<String> getClientRequestHeaders() { return clientRequestHeaders; }
 
   public List<String> getClientResponseHeaders() {
     return clientResponseHeaders;
@@ -63,6 +65,10 @@ public final class CommonConfig {
 
   public List<String> getServerResponseHeaders() {
     return serverResponseHeaders;
+  }
+
+  public List<String> getGrpcRequestMetadata() {
+    return grpcRequestMetadata;
   }
 
   public boolean isStatementSanitizationEnabled() {

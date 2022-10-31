@@ -24,6 +24,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,7 @@ class GrpcTest extends AbstractGrpcTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   private static final AttributeKey<String> CUSTOM_KEY = AttributeKey.stringKey("customKey");
+  private static final String METADATA_ATTRIBUTE_PREFIX = "rpc.request.metadata.";
 
   private static final Metadata.Key<String> CUSTOM_METADATA_KEY =
       Metadata.Key.of("customMetadataKey", Metadata.ASCII_STRING_MARSHALLER);
@@ -54,6 +57,81 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Test
+  void grpcAttributesExtractor() throws Exception {
+    String metadataKey = "some-key";
+    AttributeKey<List<String>> attributeKey = AttributeKey.stringArrayKey(METADATA_ATTRIBUTE_PREFIX + metadataKey);
+    String metadataValue = "some-value";
+    List<String> metadataValueAsList = Collections.singletonList("some-value");
+
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public void sayHello(
+              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
+            Helloworld.Response reply =
+                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+          }
+        };
+
+    GrpcAttributesExtractor grpcAttributesExtractor = new GrpcAttributesExtractor(
+        GrpcRpcAttributesGetter.INSTANCE,
+        Collections.singletonList(metadataKey));
+
+    Server server =
+        ServerBuilder.forPort(0)
+            .addService(greeter)
+            .intercept(
+                GrpcTelemetry.builder(testing.getOpenTelemetry())
+                    .addAttributeExtractor(grpcAttributesExtractor)
+                    .build()
+                    .newServerInterceptor())
+            .build()
+            .start();
+
+    ManagedChannel channel =
+        createChannel(
+            ManagedChannelBuilder.forAddress("localhost", server.getPort())
+                .intercept(
+                    GrpcTelemetry.builder(testing.getOpenTelemetry())
+                        .addAttributeExtractor(grpcAttributesExtractor)
+                        .build()
+                        .newClientInterceptor()));
+
+    Metadata extraMetadata = new Metadata();
+    extraMetadata.put(Metadata.Key.of(metadataKey, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
+
+    GreeterGrpc.GreeterBlockingStub client =
+        GreeterGrpc.newBlockingStub(channel)
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(extraMetadata));
+
+    Helloworld.Response response =
+        testing()
+            .runWithSpan(
+                "parent",
+                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+
+    OpenTelemetryAssertions.assertThat(response.getMessage()).isEqualTo("Hello test");
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttribute(attributeKey, metadataValueAsList),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttribute(attributeKey, metadataValueAsList)));
   }
 
   @Test
