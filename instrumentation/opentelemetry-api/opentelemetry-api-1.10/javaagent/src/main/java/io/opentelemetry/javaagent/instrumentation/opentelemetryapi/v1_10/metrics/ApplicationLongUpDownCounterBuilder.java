@@ -10,6 +10,7 @@ import application.io.opentelemetry.api.metrics.LongUpDownCounter;
 import application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import application.io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.function.Consumer;
 
 final class ApplicationLongUpDownCounterBuilder implements LongUpDownCounterBuilder {
@@ -22,12 +23,14 @@ final class ApplicationLongUpDownCounterBuilder implements LongUpDownCounterBuil
   }
 
   @Override
+  @CanIgnoreReturnValue
   public LongUpDownCounterBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public LongUpDownCounterBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;

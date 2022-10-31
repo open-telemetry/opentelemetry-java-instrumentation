@@ -20,13 +20,13 @@ public class ElasticTransportNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String peerName(ElasticTransportRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Integer peerPort(ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public Integer peerPort(ElasticTransportRequest request) {
     return null;
   }
 

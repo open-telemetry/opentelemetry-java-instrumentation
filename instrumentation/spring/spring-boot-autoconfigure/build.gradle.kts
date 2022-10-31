@@ -1,6 +1,5 @@
 plugins {
-  id("otel.java-conventions")
-  id("otel.publish-conventions")
+  id("otel.library-instrumentation")
 }
 
 // Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration.custom-starter
@@ -33,12 +32,15 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-annotations")
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry:opentelemetry-extension-aws")
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-resources")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
   compileOnly("io.opentelemetry:opentelemetry-exporter-jaeger")
   compileOnly("io.opentelemetry:opentelemetry-exporter-otlp")
   compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
   compileOnly(project(":instrumentation-annotations"))
+
+  compileOnly(project(":instrumentation:resources:library"))
+  annotationProcessor("com.google.auto.service:auto-service")
+  compileOnly("com.google.auto.service:auto-service-annotations")
 
   testImplementation("org.springframework.kafka:spring-kafka:2.9.0")
   testImplementation("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
@@ -53,7 +55,7 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
+  testImplementation(project(":instrumentation:resources:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")

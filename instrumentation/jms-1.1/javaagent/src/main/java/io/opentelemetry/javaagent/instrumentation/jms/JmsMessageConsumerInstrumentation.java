@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.jms.JmsSingletons.consumerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -37,10 +38,16 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
+        named("receive")
+            .and(takesArguments(0).or(takesArguments(1)))
+            .and(returns(named("javax.jms.Message")))
+            .and(isPublic()),
         JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
     transformer.applyAdviceToMethod(
-        named("receiveNoWait").and(takesArguments(0)).and(isPublic()),
+        named("receiveNoWait")
+            .and(takesArguments(0))
+            .and(returns(named("javax.jms.Message")))
+            .and(isPublic()),
         JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
   }
 

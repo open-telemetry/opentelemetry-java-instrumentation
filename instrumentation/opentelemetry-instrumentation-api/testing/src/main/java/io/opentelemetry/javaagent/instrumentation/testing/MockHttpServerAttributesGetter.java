@@ -61,10 +61,4 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
   public String scheme(String s) {
     return null;
   }
-
-  @Nullable
-  @Override
-  public String serverName(String s) {
-    return null;
-  }
 }

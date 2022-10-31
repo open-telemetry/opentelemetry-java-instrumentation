@@ -3,37 +3,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  assemble:
-    uses: ./.github/workflows/reusable-assemble.yml
-
-  test:
-    uses: ./.github/workflows/reusable-test.yml
+  required-jobs:
+    uses: ./.github/workflows/reusable-spotless.yml
 
   # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
   # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry
 
-  smoke-test:
-    uses: ./.github/workflows/reusable-smoke-test.yml
-
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,
   # and this is not a reason to hold up the release
 
-  gradle-plugins:
-    uses: ./.github/workflows/reusable-gradle-plugins.yml
-
-  examples:
-    uses: ./.github/workflows/reusable-examples.yml
-
   release:
     needs:
-      - assemble
-      - test
-      - smoke-test
-      - gradle-plugins
-      - examples
+      - required-jobs
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
     runs-on: ubuntu-latest
@@ -238,7 +222,7 @@ jobs:
         run: |
           message="Copy change log updates from $GITHUB_REF_NAME"
           body="Copy log updates from \`$GITHUB_REF_NAME\`."
-          branch="copy-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
+          branch="opentelemetrybot/copy-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
 
           if [[ $VERSION == *.0 ]]; then
             if git diff --quiet; then

@@ -97,17 +97,16 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" { it == "localhost" || it == null }
-            "$SemanticAttributes.NET_HOST_PORT" { it instanceof Long || it == null }
-            "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
-            "net.sock.peer.port" { it instanceof Long || it == null }
-            "net.sock.host.addr" { it == "127.0.0.1" || it == null }
-            "net.sock.host.port" { it instanceof Long || it == null }
+            "$SemanticAttributes.NET_HOST_PORT" { it == app.bindPort || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" { it instanceof Long || it == null }
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NET_SOCK_HOST_PORT" { it instanceof Long || it == null }
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_USER_AGENT" String
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:${app.bindPort}"
             "$SemanticAttributes.HTTP_TARGET" "/$path"
             "$SemanticAttributes.HTTP_ROUTE" "/$route"
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long

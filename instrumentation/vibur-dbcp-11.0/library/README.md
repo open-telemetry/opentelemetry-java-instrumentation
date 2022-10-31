@@ -1,4 +1,4 @@
-# Manual Instrumentation for Vibur DBCP
+# Library Instrumentation for Vibur DBCP version 11.0 and higher
 
 Provides OpenTelemetry instrumentation for [Vibur DBCP](https://www.vibur.org/).
 
@@ -6,13 +6,12 @@ Provides OpenTelemetry instrumentation for [Vibur DBCP](https://www.vibur.org/).
 
 ### Add these dependencies to your project:
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.15.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-vibur-dbcp-11.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>

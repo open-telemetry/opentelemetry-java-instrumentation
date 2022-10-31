@@ -93,10 +93,4 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   public String route(ServletRequestContext<REQUEST> requestContext) {
     return null;
   }
-
-  @Override
-  @Nullable
-  public String serverName(ServletRequestContext<REQUEST> requestContext) {
-    return null;
-  }
 }

@@ -62,10 +62,4 @@ class AkkaHttpServerAttributesGetter
   public String scheme(HttpRequest request) {
     return request.uri().scheme();
   }
-
-  @Override
-  @Nullable
-  public String serverName(HttpRequest request) {
-    return null;
-  }
 }

@@ -153,6 +153,11 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           .getName()
           .startsWith("io.opentelemetry.javaagent.instrumentation.netty.")) {
         pipeline.removeLast();
+      } else if (handler
+          .getClass()
+          .getName()
+          .startsWith("io.opentelemetry.instrumentation.netty.")) {
+        pipeline.removeLast();
       }
     }
   }

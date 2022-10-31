@@ -71,10 +71,4 @@ public class UndertowHttpAttributesGetter
   public String route(HttpServerExchange exchange) {
     return null;
   }
-
-  @Override
-  @Nullable
-  public String serverName(HttpServerExchange exchange) {
-    return null;
-  }
 }

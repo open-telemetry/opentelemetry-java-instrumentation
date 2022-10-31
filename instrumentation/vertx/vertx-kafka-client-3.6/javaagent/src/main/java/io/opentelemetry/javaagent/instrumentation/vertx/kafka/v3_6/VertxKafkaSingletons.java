@@ -27,9 +27,6 @@ public final class VertxKafkaSingletons {
             .setCaptureExperimentalSpanAttributes(
                 InstrumentationConfig.get()
                     .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-            .setPropagationEnabled(
-                InstrumentationConfig.get()
-                    .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true))
             .setMessagingReceiveInstrumentationEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
     BATCH_PROCESS_INSTRUMENTER = factory.createBatchProcessInstrumenter();

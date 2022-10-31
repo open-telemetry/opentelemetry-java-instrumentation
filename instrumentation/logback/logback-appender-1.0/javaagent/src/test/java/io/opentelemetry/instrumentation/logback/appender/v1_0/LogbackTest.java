@@ -10,12 +10,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogData;
-import io.opentelemetry.sdk.logs.data.Severity;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -134,9 +134,9 @@ class LogbackTest extends AgentInstrumentationSpecification {
     }
 
     if (expectedSeverity != null) {
-      await().untilAsserted(() -> assertThat(testing.logs().size()).isEqualTo(1));
+      await().untilAsserted(() -> assertThat(testing.logRecords().size()).isEqualTo(1));
 
-      LogData log = testing.logs().get(0);
+      LogRecordData log = testing.logRecords().get(0);
       assertThat(log)
           .hasBody("xyz: 123")
           // TODO (trask) why is version "" instead of null?
@@ -182,7 +182,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
 
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
-      assertThat(testing.logs()).isEmpty();
+      assertThat(testing.logRecords()).isEmpty();
     }
   }
 
@@ -196,9 +196,9 @@ class LogbackTest extends AgentInstrumentationSpecification {
       MDC.clear();
     }
 
-    await().untilAsserted(() -> assertThat(testing.logs().size()).isEqualTo(1));
+    await().untilAsserted(() -> assertThat(testing.logRecords().size()).isEqualTo(1));
 
-    LogData log = getLogs().get(0);
+    LogRecordData log = getLogRecords().get(0);
     assertThat(log)
         .hasBody("xyz: 123")
         // TODO (trask) why is version "" instead of null?
@@ -229,9 +229,9 @@ class LogbackTest extends AgentInstrumentationSpecification {
 
     abcLogger.info(marker, "Message");
 
-    await().untilAsserted(() -> assertThat(testing.logs().size()).isEqualTo(1));
+    await().untilAsserted(() -> assertThat(testing.logRecords().size()).isEqualTo(1));
 
-    LogData log = getLogs().get(0);
+    LogRecordData log = getLogRecords().get(0);
 
     assertThat(log)
         .hasAttributesSatisfying(

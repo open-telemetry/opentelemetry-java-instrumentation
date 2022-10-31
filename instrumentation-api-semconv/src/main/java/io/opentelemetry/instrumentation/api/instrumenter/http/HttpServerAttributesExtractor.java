@@ -13,6 +13,8 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -36,8 +38,9 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the HTTP server attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
-    return builder(getter).build();
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetServerAttributesGetter<REQUEST> netAttributesGetter) {
+    return builder(httpAttributesGetter, netAttributesGetter).build();
   }
 
   /**
@@ -45,26 +48,36 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
    * HTTP client attributes extractor.
    */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new HttpServerAttributesExtractorBuilder<>(getter);
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetServerAttributesGetter<REQUEST> netAttributesGetter) {
+    return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
+  private final NetServerAttributesGetter<REQUEST> netAttributesGetter;
   private final Function<Context, String> httpRouteHolderGetter;
 
   HttpServerAttributesExtractor(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetServerAttributesGetter<REQUEST> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> capturedResponseHeaders) {
-    this(getter, capturedRequestHeaders, capturedResponseHeaders, HttpRouteHolder::getRoute);
+    this(
+        httpAttributesGetter,
+        netAttributesGetter,
+        capturedRequestHeaders,
+        capturedResponseHeaders,
+        HttpRouteHolder::getRoute);
   }
 
   // visible for tests
   HttpServerAttributesExtractor(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetServerAttributesGetter<REQUEST> netAttributesGetter,
       List<String> capturedRequestHeaders,
       List<String> responseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
-    super(getter, capturedRequestHeaders, responseHeaders);
+    super(httpAttributesGetter, capturedRequestHeaders, responseHeaders);
+    this.netAttributesGetter = netAttributesGetter;
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
@@ -76,11 +89,12 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     String forwardedProto = forwardedProto(request);
     String value = forwardedProto != null ? forwardedProto : getter.scheme(request);
     internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
-    internalSet(attributes, SemanticAttributes.HTTP_HOST, host(request));
     internalSet(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
-    internalSet(attributes, SemanticAttributes.HTTP_SERVER_NAME, getter.serverName(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
+
+    InternalNetServerAttributesExtractor.onStart(
+        netAttributesGetter, attributes, request, host(request));
   }
 
   @Override

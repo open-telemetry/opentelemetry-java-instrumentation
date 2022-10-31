@@ -34,6 +34,7 @@ val javaagentLibs by configurations.creating {
 listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
     exclude("io.opentelemetry", "opentelemetry-api")
+    exclude("io.opentelemetry", "opentelemetry-api-logs")
     exclude("io.opentelemetry", "opentelemetry-semconv")
   }
 }
@@ -44,9 +45,10 @@ val licenseReportDependencies by configurations.creating {
 
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
+  // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-logs is not
+  bootstrapLibs("io.opentelemetry:opentelemetry-api-logs")
   bootstrapLibs(project(":instrumentation-api-semconv"))
   bootstrapLibs(project(":instrumentation-annotations-support"))
-  bootstrapLibs(project(":instrumentation-appender-api-internal"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
   // extension-api contains both bootstrap packages and agent packages
@@ -296,7 +298,6 @@ fun ShadowJar.excludeBootstrapClasses() {
     exclude(project(":instrumentation-api"))
     exclude(project(":instrumentation-api-semconv"))
     exclude(project(":instrumentation-annotations-support"))
-    exclude(project(":instrumentation-appender-api-internal"))
     exclude(project(":javaagent-bootstrap"))
   }
 

@@ -52,7 +52,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("tasks")
+                            .hasUnit("{tasks}")
                             .hasLongSumSatisfying(
                                 sum ->
                                     sum.isNotMonotonic()
@@ -118,7 +118,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                     metric ->
                         assertThat(metric)
                             .hasDescription("This is a test timer")
-                            .hasUnit("tasks")
+                            .hasUnit("{tasks}")
                             .hasLongSumSatisfying(
                                 sum ->
                                     sum.isNotMonotonic()

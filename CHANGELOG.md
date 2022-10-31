@@ -2,6 +2,79 @@
 
 ## Unreleased
 
+## Version 1.19.1 (2022-10-19)
+
+### 🛠️ Bug fixes
+
+- Capture `net.host.name` on netty SERVER spans
+  ([#6892](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6892))
+
+## Version 1.19.0 (2022-10-13)
+
+### Migration notes
+
+- Deprecated `HttpServerAttributesGetter.serverName()`, and removed `http.host` and
+  `http.server_name` attributes
+  ([#6709](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6709))
+- Removed previously deprecated configuration flags (see previous release notes for deprecations)
+  ([#6771](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6771))
+- The restlet-1 instrumentation name has changed from `restlet-1.0` to `restlet-1.1`
+  ([#6106](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6106))
+
+### 🌟 New library instrumentation
+
+- Netty 4.1
+  ([#6820](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6820))
+
+### 📈 Enhancements
+
+- Move in resource providers from core repo
+  ([#6574](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6574))
+- Propagate client span context in doOnRequest
+  ([#6621](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6621))
+- Update attribute key of rocketmq's message tag to use name from semantic conventions
+  (`messaging.rocketmq.message_tag`)
+  ([#6677](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6677))
+- Avoid muzzle matcher warning for the spring-boot-actuator-autoconfigure instrumentation
+  ([#6695](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6695))
+- Add marker attribute for Log4j 2
+  ([#6680](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6680))
+- Add marker attribute for Logback
+  ([#6652](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6652))
+- Add daemon attribute to process.runtime.jvm.threads.count
+  ([#6635](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6635))
+- Link JMS receive span with the producer span
+  ([#6804](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6804))
+- Link RabbitMQ receive span with the producer span
+  ([#6808](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6808))
+- Run context customizers before span start instead of after
+  ([#6634](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6634))
+- Strip sensitive data from the url
+  ([#6417](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6417))
+- Extract `net.peer.{name,port}` on start for CLIENT spans
+  ([#6828](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6828))
+
+### 🛠️ Bug fixes
+
+- Fix scheduled job experimental attributes property
+  ([#6633](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6633))
+- Fix AutoConfigurationCustomizer.addPropertiesSupplier not taking into account configuration-file
+  ([#6697](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6697))
+- Fix Dubbo NPE and trace propagation issue
+  ([#6640](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6640))
+- Fix directory separator in ProcessResource attributes
+  ([#6716](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6716))
+- Fix instrumentation for tomcat 10.1.0
+  ([#6766](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6766))
+- Fix instrumentation name for jaxrs-2.0-annotations
+  ([#6770](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6770))
+- Fix instrumentation for vert.x 4.3.4
+  ([#6809](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6809))
+- Fix Restlet v2 `Message#getAttributes` calls
+  ([#6796](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6796))
+- Guard against null HttpContext
+  ([#6792](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6792))
+
 ## Version 1.18.0 (2022-09-14)
 
 The `opentelemetry-instrumentation-api` artifact is declared stable in this release.

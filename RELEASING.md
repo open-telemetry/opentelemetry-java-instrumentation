@@ -18,7 +18,8 @@ the second Monday of the month (roughly a few of days after the monthly minor re
 
 ## Preparing a new major or minor release
 
-* Close the release milestone if there is one.
+* Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
+  if there is one.
 * Merge a pull request to `main` updating the `CHANGELOG.md`.
   * The heading for the unreleased entries should be `## Unreleased`.
   * Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change log.
@@ -40,6 +41,10 @@ and deadlocks.
     e.g. `release/v1.9.x`, then enter the pull request number that you want to backport,
     then click the "Run workflow" button below that.
   * Review and merge the backport pull request that it generates.
+  * Note: if the PR contains any changes to workflow files, it will have to be manually backported,
+    because the default `GITHUB_TOKEN` does not have permission to update workflow files (and the
+    `opentelemetrybot` token doesn't have write permission to this repository at all, so while it
+    can be used to open a PR, it can't be used to push to a local branch).
 * Merge a pull request to the release branch updating the `CHANGELOG.md`.
   * The heading for the unreleased entries should be `## Unreleased`.
 * Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-patch-release.yml).

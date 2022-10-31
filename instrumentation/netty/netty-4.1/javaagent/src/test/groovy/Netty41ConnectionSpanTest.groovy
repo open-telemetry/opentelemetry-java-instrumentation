@@ -16,6 +16,7 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
+import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -120,7 +121,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "net.sock.peer.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
           }
         }
         span(3) {
@@ -180,7 +181,7 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "net.sock.peer.addr" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
           }
         }
       }

@@ -76,12 +76,6 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
-  @Nullable
-  public String serverName(Request request) {
-    return null;
-  }
-
-  @Override
   public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatus().getCode();
   }

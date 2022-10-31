@@ -1,18 +1,18 @@
-# Logback Integration
+# MDC Instrumentation for Logback version 1.0 and higher
 
 This module integrates instrumentation with Logback by injecting the trace ID and span ID from a
 mounted span using a custom Logback appender.
 
-To use it, add the module to your application's runtime classpath and add the appender to your
-`logback.xml`.
+## Quickstart
 
-Replace `OPENTELEMETRY_VERSION` with the latest
-stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation).
+### Add these dependencies to your project:
 
-**Maven**
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-logback-mdc-1.0).
+
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
@@ -22,13 +22,15 @@ stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrument
 </dependencies>
 ```
 
-**Gradle**
+For Gradle, add to your dependencies:
 
 ```kotlin
 dependencies {
   runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:OPENTELEMETRY_VERSION")
 }
 ```
+
+### Usage
 
 **logback.xml**
 

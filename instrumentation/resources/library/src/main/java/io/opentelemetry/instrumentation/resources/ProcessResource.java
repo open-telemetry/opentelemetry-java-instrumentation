@@ -12,7 +12,6 @@ import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 /** Factory of a {@link Resource} which provides information about the current running process. */
 public final class ProcessResource {
@@ -38,7 +37,6 @@ public final class ProcessResource {
     }
   }
 
-  @IgnoreJRERequirement
   private static Resource doBuildResource() {
     AttributesBuilder attributes = Attributes.builder();
 
@@ -61,9 +59,9 @@ public final class ProcessResource {
     if (javaHome != null) {
       StringBuilder executablePath = new StringBuilder(javaHome);
       executablePath
-          .append(File.pathSeparatorChar)
+          .append(File.separatorChar)
           .append("bin")
-          .append(File.pathSeparatorChar)
+          .append(File.separatorChar)
           .append("java");
       if (osName != null && osName.toLowerCase().startsWith("windows")) {
         executablePath.append(".exe");

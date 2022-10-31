@@ -8,7 +8,6 @@ dependencies {
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")
-  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
 

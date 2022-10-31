@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
@@ -17,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +33,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     return new ServletInstrumenterBuilder<>();
   }
 
+  @CanIgnoreReturnValue
   public ServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer) {
     contextCustomizers.add(contextCustomizer);
@@ -59,11 +60,10 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .setErrorCauseExtractor(errorCauseExtractor)
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .build())
-            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(additionalAttributesExtractor)
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get());

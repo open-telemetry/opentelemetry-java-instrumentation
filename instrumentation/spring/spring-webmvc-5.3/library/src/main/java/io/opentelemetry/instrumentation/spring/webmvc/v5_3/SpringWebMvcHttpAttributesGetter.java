@@ -98,10 +98,4 @@ enum SpringWebMvcHttpAttributesGetter
   public String scheme(HttpServletRequest request) {
     return request.getScheme();
   }
-
-  @Override
-  @Nullable
-  public String serverName(HttpServletRequest request) {
-    return null;
-  }
 }

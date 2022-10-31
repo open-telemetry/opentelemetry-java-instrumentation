@@ -39,10 +39,14 @@ public final class BufferPools {
 
   /** Register observers for java runtime buffer pool metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
-
     List<BufferPoolMXBean> bufferBeans =
         ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
-    Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");
+    registerObservers(openTelemetry, bufferBeans);
+  }
+
+  // Visible for testing
+  static void registerObservers(OpenTelemetry openTelemetry, List<BufferPoolMXBean> bufferBeans) {
+    Meter meter = RuntimeMetricsUtil.getMeter(openTelemetry);
 
     meter
         .upDownCounterBuilder("process.runtime.jvm.buffer.usage")
@@ -59,10 +63,11 @@ public final class BufferPools {
     meter
         .upDownCounterBuilder("process.runtime.jvm.buffer.count")
         .setDescription("The number of buffers in the pool")
-        .setUnit("buffers")
+        .setUnit("{buffers}")
         .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getCount));
   }
 
+  // Visible for testing
   static Consumer<ObservableLongMeasurement> callback(
       List<BufferPoolMXBean> bufferPools, Function<BufferPoolMXBean, Long> extractor) {
     List<Attributes> attributeSets = new ArrayList<>(bufferPools.size());

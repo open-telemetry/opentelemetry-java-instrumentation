@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
@@ -31,7 +31,7 @@ public class TomcatJdbcInstrumentationTest {
   @Test
   void shouldReportMetrics() throws Exception {
     // given
-    given(dataSourceMock.getConnection()).willReturn(connectionMock);
+    when(dataSourceMock.getConnection()).thenReturn(connectionMock);
 
     DataSource tomcatDataSource = new DataSource();
     tomcatDataSource.setDataSource(dataSourceMock);

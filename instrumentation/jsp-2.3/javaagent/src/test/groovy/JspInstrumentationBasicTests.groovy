@@ -91,7 +91,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -102,9 +101,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
           }
         }
         span(1) {
@@ -151,7 +150,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" "$route?$queryString"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -161,9 +159,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
           }
         }
         span(1) {
@@ -206,7 +204,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -217,9 +214,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
           }
         }
         span(1) {
@@ -271,7 +268,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           }
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
@@ -281,9 +277,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
           }
         }
         span(1) {
@@ -340,7 +336,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -350,9 +345,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
           }
         }
         span(1) {
@@ -390,7 +385,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -400,9 +394,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
           }
         }
         span(1) {
@@ -472,7 +466,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           errorEvent(JasperException, String)
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" route
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 500
@@ -482,9 +475,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
           }
         }
         span(1) {
@@ -523,7 +516,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           attributes {
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" "localhost:$port"
             "$SemanticAttributes.HTTP_TARGET" "/$jspWebappContext/$staticFile"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
@@ -533,9 +525,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_HOST_NAME" "localhost"
             "$SemanticAttributes.NET_HOST_PORT" port
-            "net.sock.peer.addr" "127.0.0.1"
-            "net.sock.peer.port" Long
-            "net.sock.host.addr" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
           }
         }
       }

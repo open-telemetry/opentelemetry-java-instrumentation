@@ -5,7 +5,7 @@
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.sdk.logs.data.Severity
+import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.jboss.logmanager.MDC
 import org.jboss.logmanager.Level
@@ -50,9 +50,9 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
       await()
         .untilAsserted(
           () -> {
-            assertThat(logs).hasSize(1)
+            assertThat(logRecords).hasSize(1)
           })
-      def log = logs.get(0)
+      def log = logRecords.get(0)
       assertThat(log.getBody().asString()).isEqualTo("xyz")
       assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
@@ -77,7 +77,7 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
       }
     } else {
       Thread.sleep(500) // sleep a bit just to make sure no log is captured
-      assertThat(logs.size() == 0).isTrue()
+      assertThat(logRecords.size() == 0).isTrue()
     }
 
     where:
@@ -113,9 +113,9 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
     await()
       .untilAsserted(
         () -> {
-          assertThat(logs).hasSize(1)
+          assertThat(logRecords).hasSize(1)
         })
-    def log = logs.get(0)
+    def log = logRecords.get(0)
     assertThat(log.getBody().asString()).isEqualTo("xyz")
     assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)

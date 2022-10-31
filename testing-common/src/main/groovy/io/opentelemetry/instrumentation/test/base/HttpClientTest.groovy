@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue
-import static org.junit.jupiter.api.Assumptions.assumeFalse
-
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -21,6 +18,9 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static org.junit.jupiter.api.Assumptions.assumeFalse
+import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
@@ -198,16 +198,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     @Override
     protected boolean testHttps() {
       return HttpClientTest.this.testHttps()
-    }
-
-    @Override
-    protected boolean testCausality() {
-      return HttpClientTest.this.testCausality()
-    }
-
-    @Override
-    protected boolean testCausalityWithCallback() {
-      return HttpClientTest.this.testCausalityWithCallback()
     }
 
     @Override
@@ -402,14 +392,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * propagate trace context.
    */
   def "high concurrency test"() {
-    assumeTrue(testCausality())
     expect:
     junitTest.highConcurrency()
   }
 
   def "high concurrency test with callback"() {
-    assumeTrue(testCausality())
-    assumeTrue(testCausalityWithCallback())
     assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
     expect:
@@ -490,14 +477,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testHttps() {
-    true
-  }
-
-  boolean testCausality() {
-    true
-  }
-
-  boolean testCausalityWithCallback() {
     true
   }
 

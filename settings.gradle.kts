@@ -1,27 +1,21 @@
 pluginManagement {
   plugins {
-    id("com.bmuschko.docker-remote-api") version "7.3.0"
-    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.bmuschko.docker-remote-api") version "8.1.0"
+    id("com.github.ben-manes.versions") version "0.43.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
-    id("com.google.cloud.tools.jib") version "3.2.1"
+    id("com.google.cloud.tools.jib") version "3.3.1"
     id("com.gradle.plugin-publish") version "1.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.6.20"
+    id("org.jetbrains.kotlin.jvm") version "1.7.20"
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.6.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
   }
-
-  repositories {
-    gradlePluginPortal()
-    mavenCentral()
-  }
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.11.1"
-  id("com.github.burrunan.s3-build-cache") version "1.3"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.1"
+  id("com.gradle.enterprise") version "3.11.2"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.2"
 }
 
 dependencyResolutionManagement {
@@ -89,7 +83,9 @@ buildCache {
 
 rootProject.name = "opentelemetry-java-instrumentation"
 
-includeBuild("conventions")
+// this is only split out due to a dependabot limitation
+// for details see .github/project-root-duplicates/README.md
+apply(from = "include-conventions.gradle.kts")
 
 include(":custom-checks")
 
@@ -111,8 +107,6 @@ include(":bom")
 include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-semconv")
-include(":instrumentation-appender-api-internal")
-include(":instrumentation-appender-sdk-internal")
 include(":instrumentation-annotations")
 include(":instrumentation-annotations-support")
 include(":instrumentation-annotations-support-testing")
@@ -353,8 +347,11 @@ include(":instrumentation:mongo:mongo-common:testing")
 include(":instrumentation:netty:netty-3.8:javaagent")
 include(":instrumentation:netty:netty-4.0:javaagent")
 include(":instrumentation:netty:netty-4.1:javaagent")
+include(":instrumentation:netty:netty-4.1:library")
+include(":instrumentation:netty:netty-4.1:testing")
 include(":instrumentation:netty:netty-4-common:javaagent")
-include(":instrumentation:netty:netty-common:javaagent")
+include(":instrumentation:netty:netty-4-common:library")
+include(":instrumentation:netty:netty-common:library")
 include(":instrumentation:okhttp:okhttp-2.2:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:library")
@@ -362,6 +359,7 @@ include(":instrumentation:okhttp:okhttp-3.0:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-logs-1.19:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-api:javaagent")
@@ -398,17 +396,19 @@ include(":instrumentation:redisson:redisson-3.17:javaagent")
 include(":instrumentation:redisson:redisson-common:javaagent")
 include(":instrumentation:redisson:redisson-common:testing")
 include(":instrumentation:resources:library")
-include(":instrumentation:restlet:restlet-1.0:javaagent")
-include(":instrumentation:restlet:restlet-1.0:library")
-include(":instrumentation:restlet:restlet-1.0:testing")
+include(":instrumentation:restlet:restlet-1.1:javaagent")
+include(":instrumentation:restlet:restlet-1.1:library")
+include(":instrumentation:restlet:restlet-1.1:testing")
 include(":instrumentation:restlet:restlet-2.0:javaagent")
 include(":instrumentation:restlet:restlet-2.0:library")
 include(":instrumentation:restlet:restlet-2.0:testing")
 include(":instrumentation:rmi:bootstrap")
 include(":instrumentation:rmi:javaagent")
-include(":instrumentation:rocketmq-client-4.8:javaagent")
-include(":instrumentation:rocketmq-client-4.8:library")
-include(":instrumentation:rocketmq-client-4.8:testing")
+include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:library")
+include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:testing")
+include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing")
 include(":instrumentation:runtime-metrics:javaagent")
 include(":instrumentation:runtime-metrics:library")
 include(":instrumentation:rxjava:rxjava-1.0:library")

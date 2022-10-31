@@ -30,13 +30,13 @@ class InetSocketAddressNetClientAttributesGetterTest {
             }
 
             @Override
-            public String peerName(InetSocketAddress request, InetSocketAddress response) {
+            public String peerName(InetSocketAddress request) {
               // net.peer.name and net.peer.port are tested in NetClientAttributesExtractorTest
               return null;
             }
 
             @Override
-            public Integer peerPort(InetSocketAddress request, InetSocketAddress response) {
+            public Integer peerPort(InetSocketAddress request) {
               // net.peer.name and net.peer.port are tested in NetClientAttributesExtractorTest
               return null;
             }
@@ -82,12 +82,12 @@ class InetSocketAddressNetClientAttributesGetterTest {
 
     AttributesBuilder builder = Attributes.builder();
     builder.put(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
-    builder.put(NetAttributes.NET_SOCK_PEER_ADDR, address.getAddress().getHostAddress());
+    builder.put(SemanticAttributes.NET_SOCK_PEER_ADDR, address.getAddress().getHostAddress());
     if (!ipv4) {
-      builder.put(NetAttributes.NET_SOCK_FAMILY, "inet6");
+      builder.put(SemanticAttributes.NET_SOCK_FAMILY, "inet6");
     }
-    builder.put(NetAttributes.NET_SOCK_PEER_NAME, "api.github.com");
-    builder.put(NetAttributes.NET_SOCK_PEER_PORT, 456L);
+    builder.put(SemanticAttributes.NET_SOCK_PEER_NAME, "api.github.com");
+    builder.put(SemanticAttributes.NET_SOCK_PEER_PORT, 456L);
 
     assertThat(endAttributes.build()).isEqualTo(builder.build());
   }

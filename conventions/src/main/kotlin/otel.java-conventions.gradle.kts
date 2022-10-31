@@ -13,6 +13,7 @@ plugins {
 
   id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
+  id("org.owasp.dependencycheck")
 }
 
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
@@ -124,6 +125,7 @@ dependencies {
   components.all<NettyAlignmentRule>()
 
   compileOnly("com.google.code.findbugs:jsr305")
+  compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:2.2.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.9"))
@@ -354,6 +356,12 @@ checkstyle {
   maxWarnings = 0
 }
 
+dependencyCheck {
+  skipConfigurations = listOf("errorprone", "checkstyle", "annotationProcessor")
+  suppressionFile = "buildscripts/dependency-check-suppressions.xml"
+  failBuildOnCVSS = 7.0f // fail on high or critical CVE
+}
+
 idea {
   module {
     isDownloadJavadoc = false
@@ -382,7 +390,6 @@ configurations.configureEach {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")).using(project(":instrumentation-api-semconv"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")).using(project(":instrumentation-annotations"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")).using(project(":instrumentation-annotations-support"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")).using(project(":instrumentation-appender-api-internal"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))

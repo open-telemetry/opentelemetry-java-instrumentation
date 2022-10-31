@@ -15,6 +15,7 @@ import application.io.opentelemetry.api.trace.SpanContext;
 import application.io.opentelemetry.api.trace.SpanKind;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.context.Context;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -32,30 +33,35 @@ class ApplicationSpan implements Span {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span setAttribute(String key, String value) {
     agentSpan.setAttribute(key, value);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span setAttribute(String key, long value) {
     agentSpan.setAttribute(key, value);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span setAttribute(String key, double value) {
     agentSpan.setAttribute(key, value);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span setAttribute(String key, boolean value) {
     agentSpan.setAttribute(key, value);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public <T> Span setAttribute(AttributeKey<T> applicationKey, T value) {
     @SuppressWarnings("unchecked")
     io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
@@ -66,24 +72,28 @@ class ApplicationSpan implements Span {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span addEvent(String name) {
     agentSpan.addEvent(name);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span addEvent(String name, long timestamp, TimeUnit unit) {
     agentSpan.addEvent(name, timestamp, unit);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span addEvent(String name, Attributes applicationAttributes) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes));
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span addEvent(
       String name, Attributes applicationAttributes, long timestamp, TimeUnit unit) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp, unit);
@@ -91,30 +101,35 @@ class ApplicationSpan implements Span {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span setStatus(StatusCode status) {
     agentSpan.setStatus(Bridging.toAgent(status));
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span setStatus(StatusCode status, String description) {
     agentSpan.setStatus(Bridging.toAgent(status), description);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span recordException(Throwable throwable) {
     agentSpan.recordException(throwable);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span recordException(Throwable throwable, Attributes attributes) {
     agentSpan.recordException(throwable, Bridging.toAgent(attributes));
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public Span updateName(String name) {
     agentSpan.updateName(name);
     return this;
@@ -171,24 +186,28 @@ class ApplicationSpan implements Span {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder setParent(Context applicationContext) {
       agentBuilder.setParent(AgentContextStorage.getAgentContext(applicationContext));
       return this;
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder setNoParent() {
       agentBuilder.setNoParent();
       return this;
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder addLink(SpanContext applicationSpanContext) {
       agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
       return this;
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder addLink(
         SpanContext applicationSpanContext, Attributes applicationAttributes) {
       agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
@@ -196,30 +215,35 @@ class ApplicationSpan implements Span {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder setAttribute(String key, String value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder setAttribute(String key, long value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder setAttribute(String key, double value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder setAttribute(String key, boolean value) {
       agentBuilder.setAttribute(key, value);
       return this;
     }
 
     @Override
+    @CanIgnoreReturnValue
     public <T> SpanBuilder setAttribute(AttributeKey<T> applicationKey, T value) {
       @SuppressWarnings("unchecked")
       io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
@@ -230,6 +254,7 @@ class ApplicationSpan implements Span {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder setSpanKind(SpanKind applicationSpanKind) {
       io.opentelemetry.api.trace.SpanKind agentSpanKind = toAgentOrNull(applicationSpanKind);
       if (agentSpanKind != null) {
@@ -239,6 +264,7 @@ class ApplicationSpan implements Span {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public SpanBuilder setStartTimestamp(long startTimestamp, TimeUnit unit) {
       agentBuilder.setStartTimestamp(startTimestamp, unit);
       return this;

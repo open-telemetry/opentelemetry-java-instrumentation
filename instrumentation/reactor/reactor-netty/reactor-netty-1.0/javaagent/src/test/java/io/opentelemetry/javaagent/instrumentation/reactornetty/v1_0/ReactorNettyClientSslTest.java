@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
@@ -112,7 +110,7 @@ class ReactorNettyClientSslTest {
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(INTERNAL)
@@ -123,9 +121,9 @@ class ReactorNettyClientSslTest {
                         .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                            equalTo(stringKey("net.sock.peer.name"), "localhost"),
-                            equalTo(longKey("net.sock.peer.port"), server.httpsPort()))));
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, server.httpsPort()))));
   }
 
   @Test
@@ -163,7 +161,7 @@ class ReactorNettyClientSslTest {
                                 AbstractLongAssert::isNotNegative),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)
@@ -180,16 +178,16 @@ class ReactorNettyClientSslTest {
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                             equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1")),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(stringKey("net.sock.peer.addr"), "127.0.0.1"),
-                            equalTo(stringKey("net.sock.peer.name"), "localhost"),
-                            equalTo(longKey("net.sock.peer.port"), server.httpsPort())),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
+                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, server.httpsPort())),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }

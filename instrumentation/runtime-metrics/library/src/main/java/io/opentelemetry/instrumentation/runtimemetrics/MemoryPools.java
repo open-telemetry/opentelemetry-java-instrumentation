@@ -50,8 +50,12 @@ public final class MemoryPools {
 
   /** Register observers for java runtime memory metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
-    List<MemoryPoolMXBean> poolBeans = ManagementFactory.getMemoryPoolMXBeans();
-    Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");
+    registerObservers(openTelemetry, ManagementFactory.getMemoryPoolMXBeans());
+  }
+
+  // Visible for testing
+  static void registerObservers(OpenTelemetry openTelemetry, List<MemoryPoolMXBean> poolBeans) {
+    Meter meter = RuntimeMetricsUtil.getMeter(openTelemetry);
 
     meter
         .upDownCounterBuilder("process.runtime.jvm.memory.usage")

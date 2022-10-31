@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -14,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +30,8 @@ public final class SpringWebMvcTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final HttpServerAttributesExtractorBuilder<HttpServletRequest, HttpServletResponse>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(
+              SpringWebMvcHttpAttributesGetter.INSTANCE, SpringWebMvcNetAttributesGetter.INSTANCE);
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -40,6 +41,7 @@ public final class SpringWebMvcTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpServletRequest, HttpServletResponse> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
@@ -51,6 +53,7 @@ public final class SpringWebMvcTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
@@ -61,6 +64,7 @@ public final class SpringWebMvcTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
@@ -81,8 +85,6 @@ public final class SpringWebMvcTelemetryBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-            .addAttributesExtractor(
-                NetServerAttributesExtractor.create(SpringWebMvcNetAttributesGetter.INSTANCE))
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get())

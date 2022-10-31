@@ -12,13 +12,10 @@ import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 /** Factory for {@link Resource} retrieving Container ID information. */
 public final class ContainerResource {
@@ -27,7 +24,6 @@ public final class ContainerResource {
   private static final String UNIQUE_HOST_NAME_FILE_NAME = "/proc/self/cgroup";
   private static final Resource INSTANCE = buildSingleton(UNIQUE_HOST_NAME_FILE_NAME);
 
-  @IgnoreJRERequirement
   private static Resource buildSingleton(String uniqueHostNameFileName) {
     // can't initialize this statically without running afoul of animalSniffer on paths
     return buildResource(Paths.get(uniqueHostNameFileName));
@@ -35,13 +31,11 @@ public final class ContainerResource {
 
   // package private for testing
   static Resource buildResource(Path path) {
-    String containerId = extractContainerId(path);
-
-    if (containerId == null || containerId.isEmpty()) {
-      return Resource.empty();
-    } else {
-      return Resource.create(Attributes.of(ResourceAttributes.CONTAINER_ID, containerId));
-    }
+    return extractContainerId(path)
+        .map(
+            containerId ->
+                Resource.create(Attributes.of(ResourceAttributes.CONTAINER_ID, containerId)))
+        .orElseGet(Resource::empty);
   }
 
   /** Returns resource with container information. */
@@ -56,34 +50,28 @@ public final class ContainerResource {
    *
    * @return containerId
    */
-  @IgnoreJRERequirement
-  @Nullable
-  private static String extractContainerId(Path cgroupFilePath) {
+  private static Optional<String> extractContainerId(Path cgroupFilePath) {
     if (!Files.exists(cgroupFilePath) || !Files.isReadable(cgroupFilePath)) {
-      return null;
+      return Optional.empty();
     }
     try (Stream<String> lines = Files.lines(cgroupFilePath)) {
-      Optional<String> value =
-          lines
-              .filter(line -> !line.isEmpty())
-              .map(ContainerResource::getIdFromLine)
-              .filter(Objects::nonNull)
-              .findFirst();
-      if (value.isPresent()) {
-        return value.get();
-      }
+      return lines
+          .filter(line -> !line.isEmpty())
+          .map(ContainerResource::getIdFromLine)
+          .filter(Optional::isPresent)
+          .findFirst()
+          .orElse(Optional.empty());
     } catch (Exception e) {
       logger.log(Level.WARNING, "Unable to read file", e);
     }
-    return null;
+    return Optional.empty();
   }
 
-  @Nullable
-  private static String getIdFromLine(String line) {
+  private static Optional<String> getIdFromLine(String line) {
     // This cgroup output line should have the container id in it
     int lastSlashIdx = line.lastIndexOf('/');
     if (lastSlashIdx < 0) {
-      return null;
+      return Optional.empty();
     }
 
     String containerId;
@@ -105,16 +93,16 @@ public final class ContainerResource {
         endIdx = lastSection.length();
       }
       if (startIdx > endIdx) {
-        return null;
+        return Optional.empty();
       }
 
       containerId = lastSection.substring(startIdx, endIdx);
     }
 
     if (OtelEncodingUtils.isValidBase16String(containerId) && !containerId.isEmpty()) {
-      return containerId;
+      return Optional.of(containerId);
     } else {
-      return null;
+      return Optional.empty();
     }
   }
 

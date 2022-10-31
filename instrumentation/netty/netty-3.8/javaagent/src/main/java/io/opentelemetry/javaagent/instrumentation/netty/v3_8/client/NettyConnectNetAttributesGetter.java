@@ -9,7 +9,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_UDP;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -26,7 +26,7 @@ final class NettyConnectNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(NettyConnectionRequest request, @Nullable Channel channel) {
+  public String peerName(NettyConnectionRequest request) {
     SocketAddress requestedAddress = request.remoteAddressOnStart();
     if (requestedAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) requestedAddress).getHostString();
@@ -36,7 +36,7 @@ final class NettyConnectNetAttributesGetter
 
   @Nullable
   @Override
-  public Integer peerPort(NettyConnectionRequest request, @Nullable Channel channel) {
+  public Integer peerPort(NettyConnectionRequest request) {
     SocketAddress requestedAddress = request.remoteAddressOnStart();
     if (requestedAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) requestedAddress).getPort();

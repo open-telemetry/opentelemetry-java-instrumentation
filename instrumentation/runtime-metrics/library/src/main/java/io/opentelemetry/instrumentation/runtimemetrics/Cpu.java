@@ -80,7 +80,7 @@ public final class Cpu {
       OperatingSystemMXBean osBean,
       @Nullable Supplier<Double> systemCpuUsage,
       @Nullable Supplier<Double> processCpuUsage) {
-    Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");
+    Meter meter = RuntimeMetricsUtil.getMeter(openTelemetry);
 
     meter
         .gaugeBuilder("process.runtime.jvm.system.cpu.load_1m")

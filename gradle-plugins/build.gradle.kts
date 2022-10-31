@@ -26,10 +26,10 @@ configurations.named("compileOnly") {
 dependencies {
   implementation("com.google.guava:guava:31.1-jre")
   // we need to use byte buddy variant that does not shade asm
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.17") {
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.18") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")
   }
-  implementation("net.bytebuddy:byte-buddy-dep:1.12.17")
+  implementation("net.bytebuddy:byte-buddy-dep:1.12.18")
 
   implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
@@ -137,15 +137,14 @@ afterEvaluate {
       }
     }
   }
+}
 
 // Sign only if we have a key to do so
-  val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
-// Stub out entire signing block off of CI since Gradle provides no way of lazy configuration of
-// signing tasks.
-  if (System.getenv("CI") != null && signingKey != null) {
-    signing {
-      useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
-      sign(publishing.publications["pluginMaven"])
-    }
-  }
+val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
+signing {
+  setRequired({
+    // only require signing on CI and when a signing key is present
+    System.getenv("CI") != null && signingKey != null
+  })
+  useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
+import static io.opentelemetry.instrumentation.runtimemetrics.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -41,6 +42,7 @@ class ClassesTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of classes loaded since JVM start")
                         .hasUnit("1")
                         .hasLongSumSatisfying(
@@ -56,6 +58,7 @@ class ClassesTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of classes unloaded since JVM start")
                         .hasUnit("1")
                         .hasLongSumSatisfying(
@@ -71,6 +74,7 @@ class ClassesTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of classes currently loaded")
                         .hasUnit("1")
                         .hasLongSumSatisfying(

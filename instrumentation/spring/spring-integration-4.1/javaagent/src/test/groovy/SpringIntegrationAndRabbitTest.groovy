@@ -46,9 +46,9 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           childOf span(1)
           kind CLIENT
           attributes {
-            "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
-            "net.sock.peer.port" Long
-            "net.sock.family" { it == null || it == "inet6" }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }
@@ -59,9 +59,9 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           childOf span(1)
           kind PRODUCER
           attributes {
-            "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
-            "net.sock.peer.port" Long
-            "net.sock.family" { it == null || it == "inet6" }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION" "testTopic"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
@@ -113,9 +113,9 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           name "basic.ack"
           kind CLIENT
           attributes {
-            "net.sock.peer.addr" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
-            "net.sock.peer.port" Long
-            "net.sock.family" { it == null || it == "inet6" }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
           }

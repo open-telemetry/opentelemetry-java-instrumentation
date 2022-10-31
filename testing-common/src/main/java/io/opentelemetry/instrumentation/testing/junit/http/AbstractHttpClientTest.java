@@ -140,7 +140,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return READ_TIMEOUT;
   }
 
-  private InstrumentationTestRunner testing;
+  protected InstrumentationTestRunner testing;
   private HttpClientTestServer server;
 
   private final HttpClientTestOptions options = new HttpClientTestOptions();
@@ -182,12 +182,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     }
     if (!testHttps()) {
       options.disableTestHttps();
-    }
-    if (!testCausality()) {
-      options.disableTestCausality();
-    }
-    if (!testCausalityWithCallback()) {
-      options.disableTestCausalityWithCallback();
     }
     if (!testCallback()) {
       options.disableTestCallback();
@@ -704,8 +698,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    */
   @Test
   void highConcurrency() {
-    assumeTrue(options.testCausality);
-
     int count = 50;
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -777,8 +769,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void highConcurrencyWithCallback() {
-    assumeTrue(options.testCausality);
-    assumeTrue(options.testCausalityWithCallback);
     assumeTrue(options.testCallback);
     assumeTrue(options.testCallbackWithParent);
 
@@ -988,14 +978,14 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 }
 
                 // TODO: Move to test knob rather than always treating as optional
-                if (attrs.get(AttributeKey.stringKey("net.sock.peer.addr")) != null) {
+                if (attrs.get(SemanticAttributes.NET_SOCK_PEER_ADDR) != null) {
                   assertThat(attrs)
-                      .containsEntry(AttributeKey.stringKey("net.sock.peer.addr"), "127.0.0.1");
+                      .containsEntry(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1");
                 }
-                if (attrs.get(AttributeKey.stringKey("net.sock.peer.port")) != null) {
+                if (attrs.get(SemanticAttributes.NET_SOCK_PEER_PORT) != null) {
                   assertThat(attrs)
                       .containsEntry(
-                          AttributeKey.longKey("net.sock.peer.port"),
+                          SemanticAttributes.NET_SOCK_PEER_PORT,
                           "https".equals(uri.getScheme()) ? server.httpsPort() : server.httpPort());
                 }
               }
@@ -1118,14 +1108,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   }
 
   protected boolean testHttps() {
-    return true;
-  }
-
-  protected boolean testCausality() {
-    return true;
-  }
-
-  protected boolean testCausalityWithCallback() {
     return true;
   }
 

@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 public final class ReactorAsyncOperationEndStrategyBuilder {
   private boolean captureExperimentalSpanAttributes;
 
   ReactorAsyncOperationEndStrategyBuilder() {}
 
+  @CanIgnoreReturnValue
   public ReactorAsyncOperationEndStrategyBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;

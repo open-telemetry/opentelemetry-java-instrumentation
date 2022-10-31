@@ -3,8 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":instrumentation-appender-api-internal"))
-  implementation(project(":instrumentation-appender-sdk-internal"))
+  implementation("io.opentelemetry:opentelemetry-api-logs")
 
   // pin the version strictly to avoid overriding by dependencyManagement versions
   compileOnly("ch.qos.logback:logback-classic") {

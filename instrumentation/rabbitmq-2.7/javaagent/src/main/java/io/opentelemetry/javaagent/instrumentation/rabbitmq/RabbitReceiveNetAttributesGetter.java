@@ -21,13 +21,13 @@ public class RabbitReceiveNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(ReceiveRequest request, @Nullable GetResponse response) {
+  public String peerName(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(ReceiveRequest request, @Nullable GetResponse response) {
+  public Integer peerPort(ReceiveRequest request) {
     return null;
   }
 
