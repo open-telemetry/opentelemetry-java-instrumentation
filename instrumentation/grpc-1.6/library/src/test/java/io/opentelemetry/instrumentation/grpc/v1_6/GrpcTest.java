@@ -62,7 +62,8 @@ class GrpcTest extends AbstractGrpcTest {
   @Test
   void grpcAttributesExtractor() throws Exception {
     String metadataKey = "some-key";
-    AttributeKey<List<String>> attributeKey = AttributeKey.stringArrayKey(METADATA_ATTRIBUTE_PREFIX + metadataKey);
+    AttributeKey<List<String>> attributeKey =
+        AttributeKey.stringArrayKey(METADATA_ATTRIBUTE_PREFIX + metadataKey);
     String metadataValue = "some-value";
     List<String> metadataValueAsList = Collections.singletonList("some-value");
 
@@ -78,9 +79,9 @@ class GrpcTest extends AbstractGrpcTest {
           }
         };
 
-    GrpcAttributesExtractor grpcAttributesExtractor = new GrpcAttributesExtractor(
-        GrpcRpcAttributesGetter.INSTANCE,
-        Collections.singletonList(metadataKey));
+    GrpcAttributesExtractor grpcAttributesExtractor =
+        new GrpcAttributesExtractor(
+            GrpcRpcAttributesGetter.INSTANCE, Collections.singletonList(metadataKey));
 
     Server server =
         ServerBuilder.forPort(0)
@@ -103,7 +104,8 @@ class GrpcTest extends AbstractGrpcTest {
                         .newClientInterceptor()));
 
     Metadata extraMetadata = new Metadata();
-    extraMetadata.put(Metadata.Key.of(metadataKey, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
+    extraMetadata.put(
+        Metadata.Key.of(metadataKey, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
 
     GreeterGrpc.GreeterBlockingStub client =
         GreeterGrpc.newBlockingStub(channel)

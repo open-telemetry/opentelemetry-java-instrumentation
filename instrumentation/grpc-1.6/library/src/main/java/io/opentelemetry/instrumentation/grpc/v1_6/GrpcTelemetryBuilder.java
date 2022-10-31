@@ -52,7 +52,6 @@ public final class GrpcTelemetryBuilder {
   private boolean captureExperimentalSpanAttributes;
   private List<String> requestMetadataValuesToCapture;
 
-
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
