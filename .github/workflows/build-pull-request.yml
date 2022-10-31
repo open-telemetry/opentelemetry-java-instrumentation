@@ -15,11 +15,6 @@ jobs:
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
       cache-read-only: true
 
-  test-latest-deps:
-    uses: ./.github/workflows/reusable-test-latest-deps.yml
-    with:
-      cache-read-only: true
-
   muzzle:
     # release branch PRs are excluded
     # because any time a new library version is released to maven central it can fail

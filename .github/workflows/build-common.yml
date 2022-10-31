@@ -51,48 +51,6 @@ jobs:
 
       - uses: gradle/wrapper-validation-action@v1.0.5
 
-  license-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK for running Gradle
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Generate license report
-        uses: gradle/gradle-build-action@v2
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-        with:
-          # currently ignoring inputs.no-build-cache and always running with --no-build-cache
-          # see https://github.com/jk1/Gradle-License-Report/issues/231
-          arguments: generateLicenseReport --no-build-cache
-          cache-read-only: ${{ inputs.cache-read-only }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
-
-      - name: Check licenses
-        run: |
-          # add any untracked folders that may have been added by generateLicenseReport
-          git add licenses
-          # there's always going to one line difference due to the timestamp included in the report
-          if [[ $(git diff --cached --shortstat licenses) == " 1 file changed, 1 insertion(+), 1 deletion(-)" ]]
-          then
-            echo "Licenses are up-to-date."
-          else
-            echo "Licenses are not up-to-date, please run './gradlew generateLicenseReport' locally and commit."
-            echo
-            echo "$(git diff --cached --stat licenses)"
-            echo
-            echo "$(git diff --cached licenses)"
-            exit 1
-          fi
-
   assemble:
     runs-on: ubuntu-latest
     steps:
@@ -134,13 +92,9 @@ jobs:
     strategy:
       matrix:
         test-java-version:
-          - 8
           - 11
-          - 17
-          - 19
         vm:
           - hotspot
-          - openj9
         exclude:
           - test-java-version: 19
             vm: openj9
@@ -214,39 +168,39 @@ jobs:
             **/jitdump.*.dmp
           if-no-files-found: ignore
 
-  smoke-test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - windows-2019
-          - ubuntu-latest
-        smoke-test-suite:
-          - jetty
-          - liberty
-          - payara
-          - tomcat
-          - tomee
-          - websphere
-          - wildfly
-          - other
-        exclude:
-          - os: ${{ inputs.skip-windows-smoke-tests && 'windows-2019' || '' }}
-          - os: windows-2019
-            smoke-test-suite: websphere
-      fail-fast: false
-    steps:
-      - name: Support long paths
-        run: git config --system core.longpaths true
-        if: matrix.os == 'windows-2019'
-
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK for running Gradle
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 17
+#  smoke-test:
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        os:
+#          - windows-2019
+#          - ubuntu-latest
+#        smoke-test-suite:
+#          - jetty
+#          - liberty
+#          - payara
+#          - tomcat
+#          - tomee
+#          - websphere
+#          - wildfly
+#          - other
+#        exclude:
+#          - os: ${{ inputs.skip-windows-smoke-tests && 'windows-2019' || '' }}
+#          - os: windows-2019
+#            smoke-test-suite: websphere
+#      fail-fast: false
+#    steps:
+#      - name: Support long paths
+#        run: git config --system core.longpaths true
+#        if: matrix.os == 'windows-2019'
+#
+#      - uses: actions/checkout@v3
+#
+#      - name: Set up JDK for running Gradle
+#        uses: actions/setup-java@v3
+#        with:
+#          distribution: temurin
+#          java-version: 17
 
       - name: Set up Gradle cache
         uses: gradle/gradle-build-action@v2
@@ -308,40 +262,3 @@ jobs:
           arguments: build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           build-root-directory: gradle-plugins
           cache-read-only: ${{ inputs.cache-read-only }}
-
-  examples:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK for running Gradle
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Set up Gradle cache
-        uses: gradle/gradle-build-action@v2
-        with:
-          cache-read-only: ${{ inputs.cache-read-only }}
-
-      - name: Local publish of artifacts
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
-
-      - name: Local publish of gradle plugins
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
-        working-directory: gradle-plugins
-
-      - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-        working-directory: examples/distro
-
-      - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-        working-directory: examples/extension
-
-      - name: Run muzzle check against extension
-        run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
-        working-directory: examples/extension
