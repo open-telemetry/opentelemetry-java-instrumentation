@@ -28,7 +28,6 @@ public final class GrpcSingletons {
         InstrumentationConfig.get()
             .getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
 
-
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
