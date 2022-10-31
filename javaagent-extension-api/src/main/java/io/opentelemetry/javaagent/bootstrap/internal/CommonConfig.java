@@ -46,14 +46,15 @@ public final class CommonConfig {
         config.getList("otel.instrumentation.grpc.capture-metadata.request", emptyList());
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
-
   }
 
   public Map<String, String> getPeerServiceMapping() {
     return peerServiceMapping;
   }
 
-  public List<String> getClientRequestHeaders() { return clientRequestHeaders; }
+  public List<String> getClientRequestHeaders() {
+    return clientRequestHeaders;
+  }
 
   public List<String> getClientResponseHeaders() {
     return clientResponseHeaders;
