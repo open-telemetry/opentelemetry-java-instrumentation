@@ -14,7 +14,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.11.2"
+  id("com.gradle.enterprise") version "3.11.3"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.2"
 }
 
