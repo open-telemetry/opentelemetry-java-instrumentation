@@ -17,9 +17,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, Status> {
-  // TODO: This should be added to package io.opentelemetry.semconv.trace.attributes in the next
-  // release
-  public static final String GRPC_METADATA_ATTRIBUTE_VALUE_PREFIX = "rpc.request.metadata";
+  // TODO: This should be added to
+  //  io.opentelemetry.semconv.trace.attributes.SemanticAttributes when possible
+  public static final String RPC_REQUEST_METADATA_ATTRIBUTE_VALUE_PREFIX = "rpc.request.metadata";
 
   private final GrpcRpcAttributesGetter getter;
   private final List<String> requestMetadataValuesToCapture;
@@ -51,7 +51,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       for (String key : requestMetadataValuesToCapture) {
         internalSet(
             attributes,
-            AttributeKey.stringArrayKey(GRPC_METADATA_ATTRIBUTE_VALUE_PREFIX + "." + key),
+            AttributeKey.stringArrayKey(RPC_REQUEST_METADATA_ATTRIBUTE_VALUE_PREFIX + "." + key),
             getter.metadataValue(request, key));
       }
     }
