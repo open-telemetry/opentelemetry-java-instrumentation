@@ -66,7 +66,7 @@ final class RocketMqPublishingMessageImplInstrumentation implements TypeInstrume
 
   @SuppressWarnings("unused")
   public static class GetPropertiesAdvice {
-    /** Update the message properties to propagate context recorded by {@link MapSetter}. */
+    /** Update the message properties to propagate context recorded by {@link MessageMapSetter}. */
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This MessageImpl messageImpl,
