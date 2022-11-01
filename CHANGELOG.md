@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Bring back two public methods in `opentelemetry-instrumentation-api-semconv` that were mistakenly
+  removed in v1.19.1 without a deprecation cycle
+  ([#7020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7020))
+
 ## Version 1.19.1 (2022-10-19)
 
 ### 🛠️ Bug fixes
