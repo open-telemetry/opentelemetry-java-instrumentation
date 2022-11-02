@@ -64,7 +64,7 @@ public final class CommonConfig {
   public List<String> getServerResponseHeaders() {
     return serverResponseHeaders;
   }
-  
+
   public boolean isStatementSanitizationEnabled() {
     return statementSanitizationEnabled;
   }
