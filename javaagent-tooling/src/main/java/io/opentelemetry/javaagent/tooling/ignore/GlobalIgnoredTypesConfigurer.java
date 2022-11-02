@@ -157,5 +157,9 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // Don't instrument the executor's own runnables. These runnables may never return until
     // netty shuts down.
     builder.ignoreTaskClass("io.netty.util.concurrent.SingleThreadEventExecutor$");
+
+    // Presto's presto-jdbc shades the okhttp3 ConnectionPool class. Just like we ignore the pool
+    // in OkHttp3IgnoredTypesConfigurer we need to also ignore it here.
+    builder.ignoreTaskClass("io.prestosql.jdbc.$internal.okhttp3.ConnectionPool$");
   }
 }
