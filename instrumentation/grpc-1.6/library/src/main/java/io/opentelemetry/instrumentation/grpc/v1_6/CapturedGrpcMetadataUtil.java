@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static java.util.Collections.unmodifiableList;
@@ -25,7 +30,8 @@ final class CapturedGrpcMetadataUtil {
   }
 
   static AttributeKey<List<String>> requestAttributeKey(String metadataKey) {
-    return requestKeysCache.computeIfAbsent(metadataKey, CapturedGrpcMetadataUtil::createRequestKey);
+    return requestKeysCache.computeIfAbsent(
+        metadataKey, CapturedGrpcMetadataUtil::createRequestKey);
   }
 
   private static AttributeKey<List<String>> createRequestKey(String metadataKey) {
