@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
+import static java.util.Collections.emptyList;
+
 import io.grpc.ClientInterceptor;
 import io.grpc.Context;
 import io.grpc.ServerInterceptor;
@@ -13,8 +15,6 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
-
-import static java.util.Collections.emptyList;
 
 // Holds singleton references.
 public final class GrpcSingletons {
@@ -29,7 +29,6 @@ public final class GrpcSingletons {
     boolean experimentalSpanAttributes =
         InstrumentationConfig.get()
             .getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
-
 
     List<String> rpcRequestMetadata =
         InstrumentationConfig.get()
