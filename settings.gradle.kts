@@ -1,26 +1,20 @@
 pluginManagement {
   plugins {
-    id("com.bmuschko.docker-remote-api") version "7.3.0"
-    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.bmuschko.docker-remote-api") version "8.1.0"
+    id("com.github.ben-manes.versions") version "0.43.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
-    id("com.google.cloud.tools.jib") version "3.2.1"
+    id("com.google.cloud.tools.jib") version "3.3.1"
     id("com.gradle.plugin-publish") version "1.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.6.20"
+    id("org.jetbrains.kotlin.jvm") version "1.7.20"
     id("org.unbroken-dome.test-sets") version "4.0.0"
     id("org.xbib.gradle.plugin.jflex") version "1.6.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
   }
-
-  repositories {
-    gradlePluginPortal()
-    mavenCentral()
-  }
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.11.2"
-  id("com.github.burrunan.s3-build-cache") version "1.3"
+  id("com.gradle.enterprise") version "3.11.3"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.2"
 }
 
@@ -89,7 +83,9 @@ buildCache {
 
 rootProject.name = "opentelemetry-java-instrumentation"
 
-includeBuild("conventions")
+// this is only split out due to a dependabot limitation
+// for details see .github/project-root-duplicates/README.md
+apply(from = "include-conventions.gradle.kts")
 
 include(":custom-checks")
 
@@ -409,6 +405,8 @@ include(":instrumentation:rmi:javaagent")
 include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:javaagent")
 include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:library")
 include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:testing")
+include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing")
 include(":instrumentation:runtime-metrics:javaagent")
 include(":instrumentation:runtime-metrics:library")
 include(":instrumentation:rxjava:rxjava-1.0:library")

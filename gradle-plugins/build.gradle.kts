@@ -137,15 +137,14 @@ afterEvaluate {
       }
     }
   }
+}
 
 // Sign only if we have a key to do so
-  val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
-// Stub out entire signing block off of CI since Gradle provides no way of lazy configuration of
-// signing tasks.
-  if (System.getenv("CI") != null && signingKey != null) {
-    signing {
-      useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
-      sign(publishing.publications["pluginMaven"])
-    }
-  }
+val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
+signing {
+  setRequired({
+    // only require signing on CI and when a signing key is present
+    System.getenv("CI") != null && signingKey != null
+  })
+  useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
 }
