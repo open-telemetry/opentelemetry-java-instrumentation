@@ -20,18 +20,14 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.lang.management.GarbageCollectorMXBean;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.management.ListenerNotFoundException;
-import javax.management.MBeanNotificationInfo;
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
-import javax.management.NotificationFilter;
 import javax.management.NotificationListener;
-import javax.management.ObjectName;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -44,25 +40,19 @@ class GarbageCollectorTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @Mock private GarbageCollectorMXBean gcBean;
-  @Mock private NotificationEmitter notificationEmitter;
+  @Mock(extraInterfaces = NotificationEmitter.class)
+  private GarbageCollectorMXBean gcBean;
 
-  private GarbageCollectorMXBean testGcBean;
-
-  @BeforeEach
-  void setup() {
-    testGcBean = new TestGcBean(notificationEmitter, gcBean);
-  }
+  @Captor private ArgumentCaptor<NotificationListener> listenerCaptor;
 
   @Test
   void registerObservers() {
     GarbageCollector.registerObservers(
         testing.getOpenTelemetry(),
-        Collections.singletonList(testGcBean),
+        Collections.singletonList(gcBean),
         GarbageCollectorTest::getGcNotificationInfo);
 
-    ArgumentCaptor<NotificationListener> listenerCaptor =
-        ArgumentCaptor.forClass(NotificationListener.class);
+    NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
     verify(notificationEmitter).addNotificationListener(listenerCaptor.capture(), any(), any());
     NotificationListener listener = listenerCaptor.getValue();
 
@@ -139,75 +129,6 @@ class GarbageCollectorTest {
           "test",
           sequence.incrementAndGet());
       this.gcNotificationInfo = gcNotificationInfo;
-    }
-  }
-
-  /**
-   * Combines {@link NotificationEmitter} and {@link GarbageCollectorMXBean}, allowing a composite
-   * mock of the two interfaces.
-   */
-  private static class TestGcBean implements NotificationEmitter, GarbageCollectorMXBean {
-
-    private final NotificationEmitter notificationEmitter;
-    private final GarbageCollectorMXBean gcBean;
-
-    private TestGcBean(NotificationEmitter notificationEmitter, GarbageCollectorMXBean gcBean) {
-      this.notificationEmitter = notificationEmitter;
-      this.gcBean = gcBean;
-    }
-
-    @Override
-    public void removeNotificationListener(NotificationListener listener)
-        throws ListenerNotFoundException {
-      notificationEmitter.removeNotificationListener(listener);
-    }
-
-    @Override
-    public void removeNotificationListener(
-        NotificationListener listener, NotificationFilter filter, Object handback)
-        throws ListenerNotFoundException {
-      notificationEmitter.removeNotificationListener(listener, filter, handback);
-    }
-
-    @Override
-    public void addNotificationListener(
-        NotificationListener listener, NotificationFilter filter, Object handback) {
-      notificationEmitter.addNotificationListener(listener, filter, handback);
-    }
-
-    @Override
-    public MBeanNotificationInfo[] getNotificationInfo() {
-      return notificationEmitter.getNotificationInfo();
-    }
-
-    @Override
-    public long getCollectionCount() {
-      return gcBean.getCollectionCount();
-    }
-
-    @Override
-    public long getCollectionTime() {
-      return gcBean.getCollectionTime();
-    }
-
-    @Override
-    public String getName() {
-      return gcBean.getName();
-    }
-
-    @Override
-    public boolean isValid() {
-      return gcBean.isValid();
-    }
-
-    @Override
-    public String[] getMemoryPoolNames() {
-      return gcBean.getMemoryPoolNames();
-    }
-
-    @Override
-    public ObjectName getObjectName() {
-      return gcBean.getObjectName();
     }
   }
 }
