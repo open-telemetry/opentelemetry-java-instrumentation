@@ -50,7 +50,7 @@ public final class GrpcTelemetryBuilder {
       additionalClientExtractors = new ArrayList<>();
 
   private boolean captureExperimentalSpanAttributes;
-  private List<String> requestMetadataValuesToCapture;
+  private List<String> capturedRequestMetadata;
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -119,7 +119,7 @@ public final class GrpcTelemetryBuilder {
   /** Sets which metadata request values should be captured as span attributes. */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setCapturedRequestMetadata(List<String> capturedRequestMetadata) {
-    this.requestMetadataValuesToCapture = capturedRequestMetadata;
+    this.capturedRequestMetadata = capturedRequestMetadata;
     return this;
   }
 
@@ -149,7 +149,7 @@ public final class GrpcTelemetryBuilder {
                     .setSpanStatusExtractor(new GrpcSpanStatusExtractor())
                     .addAttributesExtractor(
                         new GrpcAttributesExtractor(
-                            GrpcRpcAttributesGetter.INSTANCE, requestMetadataValuesToCapture))
+                            GrpcRpcAttributesGetter.INSTANCE, capturedRequestMetadata))
                     .addAttributesExtractors(additionalExtractors));
 
     GrpcNetClientAttributesGetter netClientAttributesGetter = new GrpcNetClientAttributesGetter();
