@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.javaagent.jmx;
 
-import static java.util.logging.Level.CONFIG;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -31,7 +31,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
     if (config.getBoolean("otel.jmx.enabled", true)) {
       JmxMetricInsight service =
           JmxMetricInsight.createService(GlobalOpenTelemetry.get(), beanDiscoveryDelay(config));
-      MetricConfiguration conf = buildMetricConfiguration();
+      MetricConfiguration conf = buildMetricConfiguration(config);
       service.start(conf);
     }
   }
@@ -61,26 +61,28 @@ public class JmxMetricInsightInstaller implements AgentListener {
         RuleParser parserInstance = RuleParser.get();
         parserInstance.addMetricDefs(conf, inputStream);
       } else {
-        JmxMetricInsight.getLogger().log(CONFIG, "No support found for {0}", platform);
+        JmxMetricInsight.getLogger().log(INFO, "No support found for {0}", platform);
       }
     } catch (Exception e) {
       JmxMetricInsight.getLogger().warning(e.getMessage());
     }
   }
 
-  private static void buildFromDefaultRules(MetricConfiguration conf) {
-    String targetSystem = System.getProperty("otel.jmx.target.system", "").trim();
-    String[] platforms = targetSystem.length() == 0 ? new String[0] : targetSystem.split(",");
+  private static void buildFromDefaultRules(
+      MetricConfiguration conf, ConfigProperties configProperties) {
+    String targetSystem = configProperties.getString("otel.jmx.target.system", "");
+    String[] platforms = targetSystem.isEmpty() ? new String[0] : targetSystem.split(",");
 
     for (String platform : platforms) {
       addRulesForPlatform(platform, conf);
     }
   }
 
-  private static void buildFromUserRules(MetricConfiguration conf) {
-    String jmxDir = System.getProperty("otel.jmx.config");
+  private static void buildFromUserRules(
+      MetricConfiguration conf, ConfigProperties configProperties) {
+    String jmxDir = configProperties.getString("otel.jmx.config");
     if (jmxDir != null) {
-      JmxMetricInsight.getLogger().log(CONFIG, "JMX config file name: {0}", jmxDir);
+      JmxMetricInsight.getLogger().log(FINE, "JMX config file name: {0}", jmxDir);
       RuleParser parserInstance = RuleParser.get();
       try (InputStream inputStream = Files.newInputStream(new File(jmxDir.trim()).toPath())) {
         parserInstance.addMetricDefs(conf, inputStream);
@@ -90,13 +92,13 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static MetricConfiguration buildMetricConfiguration() {
-    MetricConfiguration conf = new MetricConfiguration();
+  private static MetricConfiguration buildMetricConfiguration(ConfigProperties configProperties) {
+    MetricConfiguration metricConfiguration = new MetricConfiguration();
 
-    buildFromDefaultRules(conf);
+    buildFromDefaultRules(metricConfiguration, configProperties);
 
-    buildFromUserRules(conf);
+    buildFromUserRules(metricConfiguration, configProperties);
 
-    return conf;
+    return metricConfiguration;
   }
 }
