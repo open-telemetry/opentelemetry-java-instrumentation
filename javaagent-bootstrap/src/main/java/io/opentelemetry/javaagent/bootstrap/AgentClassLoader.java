@@ -116,7 +116,7 @@ public class AgentClassLoader extends URLClassLoader {
 
   private static ClassLoader getParentClassLoader() {
     if (JAVA_VERSION > 8) {
-      return new JdkHttpServerClassLoader();
+      return new PlatformDelegatingClassLoader();
     }
     return null;
   }
@@ -441,7 +441,10 @@ public class AgentClassLoader extends URLClassLoader {
     }
   }
 
-  private static class JdkHttpServerClassLoader extends ClassLoader {
+  // We don't always delegate to platform loader because platform class loader also contains user
+  // classes when running a modular application. We don't want these classes interfering with the
+  // agent.
+  private static class PlatformDelegatingClassLoader extends ClassLoader {
 
     static {
       // this class loader doesn't load any classes, so this is technically unnecessary,
@@ -452,14 +455,16 @@ public class AgentClassLoader extends URLClassLoader {
 
     private final ClassLoader platformClassLoader = getPlatformLoader();
 
-    public JdkHttpServerClassLoader() {
+    public PlatformDelegatingClassLoader() {
       super(null);
     }
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
       // prometheus exporter uses jdk http server, load it from the platform class loader
-      if (name != null && name.startsWith("com.sun.net.httpserver.")) {
+      // some custom extensions use java.sql classes, make these available to agent and extensions
+      if (name != null
+          && (name.startsWith("com.sun.net.httpserver.") || name.startsWith("java.sql."))) {
         return platformClassLoader.loadClass(name);
       }
       return Class.forName(name, false, null);
