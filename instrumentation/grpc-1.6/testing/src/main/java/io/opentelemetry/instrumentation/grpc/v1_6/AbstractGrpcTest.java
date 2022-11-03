@@ -39,13 +39,18 @@ import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.reflection.v1alpha.ServerReflectionRequest;
 import io.grpc.reflection.v1alpha.ServerReflectionResponse;
+import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.Collections;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -66,6 +71,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractGrpcTest {
+  protected static final String METADATA_KEY = "some-key";
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
@@ -1667,6 +1673,63 @@ public abstract class AbstractGrpcTest {
     clientCallDone.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
+  }
+
+  @Test
+  void setCapturedRequestMetadata() throws Exception {
+    String metadataAttributePrefix = "rpc.request.metadata.";
+    AttributeKey<List<String>> attributeKey =
+        AttributeKey.stringArrayKey(metadataAttributePrefix + METADATA_KEY);
+    String metadataValue = "some-value";
+    List<String> metadataValueAsList = Collections.singletonList("some-value");
+
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public void sayHello(
+              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
+            Helloworld.Response reply =
+                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+          }
+        };
+
+    Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
+
+    ManagedChannel channel = createChannel(server);
+
+    Metadata extraMetadata = new Metadata();
+    extraMetadata.put(
+        Metadata.Key.of(METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
+
+    GreeterGrpc.GreeterBlockingStub client =
+        GreeterGrpc.newBlockingStub(channel)
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(extraMetadata));
+
+    Helloworld.Response response =
+        testing()
+            .runWithSpan(
+                "parent",
+                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+
+    OpenTelemetryAssertions.assertThat(response.getMessage()).isEqualTo("Hello test");
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttribute(attributeKey, metadataValueAsList),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttribute(attributeKey, metadataValueAsList)));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
