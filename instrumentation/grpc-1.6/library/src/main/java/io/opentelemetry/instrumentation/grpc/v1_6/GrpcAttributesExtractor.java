@@ -46,7 +46,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
     if (capturedRequestMetadata != null) {
       for (String key : capturedRequestMetadata) {
         List<String> value = getter.metadataValue(request, key);
-        if (value != null) {
+        if (!value.isEmpty()) {
           attributes.put(requestAttributeKey(key), value);
         }
       }
