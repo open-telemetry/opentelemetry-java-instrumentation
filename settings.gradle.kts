@@ -8,7 +8,7 @@ pluginManagement {
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("org.jetbrains.kotlin.jvm") version "1.7.20"
     id("org.unbroken-dome.test-sets") version "4.0.0"
-    id("org.xbib.gradle.plugin.jflex") version "1.6.0"
+    id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
   }
 }
