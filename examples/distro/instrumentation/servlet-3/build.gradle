@@ -17,7 +17,7 @@ muzzle {
 
 dependencies {
   compileOnly project(":bootstrap")
-  compileOnly "javax.servlet:javax.servlet-api:3.0.1"
+  compileOnly "javax.servlet:javax.servlet-api:4.0.1"
 
   testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-common:${versions.opentelemetryJavaagentAlpha}"
   testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-2.2:${versions.opentelemetryJavaagentAlpha}"
