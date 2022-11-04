@@ -34,9 +34,6 @@ dependencies {
   testImplementation("org.apache.commons:commons-lang3:3.12.0")
   testImplementation("commons-io:commons-io:2.11.0")
   testImplementation("org.opensearch:opensearch-testcontainers:2.0.0")
-
-  testCompileOnly("org.projectlombok:lombok:1.18.24")
-  testAnnotationProcessor("org.projectlombok:lombok:1.18.24")
 }
 
 tasks {
