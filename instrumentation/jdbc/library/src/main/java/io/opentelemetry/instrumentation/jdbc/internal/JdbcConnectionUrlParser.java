@@ -47,8 +47,10 @@ public enum JdbcConnectionUrlParser {
         if (user != null) {
           builder.user(user);
         }
-
         String path = uri.getPath();
+        if (path == null) {
+          path = "";
+        }
         if (path.startsWith("/")) {
           path = path.substring(1);
         }
