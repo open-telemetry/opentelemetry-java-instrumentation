@@ -29,7 +29,7 @@ import org.apache.kafka.common.metrics.Measurable;
 final class KafkaMetricRegistry {
 
   private static final Set<String> groups = new HashSet<>(Arrays.asList("consumer", "producer"));
-  private static final Map<Class<?>, String> measureableToInstrumentType = new HashMap<>();
+  private static final Map<Class<?>, String> measurableToInstrumentType = new HashMap<>();
   private static final Map<String, String> descriptionCache = new ConcurrentHashMap<>();
 
   static {
@@ -51,7 +51,7 @@ final class KafkaMetricRegistry {
 
     for (Map.Entry<String, String> entry : classNameToType.entrySet()) {
       try {
-        measureableToInstrumentType.put(Class.forName(entry.getKey()), entry.getValue());
+        measurableToInstrumentType.put(Class.forName(entry.getKey()), entry.getValue());
       } catch (ClassNotFoundException e) {
         // Class doesn't exist in this version of kafka client - skip
       }
@@ -60,7 +60,7 @@ final class KafkaMetricRegistry {
 
   @Nullable
   static RegisteredObservable getRegisteredObservable(Meter meter, KafkaMetric kafkaMetric) {
-    // If metric is not a Measureable, we can't map it to an instrument
+    // If metric is not a Measurable, we can't map it to an instrument
     Class<? extends Measurable> measurable = getMeasurable(kafkaMetric);
     if (measurable == null) {
       return null;
@@ -77,7 +77,7 @@ final class KafkaMetricRegistry {
     String instrumentDescription =
         descriptionCache.computeIfAbsent(instrumentName, s -> metricName.description());
     String instrumentType =
-        measureableToInstrumentType.getOrDefault(
+        measurableToInstrumentType.getOrDefault(
             measurable, INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE);
 
     InstrumentDescriptor instrumentDescriptor =
