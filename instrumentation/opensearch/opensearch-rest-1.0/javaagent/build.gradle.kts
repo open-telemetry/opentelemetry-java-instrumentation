@@ -22,7 +22,7 @@ otelJava {
 }
 
 dependencies {
-  library("org.opensearch.client:opensearch-rest-client:1.3.6")
+  library("org.opensearch.client:opensearch-rest-client:1.0.0")
 
   implementation(project(":instrumentation:opensearch:opensearch-rest-common:javaagent"))
 
