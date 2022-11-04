@@ -148,6 +148,7 @@ public abstract class AbstractRocketMqClientTest {
                                 .hasName(topic + " receive")
                                 .hasStatus(StatusData.unset())
                                 .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                     equalTo(
                                         MESSAGING_DESTINATION_KIND,

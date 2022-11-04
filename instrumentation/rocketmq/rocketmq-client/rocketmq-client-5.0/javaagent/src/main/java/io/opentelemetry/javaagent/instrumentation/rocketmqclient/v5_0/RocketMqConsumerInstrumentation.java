@@ -23,7 +23,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.impl.consumer.ReceiveMessageResult;
 import org.apache.rocketmq.client.java.message.MessageViewImpl;
-import org.apache.rocketmq.client.java.route.MessageQueueImpl;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.FutureCallback;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.Futures;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.ListenableFuture;
@@ -58,25 +57,21 @@ final class RocketMqConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(0) ReceiveMessageRequest request,
-        @Advice.Argument(1) MessageQueueImpl messageQueue,
         @Advice.Enter Timer timer,
         @Advice.Return ListenableFuture<ReceiveMessageResult> future) {
       String consumerGroup = request.getGroup().getName();
-      SpanFinishingCallback spanFinishingCallback =
-          new SpanFinishingCallback(consumerGroup, messageQueue, timer);
+      SpanFinishingCallback spanFinishingCallback = new SpanFinishingCallback(request, timer);
       Futures.addCallback(future, spanFinishingCallback, MoreExecutors.directExecutor());
     }
   }
 
   public static class SpanFinishingCallback implements FutureCallback<ReceiveMessageResult> {
 
-    private final String consumerGroup;
-    private final MessageQueueImpl messageQueue;
+    private final ReceiveMessageRequest request;
     private final Timer timer;
 
-    public SpanFinishingCallback(String consumerGroup, MessageQueueImpl messageQueue, Timer timer) {
-      this.consumerGroup = consumerGroup;
-      this.messageQueue = messageQueue;
+    public SpanFinishingCallback(ReceiveMessageRequest request, Timer timer) {
+      this.request = request;
       this.timer = timer;
     }
 
@@ -87,18 +82,19 @@ final class RocketMqConsumerInstrumentation implements TypeInstrumentation {
       if (messageViews.isEmpty()) {
         return;
       }
+      String consumerGroup = request.getGroup().getName();
       for (MessageViewImpl messageView : messageViews) {
         VirtualFieldStore.setConsumerGroupByMessage(messageView, consumerGroup);
       }
-      Instrumenter<MessageQueueImpl, List<MessageView>> receiveInstrumenter =
+      Instrumenter<ReceiveMessageRequest, List<MessageView>> receiveInstrumenter =
           RocketMqSingletons.consumerReceiveInstrumenter();
       Context parentContext = Context.current();
-      if (receiveInstrumenter.shouldStart(parentContext, messageQueue)) {
+      if (receiveInstrumenter.shouldStart(parentContext, request)) {
         Context context =
             InstrumenterUtil.startAndEnd(
                 receiveInstrumenter,
                 parentContext,
-                messageQueue,
+                request,
                 null,
                 null,
                 timer.startTime(),
@@ -111,14 +107,14 @@ final class RocketMqConsumerInstrumentation implements TypeInstrumentation {
 
     @Override
     public void onFailure(Throwable throwable) {
-      Instrumenter<MessageQueueImpl, List<MessageView>> receiveInstrumenter =
+      Instrumenter<ReceiveMessageRequest, List<MessageView>> receiveInstrumenter =
           RocketMqSingletons.consumerReceiveInstrumenter();
       Context parentContext = Context.current();
-      if (receiveInstrumenter.shouldStart(parentContext, messageQueue)) {
+      if (receiveInstrumenter.shouldStart(parentContext, request)) {
         InstrumenterUtil.startAndEnd(
             receiveInstrumenter,
             parentContext,
-            messageQueue,
+            request,
             null,
             throwable,
             timer.startTime(),

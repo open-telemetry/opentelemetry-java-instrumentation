@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -14,12 +15,11 @@ import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
-import org.apache.rocketmq.client.java.route.MessageQueueImpl;
 
 public final class RocketMqSingletons {
 
   private static final Instrumenter<PublishingMessageImpl, SendReceiptImpl> PRODUCER_INSTRUMENTER;
-  private static final Instrumenter<MessageQueueImpl, List<MessageView>>
+  private static final Instrumenter<ReceiveMessageRequest, List<MessageView>>
       CONSUMER_RECEIVE_INSTRUMENTER;
   private static final Instrumenter<MessageView, ConsumeResult> CONSUMER_PROCESS_INSTRUMENTER;
 
@@ -43,7 +43,8 @@ public final class RocketMqSingletons {
     return PRODUCER_INSTRUMENTER;
   }
 
-  public static Instrumenter<MessageQueueImpl, List<MessageView>> consumerReceiveInstrumenter() {
+  public static Instrumenter<ReceiveMessageRequest, List<MessageView>>
+      consumerReceiveInstrumenter() {
     return CONSUMER_RECEIVE_INSTRUMENTER;
   }
 

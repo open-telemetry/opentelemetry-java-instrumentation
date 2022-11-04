@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -22,7 +23,6 @@ import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
-import org.apache.rocketmq.client.java.route.MessageQueueImpl;
 
 final class RocketMqInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rocketmq-client-5.0";
@@ -53,20 +53,21 @@ final class RocketMqInstrumenterFactory {
     return instrumenterBuilder.buildProducerInstrumenter(MessageMapSetter.INSTANCE);
   }
 
-  public static Instrumenter<MessageQueueImpl, List<MessageView>> createConsumerReceiveInstrumenter(
-      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+  public static Instrumenter<ReceiveMessageRequest, List<MessageView>>
+      createConsumerReceiveInstrumenter(OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     RocketMqConsumerReceiveAttributeGetter getter = RocketMqConsumerReceiveAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.RECEIVE;
 
-    MessagingAttributesExtractor<MessageQueueImpl, List<MessageView>> attributesExtractor =
+    MessagingAttributesExtractor<ReceiveMessageRequest, List<MessageView>> attributesExtractor =
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders);
 
-    InstrumenterBuilder<MessageQueueImpl, List<MessageView>> instrumenterBuilder =
-        Instrumenter.<MessageQueueImpl, List<MessageView>>builder(
+    InstrumenterBuilder<ReceiveMessageRequest, List<MessageView>> instrumenterBuilder =
+        Instrumenter.<ReceiveMessageRequest, List<MessageView>>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(attributesExtractor)
+            .addAttributesExtractor(RocketMqConsumerReceiveAttributeExtractor.INSTANCE)
             .setSpanStatusExtractor(
                 (spanStatusBuilder, messageView, unused, error) -> {
                   if (error != null) {
