@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRest
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestRequest;
 import org.opensearch.client.Response;
 
-public final class OpenSearchRest1Singletons {
+public final class OpenSearchRestSingletons {
 
   private static final Instrumenter<OpenSearchRestRequest, Response> INSTRUMENTER =
       OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-1.0");
@@ -19,5 +19,5 @@ public final class OpenSearchRest1Singletons {
     return INSTRUMENTER;
   }
 
-  private OpenSearchRest1Singletons() {}
+  private OpenSearchRestSingletons() {}
 }

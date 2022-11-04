@@ -59,11 +59,11 @@ public class RestClientInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       otelRequest = OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
-      if (!OpenSearchRest1Singletons.instrumenter().shouldStart(parentContext, otelRequest)) {
+      if (!OpenSearchRestSingletons.instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
 
-      context = OpenSearchRest1Singletons.instrumenter().start(parentContext, otelRequest);
+      context = OpenSearchRestSingletons.instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
     }
 
@@ -80,7 +80,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      OpenSearchRest1Singletons.instrumenter().end(context, otelRequest, response, throwable);
+      OpenSearchRestSingletons.instrumenter().end(context, otelRequest, response, throwable);
     }
   }
 
@@ -97,18 +97,18 @@ public class RestClientInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       otelRequest = OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
-      if (!OpenSearchRest1Singletons.instrumenter().shouldStart(parentContext, otelRequest)) {
+      if (!OpenSearchRestSingletons.instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
 
-      context = OpenSearchRest1Singletons.instrumenter().start(parentContext, otelRequest);
+      context = OpenSearchRestSingletons.instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
 
       responseListener =
           new RestResponseListener(
               responseListener,
               parentContext,
-              OpenSearchRest1Singletons.instrumenter(),
+              OpenSearchRestSingletons.instrumenter(),
               context,
               otelRequest);
     }
@@ -126,7 +126,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
       scope.close();
 
       if (throwable != null) {
-        OpenSearchRest1Singletons.instrumenter().end(context, otelRequest, null, throwable);
+        OpenSearchRestSingletons.instrumenter().end(context, otelRequest, null, throwable);
       }
       // span ended in RestResponseListener
     }
