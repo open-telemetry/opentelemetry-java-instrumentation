@@ -82,7 +82,7 @@ dependencies {
    NB! Only Advice (and "helper") classes of instrumentation modules can access classes from application classpath.
    See https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/writing-instrumentation-module.md#advice-classes
    */
-  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
 
   /*
   This dependency is required for DemoSpanProcessor both during compile and runtime.
