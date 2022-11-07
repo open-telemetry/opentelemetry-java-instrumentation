@@ -54,7 +54,8 @@ final class RocketMqInstrumenterFactory {
   }
 
   public static Instrumenter<ReceiveMessageRequest, List<MessageView>>
-      createConsumerReceiveInstrumenter(OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+      createConsumerReceiveInstrumenter(
+          OpenTelemetry openTelemetry, List<String> capturedHeaders, boolean enabled) {
     RocketMqConsumerReceiveAttributeGetter getter = RocketMqConsumerReceiveAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.RECEIVE;
 
@@ -66,6 +67,7 @@ final class RocketMqInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
+            .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(RocketMqConsumerReceiveAttributeExtractor.INSTANCE)
             .setSpanStatusExtractor(
@@ -78,16 +80,14 @@ final class RocketMqInstrumenterFactory {
   }
 
   public static Instrumenter<MessageView, ConsumeResult> createConsumerProcessInstrumenter(
-      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+      OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
+      boolean receiveInstrumentationEnabled) {
     RocketMqConsumerProcessAttributeGetter getter = RocketMqConsumerProcessAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
     MessagingAttributesExtractor<MessageView, ConsumeResult> attributesExtractor =
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders);
-
-    SpanLinksExtractor<MessageView> spanLinksExtractor =
-        new PropagatorBasedSpanLinksExtractor<>(
-            openTelemetry.getPropagators().getTextMapPropagator(), MessageMapGetter.INSTANCE);
 
     InstrumenterBuilder<MessageView, ConsumeResult> instrumenterBuilder =
         Instrumenter.<MessageView, ConsumeResult>builder(
@@ -101,9 +101,16 @@ final class RocketMqInstrumenterFactory {
                   if (error != null || ConsumeResult.FAILURE.equals(consumeResult)) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   }
-                })
-            .addSpanLinksExtractor(spanLinksExtractor);
-    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+                });
+
+    if (receiveInstrumentationEnabled) {
+      SpanLinksExtractor<MessageView> spanLinksExtractor =
+          new PropagatorBasedSpanLinksExtractor<>(
+              openTelemetry.getPropagators().getTextMapPropagator(), MessageMapGetter.INSTANCE);
+      instrumenterBuilder.addSpanLinksExtractor(spanLinksExtractor);
+      return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    }
+    return instrumenterBuilder.buildConsumerInstrumenter(MessageMapGetter.INSTANCE);
   }
 
   private static <T, R> MessagingAttributesExtractor<T, R> buildMessagingAttributesExtractor(

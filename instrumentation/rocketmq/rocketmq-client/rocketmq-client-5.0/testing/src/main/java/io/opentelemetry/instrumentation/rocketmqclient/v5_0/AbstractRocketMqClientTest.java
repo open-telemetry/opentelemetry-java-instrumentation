@@ -181,4 +181,89 @@ public abstract class AbstractRocketMqClientTest {
       }
     }
   }
+
+  @Test
+  public void testSendAndConsumeMessageWithReceiveSpanSuppressed()
+      throws ClientException, IOException {
+    ClientConfiguration clientConfiguration =
+        ClientConfiguration.newBuilder().setEndpoints(endpoints).build();
+    // Inner topic of the container.
+    String topic = "normal-topic-1";
+    ClientServiceProvider provider = ClientServiceProvider.loadService();
+    String consumerGroup = "group-normal-topic-1";
+    String tag = "tagA";
+    FilterExpression filterExpression = new FilterExpression(tag, FilterExpressionType.TAG);
+    try (PushConsumer ignored =
+        provider
+            .newPushConsumerBuilder()
+            .setClientConfiguration(clientConfiguration)
+            .setConsumerGroup(consumerGroup)
+            .setSubscriptionExpressions(Collections.singletonMap(topic, filterExpression))
+            .setMessageListener(messageView -> ConsumeResult.SUCCESS)
+            .build()) {
+      try (Producer producer =
+          provider
+              .newProducerBuilder()
+              .setClientConfiguration(clientConfiguration)
+              .setTopics(topic)
+              .build()) {
+
+        String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
+        byte[] body = "foobar".getBytes(StandardCharsets.UTF_8);
+        Message message =
+            provider
+                .newMessageBuilder()
+                .setTopic(topic)
+                .setTag(tag)
+                .setKeys(keys)
+                .setBody(body)
+                .build();
+
+        SendReceipt sendReceipt = producer.send(message);
+        testing()
+            .waitAndAssertTraces(
+                trace ->
+                    trace.hasSpansSatisfyingExactly(
+                        span ->
+                            span.hasKind(SpanKind.PRODUCER)
+                                .hasName(topic + " send")
+                                .hasStatus(StatusData.unset())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
+                                    equalTo(
+                                        MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
+                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                    equalTo(
+                                        MESSAGING_MESSAGE_ID,
+                                        sendReceipt.getMessageId().toString()),
+                                    equalTo(
+                                        MESSAGING_DESTINATION_KIND,
+                                        SemanticAttributes.MessagingDestinationKindValues.TOPIC),
+                                    equalTo(MESSAGING_DESTINATION, topic)),
+                        span ->
+                            span.hasKind(SpanKind.CONSUMER)
+                                .hasName(topic + " process")
+                                .hasStatus(StatusData.unset())
+                                // As the child of send span.
+                                .hasParent(trace.getSpan(0))
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
+                                    equalTo(
+                                        MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
+                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                    equalTo(
+                                        MESSAGING_MESSAGE_ID,
+                                        sendReceipt.getMessageId().toString()),
+                                    equalTo(
+                                        MESSAGING_DESTINATION_KIND,
+                                        SemanticAttributes.MessagingDestinationKindValues.TOPIC),
+                                    equalTo(MESSAGING_DESTINATION, topic),
+                                    equalTo(MESSAGING_OPERATION, "process"))));
+      }
+    }
+  }
 }
