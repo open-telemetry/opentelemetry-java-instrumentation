@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import javax.annotation.Nullable;
+
 /**
  * A class holding relevant information about an MBean attribute which will be used for collecting
  * metric values. The info comes directly from the relevant MBeans.
@@ -12,9 +14,9 @@ package io.opentelemetry.instrumentation.jmx.engine;
 class AttributeInfo {
 
   private boolean usesDoubles;
-  private String description;
+  @Nullable private String description;
 
-  AttributeInfo(Number sampleValue, String description) {
+  AttributeInfo(Number sampleValue, @Nullable String description) {
     if (sampleValue instanceof Byte
         || sampleValue instanceof Short
         || sampleValue instanceof Integer
@@ -31,6 +33,7 @@ class AttributeInfo {
     return usesDoubles;
   }
 
+  @Nullable
   String getDescription() {
     return description;
   }

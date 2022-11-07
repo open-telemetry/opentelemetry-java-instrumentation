@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import javax.annotation.Nullable;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
 
@@ -14,7 +15,7 @@ import javax.management.QueryExp;
  */
 public class BeanPack {
   // How to specify the MBean(s)
-  private final QueryExp queryExp;
+  @Nullable private final QueryExp queryExp;
   private final ObjectName[] namePatterns;
 
   /**
@@ -24,11 +25,12 @@ public class BeanPack {
    * @param namePatterns an array of ObjectNames used to look for MBeans; usually they will be
    *     patterns. If multiple patterns are provided, they work as logical OR.
    */
-  public BeanPack(QueryExp queryExp, ObjectName... namePatterns) {
+  public BeanPack(@Nullable QueryExp queryExp, ObjectName... namePatterns) {
     this.queryExp = queryExp;
     this.namePatterns = namePatterns;
   }
 
+  @Nullable
   QueryExp getQueryExp() {
     return queryExp;
   }

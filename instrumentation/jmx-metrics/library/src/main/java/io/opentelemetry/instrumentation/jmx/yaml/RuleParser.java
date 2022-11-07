@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.yaml;
 
-import static java.util.logging.Level.CONFIG;
+import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
@@ -52,13 +52,13 @@ public class RuleParser {
    * @param conf the metric configuration
    * @param is the InputStream with the YAML rules
    */
-  public void addMetricDefs(MetricConfiguration conf, InputStream is) {
+  public void addMetricDefsTo(MetricConfiguration conf, InputStream is) {
     try {
 
       JmxConfig config = loadConfig(is);
       if (config != null) {
-        logger.log(CONFIG, "Found {0} metric rules", config.getRules().size());
-        config.addMetricDefs(conf);
+        logger.log(INFO, "Found {0} metric rules", config.getRules().size());
+        config.addMetricDefsTo(conf);
       }
     } catch (Exception exception) {
       logger.log(WARNING, "Failed to parse YAML rules: " + rootCause(exception));

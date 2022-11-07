@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import javax.annotation.Nullable;
+
 /**
  * A class providing the user visible characteristics (name, type, description and units) of a
  * metric to be reported with OpenTelemetry.
@@ -22,8 +24,8 @@ public class MetricBanner {
 
   // How to report the metric using OpenTelemetry API
   private final String metricName; // used as Instrument name
-  private final String description;
-  private final String unit;
+  @Nullable private final String description;
+  @Nullable private final String unit;
   private final Type type;
 
   /**
@@ -34,7 +36,8 @@ public class MetricBanner {
    * @param unit a human readable unit of measurement
    * @param type the instrument typ to be used for the metric
    */
-  public MetricBanner(String metricName, String description, String unit, Type type) {
+  public MetricBanner(
+      String metricName, @Nullable String description, String unit, @Nullable Type type) {
     this.metricName = metricName;
     this.description = description;
     this.unit = unit;
@@ -45,10 +48,12 @@ public class MetricBanner {
     return metricName;
   }
 
+  @Nullable
   String getDescription() {
     return description;
   }
 
+  @Nullable
   String getUnit() {
     return unit;
   }

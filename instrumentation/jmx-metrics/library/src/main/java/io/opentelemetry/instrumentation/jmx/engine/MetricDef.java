@@ -9,17 +9,65 @@ package io.opentelemetry.instrumentation.jmx.engine;
  * A class providing a complete definition on how to create an Open Telemetry metric out of the JMX
  * system: how to extract values from MBeans and how to model, name and decorate them with
  * attributes using OpenTelemetry Metric API. Objects of this class are immutable.
- *
- * <p>Example: The JVM provides an MBean with ObjectName "java.lang:type=Threading", and one of the
- * MBean attributes is "ThreadCount". This MBean can be used to provide a metric showing the current
- * number of threads run by the JVM as follows:
- *
- * <p>new MetricDef(new BeanPack(null, new ObjectName("java.lang:type=Threading")),
- *
- * <p>new MetricExtractor(new BeanAttributeExtractor("ThreadCount"),
- *
- * <p>new MetricBanner("process.runtime.jvm.threads", "Current number of threads", "1" )));
  */
+
+// Example: The rule described by the following YAML definition
+//
+//  - bean: java.lang:name=*,type=MemoryPool
+//    metricAttribute:
+//      pool: param(name)
+//      type: beanattr(Type)
+//    mapping:
+//      Usage.used:
+//        metric: my.own.jvm.memory.pool.used
+//        type: updowncounter
+//        desc: Pool memory currently used
+//        unit: By
+//      Usage.max:
+//        metric: my.own.jvm.memory.pool.max
+//        type: updowncounter
+//        desc: Maximum obtainable memory pool size
+//        unit: By
+//
+// can be created using the following snippet:
+//
+//  MetricAttribute poolAttribute =
+//      new MetricAttribute("pool", MetricAttributeExtractor.fromObjectNameParameter("name"));
+//  MetricAttribute typeAttribute =
+//      new MetricAttribute("type", MetricAttributeExtractor.fromBeanAttribute("Type"));
+//
+//  MetricBanner poolUsedBanner =
+//      new MetricBanner(
+//          "my.own.jvm.memory.pool.used",
+//          "Pool memory currently used",
+//          "By",
+//          MetricBanner.Type.UPDOWNCOUNTER);
+//  MetricBanner poolLimitBanner =
+//      new MetricBanner(
+//          "my.own.jvm.memory.pool.limit",
+//          "Maximum obtainable memory pool size",
+//          "By",
+//          MetricBanner.Type.UPDOWNCOUNTER);
+//
+//  MetricExtractor usageUsedExtractor =
+//      new MetricExtractor(
+//          new BeanAttributeExtractor("Usage", "used"),
+//          poolUsedBanner,
+//          poolAttribute,
+//          typeAttribute);
+//  MetricExtractor usageMaxExtractor =
+//      new MetricExtractor(
+//          new BeanAttributeExtractor("Usage", "max"),
+//          poolLimitBanner,
+//          poolAttribute,
+//          typeAttribute);
+//
+//  MetricDef def =
+//      new MetricDef(
+//          new BeanPack(null, new ObjectName("java.lang:name=*,type=MemoryPool")),
+//          usageUsedExtractor,
+//          usageMaxExtractor);
+
 public class MetricDef {
 
   // Describes the MBeans to use

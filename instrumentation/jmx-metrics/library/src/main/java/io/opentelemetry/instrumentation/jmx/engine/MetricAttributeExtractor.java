@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import javax.annotation.Nullable;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
@@ -23,5 +24,25 @@ public interface MetricAttributeExtractor {
    *     from an MBean attribute, or from the ObjectName parameter
    * @return the value of the attribute, can be null if extraction failed
    */
-  String extractValue(MBeanServer server, ObjectName objectName);
+  @Nullable
+  String extractValue(@Nullable MBeanServer server, @Nullable ObjectName objectName);
+
+  static MetricAttributeExtractor fromConstant(String constantValue) {
+    return (a, b) -> {
+      return constantValue;
+    };
+  }
+
+  static MetricAttributeExtractor fromObjectNameParameter(String parameterKey) {
+    if (parameterKey.isEmpty()) {
+      throw new IllegalArgumentException("Empty parameter name");
+    }
+    return (dummy, objectName) -> {
+      return objectName.getKeyProperty(parameterKey);
+    };
+  }
+
+  static MetricAttributeExtractor fromBeanAttribute(String attributeName) {
+    return BeanAttributeExtractor.fromName(attributeName);
+  }
 }

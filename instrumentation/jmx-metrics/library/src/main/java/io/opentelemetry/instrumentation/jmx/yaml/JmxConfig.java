@@ -37,7 +37,7 @@ public class JmxConfig {
    * @param configuration MetricConfiguration to add MetricDefs to
    * @throws an exception if the rule conversion cannot be performed
    */
-  public void addMetricDefs(MetricConfiguration configuration) throws Exception {
+  void addMetricDefsTo(MetricConfiguration configuration) throws Exception {
     for (JmxRule rule : rules) {
       MetricDef metricDef = rule.buildMetricDef();
       configuration.addMetricDef(metricDef);

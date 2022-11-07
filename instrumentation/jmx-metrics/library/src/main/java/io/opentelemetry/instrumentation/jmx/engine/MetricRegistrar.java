@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
-import static java.util.logging.Level.CONFIG;
+import static java.util.logging.Level.INFO;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -83,7 +83,7 @@ class MetricRegistrar {
             } else {
               builder.buildWithCallback(longTypeCallback(extractor));
             }
-            logger.log(CONFIG, "Created Counter for {0}", metricName);
+            logger.log(INFO, "Created Counter for {0}", metricName);
           }
           break;
 
@@ -104,7 +104,7 @@ class MetricRegistrar {
             } else {
               builder.buildWithCallback(longTypeCallback(extractor));
             }
-            logger.log(CONFIG, "Created UpDownCounter for {0}", metricName);
+            logger.log(INFO, "Created UpDownCounter for {0}", metricName);
           }
           break;
 
@@ -125,7 +125,7 @@ class MetricRegistrar {
             } else {
               builder.ofLongs().buildWithCallback(longTypeCallback(extractor));
             }
-            logger.log(CONFIG, "Created Gauge for {0}", metricName);
+            logger.log(INFO, "Created Gauge for {0}", metricName);
           }
       }
     }

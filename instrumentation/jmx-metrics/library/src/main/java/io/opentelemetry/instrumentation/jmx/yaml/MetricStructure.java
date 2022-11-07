@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.yaml;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
+import io.opentelemetry.instrumentation.jmx.engine.MetricAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.MetricBanner;
 import java.util.ArrayList;
 import java.util.List;
@@ -120,17 +121,17 @@ abstract class MetricStructure {
     if (target.startsWith("param(")) {
       if (k > 0) {
         return new MetricAttribute(
-            key, MetricAttribute.fromObjectNameParameter(target.substring(6, k).trim()));
+            key, MetricAttributeExtractor.fromObjectNameParameter(target.substring(6, k).trim()));
       }
     } else if (target.startsWith("beanattr(")) {
       if (k > 0) {
         return new MetricAttribute(
-            key, MetricAttribute.fromBeanAttribute(target.substring(9, k).trim()));
+            key, MetricAttributeExtractor.fromBeanAttribute(target.substring(9, k).trim()));
       }
     } else if (target.startsWith("const(")) {
       if (k > 0) {
         return new MetricAttribute(
-            key, MetricAttribute.fromConstant(target.substring(6, k).trim()));
+            key, MetricAttributeExtractor.fromConstant(target.substring(6, k).trim()));
       }
     }
 

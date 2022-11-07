@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import javax.annotation.Nullable;
+
 /**
  * A class holding the info needed to support a single metric: how to define it in OpenTelemetry and
  * how to provide the metric values.
@@ -22,7 +24,7 @@ public class MetricExtractor {
   // Defines the Measurement attributes to be used when reporting the metric value.
   private final MetricAttribute[] attributes;
 
-  private volatile DetectionStatus status;
+  @Nullable private volatile DetectionStatus status;
 
   public MetricExtractor(
       BeanAttributeExtractor attributeExtractor,
@@ -49,6 +51,7 @@ public class MetricExtractor {
     this.status = status;
   }
 
+  @Nullable
   DetectionStatus getStatus() {
     return status;
   }

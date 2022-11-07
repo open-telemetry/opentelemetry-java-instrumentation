@@ -59,7 +59,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       if (inputStream != null) {
         JmxMetricInsight.getLogger().log(FINE, "Opened input stream {0}", yamlResource);
         RuleParser parserInstance = RuleParser.get();
-        parserInstance.addMetricDefs(conf, inputStream);
+        parserInstance.addMetricDefsTo(conf, inputStream);
       } else {
         JmxMetricInsight.getLogger().log(INFO, "No support found for {0}", platform);
       }
@@ -85,7 +85,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       JmxMetricInsight.getLogger().log(FINE, "JMX config file name: {0}", jmxDir);
       RuleParser parserInstance = RuleParser.get();
       try (InputStream inputStream = Files.newInputStream(new File(jmxDir.trim()).toPath())) {
-        parserInstance.addMetricDefs(conf, inputStream);
+        parserInstance.addMetricDefsTo(conf, inputStream);
       } catch (Exception e) {
         JmxMetricInsight.getLogger().warning(e.getMessage());
       }

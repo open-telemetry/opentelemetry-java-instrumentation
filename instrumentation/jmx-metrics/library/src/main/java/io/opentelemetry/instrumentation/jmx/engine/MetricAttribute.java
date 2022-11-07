@@ -29,23 +29,4 @@ public class MetricAttribute {
   String acquireAttributeValue(MBeanServer server, ObjectName objectName) {
     return extractor.extractValue(server, objectName);
   }
-
-  public static MetricAttributeExtractor fromConstant(String constantValue) {
-    return (a, b) -> {
-      return constantValue;
-    };
-  }
-
-  public static MetricAttributeExtractor fromObjectNameParameter(String parameterKey) {
-    if (parameterKey.isEmpty()) {
-      throw new IllegalArgumentException("Empty parameter name");
-    }
-    return (dummy, objectName) -> {
-      return objectName.getKeyProperty(parameterKey);
-    };
-  }
-
-  public static MetricAttributeExtractor fromBeanAttribute(String attributeName) {
-    return BeanAttributeExtractor.fromName(attributeName);
-  }
 }

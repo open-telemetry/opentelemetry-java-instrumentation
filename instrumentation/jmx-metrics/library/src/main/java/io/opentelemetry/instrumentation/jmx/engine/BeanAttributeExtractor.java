@@ -10,6 +10,7 @@ import static java.util.logging.Level.INFO;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
@@ -98,6 +99,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
    * @param objectName the ObjectName identifying the MBean
    * @return AttributeInfo if the attribute is properly recognized, or null
    */
+  @Nullable
   AttributeInfo getAttributeInfo(MBeanServer server, ObjectName objectName) {
     if (logger.isLoggable(FINE)) {
       logger.log(FINE, "Resolving {0} for {1}", new Object[] {getAttributeName(), objectName});
@@ -168,6 +170,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
    *     malfunctions will be silent to avoid flooding the log.
    * @return the attribute value, if found, or null if an error occurred
    */
+  @Nullable
   private Object extractAttributeValue(MBeanServer server, ObjectName objectName, Logger logger) {
     try {
       Object value = server.getAttribute(objectName, baseName);
@@ -206,10 +209,12 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     return null;
   }
 
+  @Nullable
   private Object extractAttributeValue(MBeanServer server, ObjectName objectName) {
     return extractAttributeValue(server, objectName, null);
   }
 
+  @Nullable
   Number extractNumericalAttribute(MBeanServer server, ObjectName objectName) {
     Object value = extractAttributeValue(server, objectName);
     if (value instanceof Number) {
@@ -219,10 +224,12 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
   }
 
   @Override
+  @Nullable
   public String extractValue(MBeanServer server, ObjectName objectName) {
     return extractStringAttribute(server, objectName);
   }
 
+  @Nullable
   private String extractStringAttribute(MBeanServer server, ObjectName objectName) {
     Object value = extractAttributeValue(server, objectName);
     if (value instanceof String) {
