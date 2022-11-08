@@ -37,6 +37,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 ### Maven
 
 #### OpenTelemetry
+
 ```xml
 <dependency>
    <groupId>io.opentelemetry</groupId>
@@ -51,6 +52,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 ```
 
 #### LoggingSpanExporter
+
 ```xml
 <dependency>
    <groupId>io.opentelemetry</groupId>
@@ -60,6 +62,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 ```
 
 #### Jaeger Exporter
+
 ```xml
 <dependency>
    <groupId>io.opentelemetry</groupId>
@@ -76,17 +79,20 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 ### Gradle
 
 #### OpenTelemetry
+
 ```gradle
 implementation("io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION")
 ```
 
 #### LoggingExporter
+
 ```gradle
 implementation("io.opentelemetry:opentelemetry-exporter-logging:OPENTELEMETRY_VERSION")
 ```
 
 #### Jaeger Exporter
+
 ```gradle
 implementation("io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION")
 compile "io.grpc:grpc-netty:1.30.2"
@@ -613,6 +619,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
  - Minimum version: `1.1.0`
 
 #### Maven
+
 ```xml
 <dependency>
    <groupId>io.opentelemetry.instrumentation</groupId>
@@ -622,6 +629,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 ```
 
 #### Gradle
+
 ```gradle
 implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter:OPENTELEMETRY_VERSION")
 ```
@@ -826,8 +834,8 @@ status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFi
 To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporters replace the OpenTelemetry Spring Starter dependency with one of the artifacts listed below:
 
 #### Maven
-```xml
 
+```xml
 <!-- opentelemetry starter with zipkin -->
 <dependency>
 	<groupId>io.opentelemetry.instrumentation</groupId>
@@ -844,8 +852,8 @@ To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporte
 ```
 
 #### Gradle
-```gradle
 
+```gradle
 //opentelemetry starter with zipkin configurations
 implementation("io.opentelemetry.instrumentation:opentelemetry-zipkin-spring-boot-starter:OPENTELEMETRY_VERSION")
 

@@ -11,23 +11,22 @@ This version is compatible with Spring Boot 2.0.
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
  - Minimum version: `1.1.0`
 
-
 ### Maven
+
 Add the following dependencies to your `pom.xml` file:
 
 ```xml
 <dependencies>
-
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-spring-boot-starter</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
-
 </dependencies>
 ```
 
 ### Gradle
+
 Add the following dependencies to your gradle.build file:
 
 ```groovy

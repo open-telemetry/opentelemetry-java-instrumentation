@@ -1,4 +1,4 @@
-# Manual Instrumentation for Apache DBCP
+# Library Instrumentation for Apache DBCP version 2.0 and higher
 
 Provides OpenTelemetry instrumentation for [Apache DBCP](https://commons.apache.org/proper/commons-dbcp/).
 
@@ -6,13 +6,12 @@ Provides OpenTelemetry instrumentation for [Apache DBCP](https://commons.apache.
 
 ### Add these dependencies to your project:
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.15.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-apache-dbcp-2.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>

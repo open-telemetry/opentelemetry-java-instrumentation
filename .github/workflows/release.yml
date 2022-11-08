@@ -3,45 +3,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  spotless:
+  required-jobs:
     uses: ./.github/workflows/reusable-spotless.yml
-
-  license-check:
-    uses: ./.github/workflows/reusable-license-check.yml
-
-  assemble:
-    uses: ./.github/workflows/reusable-assemble.yml
-
-  test:
-    uses: ./.github/workflows/reusable-test.yml
 
   # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
   # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry
 
-  smoke-test:
-    uses: ./.github/workflows/reusable-smoke-test.yml
-
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,
   # and this is not a reason to hold up the release
 
-  gradle-plugins:
-    uses: ./.github/workflows/reusable-gradle-plugins.yml
-
-  examples:
-    uses: ./.github/workflows/reusable-examples.yml
-
   release:
     needs:
-      - spotless
-      - license-check
-      - assemble
-      - test
-      - smoke-test
-      - gradle-plugins
-      - examples
+      - required-jobs
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
     runs-on: ubuntu-latest
@@ -265,22 +241,6 @@ jobs:
   create-operator-pull-request:
     needs: release
     uses: ./.github/workflows/reusable-create-operator-pull-request.yml
-    with:
-      version: ${{ needs.release.outputs.version }}
-    secrets:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-
-  create-java-contrib-pull-request:
-    needs: release
-    uses: ./.github/workflows/reusable-create-java-contrib-pull-request.yml
-    with:
-      version: ${{ needs.release.outputs.version }}
-    secrets:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-
-  create-java-docs-pull-request:
-    needs: release
-    uses: ./.github/workflows/reusable-create-java-docs-pull-request.yml
     with:
       version: ${{ needs.release.outputs.version }}
     secrets:

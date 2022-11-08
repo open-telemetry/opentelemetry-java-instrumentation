@@ -14,13 +14,11 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
 ```xml
 <dependencies>
-
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-jaeger-spring-boot-starter</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
-
 </dependencies>
 ```
 
