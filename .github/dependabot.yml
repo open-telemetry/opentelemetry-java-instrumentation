@@ -34,6 +34,13 @@ updates:
     # need to scope gradle dependency updates down in this repo because most of the instrumentations
     # intentionally test against old library versions
     directory: "/examples/distro"
+    ignore:
+      - dependency-name: "javax.servlet:javax.servlet-api"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        versions: [ "[3.1,)" ]
+      - dependency-name: "org.eclipse.jetty:jetty-servlet"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        versions: [ "[9.0,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
@@ -43,6 +50,13 @@ updates:
     # need to scope gradle dependency updates down in this repo because most of the instrumentations
     # intentionally test against old library versions
     directory: "/examples/extension"
+    ignore:
+      - dependency-name: "javax.servlet:javax.servlet-api"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        versions: [ "[3.1,)" ]
+      - dependency-name: "org.eclipse.jetty:jetty-servlet"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        versions: [ "[9.0,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
