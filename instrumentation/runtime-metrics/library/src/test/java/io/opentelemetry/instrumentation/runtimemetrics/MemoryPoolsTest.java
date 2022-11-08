@@ -188,7 +188,7 @@ class MemoryPoolsTest {
                                                 AttributeKey.stringKey("type"), "non_heap")))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-metrics",
-        "process.runtime.jvm.memory.usage_after_gc",
+        "process.runtime.jvm.memory.usage_after_last_gc",
         metrics ->
             metrics.anySatisfy(
                 metricData ->

@@ -53,28 +53,34 @@ The following lists attributes reported for a variety of garbage collectors. Not
   * `process.runtime.jvm.memory.usage`: {pool=Compressed Class Space,type=non_heap}, {pool=Par Eden Space,type=heap}, {pool=Tenured Gen,type=heap}, {pool=Par Survivor Space,type=heap}, {pool=Code Cache,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.committed`: {pool=Compressed Class Space,type=non_heap}, {pool=Par Eden Space,type=heap}, {pool=Tenured Gen,type=heap}, {pool=Par Survivor Space,type=heap}, {pool=Code Cache,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.limit`: {pool=Compressed Class Space,type=non_heap}, {pool=Par Eden Space,type=heap}, {pool=Tenured Gen,type=heap}, {pool=Par Survivor Space,type=heap}, {pool=Code Cache,type=non_heap}
+  * `process.runtime.jvm.memory.usage_after_last_gc`: {pool=Par Eden Space,type=heap}, {pool=Tenured Gen,type=heap}, {pool=Par Survivor Space,type=heap}
 * G1 Garbage Collector
   * `process.runtime.jvm.memory.init`: {pool=G1 Survivor Space,type=heap}, {pool=G1 Eden Space,type=heap}, {pool=CodeCache,type=non_heap}, {pool=G1 Old Gen,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.usage`: {pool=G1 Survivor Space,type=heap}, {pool=G1 Eden Space,type=heap}, {pool=CodeCache,type=non_heap}, {pool=G1 Old Gen,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.committed`: {pool=G1 Survivor Space,type=heap}, {pool=G1 Eden Space,type=heap}, {pool=CodeCache,type=non_heap}, {pool=G1 Old Gen,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.limit`: {pool=CodeCache,type=non_heap}, {pool=G1 Old Gen,type=heap}, {pool=Compressed Class Space,type=non_heap}
+  * `process.runtime.jvm.memory.usage_after_last_gc`: {pool=G1 Survivor Space,type=heap}, {pool=G1 Eden Space,type=heap}, {pool=G1 Old Gen,type=heap}
 * Parallel Garbage Collector
   * `process.runtime.jvm.memory.init`: {pool=CodeCache,type=non_heap}, {pool=PS Survivor Space,type=heap}, {pool=PS Old Gen,type=heap}, {pool=PS Eden Space,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.usage`: {pool=CodeCache,type=non_heap}, {pool=PS Survivor Space,type=heap}, {pool=PS Old Gen,type=heap}, {pool=PS Eden Space,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.committed`: {pool=CodeCache,type=non_heap}, {pool=PS Survivor Space,type=heap}, {pool=PS Old Gen,type=heap}, {pool=PS Eden Space,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.limit`: {pool=CodeCache,type=non_heap}, {pool=PS Survivor Space,type=heap}, {pool=PS Old Gen,type=heap}, {pool=PS Eden Space,type=heap}, {pool=Compressed Class Space,type=non_heap}
+  * `process.runtime.jvm.memory.usage_after_last_gc`: {pool=PS Survivor Space,type=heap}, {pool=PS Old Gen,type=heap}, {pool=PS Eden Space,type=heap}
 * Serial Garbage Collector
   * `process.runtime.jvm.memory.init`: {pool=CodeCache,type=non_heap}, {pool=Tenured Gen,type=heap}, {pool=Eden Space,type=heap}, {pool=Survivor Space,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.usage`: {pool=CodeCache,type=non_heap}, {pool=Tenured Gen,type=heap}, {pool=Eden Space,type=heap}, {pool=Survivor Space,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.committed`: {pool=CodeCache,type=non_heap}, {pool=Tenured Gen,type=heap}, {pool=Eden Space,type=heap}, {pool=Survivor Space,type=heap}, {pool=Compressed Class Space,type=non_heap}, {pool=Metaspace,type=non_heap}
   * `process.runtime.jvm.memory.limit`: {pool=CodeCache,type=non_heap}, {pool=Tenured Gen,type=heap}, {pool=Eden Space,type=heap}, {pool=Survivor Space,type=heap}, {pool=Compressed Class Space,type=non_heap}
+  * `process.runtime.jvm.memory.usage_after_last_gc`: {pool=Tenured Gen,type=heap}, {pool=Eden Space,type=heap}, {pool=Survivor Space,type=heap}
 * Shenandoah Garbage Collector
   * `process.runtime.jvm.memory.init`: {pool=Metaspace,type=non_heap}, {pool=CodeCache,type=non_heap}, {pool=Shenandoah,type=heap}, {pool=Compressed Class Space,type=non_heap}
   * `process.runtime.jvm.memory.usage`: {pool=Metaspace,type=non_heap}, {pool=CodeCache,type=non_heap}, {pool=Shenandoah,type=heap}, {pool=Compressed Class Space,type=non_heap}
   * `process.runtime.jvm.memory.committed`: {pool=Metaspace,type=non_heap}, {pool=CodeCache,type=non_heap}, {pool=Shenandoah,type=heap}, {pool=Compressed Class Space,type=non_heap}
   * `process.runtime.jvm.memory.limit`: {pool=CodeCache,type=non_heap}, {pool=Shenandoah,type=heap}, {pool=Compressed Class Space,type=non_heap}
+  * `process.runtime.jvm.memory.usage_after_last_gc`: {pool=Shenandoah,type=heap}
 * Z Garbage Collector
   * `process.runtime.jvm.memory.init`: {pool=Metaspace,type=non_heap}, {pool=CodeCache,type=non_heap}, {pool=ZHeap,type=heap}, {pool=Compressed Class Space,type=non_heap}
   * `process.runtime.jvm.memory.usage`: {pool=Metaspace,type=non_heap}, {pool=CodeCache,type=non_heap}, {pool=ZHeap,type=heap}, {pool=Compressed Class Space,type=non_heap}
   * `process.runtime.jvm.memory.committed`: {pool=Metaspace,type=non_heap}, {pool=CodeCache,type=non_heap}, {pool=ZHeap,type=heap}, {pool=Compressed Class Space,type=non_heap}
   * `process.runtime.jvm.memory.limit`: {pool=CodeCache,type=non_heap}, {pool=ZHeap,type=heap}, {pool=Compressed Class Space,type=non_heap}
+  * `process.runtime.jvm.memory.usage_after_last_gc`: {pool=ZHeap,type=heap}

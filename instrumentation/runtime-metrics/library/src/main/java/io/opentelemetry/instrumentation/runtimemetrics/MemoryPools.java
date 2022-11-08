@@ -35,7 +35,7 @@ import java.util.function.Function;
  *   process.runtime.jvm.memory.usage{type="heap",pool="G1 Eden Space"} 2500000
  *   process.runtime.jvm.memory.committed{type="heap",pool="G1 Eden Space"} 3000000
  *   process.runtime.jvm.memory.limit{type="heap",pool="G1 Eden Space"} 4000000
- *   process.runtime.jvm.memory.usage_after_gc{type="heap",pool="G1 Eden Space"} 1500000
+ *   process.runtime.jvm.memory.usage_after_last_gc{type="heap",pool="G1 Eden Space"} 1500000
  *   process.runtime.jvm.memory.init{type="non_heap",pool="Metaspace"} 200
  *   process.runtime.jvm.memory.usage{type="non_heap",pool="Metaspace"} 400
  *   process.runtime.jvm.memory.committed{type="non_heap",pool="Metaspace"} 500
@@ -84,7 +84,7 @@ public final class MemoryPools {
         .buildWithCallback(callback(poolBeans, MemoryPoolMXBean::getUsage, MemoryUsage::getMax));
 
     meter
-        .upDownCounterBuilder("process.runtime.jvm.memory.usage_after_gc")
+        .upDownCounterBuilder("process.runtime.jvm.memory.usage_after_last_gc")
         .setDescription(
             "Measure of memory used after the most recent garbage collection event on this pool")
         .setUnit("By")
