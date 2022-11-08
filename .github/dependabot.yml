@@ -38,9 +38,14 @@ updates:
       - dependency-name: "javax.servlet:javax.servlet-api"
         # examples are intentionally compiled and tested against Servlet 3.0
         versions: [ "[3.1,)" ]
+      - dependency-name: "org.eclipse.jetty:jetty-server"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
+        versions: [ "[9-alpha,)" ]
       - dependency-name: "org.eclipse.jetty:jetty-servlet"
         # examples are intentionally compiled and tested against Servlet 3.0
-        versions: [ "[9.0,)" ]
+        # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
+        versions: [ "[9-alpha,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
@@ -54,9 +59,14 @@ updates:
       - dependency-name: "javax.servlet:javax.servlet-api"
         # examples are intentionally compiled and tested against Servlet 3.0
         versions: [ "[3.1,)" ]
+      - dependency-name: "org.eclipse.jetty:jetty-server"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
+        versions: [ "[9-alpha,)" ]
       - dependency-name: "org.eclipse.jetty:jetty-servlet"
         # examples are intentionally compiled and tested against Servlet 3.0
-        versions: [ "[9.0,)" ]
+        # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
+        versions: [ "[9-alpha,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
