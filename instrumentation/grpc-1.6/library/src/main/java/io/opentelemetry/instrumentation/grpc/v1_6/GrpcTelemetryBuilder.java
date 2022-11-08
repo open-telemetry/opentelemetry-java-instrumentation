@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetClientAttribut
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -50,7 +51,7 @@ public final class GrpcTelemetryBuilder {
       additionalClientExtractors = new ArrayList<>();
 
   private boolean captureExperimentalSpanAttributes;
-  private List<String> capturedRequestMetadata;
+  private List<String> capturedRequestMetadata = Collections.emptyList();
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
