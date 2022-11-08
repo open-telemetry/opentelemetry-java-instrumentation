@@ -119,7 +119,9 @@ jobs:
 
       - name: Check for jApiCmp diffs
         run: |
-          if git diff --quiet
+          # need to "git add" in case any generated files did not already exist
+          git add docs/apidiffs
+          if git diff --cached --quiet
           then
             echo "No diff detected."
           else
