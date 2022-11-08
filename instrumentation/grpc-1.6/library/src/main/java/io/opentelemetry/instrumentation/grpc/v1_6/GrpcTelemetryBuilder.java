@@ -117,7 +117,7 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
-  /** Sets which metadata request values should be captured as span attributes. */
+  /** Sets which metadata request values should be captured as span attributes */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setCapturedRequestMetadata(List<String> capturedRequestMetadata) {
     this.capturedRequestMetadata = capturedRequestMetadata;
