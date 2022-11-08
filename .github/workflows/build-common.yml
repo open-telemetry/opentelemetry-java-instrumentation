@@ -334,6 +334,12 @@ jobs:
         run: ./gradlew publishToMavenLocal -x javadoc
         working-directory: gradle-plugins
 
+      - name: Debug
+        run: |
+          ls -l ~/.m2/repository/io/opentelemetry/instrumentation
+          ls -l ~/.m2/repository/io/opentelemetry/instrumentation/muzzle-generation
+          ls -l ~/.m2/repository/io/opentelemetry/instrumentation/muzzle-generation/io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin
+
       - name: Build distro
         run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
         working-directory: examples/distro
