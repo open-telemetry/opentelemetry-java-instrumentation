@@ -32,7 +32,7 @@ public final class GrpcSingletons {
 
     List<String> rpcRequestMetadata =
         InstrumentationConfig.get()
-            .getList("otel.instrumentation.rpc.capture-metadata.request", emptyList());
+            .getList("otel.instrumentation.grpc.capture-metadata.request", emptyList());
 
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
