@@ -39,7 +39,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClass("com.nr.agent.")
         .ignoreClass("com.singularity.")
         .ignoreClass("com.jinspired.")
-        .ignoreClass("org.jinspired.");
+        .ignoreClass("org.jinspired.")
+        .ignoreClass("com.contrastsecurity.");
 
     // allow JDK HttpClient
     builder.allowClass("jdk.internal.net.http.");
