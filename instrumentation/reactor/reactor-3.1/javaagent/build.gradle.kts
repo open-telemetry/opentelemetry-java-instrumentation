@@ -35,6 +35,9 @@ dependencies {
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
   testImplementation(project(":instrumentation-annotations"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
+
+  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
+  latestDepTestLibrary("io.projectreactor:reactor-test:3.4.+")
 }
 
 testing {

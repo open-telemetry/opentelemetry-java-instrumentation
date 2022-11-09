@@ -37,6 +37,9 @@ dependencies {
 
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
   testImplementation(project(":instrumentation-annotations"))
+
+  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
+  latestDepTestLibrary("io.projectreactor.netty:reactor-netty-http:1.0.+")
 }
 
 tasks {
