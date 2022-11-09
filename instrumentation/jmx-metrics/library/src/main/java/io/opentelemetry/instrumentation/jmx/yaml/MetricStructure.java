@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.jmx.yaml;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttributeExtractor;
-import io.opentelemetry.instrumentation.jmx.engine.MetricBanner;
+import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +33,7 @@ abstract class MetricStructure {
   private Map<String, String> metricAttribute; // unused, for YAML parser only
   private String unit;
 
-  private MetricBanner.Type metricType;
+  private MetricInfo.Type metricType;
   private List<MetricAttribute> metricAttributes;
 
   public String getType() {
@@ -43,7 +43,7 @@ abstract class MetricStructure {
   public void setType(String t) {
     // Do not complain about case variations
     t = t.trim().toUpperCase();
-    this.metricType = MetricBanner.Type.valueOf(t);
+    this.metricType = MetricInfo.Type.valueOf(t);
     this.type = t;
   }
 
@@ -80,7 +80,7 @@ abstract class MetricStructure {
     return metricAttribute;
   }
 
-  public MetricBanner.Type getMetricType() {
+  public MetricInfo.Type getMetricType() {
     return metricType;
   }
 

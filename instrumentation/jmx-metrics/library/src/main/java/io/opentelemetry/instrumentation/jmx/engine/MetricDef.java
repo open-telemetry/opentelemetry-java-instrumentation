@@ -36,29 +36,29 @@ package io.opentelemetry.instrumentation.jmx.engine;
 //  MetricAttribute typeAttribute =
 //      new MetricAttribute("type", MetricAttributeExtractor.fromBeanAttribute("Type"));
 //
-//  MetricBanner poolUsedBanner =
-//      new MetricBanner(
+//  MetricInfo poolUsedInfo =
+//      new MetricInfo(
 //          "my.own.jvm.memory.pool.used",
 //          "Pool memory currently used",
 //          "By",
-//          MetricBanner.Type.UPDOWNCOUNTER);
-//  MetricBanner poolLimitBanner =
-//      new MetricBanner(
+//          MetricInfo.Type.UPDOWNCOUNTER);
+//  MetricInfo poolLimitInfo =
+//      new MetricInfo(
 //          "my.own.jvm.memory.pool.limit",
 //          "Maximum obtainable memory pool size",
 //          "By",
-//          MetricBanner.Type.UPDOWNCOUNTER);
+//          MetricInfo.Type.UPDOWNCOUNTER);
 //
 //  MetricExtractor usageUsedExtractor =
 //      new MetricExtractor(
 //          new BeanAttributeExtractor("Usage", "used"),
-//          poolUsedBanner,
+//          poolUsedInfo,
 //          poolAttribute,
 //          typeAttribute);
 //  MetricExtractor usageMaxExtractor =
 //      new MetricExtractor(
 //          new BeanAttributeExtractor("Usage", "max"),
-//          poolLimitBanner,
+//          poolLimitInfo,
 //          poolAttribute,
 //          typeAttribute);
 //

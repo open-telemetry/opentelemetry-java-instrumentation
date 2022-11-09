@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.jmx.yaml;
 import io.opentelemetry.instrumentation.jmx.engine.BeanAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.BeanPack;
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
-import io.opentelemetry.instrumentation.jmx.engine.MetricBanner;
 import io.opentelemetry.instrumentation.jmx.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.engine.MetricExtractor;
+import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -138,17 +138,17 @@ public class JmxRule extends MetricStructure {
     MetricExtractor[] metricExtractors = new MetricExtractor[attrNames.size()];
     int n = 0;
     for (String attributeName : attrNames) {
-      MetricBanner banner;
+      MetricInfo metricInfo;
       Metric m = mapping.get(attributeName);
       if (m == null) {
-        banner =
-            new MetricBanner(
+        metricInfo =
+            new MetricInfo(
                 prefix == null ? attributeName : (prefix + attributeName),
                 null,
                 getUnit(),
                 getMetricType());
       } else {
-        banner = m.buildMetricBanner(prefix, attributeName, getUnit(), getMetricType());
+        metricInfo = m.buildMetricInfo(prefix, attributeName, getUnit(), getMetricType());
       }
       BeanAttributeExtractor attrExtractor = BeanAttributeExtractor.fromName(attributeName);
 
@@ -170,7 +170,7 @@ public class JmxRule extends MetricStructure {
       MetricExtractor metricExtractor =
           new MetricExtractor(
               attrExtractor,
-              banner,
+              metricInfo,
               attributeList.toArray(new MetricAttribute[attributeList.size()]));
       metricExtractors[n++] = metricExtractor;
     }

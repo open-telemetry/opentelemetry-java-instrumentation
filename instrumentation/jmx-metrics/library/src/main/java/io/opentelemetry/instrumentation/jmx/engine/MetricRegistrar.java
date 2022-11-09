@@ -56,14 +56,14 @@ class MetricRegistrar {
     }
 
     if (firstEnrollment) {
-      MetricBanner banner = extractor.getBanner();
-      String metricName = banner.getMetricName();
-      MetricBanner.Type instrumentType = banner.getType();
+      MetricInfo metricInfo = extractor.getInfo();
+      String metricName = metricInfo.getMetricName();
+      MetricInfo.Type instrumentType = metricInfo.getType();
       String description =
-          banner.getDescription() != null
-              ? banner.getDescription()
+          metricInfo.getDescription() != null
+              ? metricInfo.getDescription()
               : attributeInfo.getDescription();
-      String unit = banner.getUnit();
+      String unit = metricInfo.getUnit();
 
       switch (instrumentType) {
           // CHECKSTYLE:OFF

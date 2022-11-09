@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
  */
 public class MetricExtractor {
 
-  private final MetricBanner banner;
+  private final MetricInfo metricInfo;
 
   // Defines the way to access the metric value (a number)
   private final BeanAttributeExtractor attributeExtractor;
@@ -28,15 +28,15 @@ public class MetricExtractor {
 
   public MetricExtractor(
       BeanAttributeExtractor attributeExtractor,
-      MetricBanner banner,
+      MetricInfo metricInfo,
       MetricAttribute... attributes) {
     this.attributeExtractor = attributeExtractor;
-    this.banner = banner;
+    this.metricInfo = metricInfo;
     this.attributes = attributes;
   }
 
-  MetricBanner getBanner() {
-    return banner;
+  MetricInfo getInfo() {
+    return metricInfo;
   }
 
   BeanAttributeExtractor getMetricValueExtractor() {

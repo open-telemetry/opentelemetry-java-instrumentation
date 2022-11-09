@@ -85,7 +85,7 @@ class RuleParserTest {
     Metric m1 = attr.get("ATTRIBUTE1");
     assertThat(m1 == null).isFalse();
     assertThat("METRIC_NAME1".equals(m1.getMetric())).isTrue();
-    assertThat(m1.getMetricType() == MetricBanner.Type.GAUGE).isTrue();
+    assertThat(m1.getMetricType() == MetricInfo.Type.GAUGE).isTrue();
     assertThat("UNIT1".equals(m1.getUnit())).isTrue();
     assertThat(m1.getMetricAttribute() == null).isFalse();
     assertThat(m1.getMetricAttribute().size() == 1).isTrue();
@@ -168,19 +168,19 @@ class RuleParserTest {
     BeanAttributeExtractor a1 = m1.getMetricValueExtractor();
     assertThat("A.b".equals(a1.getAttributeName())).isTrue();
     assertThat(m1.getAttributes().length == 3).isTrue();
-    MetricBanner mb1 = m1.getBanner();
+    MetricInfo mb1 = m1.getInfo();
     assertThat("PREFIX.METRIC_NAME1".equals(mb1.getMetricName())).isTrue();
     assertThat("DESCRIPTION1".equals(mb1.getDescription())).isTrue();
     assertThat("UNIT1".equals(mb1.getUnit())).isTrue();
-    assertThat(MetricBanner.Type.COUNTER == mb1.getType()).isTrue();
+    assertThat(MetricInfo.Type.COUNTER == mb1.getType()).isTrue();
 
     MetricExtractor m3 = metricDef.getMetricExtractors()[2];
     BeanAttributeExtractor a3 = m3.getMetricValueExtractor();
     assertThat("ATTRIBUTE3".equals(a3.getAttributeName())).isTrue();
-    MetricBanner mb3 = m3.getBanner();
+    MetricInfo mb3 = m3.getInfo();
     assertThat("PREFIX.ATTRIBUTE3".equals(mb3.getMetricName())).isTrue();
     // syntax extension - defining a default unit and type
-    assertThat(MetricBanner.Type.UPDOWNCOUNTER == mb3.getType()).isTrue();
+    assertThat(MetricInfo.Type.UPDOWNCOUNTER == mb3.getType()).isTrue();
     assertThat("DEFAULT_UNIT".equals(mb3.getUnit())).isTrue();
   }
 
@@ -208,9 +208,9 @@ class RuleParserTest {
     BeanAttributeExtractor a1 = m1.getMetricValueExtractor();
     assertThat("ATTRIBUTE".equals(a1.getAttributeName())).isTrue();
     assertThat(m1.getAttributes().length == 0).isTrue();
-    MetricBanner mb1 = m1.getBanner();
+    MetricInfo mb1 = m1.getInfo();
     assertThat("ATTRIBUTE".equals(mb1.getMetricName())).isTrue();
-    assertThat(MetricBanner.Type.GAUGE == mb1.getType()).isTrue();
+    assertThat(MetricInfo.Type.GAUGE == mb1.getType()).isTrue();
     assertThat(null == mb1.getUnit()).isTrue();
   }
 
@@ -245,7 +245,7 @@ class RuleParserTest {
     assertThat(m1.getAttributes().length == 1).isTrue();
     MetricAttribute l1 = m1.getAttributes()[0];
     assertThat("value2".equals(l1.acquireAttributeValue(null, null))).isTrue();
-    MetricBanner mb1 = m1.getBanner();
+    MetricInfo mb1 = m1.getInfo();
     assertThat("ATTRIBUTE".equals(mb1.getMetricName())).isTrue();
   }
 
@@ -278,7 +278,7 @@ class RuleParserTest {
     BeanAttributeExtractor a1 = m1.getMetricValueExtractor();
     assertThat("ATTRIBUTE".equals(a1.getAttributeName())).isTrue();
     assertThat(m1.getAttributes().length == 2).isTrue();
-    MetricBanner mb1 = m1.getBanner();
+    MetricInfo mb1 = m1.getInfo();
     assertThat("ATTRIBUTE".equals(mb1.getMetricName())).isTrue();
   }
 

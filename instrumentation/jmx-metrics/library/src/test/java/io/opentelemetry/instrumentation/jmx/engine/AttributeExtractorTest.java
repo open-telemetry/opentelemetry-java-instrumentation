@@ -18,9 +18,9 @@ import org.junit.jupiter.api.Test;
 class AttributeExtractorTest {
 
   // An MBean used for this test
-  // CHECKSTYLE:OFF
+  @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
   public interface Test1MBean {
-    // CHECKSTYLE:ON
+
     byte getByteAttribute();
 
     short getShortAttribute();

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.yaml;
 
-import io.opentelemetry.instrumentation.jmx.engine.MetricBanner;
+import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
 
 /**
  * A class representing metric definition as a part of YAML metric rule. Objects of this class are
@@ -42,8 +42,8 @@ public class Metric extends MetricStructure {
     this.desc = desc.trim();
   }
 
-  MetricBanner buildMetricBanner(
-      String prefix, String attributeName, String defaultUnit, MetricBanner.Type defaultType) {
+  MetricInfo buildMetricInfo(
+      String prefix, String attributeName, String defaultUnit, MetricInfo.Type defaultType) {
     String metricName;
     if (metric == null) {
       metricName = prefix == null ? attributeName : (prefix + attributeName);
@@ -51,7 +51,7 @@ public class Metric extends MetricStructure {
       metricName = prefix == null ? metric : (prefix + metric);
     }
 
-    MetricBanner.Type metricType = getMetricType();
+    MetricInfo.Type metricType = getMetricType();
     if (metricType == null) {
       metricType = defaultType;
     }
@@ -61,6 +61,6 @@ public class Metric extends MetricStructure {
       unit = defaultUnit;
     }
 
-    return new MetricBanner(metricName, desc, unit, metricType);
+    return new MetricInfo(metricName, desc, unit, metricType);
   }
 }

@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
  *
  * <p>Objects of this class are immutable.
  */
-public class MetricBanner {
+public class MetricInfo {
 
   // OpenTelemetry asynchronous instrument types that can be used
   public enum Type {
@@ -29,14 +29,14 @@ public class MetricBanner {
   private final Type type;
 
   /**
-   * Constructor for MetricBanner.
+   * Constructor for MetricInfo.
    *
    * @param metricName a String that will be used as a metric name, it should be unique
    * @param description a human readable description of the metric
    * @param unit a human readable unit of measurement
    * @param type the instrument typ to be used for the metric
    */
-  public MetricBanner(
+  public MetricInfo(
       String metricName, @Nullable String description, String unit, @Nullable Type type) {
     this.metricName = metricName;
     this.description = description;
