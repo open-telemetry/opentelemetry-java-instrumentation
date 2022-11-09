@@ -59,7 +59,6 @@ final class RocketMqConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ReceiveMessageRequest request,
         @Advice.Enter Timer timer,
         @Advice.Return ListenableFuture<ReceiveMessageResult> future) {
-      String consumerGroup = request.getGroup().getName();
       SpanFinishingCallback spanFinishingCallback = new SpanFinishingCallback(request, timer);
       Futures.addCallback(future, spanFinishingCallback, MoreExecutors.directExecutor());
     }
