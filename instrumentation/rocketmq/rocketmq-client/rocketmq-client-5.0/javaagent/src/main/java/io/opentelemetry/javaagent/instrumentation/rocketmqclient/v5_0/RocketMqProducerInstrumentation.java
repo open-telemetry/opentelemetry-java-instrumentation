@@ -22,7 +22,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
-import org.apache.rocketmq.shaded.com.google.common.util.concurrent.FutureCallback;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.Futures;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.MoreExecutors;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture;
@@ -86,34 +85,9 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
         Context context = instrumenter.start(parentContext, message);
         Futures.addCallback(
             future,
-            new SpanFinishingCallback(instrumenter, context, message),
+            new SendSpanFinishingCallback(instrumenter, context, message),
             MoreExecutors.directExecutor());
       }
-    }
-  }
-
-  public static class SpanFinishingCallback implements FutureCallback<SendReceiptImpl> {
-    private final Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter;
-    private final Context context;
-    private final PublishingMessageImpl message;
-
-    public SpanFinishingCallback(
-        Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter,
-        Context context,
-        PublishingMessageImpl message) {
-      this.instrumenter = instrumenter;
-      this.context = context;
-      this.message = message;
-    }
-
-    @Override
-    public void onSuccess(SendReceiptImpl sendReceipt) {
-      instrumenter.end(context, message, sendReceipt, null);
-    }
-
-    @Override
-    public void onFailure(Throwable t) {
-      instrumenter.end(context, message, null, t);
     }
   }
 }
