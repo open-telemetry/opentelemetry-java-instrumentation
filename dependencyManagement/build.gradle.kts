@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
   "org.codehaus.mojo:animal-sniffer-annotations:1.22",
-  "org.junit-pioneer:junit-pioneer:1.7.1",
+  "org.junit-pioneer:junit-pioneer:1.7.2",
   "org.objenesis:objenesis:3.3",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
