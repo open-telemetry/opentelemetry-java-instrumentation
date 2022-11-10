@@ -77,7 +77,7 @@ public final class Play26Singletons {
           play.api.libs.typedmap.TypedKey<HandlerDef> handlerDef =
               (play.api.libs.typedmap.TypedKey<HandlerDef>)
                   typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF);
-          defOption = request.attrs().get(handlerDef);
+          defOption = request.request.attrs().get(handlerDef);
         } catch (IllegalAccessException | InvocationTargetException ignored) {
           // Ignore
         }
