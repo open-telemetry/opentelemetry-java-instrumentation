@@ -34,28 +34,27 @@ spotless {
     // not sure why it's not using the indent settings from .editorconfig
     ktlint().editorConfigOverride(mapOf("indent_size" to "2", "continuation_indent_size" to "2", "disabled_rules" to "no-wildcard-imports"))
   }
-  format("misc") {
-    // not using "**/..." to help keep spotless fast
-    target(
-      ".gitignore",
-      ".gitattributes",
-      ".gitconfig",
-      ".editorconfig",
-      "*.md",
-      "src/**/*.md",
-      "docs/**/*.md",
-      "*.sh",
-      "src/**/*.properties"
-    )
-    indentWithSpaces()
-    trimTrailingWhitespace()
-    endWithNewline()
-  }
 }
 
 // Use root declared tool deps to avoid issues with high concurrency.
+// see https://github.com/diffplug/spotless/tree/main/plugin-gradle#dependency-resolution-modes
 if (project == rootProject) {
   spotless {
+    format("misc") {
+      // not using "**/..." to help keep spotless fast
+      target(
+        ".gitignore",
+        ".gitattributes",
+        ".gitconfig",
+        ".editorconfig",
+        "**/*.md",
+        "**/*.sh",
+        "**/*.properties"
+      )
+      indentWithSpaces()
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
     predeclareDeps()
   }
 
