@@ -30,8 +30,16 @@ jobs:
       cache-read-only: true
 
   # this is not a required check to avoid blocking pull requests if external links break
+  shell-script-check:
+    # release branches are excluded to avoid unnecessary maintenance if new shell checks are added
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
+    uses: ./.github/workflows/reusable-shell-script-check.yml
+
+  # this is not a required check to avoid blocking pull requests if external links break
   markdown-link-check:
-    # release branches are excluded to avoid unnecessary maintenance
+    # release branches are excluded to avoid unnecessary maintenance if external links break
+    # (and also because the README.md javaagent download link has to be updated on release branches
+    #  before the release download has been published)
     if: ${{ !startsWith(github.ref_name, 'release/') }}
     uses: ./.github/workflows/reusable-markdown-link-check.yml
 
