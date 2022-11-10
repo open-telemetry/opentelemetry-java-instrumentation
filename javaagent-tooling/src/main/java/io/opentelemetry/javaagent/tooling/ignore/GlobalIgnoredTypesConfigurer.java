@@ -161,5 +161,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // Presto's presto-jdbc shades the okhttp3 ConnectionPool class. Just like we ignore the pool
     // in OkHttp3IgnoredTypesConfigurer we need to also ignore it here.
     builder.ignoreTaskClass("io.prestosql.jdbc.$internal.okhttp3.ConnectionPool$");
+
+    // Presto turned into trino, and so the package changed.
+    builder.ignoreTaskClass("io.trino.jdbc.$internal.okhttp3.ConnectionPool$");
   }
 }

@@ -16,7 +16,7 @@ tasks {
       // including only tracing-opentelemetry excludes its transitive dependencies
       include(dependency("com.couchbase.client:tracing-opentelemetry"))
     }
-    relocate("com.couchbase.client.tracing.opentelemetry", "com.couchbase.v3_1_6.client.tracing.opentelemetry")
+    relocate("com.couchbase.client.tracing.opentelemetry", "io.opentelemetry.javaagent.instrumentation.couchbase.v3_1_6.shaded.com.couchbase.client.tracing.opentelemetry")
   }
 
   val extractShadowJar by registering(Copy::class) {

@@ -25,7 +25,7 @@ muzzle {
     name.set("netty_0.8.0+_with_spring-webflux:5.1.0")
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
-    versions.set("[0.8.0.RELEASE,)")
+    versions.set("[0.8.0.RELEASE,1.1.0)")
     extraDependency("org.springframework:spring-webflux:5.1.0.RELEASE")
   }
 

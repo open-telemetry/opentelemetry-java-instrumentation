@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("io.projectreactor")
     module.set("reactor-core")
-    versions.set("[3.1.0.RELEASE,)")
+    versions.set("[3.1.0.RELEASE,3.5.0)")
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     assertInverse.set(true)
     excludeInstrumentationName("opentelemetry-api")
@@ -35,6 +35,9 @@ dependencies {
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
   testImplementation(project(":instrumentation-annotations"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
+
+  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
+  latestDepTestLibrary("io.projectreactor:reactor-test:3.4.+")
 }
 
 testing {

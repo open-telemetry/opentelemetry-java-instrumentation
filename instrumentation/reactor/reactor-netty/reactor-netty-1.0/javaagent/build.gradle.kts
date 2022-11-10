@@ -3,17 +3,17 @@ plugins {
 }
 
 muzzle {
-  fail {
+  pass {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
-    versions.set("[,1.0.0)")
+    versions.set("[1.0.0,1.1.0)")
     assertInverse.set(true)
     excludeInstrumentationName("netty")
   }
   pass {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty-http")
-    versions.set("[1.0.0,)")
+    versions.set("[1.0.0,1.1.0)")
     assertInverse.set(true)
     excludeInstrumentationName("netty")
   }
@@ -37,6 +37,9 @@ dependencies {
 
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
   testImplementation(project(":instrumentation-annotations"))
+
+  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
+  latestDepTestLibrary("io.projectreactor.netty:reactor-netty-http:1.0.+")
 }
 
 tasks {
