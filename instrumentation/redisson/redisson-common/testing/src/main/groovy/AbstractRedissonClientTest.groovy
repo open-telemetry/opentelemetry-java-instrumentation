@@ -315,4 +315,3 @@ abstract class AbstractRedissonClientTest extends AgentInstrumentationSpecificat
     }
   }
 }
-

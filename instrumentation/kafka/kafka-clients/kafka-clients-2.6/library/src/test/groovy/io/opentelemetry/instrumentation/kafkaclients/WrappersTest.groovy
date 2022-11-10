@@ -107,4 +107,3 @@ class WrappersTest extends KafkaClientBaseTest implements LibraryTestTrait {
     testHeaders << [false, true]
   }
 }
-
