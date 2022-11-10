@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 
 # this script reports some false positives, but is helpful in comparing the keys listed
 # in suppressing-instrumentation.md with the keys listed in the source files
