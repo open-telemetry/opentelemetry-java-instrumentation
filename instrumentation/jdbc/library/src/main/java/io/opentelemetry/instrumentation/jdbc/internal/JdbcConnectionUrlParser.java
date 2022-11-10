@@ -822,6 +822,8 @@ public enum JdbcConnectionUrlParser {
     }
   };
 
+  private static final String JDBC_PREFIX = "jdbc:";
+
   private static final Logger logger = Logger.getLogger(JdbcConnectionUrlParser.class.getName());
 
   private static final Map<String, JdbcConnectionUrlParser> typeParsers = new HashMap<>();
@@ -851,11 +853,11 @@ public enum JdbcConnectionUrlParser {
     // Make this easier and ignore case.
     connectionUrl = connectionUrl.toLowerCase(Locale.ROOT);
 
-    if (!connectionUrl.startsWith("jdbc:")) {
+    if (!connectionUrl.startsWith(JDBC_PREFIX)) {
       return DEFAULT;
     }
-
-    String jdbcUrl = connectionUrl.substring("jdbc:".length());
+    int lastJdbcIndex = connectionUrl.lastIndexOf(JDBC_PREFIX);
+    String jdbcUrl = connectionUrl.substring(lastJdbcIndex + JDBC_PREFIX.length());
     int typeLoc = jdbcUrl.indexOf(':');
 
     if (typeLoc < 1) {

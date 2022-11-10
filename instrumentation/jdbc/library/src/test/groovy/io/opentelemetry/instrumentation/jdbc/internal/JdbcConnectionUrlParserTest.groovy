@@ -218,6 +218,8 @@ class JdbcConnectionUrlParserTest extends Specification {
     "jdbc:tibcosoftware:postgresql://server_name:5432;DatabaseName=dbname"                            | null     | "tibcosoftware:postgresql://server_name:5432"                      | "postgresql" | "postgresql"  | null          | "server_name"                               | 5432  | null                               | "dbname"
     "jdbc:tibcosoftware:db2://server_name:50000;DatabaseName=dbname"                                  | null     | "tibcosoftware:db2://server_name:50000"                            | "db2"        | "db2"         | null          | "server_name"                               | 50000 | null                               | "dbname"
 
+	"jdbc:proxy:jdbc:oracle:thin:@server_name:1521:XE"                                                | null     | "oracle:thin://server_name:1521"                                   | "oracle"     | "thin"        | null          | "server_name"                               | 1521  | "xe"                               | null
+	
     expected = DbInfo.builder().system(system).subtype(subtype).user(user).name(name).db(db).host(host).port(port).shortUrl(shortUrl).build()
   }
 }
