@@ -224,5 +224,3 @@ class FieldBackedImplementationTest extends AgentInstrumentationSpecification {
     new UntransformableKeyClass().incrementContextCount() == 1
   }
 }
-
-

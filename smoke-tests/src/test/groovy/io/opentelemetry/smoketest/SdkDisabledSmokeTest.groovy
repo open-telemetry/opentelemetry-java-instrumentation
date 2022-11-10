@@ -57,4 +57,3 @@ class SdkDisabledSmokeTest extends SmokeTest {
     jdk << [8, 11, 17]
   }
 }
-
