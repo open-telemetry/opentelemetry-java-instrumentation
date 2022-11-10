@@ -49,7 +49,7 @@ if (project == rootProject) {
         ".editorconfig",
         "**/*.md",
         "**/*.sh",
-        "**/*.properties"
+        "**/gradle.properties"
       )
       indentWithSpaces()
       trimTrailingWhitespace()
