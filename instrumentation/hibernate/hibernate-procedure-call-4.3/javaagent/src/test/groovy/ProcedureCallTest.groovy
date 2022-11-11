@@ -184,4 +184,3 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
     }
   }
 }
-

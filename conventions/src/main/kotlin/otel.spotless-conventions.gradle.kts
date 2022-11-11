@@ -14,6 +14,7 @@ spotless {
   plugins.withId("groovy") {
     groovy {
       licenseHeaderFile(rootProject.file("buildscripts/spotless.license.java"), "(package|import|class)")
+      endWithNewline()
     }
   }
   plugins.withId("scala") {
