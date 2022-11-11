@@ -12,7 +12,7 @@ The [third section](#auto-instrumentation-using-spring-starters) with build on t
 
 In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace requests between these services using two different approaches. Finally, in section three we will explore tools documented in [opentelemetry-spring-boot-autoconfigure](./spring-boot-autoconfigure/README.md#features) which can improve this process.
 
-# Settings 
+# Settings
 
 | System property | Type | Default | Description |
 |---|---|---|---|
@@ -33,7 +33,7 @@ Add the dependencies below to enable OpenTelemetry in `MainService` and `TimeSer
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
  - Minimum version: `1.1.0`
- 
+
 ### Maven
 
 #### OpenTelemetry
@@ -707,9 +707,9 @@ Check out [OpenTelemetry Spring Boot AutoConfigure](spring-boot-autoconfigure/RE
 
 ### TimeService
 
-Configure the main class in your `Time Service` project to match the file below. Here we use the Tracer bean provided by the OpenTelemetry starter to create an internal span and set some additional events and attributes. 
+Configure the main class in your `Time Service` project to match the file below. Here we use the Tracer bean provided by the OpenTelemetry starter to create an internal span and set some additional events and attributes.
 
-```java 
+```java
 
 import java.io.IOException;
 
@@ -753,7 +753,7 @@ public class TimeServiceApplication {
            span.end();
         }
      }
-     
+
      @WithSpan(kind=SpanKind.SERVER)
      public void withSpanMethod() {}
   }
@@ -769,30 +769,30 @@ To generate a trace, run MainServiceApplication and TimeServiceApplication, and 
 
 ```java
 SpanWrapper{
-delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=15b72a8e85c842c5}, 
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=15b72a8e85c842c5},
 parentSpanId=SpanId{spanId=57f0106dd1121b54}, name=HTTP GET, kind=CLIENT, attributes={net.peer.name=AttributeValueString{stringValue=localhost},
-http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=8080}, 
-http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, 
-status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410457933181, 
+http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=8080},
+http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}},
+status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410457933181,
 endEpochNanos=1598409410925420912}, resolvedLinks=[], resolvedEvents=[], attributes={net.peer.name=AttributeValueString{stringValue=localhost},
-http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=8080}, 
-http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, totalAttributeCount=5, 
+http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=8080},
+http.url=AttributeValueString{stringValue=http://localhost:8080/time}, http.method=AttributeValueString{stringValue=GET}}, totalAttributeCount=5,
 totalRecordedEvents=0, status=Status{canonicalCode=OK, description=null}, name=HTTP GET, endEpochNanos=1598409410925420912, hasEnded=true
 }
 
 SpanWrapper{
-delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=57f0106dd1121b54}, 
-parentSpanId=SpanId{spanId=0000000000000000}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, attributes={http.status_code=AttributeValueLong{longValue=200}, 
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=57f0106dd1121b54},
+parentSpanId=SpanId{spanId=0000000000000000}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, attributes={http.status_code=AttributeValueLong{longValue=200},
 sampling.probability=AttributeValueDouble{doubleValue=1.0}, net.sock.peer.port=AttributeValueLong{longValue=57578},
 http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, http.flavor=AttributeValueString{stringValue=1.1},
 http.url=AttributeValueString{stringValue=/message}, net.sock.peer.addr=AttributeValueString{stringValue=0:0:0:0:0:0:0:1},
-http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, 
+http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}},
 status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410399317331, endEpochNanos=1598409411045782693},
 resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200}, sampling.probability=AttributeValueDouble{doubleValue=1.0},
-net.sock.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2}, 
+net.sock.peer.port=AttributeValueLong{longValue=57578}, http.user_agent=AttributeValueString{stringValue=PostmanRuntime/7.26.2},
 http.flavor=AttributeValueString{stringValue=1.1}, http.url=AttributeValueString{stringValue=/message},
 net.sock.peer.addr=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}, http.method=AttributeValueString{stringValue=GET},
-http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, totalAttributeCount=9, totalRecordedEvents=0, 
+http.client_ip=AttributeValueString{stringValue=0:0:0:0:0:0:0:1}}, totalAttributeCount=9, totalRecordedEvents=0,
 status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409411045782693, hasEnded=true
 }
 ```
@@ -801,35 +801,35 @@ status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFi
 
 ```java
 SpanWrapper{
-delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, 
-spanId=SpanId{spanId=f2d824704be8ab10}, parentSpanId=SpanId{spanId=b4ae77c523215f9d}, 
-name=time, kind=INTERNAL, attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, status=null, 
-totalRecordedEvents=1,totalRecordedLinks=0, startEpochNanos=1598409410738665807, endEpochNanos=1598409410740607921}, resolvedLinks=[], 
-resolvedEvents=[RawTimedEvent{name=TimeServiceController Entered, attributes={}, epochNanos=1598409410738760924, totalAttributeCount=0}], 
-attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, totalAttributeCount=1, totalRecordedEvents=1, 
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8},
+spanId=SpanId{spanId=f2d824704be8ab10}, parentSpanId=SpanId{spanId=b4ae77c523215f9d},
+name=time, kind=INTERNAL, attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, status=null,
+totalRecordedEvents=1,totalRecordedLinks=0, startEpochNanos=1598409410738665807, endEpochNanos=1598409410740607921}, resolvedLinks=[],
+resolvedEvents=[RawTimedEvent{name=TimeServiceController Entered, attributes={}, epochNanos=1598409410738760924, totalAttributeCount=0}],
+attributes={what.am.i=AttributeValueString{stringValue=Tu es une legume}}, totalAttributeCount=1, totalRecordedEvents=1,
 status=Status{canonicalCode=OK, description=null}, name=time, endEpochNanos=1598409410740607921, hasEnded=true
 }
 
 SpanWrapper{
-delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=b4ae77c523215f9d}, 
-parentSpanId=SpanId{spanId=15b72a8e85c842c5}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER, 
-attributes={http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=40174}, 
+delegate=RecordEventsReadableSpan{traceId=TraceId{traceId=52d6edec17bbf842cf5032ebce2043f8}, spanId=SpanId{spanId=b4ae77c523215f9d},
+parentSpanId=SpanId{spanId=15b72a8e85c842c5}, name=WebMVCTracingFilter.doFilterInteral, kind=SERVER,
+attributes={http.status_code=AttributeValueLong{longValue=200}, net.sock.peer.port=AttributeValueLong{longValue=40174},
 http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, http.flavor=AttributeValueString{stringValue=1.1},
 http.url=AttributeValueString{stringValue=/time}, net.sock.peer.addr=AttributeValueString{stringValue=127.0.0.1},
-http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, 
-status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410680549805, 
+http.method=AttributeValueString{stringValue=GET}, http.client_ip=AttributeValueString{stringValue=127.0.0.1}},
+status=Status{canonicalCode=OK, description=null}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1598409410680549805,
 endEpochNanos=1598409410921631068}, resolvedLinks=[], resolvedEvents=[], attributes={http.status_code=AttributeValueLong{longValue=200},
-net.sock.peer.port=AttributeValueLong{longValue=40174}, http.user_agent=AttributeValueString{stringValue=Java/11.0.8}, 
+net.sock.peer.port=AttributeValueLong{longValue=40174}, http.user_agent=AttributeValueString{stringValue=Java/11.0.8},
 http.flavor=AttributeValueString{stringValue=1.1}, http.url=AttributeValueString{stringValue=/time},
-net.sock.peer.addr=AttributeValueString{stringValue=127.0.0.1}, http.method=AttributeValueString{stringValue=GET}, 
-http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, totalAttributeCount=8, totalRecordedEvents=0, 
+net.sock.peer.addr=AttributeValueString{stringValue=127.0.0.1}, http.method=AttributeValueString{stringValue=GET},
+http.client_ip=AttributeValueString{stringValue=127.0.0.1}}, totalAttributeCount=8, totalRecordedEvents=0,
 status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFilterInteral, endEpochNanos=1598409410921631068, hasEnded=true
 }
 
 ```
 
 
-### Exporter Starters 
+### Exporter Starters
 
 To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporters replace the OpenTelemetry Spring Starter dependency with one of the artifacts listed below:
 
@@ -838,17 +838,17 @@ To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporte
 ```xml
 <!-- opentelemetry starter with zipkin -->
 <dependency>
-	<groupId>io.opentelemetry.instrumentation</groupId>
-	<artifactId>opentelemetry-zipkin-spring-boot-starter</artifactId>
-	<version>OPENTELEMETRY_VERSION</version>
-</dependency> 
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-zipkin-spring-boot-starter</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+</dependency>
 
 <!-- opentelemetry starter with jaeger -->
 <dependency>
-	<groupId>io.opentelemetry.instrumentation</groupId>
-	<artifactId>opentelemetry-jaeger-spring-boot-starter</artifactId>
-	<version>OPENTELEMETRY_VERSION</version>
-</dependency> 
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-jaeger-spring-boot-starter</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+</dependency>
 ```
 
 #### Gradle
@@ -879,9 +879,9 @@ Add the following configurations to overwrite the default exporter values listed
 
 ### Sample Trace Zipkin
 
-To generate a trace using the zipkin exporter follow the steps below: 
+To generate a trace using the zipkin exporter follow the steps below:
  1. Replace `opentelemetry-spring-boot-starter` with `opentelemetry-zipkin-spring-boot-starter` in your pom or gradle build file
- 2. Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin executable jar 
+ 2. Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin executable jar
     - Ensure the zipkin endpoint matches the default value listed in your application properties
  3. Run `MainServiceApplication.java` and `TimeServiceApplication.java`
  4. Use your favorite browser to send a request to `http://localhost:8080/message`
