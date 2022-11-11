@@ -112,6 +112,9 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     return response.getCode();
   }
 
+  // Apache HttpClient 5.2 introduced Timeout#of(Duration), which causes errorprone failure when
+  // running testLatestDeps
+  @SuppressWarnings("PreferJavaTimeOverload")
   static Timeout getTimeout(Duration duration) {
     return Timeout.of(duration.toMillis(), TimeUnit.MILLISECONDS);
   }
