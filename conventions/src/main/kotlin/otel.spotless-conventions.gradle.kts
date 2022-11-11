@@ -42,7 +42,6 @@ spotless {
 if (project == rootProject) {
   spotless {
     format("misc") {
-      // not using "**/..." to help keep spotless fast
       target(
         ".gitignore",
         ".gitattributes",
@@ -50,6 +49,7 @@ if (project == rootProject) {
         ".editorconfig",
         "**/*.md",
         "**/*.sh",
+        "**/*.dockerfile",
         "**/gradle.properties"
       )
       indentWithSpaces()
