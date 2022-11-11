@@ -30,14 +30,18 @@ public final class GrpcSingletons {
         InstrumentationConfig.get()
             .getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
 
-    List<String> rpcRequestMetadata =
+    List<String> clientRequestMetadata =
         InstrumentationConfig.get()
-            .getList("otel.instrumentation.grpc.capture-metadata.request", emptyList());
+            .getList("otel.instrumentation.grpc.capture-metadata.client.request", emptyList());
+    List<String> serverRequestMetadata =
+        InstrumentationConfig.get()
+            .getList("otel.instrumentation.grpc.capture-metadata.server.request", emptyList());
 
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
-            .setCapturedRequestMetadata(rpcRequestMetadata)
+            .setCapturedClientRequestMetadata(clientRequestMetadata)
+            .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
     CLIENT_INTERCEPTOR = telemetry.newClientInterceptor();

@@ -51,7 +51,8 @@ public final class GrpcTelemetryBuilder {
       additionalClientExtractors = new ArrayList<>();
 
   private boolean captureExperimentalSpanAttributes;
-  private List<String> capturedRequestMetadata = Collections.emptyList();
+  private List<String> capturedClientRequestMetadata = Collections.emptyList();
+  private List<String> capturedServerRequestMetadata = Collections.emptyList();
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -117,10 +118,19 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
-  /** Sets which metadata request values should be captured as span attributes. */
+  /** Sets which metadata request values should be captured as span attributes on client spans. */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setCapturedRequestMetadata(List<String> capturedRequestMetadata) {
-    this.capturedRequestMetadata = capturedRequestMetadata;
+  public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
+      List<String> capturedClientRequestMetadata) {
+    this.capturedClientRequestMetadata = capturedClientRequestMetadata;
+    return this;
+  }
+
+  /** Sets which metadata request values should be captured as span attributes on server spans. */
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setCapturedServerRequestMetadata(
+      List<String> capturedServerRequestMetadata) {
+    this.capturedServerRequestMetadata = capturedServerRequestMetadata;
     return this;
   }
 
@@ -148,9 +158,6 @@ public final class GrpcTelemetryBuilder {
             instrumenter ->
                 instrumenter
                     .setSpanStatusExtractor(new GrpcSpanStatusExtractor())
-                    .addAttributesExtractor(
-                        new GrpcAttributesExtractor(
-                            GrpcRpcAttributesGetter.INSTANCE, capturedRequestMetadata))
                     .addAttributesExtractors(additionalExtractors));
 
     GrpcNetClientAttributesGetter netClientAttributesGetter = new GrpcNetClientAttributesGetter();
@@ -160,11 +167,17 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
+        .addAttributesExtractor(
+            new GrpcAttributesExtractor(
+                GrpcRpcAttributesGetter.INSTANCE, capturedClientRequestMetadata))
         .addOperationMetrics(RpcClientMetrics.get());
     serverInstrumenterBuilder
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new GrpcNetServerAttributesGetter()))
+        .addAttributesExtractor(
+            new GrpcAttributesExtractor(
+                GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))
         .addOperationMetrics(RpcServerMetrics.get());
 
     if (peerService != null) {
