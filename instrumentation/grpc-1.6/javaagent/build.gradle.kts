@@ -33,6 +33,6 @@ tasks {
     // The agent context debug mechanism isn't compatible with the bridge approach which may add a
     // gRPC context to the root.
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
-    jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.request=some-key")
+    jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.client.request=some-key")
   }
 }
