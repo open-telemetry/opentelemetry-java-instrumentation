@@ -28,7 +28,7 @@ jobs:
           # synchronizing the fork is fast, and avoids the need to fetch the full upstream repo
           # (fetching the upstream repo with "--depth 1" would lead to "shallow update not allowed"
           #  error when pushing back to the origin repo)
-          gh repo sync opentelemetry-java-bot/opentelemetry.io \
+          gh repo sync opentelemetrybot/opentelemetry.io \
               --source open-telemetry/opentelemetry.io \
               --force
 
