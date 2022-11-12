@@ -4,7 +4,7 @@
 # the release date for $VERSION should be available in $RELEASE_DATE
 # and the release notes for $VERSION should be available in /tmp/changelog-section.md
 
-if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.0 ]]; then
+if [[ $VERSION == *.0 ]]; then
   # this was not a patch release, so the version exists already in the CHANGELOG.md
 
   # update the release date
