@@ -49,7 +49,7 @@ jobs:
       - name: Create pull request against opentelemetry-operator
         env:
           # this is the personal access token used for "gh pr create" below
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
           VERSION: ${{ inputs.version }}
         run: |
           message="Update the javaagent version to $VERSION"
