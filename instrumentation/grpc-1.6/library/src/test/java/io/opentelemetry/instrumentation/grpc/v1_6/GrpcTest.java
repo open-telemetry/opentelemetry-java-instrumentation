@@ -55,7 +55,7 @@ class GrpcTest extends AbstractGrpcTest {
     return client.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedClientRequestMetadata(
-                Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
+                Collections.singletonList(CLIENT_REQUEST_METADATA_KEY))
             .build()
             .newClientInterceptor());
   }
