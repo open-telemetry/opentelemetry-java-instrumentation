@@ -1732,13 +1732,14 @@ public abstract class AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttribute(clientAttributeKey,
-                                Collections.singletonList(clientMetadataValue)),
+                            .hasAttribute(
+                                clientAttributeKey, Collections.singletonList(clientMetadataValue)),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttribute(serverAttributeKey,
+                            .hasAttribute(
+                                serverAttributeKey,
                                 Collections.singletonList(serverMetadataValue))));
   }
 
