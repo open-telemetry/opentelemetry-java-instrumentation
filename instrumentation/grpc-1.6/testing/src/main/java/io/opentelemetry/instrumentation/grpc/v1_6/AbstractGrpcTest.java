@@ -1705,9 +1705,11 @@ public abstract class AbstractGrpcTest {
 
     Metadata extraMetadata = new Metadata();
     extraMetadata.put(
-        Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
+        Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        metadataValue);
     extraMetadata.put(
-        Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
+        Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        metadataValue);
 
     GreeterGrpc.GreeterBlockingStub client =
         GreeterGrpc.newBlockingStub(channel)
