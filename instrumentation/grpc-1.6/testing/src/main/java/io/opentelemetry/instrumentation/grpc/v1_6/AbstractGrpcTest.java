@@ -71,7 +71,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractGrpcTest {
-  protected static final String METADATA_KEY = "some-key";
+  protected static final String CLIENT_REQUEST_METADATA_KEY = "some-client-key";
+
+  protected static final String SERVER_REQUEST_METADATA_KEY = "some-server-key";
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
@@ -1677,11 +1679,13 @@ public abstract class AbstractGrpcTest {
 
   @Test
   void setCapturedRequestMetadata() throws Exception {
-    String metadataAttributePrefix = "rpc.client.request.metadata.";
-    AttributeKey<List<String>> attributeKey =
-        AttributeKey.stringArrayKey(metadataAttributePrefix + METADATA_KEY);
+    String metadataAttributePrefix = "rpc.request.metadata.";
+    AttributeKey<List<String>> clientAttributeKey =
+        AttributeKey.stringArrayKey(metadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> serverAttributeKey =
+        AttributeKey.stringArrayKey(metadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
     String metadataValue = "some-value";
-    List<String> metadataValueAsList = Collections.singletonList("some-value");
+    List<String> metadataValueAsList = Collections.singletonList(metadataValue);
 
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -1701,7 +1705,9 @@ public abstract class AbstractGrpcTest {
 
     Metadata extraMetadata = new Metadata();
     extraMetadata.put(
-        Metadata.Key.of(METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
+        Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
+    extraMetadata.put(
+        Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER), metadataValue);
 
     GreeterGrpc.GreeterBlockingStub client =
         GreeterGrpc.newBlockingStub(channel)
@@ -1724,12 +1730,12 @@ public abstract class AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttribute(attributeKey, metadataValueAsList),
+                            .hasAttribute(clientAttributeKey, metadataValueAsList),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttribute(attributeKey, metadataValueAsList)));
+                            .hasAttribute(serverAttributeKey, metadataValueAsList)));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
