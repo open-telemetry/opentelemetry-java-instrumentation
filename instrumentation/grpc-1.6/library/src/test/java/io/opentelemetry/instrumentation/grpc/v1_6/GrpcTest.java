@@ -44,7 +44,8 @@ class GrpcTest extends AbstractGrpcTest {
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
     return server.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedServerRequestMetadata(Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
+            .setCapturedServerRequestMetadata(
+                Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
             .build()
             .newServerInterceptor());
   }
@@ -53,7 +54,8 @@ class GrpcTest extends AbstractGrpcTest {
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
     return client.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedClientRequestMetadata(Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
+            .setCapturedClientRequestMetadata(
+                Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
             .build()
             .newClientInterceptor());
   }
