@@ -1684,8 +1684,8 @@ public abstract class AbstractGrpcTest {
         AttributeKey.stringArrayKey(metadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> serverAttributeKey =
         AttributeKey.stringArrayKey(metadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
-    String metadataValue = "some-value";
-    List<String> metadataValueAsList = Collections.singletonList(metadataValue);
+    String serverMetadataValue = "server-value";
+    String clientMetadataValue = "client-value";
 
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -1706,10 +1706,10 @@ public abstract class AbstractGrpcTest {
     Metadata extraMetadata = new Metadata();
     extraMetadata.put(
         Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        metadataValue);
+        serverMetadataValue);
     extraMetadata.put(
         Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        metadataValue);
+        clientMetadataValue);
 
     GreeterGrpc.GreeterBlockingStub client =
         GreeterGrpc.newBlockingStub(channel)
@@ -1732,12 +1732,14 @@ public abstract class AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttribute(clientAttributeKey, metadataValueAsList),
+                            .hasAttribute(clientAttributeKey,
+                                Collections.singletonList(clientMetadataValue)),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttribute(serverAttributeKey, metadataValueAsList)));
+                            .hasAttribute(serverAttributeKey,
+                                Collections.singletonList(serverMetadataValue))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
