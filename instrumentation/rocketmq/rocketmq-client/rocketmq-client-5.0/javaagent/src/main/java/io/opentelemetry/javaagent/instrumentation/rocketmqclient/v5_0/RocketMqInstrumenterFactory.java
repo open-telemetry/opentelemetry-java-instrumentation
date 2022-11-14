@@ -43,13 +43,7 @@ final class RocketMqInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(RocketMqProducerAttributeExtractor.INSTANCE)
-            .setSpanStatusExtractor(
-                (spanStatusBuilder, message, sendReceipt, error) -> {
-                  if (error != null) {
-                    spanStatusBuilder.setStatus(StatusCode.ERROR);
-                  }
-                });
+            .addAttributesExtractor(RocketMqProducerAttributeExtractor.INSTANCE);
     return instrumenterBuilder.buildProducerInstrumenter(MessageMapSetter.INSTANCE);
   }
 
@@ -69,13 +63,7 @@ final class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operation))
             .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(RocketMqConsumerReceiveAttributeExtractor.INSTANCE)
-            .setSpanStatusExtractor(
-                (spanStatusBuilder, messageView, unused, error) -> {
-                  if (error != null) {
-                    spanStatusBuilder.setStatus(StatusCode.ERROR);
-                  }
-                });
+            .addAttributesExtractor(RocketMqConsumerReceiveAttributeExtractor.INSTANCE);
     return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 

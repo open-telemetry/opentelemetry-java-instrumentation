@@ -21,7 +21,7 @@ import org.apache.rocketmq.shaded.com.google.common.util.concurrent.Futures;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.ListenableFuture;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.MoreExecutors;
 
-final class RocketMqConsumerInstrumentation implements TypeInstrumentation {
+final class ConsumerImplInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.rocketmq.client.java.impl.consumer.ConsumerImpl");
@@ -36,7 +36,7 @@ final class RocketMqConsumerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("apache.rocketmq.v2.ReceiveMessageRequest")))
             .and(takesArgument(1, named("org.apache.rocketmq.client.java.route.MessageQueueImpl")))
             .and(takesArgument(2, named("java.time.Duration"))),
-        RocketMqConsumerInstrumentation.class.getName() + "$ReceiveMessageAdvice");
+        ConsumerImplInstrumentation.class.getName() + "$ReceiveMessageAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -26,7 +26,7 @@ import org.apache.rocketmq.shaded.com.google.common.util.concurrent.Futures;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.MoreExecutors;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture;
 
-final class RocketMqProducerInstrumentation implements TypeInstrumentation {
+final class ProducerImplInstrumentation implements TypeInstrumentation {
 
   /** Match the implementation of RocketMQ producer. */
   @Override
@@ -51,7 +51,7 @@ final class RocketMqProducerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(3, List.class))
             .and(takesArgument(4, List.class))
             .and(takesArgument(5, int.class)),
-        RocketMqProducerInstrumentation.class.getName() + "$SendAdvice");
+        ProducerImplInstrumentation.class.getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")

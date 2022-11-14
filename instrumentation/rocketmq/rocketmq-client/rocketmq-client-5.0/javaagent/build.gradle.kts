@@ -20,14 +20,14 @@ dependencies {
 tasks {
   val testReceiveSpanDisabled by registering(Test::class) {
     filter {
-      includeTestsMatching("RocketMqClientTest.testSendAndConsumeMessageWithReceiveSpanSuppressed")
+      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
     }
-    include("**/RocketMqClientTest.*")
+    include("**/RocketMqClientSuppressReceiveSpanTest.*")
   }
 
   test {
     filter {
-      includeTestsMatching("RocketMqClientTest.testSendAndConsumeMessage")
+      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }

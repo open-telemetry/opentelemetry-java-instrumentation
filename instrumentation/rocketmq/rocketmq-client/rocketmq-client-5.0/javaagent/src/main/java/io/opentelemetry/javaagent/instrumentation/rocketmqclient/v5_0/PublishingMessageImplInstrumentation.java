@@ -25,7 +25,7 @@ import org.apache.rocketmq.client.apis.producer.Transaction;
 import org.apache.rocketmq.client.java.message.MessageImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
-final class RocketMqPublishingMessageImplInstrumentation implements TypeInstrumentation {
+final class PublishingMessageImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,10 +44,10 @@ final class RocketMqPublishingMessageImplInstrumentation implements TypeInstrume
                 takesArgument(
                     1, named("org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
             .and(takesArgument(2, boolean.class)),
-        RocketMqPublishingMessageImplInstrumentation.class.getName() + "$ConstructorAdvice");
+        PublishingMessageImplInstrumentation.class.getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(named("getProperties")).and(isPublic()),
-        RocketMqPublishingMessageImplInstrumentation.class.getName() + "$GetPropertiesAdvice");
+        PublishingMessageImplInstrumentation.class.getName() + "$GetPropertiesAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -56,7 +56,7 @@ final class RocketMqPublishingMessageImplInstrumentation implements TypeInstrume
      * The constructor of {@link PublishingMessageImpl} is always called in the same thread that
      * user invoke {@link Producer#send(Message)}/{@link Producer#sendAsync(Message)}/{@link
      * Producer#send(Message, Transaction)}. Store the {@link Context} here and fetch it in {@link
-     * RocketMqProducerInstrumentation}.
+     * ProducerImplInstrumentation}.
      */
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This PublishingMessageImpl message) {

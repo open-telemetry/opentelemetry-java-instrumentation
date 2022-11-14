@@ -21,14 +21,11 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.Messa
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
-import io.opentelemetry.sdk.trace.data.LinkData;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -42,8 +39,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractRocketMqClientTest {
-
+public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
 
   protected abstract InstrumentationExtension testing();
@@ -103,53 +99,36 @@ public abstract class AbstractRocketMqClientTest {
                 .runWithSpan(
                     "parent",
                     (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
-        AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
         testing()
             .waitAndAssertTraces(
-                trace -> {
-                  trace.hasSpansSatisfyingExactly(
-                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                      span ->
-                          span.hasKind(SpanKind.PRODUCER)
-                              .hasName(topic + " send")
-                              .hasStatus(StatusData.unset())
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                                  equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
-                                  equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
-                                  equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
-                                  equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                  equalTo(
-                                      MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                                  equalTo(
-                                      MESSAGING_DESTINATION_KIND,
-                                      SemanticAttributes.MessagingDestinationKindValues.TOPIC),
-                                  equalTo(MESSAGING_DESTINATION, topic)));
-                  sendSpanData.set(trace.getSpan(1));
-                },
                 trace ->
                     trace.hasSpansSatisfyingExactly(
+                        span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                         span ->
-                            span.hasKind(SpanKind.CONSUMER)
-                                .hasName(topic + " receive")
+                            span.hasKind(SpanKind.PRODUCER)
+                                .hasName(topic + " send")
                                 .hasStatus(StatusData.unset())
+                                .hasParent(trace.getSpan(0))
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
+                                    equalTo(
+                                        MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                    equalTo(
+                                        MESSAGING_MESSAGE_ID,
+                                        sendReceipt.getMessageId().toString()),
                                     equalTo(
                                         MESSAGING_DESTINATION_KIND,
                                         SemanticAttributes.MessagingDestinationKindValues.TOPIC),
-                                    equalTo(MESSAGING_DESTINATION, topic),
-                                    equalTo(MESSAGING_OPERATION, "receive")),
+                                    equalTo(MESSAGING_DESTINATION, topic)),
                         span ->
                             span.hasKind(SpanKind.CONSUMER)
                                 .hasName(topic + " process")
                                 .hasStatus(StatusData.unset())
-                                // Link to send span.
-                                .hasLinks(LinkData.create(sendSpanData.get().getSpanContext()))
-                                // As the child of receive span.
-                                .hasParent(trace.getSpan(0))
+                                // As the child of send span.
+                                .hasParent(trace.getSpan(1))
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
@@ -168,7 +147,7 @@ public abstract class AbstractRocketMqClientTest {
                         span ->
                             span.hasName("child")
                                 .hasKind(SpanKind.INTERNAL)
-                                .hasParent(trace.getSpan(1))));
+                                .hasParent(trace.getSpan(2))));
       }
     }
   }
