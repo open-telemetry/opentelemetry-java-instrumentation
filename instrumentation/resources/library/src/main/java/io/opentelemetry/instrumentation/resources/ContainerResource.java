@@ -5,37 +5,56 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import com.google.errorprone.annotations.MustBeClosed;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.internal.OtelEncodingUtils;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
+
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CONTAINER_ID;
 
 /** Factory for {@link Resource} retrieving Container ID information. */
 public final class ContainerResource {
 
-  private static final Logger logger = Logger.getLogger(ContainerResource.class.getName());
-  private static final String UNIQUE_HOST_NAME_FILE_NAME = "/proc/self/cgroup";
-  private static final Resource INSTANCE = buildSingleton(UNIQUE_HOST_NAME_FILE_NAME);
+  private static final Resource INSTANCE = buildSingleton();
 
-  private static Resource buildSingleton(String uniqueHostNameFileName) {
+  private static Resource buildSingleton() {
     // can't initialize this statically without running afoul of animalSniffer on paths
-    return buildResource(Paths.get(uniqueHostNameFileName));
+    return new ContainerResource().buildResource();
   }
 
-  // package private for testing
-  static Resource buildResource(Path path) {
-    return extractContainerId(path)
-        .map(
-            containerId ->
-                Resource.create(Attributes.of(ResourceAttributes.CONTAINER_ID, containerId)))
+  private final CGroupsV1ContainerIdExtractor v1Extractor;
+  private final CGroupsV2ContainerIdExtractor v2Extractor;
+
+  private ContainerResource() {
+    this(new CGroupsV1ContainerIdExtractor(), new CGroupsV2ContainerIdExtractor());
+  }
+
+  // Visible for testing
+  ContainerResource(
+      CGroupsV1ContainerIdExtractor v1Extractor, CGroupsV2ContainerIdExtractor v2Extractor) {
+    this.v1Extractor = v1Extractor;
+    this.v2Extractor = v2Extractor;
+  }
+
+
+  // Visible for testing
+  Resource buildResource() {
+    return getContainerId()
+        .map(id -> Resource.create(Attributes.of(CONTAINER_ID, id)))
         .orElseGet(Resource::empty);
+  }
+
+  private Optional<String> getContainerId() {
+    Optional<String> v1Result = v1Extractor.extractContainerId();
+    if(v1Result.isPresent()){
+      return v1Result;
+    }
+    return v2Extractor.extractContainerId();
   }
 
   /** Returns resource with container information. */
@@ -43,68 +62,21 @@ public final class ContainerResource {
     return INSTANCE;
   }
 
-  /**
-   * Each line of cgroup file looks like "14:name=systemd:/docker/.../... A hex string is expected
-   * inside the last section separated by '/' Each segment of the '/' can contain metadata separated
-   * by either '.' (at beginning) or '-' (at end)
-   *
-   * @return containerId
-   */
-  private static Optional<String> extractContainerId(Path cgroupFilePath) {
-    if (!Files.exists(cgroupFilePath) || !Files.isReadable(cgroupFilePath)) {
-      return Optional.empty();
+  // Exists for testing
+  final static Filesystem FILESYSTEM_INSTANCE = new Filesystem();
+  static class Filesystem {
+    boolean exists(Path path, LinkOption... options) {
+      return Files.exists(path, options);
     }
-    try (Stream<String> lines = Files.lines(cgroupFilePath)) {
-      return lines
-          .filter(line -> !line.isEmpty())
-          .map(ContainerResource::getIdFromLine)
-          .filter(Optional::isPresent)
-          .findFirst()
-          .orElse(Optional.empty());
-    } catch (Exception e) {
-      logger.log(Level.WARNING, "Unable to read file", e);
+
+    boolean isReadable(Path path) {
+      return Files.isReadable(path);
     }
-    return Optional.empty();
+
+    @MustBeClosed
+    Stream<String> lines(Path path) throws IOException {
+      return Files.lines(path);
+    }
+
   }
-
-  private static Optional<String> getIdFromLine(String line) {
-    // This cgroup output line should have the container id in it
-    int lastSlashIdx = line.lastIndexOf('/');
-    if (lastSlashIdx < 0) {
-      return Optional.empty();
-    }
-
-    String containerId;
-
-    String lastSection = line.substring(lastSlashIdx + 1);
-    int colonIdx = lastSection.lastIndexOf(':');
-
-    if (colonIdx != -1) {
-      // since containerd v1.5.0+, containerId is divided by the last colon when the cgroupDriver is
-      // systemd:
-      // https://github.com/containerd/containerd/blob/release/1.5/pkg/cri/server/helpers_linux.go#L64
-      containerId = lastSection.substring(colonIdx + 1);
-    } else {
-      int startIdx = lastSection.lastIndexOf('-');
-      int endIdx = lastSection.lastIndexOf('.');
-
-      startIdx = startIdx == -1 ? 0 : startIdx + 1;
-      if (endIdx == -1) {
-        endIdx = lastSection.length();
-      }
-      if (startIdx > endIdx) {
-        return Optional.empty();
-      }
-
-      containerId = lastSection.substring(startIdx, endIdx);
-    }
-
-    if (OtelEncodingUtils.isValidBase16String(containerId) && !containerId.isEmpty()) {
-      return Optional.of(containerId);
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  private ContainerResource() {}
 }
