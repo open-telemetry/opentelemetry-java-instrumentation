@@ -65,9 +65,6 @@ public final class ContainerResource {
   // Exists for testing
   final static Filesystem FILESYSTEM_INSTANCE = new Filesystem();
   static class Filesystem {
-    boolean exists(Path path, LinkOption... options) {
-      return Files.exists(path, options);
-    }
 
     boolean isReadable(Path path) {
       return Files.isReadable(path);

@@ -38,7 +38,7 @@ final class CGroupsV1ContainerIdExtractor {
    * @return containerId
    */
   Optional<String> extractContainerId() {
-    if (!filesystem.exists(V1_CGROUP_FILE_PATH) || !filesystem.isReadable(V1_CGROUP_FILE_PATH)) {
+    if (!filesystem.isReadable(V1_CGROUP_FILE_PATH)) {
       return Optional.empty();
     }
     try (Stream<String> lines = filesystem.lines(V1_CGROUP_FILE_PATH)) {
