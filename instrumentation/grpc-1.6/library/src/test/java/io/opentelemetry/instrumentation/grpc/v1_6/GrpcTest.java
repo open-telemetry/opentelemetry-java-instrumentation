@@ -57,6 +57,11 @@ class GrpcTest extends AbstractGrpcTest {
     return testing;
   }
 
+  /**
+   * metadataProvided. testing as well 2 extra methods: {@link
+   * GrpcTelemetryBuilder#addClientAttributeExtractor} and {@link
+   * GrpcTelemetryBuilder#addServerAttributeExtractor}
+   */
   @Test
   void metadataProvided() throws Exception {
     BindableService greeter =
