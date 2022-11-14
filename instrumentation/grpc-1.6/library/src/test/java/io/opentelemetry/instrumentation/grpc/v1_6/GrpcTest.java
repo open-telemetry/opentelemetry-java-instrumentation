@@ -89,7 +89,8 @@ class GrpcTest extends AbstractGrpcTest {
                 .intercept(
                     GrpcTelemetry.builder(testing.getOpenTelemetry())
                         .addAttributeExtractor(new CustomAttributesExtractor())
-                        .addClientAttributeExtractor(new CustomAttributesExtractorV2("clientSideValue"))
+                        .addClientAttributeExtractor(
+                            new CustomAttributesExtractorV2("clientSideValue"))
                         .build()
                         .newClientInterceptor()));
 
