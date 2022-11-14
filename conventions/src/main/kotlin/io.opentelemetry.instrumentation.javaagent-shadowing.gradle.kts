@@ -21,6 +21,7 @@ tasks.withType<ShadowJar>().configureEach {
   relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
     // Exclude resource providers
     exclude("io.opentelemetry.instrumentation.resources.*")
+    exclude("io.opentelemetry.instrumentation.spring.resources.*")
   }
 
   // relocate(OpenTelemetry API)
