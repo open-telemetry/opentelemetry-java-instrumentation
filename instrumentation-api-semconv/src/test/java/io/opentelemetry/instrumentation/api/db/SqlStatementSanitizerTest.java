@@ -190,8 +190,7 @@ public class SqlStatementSanitizerTest {
 
           // Unicode, including a unicode identifier with a trailing number
           Arguments.of(
-              "SELECT * FROM TABLE\u09137 WHERE FIELD = '\u0194'",
-              "SELECT * FROM TABLE\u09137 WHERE FIELD = ?"),
+              "SELECT * FROM TABLEओ7 WHERE FIELD = 'ɣ'", "SELECT * FROM TABLEओ7 WHERE FIELD = ?"),
 
           // whitespace normalization
           Arguments.of(
@@ -238,7 +237,7 @@ public class SqlStatementSanitizerTest {
     }
 
     static Function<String, SqlStatementInfo> expect(String sql, String operation, String table) {
-      return _ignored -> SqlStatementInfo.create(sql, operation, table);
+      return ignored -> SqlStatementInfo.create(sql, operation, table);
     }
 
     @Override
