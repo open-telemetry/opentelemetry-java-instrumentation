@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CONTAINER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Optional;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -29,7 +29,8 @@ class ContainerResourceTest {
     when(v1.extractContainerId()).thenReturn(Optional.of(TEST_CONTAINER_ID));
     ContainerResource containerResource = new ContainerResource(v1, v2);
     Resource resource = containerResource.buildResource();
-    Assertions.assertThat(resource.getAttribute(CONTAINER_ID)).isEqualTo(TEST_CONTAINER_ID);
+    assertThat(resource.getAttribute(CONTAINER_ID)).isEqualTo(TEST_CONTAINER_ID);
+    verifyNoInteractions(v2);
   }
 
   @Test
@@ -38,7 +39,7 @@ class ContainerResourceTest {
     when(v2.extractContainerId()).thenReturn(Optional.of(TEST_CONTAINER_ID));
     ContainerResource containerResource = new ContainerResource(v1, v2);
     Resource resource = containerResource.buildResource();
-    Assertions.assertThat(resource.getAttribute(CONTAINER_ID)).isEqualTo(TEST_CONTAINER_ID);
+    assertThat(resource.getAttribute(CONTAINER_ID)).isEqualTo(TEST_CONTAINER_ID);
   }
 
   @Test
