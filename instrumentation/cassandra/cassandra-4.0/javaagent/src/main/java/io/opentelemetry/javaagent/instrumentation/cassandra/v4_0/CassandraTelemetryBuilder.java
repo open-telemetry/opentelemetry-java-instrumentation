@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.cassandra.v4_0;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 
 public class CassandraTelemetryBuilder {
@@ -20,11 +21,13 @@ public class CassandraTelemetryBuilder {
     this.openTelemetry = openTelemetry;
   }
 
+  @CanIgnoreReturnValue
   public CassandraTelemetryBuilder setInstrumentationName(String instrumentationName) {
     this.instrumentationName = instrumentationName;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public CassandraTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
     this.statementSanitizationEnabled = enabled;
     return this;

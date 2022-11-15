@@ -11,10 +11,10 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.cassandra.v4_0.CassandraRequest;
+import io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraRequest;
 
 public class TracingCqlSession
-    extends io.opentelemetry.instrumentation.cassandra.v4_0.TracingCqlSession {
+    extends io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.TracingCqlSession {
 
   public TracingCqlSession(
       CqlSession session, Instrumenter<CassandraRequest, ExecutionInfo> instrumenter) {

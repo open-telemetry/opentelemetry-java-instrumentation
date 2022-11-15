@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.cassandra.v4_0.CassandraRequest;
-import io.opentelemetry.instrumentation.cassandra.v4_0.CassandraTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 
 public final class CassandraSingletons {

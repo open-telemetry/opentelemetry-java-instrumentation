@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraSingletons.instrumenter;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import io.opentelemetry.instrumentation.cassandra.v4_0.TracingCqlSession;
 import java.util.function.Function;
 
 public class CompletionStageFunction implements Function<Object, Object> {
