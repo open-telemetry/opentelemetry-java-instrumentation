@@ -22,14 +22,6 @@ enum RocketMqConsumerProcessAttributeExtractor
   INSTANCE;
 
   @Override
-  public void onEnd(
-      AttributesBuilder attributes,
-      Context context,
-      MessageView messageView,
-      @Nullable ConsumeResult consumeResult,
-      @Nullable Throwable error) {}
-
-  @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, MessageView messageView) {
     messageView.getTag().ifPresent(s -> attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, s));
@@ -37,4 +29,12 @@ enum RocketMqConsumerProcessAttributeExtractor
     attributes.put(
         MESSAGING_ROCKETMQ_CLIENT_GROUP, VirtualFieldStore.getConsumerGroupByMessage(messageView));
   }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      MessageView messageView,
+      @Nullable ConsumeResult consumeResult,
+      @Nullable Throwable error) {}
 }
