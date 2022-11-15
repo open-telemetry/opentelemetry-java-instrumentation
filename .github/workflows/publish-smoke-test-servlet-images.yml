@@ -70,6 +70,7 @@ jobs:
         run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
   open-issue-on-failure:
-    needs: publish
+    needs:
+      - publish
     if: failure()
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

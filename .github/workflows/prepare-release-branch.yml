@@ -8,7 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - run: |
+      - name: Verify prerequisites
+        run: |
           if [[ $GITHUB_REF_NAME != main ]]; then
             echo this workflow should only be run against main
             exit 1
@@ -21,7 +22,8 @@ jobs:
 
   create-pull-request-against-release-branch:
     runs-on: ubuntu-latest
-    needs: prereqs
+    needs:
+      - prereqs
     steps:
       - uses: actions/checkout@v3
 
@@ -59,21 +61,22 @@ jobs:
       - name: Create pull request against the release branch
         env:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           message="Prepare release $VERSION"
           branch="opentelemetrybot/prepare-release-${VERSION}"
 
+          git checkout -b $branch
           git commit -a -m "$message"
-          git push origin HEAD:$branch
+          git push --set-upstream origin $branch
           gh pr create --title "[$RELEASE_BRANCH_NAME] $message" \
                        --body "$message." \
-                       --head $branch \
                        --base $RELEASE_BRANCH_NAME
 
   create-pull-request-against-main:
     runs-on: ubuntu-latest
-    needs: prereqs
+    needs:
+      - prereqs
     steps:
       - uses: actions/checkout@v3
 
@@ -107,15 +110,15 @@ jobs:
       - name: Create pull request against main
         env:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           message="Update version to $NEXT_VERSION"
           body="Update version to \`$NEXT_VERSION\`."
           branch="opentelemetrybot/update-version-to-${NEXT_VERSION}"
 
+          git checkout -b $branch
           git commit -a -m "$message"
-          git push origin HEAD:$branch
+          git push --set-upstream origin $branch
           gh pr create --title "$message" \
                        --body "$body" \
-                       --head $branch \
                        --base main
