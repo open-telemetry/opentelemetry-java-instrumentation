@@ -13,6 +13,8 @@ class RuntimeMetricsTest extends AgentInstrumentationSpecification {
   def "test runtime metrics is enabled"() {
     when:
     def conditions = new PollingConditions(timeout: 10, initialDelay: 1.5, factor: 1.25)
+    // Force a gc to ensure gc metrics
+    System.gc()
 
     then:
     conditions.eventually {
@@ -22,8 +24,7 @@ class RuntimeMetricsTest extends AgentInstrumentationSpecification {
       assert getMetrics().any { it.name == "process.runtime.jvm.system.cpu.load_1m" }
       assert getMetrics().any { it.name == "process.runtime.jvm.system.cpu.utilization" }
       assert getMetrics().any { it.name == "process.runtime.jvm.cpu.utilization" }
-      assert getMetrics().any { it.name == "runtime.jvm.gc.time" }
-      assert getMetrics().any { it.name == "runtime.jvm.gc.count" }
+      assert getMetrics().any { it.name == "process.runtime.jvm.gc.duration" }
       assert getMetrics().any { it.name == "process.runtime.jvm.memory.init" }
       assert getMetrics().any { it.name == "process.runtime.jvm.memory.usage" }
       assert getMetrics().any { it.name == "process.runtime.jvm.memory.committed" }
