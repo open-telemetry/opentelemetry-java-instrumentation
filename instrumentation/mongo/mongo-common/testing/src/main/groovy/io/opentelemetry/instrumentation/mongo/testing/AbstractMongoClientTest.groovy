@@ -187,6 +187,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         mongoSpan(it, 1, "count", collectionName, dbName, span(0)) {
           assert it == '{"count":"' + collectionName + '","query":{}}' ||
             it == '{"count":"' + collectionName + '","query":{},"$db":"?"}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","lsid":{"id":"?"}}' ||
             it == '{"count":"' + collectionName + '","query":{},"$db":"?","$readPreference":{"mode":"?"}}' ||
             it == '{"count":"' + collectionName + '","$db":"?","lsid":{"id":"?"}}'
           true
@@ -224,6 +225,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
           assert it == '{"count":"' + collectionName + '","query":{}}' ||
             it == '{"count":"' + collectionName + '","query":{},"$db":"?"}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","lsid":{"id":"?"}}' ||
             it == '{"count":"' + collectionName + '","query":{},"$db":"?","$readPreference":{"mode":"?"}}' ||
             it == '{"count":"' + collectionName + '","$db":"?","lsid":{"id":"?"}}'
           true
@@ -261,6 +263,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
           assert it == '{"count":"' + collectionName + '","query":{}}' ||
             it == '{"count":"' + collectionName + '","query":{},"$db":"?"}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","lsid":{"id":"?"}}' ||
             it == '{"count":"' + collectionName + '","query":{},"$db":"?","$readPreference":{"mode":"?"}}' ||
             it == '{"count":"' + collectionName + '","$db":"?","lsid":{"id":"?"}}'
           true
@@ -298,6 +301,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
           assert it == '{"count":"' + collectionName + '","query":{}}' ||
             it == '{"count":"' + collectionName + '","query":{},"$db":"?"}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","lsid":{"id":"?"}}' ||
             it == '{"count":"' + collectionName + '","query":{},"$db":"?","$readPreference":{"mode":"?"}}' ||
             it == '{"count":"' + collectionName + '","$db":"?","lsid":{"id":"?"}}'
           true
