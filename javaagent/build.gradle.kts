@@ -234,6 +234,7 @@ tasks {
 
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
+    finalizedBy(":spotlessApply")
   }
 
   // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.

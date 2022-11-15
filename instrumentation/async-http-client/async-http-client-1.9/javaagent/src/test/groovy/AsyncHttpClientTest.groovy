@@ -70,5 +70,3 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
     return null
   }
 }
-
-

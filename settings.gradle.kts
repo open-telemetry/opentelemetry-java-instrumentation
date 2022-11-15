@@ -1,20 +1,20 @@
 pluginManagement {
   plugins {
-    id("com.bmuschko.docker-remote-api") version "8.1.0"
-    id("com.github.ben-manes.versions") version "0.43.0"
+    id("com.bmuschko.docker-remote-api") version "9.0.0"
+    id("com.github.ben-manes.versions") version "0.44.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
     id("com.google.cloud.tools.jib") version "3.3.1"
-    id("com.gradle.plugin-publish") version "1.0.0"
+    id("com.gradle.plugin-publish") version "1.1.0"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.7.21"
     id("org.unbroken-dome.test-sets") version "4.0.0"
-    id("org.xbib.gradle.plugin.jflex") version "1.6.0"
+    id("org.xbib.gradle.plugin.jflex") version "1.7.0"
     id("org.unbroken-dome.xjc") version "2.0.0"
   }
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.11.3"
+  id("com.gradle.enterprise") version "3.11.4"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.2"
 }
 
@@ -204,9 +204,11 @@ include(":instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent")
 include(":instrumentation:dropwizard:dropwizard-views-0.7:javaagent")
 include(":instrumentation:dropwizard:dropwizard-testing")
 include(":instrumentation:elasticsearch:elasticsearch-rest-common:javaagent")
+include(":instrumentation:opensearch:opensearch-rest-common:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-6.4:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-7.0:javaagent")
+include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common:testing")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")

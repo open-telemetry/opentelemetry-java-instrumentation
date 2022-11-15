@@ -24,22 +24,30 @@ jobs:
     # release branch PRs are excluded
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
-    if: ${{ !startsWith(github.base_ref, 'release/') }}
+    if: "!startsWith(github.base_ref, 'release/')"
     uses: ./.github/workflows/reusable-muzzle.yml
     with:
       cache-read-only: true
 
+  # this is not a required check to avoid blocking pull requests if new shell checks are added
+  shell-script-check:
+    # release branches are excluded to avoid unnecessary maintenance if new shell checks are added
+    if: "!startsWith(github.ref_name, 'release/')"
+    uses: ./.github/workflows/reusable-shell-script-check.yml
+
   # this is not a required check to avoid blocking pull requests if external links break
   markdown-link-check:
-    # release branches are excluded to avoid unnecessary maintenance
-    if: ${{ !startsWith(github.ref_name, 'release/') }}
+    # release branches are excluded to avoid unnecessary maintenance if external links break
+    # (and also because the README.md javaagent download link has to be updated on release branches
+    #  before the release download has been published)
+    if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-markdown-link-check.yml
 
   # this is not a required check to avoid blocking pull requests if new misspellings are added
   # to the misspell dictionary
   misspell-check:
     # release branches are excluded to avoid unnecessary maintenance
-    if: ${{ !startsWith(github.ref_name, 'release/') }}
+    if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-misspell-check.yml
 
   required-status-check:
@@ -55,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - if: |
+      - if: >
           needs.common.result != 'success' ||
           (!startsWith(github.base_ref, 'release/') && needs.muzzle.result != 'success')
         run: exit 1

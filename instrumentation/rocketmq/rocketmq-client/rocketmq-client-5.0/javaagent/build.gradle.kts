@@ -16,3 +16,23 @@ dependencies {
 
   testImplementation(project(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing"))
 }
+
+tasks {
+  val testReceiveSpanDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    }
+    include("**/RocketMqClientSuppressReceiveSpanTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testReceiveSpanDisabled)
+  }
+}

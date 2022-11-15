@@ -46,6 +46,7 @@ jobs:
           committer_email: 107717825+opentelemetrybot@users.noreply.github.com
 
   open-issue-on-failure:
-    needs: run-overhead-tests
+    needs:
+      - run-overhead-tests
     if: failure()
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

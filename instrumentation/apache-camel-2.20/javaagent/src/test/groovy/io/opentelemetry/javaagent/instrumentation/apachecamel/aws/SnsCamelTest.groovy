@@ -132,4 +132,3 @@ class SnsCamelTest extends AgentInstrumentationSpecification {
     clearExportedData()
   }
 }
-

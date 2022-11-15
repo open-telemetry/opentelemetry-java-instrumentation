@@ -100,4 +100,3 @@ class InterceptorsTest extends KafkaClientBaseTest implements LibraryTestTrait {
     }
   }
 }
-
