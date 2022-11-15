@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -21,7 +20,6 @@ import org.apache.rocketmq.client.apis.consumer.MessageListener;
 final class ConsumeServiceInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // Instrument ConsumerService instead of MessageListener because lambda could not be enhanced.
     return named("org.apache.rocketmq.client.java.impl.consumer.ConsumeService");
   }
 
@@ -31,7 +29,6 @@ final class ConsumeServiceInstrumentation implements TypeInstrumentation {
         isConstructor()
             .and(
                 isPublic()
-                    .and(takesArguments(5))
                     .and(
                         takesArgument(
                             1, named("org.apache.rocketmq.client.apis.consumer.MessageListener")))),

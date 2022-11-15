@@ -31,13 +31,16 @@ public final class MessageListenerWrapper implements MessageListener {
       return delegator.consume(messageView);
     }
     Context context = processInstrumenter.start(parentContext, messageView);
+    ConsumeResult consumeResult = null;
+    Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
-      ConsumeResult consumeResult = delegator.consume(messageView);
-      processInstrumenter.end(context, messageView, consumeResult, null);
+      consumeResult = delegator.consume(messageView);
       return consumeResult;
     } catch (Throwable t) {
-      processInstrumenter.end(context, messageView, null, t);
+      error = t;
       throw t;
+    } finally {
+      processInstrumenter.end(context, messageView, consumeResult, error);
     }
   }
 }
