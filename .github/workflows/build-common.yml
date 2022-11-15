@@ -196,7 +196,7 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Upload deadlock detector artifacts if any
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}
@@ -204,7 +204,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload jvm crash dump files if any
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: javacore-test-${{ matrix.test-java-version }}
@@ -274,7 +274,7 @@ jobs:
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Upload jvm crash dump files if any
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
