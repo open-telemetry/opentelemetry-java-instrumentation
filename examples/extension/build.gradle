@@ -24,7 +24,6 @@ ext {
   versions = [
     // these lines are managed by .github/scripts/update-sdk-version.sh
     opentelemetry              : "1.20.0",
-    opentelemetryAlpha         : "1.18.0-alpha",
 
     // these lines are managed by .github/scripts/update-version.sh
     opentelemetryJavaagent     : "1.20.0-SNAPSHOT",
