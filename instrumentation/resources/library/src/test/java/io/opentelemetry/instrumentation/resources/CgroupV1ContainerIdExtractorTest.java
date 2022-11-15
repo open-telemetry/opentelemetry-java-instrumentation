@@ -1,6 +1,11 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.instrumentation.resources.CGroupsV1ContainerIdExtractor.V1_CGROUP_FILE_PATH;
+import static io.opentelemetry.instrumentation.resources.CgroupV1ContainerIdExtractor.V1_CGROUP_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,25 +26,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class CGroupsV1ContainerIdExtractorTest {
+class CgroupV1ContainerIdExtractorTest {
 
-  @Mock
-  ContainerResource.Filesystem filesystem;
-
-  @Test
-  void fileDoesntExist() throws IOException {
-    when(filesystem.exists(V1_CGROUP_FILE_PATH)).thenReturn(false);
-    CGroupsV1ContainerIdExtractor extractor = new CGroupsV1ContainerIdExtractor(filesystem);
-    Optional<String> result = extractor.extractContainerId();
-    assertThat(result).isEmpty();
-    verify(filesystem, never()).lines(any());
-  }
+  @Mock ContainerResource.Filesystem filesystem;
 
   @Test
-  void fileNotReadable() throws IOException{
-    when(filesystem.exists(V1_CGROUP_FILE_PATH)).thenReturn(true);
-    when(filesystem.isReadable(V1_CGROUP_FILE_PATH)).thenReturn(false);
-    CGroupsV1ContainerIdExtractor extractor = new CGroupsV1ContainerIdExtractor(filesystem);
+  void fileNotReadable() throws IOException {
+    when(filesystem.isReadable(V1_CGROUP_PATH)).thenReturn(false);
+    CgroupV1ContainerIdExtractor extractor = new CgroupV1ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
     assertThat(result).isEmpty();
     verify(filesystem, never()).lines(any());
@@ -48,17 +42,16 @@ class CGroupsV1ContainerIdExtractorTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-          // invalid containerId (non-hex)
-          "13:name=systemd:/podruntime/docker/kubepods/ac679f8a8319c8cf7d38e1adf263bc08d23zzzz",
-          // unrecognized format (last "-" is after last ".")
-          "13:name=systemd:/podruntime/docker/kubepods/ac679f8.a8319c8cf7d38e1adf263bc08-d23zzzz"
+        // invalid containerId (non-hex)
+        "13:name=systemd:/podruntime/docker/kubepods/ac679f8a8319c8cf7d38e1adf263bc08d23zzzz",
+        // unrecognized format (last "-" is after last ".")
+        "13:name=systemd:/podruntime/docker/kubepods/ac679f8.a8319c8cf7d38e1adf263bc08-d23zzzz"
       })
   void invalidContainerIds(String line) throws IOException {
-    when(filesystem.isReadable(V1_CGROUP_FILE_PATH)).thenReturn(true);
-    when(filesystem.exists(V1_CGROUP_FILE_PATH)).thenReturn(true);
-    when(filesystem.lines(V1_CGROUP_FILE_PATH)).thenReturn(Stream.of(line));
+    when(filesystem.isReadable(V1_CGROUP_PATH)).thenReturn(true);
+    when(filesystem.lines(V1_CGROUP_PATH)).thenReturn(Stream.of(line));
 
-    CGroupsV1ContainerIdExtractor extractor = new CGroupsV1ContainerIdExtractor(filesystem);
+    CgroupV1ContainerIdExtractor extractor = new CgroupV1ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
     assertThat(result).isEmpty();
   }
@@ -66,13 +59,12 @@ class CGroupsV1ContainerIdExtractorTest {
   @ParameterizedTest
   @MethodSource("validLines")
   void validCgroupLines(String line, String expectedContainerId) throws IOException {
-    when(filesystem.isReadable(V1_CGROUP_FILE_PATH)).thenReturn(true);
-    when(filesystem.exists(V1_CGROUP_FILE_PATH)).thenReturn(true);
-    when(filesystem.lines(V1_CGROUP_FILE_PATH)).thenReturn(Stream.of(line));
+    when(filesystem.isReadable(V1_CGROUP_PATH)).thenReturn(true);
+    when(filesystem.lines(V1_CGROUP_PATH)).thenReturn(Stream.of(line));
 
-    CGroupsV1ContainerIdExtractor extractor = new CGroupsV1ContainerIdExtractor(filesystem);
+    CgroupV1ContainerIdExtractor extractor = new CgroupV1ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
-    assertThat(result.get()).isEqualTo(expectedContainerId);
+    assertThat(result.orElse("fail")).isEqualTo(expectedContainerId);
   }
 
   static Stream<Arguments> validLines() {

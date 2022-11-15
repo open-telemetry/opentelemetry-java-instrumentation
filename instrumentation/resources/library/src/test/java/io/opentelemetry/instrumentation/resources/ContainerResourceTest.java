@@ -21,10 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ContainerResourceTest {
 
   public static final String TEST_CONTAINER_ID = "abcdef123123deadbeef";
-  @Mock
-  CGroupsV1ContainerIdExtractor v1;
-  @Mock
-  CGroupsV2ContainerIdExtractor v2;
+  @Mock CgroupV1ContainerIdExtractor v1;
+  @Mock CgroupV2ContainerIdExtractor v2;
 
   @Test
   void v1Success() {
@@ -41,7 +39,6 @@ class ContainerResourceTest {
     ContainerResource containerResource = new ContainerResource(v1, v2);
     Resource resource = containerResource.buildResource();
     Assertions.assertThat(resource.getAttribute(CONTAINER_ID)).isEqualTo(TEST_CONTAINER_ID);
-
   }
 
   @Test
@@ -52,5 +49,4 @@ class ContainerResourceTest {
     Resource resource = containerResource.buildResource();
     assertThat(resource).isSameAs(Resource.empty());
   }
-
 }

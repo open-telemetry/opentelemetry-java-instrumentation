@@ -5,21 +5,24 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CONTAINER_ID;
+
 import com.google.errorprone.annotations.MustBeClosed;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CONTAINER_ID;
-
-/** Factory for {@link Resource} retrieving Container ID information. */
+/**
+ * Factory for {@link Resource} retrieving Container ID information. It supports both cgroup v1 and
+ * v2 runtimes.
+ */
 public final class ContainerResource {
 
+  static final Filesystem FILESYSTEM_INSTANCE = new Filesystem();
   private static final Resource INSTANCE = buildSingleton();
 
   private static Resource buildSingleton() {
@@ -27,20 +30,19 @@ public final class ContainerResource {
     return new ContainerResource().buildResource();
   }
 
-  private final CGroupsV1ContainerIdExtractor v1Extractor;
-  private final CGroupsV2ContainerIdExtractor v2Extractor;
+  private final CgroupV1ContainerIdExtractor v1Extractor;
+  private final CgroupV2ContainerIdExtractor v2Extractor;
 
   private ContainerResource() {
-    this(new CGroupsV1ContainerIdExtractor(), new CGroupsV2ContainerIdExtractor());
+    this(new CgroupV1ContainerIdExtractor(), new CgroupV2ContainerIdExtractor());
   }
 
   // Visible for testing
   ContainerResource(
-      CGroupsV1ContainerIdExtractor v1Extractor, CGroupsV2ContainerIdExtractor v2Extractor) {
+      CgroupV1ContainerIdExtractor v1Extractor, CgroupV2ContainerIdExtractor v2Extractor) {
     this.v1Extractor = v1Extractor;
     this.v2Extractor = v2Extractor;
   }
-
 
   // Visible for testing
   Resource buildResource() {
@@ -51,7 +53,7 @@ public final class ContainerResource {
 
   private Optional<String> getContainerId() {
     Optional<String> v1Result = v1Extractor.extractContainerId();
-    if(v1Result.isPresent()){
+    if (v1Result.isPresent()) {
       return v1Result;
     }
     return v2Extractor.extractContainerId();
@@ -63,7 +65,6 @@ public final class ContainerResource {
   }
 
   // Exists for testing
-  final static Filesystem FILESYSTEM_INSTANCE = new Filesystem();
   static class Filesystem {
 
     boolean isReadable(Path path) {
@@ -74,6 +75,5 @@ public final class ContainerResource {
     Stream<String> lines(Path path) throws IOException {
       return Files.lines(path);
     }
-
   }
 }
