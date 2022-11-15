@@ -65,13 +65,13 @@ class GarbageCollectorTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-metrics",
-        "process.runtime.jvm.gc.time",
+        "process.runtime.jvm.gc.duration",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Time spent performing JVM garbage collection actions")
+                        .hasDescription("Duration of JVM garbage collection actions")
                         .hasUnit("ms")
                         .hasHistogramSatisfying(
                             histogram ->

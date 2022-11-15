@@ -58,8 +58,8 @@ public final class GarbageCollector {
 
     LongHistogram gcTime =
         meter
-            .histogramBuilder("process.runtime.jvm.gc.time")
-            .setDescription("Time spent performing JVM garbage collection actions")
+            .histogramBuilder("process.runtime.jvm.gc.duration")
+            .setDescription("Duration of JVM garbage collection actions")
             .setUnit("ms")
             .ofLongs()
             .build();
