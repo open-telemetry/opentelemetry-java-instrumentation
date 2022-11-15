@@ -37,7 +37,8 @@ final class GoogleHttpClientHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpRequest httpRequest, HttpResponse httpResponse) {
+  public Integer statusCode(
+      HttpRequest httpRequest, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatusCode();
   }
 

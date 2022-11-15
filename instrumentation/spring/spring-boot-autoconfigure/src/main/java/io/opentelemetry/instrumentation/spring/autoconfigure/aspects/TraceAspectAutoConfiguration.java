@@ -32,14 +32,15 @@ public class TraceAspectAutoConfiguration {
 
   @Bean
   @ConditionalOnClass(WithSpan.class)
-  public WithSpanAspect instrumentationWithSpanAspect(
+  public InstrumentationWithSpanAspect instrumentationWithSpanAspect(
       OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
     return new InstrumentationWithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }
 
   @Bean
+  @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
   @ConditionalOnClass(io.opentelemetry.extension.annotations.WithSpan.class)
-  public WithSpanAspect sdkExtensionWithSpanAspect(
+  public SdkExtensionWithSpanAspect sdkExtensionWithSpanAspect(
       OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
     return new SdkExtensionWithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }

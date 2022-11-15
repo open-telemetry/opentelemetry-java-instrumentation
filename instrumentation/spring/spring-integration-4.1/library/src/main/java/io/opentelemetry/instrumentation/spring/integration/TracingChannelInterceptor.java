@@ -230,7 +230,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   }
 
   private boolean createProducerSpan(MessageChannel messageChannel) {
-    if (!producerSpanEnabled) {
+    if (!producerSpanEnabled || directWithAttributesChannelClass == null) {
       return false;
     }
 

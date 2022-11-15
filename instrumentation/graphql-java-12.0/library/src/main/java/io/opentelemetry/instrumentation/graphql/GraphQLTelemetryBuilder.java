@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.graphql;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 
 /** A builder of {@link GraphQLTelemetry}. */
@@ -19,18 +20,8 @@ public final class GraphQLTelemetryBuilder {
     this.openTelemetry = openTelemetry;
   }
 
-  /**
-   * Sets whether experimental attributes should be set to spans. These attributes may be changed or
-   * removed in the future, so only enable this if you know you do not require attributes filled by
-   * this instrumentation to be stable across versions.
-   */
-  @Deprecated
-  public GraphQLTelemetryBuilder setCaptureExperimentalSpanAttributes(
-      boolean captureExperimentalSpanAttributes) {
-    return this;
-  }
-
   /** Sets whether sensitive information should be removed from queries. Default is {@code true}. */
+  @CanIgnoreReturnValue
   public GraphQLTelemetryBuilder setSanitizeQuery(boolean sanitizeQuery) {
     this.sanitizeQuery = sanitizeQuery;
     return this;

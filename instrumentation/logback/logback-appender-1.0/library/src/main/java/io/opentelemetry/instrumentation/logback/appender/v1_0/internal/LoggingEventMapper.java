@@ -11,10 +11,10 @@ import ch.qos.logback.classic.spi.ThrowableProxy;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.LoggerProvider;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
-import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Marker;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -31,31 +32,41 @@ public final class LoggingEventMapper {
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
+  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("logback.marker");
+
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
   private final boolean captureAllMdcAttributes;
+  private final boolean captureCodeAttributes;
+  private final boolean captureMarkerAttribute;
 
   public LoggingEventMapper(
-      boolean captureExperimentalAttributes, List<String> captureMdcAttributes) {
+      boolean captureExperimentalAttributes,
+      List<String> captureMdcAttributes,
+      boolean captureCodeAttributes,
+      boolean captureMarkerAttribute) {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
+    this.captureCodeAttributes = captureCodeAttributes;
     this.captureMdcAttributes = captureMdcAttributes;
+    this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
-  public void emit(LogEmitterProvider logEmitterProvider, ILoggingEvent event) {
+  public void emit(LoggerProvider loggerProvider, ILoggingEvent event) {
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
-    LogBuilder builder =
-        logEmitterProvider.logEmitterBuilder(instrumentationName).build().logBuilder();
+    LogRecordBuilder builder =
+        loggerProvider.loggerBuilder(instrumentationName).build().logRecordBuilder();
     mapLoggingEvent(builder, event);
     builder.emit();
   }
 
   /**
-   * Map the {@link ILoggingEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
+   * Map the {@link ILoggingEvent} data model onto the {@link LogRecordBuilder}. Unmapped fields
+   * include:
    *
    * <ul>
    *   <li>Thread name - {@link ILoggingEvent#getThreadName()}
@@ -63,7 +74,7 @@ public final class LoggingEventMapper {
    *   <li>Mapped diagnostic context - {@link ILoggingEvent#getMDCPropertyMap()}
    * </ul>
    */
-  private void mapLoggingEvent(LogBuilder builder, ILoggingEvent loggingEvent) {
+  private void mapLoggingEvent(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     // message
     String message = loggingEvent.getFormattedMessage();
     if (message != null) {
@@ -103,7 +114,32 @@ public final class LoggingEventMapper {
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
     }
 
-    builder.setAttributes(attributes.build());
+    if (captureCodeAttributes) {
+      StackTraceElement[] callerData = loggingEvent.getCallerData();
+      if (callerData != null && callerData.length > 0) {
+        StackTraceElement firstStackElement = callerData[0];
+        String fileName = firstStackElement.getFileName();
+        if (fileName != null) {
+          attributes.put(SemanticAttributes.CODE_FILEPATH, fileName);
+        }
+        attributes.put(SemanticAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
+        attributes.put(SemanticAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
+        int lineNumber = firstStackElement.getLineNumber();
+        if (lineNumber > 0) {
+          attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
+        }
+      }
+    }
+
+    if (captureMarkerAttribute) {
+      Marker marker = loggingEvent.getMarker();
+      if (marker != null) {
+        String markerName = marker.getName();
+        attributes.put(LOG_MARKER, markerName);
+      }
+    }
+
+    builder.setAllAttributes(attributes.build());
 
     // span context
     builder.setContext(Context.current());
@@ -133,7 +169,7 @@ public final class LoggingEventMapper {
 
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
     // TODO (trask) extract method for recording exception into
-    // instrumentation-appender-api-internal
+    // io.opentelemetry:opentelemetry-api-logs
     attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
     attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
     StringWriter writer = new StringWriter();

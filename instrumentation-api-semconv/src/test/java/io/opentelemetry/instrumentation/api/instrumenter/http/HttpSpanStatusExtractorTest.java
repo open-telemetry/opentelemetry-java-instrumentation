@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -33,7 +35,7 @@ class HttpSpanStatusExtractorTest {
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 500, 501, 600, 601})
   void hasServerStatus(int statusCode) {
     StatusCode expectedStatusCode = HttpStatusConverter.SERVER.statusFromHttpStatus(statusCode);
-    when(serverGetter.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    when(serverGetter.statusCode(anyMap(), anyMap(), isNull())).thenReturn(statusCode);
 
     HttpSpanStatusExtractor.create(serverGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
@@ -49,7 +51,7 @@ class HttpSpanStatusExtractorTest {
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasClientStatus(int statusCode) {
     StatusCode expectedStatusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode);
-    when(clientGetter.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    when(clientGetter.statusCode(anyMap(), anyMap(), isNull())).thenReturn(statusCode);
 
     HttpSpanStatusExtractor.create(clientGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
@@ -64,48 +66,32 @@ class HttpSpanStatusExtractorTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasServerStatusAndException(int statusCode) {
-    StatusCode expectedStatusCode = HttpStatusConverter.SERVER.statusFromHttpStatus(statusCode);
-    when(serverGetter.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    Throwable error = new IllegalStateException("test");
+    when(serverGetter.statusCode(anyMap(), anyMap(), same(error))).thenReturn(statusCode);
 
-    // Presence of exception has no effect.
+    // Presence of exception overshadows the HTTP status
     HttpSpanStatusExtractor.create(serverGetter)
-        .extract(
-            spanStatusBuilder,
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            new IllegalStateException("test"));
+        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
 
-    if (expectedStatusCode == StatusCode.ERROR) {
-      verify(spanStatusBuilder).setStatus(expectedStatusCode);
-    } else {
-      verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
-    }
+    verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 
   @ParameterizedTest
   @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasClientStatusAndException(int statusCode) {
-    StatusCode expectedStatusCode = HttpStatusConverter.CLIENT.statusFromHttpStatus(statusCode);
-    when(clientGetter.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+    Throwable error = new IllegalStateException("test");
+    when(clientGetter.statusCode(anyMap(), anyMap(), same(error))).thenReturn(statusCode);
 
-    // Presence of exception has no effect.
+    // Presence of exception overshadows the HTTP status
     HttpSpanStatusExtractor.create(clientGetter)
-        .extract(
-            spanStatusBuilder,
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            new IllegalStateException("test"));
+        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
 
-    if (expectedStatusCode == StatusCode.ERROR) {
-      verify(spanStatusBuilder).setStatus(expectedStatusCode);
-    } else {
-      verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
-    }
+    verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 
   @Test
   void hasNoServerStatus_fallsBackToDefault_unset() {
-    when(serverGetter.statusCode(anyMap(), anyMap())).thenReturn(null);
+    when(serverGetter.statusCode(anyMap(), anyMap(), isNull())).thenReturn(null);
 
     HttpSpanStatusExtractor.create(serverGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
@@ -115,7 +101,7 @@ class HttpSpanStatusExtractorTest {
 
   @Test
   void hasNoClientStatus_fallsBackToDefault_unset() {
-    when(clientGetter.statusCode(anyMap(), anyMap())).thenReturn(null);
+    when(clientGetter.statusCode(anyMap(), anyMap(), isNull())).thenReturn(null);
 
     HttpSpanStatusExtractor.create(clientGetter)
         .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
@@ -125,27 +111,23 @@ class HttpSpanStatusExtractorTest {
 
   @Test
   void hasNoServerStatus_fallsBackToDefault_error() {
-    when(serverGetter.statusCode(anyMap(), anyMap())).thenReturn(null);
+    Throwable error = new IllegalStateException("test");
+    when(serverGetter.statusCode(anyMap(), anyMap(), same(error))).thenReturn(null);
 
     HttpSpanStatusExtractor.create(serverGetter)
-        .extract(
-            spanStatusBuilder,
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            new IllegalStateException("test"));
+        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
+
     verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 
   @Test
   void hasNoClientStatus_fallsBackToDefault_error() {
-    when(clientGetter.statusCode(anyMap(), anyMap())).thenReturn(null);
+    IllegalStateException error = new IllegalStateException("test");
+    when(clientGetter.statusCode(anyMap(), anyMap(), same(error))).thenReturn(null);
 
     HttpSpanStatusExtractor.create(clientGetter)
-        .extract(
-            spanStatusBuilder,
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            new IllegalStateException("test"));
+        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
+
     verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
 }

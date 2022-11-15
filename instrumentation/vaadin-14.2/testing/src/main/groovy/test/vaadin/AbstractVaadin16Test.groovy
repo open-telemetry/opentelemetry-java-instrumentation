@@ -8,6 +8,7 @@ package test.vaadin
 
 import com.vaadin.flow.server.Version
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.sdk.trace.data.SpanData
 
 abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   static final boolean VAADIN_17 = Version.majorVersion >= 4
@@ -15,11 +16,14 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   static final boolean VAADIN_21 = Version.majorVersion >= 8
   static final boolean VAADIN_22 = Version.majorVersion >= 9
   static final boolean VAADIN_23 = Version.majorVersion >= 23
+  static final boolean VAADIN_23_2 = Version.majorVersion > 23 || (Version.majorVersion == 23 && Version.minorVersion >= 2)
 
   @Override
   List<String> getRequestHandlers() {
     List<String> handlers = []
-    if (VAADIN_22) {
+    if (VAADIN_23_2) {
+      handlers.add("ViteHandler")
+    } else if (VAADIN_22) {
       handlers.add("WebpackHandler")
     } else if (VAADIN_21) {
       handlers.add("DevModeHandlerImpl")
@@ -41,9 +45,17 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
 
   @Override
   void assertFirstRequest() {
-    assertTraces(VAADIN_17 ? 9 : 8) {
+    def tracesCount
+    if (VAADIN_23_2) {
+      tracesCount = 12
+    } else if (VAADIN_17) {
+      tracesCount = 9
+    } else {
+      tracesCount = 8
+    }
+    assertTraces(tracesCount) {
       traces.sort(orderByRootSpanName("IndexHtmlRequestHandler.handleRequest",
-        getContextPath() + "/main", getContextPath(), getContextPath() + "/*",
+        getContextPath() + "/main", getContextPath(), getContextPath() + "/", getContextPath() + "/*",
         getContextPath() + "/VAADIN/*"))
 
       def handlers = getRequestHandlers("IndexHtmlRequestHandler")
@@ -55,6 +67,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
           childOf span(0)
         }
         int spanIndex = 2
+        sortHandlerSpans(spans, spanIndex, handlers)
         handlers.each { handler ->
           span(spanIndex++) {
             name handler + ".handleRequest"
@@ -73,6 +86,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
         }
 
         int spanIndex = 2
+        sortHandlerSpans(spans, spanIndex, handlers)
         handlers.each { handler ->
           span(spanIndex++) {
             name handler + ".handleRequest"
@@ -101,6 +115,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
           childOf span(0)
         }
         int spanIndex = 2
+        sortHandlerSpans(spans, spanIndex, handlers)
         handlers.each { handler ->
           span(spanIndex++) {
             name handler + ".handleRequest"
@@ -110,10 +125,15 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
         }
       }
       // following traces are for javascript files used on page
-      def count = VAADIN_17 ? 5 : 4
+      def count = traces.size() - 4
       for (i in 0..count) {
         trace(3 + i, 1) {
-          def spanName = VAADIN_23 && i != 0 ? getContextPath() + "/VAADIN/*" : getContextPath() + "/*"
+          def spanName
+          if (VAADIN_23_2) {
+            spanName = i != 0 ? getContextPath() + "/*" : getContextPath() + "/"
+          } else {
+            spanName = VAADIN_23 && i != 0 ? getContextPath() + "/VAADIN/*" : getContextPath() + "/*"
+          }
           serverSpan(it, 0, spanName)
         }
       }
@@ -133,6 +153,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
         }
 
         int spanIndex = 2
+        sortHandlerSpans(spans, spanIndex, handlers)
         handlers.each { handler ->
           span(spanIndex++) {
             name handler + ".handleRequest"
@@ -148,5 +169,13 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
         }
       }
     }
+  }
+
+  static void sortHandlerSpans(List<SpanData> spans, int startIndex, List<String> handlers) {
+    spans.subList(startIndex, startIndex + handlers.size()).sort({
+      // strip .handleRequest from span name to get the handler name
+      def handlerName = it.name.substring(0, it.name.indexOf('.'))
+      return handlers.indexOf(handlerName)
+    })
   }
 }

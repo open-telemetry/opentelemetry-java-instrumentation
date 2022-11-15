@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
+import org.apache.tomcat.util.buf.MessageBytes;
 
 public class TomcatHelper<REQUEST, RESPONSE> {
   protected final Instrumenter<Request, Response> instrumenter;
@@ -65,5 +66,16 @@ public class TomcatHelper<REQUEST, RESPONSE> {
     if (servletRequest != null && servletResponse != null) {
       servletHelper.setAsyncListenerResponse(servletRequest, servletResponse);
     }
+  }
+
+  static String messageBytesToString(MessageBytes messageBytes) {
+    // on tomcat 10.1.0 MessageBytes.toString() has a side effect. Calling it caches the string
+    // value and changes type of the MessageBytes from T_BYTES to T_STR which breaks request
+    // processing in CoyoteAdapter.postParseRequest when it is called on MessageBytes from
+    // request.requestURI().
+    if (messageBytes.getType() == MessageBytes.T_BYTES) {
+      return messageBytes.getByteChunk().toString();
+    }
+    return messageBytes.toString();
   }
 }

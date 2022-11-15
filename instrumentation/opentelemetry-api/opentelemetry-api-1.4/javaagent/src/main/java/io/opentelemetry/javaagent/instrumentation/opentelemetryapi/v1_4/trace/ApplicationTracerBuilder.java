@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace;
 
 import application.io.opentelemetry.api.trace.Tracer;
 import application.io.opentelemetry.api.trace.TracerBuilder;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracer;
 
 class ApplicationTracerBuilder implements TracerBuilder {
@@ -18,12 +19,14 @@ class ApplicationTracerBuilder implements TracerBuilder {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public TracerBuilder setSchemaUrl(String schemaUrl) {
     agentTracerBuilder.setSchemaUrl(schemaUrl);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public TracerBuilder setInstrumentationVersion(String version) {
     agentTracerBuilder.setInstrumentationVersion(version);
     return this;

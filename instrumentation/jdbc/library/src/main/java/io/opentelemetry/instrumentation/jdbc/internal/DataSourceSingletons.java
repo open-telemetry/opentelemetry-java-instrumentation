@@ -35,4 +35,6 @@ public final class DataSourceSingletons {
   public static Instrumenter<DataSource, Void> instrumenter() {
     return INSTRUMENTER;
   }
+
+  private DataSourceSingletons() {}
 }

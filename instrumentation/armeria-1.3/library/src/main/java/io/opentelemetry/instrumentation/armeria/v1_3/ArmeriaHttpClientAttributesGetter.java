@@ -36,7 +36,7 @@ enum ArmeriaHttpClientAttributesGetter
 
   @Override
   @Nullable
-  public Integer statusCode(RequestContext ctx, RequestLog requestLog) {
+  public Integer statusCode(RequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
       return status.code();

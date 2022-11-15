@@ -37,6 +37,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-semconv")
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
+  api("io.opentelemetry:opentelemetry-sdk-logs-testing")
   api("io.opentelemetry:opentelemetry-sdk-metrics")
   api("io.opentelemetry:opentelemetry-sdk-logs")
   api(project(":instrumentation-api"))
@@ -46,13 +47,13 @@ dependencies {
   api("org.awaitility:awaitility")
   api("com.google.guava:guava")
   api("org.mockito:mockito-core")
+  api("org.slf4j:slf4j-api")
 
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
   implementation("io.opentelemetry.proto:opentelemetry-proto")
 
   implementation("net.bytebuddy:byte-buddy")
-  implementation("org.slf4j:slf4j-api")
   implementation("ch.qos.logback:logback-classic")
   implementation("org.slf4j:log4j-over-slf4j")
   implementation("org.slf4j:jcl-over-slf4j")

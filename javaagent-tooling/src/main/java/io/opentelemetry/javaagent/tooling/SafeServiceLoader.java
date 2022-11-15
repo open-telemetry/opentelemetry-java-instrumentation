@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.javaagent.extension.Ordered;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -32,12 +32,11 @@ public final class SafeServiceLoader {
   @SuppressWarnings("ForEachIterable")
   public static <T> List<T> load(Class<T> serviceClass) {
     List<T> result = new ArrayList<>();
-    java.util.ServiceLoader<T> services = ServiceLoader.load(serviceClass);
-    for (Iterator<T> iter = services.iterator(); iter.hasNext(); ) {
-      try {
-        result.add(iter.next());
-      } catch (UnsupportedClassVersionError e) {
-        logger.log(FINE, "Unable to load instrumentation class: {0}", e.getMessage());
+    ServiceLoader<T> services = ServiceLoader.load(serviceClass);
+    for (Iterator<T> iterator = new SafeIterator<>(services.iterator()); iterator.hasNext(); ) {
+      T service = iterator.next();
+      if (service != null) {
+        result.add(service);
       }
     }
     return result;
@@ -54,4 +53,43 @@ public final class SafeServiceLoader {
   }
 
   private SafeServiceLoader() {}
+
+  private static class SafeIterator<T> implements Iterator<T> {
+    private final Iterator<T> delegate;
+
+    SafeIterator(Iterator<T> iterator) {
+      delegate = iterator;
+    }
+
+    private static void handleUnsupportedClassVersionError(
+        UnsupportedClassVersionError unsupportedClassVersionError) {
+      logger.log(
+          FINE,
+          "Unable to load instrumentation class: {0}",
+          unsupportedClassVersionError.getMessage());
+    }
+
+    @Override
+    public boolean hasNext() {
+      // jdk9 and newer throw UnsupportedClassVersionError in hasNext()
+      while (true) {
+        try {
+          return delegate.hasNext();
+        } catch (UnsupportedClassVersionError unsupportedClassVersionError) {
+          handleUnsupportedClassVersionError(unsupportedClassVersionError);
+        }
+      }
+    }
+
+    @Override
+    public T next() {
+      // jdk8 throws UnsupportedClassVersionError in next()
+      try {
+        return delegate.next();
+      } catch (UnsupportedClassVersionError unsupportedClassVersionError) {
+        handleUnsupportedClassVersionError(unsupportedClassVersionError);
+        return null;
+      }
+    }
+  }
 }

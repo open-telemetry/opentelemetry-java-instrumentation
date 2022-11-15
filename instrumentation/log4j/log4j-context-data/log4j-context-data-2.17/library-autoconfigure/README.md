@@ -1,33 +1,35 @@
-# Log4j2 Autoconfigure Integration
+# ContextData Instrumentation for Log4j2 version 2.17 and higher
 
 This module provides a Log4j2 `ContextDataProvider` that injects trace context from active spans
 into log context.
 
-To use it, add the module to your application's runtime classpath.
+## Quickstart
 
-Replace `OPENTELEMETRY_VERSION` with the latest
-stable [release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation).
+### Add these dependencies to your project:
 
-**Maven**
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-log4j-context-data-2.17-autoconfigure).
+
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-log4j-context-data-2.17-autoconfigure</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
+    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```
 
-**Gradle**
+For Gradle, add to your dependencies:
 
-```kotlin
-dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-context-data-2.17-autoconfigure:OPENTELEMETRY_VERSION")
-}
+```groovy
+runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-context-data-2.17-autoconfigure:OPENTELEMETRY_VERSION")
 ```
+
+### Usage
 
 `OpenTelemetryContextDataProvider` implements the Log4j2 `ContextDataProvider` SPI, and injects the
 trace ID and span ID from an active span into

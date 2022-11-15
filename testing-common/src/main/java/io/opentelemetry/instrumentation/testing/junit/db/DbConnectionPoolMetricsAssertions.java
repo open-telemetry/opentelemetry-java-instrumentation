@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -46,41 +47,49 @@ public final class DbConnectionPoolMetricsAssertions {
     this.poolName = poolName;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableMinIdleConnections() {
     testMinIdleConnections = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableMaxIdleConnections() {
     testMaxIdleConnections = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableMaxConnections() {
     testMaxConnections = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disablePendingRequests() {
     testPendingRequests = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableConnectionTimeouts() {
     testConnectionTimeouts = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableCreateTime() {
     testCreateTime = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableWaitTime() {
     testWaitTime = false;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public DbConnectionPoolMetricsAssertions disableUseTime() {
     testUseTime = false;
     return this;
@@ -123,7 +132,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyUsageMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("connections")
+        .hasUnit("{connections}")
         .hasDescription(
             "The number of connections that are currently in state described by the state attribute.")
         .hasLongSumSatisfying(
@@ -147,7 +156,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyMaxConnectionsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("connections")
+        .hasUnit("{connections}")
         .hasDescription("The maximum number of open connections allowed.")
         .hasLongSumSatisfying(this::verifyPoolName);
   }
@@ -161,7 +170,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyMinIdleConnectionsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("connections")
+        .hasUnit("{connections}")
         .hasDescription("The minimum number of idle open connections allowed.")
         .hasLongSumSatisfying(this::verifyPoolName);
   }
@@ -175,7 +184,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyMaxIdleConnectionsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("connections")
+        .hasUnit("{connections}")
         .hasDescription("The maximum number of idle open connections allowed.")
         .hasLongSumSatisfying(this::verifyPoolName);
   }
@@ -194,7 +203,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyPendingRequestsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("requests")
+        .hasUnit("{requests}")
         .hasDescription(
             "The number of pending requests for an open connection, cumulative for the entire pool.")
         .hasLongSumSatisfying(this::verifyPoolName);
@@ -209,7 +218,7 @@ public final class DbConnectionPoolMetricsAssertions {
 
   private void verifyTimeoutsMetric(MetricData metric) {
     assertThat(metric)
-        .hasUnit("timeouts")
+        .hasUnit("{timeouts}")
         .hasDescription(
             "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
         .hasLongSumSatisfying(

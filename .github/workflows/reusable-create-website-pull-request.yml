@@ -1,0 +1,74 @@
+name: Reusable - Create website pull request
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+    secrets:
+      BOT_TOKEN:
+        required: true
+  # to help with partial release build failures
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: true
+
+jobs:
+  create-java-website-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync opentelemetry.io fork
+        env:
+          # this is the personal access token used for "gh repo sync" below
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          # synchronizing the fork is fast, and avoids the need to fetch the full upstream repo
+          # (fetching the upstream repo with "--depth 1" would lead to "shallow update not allowed"
+          #  error when pushing back to the origin repo)
+          gh repo sync opentelemetrybot/opentelemetry.io \
+              --source open-telemetry/opentelemetry.io \
+              --force
+
+      - uses: actions/checkout@v3
+        with:
+          repository: opentelemetrybot/opentelemetry.io
+          # this is the personal access token used for "git push" below
+          token: ${{ secrets.BOT_TOKEN }}
+
+      - name: Update version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          # TODO (trask) this will need to be updated when instrumentation-annotations are stable
+          sed -Ei "s/^javaAnnotationsVersion: [0-9.]+-alpha$/javaAnnotationsVersion: ${VERSION}-alpha/" content/en/docs/instrumentation/java/automatic/annotations.md
+
+      - name: Use CLA approved github bot
+        run: |
+          # cannot run the use-cla-approved-github-bot.sh script here since in a different repo
+          git config user.name opentelemetrybot
+          git config user.email 107717825+opentelemetrybot@users.noreply.github.com
+
+      - name: Create pull request against opentelemetry.io
+        env:
+          VERSION: ${{ inputs.version }}
+          # this is the personal access token used for "gh pr create" below
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          message="Update the Java instrumentation versions to $VERSION"
+          body="Update the Java instrumentation version to \`$VERSION\`."
+          branch="update-opentelemetry-java-instrumentation-to-${VERSION}"
+
+          # gh pr create doesn't have a way to explicitly specify different head and base
+          # repositories currently, but it will implicitly pick up the head from a different
+          # repository if you set up a tracking branch
+
+          git checkout -b $branch
+          git commit -a -m "$message"
+          git push --set-upstream origin $branch
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --repo open-telemetry/opentelemetry.io \
+                       --base main

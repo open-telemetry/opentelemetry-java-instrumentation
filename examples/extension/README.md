@@ -2,13 +2,13 @@
 
 Extensions add new features and capabilities to the agent without having to create a separate distribution (for examples and ideas, see [Use cases for extensions](#sample-use-cases)).
 
-The contents in this folder demonstrate how to create an extension for the OpenTelemetry Java instrumentation agent, with examples for every extension point. 
+The contents in this folder demonstrate how to create an extension for the OpenTelemetry Java instrumentation agent, with examples for every extension point.
 
 > Read both the source code and the Gradle build script, as they contain documentation that explains the purpose of all the major components.
 
 ## Build and add extensions
 
-To build this extension project, run `./gradlew build`. You can find the resulting jar file in `build/libs/`. 
+To build this extension project, run `./gradlew build`. You can find the resulting jar file in `build/libs/`.
 
 To add the extension to the instrumentation agent:
 
@@ -32,7 +32,6 @@ For more information, see the `extendedAgent` task in [build.gradle](build.gradl
 
 * Custom `IdGenerator`: [DemoIdGenerator](src/main/java/com/example/javaagent/DemoIdGenerator.java)
 * Custom `TextMapPropagator`: [DemoPropagator](src/main/java/com/example/javaagent/DemoPropagator.java)
-* New default configuration: [DemoPropertySource](src/main/java/com/example/javaagent/DemoPropertySource.java)
 * Custom `Sampler`: [DemoSampler](src/main/java/com/example/javaagent/DemoSampler.java)
 * Custom `SpanProcessor`: [DemoSpanProcessor](src/main/java/com/example/javaagent/DemoSpanProcessor.java)
 * Custom `SpanExporter`: [DemoSpanExporter](src/main/java/com/example/javaagent/DemoSpanExporter.java)

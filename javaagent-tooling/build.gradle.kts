@@ -14,11 +14,11 @@ dependencies {
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-annotations-support"))
-  implementation(project(":instrumentation-appender-api-internal"))
-  implementation(project(":instrumentation-appender-sdk-internal"))
+  implementation(project(":instrumentation:resources:library"))
   implementation(project(":muzzle"))
 
   implementation("io.opentelemetry:opentelemetry-api")
+  implementation("io.opentelemetry:opentelemetry-api-logs")
   implementation("io.opentelemetry:opentelemetry-sdk")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry:opentelemetry-sdk-metrics")
@@ -26,8 +26,8 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-resources")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-metric-incubator")
+  // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 
   // Exporters with dependencies
   implementation("io.opentelemetry:opentelemetry-exporter-jaeger")
@@ -53,6 +53,7 @@ dependencies {
 
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
+  testImplementation("org.junit-pioneer:junit-pioneer")
 }
 
 testing {
@@ -88,6 +89,11 @@ tasks {
   withType<Test>().configureEach {
     environment("OTEL_TRACES_EXPORTER", "none")
     environment("OTEL_METRICS_EXPORTER", "none")
+
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
   // TODO this should live in jmh-conventions

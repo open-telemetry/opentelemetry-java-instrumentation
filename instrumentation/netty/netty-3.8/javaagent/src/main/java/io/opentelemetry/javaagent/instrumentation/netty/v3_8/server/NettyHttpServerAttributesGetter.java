@@ -27,7 +27,8 @@ final class NettyHttpServerAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpRequestAndChannel requestAndChannel, HttpResponse response) {
+  public Integer statusCode(
+      HttpRequestAndChannel requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().getCode();
   }
 
@@ -60,11 +61,5 @@ final class NettyHttpServerAttributesGetter
   @Override
   public String scheme(HttpRequestAndChannel requestAndChannel) {
     return getScheme(requestAndChannel);
-  }
-
-  @Override
-  @Nullable
-  public String serverName(HttpRequestAndChannel requestAndChannel) {
-    return null;
   }
 }

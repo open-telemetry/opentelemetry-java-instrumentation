@@ -61,7 +61,6 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // tests under "io.opentelemetry.javaagent." will still be instrumented
     builder.ignoreClass("io.opentelemetry.javaagent.bootstrap.");
     builder.ignoreClass("io.opentelemetry.javaagent.shaded.");
-    builder.ignoreClass("io.opentelemetry.javaagent.slf4j.");
 
     builder
         .ignoreClass("java.")
@@ -119,6 +118,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader(
             "org.springframework.context.support.ContextTypeMatchClassLoader$ContextOverridingClassLoader")
         .ignoreClassLoader("sun.misc.Launcher$ExtClassLoader")
+        .ignoreClassLoader("org.openjdk.nashorn.internal.runtime.ScriptLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
         .ignoreClassLoader(ExtensionClassLoader.class.getName());
 
@@ -158,5 +158,12 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // Don't instrument the executor's own runnables. These runnables may never return until
     // netty shuts down.
     builder.ignoreTaskClass("io.netty.util.concurrent.SingleThreadEventExecutor$");
+
+    // Presto's presto-jdbc shades the okhttp3 ConnectionPool class. Just like we ignore the pool
+    // in OkHttp3IgnoredTypesConfigurer we need to also ignore it here.
+    builder.ignoreTaskClass("io.prestosql.jdbc.$internal.okhttp3.ConnectionPool$");
+
+    // Presto turned into trino, and so the package changed.
+    builder.ignoreTaskClass("io.trino.jdbc.$internal.okhttp3.ConnectionPool$");
   }
 }

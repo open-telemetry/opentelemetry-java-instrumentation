@@ -49,14 +49,14 @@ jobs:
       - name: Create pull request
         env:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           message="Prepare release $VERSION"
-          branch="prepare-release-${VERSION}"
+          branch="opentelemetrybot/prepare-release-${VERSION}"
 
+          git checkout -b $branch
           git commit -a -m "$message"
-          git push origin HEAD:$branch
+          git push --set-upstream origin $branch
           gh pr create --title "[$GITHUB_REF_NAME] $message" \
                        --body "$message." \
-                       --head $branch \
                        --base $GITHUB_REF_NAME

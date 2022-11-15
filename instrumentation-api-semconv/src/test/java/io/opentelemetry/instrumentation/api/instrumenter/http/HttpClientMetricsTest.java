@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -35,11 +36,9 @@ class HttpClientMetricsTest {
         Attributes.builder()
             .put("http.method", "GET")
             .put("http.url", "https://localhost:1234/")
-            .put("http.host", "host")
             .put("http.target", "/")
             .put("http.scheme", "https")
             .put("net.peer.name", "localhost")
-            .put("net.peer.ip", "0.0.0.0")
             .put("net.peer.port", 1234)
             .put("http.request_content_length", 100)
             .build();
@@ -47,9 +46,12 @@ class HttpClientMetricsTest {
     Attributes responseAttributes =
         Attributes.builder()
             .put("http.flavor", "2.0")
-            .put("http.server_name", "server")
             .put("http.status_code", 200)
             .put("http.response_content_length", 200)
+            .put("net.sock.family", "inet")
+            .put("net.peer.sock.addr", "1.2.3.4")
+            .put("net.peer.sock.name", "somehost20")
+            .put("net.peer.sock.port", 8080)
             .build();
 
     Context parent =
@@ -85,11 +87,12 @@ class HttpClientMetricsTest {
                                     point
                                         .hasSum(150 /* millis */)
                                         .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
-                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200))
+                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -106,11 +109,12 @@ class HttpClientMetricsTest {
                                     point
                                         .hasSum(100 /* bytes */)
                                         .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
-                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200)))),
+                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4")))),
             metric ->
                 assertThat(metric)
                     .hasName("http.client.response.size")
@@ -122,11 +126,12 @@ class HttpClientMetricsTest {
                                     point
                                         .hasSum(200 /* bytes */)
                                         .hasAttributesSatisfying(
+                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
-                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200)))));
+                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4")))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 

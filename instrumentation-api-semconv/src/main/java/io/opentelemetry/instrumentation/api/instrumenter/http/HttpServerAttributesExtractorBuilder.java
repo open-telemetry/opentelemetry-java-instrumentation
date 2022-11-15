@@ -7,17 +7,23 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static java.util.Collections.emptyList;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import java.util.List;
 
 /** A builder of {@link HttpServerAttributesExtractor}. */
 public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
-  final HttpServerAttributesGetter<REQUEST, RESPONSE> getter;
+  final HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
+  final NetServerAttributesGetter<REQUEST> netAttributesGetter;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
 
-  HttpServerAttributesExtractorBuilder(HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
-    this.getter = getter;
+  HttpServerAttributesExtractorBuilder(
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetServerAttributesGetter<REQUEST> netAttributesGetter) {
+    this.httpAttributesGetter = httpAttributesGetter;
+    this.netAttributesGetter = netAttributesGetter;
   }
 
   /**
@@ -31,6 +37,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       List<String> requestHeaders) {
     this.capturedRequestHeaders = requestHeaders;
@@ -49,6 +56,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       List<String> responseHeaders) {
     this.capturedResponseHeaders = responseHeaders;
@@ -61,6 +69,6 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public HttpServerAttributesExtractor<REQUEST, RESPONSE> build() {
     return new HttpServerAttributesExtractor<>(
-        getter, capturedRequestHeaders, capturedResponseHeaders);
+        httpAttributesGetter, netAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
   }
 }

@@ -33,7 +33,8 @@ enum ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(ApacheHttpClientRequest request, HttpResponse response) {
+  public Integer statusCode(
+      ApacheHttpClientRequest request, HttpResponse response, @Nullable Throwable error) {
     return response.getStatusLine().getStatusCode();
   }
 

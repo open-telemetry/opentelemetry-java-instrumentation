@@ -79,6 +79,7 @@ class WithSpanAspectParameterAttributeNamesExtractor implements ParameterAttribu
 
     @Nullable
     @Override
+    @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
     public String spanAttributeName(Parameter parameter) {
       io.opentelemetry.extension.annotations.SpanAttribute annotation =
           parameter.getDeclaredAnnotation(

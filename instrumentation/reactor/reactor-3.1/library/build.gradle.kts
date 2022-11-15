@@ -9,6 +9,6 @@ dependencies {
 
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
 
-  // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
-  latestDepTestLibrary("io.micrometer:micrometer-core:1.+")
+  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
+  latestDepTestLibrary("io.projectreactor:reactor-test:3.4.+")
 }

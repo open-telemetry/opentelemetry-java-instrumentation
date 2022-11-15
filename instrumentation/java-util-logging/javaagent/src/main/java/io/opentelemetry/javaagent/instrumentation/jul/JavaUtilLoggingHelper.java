@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.jul;
 import application.java.util.logging.Logger;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
-import io.opentelemetry.instrumentation.api.appender.internal.Severity;
-import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -40,14 +40,15 @@ public final class JavaUtilLoggingHelper {
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
-    LogBuilder builder =
-        AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
+    LogRecordBuilder builder =
+        GlobalLoggerProvider.get().loggerBuilder(instrumentationName).build().logRecordBuilder();
     mapLogRecord(builder, logRecord);
     builder.emit();
   }
 
   /**
-   * Map the {@link LogRecord} data model onto the {@link LogBuilder}. Unmapped fields include:
+   * Map the {@link LogRecord} data model onto the {@link LogRecordBuilder}. Unmapped fields
+   * include:
    *
    * <ul>
    *   <li>Fully qualified class name - {@link LogRecord#getSourceClassName()}
@@ -55,7 +56,7 @@ public final class JavaUtilLoggingHelper {
    *   <li>Thread id - {@link LogRecord#getThreadID()}
    * </ul>
    */
-  private static void mapLogRecord(LogBuilder builder, LogRecord logRecord) {
+  private static void mapLogRecord(LogRecordBuilder builder, LogRecord logRecord) {
     // message
     String message = FORMATTER.formatMessage(logRecord);
     if (message != null) {
@@ -80,7 +81,7 @@ public final class JavaUtilLoggingHelper {
     Throwable throwable = logRecord.getThrown();
     if (throwable != null) {
       // TODO (trask) extract method for recording exception into
-      // instrumentation-appender-api-internal
+      // io.opentelemetry:opentelemetry-api-logs
       attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
       attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();
@@ -94,7 +95,7 @@ public final class JavaUtilLoggingHelper {
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
     }
 
-    builder.setAttributes(attributes.build());
+    builder.setAllAttributes(attributes.build());
 
     // span context
     builder.setContext(Context.current());

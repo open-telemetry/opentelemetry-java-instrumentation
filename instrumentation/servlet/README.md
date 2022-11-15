@@ -9,7 +9,7 @@
 
 ## A word about version
 
-We support Servlet API starting from version 2.2. 
+We support Servlet API starting from version 2.2.
 But various instrumentations apply to different versions of the API.
 
 They are divided into the following sub-modules:

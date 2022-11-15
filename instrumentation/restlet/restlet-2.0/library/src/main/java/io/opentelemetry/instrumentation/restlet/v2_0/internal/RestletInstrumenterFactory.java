@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
 import java.util.List;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -21,7 +20,7 @@ import org.restlet.Response;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class RestletInstrumenterFactory {
+public final class RestletInstrumenterFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.restlet-2.0";
 
@@ -31,15 +30,15 @@ public class RestletInstrumenterFactory {
       List<AttributesExtractor<Request, Response>> additionalExtractors) {
 
     RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
-    RestletNetAttributesGetter netAttributesGetter = new RestletNetAttributesGetter();
 
     return Instrumenter.<Request, Response>builder(
             openTelemetry, INSTRUMENTATION_NAME, HttpSpanNameExtractor.create(httpAttributesGetter))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(httpServerAttributesExtractor)
-        .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
         .addOperationMetrics(HttpServerMetrics.get())
         .buildServerInstrumenter(new RestletHeadersGetter());
   }
+
+  private RestletInstrumenterFactory() {}
 }

@@ -19,9 +19,21 @@ public class Elasticsearch6TransportNetAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String peerName(ElasticTransportRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer peerPort(ElasticTransportRequest request) {
+    return null;
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getAddress(
+  protected InetSocketAddress getPeerSocketAddress(
       ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {
       return response.remoteAddress().address();

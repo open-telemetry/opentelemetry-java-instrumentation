@@ -33,8 +33,8 @@ val javaagentLibs by configurations.creating {
 // exclude dependencies that are to be placed in bootstrap from agent libs - they won't be added to inst/
 listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
-    exclude("org.slf4j")
     exclude("io.opentelemetry", "opentelemetry-api")
+    exclude("io.opentelemetry", "opentelemetry-api-logs")
     exclude("io.opentelemetry", "opentelemetry-semconv")
   }
 }
@@ -45,9 +45,10 @@ val licenseReportDependencies by configurations.creating {
 
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
+  // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-logs is not
+  bootstrapLibs("io.opentelemetry:opentelemetry-api-logs")
   bootstrapLibs(project(":instrumentation-api-semconv"))
   bootstrapLibs(project(":instrumentation-annotations-support"))
-  bootstrapLibs(project(":instrumentation-appender-api-internal"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
   // extension-api contains both bootstrap packages and agent packages
@@ -62,6 +63,7 @@ dependencies {
   baseJavaagentLibs(project(":javaagent-extension-api"))
 
   baseJavaagentLibs(project(":javaagent-tooling"))
+  baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
@@ -81,6 +83,7 @@ dependencies {
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
   //  but I couldn't get that to work
   licenseReportDependencies(project(":javaagent-tooling"))
+  licenseReportDependencies(project(":javaagent-internal-logging-simple"))
   licenseReportDependencies(project(":javaagent-extension-api"))
 
   testCompileOnly(project(":javaagent-bootstrap"))
@@ -104,6 +107,12 @@ project(":instrumentation").subprojects {
   }
 
   plugins.withId("otel.javaagent-instrumentation") {
+    javaagentDependencies.run {
+      add(javaagentLibs.name, project(subProj.path))
+    }
+  }
+
+  plugins.withId("otel.sdk-extension") {
     javaagentDependencies.run {
       add(javaagentLibs.name, project(subProj.path))
     }
@@ -225,6 +234,7 @@ tasks {
 
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
+    finalizedBy(":spotlessApply")
   }
 
   // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.
@@ -289,7 +299,6 @@ fun ShadowJar.excludeBootstrapClasses() {
     exclude(project(":instrumentation-api"))
     exclude(project(":instrumentation-api-semconv"))
     exclude(project(":instrumentation-annotations-support"))
-    exclude(project(":instrumentation-appender-api-internal"))
     exclude(project(":javaagent-bootstrap"))
   }
 

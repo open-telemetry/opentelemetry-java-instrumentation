@@ -28,6 +28,8 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }
@@ -37,7 +39,7 @@ tasks {
       includeTestsMatching("KafkaClientPropagationDisabledTest")
     }
     include("**/KafkaClientPropagationDisabledTest.*")
-    jvmArgs("-Dotel.instrumentation.kafka.client-propagation.enabled=false")
+    jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {

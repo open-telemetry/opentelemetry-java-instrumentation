@@ -19,7 +19,6 @@ customize that
 
 * [DemoIdGenerator](custom/src/main/java/com/example/javaagent/DemoIdGenerator.java) - custom `IdGenerator`
 * [DemoPropagator](custom/src/main/java/com/example/javaagent/DemoPropagator.java) - custom `TextMapPropagator`
-* [DemoPropertySource](custom/src/main/java/com/example/javaagent/DemoPropertySource.java) - default configuration
 * [DemoSampler](custom/src/main/java/com/example/javaagent/DemoSampler.java) - custom `Sampler`
 * [DemoSpanProcessor](custom/src/main/java/com/example/javaagent/DemoSpanProcessor.java) - custom `SpanProcessor`
 * [DemoSpanExporter](custom/src/main/java/com/example/javaagent/DemoSpanExporter.java) - custom `SpanExporter`
@@ -39,7 +38,7 @@ and extracts data from db connection to provide attributes for that span.
 The easiest case. You can just pre-configure your distribution and disable given instrumentation.
 
 ### I want to add/modify some attributes and their values does NOT depend on a specific db connection instance.
-E.g. you want to add some data from call stack as span attribute. 
+E.g. you want to add some data from call stack as span attribute.
 In this case just provide your custom `SpanProcessor`.
 No need for touching instrumentation itself.
 

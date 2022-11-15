@@ -20,10 +20,10 @@ import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumentationHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.NettySslInstrumentationHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientTracingHandler;
@@ -95,7 +95,7 @@ public class NettyChannelPipelineInstrumentation
         // the SslHandler lives in the netty-handler module, using class name comparison to avoid
         // adding a dependency
       } else if (handler.getClass().getName().equals("io.netty.handler.ssl.SslHandler")) {
-        ourHandler = new NettySslInstrumentationHandler(sslInstrumenter());
+        ourHandler = new NettySslInstrumentationHandler(sslInstrumenter(), handler);
       }
 
       if (ourHandler != null) {

@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
+import static io.opentelemetry.instrumentation.runtimemetrics.ScopeUtil.EXPECTED_SCOPE;
+import static io.opentelemetry.instrumentation.runtimemetrics.Threads.DAEMON;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.ThreadMXBean;
@@ -28,7 +30,8 @@ class ThreadsTest {
 
   @Test
   void registerObservers() {
-    when(threadBean.getThreadCount()).thenReturn(3);
+    when(threadBean.getThreadCount()).thenReturn(7);
+    when(threadBean.getDaemonThreadCount()).thenReturn(2);
 
     Threads.INSTANCE.registerObservers(testing.getOpenTelemetry(), threadBean);
 
@@ -39,6 +42,7 @@ class ThreadsTest {
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
                         .hasDescription("Number of executing threads")
                         .hasUnit("1")
                         .hasLongSumSatisfying(
@@ -46,6 +50,13 @@ class ThreadsTest {
                                 sum.isNotMonotonic()
                                     .hasPointsSatisfying(
                                         point ->
-                                            point.hasValue(3).hasAttributes(Attributes.empty())))));
+                                            point
+                                                .hasValue(2)
+                                                .hasAttributesSatisfying(equalTo(DAEMON, true)),
+                                        point ->
+                                            point
+                                                .hasValue(5)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(DAEMON, false))))));
   }
 }

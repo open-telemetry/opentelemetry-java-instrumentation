@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -19,7 +20,12 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class HttpClientAttributesExtractorTest {
 
@@ -43,7 +49,8 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    public Integer statusCode(Map<String, String> request, Map<String, String> response) {
+    public Integer statusCode(
+        Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       return Integer.parseInt(response.get("statusCode"));
     }
 
@@ -108,6 +115,39 @@ class HttpClientAttributesExtractorTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom_response_header"),
                 asList("654", "321")));
+  }
+
+  @ParameterizedTest
+  @MethodSource("stripUrlArguments")
+  void stripBasicAuthTest(String url, String expectedResult) {
+    Map<String, String> request = new HashMap<>();
+    request.put("url", url);
+
+    stripRequestTest(request, expectedResult);
+  }
+
+  private static Stream<Arguments> stripUrlArguments() {
+    return Stream.of(
+        arguments("https://user1:secret@github.com", "https://github.com"),
+        arguments("https://user1:secret@github.com/path/", "https://github.com/path/"),
+        arguments("https://user1:secret@github.com#test.html", "https://github.com#test.html"),
+        arguments("https://user1:secret@github.com?foo=b@r", "https://github.com?foo=b@r"),
+        arguments(
+            "https://user1:secret@github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
+        arguments("https://github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
+        arguments("https://github.com#t@st.html", "https://github.com#t@st.html"),
+        arguments("user1:secret@github.com", "user1:secret@github.com"),
+        arguments("https://github.com@", "https://github.com@"));
+  }
+
+  private static void stripRequestTest(Map<String, String> request, String expected) {
+    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter()).build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build()).containsOnly(entry(SemanticAttributes.HTTP_URL, expected));
   }
 
   @Test

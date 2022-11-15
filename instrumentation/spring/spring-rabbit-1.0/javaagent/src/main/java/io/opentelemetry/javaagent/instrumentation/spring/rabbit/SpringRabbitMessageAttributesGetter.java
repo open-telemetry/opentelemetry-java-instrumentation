@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
@@ -72,5 +74,14 @@ enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Me
   @Nullable
   public String messageId(Message message, @Nullable Void unused) {
     return message.getMessageProperties().getMessageId();
+  }
+
+  @Override
+  public List<String> header(Message message, String name) {
+    Object value = message.getMessageProperties().getHeaders().get(name);
+    if (value != null) {
+      return Collections.singletonList(value.toString());
+    }
+    return Collections.emptyList();
   }
 }

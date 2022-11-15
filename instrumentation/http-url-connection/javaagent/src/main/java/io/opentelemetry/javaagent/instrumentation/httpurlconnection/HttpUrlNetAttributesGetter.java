@@ -19,18 +19,12 @@ class HttpUrlNetAttributesGetter implements NetClientAttributesGetter<HttpURLCon
   }
 
   @Override
-  public String peerName(HttpURLConnection connection, @Nullable Integer status) {
+  public String peerName(HttpURLConnection connection) {
     return connection.getURL().getHost();
   }
 
   @Override
-  public Integer peerPort(HttpURLConnection connection, @Nullable Integer status) {
+  public Integer peerPort(HttpURLConnection connection) {
     return connection.getURL().getPort();
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpURLConnection connection, @Nullable Integer status) {
-    return null;
   }
 }

@@ -21,14 +21,6 @@ play {
   injectedRoutesGenerator.set(true)
 }
 
-repositories {
-  mavenCentral()
-  maven {
-    setName("lightbend-maven-releases")
-    setUrl("https://repo.lightbend.com/lightbend/maven-release")
-  }
-}
-
 dependencies {
   implementation("com.typesafe.play:play-guice_$scalaVer:$playVer")
   implementation("com.typesafe.play:play-logback_$scalaVer:$playVer")
@@ -37,10 +29,19 @@ dependencies {
 
 val targetJDK = project.findProperty("targetJDK") ?: "11"
 
-val tag = findProperty("tag") ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+val tag = findProperty("tag")
+  ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+
+java {
+  // this is needed to avoid jib failing with
+  // "Your project is using Java 17 but the base image is for Java 8"
+  // (it seems the jib plugins does not understand toolchains yet)
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
 
 jib {
-  from.image = "openjdk:$targetJDK"
+  from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
 }

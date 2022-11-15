@@ -5,18 +5,18 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
+import io.opentelemetry.instrumentation.resources.ContainerResource;
+import io.opentelemetry.instrumentation.resources.ContainerResourceProvider;
+import io.opentelemetry.instrumentation.resources.HostResource;
+import io.opentelemetry.instrumentation.resources.HostResourceProvider;
+import io.opentelemetry.instrumentation.resources.OsResource;
+import io.opentelemetry.instrumentation.resources.OsResourceProvider;
+import io.opentelemetry.instrumentation.resources.ProcessResource;
+import io.opentelemetry.instrumentation.resources.ProcessResourceProvider;
+import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
+import io.opentelemetry.instrumentation.resources.ProcessRuntimeResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
-import io.opentelemetry.sdk.extension.resources.ContainerResource;
-import io.opentelemetry.sdk.extension.resources.ContainerResourceProvider;
-import io.opentelemetry.sdk.extension.resources.HostResource;
-import io.opentelemetry.sdk.extension.resources.HostResourceProvider;
-import io.opentelemetry.sdk.extension.resources.OsResource;
-import io.opentelemetry.sdk.extension.resources.OsResourceProvider;
-import io.opentelemetry.sdk.extension.resources.ProcessResource;
-import io.opentelemetry.sdk.extension.resources.ProcessResourceProvider;
-import io.opentelemetry.sdk.extension.resources.ProcessRuntimeResource;
-import io.opentelemetry.sdk.extension.resources.ProcessRuntimeResourceProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

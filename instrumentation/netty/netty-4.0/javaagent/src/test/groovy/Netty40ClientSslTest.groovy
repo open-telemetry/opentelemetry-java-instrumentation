@@ -92,7 +92,7 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
           }
         }
         span(2) {
@@ -104,9 +104,9 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
           errorEventWithAnyMessage(SSLHandshakeException)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" uri.host
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" uri.port
           }
         }
       }
@@ -148,7 +148,7 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" uri.host
             "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
           }
         }
         span(2) {
@@ -157,9 +157,9 @@ class Netty40ClientSslTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_NAME" uri.host
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" uri.port
           }
         }
         span(3) {

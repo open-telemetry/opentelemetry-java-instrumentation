@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.api.util.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import java.lang.reflect.Method;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -73,6 +73,7 @@ final class JoinPointRequest {
   static final class SdkExtensionAnnotationFactory implements Factory {
 
     @Override
+    @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
     public JoinPointRequest create(JoinPoint joinPoint) {
       MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
       Method method = methodSignature.getMethod();

@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.glassfish.grizzly.http.HttpRequestPacket;
@@ -24,20 +24,28 @@ final class GrizzlyHttpAttributesGetter
 
   @Override
   public List<String> requestHeader(HttpRequestPacket request, String name) {
-    String value = request.getHeader(name);
-    return value == null ? emptyList() : singletonList(value);
+    return toHeaderList(request.getHeaders().values(name));
+  }
+
+  private static List<String> toHeaderList(Iterable<String> values) {
+    if (values.iterator().hasNext()) {
+      List<String> result = new ArrayList<>();
+      values.forEach(result::add);
+      return result;
+    }
+    return emptyList();
   }
 
   @Override
-  public Integer statusCode(HttpRequestPacket request, HttpResponsePacket response) {
+  public Integer statusCode(
+      HttpRequestPacket request, HttpResponsePacket response, @Nullable Throwable error) {
     return response.getStatus();
   }
 
   @Override
   public List<String> responseHeader(
       HttpRequestPacket request, HttpResponsePacket response, String name) {
-    String value = response.getHeader(name);
-    return value == null ? emptyList() : singletonList(value);
+    return toHeaderList(response.getHeaders().values(name));
   }
 
   @Override
@@ -69,11 +77,5 @@ final class GrizzlyHttpAttributesGetter
   @Override
   public String scheme(HttpRequestPacket request) {
     return request.isSecure() ? "https" : "http";
-  }
-
-  @Nullable
-  @Override
-  public String serverName(HttpRequestPacket request) {
-    return null;
   }
 }

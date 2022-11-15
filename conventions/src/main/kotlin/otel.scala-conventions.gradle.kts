@@ -9,7 +9,7 @@ dependencies {
 }
 
 tasks {
-  // Gradle sets scala compiler version to toolchain vesion, not target version
+  // Gradle sets scala compiler version to toolchain version, not target version
   // https://github.com/gradle/gradle/issues/18211
   withType<ScalaCompile>().configureEach {
     scalaCompileOptions.apply {

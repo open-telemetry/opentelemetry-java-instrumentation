@@ -48,6 +48,7 @@ link to tracing information provided by Lambda itself. To do so, add a dependenc
 you use.
 
 Gradle:
+
 ```kotlin
 dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators:0.8.0")
@@ -55,6 +56,7 @@ dependencies {
 ```
 
 Maven:
+
 ```xml
 <dependencies>
   <dependency>

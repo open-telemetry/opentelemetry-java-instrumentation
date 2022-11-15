@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.actuator;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -12,12 +13,19 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class SpringBootActuatorInstrumentationModule extends InstrumentationModule {
 
   public SpringBootActuatorInstrumentationModule() {
     super("spring-boot-actuator-autoconfigure", "spring-boot-actuator-autoconfigure-2.0");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in micrometer-core 1.5
+    return hasClassesNamed("io.micrometer.core.instrument.config.validate.Validated");
   }
 
   @Override
@@ -28,11 +36,6 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     // can load it
     helperResourceBuilder.registerForAllClassLoaders(
         "io/opentelemetry/javaagent/instrumentation/spring/actuator/OpenTelemetryMeterRegistryAutoConfiguration.class");
-  }
-
-  @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.micrometer1shim.");
   }
 
   @Override

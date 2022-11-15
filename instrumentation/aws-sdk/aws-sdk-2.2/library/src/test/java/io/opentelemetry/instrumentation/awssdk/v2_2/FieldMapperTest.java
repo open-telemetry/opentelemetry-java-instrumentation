@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequest.BatchWriteItem;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequest.UpdateTable;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
 import java.util.Collection;
@@ -43,8 +43,8 @@ public class FieldMapperTest {
                     .writeCapacityUnits(77L)
                     .build())
             .build();
-    given(serializer.serialize(55L)).willReturn("55");
-    given(serializer.serialize(77L)).willReturn("77");
+    when(serializer.serialize(55L)).thenReturn("55");
+    when(serializer.serialize(77L)).thenReturn("77");
 
     Span span = mock(Span.class);
     // when
@@ -65,7 +65,7 @@ public class FieldMapperTest {
     FieldMapper underTest = new FieldMapper(serializer, methodHandleFactory);
     Map<String, Collection<WriteRequest>> items = new HashMap<>();
     BatchWriteItemRequest sdkRequest = BatchWriteItemRequest.builder().requestItems(items).build();
-    given(serializer.serialize(items)).willReturn("firstTable,secondTable");
+    when(serializer.serialize(items)).thenReturn("firstTable,secondTable");
 
     Span span = mock(Span.class);
     // when
@@ -89,8 +89,8 @@ public class FieldMapperTest {
             .consumedCapacity(ConsumedCapacity.builder().build())
             .itemCollectionMetrics(items)
             .build();
-    given(serializer.serialize(sdkResponse.consumedCapacity())).willReturn("consumedCapacity");
-    given(serializer.serialize(items)).willReturn("itemCollectionMetrics");
+    when(serializer.serialize(sdkResponse.consumedCapacity())).thenReturn("consumedCapacity");
+    when(serializer.serialize(items)).thenReturn("itemCollectionMetrics");
 
     Span span = mock(Span.class);
     // when

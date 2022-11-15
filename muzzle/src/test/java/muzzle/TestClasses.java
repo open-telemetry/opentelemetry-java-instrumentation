@@ -13,22 +13,24 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class TestClasses {
 
-  @SuppressWarnings("ClassNamedLikeTypeParameter")
   public static class MethodBodyAdvice {
-    @SuppressWarnings("ReturnValueIgnored")
     @Advice.OnMethodEnter
+    @SuppressWarnings("ReturnValueIgnored")
     public static void methodBodyAdvice() {
-      A a = new A();
-      SomeInterface inter = new SomeImplementation();
+      Nested.A a = new Nested.A();
+      Nested.SomeInterface inter = new Nested.SomeImplementation();
       inter.someMethod();
       a.publicB.method("foo");
       a.publicB.methodWithPrimitives(false);
       a.publicB.methodWithArrays(new String[0]);
-      B.staticMethod();
-      A.staticB.method("bar");
+      Nested.B.staticMethod();
+      Nested.A.staticB.method("bar");
       new int[0].clone();
     }
+  }
 
+  @SuppressWarnings("ClassNamedLikeTypeParameter")
+  public static class Nested {
     public static class A {
       public B publicB = new B();
       protected Object protectedField = null;
@@ -85,6 +87,8 @@ public class TestClasses {
     }
 
     public interface AnotherInterface extends SomeInterface {}
+
+    private Nested() {}
   }
 
   public abstract static class BaseClassWithConstructor {
@@ -94,21 +98,20 @@ public class TestClasses {
   public static class LdcAdvice {
     @SuppressWarnings("ReturnValueIgnored")
     public static void ldcMethod() {
-      MethodBodyAdvice.A.class.getName();
+      Nested.A.class.getName();
     }
   }
 
   public static class InstanceofAdvice {
     public static boolean instanceofMethod(Object a) {
-      return a instanceof MethodBodyAdvice.A;
+      return a instanceof Nested.A;
     }
   }
 
   public static class InvokeDynamicAdvice {
-    public static MethodBodyAdvice.SomeInterface invokeDynamicMethod(
-        MethodBodyAdvice.SomeImplementation a) {
-      Runnable staticMethod = MethodBodyAdvice.B::staticMethod;
-      Runnable constructorMethod = MethodBodyAdvice.A::new;
+    public static Nested.SomeInterface invokeDynamicMethod(Nested.SomeImplementation a) {
+      Runnable staticMethod = Nested.B::staticMethod;
+      Runnable constructorMethod = Nested.A::new;
       return a::someMethod;
     }
   }
@@ -130,4 +133,6 @@ public class TestClasses {
       new ExternalHelper().instrument();
     }
   }
+
+  private TestClasses() {}
 }

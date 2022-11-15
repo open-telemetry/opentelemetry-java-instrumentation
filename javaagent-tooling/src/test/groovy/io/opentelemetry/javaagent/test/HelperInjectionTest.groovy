@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.test
 
-import io.opentelemetry.instrumentation.api.config.Config
+
 import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
@@ -39,7 +39,7 @@ class HelperInjectionTest extends Specification {
     thrown ClassNotFoundException
 
     when:
-    injector.transform(null, null, emptyLoader.get(), null)
+    injector.transform(null, null, emptyLoader.get(), null, null)
     HelperInjector.loadHelperClass(emptyLoader.get(), helperClassName)
     emptyLoader.get().loadClass(helperClassName)
     then:
@@ -61,7 +61,7 @@ class HelperInjectionTest extends Specification {
   def "helpers injected on bootstrap classloader"() {
     setup:
     ByteBuddyAgent.install()
-    AgentInstaller.installBytebuddyAgent(ByteBuddyAgent.getInstrumentation(), Config.get())
+    AgentInstaller.installBytebuddyAgent(ByteBuddyAgent.getInstrumentation())
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
     HelperInjector injector = new HelperInjector("test", [helperClassName], [], this.class.classLoader, ByteBuddyAgent.getInstrumentation())
     URLClassLoader bootstrapChild = new URLClassLoader(new URL[0], (ClassLoader) null)
@@ -73,7 +73,7 @@ class HelperInjectionTest extends Specification {
 
     when:
     def bootstrapClassloader = null
-    injector.transform(null, null, bootstrapClassloader, null)
+    injector.transform(null, null, bootstrapClassloader, null, null)
     Class<?> helperClass = bootstrapChild.loadClass(helperClassName)
     then:
     helperClass.getClassLoader() == bootstrapClassloader

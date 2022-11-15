@@ -63,7 +63,7 @@ class TelemetryRetriever {
         break
       }
       previousSize = content.length()
-      println "Curent content size $previousSize"
+      println "Current content size $previousSize"
       TimeUnit.MILLISECONDS.sleep(500)
     }
 

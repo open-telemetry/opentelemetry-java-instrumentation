@@ -28,9 +28,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:hibernate:hibernate-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent"))
 
-  testLibrary("org.hibernate:hibernate-core:3.3.0.SP1")
   testImplementation("org.hibernate:hibernate-annotations:3.4.0.GA")
-  testImplementation("javassist:javassist:+")
+  testImplementation("javassist:javassist:3.4.GA")
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("javax.xml.bind:jaxb-api:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-core:2.2.11")
@@ -52,4 +51,7 @@ if (findProperty("testLatestDeps") as Boolean) {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

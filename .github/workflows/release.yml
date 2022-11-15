@@ -3,40 +3,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  assemble:
-    uses: ./.github/workflows/reusable-assemble.yml
-
-  test:
-    uses: ./.github/workflows/reusable-test.yml
+  required-jobs:
+    uses: ./.github/workflows/build-common.yml
 
   # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
   # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry
 
-  smoke-test:
-    uses: ./.github/workflows/reusable-smoke-test.yml
-
   # muzzle is intentionally not included in the release workflows
   # because any time a new library version is released to maven central it can fail,
   # and this is not a reason to hold up the release
 
-  gradle-plugins:
-    uses: ./.github/workflows/reusable-gradle-plugins.yml
-
-  examples:
-    uses: ./.github/workflows/reusable-examples.yml
-
   release:
+    runs-on: ubuntu-latest
     needs:
-      - assemble
-      - test
-      - smoke-test
-      - gradle-plugins
-      - examples
+      - required-jobs
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
-    runs-on: ubuntu-latest
     steps:
       - run: |
           if [[ $GITHUB_REF_NAME != release/* ]]; then
@@ -77,7 +61,8 @@ jobs:
         with:
           ref: main
 
-      - run: |
+      - name: Check that change log update was merged to main
+        run: |
           if [[ $VERSION == *.0 ]]; then
             # not making a patch release
             if ! grep --quiet "^## Version $VERSION " CHANGELOG.md; then
@@ -123,14 +108,14 @@ jobs:
 
       - name: Generate release notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # conditional blocks not indented because of the heredoc
           if [[ $VERSION == *.0 ]]; then
           cat > /tmp/release-notes.txt << EOF
           This release targets the OpenTelemetry SDK $VERSION.
 
-          Note that all artifacts other than \`io.opentelemetry.javaagent:opentelemetry-javaagent\` have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
+          Note that many artifacts have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
 
           EOF
           else
@@ -165,7 +150,7 @@ jobs:
       - id: create-github-release
         name: Create GitHub release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
           gh release create --target $GITHUB_REF_NAME \
@@ -177,81 +162,60 @@ jobs:
 
           echo "::set-output name=version::$VERSION"
 
+  merge-change-log-to-main:
+    runs-on: ubuntu-latest
+    needs:
+      - release
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Copy change log section from release branch
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
+            > /tmp/changelog-section.md
+
       - uses: actions/checkout@v3
         with:
-          # the step below is creating a pull request against main
           ref: main
 
-      - name: Copy change log updates to main
+      - name: Merge change log to main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ $VERSION == *.0 ]]; then
-            # this was not a patch release, so the version exists already in the CHANGELOG.md
-
-            # update the release date
-            date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
-            sed -Ei "s/## Version $VERSION .*/## Version $VERSION ($date)/" CHANGELOG.md
-
-            # the entries are copied over from the release branch to support workflows
-            # where change log entries may be updated after preparing the release branch
-
-            # copy the portion above the release, up to and including the heading
-            sed -n "0,/^## Version $VERSION ($date)/p" CHANGELOG.md > /tmp/CHANGELOG.md
-
-            # copy the release notes
-            cat /tmp/CHANGELOG_SECTION.md >> /tmp/CHANGELOG.md
-
-            # copy the portion below the release
-            sed -n "0,/^## Version $VERSION /d;0,/^## Version /{/^## Version/!d};p" CHANGELOG.md \
-              >> /tmp/CHANGELOG.md
-
-            # update the real CHANGELOG.md
-            cp /tmp/CHANGELOG.md CHANGELOG.md
-          else
-            # this was a patch release, so the version does not exist already in the CHANGELOG.md
-
-            # copy the portion above the top-most release, not including the heading
-            sed -n "0,/^## Version /{ /^## Version /!p }" CHANGELOG.md > /tmp/CHANGELOG.md
-
-            # add the heading
-            date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
-            echo "## Version $VERSION ($date)" >> /tmp/CHANGELOG.md
-
-            # copy the release notes
-            cat /tmp/CHANGELOG_SECTION.md >> /tmp/CHANGELOG.md
-
-            # copy the portion starting from the top-most release
-            sed -n "/^## Version /,\$p" CHANGELOG.md >> /tmp/CHANGELOG.md
-
-            # update the real CHANGELOG.md
-            cp /tmp/CHANGELOG.md CHANGELOG.md
-          fi
+          release_date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
+          RELEASE_DATE=$release_date .github/scripts/merge-change-log-after-release.sh
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Create pull request against main
         env:
+          VERSION: ${{ needs.release.outputs.version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          message="Copy change log updates from $GITHUB_REF_NAME"
-          body="Copy log updates from \`$GITHUB_REF_NAME\`."
-          branch="copy-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
-
-          if [[ $VERSION == *.0 ]]; then
-            if git diff --quiet; then
-              echo there are no updates needed to the change log on main, not creating pull request
+          if git diff --quiet; then
+            if [[ $VERSION == *.0 ]]; then
+              echo there are no updates to merge, not creating pull request
               exit 0 # success
+            else
+              echo patch release notes did not get applied for some reason
+              exit 1 # failure
             fi
           fi
 
+          message="Merge change log updates from $GITHUB_REF_NAME"
+          body="Merge log updates from \`$GITHUB_REF_NAME\`."
+          branch="opentelemetrybot/merge-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
+
+          git checkout -b $branch
           git commit -a -m "$message"
-          git push origin HEAD:$branch
+          git push --set-upstream origin $branch
           gh pr create --title "$message" \
                        --body "$body" \
-                       --head $branch \
                        --base main
 
   create-operator-pull-request:
@@ -262,9 +226,9 @@ jobs:
     secrets:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
 
-  create-java-contrib-pull-request:
+  create-website-pull-request:
     needs: release
-    uses: ./.github/workflows/reusable-create-java-contrib-pull-request.yml
+    uses: ./.github/workflows/reusable-create-website-pull-request.yml
     with:
       version: ${{ needs.release.outputs.version }}
     secrets:

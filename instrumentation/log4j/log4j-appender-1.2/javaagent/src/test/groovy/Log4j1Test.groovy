@@ -5,16 +5,25 @@
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.sdk.logs.data.Severity
+import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.log4j.Logger
 import org.apache.log4j.MDC
+import org.apache.log4j.helpers.Loader
 import spock.lang.Unroll
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.awaitility.Awaitility.await
 
 class Log4j1Test extends AgentInstrumentationSpecification {
+
+  static {
+    // this is needed because log4j1 incorrectly thinks the initial releases of Java 10-19
+    // (which have no '.' in their versions since there is no minor version) are Java 1.1,
+    // which is before ThreadLocal was introduced and so log4j1 disables MDC functionality
+    // (and the MDC tests below fail)
+    Loader.java1 = false
+  }
 
   private static final Logger logger = Logger.getLogger("abc")
 
@@ -46,9 +55,9 @@ class Log4j1Test extends AgentInstrumentationSpecification {
       await()
         .untilAsserted(
           () -> {
-            assertThat(logs).hasSize(1)
+            assertThat(logRecords).hasSize(1)
           })
-      def log = logs.get(0)
+      def log = logRecords.get(0)
       assertThat(log.getBody().asString()).isEqualTo("xyz")
       assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
       assertThat(log.getSeverity()).isEqualTo(severity)
@@ -73,7 +82,7 @@ class Log4j1Test extends AgentInstrumentationSpecification {
       }
     } else {
       Thread.sleep(500) // sleep a bit just to make sure no log is captured
-      logs.size() == 0
+      logRecords.size() == 0
     }
 
     where:
@@ -109,9 +118,9 @@ class Log4j1Test extends AgentInstrumentationSpecification {
     await()
       .untilAsserted(
         () -> {
-          assertThat(logs).hasSize(1)
+          assertThat(logRecords).hasSize(1)
         })
-    def log = logs.get(0)
+    def log = logRecords.get(0)
     assertThat(log.getBody().asString()).isEqualTo("xyz")
     assertThat(log.getInstrumentationScopeInfo().getName()).isEqualTo("abc")
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)

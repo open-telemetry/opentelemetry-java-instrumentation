@@ -23,7 +23,7 @@ internal enum class KtorHttpServerAttributesGetter :
     return request.headers.getAll(name) ?: emptyList()
   }
 
-  override fun statusCode(request: ApplicationRequest, response: ApplicationResponse): Int? {
+  override fun statusCode(request: ApplicationRequest, response: ApplicationResponse, error: Throwable?): Int? {
     return response.status()?.value
   }
 
@@ -49,9 +49,5 @@ internal enum class KtorHttpServerAttributesGetter :
 
   override fun scheme(request: ApplicationRequest): String {
     return request.origin.scheme
-  }
-
-  override fun serverName(request: ApplicationRequest): String? {
-    return null
   }
 }

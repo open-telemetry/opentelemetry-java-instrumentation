@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -64,18 +65,12 @@ class PatchLoggerTest {
   }
 
   @Test
-  void testGetLogger() {
-    PatchLogger logger = PatchLogger.getLogger("abc");
-    assertThat(logger.getSlf4jLogger().getName()).isEqualTo("abc");
-  }
-
-  @Test
   void testGetName() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.getName()).thenReturn("xyz");
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.name()).thenReturn("xyz");
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
     // then
     assertThat(logger.getName()).isEqualTo("xyz");
   }
@@ -83,8 +78,8 @@ class PatchLoggerTest {
   @Test
   void testNormalMethods() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.severe("ereves");
@@ -96,22 +91,22 @@ class PatchLoggerTest {
     logger.finest("tsenif");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves");
-    inOrder.verify(slf4jLogger).warn("gninraw");
-    inOrder.verify(slf4jLogger).info("ofni");
-    inOrder.verify(slf4jLogger).info("gifnoc");
-    inOrder.verify(slf4jLogger).debug("enif");
-    inOrder.verify(slf4jLogger).trace("renif");
-    inOrder.verify(slf4jLogger).trace("tsenif");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testParameterizedLevelMethodsWithNoParams() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.log(Level.SEVERE, "ereves");
@@ -123,27 +118,23 @@ class PatchLoggerTest {
     logger.log(Level.FINEST, "tsenif");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves");
-    inOrder.verify(slf4jLogger).warn("gninraw");
-    inOrder.verify(slf4jLogger).info("ofni");
-    inOrder.verify(slf4jLogger).info("gifnoc");
-    inOrder.verify(slf4jLogger).debug("enif");
-    inOrder.verify(slf4jLogger).trace("renif");
-    inOrder.verify(slf4jLogger).trace("tsenif");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testParameterizedLevelMethodsWithSingleParam() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.log(Level.SEVERE, "ereves: {0}", "a");
@@ -155,34 +146,30 @@ class PatchLoggerTest {
     logger.log(Level.FINEST, "tsenif: {0}", "g");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).isErrorEnabled();
-    inOrder.verify(slf4jLogger).error("ereves: a");
-    inOrder.verify(slf4jLogger).isWarnEnabled();
-    inOrder.verify(slf4jLogger).warn("gninraw: b");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("ofni: c");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("gifnoc: d");
-    inOrder.verify(slf4jLogger).isDebugEnabled();
-    inOrder.verify(slf4jLogger).debug("enif: e");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("renif: f");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("tsenif: g");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testParameterizedLevelMethodsWithArrayOfParams() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.log(Level.SEVERE, "ereves: {0},{1}", new Object[] {"a", "b"});
@@ -194,29 +181,29 @@ class PatchLoggerTest {
     logger.log(Level.FINEST, "tsenif: {0},{1}", new Object[] {"g", "h"});
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).isErrorEnabled();
-    inOrder.verify(slf4jLogger).error("ereves: a,b");
-    inOrder.verify(slf4jLogger).isWarnEnabled();
-    inOrder.verify(slf4jLogger).warn("gninraw: b,c");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("ofni: c,d");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("gifnoc: d,e");
-    inOrder.verify(slf4jLogger).isDebugEnabled();
-    inOrder.verify(slf4jLogger).debug("enif: e,f");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("renif: f,g");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("tsenif: g,h");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a,b", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f,g", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g,h", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testParameterizedLevelMethodsWithThrowable() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
     Throwable a = new Throwable();
     Throwable b = new Throwable();
     Throwable c = new Throwable();
@@ -235,29 +222,25 @@ class PatchLoggerTest {
     logger.log(Level.FINEST, "tsenif", g);
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves", a);
-    inOrder.verify(slf4jLogger).warn("gninraw", b);
-    inOrder.verify(slf4jLogger).info("ofni", c);
-    inOrder.verify(slf4jLogger).info("gifnoc", d);
-    inOrder.verify(slf4jLogger).debug("enif", e);
-    inOrder.verify(slf4jLogger).trace("renif", f);
-    inOrder.verify(slf4jLogger).trace("tsenif", g);
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testIsLoggableAll() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
 
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // then
     assertThat(logger.isLoggable(Level.SEVERE)).isTrue();
@@ -272,15 +255,12 @@ class PatchLoggerTest {
   @Test
   void testIsLoggableSome() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(false);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(false);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(false);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(InternalLogger.Level.ERROR)).thenReturn(true);
+    when(internalLogger.isLoggable(InternalLogger.Level.WARN)).thenReturn(true);
 
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // then
     assertThat(logger.isLoggable(Level.SEVERE)).isTrue();
@@ -295,15 +275,10 @@ class PatchLoggerTest {
   @Test
   void testIsLoggableNone() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(false);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(false);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(false);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(false);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(false);
+    InternalLogger internalLogger = mock(InternalLogger.class);
 
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // then
     assertThat(logger.isLoggable(Level.SEVERE)).isFalse();
@@ -318,10 +293,10 @@ class PatchLoggerTest {
   @Test
   void testGetLevelSevere() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(InternalLogger.Level.ERROR)).thenReturn(true);
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
     // then
     assertThat(logger.getLevel()).isEqualTo(Level.SEVERE);
   }
@@ -329,10 +304,10 @@ class PatchLoggerTest {
   @Test
   void testGetLevelWarning() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(InternalLogger.Level.WARN)).thenReturn(true);
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
     // then
     assertThat(logger.getLevel()).isEqualTo(Level.WARNING);
   }
@@ -340,10 +315,10 @@ class PatchLoggerTest {
   @Test
   void testGetLevelConfig() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(InternalLogger.Level.INFO)).thenReturn(true);
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
     // then
     assertThat(logger.getLevel()).isEqualTo(Level.CONFIG);
   }
@@ -351,10 +326,10 @@ class PatchLoggerTest {
   @Test
   void testGetLevelFine() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(InternalLogger.Level.DEBUG)).thenReturn(true);
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
     // then
     assertThat(logger.getLevel()).isEqualTo(Level.FINE);
   }
@@ -362,10 +337,10 @@ class PatchLoggerTest {
   @Test
   void testGetLevelFinest() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(InternalLogger.Level.TRACE)).thenReturn(true);
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
     // then
     assertThat(logger.getLevel()).isEqualTo(Level.FINEST);
   }
@@ -373,9 +348,9 @@ class PatchLoggerTest {
   @Test
   void testGetLevelOff() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
+    InternalLogger internalLogger = mock(InternalLogger.class);
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
     // then
     assertThat(logger.getLevel()).isEqualTo(Level.OFF);
   }
@@ -383,8 +358,8 @@ class PatchLoggerTest {
   @Test
   void testLogpParameterizedLevelMethodsWithNoParams() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.logp(Level.SEVERE, null, null, "ereves");
@@ -396,27 +371,23 @@ class PatchLoggerTest {
     logger.logp(Level.FINEST, null, null, "tsenif");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves");
-    inOrder.verify(slf4jLogger).warn("gninraw");
-    inOrder.verify(slf4jLogger).info("ofni");
-    inOrder.verify(slf4jLogger).info("gifnoc");
-    inOrder.verify(slf4jLogger).debug("enif");
-    inOrder.verify(slf4jLogger).trace("renif");
-    inOrder.verify(slf4jLogger).trace("tsenif");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogpParameterizedLevelMethodsWithSingleParam() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.logp(Level.SEVERE, null, null, "ereves: {0}", "a");
@@ -428,34 +399,30 @@ class PatchLoggerTest {
     logger.logp(Level.FINEST, null, null, "tsenif: {0}", "g");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).isErrorEnabled();
-    inOrder.verify(slf4jLogger).error("ereves: a");
-    inOrder.verify(slf4jLogger).isWarnEnabled();
-    inOrder.verify(slf4jLogger).warn("gninraw: b");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("ofni: c");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("gifnoc: d");
-    inOrder.verify(slf4jLogger).isDebugEnabled();
-    inOrder.verify(slf4jLogger).debug("enif: e");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("renif: f");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("tsenif: g");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogpParameterizedLevelMethodsWithArrayOfParams() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.logp(Level.SEVERE, null, null, "ereves: {0},{1}", new Object[] {"a", "b"});
@@ -467,29 +434,29 @@ class PatchLoggerTest {
     logger.logp(Level.FINEST, null, null, "tsenif: {0},{1}", new Object[] {"g", "h"});
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).isErrorEnabled();
-    inOrder.verify(slf4jLogger).error("ereves: a,b");
-    inOrder.verify(slf4jLogger).isWarnEnabled();
-    inOrder.verify(slf4jLogger).warn("gninraw: b,c");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("ofni: c,d");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("gifnoc: d,e");
-    inOrder.verify(slf4jLogger).isDebugEnabled();
-    inOrder.verify(slf4jLogger).debug("enif: e,f");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("renif: f,g");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("tsenif: g,h");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a,b", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f,g", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g,h", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogpParameterizedLevelMethodsWithThrowable() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
     Throwable a = new Throwable();
     Throwable b = new Throwable();
     Throwable c = new Throwable();
@@ -508,22 +475,22 @@ class PatchLoggerTest {
     logger.logp(Level.FINEST, null, null, "tsenif", g);
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves", a);
-    inOrder.verify(slf4jLogger).warn("gninraw", b);
-    inOrder.verify(slf4jLogger).info("ofni", c);
-    inOrder.verify(slf4jLogger).info("gifnoc", d);
-    inOrder.verify(slf4jLogger).debug("enif", e);
-    inOrder.verify(slf4jLogger).trace("renif", f);
-    inOrder.verify(slf4jLogger).trace("tsenif", g);
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogrbParameterizedLevelMethodsWithNoParams() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.logrb(Level.SEVERE, null, null, null, "ereves");
@@ -535,27 +502,23 @@ class PatchLoggerTest {
     logger.logrb(Level.FINEST, null, null, null, "tsenif");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves");
-    inOrder.verify(slf4jLogger).warn("gninraw");
-    inOrder.verify(slf4jLogger).info("ofni");
-    inOrder.verify(slf4jLogger).info("gifnoc");
-    inOrder.verify(slf4jLogger).debug("enif");
-    inOrder.verify(slf4jLogger).trace("renif");
-    inOrder.verify(slf4jLogger).trace("tsenif");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogrbParameterizedLevelMethodsWithSingleParam() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.logrb(Level.SEVERE, null, null, null, "ereves: {0}", "a");
@@ -567,34 +530,30 @@ class PatchLoggerTest {
     logger.logrb(Level.FINEST, null, null, null, "tsenif: {0}", "g");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).isErrorEnabled();
-    inOrder.verify(slf4jLogger).error("ereves: a");
-    inOrder.verify(slf4jLogger).isWarnEnabled();
-    inOrder.verify(slf4jLogger).warn("gninraw: b");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("ofni: c");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("gifnoc: d");
-    inOrder.verify(slf4jLogger).isDebugEnabled();
-    inOrder.verify(slf4jLogger).debug("enif: e");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("renif: f");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("tsenif: g");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogrbParameterizedLevelMethodsWithArrayOfParams() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.logrb(
@@ -610,34 +569,30 @@ class PatchLoggerTest {
         Level.FINEST, null, null, (String) null, "tsenif: {0},{1}", new Object[] {"g", "h"});
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).isErrorEnabled();
-    inOrder.verify(slf4jLogger).error("ereves: a,b");
-    inOrder.verify(slf4jLogger).isWarnEnabled();
-    inOrder.verify(slf4jLogger).warn("gninraw: b,c");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("ofni: c,d");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("gifnoc: d,e");
-    inOrder.verify(slf4jLogger).isDebugEnabled();
-    inOrder.verify(slf4jLogger).debug("enif: e,f");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("renif: f,g");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("tsenif: g,h");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a,b", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f,g", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g,h", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogrbParameterizedLevelMethodsWithVarArgsOfParams() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.logrb(Level.SEVERE, (String) null, null, null, "ereves: {0},{1}", "a", "b");
@@ -649,34 +604,30 @@ class PatchLoggerTest {
     logger.logrb(Level.FINEST, (String) null, null, null, "tsenif: {0},{1}", "g", "h");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).isErrorEnabled();
-    inOrder.verify(slf4jLogger).error("ereves: a,b");
-    inOrder.verify(slf4jLogger).isWarnEnabled();
-    inOrder.verify(slf4jLogger).warn("gninraw: b,c");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("ofni: c,d");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("gifnoc: d,e");
-    inOrder.verify(slf4jLogger).isDebugEnabled();
-    inOrder.verify(slf4jLogger).debug("enif: e,f");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("renif: f,g");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("tsenif: g,h");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a,b", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f,g", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g,h", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogrbParameterizedLevelMethodsWithVarArgsOfParams2() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    when(slf4jLogger.isTraceEnabled()).thenReturn(true);
-    when(slf4jLogger.isDebugEnabled()).thenReturn(true);
-    when(slf4jLogger.isInfoEnabled()).thenReturn(true);
-    when(slf4jLogger.isWarnEnabled()).thenReturn(true);
-    when(slf4jLogger.isErrorEnabled()).thenReturn(true);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    when(internalLogger.isLoggable(any())).thenReturn(true);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.logrb(Level.SEVERE, (ResourceBundle) null, "ereves: {0},{1}", "a", "b");
@@ -688,29 +639,29 @@ class PatchLoggerTest {
     logger.logrb(Level.FINEST, (ResourceBundle) null, "tsenif: {0},{1}", "g", "h");
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).isErrorEnabled();
-    inOrder.verify(slf4jLogger).error("ereves: a,b");
-    inOrder.verify(slf4jLogger).isWarnEnabled();
-    inOrder.verify(slf4jLogger).warn("gninraw: b,c");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("ofni: c,d");
-    inOrder.verify(slf4jLogger).isInfoEnabled();
-    inOrder.verify(slf4jLogger).info("gifnoc: d,e");
-    inOrder.verify(slf4jLogger).isDebugEnabled();
-    inOrder.verify(slf4jLogger).debug("enif: e,f");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("renif: f,g");
-    inOrder.verify(slf4jLogger).isTraceEnabled();
-    inOrder.verify(slf4jLogger).trace("tsenif: g,h");
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.ERROR);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves: a,b", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.WARN);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif: f,g", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif: g,h", null);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogrbParameterizedLevelMethodsWithThrowable() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
     Throwable a = new Throwable();
     Throwable b = new Throwable();
     Throwable c = new Throwable();
@@ -729,22 +680,22 @@ class PatchLoggerTest {
     logger.logrb(Level.FINEST, null, null, (String) null, "tsenif", g);
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves", a);
-    inOrder.verify(slf4jLogger).warn("gninraw", b);
-    inOrder.verify(slf4jLogger).info("ofni", c);
-    inOrder.verify(slf4jLogger).info("gifnoc", d);
-    inOrder.verify(slf4jLogger).debug("enif", e);
-    inOrder.verify(slf4jLogger).trace("renif", f);
-    inOrder.verify(slf4jLogger).trace("tsenif", g);
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogrbParameterizedLevelMethodsWithThrowable2() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
     Throwable a = new Throwable();
     Throwable b = new Throwable();
     Throwable c = new Throwable();
@@ -763,22 +714,22 @@ class PatchLoggerTest {
     logger.logrb(Level.FINEST, null, null, (ResourceBundle) null, "tsenif", g);
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves", a);
-    inOrder.verify(slf4jLogger).warn("gninraw", b);
-    inOrder.verify(slf4jLogger).info("ofni", c);
-    inOrder.verify(slf4jLogger).info("gifnoc", d);
-    inOrder.verify(slf4jLogger).debug("enif", e);
-    inOrder.verify(slf4jLogger).trace("renif", f);
-    inOrder.verify(slf4jLogger).trace("tsenif", g);
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testLogrbParameterizedLevelMethodsWithResourceBundleObjectAndThrowable() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
     Throwable a = new Throwable();
     Throwable b = new Throwable();
     Throwable c = new Throwable();
@@ -797,22 +748,22 @@ class PatchLoggerTest {
     logger.logrb(Level.FINEST, null, null, (ResourceBundle) null, "tsenif", g);
 
     // then
-    InOrder inOrder = Mockito.inOrder(slf4jLogger);
-    inOrder.verify(slf4jLogger).error("ereves", a);
-    inOrder.verify(slf4jLogger).warn("gninraw", b);
-    inOrder.verify(slf4jLogger).info("ofni", c);
-    inOrder.verify(slf4jLogger).info("gifnoc", d);
-    inOrder.verify(slf4jLogger).debug("enif", e);
-    inOrder.verify(slf4jLogger).trace("renif", f);
-    inOrder.verify(slf4jLogger).trace("tsenif", g);
-    verifyNoMoreInteractions(slf4jLogger);
+    InOrder inOrder = Mockito.inOrder(internalLogger);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testEnteringExitingThrowingMethods() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    InternalLogger internalLogger = mock(InternalLogger.class);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
     logger.entering(null, null);
@@ -823,21 +774,21 @@ class PatchLoggerTest {
     logger.throwing(null, null, null);
 
     // then
-    verifyNoMoreInteractions(slf4jLogger);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   @Test
   void testResourceBundle() {
     // given
-    org.slf4j.Logger slf4jLogger = mock(org.slf4j.Logger.class);
+    InternalLogger internalLogger = mock(InternalLogger.class);
 
     // when
-    PatchLogger logger = new PatchLogger(slf4jLogger);
+    PatchLogger logger = new PatchLogger(internalLogger);
 
     // then
     assertThat(logger.getResourceBundle()).isNull();
     assertThat(logger.getResourceBundleName()).isNull();
-    verifyNoMoreInteractions(slf4jLogger);
+    verifyNoMoreInteractions(internalLogger);
   }
 
   static class MethodSignature {

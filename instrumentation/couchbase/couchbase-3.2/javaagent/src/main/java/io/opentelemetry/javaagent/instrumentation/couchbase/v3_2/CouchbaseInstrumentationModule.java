@@ -21,11 +21,6 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("com.couchbase.v3_2.client.tracing.opentelemetry");
-  }
-
-  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // New class introduced in 3.2.
     return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode");

@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
-import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.Result;
 
 /**
@@ -21,19 +20,25 @@ public final class DubboNetClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getAddress(DubboRequest request, @Nullable Result response) {
-    InetSocketAddress address = request.remoteAddress();
-    // dubbo 3 doesn't set remote address for client calls
-    if (address == null) {
-      URL url = request.url();
-      address = InetSocketAddress.createUnresolved(url.getHost(), url.getPort());
-    }
-    return address;
+  public String transport(DubboRequest request, @Nullable Result response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String peerName(DubboRequest request) {
+    return request.url().getHost();
+  }
+
+  @Override
+  public Integer peerPort(DubboRequest request) {
+    return request.url().getPort();
   }
 
   @Override
   @Nullable
-  public String transport(DubboRequest request, @Nullable Result response) {
-    return null;
+  protected InetSocketAddress getPeerSocketAddress(
+      DubboRequest request, @Nullable Result response) {
+    return request.remoteAddress();
   }
 }

@@ -6,6 +6,7 @@
 package jvmbootstraptest;
 
 public class LogLevelChecker {
+
   // returns an exception if logs are not in DEBUG
   public static void main(String[] args) {
 
@@ -16,4 +17,6 @@ public class LogLevelChecker {
       throw new IllegalStateException("debug mode not set");
     }
   }
+
+  private LogLevelChecker() {}
 }

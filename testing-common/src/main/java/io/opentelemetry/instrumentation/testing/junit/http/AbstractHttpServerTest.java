@@ -551,18 +551,28 @@ public abstract class AbstractHttpServerTest<SERVER> {
                 .containsEntry(
                     SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP);
           }
-          if (httpAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+
+          assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_NAME, "localhost");
+          // TODO: Move to test knob rather than always treating as optional
+          if (attrs.get(SemanticAttributes.NET_HOST_PORT) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_PORT, port);
+          }
+          if (attrs.get(SemanticAttributes.NET_SOCK_PEER_PORT) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.NET_PEER_PORT,
+                    SemanticAttributes.NET_SOCK_PEER_PORT,
                     value ->
                         assertThat(value)
                             .isInstanceOf(Long.class)
                             .isNotEqualTo(Long.valueOf(port)));
           }
-          if (httpAttributes.contains(SemanticAttributes.NET_PEER_IP)) {
+          if (attrs.get(SemanticAttributes.NET_SOCK_PEER_ADDR) != null) {
             assertThat(attrs)
-                .containsEntry(SemanticAttributes.NET_PEER_IP, options.peerIp.apply(endpoint));
+                .containsEntry(
+                    SemanticAttributes.NET_SOCK_PEER_ADDR, options.sockPeerAddr.apply(endpoint));
+          }
+          if (attrs.get(SemanticAttributes.NET_SOCK_HOST_ADDR) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1");
           }
 
           assertThat(attrs)
@@ -582,10 +592,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_USER_AGENT, TEST_USER_AGENT);
 
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_SCHEME, "http");
-          assertThat(attrs)
-              .hasEntrySatisfying(
-                  SemanticAttributes.HTTP_HOST,
-                  entry -> assertThat(entry).isIn("localhost", "localhost:" + port));
           if (endpoint != INDEXED_CHILD) {
             assertThat(attrs)
                 .containsEntry(
@@ -605,12 +611,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
                 .hasEntrySatisfying(
                     SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
                     entry -> assertThat(entry).isNotNegative());
-          }
-          if (httpAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
-            assertThat(attrs)
-                .hasEntrySatisfying(
-                    SemanticAttributes.HTTP_SERVER_NAME,
-                    entry -> assertThat(entry).isInstanceOf(String.class));
           }
           if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE) && expectedRoute != null) {
             assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);

@@ -1,4 +1,4 @@
-# Manual Instrumentation for OkHttp3 version 3.0.0+
+# Library Instrumentation for OkHttp version 3.0 and higher
 
 Provides OpenTelemetry instrumentation for [okhttp3](https://square.github.io/okhttp/).
 
@@ -6,13 +6,12 @@ Provides OpenTelemetry instrumentation for [okhttp3](https://square.github.io/ok
 
 ### Add these dependencies to your project:
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.5.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-okhttp-3.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>

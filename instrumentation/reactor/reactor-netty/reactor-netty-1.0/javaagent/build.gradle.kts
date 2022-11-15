@@ -3,17 +3,17 @@ plugins {
 }
 
 muzzle {
-  fail {
+  pass {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
-    versions.set("[,1.0.0)")
+    versions.set("[1.0.0,1.1.0)")
     assertInverse.set(true)
     excludeInstrumentationName("netty")
   }
   pass {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty-http")
-    versions.set("[1.0.0,)")
+    versions.set("[1.0.0,1.1.0)")
     assertInverse.set(true)
     excludeInstrumentationName("netty")
   }
@@ -24,6 +24,9 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  implementation(project(":instrumentation:netty:netty-4.1:library"))
+  implementation(project(":instrumentation:netty:netty-4-common:library"))
+  implementation(project(":instrumentation:netty:netty-common:library"))
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   library("io.projectreactor.netty:reactor-netty-http:1.0.0")
@@ -34,6 +37,9 @@ dependencies {
 
   testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
   testImplementation(project(":instrumentation-annotations"))
+
+  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
+  latestDepTestLibrary("io.projectreactor.netty:reactor-netty-http:1.0.+")
 }
 
 tasks {

@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -63,7 +65,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    * request a second time to verify that the traceparent header is not added multiple times to the
    * request, and that the last one wins. Tests will fail if the header shows multiple times.
    */
-  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers);
+  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
+      throws Exception;
 
   /**
    * Helper class for capturing result of asynchronous request and running a callback when result is
@@ -137,7 +140,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return READ_TIMEOUT;
   }
 
-  private InstrumentationTestRunner testing;
+  protected InstrumentationTestRunner testing;
   private HttpClientTestServer server;
 
   private final HttpClientTestOptions options = new HttpClientTestOptions();
@@ -180,12 +183,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     if (!testHttps()) {
       options.disableTestHttps();
     }
-    if (!testCausality()) {
-      options.disableTestCausality();
-    }
-    if (!testCausalityWithCallback()) {
-      options.disableTestCausalityWithCallback();
-    }
     if (!testCallback()) {
       options.disableTestCallback();
     }
@@ -195,7 +192,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     if (!testErrorWithCallback()) {
       options.disableTestErrorWithCallback();
     }
-
+    if (testCallbackWithImplicitParent()) {
+      options.enableTestCallbackWithImplicitParent();
+    }
     configure(options);
   }
 
@@ -304,6 +303,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   @Test
   void requestWithCallbackAndNoParent() throws Throwable {
     assumeTrue(options.testCallback);
+    assumeFalse(options.testCallbackWithImplicitParent);
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -322,6 +322,29 @@ public abstract class AbstractHttpClientTest<REQUEST> {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  @Test
+  void requestWithCallbackAndImplicitParent() throws Throwable {
+    assumeTrue(options.testCallbackWithImplicitParent);
+
+    String method = "GET";
+    URI uri = resolveAddress("/success");
+
+    RequestResult result =
+        doRequestWithCallback(method, uri, () -> testing.runWithSpan("callback", () -> {}));
+
+    assertThat(result.get()).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -675,8 +698,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
    */
   @Test
   void highConcurrency() {
-    assumeTrue(options.testCausality);
-
     int count = 50;
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -748,8 +769,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
 
   @Test
   void highConcurrencyWithCallback() {
-    assumeTrue(options.testCausality);
-    assumeTrue(options.testCausalityWithCallback);
     assumeTrue(options.testCallback);
     assumeTrue(options.testCallbackWithParent);
 
@@ -911,14 +930,18 @@ public abstract class AbstractHttpClientTest<REQUEST> {
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
+              // TODO: Move to test knob rather than always treating as optional
+              if (attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
+              }
+
               if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
-                // TODO(anuraaga): For theses cases, there isn't actually a peer so we shouldn't be
-                // filling in peer information but some instrumentation does so based on the URL
-                // itself which is present in HTTP attributes. We should fix this.
-                if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_NAME)) {
+                // TODO: net.peer.name and net.peer.port should always be populated from the URI or
+                // the Host header, verify these assertions below
+                if (attrs.get(SemanticAttributes.NET_PEER_NAME) != null) {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
                 }
-                if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_PORT)) {
+                if (attrs.get(SemanticAttributes.NET_PEER_PORT) != null) {
                   if (uri.getPort() > 0) {
                     assertThat(attrs)
                         .containsEntry(SemanticAttributes.NET_PEER_PORT, (long) uri.getPort());
@@ -936,6 +959,16 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                             });
                   }
                 }
+
+                // In these cases the peer connection is not established, so the HTTP client should
+                // not report any socket-level attributes
+                assertThat(attrs)
+                    .doesNotContainKey("net.sock.family")
+                    // TODO netty sometimes reports net.sock.peer.addr in connection error test
+                    // .doesNotContainKey("net.sock.peer.addr")
+                    .doesNotContainKey("net.sock.peer.name")
+                    .doesNotContainKey("net.sock.peer.port");
+
               } else {
                 if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
@@ -943,16 +976,17 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
                 }
-              }
 
-              // TODO(anuraaga): Move to test knob rather than always treating as optional
-              if (attrs.asMap().containsKey(SemanticAttributes.NET_PEER_IP)) {
-                if (uri.getHost().equals("192.0.2.1")) {
-                  // NB(anuraaga): This branch seems to currently only be exercised on Java 15.
-                  // It would be good to understand how the JVM version is impacting this check.
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, "192.0.2.1");
-                } else {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_IP, "127.0.0.1");
+                // TODO: Move to test knob rather than always treating as optional
+                if (attrs.get(SemanticAttributes.NET_SOCK_PEER_ADDR) != null) {
+                  assertThat(attrs)
+                      .containsEntry(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1");
+                }
+                if (attrs.get(SemanticAttributes.NET_SOCK_PEER_PORT) != null) {
+                  assertThat(attrs)
+                      .containsEntry(
+                          SemanticAttributes.NET_SOCK_PEER_PORT,
+                          "https".equals(uri.getScheme()) ? server.httpsPort() : server.httpPort());
                 }
               }
 
@@ -1077,14 +1111,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return true;
   }
 
-  protected boolean testCausality() {
-    return true;
-  }
-
-  protected boolean testCausalityWithCallback() {
-    return true;
-  }
-
   protected boolean testCallback() {
     return true;
   }
@@ -1093,6 +1119,13 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
     // function is used.  There is no way to stop a test from a derived class hence the flag
     return true;
+  }
+
+  protected boolean testCallbackWithImplicitParent() {
+    // depending on async behavior callback can be executed within
+    // parent span scope or outside of the scope, e.g. in reactor-netty or spring
+    // callback is correlated.
+    return false;
   }
 
   protected boolean testErrorWithCallback() {

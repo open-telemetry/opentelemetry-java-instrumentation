@@ -38,9 +38,6 @@ The bootstrap class loader contains several modules:
 * **The `instrumentation-annotations-support` module**:
   it contains classes that provide support for annotation-based auto-instrumentation, e.g.
   the `@WithSpan` annotation. This module is internal and its APIs are considered unstable.
-* **The `instrumentation-appender-api-internal` module**:
-  it contains classes that constitute the "appender API", used by logging instrumentations. This
-  module is internal and its APIs are considered unstable.
 * **The `io.opentelemetry.javaagent.bootstrap` package from the `javaagent-extension-api` module**:
   this package contains several instrumentation utilities that are only usable when an application
   is instrumented with the javaagent; for example, the `Java8BytecodeBridge` that should be used

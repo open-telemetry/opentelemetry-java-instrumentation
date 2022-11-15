@@ -110,7 +110,7 @@ public class JettyHttpClient9TracingInterceptor
         continue;
       }
 
-      Request.RequestListener proxiedListner =
+      Request.RequestListener proxiedListener =
           (Request.RequestListener)
               Proxy.newProxyInstance(
                   listenerClass.getClassLoader(),
@@ -121,7 +121,7 @@ public class JettyHttpClient9TracingInterceptor
                     }
                   });
 
-      iterator.set(proxiedListner);
+      iterator.set(proxiedListener);
     }
   }
 

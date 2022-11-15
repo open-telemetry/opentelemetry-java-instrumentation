@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRecordGetter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
+import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,14 +49,17 @@ public final class KafkaTelemetry {
   private final OpenTelemetry openTelemetry;
   private final Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter;
   private final Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter;
+  private final boolean producerPropagationEnabled;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
       Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter,
-      Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter) {
+      Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter,
+      boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerInstrumenter = producerInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
+    this.producerPropagationEnabled = producerPropagationEnabled;
   }
 
   /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -75,13 +79,46 @@ public final class KafkaTelemetry {
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
+  @SuppressWarnings("unchecked")
   public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
-    return new TracingProducer<>(producer, this);
+    return (Producer<K, V>)
+        Proxy.newProxyInstance(
+            KafkaTelemetry.class.getClassLoader(),
+            new Class<?>[] {Producer.class},
+            (proxy, method, args) -> {
+              // Future<RecordMetadata> send(ProducerRecord<K, V> record)
+              // Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback)
+              if ("send".equals(method.getName())
+                  && method.getParameterCount() >= 1
+                  && method.getParameterTypes()[0] == ProducerRecord.class) {
+                ProducerRecord<K, V> record = (ProducerRecord<K, V>) args[0];
+                Callback callback =
+                    method.getParameterCount() >= 2
+                            && method.getParameterTypes()[1] == Callback.class
+                        ? (Callback) args[1]
+                        : null;
+                return buildAndInjectSpan(record, callback, producer::send);
+              }
+              return method.invoke(producer, args);
+            });
   }
 
   /** Returns a decorated {@link Consumer} that consumes spans for each received message. */
+  @SuppressWarnings("unchecked")
   public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
-    return new TracingConsumer<>(consumer, this);
+    return (Consumer<K, V>)
+        Proxy.newProxyInstance(
+            KafkaTelemetry.class.getClassLoader(),
+            new Class<?>[] {Consumer.class},
+            (proxy, method, args) -> {
+              Object result = method.invoke(consumer, args);
+              // ConsumerRecords<K, V> poll(long timeout)
+              // ConsumerRecords<K, V> poll(Duration duration)
+              if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
+                buildAndFinishSpan((ConsumerRecords) result);
+              }
+              return result;
+            });
   }
 
   /**
@@ -116,6 +153,9 @@ public final class KafkaTelemetry {
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         OpenTelemetryMetricsReporter.class.getName());
     config.put(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTANCE, openTelemetry);
+    config.put(
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
+        KafkaTelemetryBuilder.INSTRUMENTATION_NAME);
     return Collections.unmodifiableMap(config);
   }
 
@@ -125,23 +165,22 @@ public final class KafkaTelemetry {
    * @param record the producer record to inject span info.
    */
   <K, V> void buildAndInjectSpan(ProducerRecord<K, V> record) {
-    Context currentContext = Context.current();
+    Context parentContext = Context.current();
 
-    if (!producerInstrumenter.shouldStart(currentContext, record)) {
+    if (!producerInstrumenter.shouldStart(parentContext, record)) {
       return;
     }
 
-    Context current = producerInstrumenter.start(currentContext, record);
-    try (Scope ignored = current.makeCurrent()) {
+    Context context = producerInstrumenter.start(parentContext, record);
+    if (producerPropagationEnabled) {
       try {
-        propagator().inject(current, record.headers(), SETTER);
+        propagator().inject(context, record.headers(), SETTER);
       } catch (Throwable t) {
         // it can happen if headers are read only (when record is sent second time)
         logger.log(WARNING, "failed to inject span context. sending record second time?", t);
       }
     }
-
-    producerInstrumenter.end(current, record, null, null);
+    producerInstrumenter.end(context, record, null, null);
   }
 
   /**

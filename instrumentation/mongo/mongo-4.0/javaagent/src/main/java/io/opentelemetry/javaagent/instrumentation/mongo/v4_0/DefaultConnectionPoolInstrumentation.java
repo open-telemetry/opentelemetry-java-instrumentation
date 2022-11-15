@@ -31,6 +31,7 @@ public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation
         this.getClass().getName() + "$SingleResultCallbackAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SingleResultCallbackAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

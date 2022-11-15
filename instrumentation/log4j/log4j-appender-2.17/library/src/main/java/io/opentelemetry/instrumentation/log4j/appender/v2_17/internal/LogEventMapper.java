@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
-import io.opentelemetry.instrumentation.api.appender.internal.Severity;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
@@ -18,6 +18,7 @@ import java.io.StringWriter;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
@@ -35,10 +36,13 @@ public final class LogEventMapper<T> {
   private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
       Cache.bounded(100);
 
+  private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("log4j.marker");
+
   private final ContextDataAccessor<T> contextDataAccessor;
 
   private final boolean captureExperimentalAttributes;
   private final boolean captureMapMessageAttributes;
+  private final boolean captureMarkerAttribute;
   private final List<String> captureContextDataAttributes;
   private final boolean captureAllContextDataAttributes;
 
@@ -46,18 +50,20 @@ public final class LogEventMapper<T> {
       ContextDataAccessor<T> contextDataAccessor,
       boolean captureExperimentalAttributes,
       boolean captureMapMessageAttributes,
+      boolean captureMarkerAttribute,
       List<String> captureContextDataAttributes) {
 
     this.contextDataAccessor = contextDataAccessor;
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
+    this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
   }
 
   /**
-   * Map the {@link LogEvent} data model onto the {@link LogBuilder}. Unmapped fields include:
+   * Map the {@link LogEvent} data model onto the {@link LogRecordBuilder}. Unmapped fields include:
    *
    * <ul>
    *   <li>Fully qualified class name - {@link LogEvent#getLoggerFqcn()}
@@ -69,15 +75,23 @@ public final class LogEventMapper<T> {
    * </ul>
    */
   public void mapLogEvent(
-      LogBuilder builder,
+      LogRecordBuilder builder,
       Message message,
       Level level,
+      @Nullable Marker marker,
       @Nullable Throwable throwable,
       T contextData) {
 
     AttributesBuilder attributes = Attributes.builder();
 
     captureMessage(builder, attributes, message);
+
+    if (captureMarkerAttribute) {
+      if (marker != null) {
+        String markerName = marker.getName();
+        attributes.put(LOG_MARKER, markerName);
+      }
+    }
 
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
@@ -96,13 +110,13 @@ public final class LogEventMapper<T> {
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
     }
 
-    builder.setAttributes(attributes.build());
+    builder.setAllAttributes(attributes.build());
 
     builder.setContext(Context.current());
   }
 
   // visible for testing
-  void captureMessage(LogBuilder builder, AttributesBuilder attributes, Message message) {
+  void captureMessage(LogRecordBuilder builder, AttributesBuilder attributes, Message message) {
     if (message == null) {
       return;
     }
@@ -169,7 +183,7 @@ public final class LogEventMapper<T> {
 
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
     // TODO (trask) extract method for recording exception into
-    // instrumentation-appender-api-internal
+    // io.opentelemetry:opentelemetry-api-logs
     attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
     attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
     StringWriter writer = new StringWriter();

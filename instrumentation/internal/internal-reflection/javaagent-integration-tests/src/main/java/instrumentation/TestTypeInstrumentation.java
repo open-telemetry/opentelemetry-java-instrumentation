@@ -26,7 +26,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("testMethod"), TestTypeInstrumentation.class.getName() + "$TestAdvice");
     transformer.applyAdviceToMethod(
-        named("testMethod2"), TestTypeInstrumentation.class.getName() + "$TestAdvice2");
+        named("testMethod2"), TestTypeInstrumentation.class.getName() + "$Test2Advice");
   }
 
   @SuppressWarnings("unused")
@@ -41,7 +41,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class TestAdvice2 {
+  public static class Test2Advice {
 
     @Advice.OnMethodExit
     public static void methodExit(

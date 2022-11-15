@@ -57,7 +57,7 @@ public final class HttpServerMetrics implements OperationListener {
     activeRequests =
         meter
             .upDownCounterBuilder("http.server.active_requests")
-            .setUnit("requests")
+            .setUnit("{requests}")
             .setDescription("The number of concurrent HTTP requests that are currently in-flight")
             .build();
 

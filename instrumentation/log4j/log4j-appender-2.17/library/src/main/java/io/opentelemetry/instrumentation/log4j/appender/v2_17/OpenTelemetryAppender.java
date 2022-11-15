@@ -7,13 +7,10 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProviderHolder;
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
-import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -44,9 +41,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   static final String PLUGIN_NAME = "OpenTelemetry";
 
-  private static final LogEmitterProviderHolder logEmitterProviderHolder =
-      new LogEmitterProviderHolder();
-
   private final LogEventMapper<ReadOnlyStringMap> mapper;
 
   @PluginBuilderFactory
@@ -59,6 +53,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
+    @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
 
     /**
@@ -74,6 +69,16 @@ public class OpenTelemetryAppender extends AbstractAppender {
     /** Sets whether log4j {@link MapMessage} attributes should be copied to logs. */
     public B setCaptureMapMessageAttributes(boolean captureMapMessageAttributes) {
       this.captureMapMessageAttributes = captureMapMessageAttributes;
+      return asBuilder();
+    }
+
+    /**
+     * Sets whether the marker attribute should be set to logs.
+     *
+     * @param captureMarkerAttribute To enable or disable the marker attribute
+     */
+    public B setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
+      this.captureMarkerAttribute = captureMarkerAttribute;
       return asBuilder();
     }
 
@@ -93,6 +98,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           getPropertyArray(),
           captureExperimentalAttributes,
           captureMapMessageAttributes,
+          captureMarkerAttribute,
           captureContextDataAttributes);
     }
   }
@@ -105,6 +111,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       Property[] properties,
       boolean captureExperimentalAttributes,
       boolean captureMapMessageAttributes,
+      boolean captureMarkerAttribute,
       String captureContextDataAttributes) {
 
     super(name, filter, layout, ignoreExceptions, properties);
@@ -113,6 +120,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
             captureMapMessageAttributes,
+            captureMarkerAttribute,
             splitAndFilterBlanksAndNulls(captureContextDataAttributes));
   }
 
@@ -132,11 +140,16 @@ public class OpenTelemetryAppender extends AbstractAppender {
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
-    LogBuilder builder =
-        logEmitterProviderHolder.get().logEmitterBuilder(instrumentationName).build().logBuilder();
+    LogRecordBuilder builder =
+        GlobalLoggerProvider.get().loggerBuilder(instrumentationName).build().logRecordBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
     mapper.mapLogEvent(
-        builder, event.getMessage(), event.getLevel(), event.getThrown(), contextData);
+        builder,
+        event.getMessage(),
+        event.getLevel(),
+        event.getMarker(),
+        event.getThrown(),
+        contextData);
 
     Instant timestamp = event.getInstant();
     if (timestamp != null) {
@@ -146,25 +159,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
           TimeUnit.NANOSECONDS);
     }
     builder.emit();
-  }
-
-  /**
-   * This should be called once as early as possible in your application initialization logic, often
-   * in a {@code static} block in your main class. It should only be called once - an attempt to
-   * call it a second time will result in an error. If trying to set the {@link
-   * SdkLogEmitterProvider} multiple times in tests, use {@link
-   * OpenTelemetryAppender#resetSdkLogEmitterProviderForTest()} between them.
-   */
-  public static void setSdkLogEmitterProvider(SdkLogEmitterProvider sdkLogEmitterProvider) {
-    logEmitterProviderHolder.set(DelegatingLogEmitterProvider.from(sdkLogEmitterProvider));
-  }
-
-  /**
-   * Unsets the global {@link LogEmitterProvider}. This is only meant to be used from tests which
-   * need to reconfigure {@link LogEmitterProvider}.
-   */
-  public static void resetSdkLogEmitterProviderForTest() {
-    logEmitterProviderHolder.resetForTest();
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<ReadOnlyStringMap> {

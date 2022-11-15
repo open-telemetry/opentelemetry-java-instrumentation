@@ -610,4 +610,3 @@ class SessionTest extends AbstractHibernateTest {
     sessionId1 != sessionId2 != sessionId3
   }
 }
-

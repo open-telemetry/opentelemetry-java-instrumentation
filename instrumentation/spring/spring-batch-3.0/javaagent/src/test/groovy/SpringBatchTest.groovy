@@ -27,16 +27,21 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
         span(0) {
           name "BatchJob taskletJob"
           kind INTERNAL
+          attributes {
+            "job.system" "spring_batch"
+          }
         }
         span(1) {
           name "BatchJob taskletJob.step"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(2) {
           name "BatchJob taskletJob.step.Tasklet"
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
       }
     }
@@ -52,11 +57,15 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
         span(0) {
           name "BatchJob taskletJob"
           kind INTERNAL
+          attributes {
+            "job.system" "spring_batch"
+          }
         }
         span(1) {
           name "BatchJob taskletJob.step"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(2) {
           name "BatchJob taskletJob.step.Tasklet"
@@ -64,6 +73,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           errorEvent IllegalStateException, "fail"
+          attributes {}
         }
       }
     }
@@ -79,36 +89,45 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
         span(0) {
           name "BatchJob itemsAndTaskletJob"
           kind INTERNAL
+          attributes {
+            "job.system" "spring_batch"
+          }
         }
         span(1) {
           name "BatchJob itemsAndTaskletJob.itemStep"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(2) {
           name "BatchJob itemsAndTaskletJob.itemStep.Chunk"
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
         span(3) {
           name "BatchJob itemsAndTaskletJob.itemStep.Chunk"
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
         span(4) {
           name "BatchJob itemsAndTaskletJob.itemStep.Chunk"
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
         span(5) {
           name "BatchJob itemsAndTaskletJob.taskletStep"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(6) {
           name "BatchJob itemsAndTaskletJob.taskletStep.Tasklet"
           kind INTERNAL
           childOf span(5)
+          attributes {}
         }
       }
     }
@@ -124,26 +143,33 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
         span(0) {
           name "BatchJob flowJob"
           kind INTERNAL
+          attributes {
+            "job.system" "spring_batch"
+          }
         }
         span(1) {
           name "BatchJob flowJob.flowStep1"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(2) {
           name "BatchJob flowJob.flowStep1.Tasklet"
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
         span(3) {
           name "BatchJob flowJob.flowStep2"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(4) {
           name "BatchJob flowJob.flowStep2.Tasklet"
           kind INTERNAL
           childOf span(3)
+          attributes {}
         }
       }
     }
@@ -159,26 +185,33 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
         span(0) {
           name "BatchJob splitJob"
           kind INTERNAL
+          attributes {
+            "job.system" "spring_batch"
+          }
         }
         span(1) {
           name ~/BatchJob splitJob\.splitFlowStep[12]/
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(2) {
           name ~/BatchJob splitJob\.splitFlowStep[12]\.Tasklet/
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
         span(3) {
           name ~/BatchJob splitJob\.splitFlowStep[12]/
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(4) {
           name ~/BatchJob splitJob\.splitFlowStep[12]\.Tasklet/
           kind INTERNAL
           childOf span(3)
+          attributes {}
         }
       }
     }
@@ -194,26 +227,33 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
         span(0) {
           name "BatchJob decisionJob"
           kind INTERNAL
+          attributes {
+            "job.system" "spring_batch"
+          }
         }
         span(1) {
           name "BatchJob decisionJob.decisionStepStart"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(2) {
           name "BatchJob decisionJob.decisionStepStart.Tasklet"
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
         span(3) {
           name "BatchJob decisionJob.decisionStepLeft"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(4) {
           name "BatchJob decisionJob.decisionStepLeft.Tasklet"
           kind INTERNAL
           childOf span(3)
+          attributes {}
         }
       }
     }
@@ -229,42 +269,52 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
         span(0) {
           name "BatchJob partitionedJob"
           kind INTERNAL
+          attributes {
+            "job.system" "spring_batch"
+          }
         }
         span(1) {
           def stepName = hasPartitionManagerStep() ? "partitionManagerStep" : "partitionWorkerStep"
           name "BatchJob partitionedJob.$stepName"
           kind INTERNAL
           childOf span(0)
+          attributes {}
         }
         span(2) {
           name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01]/
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
         span(3) {
           name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01].Chunk/
           kind INTERNAL
           childOf span(2)
+          attributes {}
         }
         span(4) {
           name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01].Chunk/
           kind INTERNAL
           childOf span(2)
+          attributes {}
         }
         span(5) {
           name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01]/
           kind INTERNAL
           childOf span(1)
+          attributes {}
         }
         span(6) {
           name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01].Chunk/
           kind INTERNAL
           childOf span(5)
+          attributes {}
         }
         span(7) {
           name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01].Chunk/
           kind INTERNAL
           childOf span(5)
+          attributes {}
         }
       }
     }

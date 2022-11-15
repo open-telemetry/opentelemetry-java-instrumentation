@@ -14,8 +14,6 @@ muzzle {
   }
 }
 
-val versions: Map<String, String> by project
-
 dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
 

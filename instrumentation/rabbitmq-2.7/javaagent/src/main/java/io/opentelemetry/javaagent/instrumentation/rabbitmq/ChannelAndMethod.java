@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.google.auto.value.AutoValue;
 import com.rabbitmq.client.Channel;
+import java.util.Map;
 
 @AutoValue
 public abstract class ChannelAndMethod {
@@ -18,4 +19,14 @@ public abstract class ChannelAndMethod {
   abstract Channel getChannel();
 
   abstract String getMethod();
+
+  private Map<String, Object> headers;
+
+  public Map<String, Object> getHeaders() {
+    return headers;
+  }
+
+  public void setHeaders(Map<String, Object> headers) {
+    this.headers = headers;
+  }
 }

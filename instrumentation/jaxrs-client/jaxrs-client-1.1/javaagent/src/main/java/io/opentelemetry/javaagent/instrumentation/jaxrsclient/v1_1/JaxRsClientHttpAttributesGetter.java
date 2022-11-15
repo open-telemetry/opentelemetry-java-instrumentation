@@ -48,7 +48,8 @@ final class JaxRsClientHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(ClientRequest httpRequest, ClientResponse httpResponse) {
+  public Integer statusCode(
+      ClientRequest httpRequest, ClientResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatus();
   }
 

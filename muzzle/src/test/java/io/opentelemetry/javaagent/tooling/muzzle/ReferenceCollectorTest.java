@@ -29,6 +29,7 @@ import muzzle.TestClasses;
 import muzzle.TestClasses.HelperAdvice;
 import muzzle.TestClasses.LdcAdvice;
 import muzzle.TestClasses.MethodBodyAdvice;
+import muzzle.TestClasses.Nested;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,17 +49,17 @@ class ReferenceCollectorTest {
 
     assertThat(references)
         .containsOnlyKeys(
-            MethodBodyAdvice.A.class.getName(),
-            MethodBodyAdvice.B.class.getName(),
-            MethodBodyAdvice.SomeInterface.class.getName(),
-            MethodBodyAdvice.SomeImplementation.class.getName());
+            Nested.A.class.getName(),
+            Nested.B.class.getName(),
+            Nested.SomeInterface.class.getName(),
+            Nested.SomeImplementation.class.getName());
 
-    ClassRef refB = references.get(MethodBodyAdvice.B.class.getName());
-    ClassRef refA = references.get(MethodBodyAdvice.A.class.getName());
+    ClassRef refB = references.get(Nested.B.class.getName());
+    ClassRef refA = references.get(Nested.A.class.getName());
 
     // interface flags
     assertThat(refB.getFlags()).contains(ManifestationFlag.NON_INTERFACE);
-    assertThat(references.get(MethodBodyAdvice.SomeInterface.class.getName()).getFlags())
+    assertThat(references.get(Nested.SomeInterface.class.getName()).getFlags())
         .contains(ManifestationFlag.INTERFACE);
 
     // class access flags
@@ -92,12 +93,12 @@ class ReferenceCollectorTest {
   @Test
   public void protectedRefTest() {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
-    collector.collectReferencesFromAdvice(MethodBodyAdvice.B2.class.getName());
+    collector.collectReferencesFromAdvice(Nested.B2.class.getName());
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
     assertMethod(
-        references.get(MethodBodyAdvice.B.class.getName()),
+        references.get(Nested.B.class.getName()),
         "protectedMethod",
         "()V",
         PROTECTED_OR_HIGHER,
@@ -111,7 +112,7 @@ class ReferenceCollectorTest {
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertThat(references).containsKey(MethodBodyAdvice.A.class.getName());
+    assertThat(references).containsKey(Nested.A.class.getName());
   }
 
   @Test
@@ -121,7 +122,7 @@ class ReferenceCollectorTest {
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertThat(references).containsKey(MethodBodyAdvice.A.class.getName());
+    assertThat(references).containsKey(Nested.A.class.getName());
   }
 
   @Test
@@ -131,23 +132,23 @@ class ReferenceCollectorTest {
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
-    assertThat(references).containsKey("muzzle.TestClasses$MethodBodyAdvice$SomeImplementation");
+    assertThat(references).containsKey("muzzle.TestClasses$Nested$SomeImplementation");
     assertMethod(
-        references.get("muzzle.TestClasses$MethodBodyAdvice$SomeImplementation"),
+        references.get("muzzle.TestClasses$Nested$SomeImplementation"),
         "someMethod",
         "()V",
         PROTECTED_OR_HIGHER,
         OwnershipFlag.NON_STATIC);
-    assertThat(references).containsKey("muzzle.TestClasses$MethodBodyAdvice$B");
+    assertThat(references).containsKey("muzzle.TestClasses$Nested$B");
     assertMethod(
-        references.get("muzzle.TestClasses$MethodBodyAdvice$B"),
+        references.get("muzzle.TestClasses$Nested$B"),
         "staticMethod",
         "()V",
         PROTECTED_OR_HIGHER,
         OwnershipFlag.STATIC);
-    assertThat(references).containsKey("muzzle.TestClasses$MethodBodyAdvice$A");
+    assertThat(references).containsKey("muzzle.TestClasses$Nested$A");
     assertMethod(
-        references.get("muzzle.TestClasses$MethodBodyAdvice$A"),
+        references.get("muzzle.TestClasses$Nested$A"),
         "<init>",
         "()V",
         PROTECTED_OR_HIGHER,

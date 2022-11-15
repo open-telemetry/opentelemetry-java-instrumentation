@@ -13,13 +13,14 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.util.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
 public final class WithSpanSingletons {
+
   private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.opentelemetry-annotations-1.0";
+      "io.opentelemetry.opentelemetry-instrumentation-annotations-1.16";
 
   private static final Logger logger = Logger.getLogger(WithSpanSingletons.class.getName());
   private static final Instrumenter<Method, Object> INSTRUMENTER = createInstrumenter();
@@ -90,4 +91,6 @@ public final class WithSpanSingletons {
     }
     return spanName;
   }
+
+  private WithSpanSingletons() {}
 }

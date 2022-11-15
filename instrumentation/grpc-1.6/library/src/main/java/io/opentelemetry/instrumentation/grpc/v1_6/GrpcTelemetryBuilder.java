@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -47,6 +48,8 @@ public final class GrpcTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalClientExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
+      additionalServerExtractors = new ArrayList<>();
 
   private boolean captureExperimentalSpanAttributes;
 
@@ -58,6 +61,7 @@ public final class GrpcTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
+  @CanIgnoreReturnValue
   public GrpcTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super GrpcRequest, ? super Status> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
@@ -69,13 +73,27 @@ public final class GrpcTelemetryBuilder {
    * instrumented items. The {@link AttributesExtractor} will be executed after all default
    * extractors.
    */
+  @CanIgnoreReturnValue
   public GrpcTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super GrpcRequest, ? super Status> attributesExtractor) {
     additionalClientExtractors.add(attributesExtractor);
     return this;
   }
 
+  /**
+   * Adds an extra server-only {@link AttributesExtractor} to invoke to set attributes to
+   * instrumented items. The {@link AttributesExtractor} will be executed after all default
+   * extractors.
+   */
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder addServerAttributeExtractor(
+      AttributesExtractor<? super GrpcRequest, ? super Status> attributesExtractor) {
+    additionalServerExtractors.add(attributesExtractor);
+    return this;
+  }
+
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientSpanNameExtractor(
       Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
           clientSpanNameExtractor) {
@@ -84,6 +102,7 @@ public final class GrpcTelemetryBuilder {
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerSpanNameExtractor(
       Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
           serverSpanNameExtractor) {
@@ -92,6 +111,7 @@ public final class GrpcTelemetryBuilder {
   }
 
   /** Sets the {@code peer.service} attribute for http client spans. */
+  @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setPeerService(String peerService) {
     this.peerService = peerService;
     return this;
@@ -102,6 +122,7 @@ public final class GrpcTelemetryBuilder {
    * removed in the future, so only enable this if you know you do not require attributes filled by
    * this instrumentation to be stable across versions
    */
+  @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
@@ -147,6 +168,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new GrpcNetServerAttributesGetter()))
+        .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get());
 
     if (peerService != null) {

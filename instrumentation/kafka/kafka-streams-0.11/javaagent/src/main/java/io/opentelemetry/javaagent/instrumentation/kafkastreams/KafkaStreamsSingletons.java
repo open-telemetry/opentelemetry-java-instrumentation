@@ -18,12 +18,10 @@ public final class KafkaStreamsSingletons {
 
   private static final Instrumenter<ConsumerRecord<?, ?>, Void> INSTRUMENTER =
       new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
+          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
               InstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-          .setPropagationEnabled(
-              InstrumentationConfig.get()
-                  .getBoolean("otel.instrumentation.kafka.client-propagation.enabled", true))
           .setMessagingReceiveInstrumentationEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .createConsumerProcessInstrumenter();

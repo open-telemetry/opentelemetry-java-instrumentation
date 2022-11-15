@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.kafka.internal;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -25,7 +27,7 @@ import org.apache.kafka.common.metrics.MetricsReporter;
  * <p>To configure, use:
  *
  * <pre>{@code
- * // KafkaTelemetry.KafkaTelemetry.create(OpenTelemetry).metricConfigProperties()
+ * // KafkaTelemetry.create(OpenTelemetry).metricConfigProperties()
  * }</pre>
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
@@ -34,6 +36,8 @@ import org.apache.kafka.common.metrics.MetricsReporter;
 public final class OpenTelemetryMetricsReporter implements MetricsReporter {
 
   public static final String CONFIG_KEY_OPENTELEMETRY_INSTANCE = "opentelemetry.instance";
+  public static final String CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME =
+      "opentelemetry.instrumentation_name";
 
   private static final Logger logger =
       Logger.getLogger(OpenTelemetryMetricsReporter.class.getName());
@@ -45,7 +49,7 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
   private static final List<RegisteredObservable> registeredObservables = new ArrayList<>();
 
   /**
-   * Reset for test by reseting the {@link #meter} to {@code null} and closing all registered
+   * Reset for test by resetting the {@link #meter} to {@code null} and closing all registered
    * instruments.
    */
   static void resetForTest() {
@@ -146,17 +150,30 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
 
   @Override
   public void configure(Map<String, ?> configs) {
-    Object openTelemetry = configs.get(CONFIG_KEY_OPENTELEMETRY_INSTANCE);
-    if (openTelemetry == null) {
-      throw new IllegalStateException(
-          "Missing required configuration property: " + CONFIG_KEY_OPENTELEMETRY_INSTANCE);
+    OpenTelemetry openTelemetry =
+        getProperty(configs, CONFIG_KEY_OPENTELEMETRY_INSTANCE, OpenTelemetry.class);
+    String instrumentationName =
+        getProperty(configs, CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME, String.class);
+    String instrumentationVersion =
+        EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+
+    MeterBuilder meterBuilder = openTelemetry.meterBuilder(instrumentationName);
+    if (instrumentationVersion != null) {
+      meterBuilder.setInstrumentationVersion(instrumentationVersion);
     }
-    if (!(openTelemetry instanceof OpenTelemetry)) {
-      throw new IllegalStateException(
-          "Configuration property "
-              + CONFIG_KEY_OPENTELEMETRY_INSTANCE
-              + " is not instance of OpenTelemetry");
+    meter = meterBuilder.build();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> T getProperty(Map<String, ?> configs, String key, Class<T> requiredType) {
+    Object value = configs.get(key);
+    if (value == null) {
+      throw new IllegalStateException("Missing required configuration property: " + key);
     }
-    meter = ((OpenTelemetry) openTelemetry).getMeter("io.opentelemetry.kafka-clients");
+    if (!requiredType.isInstance(value)) {
+      throw new IllegalStateException(
+          "Configuration property " + key + " is not instance of " + requiredType.getSimpleName());
+    }
+    return (T) value;
   }
 }

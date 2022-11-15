@@ -1,4 +1,4 @@
-# Manual Instrumentation for HikariCP
+# Library Instrumentation for HikariCP version 3.0 and higher
 
 Provides OpenTelemetry instrumentation for [HikariCP](https://github.com/brettwooldridge/HikariCP).
 
@@ -6,13 +6,12 @@ Provides OpenTelemetry instrumentation for [HikariCP](https://github.com/brettwo
 
 ### Add these dependencies to your project:
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.14.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-hikaricp-3.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>

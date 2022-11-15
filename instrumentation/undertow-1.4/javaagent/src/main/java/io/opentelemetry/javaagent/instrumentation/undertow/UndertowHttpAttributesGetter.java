@@ -37,7 +37,8 @@ public class UndertowHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpServerExchange exchange, HttpServerExchange unused) {
+  public Integer statusCode(
+      HttpServerExchange exchange, HttpServerExchange unused, @Nullable Throwable error) {
     return exchange.getStatusCode();
   }
 
@@ -68,12 +69,6 @@ public class UndertowHttpAttributesGetter
   @Override
   @Nullable
   public String route(HttpServerExchange exchange) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String serverName(HttpServerExchange exchange) {
     return null;
   }
 }

@@ -9,6 +9,7 @@ import application.io.opentelemetry.api.metrics.DoubleCounter;
 import application.io.opentelemetry.api.metrics.DoubleCounterBuilder;
 import application.io.opentelemetry.api.metrics.ObservableDoubleCounter;
 import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.function.Consumer;
 
 final class ApplicationDoubleCounterBuilder implements DoubleCounterBuilder {
@@ -20,12 +21,14 @@ final class ApplicationDoubleCounterBuilder implements DoubleCounterBuilder {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public DoubleCounterBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public DoubleCounterBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;

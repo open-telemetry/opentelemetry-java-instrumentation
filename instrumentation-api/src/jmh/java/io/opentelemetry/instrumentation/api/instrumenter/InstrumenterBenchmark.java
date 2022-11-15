@@ -86,7 +86,7 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public Integer statusCode(Void unused, Void unused2) {
+    public Integer statusCode(Void unused, Void unused2, @Nullable Throwable error) {
       return 200;
     }
 
@@ -99,19 +99,39 @@ public class InstrumenterBenchmark {
   static class ConstantNetAttributesGetter
       extends InetSocketAddressNetServerAttributesGetter<Void> {
 
-    private static final InetSocketAddress ADDRESS =
+    private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
-
-    @Override
-    @Nullable
-    public InetSocketAddress getAddress(Void unused) {
-      return ADDRESS;
-    }
+    private static final InetSocketAddress HOST_ADDRESS =
+        InetSocketAddress.createUnresolved("localhost", 80);
 
     @Override
     @Nullable
     public String transport(Void unused) {
       return SemanticAttributes.NetTransportValues.IP_TCP;
+    }
+
+    @Nullable
+    @Override
+    public String hostName(Void unused) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public Integer hostPort(Void unused) {
+      return null;
+    }
+
+    @Override
+    @Nullable
+    protected InetSocketAddress getPeerSocketAddress(Void unused) {
+      return PEER_ADDRESS;
+    }
+
+    @Nullable
+    @Override
+    protected InetSocketAddress getHostSocketAddress(Void unused) {
+      return HOST_ADDRESS;
     }
   }
 }

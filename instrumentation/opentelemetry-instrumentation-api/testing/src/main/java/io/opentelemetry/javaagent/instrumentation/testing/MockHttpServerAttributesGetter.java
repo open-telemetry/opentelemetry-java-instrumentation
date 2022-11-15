@@ -29,7 +29,7 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
 
   @Nullable
   @Override
-  public Integer statusCode(String s, Void unused) {
+  public Integer statusCode(String s, Void unused, @Nullable Throwable error) {
     return null;
   }
 
@@ -59,12 +59,6 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
   @Nullable
   @Override
   public String scheme(String s) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String serverName(String s) {
     return null;
   }
 }
