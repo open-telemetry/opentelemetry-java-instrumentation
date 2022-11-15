@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.yaml;
 
 import io.opentelemetry.instrumentation.jmx.engine.BeanAttributeExtractor;
-import io.opentelemetry.instrumentation.jmx.engine.BeanPack;
+import io.opentelemetry.instrumentation.jmx.engine.BeanGroup;
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
 import io.opentelemetry.instrumentation.jmx.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.engine.MetricExtractor;
@@ -116,16 +116,16 @@ public class JmxRule extends MetricStructure {
    * @throws an exception if any issues within the rule are detected
    */
   public MetricDef buildMetricDef() throws Exception {
-    BeanPack pack;
+    BeanGroup group;
     if (bean != null) {
-      pack = new BeanPack(null, new ObjectName(bean));
+      group = new BeanGroup(null, new ObjectName(bean));
     } else if (beans != null && !beans.isEmpty()) {
       ObjectName[] objectNames = new ObjectName[beans.size()];
       int k = 0;
       for (String oneBean : beans) {
         objectNames[k++] = new ObjectName(oneBean);
       }
-      pack = new BeanPack(null, objectNames);
+      group = new BeanGroup(null, objectNames);
     } else {
       throw new IllegalStateException("No ObjectName specified");
     }
@@ -175,7 +175,7 @@ public class JmxRule extends MetricStructure {
       metricExtractors[n++] = metricExtractor;
     }
 
-    return new MetricDef(pack, metricExtractors);
+    return new MetricDef(group, metricExtractors);
   }
 
   private static List<MetricAttribute> combineMetricAttributes(
@@ -190,8 +190,6 @@ public class JmxRule extends MetricStructure {
       set.put(metricAttribute.getAttributeName(), metricAttribute);
     }
 
-    List<MetricAttribute> result = new ArrayList<MetricAttribute>();
-    result.addAll(set.values());
-    return result;
+    return new ArrayList<MetricAttribute>(set.values());
   }
 }

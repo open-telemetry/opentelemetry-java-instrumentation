@@ -64,14 +64,14 @@ package io.opentelemetry.instrumentation.jmx.engine;
 //
 //  MetricDef def =
 //      new MetricDef(
-//          new BeanPack(null, new ObjectName("java.lang:name=*,type=MemoryPool")),
+//          new BeanGroup(null, new ObjectName("java.lang:name=*,type=MemoryPool")),
 //          usageUsedExtractor,
 //          usageMaxExtractor);
 
 public class MetricDef {
 
   // Describes the MBeans to use
-  private final BeanPack beans;
+  private final BeanGroup beans;
 
   // Describes how to get the metric values and their attributes, and how to report them
   private final MetricExtractor[] metricExtractors;
@@ -84,12 +84,12 @@ public class MetricDef {
    *     MetricExtractor is provided, they should use unique metric names or unique metric
    *     attributes
    */
-  public MetricDef(BeanPack beans, MetricExtractor... metricExtractors) {
+  public MetricDef(BeanGroup beans, MetricExtractor... metricExtractors) {
     this.beans = beans;
     this.metricExtractors = metricExtractors;
   }
 
-  BeanPack getBeanPack() {
+  BeanGroup getBeanGroup() {
     return beans;
   }
 

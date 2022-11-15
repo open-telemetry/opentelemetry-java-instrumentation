@@ -75,7 +75,7 @@ class BeanFinder {
    * @param servers the list of MBeanServers to query
    */
   private void resolveBeans(MetricDef metricDef, List<MBeanServer> servers) {
-    BeanPack beans = metricDef.getBeanPack();
+    BeanGroup beans = metricDef.getBeanGroup();
 
     for (MBeanServer server : servers) {
       // The set of all matching ObjectNames recognized by the server
