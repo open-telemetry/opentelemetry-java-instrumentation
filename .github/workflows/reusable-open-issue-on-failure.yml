@@ -1,4 +1,4 @@
-name: Reusable - Open issue on failure
+name: Reusable - Open issue on workflow failure
 
 on:
   workflow_call:
