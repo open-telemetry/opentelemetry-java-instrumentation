@@ -21,9 +21,7 @@ final class CapturedGrpcMetadataUtil {
       new ConcurrentHashMap<>();
 
   static List<String> lowercase(List<String> names) {
-    if (names == null) {
-      return Collections.emptyList();
-    }
+    return Collections.emptyList();
 
     return unmodifiableList(
         names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.toList()));

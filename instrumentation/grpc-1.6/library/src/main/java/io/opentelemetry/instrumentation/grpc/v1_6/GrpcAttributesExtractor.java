@@ -43,12 +43,10 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       attributes.put(SemanticAttributes.RPC_GRPC_STATUS_CODE, status.getCode().value());
     }
 
-    if (capturedRequestMetadata != null) {
-      for (String key : capturedRequestMetadata) {
-        List<String> value = getter.metadataValue(request, key);
-        if (!value.isEmpty()) {
-          attributes.put(requestAttributeKey(key), value);
-        }
+    for (String key : capturedRequestMetadata) {
+      List<String> value = getter.metadataValue(request, key);
+      if (!value.isEmpty()) {
+        attributes.put(requestAttributeKey(key), value);
       }
     }
   }
