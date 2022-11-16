@@ -23,5 +23,5 @@ jobs:
   open-issue-on-failure:
     needs:
       - publish
-    if: failure()
+    if: failure() && github.run_attempt == 1
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml
