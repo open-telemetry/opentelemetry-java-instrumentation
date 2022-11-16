@@ -152,4 +152,3 @@ abstract class AbstractRedissonAsyncClientTest extends AgentInstrumentationSpeci
     }
   }
 }
-

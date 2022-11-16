@@ -28,16 +28,16 @@ jobs:
         env:
           NUMBER: ${{ github.event.inputs.number }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
           title=$(gh pr view $NUMBER --json title --jq .title)
 
           branch="opentelemetrybot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
+          git checkout -b $branch
           git cherry-pick $commit
-          git push origin HEAD:$branch
+          git push --set-upstream origin $branch
           gh pr create --title "[$GITHUB_REF_NAME] $title" \
                        --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
-                       --head $branch \
                        --base $GITHUB_REF_NAME

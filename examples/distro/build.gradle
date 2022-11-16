@@ -12,9 +12,9 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.3.0"
+    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.11.0"
     classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
-    classpath "io.opentelemetry.instrumentation:gradle-plugins:1.18.0-alpha-SNAPSHOT"
+    classpath "io.opentelemetry.instrumentation:gradle-plugins:1.20.0-alpha-SNAPSHOT"
   }
 }
 
@@ -27,22 +27,22 @@ subprojects {
   ext {
     versions = [
       // these lines are managed by .github/scripts/update-sdk-version.sh
-      opentelemetry              : "1.18.0",
-      opentelemetryAlpha         : "1.18.0-alpha",
+      opentelemetry              : "1.20.1",
 
       // these lines are managed by .github/scripts/update-version.sh
       opentelemetryJavaagent     : "1.20.0-SNAPSHOT",
       opentelemetryJavaagentAlpha: "1.20.0-alpha-SNAPSHOT",
 
-      bytebuddy                  : "1.12.10",
-      autoservice                : "1.0.1"
+      bytebuddy                  : "1.12.18",
+      autoservice                : "1.0.1",
+      junit                      : "5.9.1"
     ]
 
     deps = [
-      bytebuddy           : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
-      autoservice         : [
-              "com.google.auto.service:auto-service:${versions.autoservice}",
-              "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
+      bytebuddy  : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
+      autoservice: [
+        "com.google.auto.service:auto-service:${versions.autoservice}",
+        "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
       ]
     ]
   }
@@ -64,10 +64,10 @@ subprojects {
   }
 
   dependencies {
-    testImplementation("org.mockito:mockito-core:3.3.3")
-    testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+    testImplementation("org.mockito:mockito-core:4.9.0")
+    testImplementation(enforcedPlatform("org.junit:junit-bom:${versions.junit}"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
   }
 
   tasks {

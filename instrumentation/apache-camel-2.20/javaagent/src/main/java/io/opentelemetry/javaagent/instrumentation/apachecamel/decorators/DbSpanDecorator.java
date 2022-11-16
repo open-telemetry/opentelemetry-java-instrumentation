@@ -53,6 +53,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     switch (component) {
       case "mongodb":
       case "elasticsearch":
+      case "opensearch":
         Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
         if (queryParameters.containsKey("operation")) {
           return queryParameters.get("operation");
@@ -102,6 +103,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
         }
         return null;
       case "elasticsearch":
+      case "opensearch":
         Map<String, String> elasticsearchParameters = toQueryParameters(endpoint.getEndpointUri());
         if (elasticsearchParameters.containsKey("indexName")) {
           return elasticsearchParameters.get("indexName");

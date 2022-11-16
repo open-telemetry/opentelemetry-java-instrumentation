@@ -21,11 +21,6 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("com.couchbase.v3_1_6.client.tracing.opentelemetry");
-  }
-
-  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // New class introduced in 3.1, the minimum version we support.
     // NB: Couchbase does not provide any API guarantees on their core IO artifact so reconsider

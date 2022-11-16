@@ -36,6 +36,7 @@ class GrpcTest extends AbstractGrpcTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   private static final AttributeKey<String> CUSTOM_KEY = AttributeKey.stringKey("customKey");
+  private static final AttributeKey<String> CUSTOM_KEY2 = AttributeKey.stringKey("customKey2");
 
   private static final Metadata.Key<String> CUSTOM_METADATA_KEY =
       Metadata.Key.of("customMetadataKey", Metadata.ASCII_STRING_MARSHALLER);
@@ -65,6 +66,11 @@ class GrpcTest extends AbstractGrpcTest {
     return testing;
   }
 
+  /**
+   * metadataProvided. testing as well 2 extra methods: {@link
+   * GrpcTelemetryBuilder#addClientAttributeExtractor} and {@link
+   * GrpcTelemetryBuilder#addServerAttributeExtractor}
+   */
   @Test
   void metadataProvided() throws Exception {
     BindableService greeter =
@@ -85,6 +91,7 @@ class GrpcTest extends AbstractGrpcTest {
             .intercept(
                 GrpcTelemetry.builder(testing.getOpenTelemetry())
                     .addAttributeExtractor(new CustomAttributesExtractor())
+                    .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
                     .build()
                     .newServerInterceptor())
             .build()
@@ -96,6 +103,8 @@ class GrpcTest extends AbstractGrpcTest {
                 .intercept(
                     GrpcTelemetry.builder(testing.getOpenTelemetry())
                         .addAttributeExtractor(new CustomAttributesExtractor())
+                        .addClientAttributeExtractor(
+                            new CustomAttributesExtractorV2("clientSideValue"))
                         .build()
                         .newClientInterceptor()));
 
@@ -126,11 +135,13 @@ class GrpcTest extends AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
+                            .hasAttribute(CUSTOM_KEY2, "clientSideValue")
                             .hasAttribute(CUSTOM_KEY, "customValue"),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
+                            .hasAttribute(CUSTOM_KEY2, "serverSideValue")
                             .hasAttribute(CUSTOM_KEY, "customValue")));
   }
 
@@ -157,5 +168,30 @@ class GrpcTest extends AbstractGrpcTest {
         }
       }
     }
+  }
+
+  private static class CustomAttributesExtractorV2
+      implements AttributesExtractor<GrpcRequest, Status> {
+
+    private final String valueOfKey2;
+
+    public CustomAttributesExtractorV2(String valueOfKey2) {
+      this.valueOfKey2 = valueOfKey2;
+    }
+
+    @Override
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, GrpcRequest grpcRequest) {
+
+      attributes.put(CUSTOM_KEY2, valueOfKey2);
+    }
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        GrpcRequest grpcRequest,
+        @Nullable Status status,
+        @Nullable Throwable error) {}
   }
 }

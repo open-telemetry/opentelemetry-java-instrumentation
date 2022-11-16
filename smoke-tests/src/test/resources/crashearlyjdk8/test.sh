@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/bash -e
 
 echo "compiling"
 javac CrashEarlyJdk8.java

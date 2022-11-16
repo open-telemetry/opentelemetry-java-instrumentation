@@ -2,4 +2,4 @@
 
 | Environment variable 	| Type 	| Default 	| Description 	|
 |-----------------	|------	|---------	|-------------	|
-| `otel.instrumentation.opentelemetry-annotations.exclude-methods` | String |  | All methods to be excluded from auto-instrumentation by annotation-based advices. |
+| `otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods` | String |  | All methods to be excluded from auto-instrumentation by annotation-based advices. |

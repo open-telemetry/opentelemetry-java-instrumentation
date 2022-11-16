@@ -85,10 +85,14 @@ tasks.withType<ShadowJar>().configureEach {
   // rewrite dependencies calling Logger.getLogger
   relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
 
-  // prevents conflict with library instrumentation
-  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation")
+  // prevents conflict with library instrumentation, since these classes live in the bootstrap class loader
+  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
+    // Exclude resource providers since they live in the agent class loader
+    exclude("io.opentelemetry.instrumentation.resources.*")
+    exclude("io.opentelemetry.instrumentation.spring.resources.*")
+  }
 
-  // relocate(OpenTelemetry API)
+  // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
   relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
   relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
   relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
@@ -230,7 +234,7 @@ fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSessio
   val muzzleRepo = file("${buildDir}/muzzleRepo")
   val localRepo = LocalRepository(muzzleRepo)
   return MavenRepositorySystemUtils.newSession().apply {
-    setLocalRepositoryManager(system.newLocalRepositoryManager(this, localRepo))
+    localRepositoryManager = system.newLocalRepositoryManager(this, localRepo)
   }
 }
 
