@@ -48,6 +48,8 @@ public final class GrpcTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalClientExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
+      additionalServerExtractors = new ArrayList<>();
 
   private boolean captureExperimentalSpanAttributes;
 
@@ -75,6 +77,18 @@ public final class GrpcTelemetryBuilder {
   public GrpcTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super GrpcRequest, ? super Status> attributesExtractor) {
     additionalClientExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an extra server-only {@link AttributesExtractor} to invoke to set attributes to
+   * instrumented items. The {@link AttributesExtractor} will be executed after all default
+   * extractors.
+   */
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder addServerAttributeExtractor(
+      AttributesExtractor<? super GrpcRequest, ? super Status> attributesExtractor) {
+    additionalServerExtractors.add(attributesExtractor);
     return this;
   }
 
@@ -154,6 +168,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(
             NetServerAttributesExtractor.create(new GrpcNetServerAttributesGetter()))
+        .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get());
 
     if (peerService != null) {

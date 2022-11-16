@@ -31,5 +31,5 @@ jobs:
     needs:
       - common
       - test-latest-deps
-    if: failure()
+    if: failure() && github.run_attempt == 1
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

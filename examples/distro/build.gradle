@@ -27,22 +27,22 @@ subprojects {
   ext {
     versions = [
       // these lines are managed by .github/scripts/update-sdk-version.sh
-      opentelemetry              : "1.20.0",
-      opentelemetryAlpha         : "1.18.0-alpha",
+      opentelemetry              : "1.20.1",
 
       // these lines are managed by .github/scripts/update-version.sh
       opentelemetryJavaagent     : "1.20.0-SNAPSHOT",
       opentelemetryJavaagentAlpha: "1.20.0-alpha-SNAPSHOT",
 
       bytebuddy                  : "1.12.18",
-      autoservice                : "1.0.1"
+      autoservice                : "1.0.1",
+      junit                      : "5.9.1"
     ]
 
     deps = [
-      bytebuddy           : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
-      autoservice         : [
-              "com.google.auto.service:auto-service:${versions.autoservice}",
-              "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
+      bytebuddy  : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
+      autoservice: [
+        "com.google.auto.service:auto-service:${versions.autoservice}",
+        "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
       ]
     ]
   }
@@ -64,10 +64,10 @@ subprojects {
   }
 
   dependencies {
-    testImplementation("org.mockito:mockito-core:4.8.1")
-    testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.1")
+    testImplementation("org.mockito:mockito-core:4.9.0")
+    testImplementation(enforcedPlatform("org.junit:junit-bom:${versions.junit}"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
   }
 
   tasks {

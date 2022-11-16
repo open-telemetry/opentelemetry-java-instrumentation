@@ -35,7 +35,7 @@ jobs:
           java-version: 17
 
       - name: Login to GitHub package registry
-        if: ${{ inputs.publish }}
+        if: inputs.publish
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
@@ -51,16 +51,16 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Build Java 8 Docker image
-        if: ${{ !inputs.skip-java-8 }}
+        if: "!inputs.skip-java-8"
         run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 11 Docker image
         run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 17 Docker image
-        if: ${{ !inputs.skip-java-17 }}
+        if: "!inputs.skip-java-17"
         run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 19 Docker image
-        if: ${{ !inputs.skip-java-19 }}
+        if: "!inputs.skip-java-19"
         run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=19 -Djib.httpTimeout=120000 -Djib.console=plain

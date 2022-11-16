@@ -1,4 +1,9 @@
 {
+  "retryOn429" : true,
+  "aliveStatusCodes" : [
+    200,
+    403
+  ],
   "ignorePatterns" : [
     {
       "pattern" : "https://github.com/open-telemetry/opentelemetry-java-instrumentation/network/updates"
@@ -6,10 +11,5 @@
     {
       "pattern" : "^https://kotlinlang\\.org/docs/coroutines-overview\\.html$"
     }
-  ],
-  "retryOn429" : true,
-  "aliveStatusCodes" : [
-    200,
-    403
   ]
 }
