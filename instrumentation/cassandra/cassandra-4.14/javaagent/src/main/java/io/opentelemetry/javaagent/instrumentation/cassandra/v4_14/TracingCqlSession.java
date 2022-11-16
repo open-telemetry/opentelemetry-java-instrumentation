@@ -16,13 +16,16 @@ import io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraReques
 public class TracingCqlSession
     extends io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.TracingCqlSession {
 
+  private final CqlSession tracingSession;
+
   public TracingCqlSession(
       CqlSession session, Instrumenter<CassandraRequest, ExecutionInfo> instrumenter) {
     super(session, instrumenter);
+    tracingSession = session;
   }
 
   @Override
   public ReactiveResultSet executeReactive(Statement<?> statement) {
-    return new DefaultReactiveResultSet(() -> executeAsync(statement));
+    return new DefaultReactiveResultSet(() -> tracingSession.executeAsync(statement));
   }
 }
