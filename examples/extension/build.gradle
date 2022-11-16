@@ -28,6 +28,8 @@ ext {
     // these lines are managed by .github/scripts/update-version.sh
     opentelemetryJavaagent     : "1.20.0-SNAPSHOT",
     opentelemetryJavaagentAlpha: "1.20.0-alpha-SNAPSHOT",
+
+    junit                      : "5.9.1"
   ]
 
   deps = [
@@ -98,8 +100,8 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-api:${versions.opentelemetry}")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.1")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
   testRuntimeOnly("ch.qos.logback:logback-classic:1.4.4")
 
   //Otel Java instrumentation that we use and extend during integration tests
