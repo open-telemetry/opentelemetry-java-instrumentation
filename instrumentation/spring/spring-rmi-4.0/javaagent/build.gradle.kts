@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework")
     module.set("spring-context")
-    versions.set("[4.0.0.RELEASE,)")
+    versions.set("[4.0.0.RELEASE,6)")
   }
 }
 
@@ -20,6 +20,9 @@ dependencies {
   library("org.springframework:spring-context:4.0.0.RELEASE")
   library("org.springframework:spring-aop:4.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot:1.1.0.RELEASE")
+
+  latestDepTestLibrary("org.springframework:spring-context:5.+")
+  latestDepTestLibrary("org.springframework:spring-aop:5.+")
 }
 
 tasks.withType<Test>().configureEach {

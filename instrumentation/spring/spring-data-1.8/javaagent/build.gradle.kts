@@ -37,6 +37,7 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.0.0")
   testLibrary("org.hibernate:hibernate-entitymanager:4.3.0.Final")
 
+  latestDepTestLibrary("org.springframework:spring-test:5.+")
   latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+")
 }
 
