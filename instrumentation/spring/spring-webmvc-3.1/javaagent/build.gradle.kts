@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework")
     module.set("spring-webmvc")
-    versions.set("[3.1.0.RELEASE,]")
+    versions.set("[3.1.0.RELEASE,6)")
     // these versions depend on org.springframework:spring-web which has a bad dependency on
     // javax.faces:jsf-api:1.1 which was released as pom only
     skip("1.2.1", "1.2.2", "1.2.3", "1.2.4")

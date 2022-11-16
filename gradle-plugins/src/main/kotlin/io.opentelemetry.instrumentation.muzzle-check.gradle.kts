@@ -351,6 +351,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 
   for (version in filterVersions(allRangeResult, muzzleDirective.normalizedSkipVersions)) {
     val inverseDirective = objects.newInstance(MuzzleDirective::class).apply {
+      name.set(muzzleDirective.name)
       group.set(muzzleDirective.group)
       module.set(muzzleDirective.module)
       classifier.set(muzzleDirective.classifier)

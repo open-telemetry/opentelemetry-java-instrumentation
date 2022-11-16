@@ -51,6 +51,8 @@ dependencies {
     exclude("org.jboss.naming", "jnpserver")
   }
 
+  latestDepTestLibrary("org.springframework:spring-jms:5.+")
+
   // this is just to avoid a bit more copy-pasting
   add("testReceiveSpansDisabledImplementation", sourceSets["test"].output)
 }
