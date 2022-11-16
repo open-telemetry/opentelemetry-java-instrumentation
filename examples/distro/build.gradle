@@ -28,7 +28,6 @@ subprojects {
     versions = [
       // these lines are managed by .github/scripts/update-sdk-version.sh
       opentelemetry              : "1.20.1",
-      opentelemetryAlpha         : "1.18.0-alpha",
 
       // these lines are managed by .github/scripts/update-version.sh
       opentelemetryJavaagent     : "1.20.0-SNAPSHOT",
@@ -39,10 +38,10 @@ subprojects {
     ]
 
     deps = [
-      bytebuddy           : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
-      autoservice         : [
-              "com.google.auto.service:auto-service:${versions.autoservice}",
-              "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
+      bytebuddy  : "net.bytebuddy:byte-buddy-dep:${versions.bytebuddy}",
+      autoservice: [
+        "com.google.auto.service:auto-service:${versions.autoservice}",
+        "com.google.auto.service:auto-service-annotations:${versions.autoservice}",
       ]
     ]
   }
