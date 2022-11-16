@@ -7,20 +7,27 @@ Instrumentation annotations module is declared stable in this release
 
 ### Migration notes
 
-- Rename kafka propagation setting and clarify behavior
+- Renamed configuration property `otel.instrumentation.kafka.client-propagation.enabled` to
+  `otel.instrumentation.kafka.producer-propagation.enabled` and update code so that it only affects
+  producer propagation
   ([#6957](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6957))
-- Deprecate RocketMQ propagation setting
+- Deprecated RocketMQ configuration property `otel.instrumentation.rocketmq-client.propagation`
   ([#6958](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6958))
-- Add deprecation cycle for removed methods
+- Deprecated `HttpServerAttributesExtractor#create(HttpServerAttributesGetter)` and
+  `HttpServerAttributesExtractor#builder(HttpServerAttributesGetter)`
   ([#7020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7020))
+- Renamed annotation instrumentation property name for the recent
+  `opentelemetry-instrumentation-annotations` package from
+  `otel.instrumentation.opentelemetry-annotations.exclude-methods` to
+  `otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods`
+  ([#7196](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7196))
 
 ### 🌟 New javaagent instrumentation
 
 - OpenSearch 1.x and 2.x
   ([#6998](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6998))
-
-### 🌟 New library instrumentation
-
+- JMX Metric Insight
+  ([#6573](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6573))
 
 ### 📈 Enhancements
 
@@ -40,6 +47,15 @@ Instrumentation annotations module is declared stable in this release
   ([#7114](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7114))
 - Ignore Nashorn's class loader for performance reasons
   ([#7116](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7116))
+- Add gRPC library configuration for additionalServerExtractors
+  ([#7155](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7155))
+- Implement consumer part of rocketmq new client instrumentation
+  ([#7019](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7019))
+- Support cgroup v2
+  ([#7167](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7167))
+- Replace `runtime.jvm.gc.time` / `runtime.jvm.gc.count` metrics with
+  `process.runtime.jvm.gc.duration` histogram
+  ([#6964](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6964))
 
 ### 🛠️ Bug fixes
 
