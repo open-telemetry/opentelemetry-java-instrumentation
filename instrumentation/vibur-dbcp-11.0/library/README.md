@@ -4,7 +4,7 @@ Provides OpenTelemetry instrumentation for [Vibur DBCP](https://www.vibur.org/).
 
 ## Quickstart
 
-### Add these dependencies to your project:
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
 release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-vibur-dbcp-11.0).

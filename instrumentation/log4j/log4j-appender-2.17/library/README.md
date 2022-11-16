@@ -6,7 +6,7 @@ which forwards Log4j2 log events to the
 
 ## Quickstart
 
-### Add these dependencies to your project:
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
 release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-log4j-appender-2.17).

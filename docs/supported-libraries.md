@@ -8,10 +8,10 @@ or [contributing](../CONTRIBUTING.md).
 
 ## Contents
 
-  * [Libraries / Frameworks](#libraries--frameworks)
-  * [Application Servers](#application-servers)
-  * [JVMs and Operating Systems](#jvms-and-operating-systems)
-  * [Disabled instrumentations](#disabled-instrumentations)
+* [Libraries / Frameworks](#libraries--frameworks)
+* [Application Servers](#application-servers)
+* [JVMs and Operating Systems](#jvms-and-operating-systems)
+* [Disabled instrumentations](#disabled-instrumentations)
 
 ## Libraries / Frameworks
 
@@ -141,11 +141,9 @@ These are the supported libraries and frameworks:
 [RPC Server Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc-metrics.md#rpc-server
 [RPC Client Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc-metrics.md#rpc-client
 [Messaging Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md
-[Database Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/db.md
 [Database Pool Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/database-metrics.md
 [JVM Runtime Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics
 [System Metrics]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/system-metrics.md
-
 
 ## Application Servers
 

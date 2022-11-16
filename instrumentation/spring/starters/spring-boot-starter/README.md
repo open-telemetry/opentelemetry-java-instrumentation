@@ -6,10 +6,11 @@ This version is compatible with Spring Boot 2.0.
 
 ## Quickstart
 
-### Add these dependencies to your project.
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `1.1.0`
+
+- Minimum version: `1.1.0`
 
 ### Maven
 

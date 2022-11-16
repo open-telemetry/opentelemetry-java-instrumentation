@@ -1,7 +1,7 @@
 # Repository settings
 
 Repository settings in addition to what's documented already at
-https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md.
+<https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md>.
 
 ## General > Pull Requests
 

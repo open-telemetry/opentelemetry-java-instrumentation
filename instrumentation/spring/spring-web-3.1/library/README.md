@@ -4,7 +4,7 @@ Provides OpenTelemetry instrumentation for Spring's RestTemplate.
 
 ## Quickstart
 
-### Add these dependencies to your project.
+### Add these dependencies to your project
 
 Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 3.1`

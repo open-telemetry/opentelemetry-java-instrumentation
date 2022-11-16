@@ -17,7 +17,7 @@ Configuration:
 ![enable google format](https://user-images.githubusercontent.com/5099946/131759832-36437aa0-a5f7-42c0-9425-8c5b45c16765.png)
 
 Note: If google-java-format generates errors in Intellij,
-see https://github.com/google/google-java-format/issues/787#issuecomment-1200762464.
+see <https://github.com/google/google-java-format/issues/787#issuecomment-1200762464>.
 
 ## Troubleshooting
 

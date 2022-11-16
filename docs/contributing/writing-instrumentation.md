@@ -359,6 +359,7 @@ That way you can use these shared, globally available utilities to communicate b
 instrumentation modules.
 
 Some examples of this include:
+
 * Application server instrumentations communicating with Servlet API instrumentations.
 * Different high-level Kafka consumer instrumentations suppressing the low-level `kafka-clients`
   instrumentation.

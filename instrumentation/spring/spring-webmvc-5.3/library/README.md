@@ -4,10 +4,11 @@ Provides OpenTelemetry instrumentation for Spring WebMVC controllers.
 
 ## Quickstart
 
-### Add these dependencies to your project.
+### Add these dependencies to your project
 
 Replace `SPRING_VERSION` with the version of spring you're using.
- - `Minimum version: 5.3`
+
+- `Minimum version: 5.3`
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
 release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-spring-webmvc-5.3).

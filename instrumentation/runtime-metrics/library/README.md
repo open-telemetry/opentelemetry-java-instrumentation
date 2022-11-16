@@ -4,7 +4,7 @@ This module provides JVM runtime metrics as documented in the [semantic conventi
 
 ## Quickstart
 
-### Add these dependencies to your project:
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
 release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-runtime-metrics).

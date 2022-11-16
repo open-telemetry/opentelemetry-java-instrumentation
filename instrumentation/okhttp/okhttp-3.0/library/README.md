@@ -4,7 +4,7 @@ Provides OpenTelemetry instrumentation for [okhttp3](https://square.github.io/ok
 
 ## Quickstart
 
-### Add these dependencies to your project:
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
 release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-okhttp-3.0).
