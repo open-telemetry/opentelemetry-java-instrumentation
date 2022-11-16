@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id("com.bmuschko.docker-remote-api") version "9.0.0"
+    id("com.bmuschko.docker-remote-api") version "8.1.0"
     id("com.github.ben-manes.versions") version "0.44.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
     id("com.google.cloud.tools.jib") version "3.3.1"
