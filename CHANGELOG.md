@@ -2,6 +2,87 @@
 
 ## Unreleased
 
+Instrumentation annotations module is declared stable in this release
+(`io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.20.0`).
+
+### Migration notes
+
+- Renamed configuration property `otel.instrumentation.kafka.client-propagation.enabled` to
+  `otel.instrumentation.kafka.producer-propagation.enabled` and update code so that it only affects
+  producer propagation
+  ([#6957](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6957))
+- Deprecated RocketMQ configuration property `otel.instrumentation.rocketmq-client.propagation`
+  ([#6958](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6958))
+- Deprecated `HttpServerAttributesExtractor#create(HttpServerAttributesGetter)` and
+  `HttpServerAttributesExtractor#builder(HttpServerAttributesGetter)`
+  ([#7020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7020))
+- Renamed annotation instrumentation property name for the recent
+  `opentelemetry-instrumentation-annotations` package from
+  `otel.instrumentation.opentelemetry-annotations.exclude-methods` to
+  `otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods`
+  ([#7196](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7196))
+
+### 🌟 New javaagent instrumentation
+
+- OpenSearch 1.x and 2.x
+  ([#6998](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6998))
+- JMX Metric Insight
+  ([#6573](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6573))
+
+### 📈 Enhancements
+
+- Add meter version to runtime metrics
+  ([#6874](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6874))
+- Auto-detect service name based on the jar name
+  ([#6817](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6817))
+- okhttp: run our interceptor before other interceptors
+  ([#6997](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6997))
+- Implement producer part of RocketMQ new client instrumentation
+  ([#6884](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6884))
+- Ignore presto-jdbc shaded okhttp3 connection pool.
+  ([#7031](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7031))
+- Record memory usage after garbage collection
+  ([#6963](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6963))
+- Ignore trino shaded okhttp pool
+  ([#7114](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7114))
+- Ignore Nashorn's class loader for performance reasons
+  ([#7116](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7116))
+- Add gRPC library configuration for additionalServerExtractors
+  ([#7155](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7155))
+- Implement consumer part of rocketmq new client instrumentation
+  ([#7019](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7019))
+- Support cgroup v2
+  ([#7167](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7167))
+- Replace `runtime.jvm.gc.time` / `runtime.jvm.gc.count` metrics with
+  `process.runtime.jvm.gc.duration` histogram
+  ([#6964](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6964))
+
+### 🛠️ Bug fixes
+
+- End reactor-netty HTTP client span properly on `Mono#timeout()`
+  ([#6891](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6891))
+- Capture net.host.name for netty
+  ([#6892](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6892))
+- 6929 - fixing unit for runtime.jvm.gc.count
+  ([#6930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6930))
+- fix spring-webflux cast to PathPattern throws ClassCastException
+  ([#6872](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6872))
+- Fix metric units
+  ([#6931](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6931))
+- Fix RocketMQ ClassCastException on hook conflict
+  ([#6940](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6940))
+- Handle UnsupportedClassVersionError in ServiceLoader on jdk9
+  ([#7090](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7090))
+- Avoid NPE when DirectWithAttributesChannel class is not available
+  ([#7133](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7133))
+
+### 🧰 Tooling
+
+- Revert removing the mavenCentral repo from the muzzle check plugin
+  ([#6937](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6937))
+- Make java.sql classes available to the agent and extensions
+  ([#7038](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7038))
+
 ## Version 1.19.2 (2022-11-02)
 
 ### 🛠️ Bug fixes
