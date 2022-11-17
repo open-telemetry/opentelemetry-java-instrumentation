@@ -16,6 +16,8 @@ dependencies {
   // classes and packages to be imported. Versions 3.1.0+ work with the instrumentation.
   library("org.springframework:spring-context:3.1.0.RELEASE")
   testLibrary("org.springframework:spring-context:3.2.3.RELEASE")
+
+  latestDepTestLibrary("org.springframework:spring-context:5.+")
 }
 
 tasks.withType<Test>().configureEach {
