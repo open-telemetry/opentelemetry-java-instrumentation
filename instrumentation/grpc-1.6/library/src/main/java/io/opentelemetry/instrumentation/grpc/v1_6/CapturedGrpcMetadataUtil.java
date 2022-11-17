@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.common.AttributeKey;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
