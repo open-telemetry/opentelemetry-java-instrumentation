@@ -192,7 +192,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(
             new GrpcAttributesExtractor(
                 GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))
-        .addAttributesExtractors(additionalServerExtractors
+        .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get());
 
     if (peerService != null) {
