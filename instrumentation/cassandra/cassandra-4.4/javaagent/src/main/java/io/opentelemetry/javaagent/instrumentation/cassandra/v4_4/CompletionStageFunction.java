@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.cassandra.v4_14;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_14.CassandraSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_4.CassandraSingletons.instrumenter;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import java.util.function.Function;

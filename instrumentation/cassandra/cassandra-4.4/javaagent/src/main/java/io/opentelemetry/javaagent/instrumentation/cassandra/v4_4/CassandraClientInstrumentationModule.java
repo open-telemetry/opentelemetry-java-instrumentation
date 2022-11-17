@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.cassandra.v4_14;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
 import static java.util.Collections.singletonList;
 
@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class CassandraClientInstrumentationModule extends InstrumentationModule {
   public CassandraClientInstrumentationModule() {
-    super("cassandra", "cassandra-4.14");
+    super("cassandra", "cassandra-4.4");
   }
 
   @Override

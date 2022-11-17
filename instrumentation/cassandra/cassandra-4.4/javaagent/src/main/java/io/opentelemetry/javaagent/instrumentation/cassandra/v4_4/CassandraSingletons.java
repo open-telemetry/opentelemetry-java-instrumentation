@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.cassandra.v4_14;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -19,7 +19,7 @@ final class CassandraSingletons {
   static {
     CassandraTelemetry telemetry =
         CassandraTelemetry.builder(GlobalOpenTelemetry.get())
-            .setInstrumentationName("io.opentelemetry.cassandra-4.14")
+            .setInstrumentationName("io.opentelemetry.cassandra-4.4")
             .setStatementSanitizationEnabled(CommonConfig.get().isStatementSanitizationEnabled())
             .build();
 

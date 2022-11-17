@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.cassandra.v4_14;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
 import com.datastax.dse.driver.api.core.cql.reactive.ReactiveResultSet;
 import com.datastax.dse.driver.internal.core.cql.reactive.DefaultReactiveResultSet;
