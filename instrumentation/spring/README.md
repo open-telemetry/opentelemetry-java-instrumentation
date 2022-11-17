@@ -837,14 +837,14 @@ To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporte
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-zipkin-spring-boot-starter</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
-</dependency> 
+</dependency>
 
 <!-- opentelemetry starter with jaeger -->
 <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-jaeger-spring-boot-starter</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
-</dependency> 
+</dependency>
 ```
 
 #### Gradle
