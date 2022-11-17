@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.20.0 (2022-11-17)
+
 Instrumentation annotations module is declared stable in this release
 (`io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.20.0`).
 
