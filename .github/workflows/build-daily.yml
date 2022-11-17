@@ -30,6 +30,9 @@ jobs:
   markdown-link-check:
     uses: ./.github/workflows/reusable-markdown-link-check.yml
 
+  markdown-lint-check:
+    uses: ./.github/workflows/reusable-markdown-lint-check.yml
+
   misspell-check:
     uses: ./.github/workflows/reusable-misspell-check.yml
 

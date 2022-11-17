@@ -12,7 +12,7 @@ The [third section](#auto-instrumentation-using-spring-starters) with build on t
 
 In this guide we will be using a running example. In section one and two, we will create two spring web services using Spring Boot. We will then trace requests between these services using two different approaches. Finally, in section three we will explore tools documented in [opentelemetry-spring-boot-autoconfigure](./spring-boot-autoconfigure/README.md#features) which can improve this process.
 
-# Settings
+## Settings
 
 | System property | Type | Default | Description |
 |---|---|---|---|
@@ -21,20 +21,21 @@ In this guide we will be using a running example. In section one and two, we wil
 | `otel.instrumentation.spring-webflux.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Spring WebFlux version 5.0. |
 | `otel.instrumentation.spring-webmvc.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes for Spring Web MVC 3.1. |
 
-# Manual Instrumentation Guide
+## Manual Instrumentation Guide
 
-## Create two Spring Projects
+### Create two Spring Projects
 
 Using the [spring project initializer](https://start.spring.io/), we will create two spring projects.  Name one project `MainService` and the other `TimeService`. In this example `MainService` will be a client of `TimeService` and they will be dealing with time. Make sure to select maven, Spring Boot 2.3, Java, and add the spring-web dependency. After downloading the two projects include the OpenTelemetry dependencies and configuration listed below.
 
-## Setup for Manual Instrumentation
+### Setup for Manual Instrumentation
 
 Add the dependencies below to enable OpenTelemetry in `MainService` and `TimeService`. The Jaeger and LoggingExporter packages are recommended for exporting traces but are not required. As of May 2020, Jaeger, Zipkin, OTLP, and Logging exporters are supported by opentelemetry-java. Feel free to use whatever exporter you are most comfortable with.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `1.1.0`
 
-### Maven
+- Minimum version: `1.1.0`
+
+#### Maven
 
 #### OpenTelemetry
 
@@ -51,7 +52,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 </dependency>
 ```
 
-#### LoggingSpanExporter
+##### LoggingSpanExporter
 
 ```xml
 <dependency>
@@ -61,7 +62,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 </dependency>
 ```
 
-#### Jaeger Exporter
+##### Jaeger Exporter
 
 ```xml
 <dependency>
@@ -76,29 +77,29 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 </dependency>
 ```
 
-### Gradle
+#### Gradle
 
-#### OpenTelemetry
+##### OpenTelemetry
 
 ```gradle
 implementation("io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION")
 ```
 
-#### LoggingExporter
+##### LoggingExporter
 
 ```gradle
 implementation("io.opentelemetry:opentelemetry-exporter-logging:OPENTELEMETRY_VERSION")
 ```
 
-#### Jaeger Exporter
+##### Jaeger Exporter
 
 ```gradle
 implementation("io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION")
 compile "io.grpc:grpc-netty:1.30.2"
 ```
 
-### Tracer Configuration
+#### Tracer Configuration
 
 To enable tracing in your OpenTelemetry project configure a Tracer Bean. This bean will be auto wired to controllers to create and propagate spans. This can be seen in the `Tracer otelTracer()` method below. If you plan to use a trace exporter remember to also include it in this configuration class. In section 3 we will use an annotation to set up this configuration.
 
@@ -132,7 +133,6 @@ public class OtelConfig {
 }
 ```
 
-
 The file above configures an OpenTelemetry tracer and a span processor. The span processor builds a log exporter which will output spans to the console. Similarly, one could add another exporter, such as the `JaegerExporter`, to visualize traces on a different back-end. Similar to how the `LoggingExporter` is configured, a Jaeger configuration can be added to the `OtelConfig` class above.
 
 Sample configuration for a Jaeger Exporter:
@@ -147,12 +147,12 @@ SpanProcessor jaegerProcessor = SimpleSpanProcessor
 OpenTelemetrySdk.getTracerManagement().addSpanProcessor(jaegerProcessor);
 ```
 
-### Project Background
+#### Project Background
 
 Here we will create REST controllers for `MainService` and `TimeService`.
 `MainService` will send a GET request to `TimeService` to retrieve the current time. After this request is resolved, `MainService` then will append a message to time and return a string to the client.
 
-## Manual Instrumentation with Java SDK
+### Manual Instrumentation with Java SDK
 
 ### Add OpenTelemetry to MainService and TimeService
 
@@ -165,61 +165,61 @@ Required dependencies and configurations for MainService and TimeService project
 
 3. Ensure a Spring Boot main class was created by the Spring initializer
 
-```java
-@SpringBootApplication
-public class MainServiceApplication {
+   ```java
+   @SpringBootApplication
+   public class MainServiceApplication {
 
-   public static void main(String[] args) {
-      SpringApplication.run(MainServiceApplication.class, args);
+      public static void main(String[] args) {
+         SpringApplication.run(MainServiceApplication.class, args);
+      }
    }
-}
-```
+   ```
 
 4. Create a REST controller for MainService
 5. Create a span to wrap MainServiceController.message()
 
-```java
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+   ```java
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import org.springframework.web.bind.annotation.RestController;
 
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
+   import io.opentelemetry.context.Scope;
+   import io.opentelemetry.api.trace.Span;
+   import io.opentelemetry.api.trace.Tracer;
 
-import HttpUtils;
+   import HttpUtils;
 
-@RestController
-@RequestMapping(value = "/message")
-public class MainServiceController {
-   private static int requestCount = 1;
-   private static final String TIME_SERVICE_URL = "http://localhost:8081/time";
+   @RestController
+   @RequestMapping(value = "/message")
+   public class MainServiceController {
+      private static int requestCount = 1;
+      private static final String TIME_SERVICE_URL = "http://localhost:8081/time";
 
-   @Autowired
-   private Tracer tracer;
+      @Autowired
+      private Tracer tracer;
 
-   @Autowired
-   private HttpUtils httpUtils;
+      @Autowired
+      private HttpUtils httpUtils;
 
-   @GetMapping
-   public String message() {
-      Span span = tracer.spanBuilder("message").startSpan();
+      @GetMapping
+      public String message() {
+         Span span = tracer.spanBuilder("message").startSpan();
 
-      try (Scope scope = tracer.withSpan(span)) {
-         span.addEvent("Controller Entered");
-         span.setAttribute("timeservicecontroller.request.count", requestCount++);
-         return "Time Service says: " + httpUtils.callEndpoint(TIME_SERVICE_URL);
-      } catch (Exception e) {
-         span.setAttribute("error", true);
-         return "ERROR: I can't tell the time";
-      } finally {
-         span.addEvent("Exit Controller");
-         span.end();
+         try (Scope scope = tracer.withSpan(span)) {
+            span.addEvent("Controller Entered");
+            span.setAttribute("timeservicecontroller.request.count", requestCount++);
+            return "Time Service says: " + httpUtils.callEndpoint(TIME_SERVICE_URL);
+         } catch (Exception e) {
+            span.setAttribute("error", true);
+            return "ERROR: I can't tell the time";
+         } finally {
+            span.addEvent("Exit Controller");
+            span.end();
+         }
       }
    }
-}
-```
+   ```
 
 6. Configure `HttpUtils.callEndpoint` to inject span context into request. This is key to propagate the trace to the TimeService
 
@@ -275,26 +275,27 @@ public class HttpUtils {
   }
 }
 ```
+
 ### Instrumentation of TimeService
 
 1. Ensure OpenTelemetry dependencies are included
 2. Ensure an OpenTelemetry Tracer is configured
 3. Ensure a Spring Boot main class was created by the Spring initializer
 
-```java
-import java.io.IOException;
+   ```java
+   import java.io.IOException;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+   import org.springframework.boot.SpringApplication;
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
-public class TimeServiceApplication {
+   @SpringBootApplication
+   public class TimeServiceApplication {
 
-   public static void main(String[] args) {
-      SpringApplication.run(TimeServiceApplication.class, args);
+      public static void main(String[] args) {
+         SpringApplication.run(TimeServiceApplication.class, args);
+      }
    }
-}
-```
+   ```
 
 4. Create a REST controller for TimeService
 5. Start a span to wrap TimeServiceController.time()
@@ -344,7 +345,7 @@ After running Jaeger locally, navigate to the url below. Make sure to refresh th
 
 Run MainService and TimeService from command line or using an IDE. The end point of interest for MainService is `http://localhost:8080/message` and  `http://localhost:8081/time` for TimeService. Entering `localhost:8080/message` in a browser should call MainService and then TimeService, creating a trace.
 
-***Note: The default port for the Apache Tomcat is 8080. On localhost both MainService and TimeService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by MainServiceController.TIME_SERVICE_URL. ***
+***Note: The default port for the Apache Tomcat is 8080. On localhost both MainService and TimeService services will attempt to run on this port raising an error. To avoid this add `server.port=8081` to the resources/application.properties file. Ensure the port specified corresponds to port referenced by MainServiceController.TIME_SERVICE_URL.***
 
 Congrats, we just created a distributed service with OpenTelemetry!
 
@@ -601,8 +602,6 @@ To visualize this trace add a trace exporter to one or both of your applications
 
 To create a sample trace enter `localhost:8080/message` in a browser. This trace should include a span for MainService and a span for TimeService.
 
-
-
 ## Auto Instrumentation using Spring Starters
 
 In this tutorial we will create two SpringBoot applications (MainService and TimeService). We will
@@ -616,7 +615,8 @@ Zipkin.
 Add the following dependencies to your build file.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `1.1.0`
+
+- Minimum version: `1.1.0`
 
 #### Maven
 
@@ -703,8 +703,6 @@ server.port=8081
 
 Check out [OpenTelemetry Spring Boot AutoConfigure](spring-boot-autoconfigure/README.md) to learn more.
 
-
-
 ### TimeService
 
 Configure the main class in your `Time Service` project to match the file below. Here we use the Tracer bean provided by the OpenTelemetry starter to create an internal span and set some additional events and attributes.
@@ -759,7 +757,6 @@ public class TimeServiceApplication {
   }
 }
 ```
-
 
 ### Generating Trace - LoggingSpanExporter
 
@@ -828,7 +825,6 @@ status=Status{canonicalCode=OK, description=null}, name=WebMVCTracingFilter.doFi
 
 ```
 
-
 ### Exporter Starters
 
 To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporters replace the OpenTelemetry Spring Starter dependency with one of the artifacts listed below:
@@ -880,13 +876,13 @@ Add the following configurations to overwrite the default exporter values listed
 ### Sample Trace Zipkin
 
 To generate a trace using the zipkin exporter follow the steps below:
+
  1. Replace `opentelemetry-spring-boot-starter` with `opentelemetry-zipkin-spring-boot-starter` in your pom or gradle build file
  2. Use the Zipkin [quick starter](https://zipkin.io/pages/quickstart) to download and run the zipkin executable jar
     - Ensure the zipkin endpoint matches the default value listed in your application properties
  3. Run `MainServiceApplication.java` and `TimeServiceApplication.java`
  4. Use your favorite browser to send a request to `http://localhost:8080/message`
  5. Navigate to `http://localhost:9411` to see your trace
-
 
 Shown below is the sample trace generated by `MainService` and `TimeService` using the opentelemetry-zipkin-spring-boot-starter.
 

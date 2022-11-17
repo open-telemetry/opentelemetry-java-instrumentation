@@ -45,6 +45,11 @@ jobs:
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-markdown-link-check.yml
 
+  markdown-lint-check:
+    # release branches are excluded
+    if: ${{ !startsWith(github.ref_name, 'release/') }}
+    uses: ./.github/workflows/reusable-markdown-lint-check.yml
+
   misspell-check:
     # release branches are excluded to avoid unnecessary maintenance if new misspellings are added
     # to the misspell dictionary

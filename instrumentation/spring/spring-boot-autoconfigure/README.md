@@ -8,10 +8,11 @@ the [opentelemetry-spring-boot-starter](../starters/spring-boot-starter/README.m
 
 ## Quickstart
 
-### Add these dependencies to your project.
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `1.17.0`
+
+- Minimum version: `1.17.0`
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -60,10 +61,12 @@ implementation("io.opentelemetry:opentelemetry-exporters-otlp:OPENTELEMETRY_VERS
 The following dependencies are optional but are required to use the corresponding features.
 
 Replace `SPRING_VERSION` with the version of spring you're using.
- - Minimum version: `3.1`
+
+- Minimum version: `3.1`
 
 Replace `SPRING_WEBFLUX_VERSION` with the version of spring-webflux you're using.
- - Minimum version: `5.0`
+
+- Minimum version: `5.0`
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -145,7 +148,6 @@ implementation("io.opentelemetry:opentelemetry-extension-annotations:OPENTELEMET
 
 #### OpenTelemetry Auto Configuration
 
-
 #### OpenTelemetry Tracer Auto Configuration
 
 Provides a OpenTelemetry tracer bean (`io.opentelemetry.api.trace.Tracer`) if one does not exist in the application context of the spring project. This tracer bean will be used in all configurations listed below. Feel free to declare your own Opentelemetry tracer bean to overwrite this configuration.
@@ -219,6 +221,7 @@ public class TracedClass {
 The traces below were exported using Zipkin.
 
 ##### Spring Web MVC - Server Span
+
 ```json
    {
       "traceId":"0371febbbfa76b2e285a08b53a055d17",
@@ -380,7 +383,6 @@ public class OpenTelemetryConfig {}
 This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/jaeger), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
 
 If an exporter is present in the classpath during runtime and a spring bean of the exporter is missing from the spring application context. An exporter bean is initialized and added to a simple span processor in the active tracer provider. Check out the implementation [here](./src/main/java/io/opentelemetry/instrumentation/spring/autoconfigure/OpenTelemetryAutoConfiguration.java).
-
 
 #### Configuration Properties
 

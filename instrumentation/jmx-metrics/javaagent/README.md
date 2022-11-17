@@ -23,12 +23,12 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
 
 No targets are enabled by default. The supported target environments are listed below.
 
- - [activemq](activemq.md)
- - [jetty](jetty.md)
- - [kafka-broker](kafka-broker.md)
- - [tomcat](tomcat.md)
- - [wildfly](wildfly.md)
- - [hadoop](hadoop.md)
+- [activemq](activemq.md)
+- [jetty](jetty.md)
+- [kafka-broker](kafka-broker.md)
+- [tomcat](tomcat.md)
+- [wildfly](wildfly.md)
+- [hadoop](hadoop.md)
 
 ## Configuration File
 
@@ -44,6 +44,7 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
 ### Basic Syntax
 
 The configuration file can contain multiple entries (which we call _rules_), defining a number of metrics. Each rule must identify a set of MBeans and the name of the MBean attribute to query, along with additional information on how to report the values. Let's look at a simple example.
+
 ```yaml
 ---
 rules:
@@ -55,6 +56,7 @@ rules:
         desc: The current number of threads
         unit: 1
 ```
+
 MBeans are identified by unique [ObjectNames](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html). In the example above, the object name `java.lang:type=Threading` identifies one of the standard JVM MBeans, which can be used to access a number of internal JVM statistics related to threads. For that MBean, we specify its attribute `ThreadCount` which reflects the number of currently active (alive) threads. The values of this attribute will be reported by a metric named `my.own.jvm.thread.count`. The declared OpenTelemetry type of the metric is declared as `updowncounter` which indicates that the value is a sum which can go up or down over time. Metric description and/or unit can also be specified.
 
 All metrics reported by the service are backed by
@@ -68,6 +70,7 @@ To figure out what MBeans (or ObjectNames) and their attributes are available fo
 ### Composite Types
 
 The next example shows how the current heap size can be reported.
+
 ```yaml
 ---
 rules:
@@ -84,6 +87,7 @@ rules:
         desc: The maximum allowed heap size
         unit: By
 ```
+
 The MBean responsible for memory statistics, identified by ObjectName `java.lang:type=Memory` has an attribute named `HeapMemoryUsage`, which is of a `CompositeType`. This type represents a collection of fields with values (very much like the traditional `struct` data type). To access individual fields of the structure we use a dot which separates the MBean attribute name from the field name. The values are reported in bytes, which here we indicate by `By`. In the above example, the current heap size and the maximum allowed heap size will be reported as two metrics, named `my.own.jvm.heap.used`, and `my.own.jvm.heap.max`.
 
 ### Measurement Attributes
@@ -113,14 +117,15 @@ rules:
 The ObjectName pattern will match a number of MBeans, each for a different memory pool. The number and names of available memory pools, however, will be known only at runtime. To report values for all actual memory pools using only two metrics, we use metric attributes (referenced by the configuration file as `metricAttribute` elements). The first metric attribute, named `pool` will have its value derived from the ObjectName parameter `name` - which corresponds to the memory pool name. The second metric attribute, named `type` will get its value from the corresponding MBean attribute named `Type`. The values of this attribute are strings `HEAP` or `NON_HEAP` classifying the corresponding memory pool. Here the definition of the metric attributes is shared by both metrics, but it is also possible to define them at the individual metric level.
 
 Using the above rule, when running on HotSpot JVM for Java 11, the following combinations of metric attributes will be reported.
- - {pool="Compressed Class Space", type="NON_HEAP"}
- - {pool="CodeHeap 'non-profiled nmethods'", type="NON_HEAP"}
- - {pool="G1 Eden Space", type="HEAP"}
- - {pool="G1 Old Gen", type="HEAP"}
- - {pool="CodeHeap 'profiled nmethods'", type="NON_HEAP"}
- - {pool="Metaspace", type="NON_HEAP"}
- - {pool="CodeHeap 'non-nmethods'", type="NON_HEAP"}
- - {pool="G1 Survivor Space", type="HEAP"}
+
+- {pool="Compressed Class Space", type="NON_HEAP"}
+- {pool="CodeHeap 'non-profiled nmethods'", type="NON_HEAP"}
+- {pool="G1 Eden Space", type="HEAP"}
+- {pool="G1 Old Gen", type="HEAP"}
+- {pool="CodeHeap 'profiled nmethods'", type="NON_HEAP"}
+- {pool="Metaspace", type="NON_HEAP"}
+- {pool="CodeHeap 'non-nmethods'", type="NON_HEAP"}
+- {pool="G1 Survivor Space", type="HEAP"}
 
 **Note**: Heap and memory pool metrics above are given just as examples. The Java Agent already reports such metrics, no additional configuration is needed from the users.
 
@@ -149,6 +154,7 @@ rules:
         desc: The number of transmitted bytes
         unit: By
 ```
+
 The referenced MBean has two attributes of interest, `bytesReceived`, and `bytesSent`. We want them to be reported by just one metric, but keeping the values separate by using metric attribute `direction`. This is achieved by specifying the same metric name `catalina.traffic` when mapping the MBean attributes to metrics. There will be two metric attributes provided: `handler`, which has a shared definition, and `direction`, which has its value (`in` or `out`) declared directly as constants, depending on the MBean attribute providing the metric value.
 
 Keep in mind that when defining a metric multiple times like this, its type, unit and description must be exactly the same. Otherwise there will be complaints about attempts to redefine a metric in a non-compatible way.
@@ -206,6 +212,7 @@ rules:
       task-created-total:
       task-closed-total:
 ```
+
 Because we declared metric prefix (here `my.kafka.streams.`) and did not specify actual metric names, the metric names will be generated automatically, by appending the corresponding MBean attribute name to the prefix.
 Thus, the above definitions will create several metrics, named `my.kafka.streams.commit-latency-avg`, `my.kafka.streams.commit-latency-max`, and so on. For the first configuration rule, the default unit has been changed to `ms`, which remains in effect for all MBean attribute mappings listed within the rule, unless they define their own unit. Similarly, the second configuration rule defines the unit as `/s`, valid for all the rates reported.
 
@@ -247,6 +254,7 @@ rules:                                # start of list of configuration rules
         type: updowncounter           # optional
       <BEANATTR6>:                    # metric name will be <BEANATTR6>
 ```
+
 The following table explains the used terms with more details.
 
 | Syntactic Element | Description |

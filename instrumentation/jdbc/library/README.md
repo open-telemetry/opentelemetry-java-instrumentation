@@ -5,7 +5,7 @@ Provides OpenTelemetry instrumentation for
 
 ## Quickstart
 
-### Add these dependencies to your project:
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
 release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-jdbc).
@@ -65,14 +65,10 @@ public class DataSourceConfig {
 
 #### Driver way
 
-1. Activate tracing for JDBC connections by setting `jdbc:otel:` prefix to the JDBC URL:
-
-```
-jdbc:otel:h2:mem:test
-```
+1. Activate tracing for JDBC connections by setting `jdbc:otel:` prefix to the JDBC URL, e.g. `jdbc:otel:h2:mem:test`.
 
 2. Set the driver class to `io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver` and initialize the driver with:
 
-```java
-Class.forName("io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver");
-```
+  ```java
+  Class.forName("io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver");
+  ```

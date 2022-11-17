@@ -61,11 +61,11 @@ Different vendors will provide their own exporter here.
 There may be an option for users to bring their own (unshaded) OpenTelemetry Exporter
 and have the agent perform the required shading on the fly.
 
-#### Open Questions
+### Open Questions
 
 If there are multiple apps running in the same JVM, how to distinguish between them?
 
-#### Risks
+### Risks
 
 User code could cast OpenTelemetry API objects to the underlying OpenTelemetry SDK classes,
 which would throw ClassCastException if it finds the Versioned Bridge class instead.
@@ -86,7 +86,7 @@ The Java agent could check which version of the OpenTelemetry API was brought by
 and only apply the bytecode instrumentation if it's compatible
 with that version of the OpenTelemetry API.
 
-#### Advantages
+### Advantages
 
 Users who have performed programmatic configuration of the SDK / exporter
 do not lose that configuration.
@@ -94,7 +94,7 @@ do not lose that configuration.
 If there are multiple apps running in the same JVM, it's easy to distinguish them
 since they can each have their own SDK / exporter configuration.
 
-#### Disadvantages
+### Disadvantages
 
 Classes outside of the user app cannot be instrumented since those classes do not have access
 to the OpenTelemetry API brought by the user app. This includes classes brought by the JVM
@@ -114,11 +114,11 @@ This would work by having new server/consumer spans set the Class Loader Bridge
 so that instrumentation on all classes during that span would be able to look up the bridge
 and emit telemetry.
 
-#### Advantages
+### Advantages
 
 Same as Alternate Design 1 above
 
-#### Disadvantages
+### Disadvantages
 
 Bytecode instrumentation on classes outside of the user app cannot emit any telemetry
 if there is not already an active span. This includes classes brought by the JVM
@@ -130,4 +130,4 @@ and the application server (e.g. HttpServlet and other Java EE classes).
 [1] Shading dependencies is the process of including and renaming dependencies
 (thus relocating the classes & rewriting affected bytecode & resources)
 to create a private copy that you bundle alongside your own code
-(https://softwareengineering.stackexchange.com/questions/297276/what-is-a-shaded-java-dependency)
+(<https://softwareengineering.stackexchange.com/questions/297276/what-is-a-shaded-java-dependency>)

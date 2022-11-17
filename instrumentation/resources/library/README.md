@@ -9,18 +9,20 @@ common environments. Currently, the resources provide the following semantic con
 
 Provider: `io.opentelemetry.instrumentation.resources.ContainerResource`
 
-Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/container.md
+Specification: <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/container.md>
 
 Implemented attributes:
+
 - `container.id`
 
 ### Host
 
 Provider: `io.opentelemetry.instrumentation.resources.HostResource`
 
-Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/host.md
+Specification: <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/host.md>
 
 Implemented attributes:
+
 - `host.name`
 - `host.arch`
 
@@ -28,9 +30,10 @@ Implemented attributes:
 
 Provider: `io.opentelemetry.instrumentation.resources.OsResource`
 
-Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/os.md
+Specification: <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/os.md>
 
 Implemented attributes:
+
 - `os.type`
 - `os.description`
 
@@ -38,9 +41,10 @@ Implemented attributes:
 
 Implementation: `io.opentelemetry.instrumentation.resources.ProcessResource`
 
-Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/process.md#process
+Specification: <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/process.md#process>
 
 Implemented attributes:
+
 - `process.pid`
 - `process.executable.path` (note, we assume the `java` binary is located in the `bin` subfolder of `JAVA_HOME`)
 - `process.command_line` (note this includes all system properties and arguments when running)
@@ -49,9 +53,10 @@ Implemented attributes:
 
 Implementation: `io.opentelemetry.instrumentation.resources.ProcessRuntimeResource`
 
-Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/process.md#process-runtimes
+Specification: <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/process.md#process-runtimes>
 
 Implemented attributes:
+
 - `process.runtime.name`
 - `process.runtime.version`
 - `process.runtime.description`
