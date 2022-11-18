@@ -37,12 +37,12 @@ val DEPENDENCY_BOMS = listOf(
 )
 
 val autoServiceVersion = "1.0.1"
-val autoValueVersion = "1.10"
+val autoValueVersion = "1.10.1"
 val errorProneVersion = "2.16"
-val byteBuddyVersion = "1.12.18"
+val byteBuddyVersion = "1.12.19"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.9.0"
-val slf4jVersion = "2.0.2"
+val slf4jVersion = "2.0.4"
 
 val CORE_DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:${autoServiceVersion}",
@@ -73,7 +73,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "ch.qos.logback:logback-classic:1.3.1", // 1.4+ requires Java 11+
+  "ch.qos.logback:logback-classic:1.3.4", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",

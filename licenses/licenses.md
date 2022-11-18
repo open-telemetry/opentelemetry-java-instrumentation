@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2022-11-17 19:35:11 PST_
+_2022-11-18 08:34:48 PST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -155,10 +155,10 @@ _2022-11-17 19:35:11 PST_
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.23.2.jar/META-INF/LICENSE](zipkin-2.23.2.jar/META-INF/LICENSE)
 
-**35** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.12.18`
+**35** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.12.19`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.12.18.jar/META-INF/LICENSE](byte-buddy-dep-1.12.18.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.12.18.jar/META-INF/NOTICE](byte-buddy-dep-1.12.18.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.12.19.jar/META-INF/LICENSE](byte-buddy-dep-1.12.19.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.12.19.jar/META-INF/NOTICE](byte-buddy-dep-1.12.19.jar/META-INF/NOTICE)
 
 **36** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
@@ -201,11 +201,11 @@ _2022-11-17 19:35:11 PST_
 
 ## MIT License
 
-**44** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.2`
+**44** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.4`
 > - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
-**45** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.2`
+**45** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.4`
 > - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
