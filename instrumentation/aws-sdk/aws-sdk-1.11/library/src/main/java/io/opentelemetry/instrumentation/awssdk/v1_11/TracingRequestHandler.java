@@ -11,7 +11,6 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -33,6 +32,7 @@ final class TracingRequestHandler extends RequestHandler2 {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   public void beforeRequest(Request<?> request) {
     Context parentContext = Context.current();
     if (!requestInstrumenter.shouldStart(parentContext, request)) {
@@ -40,7 +40,8 @@ final class TracingRequestHandler extends RequestHandler2 {
     }
     Context context = requestInstrumenter.start(parentContext, request);
 
-    AwsXrayPropagator.getInstance().inject(context, request, HeaderSetter.INSTANCE);
+    io.opentelemetry.extension.aws.AwsXrayPropagator.getInstance()
+        .inject(context, request, HeaderSetter.INSTANCE);
 
     request.addHandlerContext(CONTEXT, context);
   }

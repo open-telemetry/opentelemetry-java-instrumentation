@@ -9,7 +9,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
 import org.apache.camel.Endpoint;
@@ -28,8 +27,9 @@ final class CamelPropagationUtil {
     return endpoint.getClass().getName().endsWith("SqsEndpoint");
   }
 
+  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   private static Context extractAwsPropagationParent(Map<String, Object> exchangeHeaders) {
-    return AwsXrayPropagator.getInstance()
+    return io.opentelemetry.extension.aws.AwsXrayPropagator.getInstance()
         .extract(
             Context.current(),
             Collections.singletonMap("X-Amzn-Trace-Id", exchangeHeaders.get("AWSTraceHeader")),
