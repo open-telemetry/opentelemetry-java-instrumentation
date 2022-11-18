@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2022-11-07 16:43:40 PST_
+_2022-11-18 11:33:55 CET_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -201,11 +201,11 @@ _2022-11-07 16:43:40 PST_
 
 ## MIT License
 
-**44** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.2`
+**44** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.4`
 > - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
-**45** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.2`
+**45** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.4`
 > - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
