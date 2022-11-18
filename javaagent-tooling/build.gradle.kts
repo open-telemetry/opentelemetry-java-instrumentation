@@ -23,7 +23,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-metrics")
   implementation("io.opentelemetry:opentelemetry-sdk-logs")
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
-  implementation("io.opentelemetry:opentelemetry-extension-aws")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
   implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
@@ -39,6 +38,8 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
+
+  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   api("net.bytebuddy:byte-buddy-dep")
 

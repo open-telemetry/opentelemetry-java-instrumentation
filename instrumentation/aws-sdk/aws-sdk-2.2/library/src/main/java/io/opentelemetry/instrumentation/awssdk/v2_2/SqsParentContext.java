@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.extension.aws.AwsXrayPropagator;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
 

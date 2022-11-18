@@ -23,7 +23,7 @@ dependencies {
   // Note that Lambda itself uses Jackson, but does not expose it to the function so we need to include it here.
   // TODO(anuraaga): Switch to aws-lambda-java-serialization to more robustly follow Lambda's serialization logic.
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("io.opentelemetry:opentelemetry-extension-aws")
+  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   // allows to get the function ARN
   testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")

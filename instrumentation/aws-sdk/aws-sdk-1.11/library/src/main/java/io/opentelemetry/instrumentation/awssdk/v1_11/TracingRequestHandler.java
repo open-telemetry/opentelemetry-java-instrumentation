@@ -11,7 +11,7 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.extension.aws.AwsXrayPropagator;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
 import javax.annotation.Nullable;

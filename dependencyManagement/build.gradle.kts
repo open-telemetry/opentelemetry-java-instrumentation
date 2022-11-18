@@ -48,6 +48,7 @@ val byteBuddyVersion = "1.12.18"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.9.0"
 val slf4jVersion = "2.0.2"
+val otelContribVersion = "1.20.0"
 
 val CORE_DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:${autoServiceVersion}",
@@ -94,6 +95,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
   "org.assertj:assertj-core:3.23.1",
   "org.awaitility:awaitility:4.2.0",
