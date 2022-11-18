@@ -23,16 +23,19 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
+val byteBuddyVersion = "1.12.19"
+val aetherVersion = "1.1.0"
+
 dependencies {
   implementation("com.google.guava:guava:31.1-jre")
   // we need to use byte buddy variant that does not shade asm
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.19") {
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")
   }
-  implementation("net.bytebuddy:byte-buddy-dep:1.12.19")
+  implementation("net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}")
 
-  implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
-  implementation("org.eclipse.aether:aether-transport-http:1.1.0")
+  implementation("org.eclipse.aether:aether-connector-basic:${aetherVersion}")
+  implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
