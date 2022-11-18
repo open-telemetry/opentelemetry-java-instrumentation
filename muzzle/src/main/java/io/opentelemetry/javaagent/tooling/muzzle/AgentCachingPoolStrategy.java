@@ -251,7 +251,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   private static final class SharedResolutionCacheAdapter implements TypePool.CacheProvider {
     private static final String OBJECT_NAME = "java.lang.Object";
     private static final TypePool.Resolution OBJECT_RESOLUTION =
-        new TypePool.Resolution.Simple(TypeDescription.OBJECT);
+        new TypePool.Resolution.Simple(TypeDescription.ForLoadedType.of(Object.class));
 
     private final int loaderHash;
     private final WeakReference<ClassLoader> loaderRef;
