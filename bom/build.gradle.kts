@@ -10,10 +10,8 @@ javaPlatform {
   allowDependencies()
 }
 
-val otelVersion: String by project
-
 dependencies {
-  api(platform("io.opentelemetry:opentelemetry-bom:${otelVersion}"))
+  api(platform("io.opentelemetry:opentelemetry-bom"))
 }
 
 otelBom.projectFilter.set { it.findProperty("otel.stable") == "true" }

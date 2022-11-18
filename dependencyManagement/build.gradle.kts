@@ -11,11 +11,6 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-// this line is managed by .github/scripts/update-sdk-version.sh
-val otelVersion = "1.19.0"
-
-rootProject.extra["otelVersion"] = otelVersion
-
 // Need both BOM and groovy jars
 val groovyVersion = "4.0.6"
 
@@ -34,8 +29,8 @@ val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.14.0",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:${otelVersion}",
-  "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
+  "io.opentelemetry:opentelemetry-bom:1.20.1",
+  "io.opentelemetry:opentelemetry-bom-alpha:1.20.1-alpha",
   "org.junit:junit-bom:5.9.1",
   "org.testcontainers:testcontainers-bom:1.17.6",
   "org.spockframework:spock-bom:2.3-groovy-4.0"
