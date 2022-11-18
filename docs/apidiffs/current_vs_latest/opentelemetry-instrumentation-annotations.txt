@@ -1,20 +1,2 @@
 Comparing source compatibility of  against 
-+++  NEW ANNOTATION: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.annotations.SpanAttribute  (not serializable)
-	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
-	+++  NEW INTERFACE: java.lang.annotation.Annotation
-	+++  NEW SUPERCLASS: java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String value()
-	+++  NEW ANNOTATION: java.lang.annotation.Target
-		+++  NEW ELEMENT: value=java.lang.annotation.ElementType.PARAMETER (+)
-	+++  NEW ANNOTATION: java.lang.annotation.Retention
-		+++  NEW ELEMENT: value=java.lang.annotation.RetentionPolicy.RUNTIME (+)
-+++  NEW ANNOTATION: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.annotations.WithSpan  (not serializable)
-	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
-	+++  NEW INTERFACE: java.lang.annotation.Annotation
-	+++  NEW SUPERCLASS: java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) io.opentelemetry.api.trace.SpanKind kind()
-	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String value()
-	+++  NEW ANNOTATION: java.lang.annotation.Target
-		+++  NEW ELEMENT: value=java.lang.annotation.ElementType.METHOD,java.lang.annotation.ElementType.CONSTRUCTOR (+)
-	+++  NEW ANNOTATION: java.lang.annotation.Retention
-		+++  NEW ELEMENT: value=java.lang.annotation.RetentionPolicy.RUNTIME (+)
+No changes.
