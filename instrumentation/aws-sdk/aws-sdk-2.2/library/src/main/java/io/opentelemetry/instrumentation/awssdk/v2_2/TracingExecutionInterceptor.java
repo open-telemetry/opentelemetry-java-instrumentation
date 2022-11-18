@@ -124,6 +124,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
     SdkHttpRequest httpRequest = context.httpRequest();

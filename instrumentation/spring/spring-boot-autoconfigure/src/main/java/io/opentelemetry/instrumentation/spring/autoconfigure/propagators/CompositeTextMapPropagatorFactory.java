@@ -27,6 +27,7 @@ public final class CompositeTextMapPropagatorFactory {
   private static final Logger logger =
       Logger.getLogger(CompositeTextMapPropagatorFactory.class.getName());
 
+  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   static TextMapPropagator getCompositeTextMapPropagator(
       BeanFactory beanFactory, List<String> types) {
 

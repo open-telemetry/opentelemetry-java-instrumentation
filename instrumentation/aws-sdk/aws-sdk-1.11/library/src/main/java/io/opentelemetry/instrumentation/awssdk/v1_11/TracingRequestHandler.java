@@ -33,6 +33,7 @@ final class TracingRequestHandler extends RequestHandler2 {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   public void beforeRequest(Request<?> request) {
     Context parentContext = Context.current();
     if (!requestInstrumenter.shouldStart(parentContext, request)) {
