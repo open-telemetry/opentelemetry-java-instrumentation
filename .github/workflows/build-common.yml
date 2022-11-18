@@ -126,8 +126,8 @@ jobs:
             echo "No diff detected."
           else
             echo "Diff detected - did you run './gradlew jApiCmp'?"
-            echo $(git diff --name-only)
-            echo $(git diff)
+            echo $(git diff --cached --name-only)
+            echo $(git diff --cached)
             exit 1
           fi
 
