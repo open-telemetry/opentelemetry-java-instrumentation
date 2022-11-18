@@ -25,6 +25,10 @@ updates:
     # need to scope gradle dependency updates down in this repo because most of the instrumentations
     # intentionally test against old library versions
     directory: "/dependencyManagement"
+    ignore:
+      - dependency-name: "ch.qos.logback:logback-classic"
+        # logback 1.4+ requires Java 11
+        versions: [ "[1.4,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
