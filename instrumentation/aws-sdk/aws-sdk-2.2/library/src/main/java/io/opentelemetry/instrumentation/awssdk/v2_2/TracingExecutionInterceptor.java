@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYN
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
@@ -124,6 +123,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
     SdkHttpRequest httpRequest = context.httpRequest();
@@ -134,7 +134,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkHttpRequest.Builder builder = httpRequest.toBuilder();
-    AwsXrayPropagator.getInstance().inject(otelContext, builder, RequestHeaderSetter.INSTANCE);
+    io.opentelemetry.extension.aws.AwsXrayPropagator.getInstance()
+        .inject(otelContext, builder, RequestHeaderSetter.INSTANCE);
     return builder.build();
   }
 

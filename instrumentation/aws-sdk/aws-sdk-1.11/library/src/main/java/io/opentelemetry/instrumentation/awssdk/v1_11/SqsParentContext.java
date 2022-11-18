@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
 
@@ -29,9 +28,10 @@ final class SqsParentContext {
 
   static final String AWS_TRACE_SYSTEM_ATTRIBUTE = "AWSTraceHeader";
 
+  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   static Context ofSystemAttributes(Map<String, String> systemAttributes) {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
-    return AwsXrayPropagator.getInstance()
+    return io.opentelemetry.extension.aws.AwsXrayPropagator.getInstance()
         .extract(
             Context.root(),
             Collections.singletonMap("X-Amzn-Trace-Id", traceHeader),
