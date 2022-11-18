@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.20.1 (2022-11-18)
 
 ### 📈 Enhancements
 
