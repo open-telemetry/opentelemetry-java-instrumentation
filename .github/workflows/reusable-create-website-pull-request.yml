@@ -43,7 +43,7 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           # TODO (trask) this will need to be updated when instrumentation-annotations are stable
-          sed -Ei "s/^javaAnnotationsVersion: [0-9.]+-alpha$/javaAnnotationsVersion: ${VERSION}-alpha/" content/en/docs/instrumentation/java/automatic/annotations.md
+          sed -Ei "s/^javaAnnotationsVersion: [0-9.]+$/javaAnnotationsVersion: ${VERSION}/" content/en/docs/instrumentation/java/automatic/annotations.md
 
       - name: Use CLA approved github bot
         run: |
