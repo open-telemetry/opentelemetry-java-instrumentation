@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## Version 1.20.1 (2022-11-19)
+
+### 📈 Enhancements
+
+- Update SDK version from 1.19.0 to 1.20.1
+  ([#7223](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7223))
+
 ## Version 1.20.0 (2022-11-17)
 
 Instrumentation annotations module is declared stable in this release
