@@ -46,6 +46,7 @@ import org.apache.rocketmq.client.apis.consumer.PushConsumer;
 import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
+import org.apache.rocketmq.client.java.impl.ClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -102,6 +103,7 @@ public abstract class AbstractRocketMqClientTest {
     }
     if (consumer != null) {
       // Not calling consumer.close(); because it takes a lot of time to complete
+      ((ClientImpl) consumer).stopAsync();
     }
     container.close();
   }
