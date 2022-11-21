@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYN
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
@@ -134,8 +135,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkHttpRequest.Builder builder = httpRequest.toBuilder();
-    io.opentelemetry.extension.aws.AwsXrayPropagator.getInstance()
-        .inject(otelContext, builder, RequestHeaderSetter.INSTANCE);
+    AwsXrayPropagator.getInstance().inject(otelContext, builder, RequestHeaderSetter.INSTANCE);
     return builder.build();
   }
 

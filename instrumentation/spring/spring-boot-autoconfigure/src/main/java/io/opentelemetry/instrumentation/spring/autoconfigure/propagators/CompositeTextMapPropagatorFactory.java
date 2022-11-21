@@ -10,6 +10,7 @@ import static java.util.logging.Level.WARNING;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extension.trace.propagation.OtTracePropagator;
@@ -67,11 +68,11 @@ public final class CompositeTextMapPropagatorFactory {
           }
           break;
         case "xray":
-          if (isOnClasspath("io.opentelemetry.extension.aws.AwsXrayPropagator")) {
+          if (isOnClasspath("io.opentelemetry.contrib.awsxray.AwsXrayPropagator")) {
             propagators.add(
                 beanFactory
-                    .getBeanProvider(io.opentelemetry.extension.aws.AwsXrayPropagator.class)
-                    .getIfAvailable(io.opentelemetry.extension.aws.AwsXrayPropagator::getInstance));
+                    .getBeanProvider(AwsXrayPropagator.class)
+                    .getIfAvailable(AwsXrayPropagator::getInstance));
           }
           break;
         case "tracecontext":

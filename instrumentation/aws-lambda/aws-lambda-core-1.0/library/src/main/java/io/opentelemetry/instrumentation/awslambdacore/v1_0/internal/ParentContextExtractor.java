@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
@@ -53,9 +54,8 @@ public final class ParentContextExtractor {
   // lower-case map getter used for extraction
   static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
-  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   public static Context fromXrayHeader(String parentHeader) {
-    return io.opentelemetry.extension.aws.AwsXrayPropagator.getInstance()
+    return AwsXrayPropagator.getInstance()
         .extract(
             // see BaseTracer#extract() on why we're using root() here
             Context.root(),

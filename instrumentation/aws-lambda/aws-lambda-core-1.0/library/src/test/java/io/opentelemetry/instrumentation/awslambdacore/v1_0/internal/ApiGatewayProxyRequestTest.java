@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,14 +42,11 @@ class ApiGatewayProxyRequestTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   public void shouldCreateNoopRequestIfXrayPropagatorsSet() throws IOException {
     // given
     InputStream mock = mock(InputStream.class);
     GlobalOpenTelemetry.set(
-        OpenTelemetry.propagating(
-            ContextPropagators.create(
-                io.opentelemetry.extension.aws.AwsXrayPropagator.getInstance())));
+        OpenTelemetry.propagating(ContextPropagators.create(AwsXrayPropagator.getInstance())));
     // when
     ApiGatewayProxyRequest created = ApiGatewayProxyRequest.forStream(mock);
     // then
