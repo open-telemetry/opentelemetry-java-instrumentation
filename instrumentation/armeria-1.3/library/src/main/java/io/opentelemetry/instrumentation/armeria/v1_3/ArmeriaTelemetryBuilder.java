@@ -24,7 +24,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
@@ -47,7 +46,8 @@ public final class ArmeriaTelemetryBuilder {
 
   private final HttpClientAttributesExtractorBuilder<RequestContext, RequestLog>
       httpClientAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
+          HttpClientAttributesExtractor.builder(
+              ArmeriaHttpClientAttributesGetter.INSTANCE, new ArmeriaNetClientAttributesGetter());
   private final HttpServerAttributesExtractorBuilder<RequestContext, RequestLog>
       httpServerAttributesExtractorBuilder =
           HttpServerAttributesExtractor.builder(
@@ -166,16 +166,10 @@ public final class ArmeriaTelemetryBuilder {
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));
 
-    ArmeriaNetClientAttributesGetter netClientAttributesGetter =
-        new ArmeriaNetClientAttributesGetter();
-    NetClientAttributesExtractor<RequestContext, RequestLog> netClientAttributesExtractor =
-        NetClientAttributesExtractor.create(netClientAttributesGetter);
-
     clientInstrumenterBuilder
         .setSpanStatusExtractor(
             statusExtractorTransformer.apply(
                 HttpSpanStatusExtractor.create(clientAttributesGetter)))
-        .addAttributesExtractor(netClientAttributesExtractor)
         .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
         .addAttributesExtractors(additionalClientExtractors)
         .addOperationMetrics(HttpClientMetrics.get());

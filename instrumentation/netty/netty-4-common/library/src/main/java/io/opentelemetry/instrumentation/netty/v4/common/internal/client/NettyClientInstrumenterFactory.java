@@ -54,21 +54,17 @@ public final class NettyClientInstrumenterFactory {
       List<String> capturedResponseHeaders,
       List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
           additionalHttpAttributeExtractors) {
-    NettyHttpClientAttributesGetter httpClientAttributesGetter =
-        new NettyHttpClientAttributesGetter();
+    NettyHttpClientAttributesGetter httpAttributesGetter = new NettyHttpClientAttributesGetter();
     NettyNetClientAttributesGetter netAttributesGetter = new NettyNetClientAttributesGetter();
 
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
-            openTelemetry,
-            instrumentationName,
-            HttpSpanNameExtractor.create(httpClientAttributesGetter))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesGetter))
+            openTelemetry, instrumentationName, HttpSpanNameExtractor.create(httpAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(
-            HttpClientAttributesExtractor.builder(httpClientAttributesGetter)
+            HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                 .setCapturedRequestHeaders(capturedRequestHeaders)
                 .setCapturedResponseHeaders(capturedResponseHeaders)
                 .build())
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractor(
             PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping))
         .addAttributesExtractors(additionalHttpAttributeExtractors)

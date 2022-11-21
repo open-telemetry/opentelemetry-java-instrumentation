@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpResponse;
@@ -30,7 +29,9 @@ public final class ApacheHttpClientTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<ApacheHttpClientRequest, HttpResponse>
       httpAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(ApacheHttpClientHttpAttributesGetter.INSTANCE);
+          HttpClientAttributesExtractor.builder(
+              ApacheHttpClientHttpAttributesGetter.INSTANCE,
+              new ApacheHttpClientNetAttributesGetter());
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -77,8 +78,6 @@ public final class ApacheHttpClientTelemetryBuilder {
   public ApacheHttpClientTelemetry build() {
     ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
         ApacheHttpClientHttpAttributesGetter.INSTANCE;
-    ApacheHttpClientNetAttributesGetter netAttributesGetter =
-        new ApacheHttpClientNetAttributesGetter();
 
     Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
@@ -87,7 +86,6 @@ public final class ApacheHttpClientTelemetryBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             // We manually inject because we need to inject internal requests for redirects.
             .buildInstrumenter(SpanKindExtractor.alwaysClient());

@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -21,8 +22,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 class HttpServerAttributesExtractorTest {
 
@@ -246,5 +253,33 @@ class HttpServerAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.NET_HOST_NAME, "thehost"),
             entry(SemanticAttributes.NET_HOST_PORT, 777L));
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(DefaultHostPortArgumentSource.class)
+  void defaultHostPort(int hostPort, String scheme) {
+    Map<String, Object> request = new HashMap<>();
+    request.put("scheme", scheme);
+    request.put("hostPort", hostPort);
+
+    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+        HttpServerAttributesExtractor.builder(
+                new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
+            .setCapturedRequestHeaders(emptyList())
+            .setCapturedResponseHeaders(emptyList())
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build()).doesNotContainKey(SemanticAttributes.NET_HOST_PORT);
+  }
+
+  static class DefaultHostPortArgumentSource implements ArgumentsProvider {
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return Stream.of(arguments(80, "http"), arguments(443, "https"));
+    }
   }
 }

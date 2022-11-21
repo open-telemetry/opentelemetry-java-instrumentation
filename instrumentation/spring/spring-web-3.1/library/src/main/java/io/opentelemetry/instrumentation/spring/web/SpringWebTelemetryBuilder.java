@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpRequest;
@@ -29,7 +28,8 @@ public final class SpringWebTelemetryBuilder {
       new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<HttpRequest, ClientHttpResponse>
       httpAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(SpringWebHttpAttributesGetter.INSTANCE);
+          HttpClientAttributesExtractor.builder(
+              SpringWebHttpAttributesGetter.INSTANCE, new SpringWebNetAttributesGetter());
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -74,7 +74,6 @@ public final class SpringWebTelemetryBuilder {
    */
   public SpringWebTelemetry build() {
     SpringWebHttpAttributesGetter httpAttributeGetter = SpringWebHttpAttributesGetter.INSTANCE;
-    SpringWebNetAttributesGetter netAttributesGetter = new SpringWebNetAttributesGetter();
 
     Instrumenter<HttpRequest, ClientHttpResponse> instrumenter =
         Instrumenter.<HttpRequest, ClientHttpResponse>builder(
@@ -83,7 +82,6 @@ public final class SpringWebTelemetryBuilder {
                 HttpSpanNameExtractor.create(httpAttributeGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
             .buildClientInstrumenter(HttpRequestSetter.INSTANCE);

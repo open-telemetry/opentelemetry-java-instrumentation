@@ -11,6 +11,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.function.BiPredicate;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -18,16 +19,22 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class InternalNetServerAttributesExtractor {
+public final class InternalNetServerAttributesExtractor<REQUEST> {
 
   private static final Logger logger =
       Logger.getLogger(InternalNetServerAttributesExtractor.class.getName());
 
-  public static <REQUEST> void onStart(
+  private final NetServerAttributesGetter<REQUEST> getter;
+  private final BiPredicate<Integer, REQUEST> netHostPortCondition;
+
+  public InternalNetServerAttributesExtractor(
       NetServerAttributesGetter<REQUEST> getter,
-      AttributesBuilder attributes,
-      REQUEST request,
-      @Nullable String hostHeader) {
+      BiPredicate<Integer, REQUEST> netHostPortCondition) {
+    this.getter = getter;
+    this.netHostPortCondition = netHostPortCondition;
+  }
+
+  public void onStart(AttributesBuilder attributes, REQUEST request, @Nullable String hostHeader) {
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request));
 
     boolean setSockFamily = false;
@@ -66,7 +73,7 @@ public class InternalNetServerAttributesExtractor {
     if (hostName != null) {
       internalSet(attributes, SemanticAttributes.NET_HOST_NAME, hostName);
 
-      if (hostPort != null && hostPort > 0) {
+      if (hostPort != null && hostPort > 0 && netHostPortCondition.test(hostPort, request)) {
         internalSet(attributes, SemanticAttributes.NET_HOST_PORT, (long) hostPort);
       }
     }
@@ -90,6 +97,4 @@ public class InternalNetServerAttributesExtractor {
       }
     }
   }
-
-  private InternalNetServerAttributesExtractor() {}
 }

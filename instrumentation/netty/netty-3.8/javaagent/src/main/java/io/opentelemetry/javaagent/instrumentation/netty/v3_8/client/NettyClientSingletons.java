@@ -30,25 +30,23 @@ public final class NettyClientSingletons {
   private static final Instrumenter<NettyConnectionRequest, Channel> CONNECTION_INSTRUMENTER;
 
   static {
-    NettyHttpClientAttributesGetter httpClientAttributesGetter =
-        new NettyHttpClientAttributesGetter();
-    NettyNetClientAttributesGetter netClientAttributesGetter = new NettyNetClientAttributesGetter();
+    NettyHttpClientAttributesGetter httpAttributesGetter = new NettyHttpClientAttributesGetter();
+    NettyNetClientAttributesGetter netAttributesGetter = new NettyNetClientAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.create(httpClientAttributesGetter))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesGetter))
+                HttpSpanNameExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpClientAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .build())
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netClientAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addOperationMetrics(HttpClientMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
@@ -56,12 +54,11 @@ public final class NettyClientSingletons {
 
     NettyConnectNetAttributesGetter nettyConnectAttributesGetter =
         new NettyConnectNetAttributesGetter();
-    NetClientAttributesExtractor<NettyConnectionRequest, Channel> nettyConnectAttributesExtractor =
-        NetClientAttributesExtractor.create(nettyConnectAttributesGetter);
     CONNECTION_INSTRUMENTER =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NettyConnectionRequest::spanName)
-            .addAttributesExtractor(nettyConnectAttributesExtractor)
+            .addAttributesExtractor(
+                NetClientAttributesExtractor.create(nettyConnectAttributesGetter))
             .addAttributesExtractor(HttpClientSpanKeyAttributesExtractor.INSTANCE)
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(

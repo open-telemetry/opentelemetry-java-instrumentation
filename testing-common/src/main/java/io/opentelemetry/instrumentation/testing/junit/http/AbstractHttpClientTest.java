@@ -941,23 +941,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                 if (attrs.get(SemanticAttributes.NET_PEER_NAME) != null) {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
                 }
+                // TODO: once httpClientAttributes test knob is used, verify default port values
                 if (attrs.get(SemanticAttributes.NET_PEER_PORT) != null) {
-                  if (uri.getPort() > 0) {
-                    assertThat(attrs)
-                        .containsEntry(SemanticAttributes.NET_PEER_PORT, (long) uri.getPort());
-                  } else {
-                    // https://192.0.2.1/ where some instrumentation may have set this to 443, but
-                    // not all.
-                    assertThat(attrs)
-                        .hasEntrySatisfying(
-                            SemanticAttributes.NET_PEER_PORT,
-                            port -> {
-                              // Some instrumentation seem to set NET_PEER_PORT to -1 incorrectly.
-                              if (port > 0) {
-                                assertThat(port).isEqualTo(options.testHttps ? 443 : 80);
-                              }
-                            });
-                  }
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
                 }
 
                 // In these cases the peer connection is not established, so the HTTP client should
@@ -974,7 +960,13 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
                 }
                 if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
+                  int uriPort = uri.getPort();
+                  // default values are ignored
+                  if (uriPort <= 0 || uriPort == 80 || uriPort == 443) {
+                    assertThat(attrs).doesNotContainKey(SemanticAttributes.NET_PEER_PORT);
+                  } else {
+                    assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uriPort);
+                  }
                 }
 
                 // TODO: Move to test knob rather than always treating as optional

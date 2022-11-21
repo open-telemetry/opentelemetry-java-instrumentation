@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
 import java.util.Arrays;
 import java.util.List;
@@ -22,29 +21,23 @@ final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
   static final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
-  static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> httpAttributesExtractor =
-      HttpClientAttributesExtractor.create(httpAttributesGetter);
-  static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
   private static final AwsSdkNetAttributesGetter netAttributesGetter =
       new AwsSdkNetAttributesGetter();
-  private static final NetClientAttributesExtractor<ExecutionAttributes, SdkHttpResponse>
-      netAttributesExtractor = NetClientAttributesExtractor.create(netAttributesGetter);
+  static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> httpAttributesExtractor =
+      HttpClientAttributesExtractor.create(httpAttributesGetter, netAttributesGetter);
+  static final AttributesExtractor<ExecutionAttributes, SdkHttpResponse> rpcAttributesExtractor =
+      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
   private static final AwsSdkSpanKindExtractor spanKindExtractor = new AwsSdkSpanKindExtractor();
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
-      defaultAttributesExtractors =
-          Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor, netAttributesExtractor);
+      defaultAttributesExtractors = Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, SdkHttpResponse>>
       extendedAttributesExtractors =
           Arrays.asList(
-              httpAttributesExtractor,
-              rpcAttributesExtractor,
-              netAttributesExtractor,
-              experimentalAttributesExtractor);
+              httpAttributesExtractor, rpcAttributesExtractor, experimentalAttributesExtractor);
 
   static Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter(
       OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {

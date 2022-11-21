@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final NetServerAttributesGetter<REQUEST> getter;
+  private final InternalNetServerAttributesExtractor<REQUEST> internalExtractor;
 
   public static <REQUEST, RESPONSE> NetServerAttributesExtractor<REQUEST, RESPONSE> create(
       NetServerAttributesGetter<REQUEST> getter) {
@@ -28,12 +28,13 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private NetServerAttributesExtractor(NetServerAttributesGetter<REQUEST> getter) {
-    this.getter = getter;
+    internalExtractor =
+        new InternalNetServerAttributesExtractor<>(getter, (integer, request) -> true);
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    InternalNetServerAttributesExtractor.onStart(getter, attributes, request, null);
+    internalExtractor.onStart(attributes, request, null);
   }
 
   @Override
