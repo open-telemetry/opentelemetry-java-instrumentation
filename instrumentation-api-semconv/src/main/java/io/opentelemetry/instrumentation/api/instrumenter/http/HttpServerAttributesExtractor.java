@@ -36,35 +36,11 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, HttpServerAttributesGetter<REQUEST, RESPONSE>>
     implements SpanKeyProvider {
 
-  /**
-   * Creates the HTTP server attributes extractor with default configuration.
-   *
-   * @deprecated Use {@link #create(HttpServerAttributesGetter, NetServerAttributesGetter)} instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return create(httpAttributesGetter, new NoopNetServerAttributesGetter<>());
-  }
-
   /** Creates the HTTP server attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractor<REQUEST, RESPONSE> create(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetServerAttributesGetter<REQUEST> netAttributesGetter) {
     return builder(httpAttributesGetter, netAttributesGetter).build();
-  }
-
-  /**
-   * Returns a new {@link HttpServerAttributesExtractorBuilder} that can be used to configure the
-   * HTTP client attributes extractor.
-   *
-   * @deprecated Use {@link #builder(HttpServerAttributesGetter, NetServerAttributesGetter)}
-   *     instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return builder(httpAttributesGetter, new NoopNetServerAttributesGetter<>());
   }
 
   /**
@@ -185,27 +161,5 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_SERVER;
-  }
-
-  private static class NoopNetServerAttributesGetter<REQUEST>
-      implements NetServerAttributesGetter<REQUEST> {
-
-    @Nullable
-    @Override
-    public String transport(REQUEST request) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public String hostName(REQUEST request) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Integer hostPort(REQUEST request) {
-      return null;
-    }
   }
 }
