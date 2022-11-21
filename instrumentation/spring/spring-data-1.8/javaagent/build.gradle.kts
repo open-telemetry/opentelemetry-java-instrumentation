@@ -39,6 +39,8 @@ dependencies {
 
   latestDepTestLibrary("org.springframework:spring-test:5.+")
   latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+")
+  latestDepTestLibrary("org.springframework.data:spring-data-commons:2.+")
+  latestDepTestLibrary("org.springframework.data:spring-data-jpa:2.+")
 }
 
 tasks.withType<Test>().configureEach {

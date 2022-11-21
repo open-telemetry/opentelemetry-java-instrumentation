@@ -58,7 +58,7 @@ dependencies {
 
   add("latestDepTestImplementation", "org.hibernate:hibernate-core:5.+")
   add("latestDepTestImplementation", "org.hibernate:hibernate-entitymanager:5.+")
-  add("latestDepTestImplementation", "org.springframework.data:spring-data-jpa:(2.4.0,)")
+  add("latestDepTestImplementation", "org.springframework.data:spring-data-jpa:(2.4.0,3)")
 }
 
 tasks.withType<Test>().configureEach {
