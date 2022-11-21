@@ -20,39 +20,11 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   String transport(REQUEST request, @Nullable RESPONSE response);
 
-  /**
-   * Logical remote hostname.
-   *
-   * @deprecated This method is deprecated and will be removed in the next release.
-   */
-  @Deprecated
   @Nullable
-  default String peerName(REQUEST request, @Nullable RESPONSE response) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the next release");
-  }
+  String peerName(REQUEST request);
 
   @Nullable
-  default String peerName(REQUEST request) {
-    return peerName(request, null);
-  }
-
-  /**
-   * Logical remote port number.
-   *
-   * @deprecated This method is deprecated and will be removed in the next release.
-   */
-  @Deprecated
-  @Nullable
-  default Integer peerPort(REQUEST request, @Nullable RESPONSE response) {
-    throw new UnsupportedOperationException(
-        "This method is deprecated and will be removed in the next release");
-  }
-
-  @Nullable
-  default Integer peerPort(REQUEST request) {
-    return peerPort(request, null);
-  }
+  Integer peerPort(REQUEST request);
 
   @Nullable
   default String sockFamily(REQUEST request, @Nullable RESPONSE response) {
