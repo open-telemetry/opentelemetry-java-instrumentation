@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Fix the boms
+  ([#7252](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7252))
+
 ## Version 1.20.1 (2022-11-18)
 
 ### 📈 Enhancements
