@@ -934,18 +934,20 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               if (attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
               }
+              if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
+              }
+              if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+                int uriPort = uri.getPort();
+                // default values are ignored
+                if (uriPort <= 0 || uriPort == 80 || uriPort == 443) {
+                  assertThat(attrs).doesNotContainKey(SemanticAttributes.NET_PEER_PORT);
+                } else {
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uriPort);
+                }
+              }
 
               if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
-                // TODO: net.peer.name and net.peer.port should always be populated from the URI or
-                // the Host header, verify these assertions below
-                if (attrs.get(SemanticAttributes.NET_PEER_NAME) != null) {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
-                }
-                // TODO: once httpClientAttributes test knob is used, verify default port values
-                if (attrs.get(SemanticAttributes.NET_PEER_PORT) != null) {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
-                }
-
                 // In these cases the peer connection is not established, so the HTTP client should
                 // not report any socket-level attributes
                 assertThat(attrs)
@@ -956,19 +958,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                     .doesNotContainKey("net.sock.peer.port");
 
               } else {
-                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
-                }
-                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
-                  int uriPort = uri.getPort();
-                  // default values are ignored
-                  if (uriPort <= 0 || uriPort == 80 || uriPort == 443) {
-                    assertThat(attrs).doesNotContainKey(SemanticAttributes.NET_PEER_PORT);
-                  } else {
-                    assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uriPort);
-                  }
-                }
-
                 // TODO: Move to test knob rather than always treating as optional
                 if (attrs.get(SemanticAttributes.NET_SOCK_PEER_ADDR) != null) {
                   assertThat(attrs)

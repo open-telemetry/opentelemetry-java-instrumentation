@@ -12,9 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.netty.common.internal.HttpClientSpanKeyAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -58,8 +56,8 @@ public final class NettyClientSingletons {
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
-                NetClientAttributesExtractor.create(nettyConnectAttributesGetter))
-            .addAttributesExtractor(HttpClientSpanKeyAttributesExtractor.INSTANCE)
+                HttpClientAttributesExtractor.create(
+                    NettyConnectHttpAttributesGetter.INSTANCE, nettyConnectAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     nettyConnectAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
