@@ -89,6 +89,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
     builder
         .ignoreClass("org.springframework.amqp.")
         .allowClass("org.springframework.amqp.rabbit.connection.")
+        .allowClass("org.springframework.amqp.rabbit.core.RabbitTemplate$$Lambda$")
         .allowClass("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer");
 
     builder
