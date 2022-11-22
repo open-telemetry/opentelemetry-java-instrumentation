@@ -46,6 +46,6 @@ public final class SpringWebfluxTelemetry {
         return;
       }
     }
-    exchangeFilterFunctions.add(0, new WebClientTracingFilter(instrumenter, propagators));
+    exchangeFilterFunctions.add(new WebClientTracingFilter(instrumenter, propagators));
   }
 }
