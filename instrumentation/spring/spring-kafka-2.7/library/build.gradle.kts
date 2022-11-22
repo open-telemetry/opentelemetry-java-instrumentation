@@ -18,6 +18,8 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+
+  latestDepTestLibrary("org.springframework.kafka:spring-kafka:2.+")
 }
 
 configurations.testRuntimeClasspath {
