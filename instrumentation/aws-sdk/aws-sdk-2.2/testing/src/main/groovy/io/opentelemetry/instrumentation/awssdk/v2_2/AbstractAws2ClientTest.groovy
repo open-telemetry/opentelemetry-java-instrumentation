@@ -57,6 +57,7 @@ import java.util.concurrent.Future
 
 import static com.google.common.collect.ImmutableMap.of
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
@@ -168,6 +169,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
             "$SemanticAttributes.RPC_METHOD" "CreateTable"
@@ -203,6 +206,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_METHOD" "$method"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
@@ -239,6 +244,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -341,7 +348,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "$service.$operation"
-          kind CLIENT
+          kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
@@ -352,6 +359,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -375,11 +384,11 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     request.request().headers().get("traceparent") == null
 
     where:
-    service   | operation           | method | path                  | requestId                              | builder                 | call                                                                                             | body
-    "S3"      | "CreateBucket"      | "PUT"  | "/somebucket"         | "UNKNOWN"                              | S3Client.builder()      | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
-    "S3"      | "GetObject"         | "GET"  | "/somebucket/somekey" | "UNKNOWN"                              | S3Client.builder()      | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
-    "Kinesis" | "DeleteStream"      | "POST" | ""                    | "UNKNOWN"                              | KinesisClient.builder() | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
-    "Sqs"     | "CreateQueue"       | "POST" | ""                    | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()     | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | """
+    service   | operation           | method | path                          | requestId                              | builder                 | call                                                                                             | body
+    "S3"      | "CreateBucket"      | "PUT"  | path("somebucket")            | "UNKNOWN"                              | S3Client.builder()      | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
+    "S3"      | "GetObject"         | "GET"  | path("somebucket", "somekey") | "UNKNOWN"                              | S3Client.builder()      | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
+    "Kinesis" | "DeleteStream"      | "POST" | ""                            | "UNKNOWN"                              | KinesisClient.builder() | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
+    "Sqs"     | "CreateQueue"       | "POST" | ""                            | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()     | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | """
         <CreateQueueResponse>
             <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
@@ -431,7 +440,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "$service.$operation"
-          kind CLIENT
+          kind operation != "SendMessage" ? CLIENT : PRODUCER
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
@@ -442,6 +451,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_USER_AGENT" { it.startsWith("aws-sdk-java/") }
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -465,18 +476,18 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     request.request().headers().get("traceparent") == null
 
     where:
-    service | operation           | method | path                  | requestId                              | builder                  | call                                                                                                                             | body
-    "S3"    | "CreateBucket"      | "PUT"  | "/somebucket"         | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }                                              | ""
-    "S3"    | "GetObject"         | "GET"  | "/somebucket/somekey" | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build(), AsyncResponseTransformer.toBytes()) } | "1234567890"
+    service | operation           | method | path                          | requestId                              | builder                  | call                                                                                                                             | body
+    "S3"    | "CreateBucket"      | "PUT"  | path("somebucket")            | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }                                              | ""
+    "S3"    | "GetObject"         | "GET"  | path("somebucket", "somekey") | "UNKNOWN"                              | S3AsyncClient.builder()  | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build(), AsyncResponseTransformer.toBytes()) } | "1234567890"
     // Kinesis seems to expect an http2 response which is incompatible with our test server.
     // "Kinesis"  | "DeleteStream"      | "POST" | "/"                   | "UNKNOWN"                              | KinesisAsyncClient.builder()  | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }                                          | ""
-    "Sqs"   | "CreateQueue"       | "POST" | ""                    | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder() | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | """
+    "Sqs"   | "CreateQueue"       | "POST" | ""                            | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsAsyncClient.builder() | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }                                              | """
         <CreateQueueResponse>
             <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
         """
-    "Sqs"   | "SendMessage"       | "POST" | ""                    | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
+    "Sqs"   | "SendMessage"       | "POST" | ""                            | "27daac76-34dd-47df-bd01-1f6e873584a0" | SqsAsyncClient.builder() | { c -> c.sendMessage(SendMessageRequest.builder().queueUrl("someurl").messageBody("").build()) }                                 | """
         <SendMessageResponse>
             <SendMessageResult>
                 <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
@@ -486,14 +497,14 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
         </SendMessageResponse>
         """
-    "Ec2"   | "AllocateAddress"   | "POST" | ""                    | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder() | { c -> c.allocateAddress() }                                                                                                     | """
+    "Ec2"   | "AllocateAddress"   | "POST" | ""                            | "59dbff89-35bd-4eac-99ed-be587EXAMPLE" | Ec2AsyncClient.builder() | { c -> c.allocateAddress() }                                                                                                     | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
            <publicIp>192.0.2.1</publicIp>
            <domain>standard</domain>
         </AllocateAddressResponse>
         """
-    "Rds"   | "DeleteOptionGroup" | "POST" | ""                    | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsAsyncClient.builder() | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                                                         | """
+    "Rds"   | "DeleteOptionGroup" | "POST" | ""                            | "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99" | RdsAsyncClient.builder() | { c -> c.deleteOptionGroup(DeleteOptionGroupRequest.builder().build()) }                                                         | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>
@@ -524,6 +535,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     then:
     thrown SdkClientException
 
+    def path = path("somebucket", "somekey")
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -536,7 +548,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
             "$SemanticAttributes.NET_TRANSPORT" IP_TCP
             "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}/somebucket/somekey"
+            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}${path}"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_FLAVOR" "1.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -548,5 +560,17 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         }
       }
     }
+  }
+
+  static String path(String bucket, String path = null) {
+    def result = ""
+    // since 2.18.0 bucket name is not present in request path
+    if (!Boolean.getBoolean("testLatestDeps") && !bucket.isEmpty()) {
+      result = "/" + bucket
+    }
+    if (path != null && !path.isEmpty()) {
+      result += "/" + path
+    }
+    return result
   }
 }

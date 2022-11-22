@@ -11,10 +11,10 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id "com.github.johnrengelman.shadow" version "7.1.2"
-  id "com.diffplug.spotless" version "6.3.0"
+  id "com.diffplug.spotless" version "6.11.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.16.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "1.16.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.21.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "1.21.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -22,10 +22,11 @@ version '1.0'
 
 ext {
   versions = [
-    opentelemetry              : "1.15.0",
-    opentelemetryAlpha         : "1.15.0-alpha",
-    opentelemetryJavaagent     : "1.16.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "1.16.0-alpha-SNAPSHOT",
+    // these lines are managed by .github/scripts/update-version.sh
+    opentelemetryJavaagent     : "1.21.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "1.21.0-alpha-SNAPSHOT",
+
+    junit                      : "5.9.1"
   ]
 
   deps = [
@@ -59,13 +60,19 @@ spotless {
 }
 
 dependencies {
+  api(platform("io.opentelemetry:opentelemetry-bom:1.20.1"))
+
+  // these serve as a test of the instrumentation boms
+  api(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.opentelemetryJavaagent}"))
+  api(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions.opentelemetryJavaagentAlpha}"))
+
   /*
   Interfaces and SPIs that we implement. We use `compileOnly` dependency because during
   runtime all necessary classes are provided by javaagent itself.
    */
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:${versions.opentelemetry}")
-  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:${versions.opentelemetryJavaagentAlpha}")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 
   //Provides @AutoService annotation that makes registration of our SPI implementations much easier
   compileOnly deps.autoservice
@@ -86,27 +93,26 @@ dependencies {
   Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
   and added to the resulting jar for our extension's distribution.
    */
-  implementation 'org.apache.commons:commons-lang3:3.11'
+  implementation 'org.apache.commons:commons-lang3:3.12.0'
 
   //All dependencies below are only for tests
-  testImplementation("org.testcontainers:testcontainers:1.16.2")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.11.2")
-  testImplementation("com.google.protobuf:protobuf-java-util:3.12.4")
-  testImplementation("com.squareup.okhttp3:okhttp:3.12.12")
-  testImplementation("io.opentelemetry:opentelemetry-api:${versions.opentelemetry}")
-  testImplementation("io.opentelemetry.proto:opentelemetry-proto:0.16.0-alpha")
+  testImplementation("org.testcontainers:testcontainers:1.17.6")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.0")
+  testImplementation("com.google.protobuf:protobuf-java-util:3.21.9")
+  testImplementation("com.squareup.okhttp3:okhttp:4.10.0")
+  testImplementation("io.opentelemetry:opentelemetry-api")
+  testImplementation("io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.2.3")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.4.5")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
 
   //TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
-  add("codegen", "ch.qos.logback:logback-classic:1.2.3")
-  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support:${versions.opentelemetryJavaagentAlpha}")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
 }

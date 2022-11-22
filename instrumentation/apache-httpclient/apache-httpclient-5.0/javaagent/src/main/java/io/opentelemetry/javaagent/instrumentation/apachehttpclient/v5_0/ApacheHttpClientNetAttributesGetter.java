@@ -26,12 +26,12 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(HttpRequest request, @Nullable HttpResponse response) {
+  public String peerName(HttpRequest request) {
     return request.getAuthority().getHostName();
   }
 
   @Override
-  public Integer peerPort(HttpRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(HttpRequest request) {
     int port = request.getAuthority().getPort();
     if (port != -1) {
       return port;
@@ -49,11 +49,5 @@ final class ApacheHttpClientNetAttributesGetter
         logger.log(FINE, "no default port mapping for scheme: {0}", scheme);
         return null;
     }
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(HttpRequest request, @Nullable HttpResponse response) {
-    return null;
   }
 }

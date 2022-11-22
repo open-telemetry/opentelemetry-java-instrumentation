@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
   private static final Logger logger = Logger.getLogger(IgnoredClassLoadersMatcher.class.getName());
 
-  /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
+  /* Cache of class loader instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
   private static final Cache<ClassLoader, Boolean> skipCache = Cache.weak();
 
   private final Trie<IgnoreAllow> ignoredClassLoaders;

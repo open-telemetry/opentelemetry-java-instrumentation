@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -35,7 +34,8 @@ import java.util.function.Function;
  *   process.runtime.jvm.memory.init{type="heap",pool="G1 Eden Space"} 1000000
  *   process.runtime.jvm.memory.usage{type="heap",pool="G1 Eden Space"} 2500000
  *   process.runtime.jvm.memory.committed{type="heap",pool="G1 Eden Space"} 3000000
- *   process.runtime.jvm.memory.max{type="heap",pool="G1 Eden Space"} 4000000
+ *   process.runtime.jvm.memory.limit{type="heap",pool="G1 Eden Space"} 4000000
+ *   process.runtime.jvm.memory.usage_after_last_gc{type="heap",pool="G1 Eden Space"} 1500000
  *   process.runtime.jvm.memory.init{type="non_heap",pool="Metaspace"} 200
  *   process.runtime.jvm.memory.usage{type="non_heap",pool="Metaspace"} 400
  *   process.runtime.jvm.memory.committed{type="non_heap",pool="Metaspace"} 500
@@ -49,49 +49,54 @@ public final class MemoryPools {
   private static final String HEAP = "heap";
   private static final String NON_HEAP = "non_heap";
 
-  /**
-   * Register observers for java runtime memory metrics.
-   *
-   * @deprecated use {@link #registerObservers(OpenTelemetry openTelemetry)}
-   */
-  @Deprecated
-  public static void registerObservers() {
-    registerObservers(GlobalOpenTelemetry.get());
-  }
-
   /** Register observers for java runtime memory metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
-    List<MemoryPoolMXBean> poolBeans = ManagementFactory.getMemoryPoolMXBeans();
-    Meter meter = openTelemetry.getMeter("io.opentelemetry.runtime-metrics");
+    registerObservers(openTelemetry, ManagementFactory.getMemoryPoolMXBeans());
+  }
+
+  // Visible for testing
+  static void registerObservers(OpenTelemetry openTelemetry, List<MemoryPoolMXBean> poolBeans) {
+    Meter meter = RuntimeMetricsUtil.getMeter(openTelemetry);
 
     meter
         .upDownCounterBuilder("process.runtime.jvm.memory.usage")
         .setDescription("Measure of memory used")
         .setUnit("By")
-        .buildWithCallback(callback(poolBeans, MemoryUsage::getUsed));
+        .buildWithCallback(callback(poolBeans, MemoryPoolMXBean::getUsage, MemoryUsage::getUsed));
 
     meter
         .upDownCounterBuilder("process.runtime.jvm.memory.init")
         .setDescription("Measure of initial memory requested")
         .setUnit("By")
-        .buildWithCallback(callback(poolBeans, MemoryUsage::getInit));
+        .buildWithCallback(callback(poolBeans, MemoryPoolMXBean::getUsage, MemoryUsage::getInit));
 
     meter
         .upDownCounterBuilder("process.runtime.jvm.memory.committed")
         .setDescription("Measure of memory committed")
         .setUnit("By")
-        .buildWithCallback(callback(poolBeans, MemoryUsage::getCommitted));
+        .buildWithCallback(
+            callback(poolBeans, MemoryPoolMXBean::getUsage, MemoryUsage::getCommitted));
 
     meter
         .upDownCounterBuilder("process.runtime.jvm.memory.limit")
         .setDescription("Measure of max obtainable memory")
         .setUnit("By")
-        .buildWithCallback(callback(poolBeans, MemoryUsage::getMax));
+        .buildWithCallback(callback(poolBeans, MemoryPoolMXBean::getUsage, MemoryUsage::getMax));
+
+    meter
+        .upDownCounterBuilder("process.runtime.jvm.memory.usage_after_last_gc")
+        .setDescription(
+            "Measure of memory used after the most recent garbage collection event on this pool")
+        .setUnit("By")
+        .buildWithCallback(
+            callback(poolBeans, MemoryPoolMXBean::getCollectionUsage, MemoryUsage::getUsed));
   }
 
   // Visible for testing
   static Consumer<ObservableLongMeasurement> callback(
-      List<MemoryPoolMXBean> poolBeans, Function<MemoryUsage, Long> extractor) {
+      List<MemoryPoolMXBean> poolBeans,
+      Function<MemoryPoolMXBean, MemoryUsage> memoryUsageExtractor,
+      Function<MemoryUsage, Long> valueExtractor) {
     List<Attributes> attributeSets = new ArrayList<>(poolBeans.size());
     for (MemoryPoolMXBean pool : poolBeans) {
       attributeSets.add(
@@ -104,7 +109,13 @@ public final class MemoryPools {
     return measurement -> {
       for (int i = 0; i < poolBeans.size(); i++) {
         Attributes attributes = attributeSets.get(i);
-        long value = extractor.apply(poolBeans.get(i).getUsage());
+        MemoryUsage memoryUsage = memoryUsageExtractor.apply(poolBeans.get(i));
+        if (memoryUsage == null) {
+          // JVM may return null in special cases for MemoryPoolMXBean.getUsage() and
+          // MemoryPoolMXBean.getCollectionUsage()
+          continue;
+        }
+        long value = valueExtractor.apply(memoryUsage);
         if (value != -1) {
           measurement.record(value, attributes);
         }

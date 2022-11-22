@@ -31,19 +31,19 @@ final class TestInstrumenters {
   TestInstrumenters(OpenTelemetry openTelemetry) {
     instrumenter =
         Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
-            .newInstrumenter(SpanKindExtractor.alwaysInternal());
+            .buildInstrumenter(SpanKindExtractor.alwaysInternal());
     httpClientInstrumenter =
         Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
             // cover both semconv and span-kind strategies
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.HTTP_CLIENT))
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.KIND_CLIENT))
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
     httpServerInstrumenter =
         Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
             // cover both semconv and span-kind strategies
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.HTTP_SERVER))
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.KIND_SERVER))
-            .newInstrumenter(SpanKindExtractor.alwaysServer());
+            .buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   /**

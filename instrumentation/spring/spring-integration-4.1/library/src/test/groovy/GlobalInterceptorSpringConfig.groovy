@@ -10,12 +10,17 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.integration.config.GlobalChannelInterceptor
 import org.springframework.messaging.support.ChannelInterceptor
 
+import static java.util.Collections.singletonList
+
 @Configuration
 class GlobalInterceptorSpringConfig {
 
   @GlobalChannelInterceptor
   @Bean
   ChannelInterceptor otelInterceptor() {
-    SpringIntegrationTelemetry.create(GlobalOpenTelemetry.get()).newChannelInterceptor()
+    SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
+      .setCapturedHeaders(singletonList("test-message-header"))
+      .build()
+      .newChannelInterceptor()
   }
 }

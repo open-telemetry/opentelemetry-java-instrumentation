@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 public final class InstrumentedTaskClasses {
 
-  private static final Logger logger = Logger.getLogger(Config.class.getName());
+  private static final Logger logger = Logger.getLogger(InstrumentedTaskClasses.class.getName());
 
   private static final String AGENT_CLASSLOADER_NAME =
       "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
@@ -41,7 +40,7 @@ public final class InstrumentedTaskClasses {
 
   /**
    * Sets the configured ignored tasks predicate. This method is called internally from the agent
-   * classloader.
+   * class loader.
    */
   public static void setIgnoredTaskClassesPredicate(Predicate<String> ignoredTasksTriePredicate) {
     if (InstrumentedTaskClasses.ignoredTaskClassesPredicate != null) {

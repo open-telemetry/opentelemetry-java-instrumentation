@@ -47,7 +47,7 @@ configurations {
 }
 
 dependencies {
-  compileOnly("io.opentelemetry:opentelemetry-extension-aws")
+  compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:library"))
 

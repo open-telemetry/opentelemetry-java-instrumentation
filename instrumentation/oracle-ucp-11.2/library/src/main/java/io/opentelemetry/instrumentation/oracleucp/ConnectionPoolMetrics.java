@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.oracleucp;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.BatchCallback;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.metrics.db.DbConnectionPoolMetrics;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import oracle.ucp.UniversalConnectionPool;
@@ -20,8 +20,8 @@ final class ConnectionPoolMetrics {
   // a weak map does not make sense here because each Meter holds a reference to the connection pool
   // none of the UniversalConnectionPool implementations contain equals()/hashCode(), so it's safe
   // to keep them in a plain ConcurrentHashMap
-  private static final Map<UniversalConnectionPool, List<ObservableLongUpDownCounter>>
-      dataSourceMetrics = new ConcurrentHashMap<>();
+  private static final Map<UniversalConnectionPool, BatchCallback> dataSourceMetrics =
+      new ConcurrentHashMap<>();
 
   public static void registerMetrics(
       OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool) {
@@ -29,27 +29,40 @@ final class ConnectionPoolMetrics {
         connectionPool, (unused) -> createMeters(openTelemetry, connectionPool));
   }
 
-  private static List<ObservableLongUpDownCounter> createMeters(
+  private static BatchCallback createMeters(
       OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool) {
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
             openTelemetry, INSTRUMENTATION_NAME, connectionPool.getName());
 
-    return Arrays.asList(
-        metrics.usedConnections(connectionPool::getBorrowedConnectionsCount),
-        metrics.idleConnections(connectionPool::getAvailableConnectionsCount),
-        metrics.maxConnections(() -> connectionPool.getStatistics().getPeakConnectionsCount()),
-        metrics.pendingRequestsForConnection(
-            () -> connectionPool.getStatistics().getPendingRequestsCount()));
+    ObservableLongMeasurement connections = metrics.connections();
+    ObservableLongMeasurement maxConnections = metrics.maxConnections();
+    ObservableLongMeasurement pendingRequestsForConnection = metrics.pendingRequestsForConnection();
+
+    Attributes attributes = metrics.getAttributes();
+    Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
+    Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
+
+    return metrics.batchCallback(
+        () -> {
+          connections.record(
+              connectionPool.getBorrowedConnectionsCount(), usedConnectionsAttributes);
+          connections.record(
+              connectionPool.getAvailableConnectionsCount(), idleConnectionsAttributes);
+          maxConnections.record(
+              connectionPool.getStatistics().getPeakConnectionsCount(), attributes);
+          pendingRequestsForConnection.record(
+              connectionPool.getStatistics().getPendingRequestsCount(), attributes);
+        },
+        connections,
+        maxConnections,
+        pendingRequestsForConnection);
   }
 
   public static void unregisterMetrics(UniversalConnectionPool connectionPool) {
-    List<ObservableLongUpDownCounter> observableInstruments =
-        dataSourceMetrics.remove(connectionPool);
-    if (observableInstruments != null) {
-      for (ObservableLongUpDownCounter observable : observableInstruments) {
-        observable.close();
-      }
+    BatchCallback callback = dataSourceMetrics.remove(connectionPool);
+    if (callback != null) {
+      callback.close();
     }
   }
 

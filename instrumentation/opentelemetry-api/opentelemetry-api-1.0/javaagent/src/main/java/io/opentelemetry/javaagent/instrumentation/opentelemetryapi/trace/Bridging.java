@@ -160,4 +160,6 @@ public class Bridging {
     applicationTraceState.forEach(agentTraceState::put);
     return agentTraceState.build();
   }
+
+  private Bridging() {}
 }

@@ -37,7 +37,7 @@ jobs:
           arguments: ":smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}"
 
   publishWindows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: bash
@@ -72,5 +72,5 @@ jobs:
     needs:
       - publishLinux
       - publishWindows
-    if: failure()
+    if: failure() && github.run_attempt == 1
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

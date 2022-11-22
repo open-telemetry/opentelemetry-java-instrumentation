@@ -40,12 +40,13 @@ jobs:
           cwd: './gh-pages'
           branch: 'gh-pages'
           message: 'update test result data'
-          author_name: opentelemetry-java-bot
-          author_email: 97938252+opentelemetry-java-bot@users.noreply.github.com
-          committer_name: opentelemetry-java-bot
-          committer_email: 97938252+opentelemetry-java-bot@users.noreply.github.com
+          author_name: opentelemetrybot
+          author_email: 107717825+opentelemetrybot@users.noreply.github.com
+          committer_name: opentelemetrybot
+          committer_email: 107717825+opentelemetrybot@users.noreply.github.com
 
   open-issue-on-failure:
-    needs: run-overhead-tests
-    if: failure()
+    needs:
+      - run-overhead-tests
+    if: failure() && github.run_attempt == 1
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

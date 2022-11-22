@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor
 import kotlinx.coroutines.withContext
 
 class KtorServerTracing private constructor(
@@ -35,7 +34,7 @@ class KtorServerTracing private constructor(
 
     internal val additionalExtractors = mutableListOf<AttributesExtractor<in ApplicationRequest, in ApplicationResponse>>()
 
-    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
+    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE, KtorNetServerAttributesGetter())
 
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
@@ -103,13 +102,12 @@ class KtorServerTracing private constructor(
 
       with(instrumenterBuilder) {
         setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
-        addAttributesExtractor(NetServerAttributesExtractor.create(KtorNetServerAttributesGetter()))
         addAttributesExtractor(configuration.httpAttributesExtractorBuilder.build())
         addOperationMetrics(HttpServerMetrics.get())
         addContextCustomizer(HttpRouteHolder.get())
       }
 
-      val instrumenter = instrumenterBuilder.newServerInstrumenter(ApplicationRequestGetter)
+      val instrumenter = instrumenterBuilder.buildServerInstrumenter(ApplicationRequestGetter)
 
       val feature = KtorServerTracing(instrumenter)
 

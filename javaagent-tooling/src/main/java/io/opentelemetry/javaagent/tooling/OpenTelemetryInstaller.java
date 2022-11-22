@@ -5,20 +5,15 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
-import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.sdk.appender.internal.DelegatingLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
-import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.logs.SdkLogEmitterProvider;
 import java.util.Arrays;
 
-public class OpenTelemetryInstaller {
+public final class OpenTelemetryInstaller {
 
   /**
    * Install the {@link OpenTelemetrySdk} using autoconfigure, and return the {@link
@@ -26,13 +21,9 @@ public class OpenTelemetryInstaller {
    *
    * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
-  static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(Config config) {
-    System.setProperty("io.opentelemetry.context.contextStorageProvider", "default");
-
+  public static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk() {
     AutoConfiguredOpenTelemetrySdkBuilder builder =
-        AutoConfiguredOpenTelemetrySdk.builder()
-            .setResultAsGlobal(true)
-            .addPropertiesSupplier(config::getAllProperties);
+        AutoConfiguredOpenTelemetrySdk.builder().setResultAsGlobal(true);
 
     ClassLoader classLoader = AgentInitializer.getExtensionsClassLoader();
     if (classLoader != null) {
@@ -47,16 +38,13 @@ public class OpenTelemetryInstaller {
         (timeout, unit) -> {
           CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
           CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
-          CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult))
+          CompletableResultCode logsResult = sdk.getSdkLoggerProvider().forceFlush();
+          CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult, logsResult))
               .join(timeout, unit);
         });
 
-    SdkLogEmitterProvider sdkLogEmitterProvider =
-        autoConfiguredSdk.getOpenTelemetrySdk().getSdkLogEmitterProvider();
-    LogEmitterProvider logEmitterProvider =
-        DelegatingLogEmitterProvider.from(sdkLogEmitterProvider);
-    AgentLogEmitterProvider.set(logEmitterProvider);
-
     return autoConfiguredSdk;
   }
+
+  private OpenTelemetryInstaller() {}
 }

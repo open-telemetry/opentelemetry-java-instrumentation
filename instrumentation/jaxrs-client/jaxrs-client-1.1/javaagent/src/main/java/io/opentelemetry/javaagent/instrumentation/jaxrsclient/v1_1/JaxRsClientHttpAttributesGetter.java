@@ -43,41 +43,14 @@ final class JaxRsClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(
-      ClientRequest httpRequest, @Nullable ClientResponse httpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      ClientRequest httpRequest, @Nullable ClientResponse httpResponse) {
-    return null;
-  }
-
-  @Override
   public String flavor(ClientRequest httpRequest, @Nullable ClientResponse httpResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public Integer statusCode(ClientRequest httpRequest, ClientResponse httpResponse) {
+  public Integer statusCode(
+      ClientRequest httpRequest, ClientResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatus();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(ClientRequest httpRequest, ClientResponse httpResponse) {
-    int length = httpResponse.getLength();
-    return length != -1 ? (long) length : null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      ClientRequest httpRequest, ClientResponse httpResponse) {
-    return null;
   }
 
   @Override

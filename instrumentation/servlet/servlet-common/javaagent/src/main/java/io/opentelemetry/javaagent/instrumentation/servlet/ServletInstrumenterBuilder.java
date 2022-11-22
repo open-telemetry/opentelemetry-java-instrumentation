@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
@@ -17,7 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     return new ServletInstrumenterBuilder<>();
   }
 
+  @CanIgnoreReturnValue
   public ServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer) {
     contextCustomizers.add(contextCustomizer);
@@ -57,8 +59,11 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
                 GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .setErrorCauseExtractor(errorCauseExtractor)
-            .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(
+                HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                    .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
+                    .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .build())
             .addAttributesExtractor(additionalAttributesExtractor)
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(HttpRouteHolder.get());
@@ -71,7 +76,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);
     }
-    return builder.newServerInstrumenter(new ServletRequestGetter<>(accessor));
+    return builder.buildServerInstrumenter(new ServletRequestGetter<>(accessor));
   }
 
   public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(

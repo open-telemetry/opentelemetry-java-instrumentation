@@ -13,12 +13,13 @@ muzzle {
 
 dependencies {
   library("io.reactivex.rxjava3:rxjava:3.1.1")
-  compileOnly(project(":instrumentation-api-annotation-support"))
+  compileOnly(project(":instrumentation-annotations-support"))
 
   implementation(project(":instrumentation:rxjava:rxjava-3.1.1:library"))
 
   testImplementation(project(":instrumentation:rxjava:rxjava-3-common:testing"))
 
+  testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:rxjava:rxjava-3.0:javaagent"))
 }
 

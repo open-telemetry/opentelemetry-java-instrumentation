@@ -33,5 +33,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   public void close() {}
 
   @Override
-  public void configure(Map<String, ?> map) {}
+  public void configure(Map<String, ?> map) {
+    // TODO: support experimental attributes config
+  }
 }

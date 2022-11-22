@@ -8,13 +8,115 @@ registries:
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
+    rebase-strategy: "disabled"
     schedule:
       interval: "daily"
+
+  - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
+    directory: "/conventions"
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
+    directory: "/dependencyManagement"
+    ignore:
+      - dependency-name: "ch.qos.logback:logback-classic"
+        # logback 1.4+ requires Java 11
+        versions: [ "[1.4,)" ]
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
+    directory: "/examples/distro"
+    ignore:
+      - dependency-name: "javax.servlet:javax.servlet-api"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        versions: [ "[3.1,)" ]
+      - dependency-name: "org.eclipse.jetty:jetty-server"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
+        versions: [ "[9-alpha,)" ]
+      - dependency-name: "org.eclipse.jetty:jetty-servlet"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
+        versions: [ "[9-alpha,)" ]
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
+    directory: "/examples/extension"
+    ignore:
+      - dependency-name: "javax.servlet:javax.servlet-api"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        versions: [ "[3.1,)" ]
+      - dependency-name: "org.eclipse.jetty:jetty-server"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
+        versions: [ "[9-alpha,)" ]
+      - dependency-name: "org.eclipse.jetty:jetty-servlet"
+        # examples are intentionally compiled and tested against Servlet 3.0
+        # "9-alpha" is needed to precede all 9.0.0.v{DATE} versions
+        versions: [ "[9-alpha,)" ]
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
+    directory: "/gradle-plugins"
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
+    directory: "/smoke-tests"
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "gradle"
+    # need to scope gradle dependency updates down in this repo because most of the instrumentations
+    # intentionally test against old library versions
+    directory: "/.github/dependabot-symlinks"
+    ignore:
+      - dependency-name: "com.bmuschko.docker-remote-api"
+        # Publishing Servlet images for smoke tests is failing starting from 9.0.0
+        # (see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7185)
+        # in particular, these commands are failing (reproducible locally):
+        # ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
+        # ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
+        versions: [ "[9,)" ]
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
   - package-ecosystem: "gradle"
     directory: "/"
     allow:
       - dependency-name: "com.gradle*"
     registries:
       - gradle-plugin-portal
+    rebase-strategy: "disabled"
     schedule:
-      interval: "weekly"
+      interval: "daily"

@@ -40,6 +40,7 @@ final class TemporaryMetricsView {
     Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
     view.add(SemanticAttributes.NET_PEER_NAME);
     view.add(SemanticAttributes.NET_PEER_PORT);
+    view.add(AttributeKey.stringKey("net.peer.sock.addr"));
     return view;
   }
 
@@ -51,7 +52,8 @@ final class TemporaryMetricsView {
     // - we prefer http.route (which is scrubbed) over http.target (which is not scrubbed).
     Set<AttributeKey> view = new HashSet<>(durationAlwaysInclude);
     view.add(SemanticAttributes.HTTP_SCHEME);
-    view.add(SemanticAttributes.HTTP_HOST);
+    view.add(SemanticAttributes.NET_HOST_NAME);
+    view.add(SemanticAttributes.NET_HOST_PORT);
     view.add(SemanticAttributes.HTTP_ROUTE);
     return view;
   }
@@ -61,21 +63,23 @@ final class TemporaryMetricsView {
     // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#attributes
     Set<AttributeKey> view = new HashSet<>();
     view.add(SemanticAttributes.HTTP_METHOD);
-    view.add(SemanticAttributes.HTTP_HOST);
     view.add(SemanticAttributes.HTTP_SCHEME);
     view.add(SemanticAttributes.HTTP_FLAVOR);
-    view.add(SemanticAttributes.HTTP_SERVER_NAME);
+    view.add(SemanticAttributes.NET_HOST_NAME);
+    // TODO: net host port?
     return view;
   }
 
-  static Attributes applyClientDurationView(Attributes startAttributes, Attributes endAttributes) {
+  static Attributes applyClientDurationAndSizeView(
+      Attributes startAttributes, Attributes endAttributes) {
     AttributesBuilder filtered = Attributes.builder();
     applyView(filtered, startAttributes, durationClientView);
     applyView(filtered, endAttributes, durationClientView);
     return filtered.build();
   }
 
-  static Attributes applyServerDurationView(Attributes startAttributes, Attributes endAttributes) {
+  static Attributes applyServerDurationAndSizeView(
+      Attributes startAttributes, Attributes endAttributes) {
     AttributesBuilder filtered = Attributes.builder();
     applyView(filtered, startAttributes, durationServerView);
     applyView(filtered, endAttributes, durationServerView);

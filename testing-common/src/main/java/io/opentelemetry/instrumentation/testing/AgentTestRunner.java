@@ -12,7 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
-import io.opentelemetry.sdk.logs.data.LogData;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * An implementation of {@link InstrumentationTestRunner} that delegates most of its calls to the
  * OpenTelemetry Javaagent that this process runs with. It uses the {@link
  * AgentTestingExporterAccess} bridge class to retrieve exported traces and metrics data from the
- * agent classloader.
+ * agent class loader.
  */
 public final class AgentTestRunner extends InstrumentationTestRunner {
   static {
@@ -84,8 +84,8 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public List<LogData> getExportedLogs() {
-    return AgentTestingExporterAccess.getExportedLogs();
+  public List<LogRecordData> getExportedLogRecords() {
+    return AgentTestingExporterAccess.getExportedLogRecords();
   }
 
   @Override

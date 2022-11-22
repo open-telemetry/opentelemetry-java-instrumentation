@@ -19,6 +19,7 @@ jobs:
       skip-java-8: true
 
   open-issue-on-failure:
-    needs: publish
-    if: failure()
+    needs:
+      - publish
+    if: failure() && github.run_attempt == 1
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

@@ -4,8 +4,8 @@ plugins {
 
 muzzle {
   pass {
-    group.set("org.restlet")
-    module.set("org.restlet.jse")
+    group.set("org.restlet.jse")
+    module.set("org.restlet")
     versions.set("[2.0.0,)")
     assertInverse.set(true)
   }

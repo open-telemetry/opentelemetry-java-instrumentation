@@ -46,7 +46,7 @@ tasks {
     if (findProperty("testLatestDeps") as Boolean) {
       dependsOn(vaadin14LatestTest)
     }
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
 
@@ -69,7 +69,23 @@ dependencies {
 
   add("vaadin14LatestTestImplementation", "com.vaadin:vaadin-spring-boot-starter:14.+")
   add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:+")
-  // to work around https://github.com/vaadin/flow/issues/13952
-  // can be removed after a new version of vaadin-spring-boot-starter has been released
-  add("latestDepTestImplementation", "com.vaadin:flow-server:+")
+}
+
+configurations {
+  listOf(
+    testRuntimeClasspath,
+    named("vaadin142TestRuntimeClasspath"),
+    named("vaadin14LatestTestRuntimeClasspath"),
+    named("vaadin16TestRuntimeClasspath"),
+    named("latestDepTestRuntimeClasspath")
+  )
+    .forEach {
+      it.configure {
+        resolutionStrategy {
+          // requires old logback (and therefore also old slf4j)
+          force("ch.qos.logback:logback-classic:1.2.11")
+          force("org.slf4j:slf4j-api:1.7.36")
+        }
+      }
+    }
 }

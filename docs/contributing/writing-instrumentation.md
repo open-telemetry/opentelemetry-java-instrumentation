@@ -359,6 +359,7 @@ That way you can use these shared, globally available utilities to communicate b
 instrumentation modules.
 
 Some examples of this include:
+
 * Application server instrumentations communicating with Servlet API instrumentations.
 * Different high-level Kafka consumer instrumentations suppressing the low-level `kafka-clients`
   instrumentation.
@@ -385,7 +386,7 @@ here, including the instrumented library - you can only use JDK and OpenTelemetr
 ## Writing Java agent unit tests
 
 As mentioned before, tests in the `javaagent` module cannot access the javaagent instrumentation
-classes directly because of classloader separation - the javaagent classes are hidden and not
+classes directly because of class loader separation - the javaagent classes are hidden and not
 accessible from the instrumented application code.
 
 Ideally javaagent instrumentation is just a thin wrapper over library instrumentation, and so there

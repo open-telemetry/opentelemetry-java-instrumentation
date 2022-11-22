@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletErrorCauseExtractor;
@@ -34,8 +34,11 @@ public final class TomcatInstrumenterFactory {
             HttpSpanNameExtractor.create(httpAttributesGetter))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
-        .addAttributesExtractor(HttpServerAttributesExtractor.create(httpAttributesGetter))
-        .addAttributesExtractor(NetServerAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(
+            HttpServerAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
+                .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                .build())
         .addContextCustomizer(HttpRouteHolder.get())
         .addContextCustomizer(
             (context, request, attributes) ->
@@ -44,6 +47,6 @@ public final class TomcatInstrumenterFactory {
                     .recordException()
                     .init(context))
         .addOperationMetrics(HttpServerMetrics.get())
-        .newServerInstrumenter(TomcatRequestGetter.INSTANCE);
+        .buildServerInstrumenter(TomcatRequestGetter.INSTANCE);
   }
 }

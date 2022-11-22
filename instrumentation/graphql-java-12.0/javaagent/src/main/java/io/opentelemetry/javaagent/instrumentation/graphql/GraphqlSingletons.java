@@ -8,15 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.graphql;
 import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.graphql.GraphQLTelemetry;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class GraphqlSingletons {
 
   private static final boolean QUERY_SANITIZATION_ENABLED =
-      Config.get().getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
 
   private static final GraphQLTelemetry TELEMETRY =
       GraphQLTelemetry.builder(GlobalOpenTelemetry.get())

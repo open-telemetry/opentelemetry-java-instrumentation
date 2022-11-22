@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent;
 import io.opentracing.contrib.dropwizard.Trace;
 
 public class ClassToInstrument {
+
   @Trace
   public static void someMethod() {}
+
+  protected ClassToInstrument() {}
 }

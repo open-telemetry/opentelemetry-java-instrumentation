@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class JaxrsInstrumenterFactory {
 
@@ -22,7 +22,7 @@ public final class JaxrsInstrumenterFactory {
             CodeSpanNameExtractor.create(codeAttributesGetter))
         .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
         .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-        .newInstrumenter();
+        .buildInstrumenter();
   }
 
   private JaxrsInstrumenterFactory() {}

@@ -9,8 +9,9 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.TimeUnit
 import spock.lang.Unroll
+
+import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
@@ -267,10 +268,12 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         hasNoParent()
       }
       attributes {
-        "$SemanticAttributes.NET_PEER_IP" { it == null || it == "127.0.0.1" } // Optional
-        "$SemanticAttributes.NET_PEER_PORT" Long
+        "$SemanticAttributes.NET_HOST_NAME" fullUrl.host
+        "$SemanticAttributes.NET_HOST_PORT" fullUrl.port
+        "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+        "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+        "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
         "$SemanticAttributes.HTTP_SCHEME" fullUrl.getScheme()
-        "$SemanticAttributes.HTTP_HOST" fullUrl.getHost() + ":" + fullUrl.getPort()
         "$SemanticAttributes.HTTP_TARGET" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
         "$SemanticAttributes.HTTP_METHOD" method
         "$SemanticAttributes.HTTP_STATUS_CODE" statusCode

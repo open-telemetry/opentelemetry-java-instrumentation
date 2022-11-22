@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.eclipse.jetty.server.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
@@ -111,11 +112,14 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
 
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    def responseMethod = endpoint == REDIRECT ? "sendRedirect" : "sendError"
     trace.span(index) {
-      name endpoint == REDIRECT ? "Response.sendRedirect" : "Response.sendError"
+      name "Response.$responseMethod"
       kind INTERNAL
       childOf((SpanData) parent)
       attributes {
+        "$SemanticAttributes.CODE_NAMESPACE" Response.name
+        "$SemanticAttributes.CODE_FUNCTION" responseMethod
       }
     }
   }

@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.extension.Ordered;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 /**
@@ -18,9 +17,6 @@ import net.bytebuddy.agent.builder.AgentBuilder;
  */
 public interface BeforeAgentListener extends Ordered {
 
-  /**
-   * Runs before {@link AgentBuilder} construction, before any instrumentation is added. Not called
-   * if noop api enabled via {@code otel.javaagent.experimental.use-noop-api}.
-   */
-  void beforeAgent(Config config, AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk);
+  /** Runs before {@link AgentBuilder} construction, before any instrumentation is added. */
+  void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk);
 }

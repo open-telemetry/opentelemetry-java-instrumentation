@@ -35,7 +35,7 @@ public class IntegrationTestUtils {
 
   private static final Logger logger = LoggerFactory.getLogger(IntegrationTestUtils.class);
 
-  /** Returns the classloader the core agent is running on. */
+  /** Returns the class loader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
     return getAgentFieldClassloader("agentClassLoader");
   }
@@ -59,6 +59,7 @@ public class IntegrationTestUtils {
   }
 
   // TODO this works only accidentally now, because we don't have extensions in tests.
+
   /** Returns the URL to the jar the agent appended to the bootstrap classpath. */
   public static ClassLoader getBootstrapProxy() throws Exception {
     ClassLoader agentClassLoader = getAgentClassLoader();
@@ -260,4 +261,6 @@ public class IntegrationTestUtils {
       }
     }
   }
+
+  private IntegrationTestUtils() {}
 }

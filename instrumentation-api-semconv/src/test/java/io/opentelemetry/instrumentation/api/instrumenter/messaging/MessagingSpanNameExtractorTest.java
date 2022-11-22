@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.messaging;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.stream.Stream;
@@ -33,9 +33,9 @@ class MessagingSpanNameExtractorTest {
     Message message = new Message();
 
     if (isTemporaryQueue) {
-      given(getter.temporaryDestination(message)).willReturn(true);
+      when(getter.temporaryDestination(message)).thenReturn(true);
     } else {
-      given(getter.destination(message)).willReturn(destinationName);
+      when(getter.destination(message)).thenReturn(destinationName);
     }
 
     SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(getter, operation);

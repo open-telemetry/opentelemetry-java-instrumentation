@@ -12,6 +12,7 @@ Muzzle will prevent loading an instrumentation if it detects any mismatch or con
 ## How it works
 
 Muzzle has two phases:
+
 * at compile time it collects references to the third-party symbols and used helper classes;
 * at runtime it compares those references to the actual API symbols on the classpath.
 
@@ -31,7 +32,7 @@ encounters a reference to a non-instrumentation class (determined by `Instrument
 and the `InstrumentationModule#isHelperClass(String)` predicate). Aside from references, the
 collection process also builds a graph of dependencies between internal instrumentation helper
 classes - this dependency graph is later used to construct a list of helper classes that will be
-injected to the application classloader (`InstrumentationModuleMuzzle#getMuzzleHelperClassNames()`).
+injected to the application class loader (`InstrumentationModuleMuzzle#getMuzzleHelperClassNames()`).
 Muzzle also automatically generates the `InstrumentationModuleMuzzle#registerMuzzleVirtualFields()`
 method. All collected references are then used to generate
 an `InstrumentationModuleMuzzle#getMuzzleReferences` method.
@@ -53,7 +54,7 @@ actual application classpath types the whole instrumentation is discarded.
 
 It is worth noting that because the muzzle check is expensive, it is only performed after a match
 has been made by the `InstrumentationModule#classLoaderMatcher()` and `TypeInstrumentation#typeMatcher()`
-matchers. The result of muzzle matcher is cached per classloader, so that it is only executed
+matchers. The result of muzzle matcher is cached per class loader, so that it is only executed
 once for the whole instrumentation module.
 
 The source code of the runtime muzzle matcher is located in the `muzzle` module.
@@ -73,12 +74,15 @@ it's not an optional feature.
 The gradle plugin defines two tasks:
 
 * `muzzle` task runs the runtime muzzle verification against different library versions:
+
     ```sh
     ./gradlew :instrumentation:google-http-client-1.19:javaagent:muzzle
     ```
+
     If a new, incompatible version of the instrumented library is published it fails the build.
 
 * `printMuzzleReferences` task prints all API references in a given module:
+
     ```sh
     ./gradlew :instrumentation:google-http-client-1.19:javaagent:printMuzzleReferences
     ```

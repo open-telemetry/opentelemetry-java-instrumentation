@@ -250,7 +250,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.NET_PEER_PORT.key" 443
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -318,7 +317,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.NET_PEER_PORT.key" 443
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -332,7 +330,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.NET_PEER_PORT.key" 443
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -407,7 +404,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.NET_PEER_PORT.key" 443
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -421,7 +417,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.NET_TRANSPORT.key" SemanticAttributes.NetTransportValues.IP_TCP
             "$SemanticAttributes.NET_PEER_NAME.key" "api.twilio.com"
-            "$SemanticAttributes.NET_PEER_PORT.key" 443
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"

@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 /**
  * Additional global ignore settings that are used to reduce number of classes we try to apply
@@ -28,7 +28,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
       "otel.javaagent.testing.additional-library-ignores.enabled";
 
   @Override
-  public void configure(Config config, IgnoredTypesBuilder builder) {
+  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     if (config.getBoolean(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
       configure(builder);
     }
@@ -89,6 +89,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
     builder
         .ignoreClass("org.springframework.amqp.")
         .allowClass("org.springframework.amqp.rabbit.connection.")
+        .allowClass("org.springframework.amqp.rabbit.core.RabbitTemplate$$Lambda$")
         .allowClass("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer");
 
     builder
@@ -214,11 +215,6 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("ch.qos.logback.classic.spi.LoggingEventVO");
 
     builder
-        .ignoreClass("com.codahale.metrics.")
-        // We instrument servlets
-        .allowClass("com.codahale.metrics.servlets.");
-
-    builder
         .ignoreClass("com.couchbase.client.deps.")
         // Couchbase library includes some packaged dependencies, unfortunately some of them are
         // instrumented by executors instrumentation
@@ -270,7 +266,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("com.fasterxml.jackson.")
-        .allowClass("com.fasterxml.jackson.module.afterburner.util.MyClassLoader");
+        .allowClass("com.fasterxml.jackson.module.afterburner.util.MyClassLoader")
+        .allowClass("com.fasterxml.jackson.databind.util.internal.PrivateMaxEntriesMap$AddTask");
 
     // kotlin, note we do not ignore kotlinx because we instrument coroutines code
     builder.ignoreClass("kotlin.").allowClass("kotlin.coroutines.jvm.internal.DebugProbesKt");

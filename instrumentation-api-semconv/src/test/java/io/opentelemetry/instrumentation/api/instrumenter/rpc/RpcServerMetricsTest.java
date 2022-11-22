@@ -41,14 +41,14 @@ class RpcServerMetricsTest {
     Attributes responseAttributes1 =
         Attributes.builder()
             .put(SemanticAttributes.NET_HOST_NAME, "example.com")
-            .put(SemanticAttributes.NET_HOST_IP, "127.0.0.1")
+            .put(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1")
             .put(SemanticAttributes.NET_HOST_PORT, 8080)
             .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
             .build();
 
     Attributes responseAttributes2 =
         Attributes.builder()
-            .put(SemanticAttributes.NET_HOST_IP, "127.0.0.1")
+            .put(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1")
             .put(SemanticAttributes.NET_HOST_PORT, 8080)
             .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
             .build();
@@ -120,7 +120,8 @@ class RpcServerMetricsTest {
                                                 SemanticAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
-                                            equalTo(SemanticAttributes.NET_HOST_IP, "127.0.0.1"),
+                                            equalTo(
+                                                SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"),
                                             equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp")))));
   }
 

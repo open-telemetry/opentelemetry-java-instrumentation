@@ -10,8 +10,6 @@ import reactor.rabbitmq.ExchangeSpecification
 import reactor.rabbitmq.RabbitFlux
 import reactor.rabbitmq.SenderOptions
 
-import static com.google.common.net.InetAddresses.isInetAddress
-
 class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements WithRabbitMqTrait {
 
   def setupSpec() {
@@ -39,9 +37,9 @@ class ReactorRabbitMqTest extends AgentInstrumentationSpecification implements W
           name 'exchange.declare'
           kind SpanKind.CLIENT
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" { it == null || it instanceof String }
-            "$SemanticAttributes.NET_PEER_IP" { isInetAddress(it as String) }
-            "$SemanticAttributes.NET_PEER_PORT" { it == null || it instanceof Long }
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "queue"
             "rabbitmq.command" "exchange.declare"

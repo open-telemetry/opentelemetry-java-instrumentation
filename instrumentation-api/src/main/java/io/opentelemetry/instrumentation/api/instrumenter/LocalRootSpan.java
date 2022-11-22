@@ -54,4 +54,6 @@ public final class LocalRootSpan {
   static Context store(Context context, Span span) {
     return context.with(KEY, span);
   }
+
+  private LocalRootSpan() {}
 }

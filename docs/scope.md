@@ -1,4 +1,4 @@
-### Scope of this repository
+# Scope of this repository
 
 Both javaagent and library-based approaches to the following:
 

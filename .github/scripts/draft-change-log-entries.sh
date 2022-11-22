@@ -43,5 +43,9 @@ echo
 echo "### 🧰 Tooling"
 echo
 
-git log --reverse --pretty=format:"- %s" $range \
+git log --reverse \
+        --perl-regexp \
+        --author='^(?!dependabot\[bot\] )' \
+        --pretty=format:"- %s" \
+        "$range" \
   | sed -E 's,\(#([0-9]+)\)$,\n  ([#\1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1)),'

@@ -20,9 +20,20 @@ final class PlayWsClientNetAttributesGetter
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
+  @Nullable
+  @Override
+  public String peerName(Request request) {
+    return request.getUri().getHost();
+  }
+
+  @Override
+  public Integer peerPort(Request request) {
+    return request.getUri().getPort();
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getAddress(Request request, @Nullable Response response) {
+  protected InetSocketAddress getPeerSocketAddress(Request request, @Nullable Response response) {
     if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) response.getRemoteAddress();
     }

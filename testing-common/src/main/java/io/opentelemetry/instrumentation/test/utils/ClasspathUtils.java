@@ -42,7 +42,7 @@ public final class ClasspathUtils {
    *
    * <p>The jar file will be removed when the jvm exits.
    *
-   * @param loader classloader used to load bytes
+   * @param loader class loader used to load bytes
    * @param resourceNames names of resources to copy into the new jar
    * @return the location of the newly created jar.
    */

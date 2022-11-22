@@ -158,7 +158,7 @@ public abstract class Mismatch {
       StringWriter sw = new StringWriter();
       sw.write("Failed to generate reference check for: ");
       sw.write(referenceBeingChecked.toString());
-      sw.write(" on classloader ");
+      sw.write(" on class loader ");
       sw.write(classLoaderBeingChecked.toString());
       sw.write("\n");
       // add exception message and stack trace
@@ -169,7 +169,7 @@ public abstract class Mismatch {
   }
 
   /**
-   * Represents failure of some classloader to satisfy {@link
+   * Represents failure of some class loader to satisfy {@link
    * InstrumentationModule#classLoaderMatcher()}.
    */
   public static class InstrumentationModuleClassLoaderMismatch extends Mismatch {
@@ -180,13 +180,13 @@ public abstract class Mismatch {
 
     @Override
     String getMismatchDetails() {
-      return "InstrumentationModule classloader check";
+      return "InstrumentationModule class loader check";
     }
   }
 
   /**
    * Represents failure to inject {@link InstrumentationModuleMuzzle#getMuzzleHelperClassNames()}
-   * into some classloader.
+   * into some class loader.
    */
   public static class HelperClassesInjectionError extends Mismatch {
 

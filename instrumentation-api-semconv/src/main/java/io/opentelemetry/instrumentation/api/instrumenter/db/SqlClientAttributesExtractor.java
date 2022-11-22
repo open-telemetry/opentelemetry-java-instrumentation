@@ -20,7 +20,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
  * attributes</a>. This class is designed with SQL (or SQL-like) database clients in mind.
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
- * <code>{@linkplain SemanticAttributes#DB_SQL_TABLE db.sql.table}</code> attrubute. The raw SQL
+ * <code>{@linkplain SemanticAttributes#DB_SQL_TABLE db.sql.table}</code> attribute. The raw SQL
  * statements returned by the {@link SqlClientAttributesGetter#rawStatement(Object)} method are
  * sanitized before use, all statement parameters are removed.
  */
@@ -44,19 +44,22 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private final AttributeKey<String> dbTableAttribute;
+  private final SqlStatementSanitizer sanitizer;
 
   SqlClientAttributesExtractor(
-      SqlClientAttributesGetter<REQUEST> getter, AttributeKey<String> dbTableAttribute) {
+      SqlClientAttributesGetter<REQUEST> getter,
+      AttributeKey<String> dbTableAttribute,
+      SqlStatementSanitizer sanitizer) {
     super(getter);
     this.dbTableAttribute = dbTableAttribute;
+    this.sanitizer = sanitizer;
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    SqlStatementInfo sanitizedStatement =
-        SqlStatementSanitizer.sanitize(getter.rawStatement(request));
+    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.rawStatement(request));
     internalSet(attributes, SemanticAttributes.DB_STATEMENT, sanitizedStatement.getFullStatement());
     internalSet(attributes, SemanticAttributes.DB_OPERATION, sanitizedStatement.getOperation());
     internalSet(attributes, dbTableAttribute, sanitizedStatement.getTable());

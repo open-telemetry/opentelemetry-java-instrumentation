@@ -7,7 +7,7 @@ muzzle {
     name.set("webflux_5.0.0+_with_netty_0.8.0")
     group.set("org.springframework")
     module.set("spring-webflux")
-    versions.set("[5.0.0.RELEASE,)")
+    versions.set("[5.0.0.RELEASE,6)")
     assertInverse.set(true)
     extraDependency("io.projectreactor.netty:reactor-netty:0.8.0.RELEASE")
   }
@@ -16,7 +16,7 @@ muzzle {
     name.set("webflux_5.0.0_with_ipc_0.7.0")
     group.set("org.springframework")
     module.set("spring-webflux")
-    versions.set("[5.0.0.RELEASE,)")
+    versions.set("[5.0.0.RELEASE,6)")
     assertInverse.set(true)
     extraDependency("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
   }
@@ -25,7 +25,7 @@ muzzle {
     name.set("netty_0.8.0+_with_spring-webflux:5.1.0")
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
-    versions.set("[0.8.0.RELEASE,)")
+    versions.set("[0.8.0.RELEASE,1.1.0)")
     extraDependency("org.springframework:spring-webflux:5.1.0.RELEASE")
   }
 
@@ -62,6 +62,17 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
 }

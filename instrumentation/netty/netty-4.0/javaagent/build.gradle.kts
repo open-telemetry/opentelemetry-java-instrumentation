@@ -26,11 +26,13 @@ muzzle {
 dependencies {
   library("io.netty:netty-codec-http:4.0.0.Final")
   implementation(project(":instrumentation:netty:netty-4-common:javaagent"))
+  implementation(project(":instrumentation:netty:netty-4-common:library"))
+  implementation(project(":instrumentation:netty:netty-common:library"))
 
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  latestDepTestLibrary("io.netty:netty-codec-http:4.0.+")
+  latestDepTestLibrary("io.netty:netty-codec-http:4.0.+") // see netty-4.1 module
 }
 
 tasks {

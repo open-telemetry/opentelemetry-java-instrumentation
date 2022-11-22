@@ -23,6 +23,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
@@ -126,7 +127,10 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
       case "http://192.0.2.1/": // non routable address
         return []
     }
-    return super.httpAttributes(uri)
+    def attributes = super.httpAttributes(uri)
+    attributes.remove(SemanticAttributes.NET_PEER_NAME)
+    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    return attributes
   }
 
   @Override

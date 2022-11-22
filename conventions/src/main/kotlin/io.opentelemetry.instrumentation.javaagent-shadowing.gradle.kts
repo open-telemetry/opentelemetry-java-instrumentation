@@ -14,15 +14,17 @@ tasks.withType<ShadowJar>().configureEach {
 
   exclude("**/module-info.class")
 
-  // Prevents conflict with other SLF4J instances. Important for premain.
-  relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")
   // rewrite dependencies calling Logger.getLogger
   relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
 
-  // prevents conflict with library instrumentation
-  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation")
+  // prevents conflict with library instrumentation, since these classes live in the bootstrap class loader
+  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
+    // Exclude resource providers since they live in the agent class loader
+    exclude("io.opentelemetry.instrumentation.resources.*")
+    exclude("io.opentelemetry.instrumentation.spring.resources.*")
+  }
 
-  // relocate(OpenTelemetry API)
+  // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
   relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
   relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
   relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")

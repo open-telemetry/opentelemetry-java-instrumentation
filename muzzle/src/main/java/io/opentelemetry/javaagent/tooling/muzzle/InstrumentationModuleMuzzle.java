@@ -43,7 +43,7 @@ public interface InstrumentationModuleMuzzle {
 
   /**
    * Returns a list of instrumentation helper classes, automatically detected by muzzle during
-   * compilation. Those helpers will be injected into the application classloader.
+   * compilation. Those helpers will be injected into the application class loader.
    */
   List<String> getMuzzleHelperClassNames();
 

@@ -54,3 +54,9 @@ If you are on Windows and you want to run the tests using linux containers:
 ```
 USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=payara
 ```
+
+## Docker disk space
+
+Some of the instrumentation tests (and all of the smoke tests) spin up docker containers via
+[testcontainers](https://www.testcontainers.org/). If you run out of space, you may wish to prune
+old containers, images and volumes using `docker system prune --volumes`.

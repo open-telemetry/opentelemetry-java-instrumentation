@@ -110,7 +110,7 @@ abstract class AbstractComplexPropagationTest extends InstrumentationSpecificati
       new LinkedBlockingQueue<Payload>()
     }
 
-    @Bean
+    @Bean(destroyMethod = "shutdownNow")
     ExecutorService consumerThread() {
       Executors.newSingleThreadExecutor()
     }

@@ -9,8 +9,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.extension.Ordered;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /**
  * Instrumentation module groups several connected {@link TypeInstrumentation}s together, sharing
- * classloader matcher, helper classes, muzzle safety checks, etc. Ideally all types in a single
+ * class loader matcher, helper classes, muzzle safety checks, etc. Ideally all types in a single
  * instrumented library should live in a single module.
  *
  * <p>Classes extending {@link InstrumentationModule} should be public and non-final so that it's
@@ -30,8 +30,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * java.util.ServiceLoader} for more details.
  */
 public abstract class InstrumentationModule implements Ordered {
-  private static final boolean DEFAULT_ENABLED =
-      Config.get().getBoolean("otel.instrumentation.common.default-enabled", true);
 
   private final Set<String> instrumentationNames;
 
@@ -83,15 +81,15 @@ public abstract class InstrumentationModule implements Ordered {
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
    */
-  public boolean defaultEnabled() {
-    return DEFAULT_ENABLED;
+  public boolean defaultEnabled(ConfigProperties config) {
+    return config.getBoolean("otel.instrumentation.common.default-enabled", true);
   }
 
   /**
    * Instrumentation modules can override this method to specify additional packages (or classes)
    * that should be treated as "library instrumentation" packages. Classes from those packages will
    * be treated by muzzle as instrumentation helper classes: they will be scanned for references and
-   * automatically injected into the application classloader if they're used in any type
+   * automatically injected into the application class loader if they're used in any type
    * instrumentation. The classes for which this predicate returns {@code true} will be treated as
    * helper classes, in addition to the default ones defined in the {@code HelperClassPredicate}
    * class.
@@ -106,7 +104,7 @@ public abstract class InstrumentationModule implements Ordered {
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {}
 
   /**
-   * An instrumentation module can implement this method to make sure that the classloader contains
+   * An instrumentation module can implement this method to make sure that the class loader contains
    * the particular library version. It is useful to implement that if the muzzle check does not
    * fail for versions out of the instrumentation's scope.
    *
@@ -114,7 +112,7 @@ public abstract class InstrumentationModule implements Ordered {
    * used in the helper classes at all; this module is instrumenting 2.0: this method will return
    * {@code not(hasClassesNamed("A"))}.
    *
-   * @return A type matcher used to match the classloader under transform
+   * @return A type matcher used to match the class loader under transform
    */
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return any();
@@ -131,7 +129,7 @@ public abstract class InstrumentationModule implements Ordered {
    * the logs, you may need to override this method and provide fully qualified classes names of
    * helper classes that your instrumentation uses.
    *
-   * <p>These helper classes will be injected into the application classloader after automatically
+   * <p>These helper classes will be injected into the application class loader after automatically
    * detected ones.
    */
   public List<String> getAdditionalHelperClassNames() {

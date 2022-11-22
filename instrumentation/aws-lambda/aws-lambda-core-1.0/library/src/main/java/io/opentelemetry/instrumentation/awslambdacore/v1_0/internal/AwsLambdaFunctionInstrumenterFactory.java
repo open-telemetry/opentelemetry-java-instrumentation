@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class AwsLambdaFunctionInstrumenterFactory {
+public final class AwsLambdaFunctionInstrumenterFactory {
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
     return new AwsLambdaFunctionInstrumenter(
@@ -23,11 +23,13 @@ public class AwsLambdaFunctionInstrumenterFactory {
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-core-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)
-            .addAttributesExtractors(new AwsLambdaFunctionAttributesExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysServer()));
+            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
+            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {
     return input.getAwsContext().getFunctionName();
   }
+
+  private AwsLambdaFunctionInstrumenterFactory() {}
 }

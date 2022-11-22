@@ -3,7 +3,7 @@ name: Reusable - Create operator pull request
 on:
   workflow_call:
     inputs:
-      javaagent-version:
+      version:
         type: string
         required: true
     secrets:
@@ -12,54 +12,67 @@ on:
   # to help with partial release build failures
   workflow_dispatch:
     inputs:
-      javaagent-version:
-        description: "Javaagent version"
+      version:
+        description: "Version"
         required: true
 
 jobs:
   create-operator-pull-request:
     runs-on: ubuntu-latest
     steps:
+      - name: Sync opentelemetry-operator fork
+        env:
+          # this is the personal access token used for "gh repo sync" below
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          # synchronizing the fork is fast, and avoids the need to fetch the full upstream repo
+          # (fetching the upstream repo with "--depth 1" would lead to "shallow update not allowed"
+          #  error when pushing back to the origin repo)
+          gh repo sync opentelemetrybot/opentelemetry-operator \
+              --source open-telemetry/opentelemetry-operator \
+              --force
+
       - uses: actions/checkout@v3
         with:
-          repository: opentelemetry-java-bot/opentelemetry-operator
+          repository: opentelemetrybot/opentelemetry-operator
           # this is the personal access token used for "git push" below
           token: ${{ secrets.BOT_TOKEN }}
 
-      - name: Initialize pull request branch
-        env:
-          VERSION: ${{ inputs.javaagent-version }}
-        run: |
-          git remote add upstream https://github.com/open-telemetry/opentelemetry-operator.git
-          git fetch upstream
-          git checkout -b update-opentelemetry-javaagent-to-${VERSION} upstream/main
-
       - name: Update version
         env:
-          VERSION: ${{ inputs.javaagent-version }}
+          VERSION: ${{ inputs.version }}
         run: |
           echo $VERSION > autoinstrumentation/java/version.txt
 
-      - name: Set git user
+      - name: Use CLA approved github bot
         run: |
-          git config user.name opentelemetry-java-bot
-          git config user.email 97938252+opentelemetry-java-bot@users.noreply.github.com
+          # cannot run the use-cla-approved-github-bot.sh script here since in a different repo
+          git config user.name opentelemetrybot
+          git config user.email 107717825+opentelemetrybot@users.noreply.github.com
 
       - name: Create pull request against opentelemetry-operator
         env:
+          VERSION: ${{ inputs.version }}
           # this is the personal access token used for "gh pr create" below
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-          VERSION: ${{ inputs.javaagent-version }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           message="Update the javaagent version to $VERSION"
-          body="Update the javaagent version to \`$VERSION\`."
+          # note that @open-telemetry/java-instrumentation-approvers cannot be used below
+          # because opentelemetrybot is not a member of the OpenTelemetry org,
+          # and so it cannot @ mention OpenTelemetry org groups
+          body="Update the javaagent version to \`$VERSION\`.
+
+          cc @laurit @mateuszrzeszutek @trask
+          "
+          branch="update-opentelemetry-javaagent-to-${VERSION}"
 
           # gh pr create doesn't have a way to explicitly specify different head and base
           # repositories currently, but it will implicitly pick up the head from a different
           # repository if you set up a tracking branch
 
+          git checkout -b $branch
           git commit -a -m "$message"
-          git push --set-upstream origin HEAD:update-opentelemetry-javaagent-to-${VERSION}
+          git push --set-upstream origin $branch
           gh pr create --title "$message" \
                        --body "$body" \
                        --repo open-telemetry/opentelemetry-operator \

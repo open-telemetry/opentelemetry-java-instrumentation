@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 
 final class ApacheHttpClientNetAttributesGetter
-    implements NetClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
+    extends InetSocketAddressNetClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   public String transport(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
@@ -20,19 +21,20 @@ final class ApacheHttpClientNetAttributesGetter
 
   @Override
   @Nullable
-  public String peerName(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public String peerName(ApacheHttpClientRequest request) {
     return request.getPeerName();
   }
 
   @Override
   @Nullable
-  public Integer peerPort(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(ApacheHttpClientRequest request) {
     return request.getPeerPort();
   }
 
-  @Override
   @Nullable
-  public String peerIp(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return null;
+  @Override
+  protected InetSocketAddress getPeerSocketAddress(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.peerSocketAddress();
   }
 }

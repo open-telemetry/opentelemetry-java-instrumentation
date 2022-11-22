@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.axis2;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public class Axis2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-2.0-axis2-1.6";
@@ -19,7 +19,7 @@ public class Axis2Singletons {
         Instrumenter.<Axis2Request, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, Axis2Request::spanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<Axis2Request, Void> instrumenter() {

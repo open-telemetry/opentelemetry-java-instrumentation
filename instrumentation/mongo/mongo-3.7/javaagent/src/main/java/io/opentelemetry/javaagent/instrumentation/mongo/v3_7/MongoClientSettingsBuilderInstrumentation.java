@@ -49,7 +49,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
         @Advice.This MongoClientSettings.Builder builder,
         @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
       for (CommandListener commandListener : commandListeners) {
-        if (commandListener == MongoInstrumentationSingletons.LISTENER) {
+        if (MongoInstrumentationSingletons.isTracingListener(commandListener)) {
           return;
         }
       }

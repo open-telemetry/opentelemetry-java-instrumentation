@@ -51,25 +51,25 @@ potentially cause linkage errors.
 
 ## Classloader separation
 
-See more detail about the classloader separation [here](./contributing/javaagent-structure.md).
+See more detail about the class loader separation [here](./contributing/javaagent-structure.md).
 
-The Java agent makes sure to include as little code as possible in the user app's classloader, and
+The Java agent makes sure to include as little code as possible in the user app's class loader, and
 all code that is included is either unique to the agent itself or shaded in the agent build. This is
 because if the agent included classes that are also used by the user's app and there was a version
 mismatch, it could cause linkage crashes.
 
-Instead of executing code in the app's classloader, the agent has its own agent classloader where
+Instead of executing code in the app's class loader, the agent has its own agent class loader where
 instrumentation is loaded and exporters and the SDK is configured. Only when applying an
 instrumentation (which will have passed Muzzle runtime checks) do we inject any additional classes
-that are needed by the instrumentation into the user's classloader. These classes are always either
+that are needed by the instrumentation into the user's class loader. These classes are always either
 unique to the agent or shaded versions of public libraries such as our library instrumentation
 modules and cannot cause version conflicts.
 
-To ensure agent classes are not automatically loaded into the user's classloader, possibly by an
+To ensure agent classes are not automatically loaded into the user's class loader, possibly by an
 eager loading application server, they are hidden in the agent JAR as standard, non-Java files.
 All packages are moved into a subdirectory `inst` and all classes are renamed from `.class` to
 `.classdata`, ensuring applications with any sort of automatic classpath scanning will not find
-agent classes. The agent classloader understands this convention and unobfuscates when loading
+agent classes. The agent class loader understands this convention and unobfuscates when loading
 classes.
 
 ## Smoke tests

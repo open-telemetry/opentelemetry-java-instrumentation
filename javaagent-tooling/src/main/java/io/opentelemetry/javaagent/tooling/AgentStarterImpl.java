@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
-import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -80,14 +78,13 @@ public class AgentStarterImpl implements AgentStarter {
     if (loggingCustomizers.hasNext()) {
       loggingCustomizer = loggingCustomizers.next();
     } else {
-      loggingCustomizer = new DefaultLoggingCustomizer();
+      loggingCustomizer = NoopLoggingCustomizer.INSTANCE;
     }
 
     Throwable startupError = null;
     try {
       loggingCustomizer.init();
-      ConfigInitializer.initialize();
-      AgentInstaller.installBytebuddyAgent(instrumentation, Config.get());
+      AgentInstaller.installBytebuddyAgent(instrumentation);
       WeakConcurrentMapCleaner.start();
     } catch (Throwable t) {
       // this is logged below and not rethrown to avoid logging it twice

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.extension.ignore;
 
-import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.extension.Ordered;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 
 /**
  * An {@link IgnoredTypesConfigurer} can be used to augment built-in instrumentation restrictions:
@@ -22,5 +22,5 @@ public interface IgnoredTypesConfigurer extends Ordered {
    * Configure the passed {@code builder} and define which classes should be ignored when
    * instrumenting.
    */
-  void configure(Config config, IgnoredTypesBuilder builder);
+  void configure(IgnoredTypesBuilder builder, ConfigProperties config);
 }

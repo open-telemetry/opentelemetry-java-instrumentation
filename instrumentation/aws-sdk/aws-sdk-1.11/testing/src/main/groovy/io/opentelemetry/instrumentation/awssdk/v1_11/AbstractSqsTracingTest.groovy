@@ -14,6 +14,7 @@ import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import spock.lang.Shared
 
@@ -81,6 +82,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
       }
@@ -103,6 +105,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(1) {
@@ -124,6 +127,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
       }
@@ -150,6 +154,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" IP_TCP
+            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
       }

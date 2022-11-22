@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A holder of all ClassLoaderMatcher caches. We store them in the bootstrap classloader so that
+ * A holder of all ClassLoaderMatcher caches. We store them in the bootstrap class loader so that
  * instrumentation can invalidate the ClassLoaderMatcher for a particular ClassLoader, e.g. when
  * {@link java.net.URLClassLoader#addURL(URL)} is called.
  *

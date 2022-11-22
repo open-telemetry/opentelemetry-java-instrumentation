@@ -5,20 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.kafka.SpringKafkaSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.RecordInterceptor;
 
@@ -56,13 +53,13 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     public static <K, V> void onExit(
         @Advice.Return(readOnly = false) BatchInterceptor<K, V> interceptor) {
 
-      if (!(interceptor instanceof InstrumentedBatchInterceptor)) {
-        VirtualField<ConsumerRecords<K, V>, Context> receiveContextField =
-            VirtualField.find(ConsumerRecords.class, Context.class);
-        VirtualField<ConsumerRecords<K, V>, State<ConsumerRecords<K, V>>> stateField =
-            VirtualField.find(ConsumerRecords.class, State.class);
-        interceptor =
-            new InstrumentedBatchInterceptor<>(receiveContextField, stateField, interceptor);
+      if (interceptor == null
+          || !interceptor
+              .getClass()
+              .getName()
+              .equals(
+                  "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedBatchInterceptor")) {
+        interceptor = telemetry().createBatchInterceptor(interceptor);
       }
     }
   }
@@ -74,13 +71,13 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     public static <K, V> void onExit(
         @Advice.Return(readOnly = false) RecordInterceptor<K, V> interceptor) {
 
-      if (!(interceptor instanceof InstrumentedRecordInterceptor)) {
-        VirtualField<ConsumerRecord<K, V>, Context> receiveContextField =
-            VirtualField.find(ConsumerRecord.class, Context.class);
-        VirtualField<ConsumerRecord<K, V>, State<ConsumerRecord<K, V>>> stateField =
-            VirtualField.find(ConsumerRecord.class, State.class);
-        interceptor =
-            new InstrumentedRecordInterceptor<>(receiveContextField, stateField, interceptor);
+      if (interceptor == null
+          || !interceptor
+              .getClass()
+              .getName()
+              .equals(
+                  "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
+        interceptor = telemetry().createRecordInterceptor(interceptor);
       }
     }
   }

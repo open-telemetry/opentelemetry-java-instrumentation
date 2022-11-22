@@ -11,6 +11,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.SpanLimits;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This is one of the main entry points for Instrumentation Agent's customizations. It allows
@@ -27,7 +29,9 @@ public class DemoAutoConfigurationCustomizerProvider
 
   @Override
   public void customize(AutoConfigurationCustomizer autoConfiguration) {
-    autoConfiguration.addTracerProviderCustomizer(this::configureSdkTracerProvider);
+    autoConfiguration
+        .addTracerProviderCustomizer(this::configureSdkTracerProvider)
+        .addPropertiesSupplier(this::getDefaultProperties);
   }
 
   private SdkTracerProviderBuilder configureSdkTracerProvider(
@@ -38,5 +42,13 @@ public class DemoAutoConfigurationCustomizerProvider
         .setSampler(new DemoSampler())
         .addSpanProcessor(new DemoSpanProcessor())
         .addSpanProcessor(SimpleSpanProcessor.create(new DemoSpanExporter()));
+  }
+
+  private Map<String, String> getDefaultProperties() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.exporter.otlp.endpoint", "http://backend:8080");
+    properties.put("otel.exporter.otlp.insecure", "true");
+    properties.put("otel.config.max.attrs", "16");
+    return properties;
   }
 }

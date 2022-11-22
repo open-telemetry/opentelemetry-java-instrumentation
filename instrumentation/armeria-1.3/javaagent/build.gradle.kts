@@ -18,3 +18,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:armeria-1.3:testing"))
 }
+
+tasks {
+  test {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+}

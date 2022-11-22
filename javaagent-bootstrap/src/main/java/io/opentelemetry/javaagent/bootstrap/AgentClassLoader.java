@@ -28,14 +28,13 @@ import javax.annotation.Nullable;
 /**
  * Classloader used to run the core agent.
  *
- * <p>It is built around the concept of a jar inside another jar. This classloader loads the files
+ * <p>It is built around the concept of a jar inside another jar. This class loader loads the files
  * of the internal jar to load classes and resources.
  */
 public class AgentClassLoader extends URLClassLoader {
 
-  // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
-  // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
-  // configure the logging levels
+  // NOTE it's important not to use logging in this class, because this class is used before logging
+  // is initialized
 
   static {
     ClassLoader.registerAsParallelCapable();
@@ -117,7 +116,7 @@ public class AgentClassLoader extends URLClassLoader {
 
   private static ClassLoader getParentClassLoader() {
     if (JAVA_VERSION > 8) {
-      return new JdkHttpServerClassLoader();
+      return new PlatformDelegatingClassLoader();
     }
     return null;
   }
@@ -324,7 +323,7 @@ public class AgentClassLoader extends URLClassLoader {
   }
 
   /**
-   * A stand-in for the bootstrap classloader. Used to look up bootstrap resources and resources
+   * A stand-in for the bootstrap class loader. Used to look up bootstrap resources and resources
    * appended by instrumentation.
    *
    * <p>This class is thread safe.
@@ -442,7 +441,10 @@ public class AgentClassLoader extends URLClassLoader {
     }
   }
 
-  private static class JdkHttpServerClassLoader extends ClassLoader {
+  // We don't always delegate to platform loader because platform class loader also contains user
+  // classes when running a modular application. We don't want these classes interfering with the
+  // agent.
+  private static class PlatformDelegatingClassLoader extends ClassLoader {
 
     static {
       // this class loader doesn't load any classes, so this is technically unnecessary,
@@ -453,14 +455,16 @@ public class AgentClassLoader extends URLClassLoader {
 
     private final ClassLoader platformClassLoader = getPlatformLoader();
 
-    public JdkHttpServerClassLoader() {
+    public PlatformDelegatingClassLoader() {
       super(null);
     }
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
       // prometheus exporter uses jdk http server, load it from the platform class loader
-      if (name != null && name.startsWith("com.sun.net.httpserver.")) {
+      // some custom extensions use java.sql classes, make these available to agent and extensions
+      if (name != null
+          && (name.startsWith("com.sun.net.httpserver.") || name.startsWith("java.sql."))) {
         return platformClassLoader.loadClass(name);
       }
       return Class.forName(name, false, null);

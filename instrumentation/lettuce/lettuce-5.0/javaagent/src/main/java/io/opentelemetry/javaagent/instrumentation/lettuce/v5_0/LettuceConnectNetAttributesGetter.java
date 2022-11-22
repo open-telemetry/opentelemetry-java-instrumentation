@@ -18,18 +18,12 @@ final class LettuceConnectNetAttributesGetter implements NetClientAttributesGett
   }
 
   @Override
-  public String peerName(RedisURI redisUri, @Nullable Void unused) {
+  public String peerName(RedisURI redisUri) {
     return redisUri.getHost();
   }
 
   @Override
-  public Integer peerPort(RedisURI redisUri, @Nullable Void unused) {
+  public Integer peerPort(RedisURI redisUri) {
     return redisUri.getPort();
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(RedisURI redisUri, @Nullable Void unused) {
-    return null;
   }
 }

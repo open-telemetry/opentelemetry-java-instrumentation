@@ -10,9 +10,18 @@ Every successful CI build of the main branch automatically executes `./gradlew p
 as the last step, which publishes a snapshot build to
 [Sonatype OSS snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/).
 
+## Release cadence
+
+This repository roughly targets monthly minor releases from the `main` branch on the Wednesday after
+the second Monday of the month (roughly a few of days after the monthly minor release of
+[opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)).
+
 ## Preparing a new major or minor release
 
-* Close the release milestone if there is one.
+* Check that [dependabot has run](https://github.com/open-telemetry/opentelemetry-java-instrumentation/network/updates)
+  sometime in the past day (this link is only accessible if you have write access to the repository).
+* Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
+  if there is one.
 * Merge a pull request to `main` updating the `CHANGELOG.md`.
   * The heading for the unreleased entries should be `## Unreleased`.
   * Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change log.
@@ -34,6 +43,10 @@ and deadlocks.
     e.g. `release/v1.9.x`, then enter the pull request number that you want to backport,
     then click the "Run workflow" button below that.
   * Review and merge the backport pull request that it generates.
+  * Note: if the PR contains any changes to workflow files, it will have to be manually backported,
+    because the default `GITHUB_TOKEN` does not have permission to update workflow files (and the
+    `opentelemetrybot` token doesn't have write permission to this repository at all, so while it
+    can be used to open a PR, it can't be used to push to a local branch).
 * Merge a pull request to the release branch updating the `CHANGELOG.md`.
   * The heading for the unreleased entries should be `## Unreleased`.
 * Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-patch-release.yml).
@@ -51,6 +64,20 @@ and deadlocks.
   * Review and merge the pull request that it creates for updating the change log in main
     (note that if this is not a patch release then the change log on main may already be up-to-date,
     in which case no pull request will be created).
+
+## Update release versions in documentations
+
+After releasing is done, you need to first update the docs. This needs to happen after artifacts have propagated
+to Maven Central so should probably be done an hour or two after the release workflow finishes.
+
+```sh
+./gradlew japicmp -PapiBaseVersion=a.b.c -PapiNewVersion=x.y.z
+./gradlew --refresh-dependencies japicmp
+```
+
+Where `x.y.z` is the version just released and `a.b.c` is the previous version.
+
+Create a PR to mark the new release in docs on the main branch.
 
 ## Credentials
 

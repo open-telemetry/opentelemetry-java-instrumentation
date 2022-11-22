@@ -9,6 +9,7 @@ import application.io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import application.io.opentelemetry.api.metrics.LongGaugeBuilder;
 import application.io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.function.Consumer;
 
 final class ApplicationDoubleGaugeBuilder implements DoubleGaugeBuilder {
@@ -20,12 +21,14 @@ final class ApplicationDoubleGaugeBuilder implements DoubleGaugeBuilder {
   }
 
   @Override
+  @CanIgnoreReturnValue
   public DoubleGaugeBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public DoubleGaugeBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;

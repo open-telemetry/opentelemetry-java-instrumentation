@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.reactor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
 
-// Isolated test to use clean classloader because reactor instrumentation is applied on static
+// Isolated test to use clean class loader because reactor instrumentation is applied on static
 // initialization.
 class InitializationTest {
 

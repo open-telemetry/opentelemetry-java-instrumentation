@@ -1,18 +1,17 @@
-# Manual Instrumentation for C3P0
+# Library Instrumentation for C3P0 version 0.9 and higher
 
 Provides OpenTelemetry instrumentation for [C3P0](https://www.mchange.com/projects/c3p0/).
 
 ## Quickstart
 
-### Add these dependencies to your project:
+### Add these dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the latest stable
-[release](https://mvnrepository.com/artifact/io.opentelemetry). `Minimum version: 1.15.0`
+Replace `OPENTELEMETRY_VERSION` with the [latest
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-c3p0-0.9).
 
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>

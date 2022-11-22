@@ -21,10 +21,12 @@ class MongoInstrumenterFactory {
       netAttributesExtractor = NetClientAttributesExtractor.create(new MongoNetAttributesGetter());
 
   static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
-      OpenTelemetry openTelemetry, int maxNormalizedQueryLength) {
+      OpenTelemetry openTelemetry,
+      boolean statementSanitizationEnabled,
+      int maxNormalizedQueryLength) {
 
     MongoDbAttributesGetter dbAttributesGetter =
-        new MongoDbAttributesGetter(maxNormalizedQueryLength);
+        new MongoDbAttributesGetter(statementSanitizationEnabled, maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
         new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
 
@@ -33,6 +35,8 @@ class MongoInstrumenterFactory {
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(netAttributesExtractor)
         .addAttributesExtractor(attributesExtractor)
-        .newInstrumenter(SpanKindExtractor.alwaysClient());
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
+
+  private MongoInstrumenterFactory() {}
 }

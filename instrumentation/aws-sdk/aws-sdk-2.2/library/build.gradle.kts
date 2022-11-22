@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation("io.opentelemetry:opentelemetry-extension-aws")
+  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   library("software.amazon.awssdk:aws-core:2.2.0")
   library("software.amazon.awssdk:aws-json-protocol:2.2.0")
@@ -22,6 +22,7 @@ dependencies {
 
 tasks {
   test {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
   }
 }

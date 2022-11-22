@@ -3,9 +3,6 @@ name: Reusable - Test latest deps
 on:
   workflow_call:
     inputs:
-      skip:
-        type: boolean
-        required: false
       cache-read-only:
         type: boolean
         required: false
@@ -22,19 +19,12 @@ on:
 
 jobs:
   test-latest-deps:
-    # the condition is on the steps below instead of here on the job, because skipping the job
-    # causes the job to show up as canceled in the GitHub UI which prevents the build section from
-    # collapsing when everything (else) is green
-    #
-    # and the name is updated when the steps below are skipped which makes what's happening clearer
-    # in the GitHub UI
-    name: testLatestDeps${{ inputs.skip && ' (skipped)' || '' }}
+    name: testLatestDeps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up JDK for running Gradle
-        if: ${{ !inputs.skip }}
         uses: actions/setup-java@v3
         with:
           distribution: temurin
@@ -47,8 +37,11 @@ jobs:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-latest-cache-pnpm-modules
 
+      - name: Increase gradle daemon heap size
+        run: |
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx2g /" gradle.properties
+
       - name: Test
-        if: ${{ !inputs.skip }}
         uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}

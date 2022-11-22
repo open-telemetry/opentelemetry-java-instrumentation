@@ -19,7 +19,7 @@ public final class Play24Singletons {
   private static final Instrumenter<Void, Void> INSTRUMENTER =
       Instrumenter.<Void, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.play-mvc-2.4", s -> SPAN_NAME)
-          .newInstrumenter();
+          .buildInstrumenter();
 
   public static Instrumenter<Void, Void> instrumenter() {
     return INSTRUMENTER;

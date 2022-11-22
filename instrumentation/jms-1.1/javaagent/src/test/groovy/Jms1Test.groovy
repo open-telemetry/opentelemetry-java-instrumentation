@@ -61,19 +61,34 @@ class Jms1Test extends AgentInstrumentationSpecification {
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
 
-    producer.send(message)
+    runWithSpan("producer parent") {
+      producer.send(message)
+    }
 
-    TextMessage receivedMessage = consumer.receive()
+    TextMessage receivedMessage = runWithSpan("consumer parent") {
+      return consumer.receive() as TextMessage
+    }
     String messageId = receivedMessage.getJMSMessageID()
 
     expect:
     receivedMessage.text == messageText
     assertTraces(2) {
-      trace(0, 1) {
-        producerSpan(it, 0, destinationType, destinationName)
+      SpanData producerSpanData
+      trace(0, 2) {
+        span(0) {
+          name "producer parent"
+          hasNoParent()
+        }
+        producerSpan(it, 1, destinationType, destinationName, span(0))
+
+        producerSpanData = span(1)
       }
-      trace(1, 1) {
-        consumerSpan(it, 0, destinationType, destinationName, messageId, null, "receive")
+      trace(1, 2) {
+        span(0) {
+          name "consumer parent"
+          hasNoParent()
+        }
+        consumerSpan(it, 1, destinationType, destinationName, messageId, "receive", span(0), producerSpanData)
       }
     }
 
@@ -99,7 +114,7 @@ class Jms1Test extends AgentInstrumentationSpecification {
       @Override
       void onMessage(Message message) {
         lock.await() // ensure the producer trace is reported first.
-        messageRef.set(message)
+        messageRef.set(message as TextMessage)
       }
     }
 
@@ -110,7 +125,7 @@ class Jms1Test extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         producerSpan(it, 0, destinationType, destinationName)
-        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), span(0), "process")
+        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), "process", span(0))
       }
     }
     // This check needs to go after all traces have been accounted for
@@ -133,7 +148,7 @@ class Jms1Test extends AgentInstrumentationSpecification {
     def consumer = session.createConsumer(destination)
 
     // Receive with timeout
-    TextMessage receivedMessage = consumer.receiveNoWait()
+    Message receivedMessage = consumer.receiveNoWait()
 
     expect:
     receivedMessage == null
@@ -154,7 +169,7 @@ class Jms1Test extends AgentInstrumentationSpecification {
     def consumer = session.createConsumer(destination)
 
     // Receive with timeout
-    TextMessage receivedMessage = consumer.receive(100)
+    Message receivedMessage = consumer.receive(100)
 
     expect:
     receivedMessage == null
@@ -183,7 +198,7 @@ class Jms1Test extends AgentInstrumentationSpecification {
     and:
     producer.send(message)
 
-    TextMessage receivedMessage = consumer.receive()
+    TextMessage receivedMessage = consumer.receive() as TextMessage
 
     then:
     receivedMessage.text == messageText
@@ -196,21 +211,7 @@ class Jms1Test extends AgentInstrumentationSpecification {
         producerSpan(it, 0, destinationType, destinationName)
       }
       trace(1, 1) {
-        span(0) {
-          hasNoParent()
-          name destinationName + " receive"
-          kind CONSUMER
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-            "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" destinationType
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" receivedMessage.getJMSMessageID()
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            if (destinationName == "(temporary)") {
-              "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
-            }
-          }
-        }
+        consumerSpan(it, 0, destinationType, destinationName, "", "receive", null)
       }
     }
 
@@ -237,19 +238,25 @@ class Jms1Test extends AgentInstrumentationSpecification {
       @Override
       void onMessage(Message message) {
         lock.await() // ensure the producer trace is reported first.
-        messageRef.set(message)
+        messageRef.set(message as TextMessage)
       }
     }
 
     when:
-    producer.send(destination, message)
+    runWithSpan("parent") {
+      producer.send(destination, message)
+    }
     lock.countDown()
 
     then:
     assertTraces(1) {
-      trace(0, 2) {
-        producerSpan(it, 0, destinationType, destinationName)
-        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), span(0), "process")
+      trace(0, 3) {
+        span(0) {
+          name "parent"
+          hasNoParent()
+        }
+        producerSpan(it, 1, destinationType, destinationName, span(0))
+        consumerSpan(it, 2, destinationType, destinationName, messageRef.get().getJMSMessageID(), "process", span(1))
       }
     }
     // This check needs to go after all traces have been accounted for
@@ -267,11 +274,62 @@ class Jms1Test extends AgentInstrumentationSpecification {
     session.createTemporaryTopic()   | "topic"         | "(temporary)"
   }
 
-  static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {
+  def "capture message header as span attribute"() {
+    setup:
+    def destinationName = "someQueue"
+    def destinationType = "queue"
+    def destination = session.createQueue(destinationName)
+    def producer = session.createProducer(destination)
+    def consumer = session.createConsumer(destination)
+
+    def message = session.createTextMessage(messageText)
+    message.setStringProperty("test-message-header", "test")
+    message.setIntProperty("test-message-int-header", 1234)
+    runWithSpan("producer parent") {
+      producer.send(message)
+    }
+
+    TextMessage receivedMessage = runWithSpan("consumer parent") {
+      return consumer.receive() as TextMessage
+    }
+    String messageId = receivedMessage.getJMSMessageID()
+
+    expect:
+    receivedMessage.text == messageText
+    assertTraces(2) {
+      SpanData producerSpanData
+      trace(0, 2) {
+        span(0) {
+          name "producer parent"
+          hasNoParent()
+        }
+        producerSpan(it, 1, destinationType, destinationName, span(0), true)
+
+        producerSpanData = span(1)
+      }
+      trace(1, 2) {
+        span(0) {
+          name "consumer parent"
+          hasNoParent()
+        }
+        consumerSpan(it, 1, destinationType, destinationName, messageId, "receive", span(0), producerSpanData, true)
+      }
+    }
+
+    cleanup:
+    producer.close()
+    consumer.close()
+  }
+
+  static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName, SpanData parentSpan = null, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " send"
       kind PRODUCER
-      hasNoParent()
+      if (parentSpan == null) {
+        hasNoParent()
+      } else {
+        childOf(parentSpan)
+      }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
         "$SemanticAttributes.MESSAGING_DESTINATION" destinationName
@@ -280,6 +338,10 @@ class Jms1Test extends AgentInstrumentationSpecification {
           "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        if (testHeaders) {
+          "messaging.header.test_message_header" { it == ["test"] }
+          "messaging.header.test_message_int_header" { it == ["1234"] }
+        }
       }
     }
   }
@@ -287,14 +349,19 @@ class Jms1Test extends AgentInstrumentationSpecification {
   // passing messageId = null will verify message.id is not captured,
   // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
   // any other value for messageId will verify that message.id is captured and has that same value
-  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, Object parentOrLinkedSpan, String operation) {
+  static consumerSpan(TraceAssert trace, int index, String destinationType, String destinationName, String messageId, String operation, SpanData parentSpan, SpanData linkedSpan = null, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " " + operation
       kind CONSUMER
-      if (parentOrLinkedSpan != null) {
-        childOf((SpanData) parentOrLinkedSpan)
-      } else {
+      if (parentSpan == null) {
         hasNoParent()
+      } else {
+        childOf(parentSpan)
+      }
+      if (linkedSpan == null) {
+        hasNoLinks()
+      } else {
+        hasLink(linkedSpan)
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
@@ -307,6 +374,10 @@ class Jms1Test extends AgentInstrumentationSpecification {
         }
         if (destinationName == "(temporary)") {
           "$SemanticAttributes.MESSAGING_TEMP_DESTINATION" true
+        }
+        if (testHeaders) {
+          "messaging.header.test_message_header" { it == ["test"] }
+          "messaging.header.test_message_int_header" { it == ["1234"] }
         }
       }
     }

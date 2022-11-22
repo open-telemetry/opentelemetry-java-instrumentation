@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework.kafka")
     module.set("spring-kafka")
-    versions.set("[2.7.0,)")
+    versions.set("[2.7.0,3)")
     assertInverse.set(true)
   }
 }
@@ -17,6 +17,7 @@ dependencies {
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
+  implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
 
   library("org.springframework.kafka:spring-kafka:2.7.0")
 
@@ -26,6 +27,8 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+
+  latestDepTestLibrary("org.springframework.kafka:spring-kafka:2.+")
 }
 
 testing {
@@ -63,4 +66,20 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+}
+
+configurations {
+  listOf(
+    testRuntimeClasspath,
+    named("testNoReceiveTelemetryRuntimeClasspath")
+  )
+    .forEach {
+      it.configure {
+        resolutionStrategy {
+          // requires old logback (and therefore also old slf4j)
+          force("ch.qos.logback:logback-classic:1.2.11")
+          force("org.slf4j:slf4j-api:1.7.36")
+        }
+      }
+    }
 }

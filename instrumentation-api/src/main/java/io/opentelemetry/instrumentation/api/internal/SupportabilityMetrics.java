@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -28,15 +27,17 @@ public final class SupportabilityMetrics {
   private final ConcurrentMap<String, AtomicLong> counters = new ConcurrentHashMap<>();
 
   private static final SupportabilityMetrics INSTANCE =
-      new SupportabilityMetrics(Config.get(), logger::fine).start();
+      new SupportabilityMetrics(
+              ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false), logger::fine)
+          .start();
 
   public static SupportabilityMetrics instance() {
     return INSTANCE;
   }
 
   // visible for testing
-  SupportabilityMetrics(Config config, Consumer<String> reporter) {
-    agentDebugEnabled = config.getBoolean("otel.javaagent.debug", false);
+  SupportabilityMetrics(boolean agentDebugEnabled, Consumer<String> reporter) {
+    this.agentDebugEnabled = agentDebugEnabled;
     this.reporter = reporter;
   }
 
@@ -79,7 +80,9 @@ public final class SupportabilityMetrics {
         });
   }
 
-  SupportabilityMetrics start() {
+  // this private method is designed for assignment of the return value
+  @SuppressWarnings("CanIgnoreReturnValueSuggester")
+  private SupportabilityMetrics start() {
     if (agentDebugEnabled) {
       Executors.newScheduledThreadPool(
               1,

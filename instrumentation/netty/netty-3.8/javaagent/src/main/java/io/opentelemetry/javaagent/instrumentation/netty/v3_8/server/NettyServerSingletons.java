@@ -12,8 +12,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
@@ -32,14 +32,16 @@ final class NettyServerSingletons {
                 HttpSpanNameExtractor.create(httpServerAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpServerAttributesGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.create(httpServerAttributesGetter))
-            .addAttributesExtractor(
-                NetServerAttributesExtractor.create(new NettyNetServerAttributesGetter()))
+                HttpServerAttributesExtractor.builder(
+                        httpServerAttributesGetter, new NettyNetServerAttributesGetter())
+                    .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
+                    .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                    .build())
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .addContextCustomizer(HttpRouteHolder.get())
-            .newServerInstrumenter(NettyHeadersGetter.INSTANCE);
+            .buildServerInstrumenter(NettyHeadersGetter.INSTANCE);
   }
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {

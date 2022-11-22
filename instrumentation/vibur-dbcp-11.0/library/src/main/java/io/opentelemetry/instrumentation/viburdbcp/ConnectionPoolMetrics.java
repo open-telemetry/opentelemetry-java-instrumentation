@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.viburdbcp;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.BatchCallback;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.metrics.db.DbConnectionPoolMetrics;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.vibur.dbcp.ViburDBCPDataSource;
@@ -20,31 +20,40 @@ final class ConnectionPoolMetrics {
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // ViburDBCPDataSource does not implement equals()/hashCode(), so it's safe to keep them in a
   // plain ConcurrentHashMap
-  private static final Map<ViburDBCPDataSource, List<ObservableLongUpDownCounter>>
-      dataSourceMetrics = new ConcurrentHashMap<>();
+  private static final Map<ViburDBCPDataSource, BatchCallback> dataSourceMetrics =
+      new ConcurrentHashMap<>();
 
   public static void registerMetrics(OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource) {
     dataSourceMetrics.computeIfAbsent(
         dataSource, (unused) -> createMeters(openTelemetry, dataSource));
   }
 
-  private static List<ObservableLongUpDownCounter> createMeters(
+  private static BatchCallback createMeters(
       OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource) {
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSource.getName());
 
-    return Arrays.asList(
-        metrics.usedConnections(() -> dataSource.getPool().taken()),
-        metrics.idleConnections(() -> dataSource.getPool().remainingCreated()),
-        metrics.maxConnections(dataSource::getPoolMaxSize));
+    ObservableLongMeasurement connections = metrics.connections();
+    ObservableLongMeasurement maxConnections = metrics.maxConnections();
+
+    Attributes attributes = metrics.getAttributes();
+    Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
+    Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
+
+    return metrics.batchCallback(
+        () -> {
+          connections.record(dataSource.getPool().taken(), usedConnectionsAttributes);
+          connections.record(dataSource.getPool().remainingCreated(), idleConnectionsAttributes);
+          maxConnections.record(dataSource.getPoolMaxSize(), attributes);
+        },
+        connections,
+        maxConnections);
   }
 
   public static void unregisterMetrics(ViburDBCPDataSource dataSource) {
-    List<ObservableLongUpDownCounter> observableInstruments = dataSourceMetrics.remove(dataSource);
-    if (observableInstruments != null) {
-      for (ObservableLongUpDownCounter observable : observableInstruments) {
-        observable.close();
-      }
+    BatchCallback callback = dataSourceMetrics.remove(dataSource);
+    if (callback != null) {
+      callback.close();
     }
   }
 

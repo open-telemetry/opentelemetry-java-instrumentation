@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.net;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -25,7 +23,7 @@ import javax.annotation.Nullable;
 public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
+  private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
 
   public static <REQUEST, RESPONSE> NetClientAttributesExtractor<REQUEST, RESPONSE> create(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
@@ -33,11 +31,13 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private NetClientAttributesExtractor(NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    this.getter = getter;
+    internalExtractor = new InternalNetClientAttributesExtractor<>(getter, (port, request) -> true);
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    internalExtractor.onStart(attributes, request);
+  }
 
   @Override
   public void onEnd(
@@ -46,20 +46,6 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-
-    internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
-
-    String peerIp = getter.peerIp(request, response);
-    String peerName = getter.peerName(request, response);
-
-    if (peerName != null && !peerName.equals(peerIp)) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
-    }
-    internalSet(attributes, SemanticAttributes.NET_PEER_IP, peerIp);
-
-    Integer peerPort = getter.peerPort(request, response);
-    if (peerPort != null && peerPort > 0) {
-      internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
-    }
+    internalExtractor.onEnd(attributes, request, response);
   }
 }

@@ -32,6 +32,10 @@ public class ConnectionManagerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("getConnection").and(takesArgument(3, named("io.vertx.core.Handler"))),
         ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg3Advice");
+    // since 4.3.4
+    transformer.applyAdviceToMethod(
+        named("getConnection").and(takesArgument(4, named("io.vertx.core.Handler"))),
+        ConnectionManagerInstrumentation.class.getName() + "$GetConnectionArg4Advice");
   }
 
   @SuppressWarnings("unused")
@@ -48,6 +52,15 @@ public class ConnectionManagerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 3, readOnly = false) Handler<?> handler) {
+      handler = HandlerWrapper.wrap(handler);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetConnectionArg4Advice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapHandler(
+        @Advice.Argument(value = 4, readOnly = false) Handler<?> handler) {
       handler = HandlerWrapper.wrap(handler);
     }
   }

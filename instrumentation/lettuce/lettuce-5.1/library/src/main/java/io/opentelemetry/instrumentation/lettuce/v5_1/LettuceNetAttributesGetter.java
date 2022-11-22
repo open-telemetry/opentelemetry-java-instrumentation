@@ -7,12 +7,13 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.instrumentation.lettuce.v5_1.OpenTelemetryTracing.OpenTelemetryEndpoint;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class LettuceNetAttributesGetter
-    implements NetClientAttributesGetter<OpenTelemetryEndpoint, Void> {
+    extends InetSocketAddressNetClientAttributesGetter<OpenTelemetryEndpoint, Void> {
 
   @Override
   public String transport(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
@@ -21,18 +22,20 @@ final class LettuceNetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
-    return endpoint.name;
-  }
-
-  @Override
-  public Integer peerPort(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
-    return endpoint.port;
+  public String peerName(OpenTelemetryEndpoint openTelemetryEndpoint) {
+    return null;
   }
 
   @Nullable
   @Override
-  public String peerIp(OpenTelemetryEndpoint endpoint, @Nullable Void unused) {
-    return endpoint.ip;
+  public Integer peerPort(OpenTelemetryEndpoint openTelemetryEndpoint) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  protected InetSocketAddress getPeerSocketAddress(
+      OpenTelemetryEndpoint openTelemetryEndpoint, @Nullable Void unused) {
+    return openTelemetryEndpoint.address;
   }
 }
