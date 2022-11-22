@@ -32,6 +32,8 @@ dependencies {
   testLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:2.2.1.RELEASE")
 
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
+
+  latestDepTestLibrary("org.springframework.integration:spring-integration-core:5.+")
 }
 
 tasks {
