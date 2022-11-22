@@ -554,6 +554,7 @@ public abstract class AbstractHttpServerTest<SERVER> {
 
           assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_NAME, "localhost");
           // TODO: Move to test knob rather than always treating as optional
+          // TODO: once httpAttributes test knob is used, verify default port values
           if (attrs.get(SemanticAttributes.NET_HOST_PORT) != null) {
             assertThat(attrs).containsEntry(SemanticAttributes.NET_HOST_PORT, port);
           }

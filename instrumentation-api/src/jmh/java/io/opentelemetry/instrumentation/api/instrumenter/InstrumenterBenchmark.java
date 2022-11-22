@@ -10,8 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -42,9 +41,8 @@ public class InstrumenterBenchmark {
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
-              HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
-          .addAttributesExtractor(
-              NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
+              HttpClientAttributesExtractor.create(
+                  ConstantHttpAttributesGetter.INSTANCE, new ConstantNetAttributesGetter()))
           .buildInstrumenter();
 
   @Benchmark
@@ -97,41 +95,33 @@ public class InstrumenterBenchmark {
   }
 
   static class ConstantNetAttributesGetter
-      extends InetSocketAddressNetServerAttributesGetter<Void> {
+      extends InetSocketAddressNetClientAttributesGetter<Void, Void> {
 
     private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
-    private static final InetSocketAddress HOST_ADDRESS =
-        InetSocketAddress.createUnresolved("localhost", 80);
 
-    @Override
     @Nullable
-    public String transport(Void unused) {
+    @Override
+    public String transport(Void request, @Nullable Void response) {
       return SemanticAttributes.NetTransportValues.IP_TCP;
     }
 
     @Nullable
     @Override
-    public String hostName(Void unused) {
+    public String peerName(Void request) {
       return null;
     }
 
     @Nullable
     @Override
-    public Integer hostPort(Void unused) {
+    public Integer peerPort(Void request) {
       return null;
     }
 
-    @Override
     @Nullable
-    protected InetSocketAddress getPeerSocketAddress(Void unused) {
+    @Override
+    protected InetSocketAddress getPeerSocketAddress(Void request, @Nullable Void response) {
       return PEER_ADDRESS;
-    }
-
-    @Nullable
-    @Override
-    protected InetSocketAddress getHostSocketAddress(Void unused) {
-      return HOST_ADDRESS;
     }
   }
 }

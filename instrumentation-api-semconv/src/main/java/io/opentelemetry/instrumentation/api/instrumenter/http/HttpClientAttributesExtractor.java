@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -29,10 +31,35 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>>
     implements SpanKeyProvider {
 
-  /** Creates the HTTP client attributes extractor with default configuration. */
+  /**
+   * Creates the HTTP client attributes extractor with default configuration.
+   *
+   * @deprecated Use {@link #create(HttpClientAttributesGetter, NetClientAttributesGetter)} instead.
+   */
+  @Deprecated
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return builder(getter).build();
+  }
+
+  /** Creates the HTTP client attributes extractor with default configuration. */
+  public static <REQUEST, RESPONSE> HttpClientAttributesExtractor<REQUEST, RESPONSE> create(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+    return builder(httpAttributesGetter, netAttributesGetter).build();
+  }
+
+  /**
+   * Returns a new {@link HttpClientAttributesExtractorBuilder} that can be used to configure the
+   * HTTP client attributes extractor.
+   *
+   * @deprecated Use {@link #builder(HttpClientAttributesGetter, NetClientAttributesGetter)}
+   *     instead.
+   */
+  @Deprecated
+  public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
+    return builder(httpAttributesGetter, new NoopNetClientAttributesGetter<>());
   }
 
   /**
@@ -40,21 +67,43 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
    * HTTP client attributes extractor.
    */
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new HttpClientAttributesExtractorBuilder<>(getter);
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+    return new HttpClientAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
+  private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
+
   HttpClientAttributesExtractor(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter,
       List<String> capturedRequestHeaders,
-      List<String> responseHeaders) {
-    super(getter, capturedRequestHeaders, responseHeaders);
+      List<String> capturedResponseHeaders) {
+    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    internalNetExtractor =
+        new InternalNetClientAttributesExtractor<>(
+            netAttributesGetter, this::shouldCapturePeerPort);
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
+
     internalSet(attributes, SemanticAttributes.HTTP_URL, stripSensitiveData(getter.url(request)));
+
+    internalNetExtractor.onStart(attributes, request);
+  }
+
+  private boolean shouldCapturePeerPort(int port, REQUEST request) {
+    String url = getter.url(request);
+    if (url == null) {
+      return true;
+    }
+    // according to spec: extract if not default (80 for http scheme, 443 for https).
+    if ((url.startsWith("http://") && port == 80) || (url.startsWith("https://") && port == 443)) {
+      return false;
+    }
+    return true;
   }
 
   @Nullable
@@ -108,7 +157,10 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     super.onEnd(attributes, context, request, response, error);
+
     internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request, response));
+
+    internalNetExtractor.onEnd(attributes, request, response);
   }
 
   /**
@@ -118,5 +170,27 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_CLIENT;
+  }
+
+  private static final class NoopNetClientAttributesGetter<REQUEST, RESPONSE>
+      implements NetClientAttributesGetter<REQUEST, RESPONSE> {
+
+    @Nullable
+    @Override
+    public String transport(REQUEST request, @Nullable RESPONSE response) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public String peerName(REQUEST request) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public Integer peerPort(REQUEST request) {
+      return null;
+    }
   }
 }

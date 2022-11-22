@@ -14,7 +14,9 @@ public final class VertxClientSingletons {
 
   private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER =
       VertxClientInstrumenterFactory.create(
-          "io.opentelemetry.vertx-http-client-3.0", new Vertx3HttpAttributesGetter(), null);
+          "io.opentelemetry.vertx-http-client-3.0",
+          new Vertx3HttpAttributesGetter(),
+          Vertx3NetAttributesGetter.INSTANCE);
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
     return INSTRUMENTER;

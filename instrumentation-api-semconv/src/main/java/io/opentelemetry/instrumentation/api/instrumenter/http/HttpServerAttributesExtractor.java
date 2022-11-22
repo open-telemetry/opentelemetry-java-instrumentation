@@ -53,7 +53,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
   }
 
-  private final NetServerAttributesGetter<REQUEST> netAttributesGetter;
+  private final InternalNetServerAttributesExtractor<REQUEST> internalNetExtractor;
   private final Function<Context, String> httpRouteHolderGetter;
 
   HttpServerAttributesExtractor(
@@ -74,10 +74,12 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       NetServerAttributesGetter<REQUEST> netAttributesGetter,
       List<String> capturedRequestHeaders,
-      List<String> responseHeaders,
+      List<String> capturedResponseHeaders,
       Function<Context, String> httpRouteHolderGetter) {
-    super(httpAttributesGetter, capturedRequestHeaders, responseHeaders);
-    this.netAttributesGetter = netAttributesGetter;
+    super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
+    internalNetExtractor =
+        new InternalNetServerAttributesExtractor<>(
+            netAttributesGetter, this::shouldCaptureHostPort);
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
@@ -93,8 +95,19 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
 
-    InternalNetServerAttributesExtractor.onStart(
-        netAttributesGetter, attributes, request, host(request));
+    internalNetExtractor.onStart(attributes, request, host(request));
+  }
+
+  private boolean shouldCaptureHostPort(int port, REQUEST request) {
+    String scheme = getter.scheme(request);
+    if (scheme == null) {
+      return true;
+    }
+    // according to spec: extract if not default (80 for http scheme, 443 for https).
+    if ((scheme.equals("http") && port == 80) || (scheme.equals("https") && port == 443)) {
+      return false;
+    }
+    return true;
   }
 
   @Override

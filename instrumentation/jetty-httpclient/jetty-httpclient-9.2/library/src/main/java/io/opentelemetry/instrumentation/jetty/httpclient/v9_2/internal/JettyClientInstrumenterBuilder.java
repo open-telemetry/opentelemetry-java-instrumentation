@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jetty.client.api.Request;
@@ -34,7 +33,8 @@ public final class JettyClientInstrumenterBuilder {
       new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<Request, Response>
       httpAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(JettyClientHttpAttributesGetter.INSTANCE);
+          HttpClientAttributesExtractor.builder(
+              JettyClientHttpAttributesGetter.INSTANCE, new JettyHttpClientNetAttributesGetter());
 
   public JettyClientInstrumenterBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -61,8 +61,6 @@ public final class JettyClientInstrumenterBuilder {
 
   public Instrumenter<Request, Response> build() {
     JettyClientHttpAttributesGetter httpAttributesGetter = JettyClientHttpAttributesGetter.INSTANCE;
-    JettyHttpClientNetAttributesGetter netAttributesGetter =
-        new JettyHttpClientNetAttributesGetter();
 
     return Instrumenter.<Request, Response>builder(
             this.openTelemetry,
@@ -70,7 +68,6 @@ public final class JettyClientInstrumenterBuilder {
             HttpSpanNameExtractor.create(httpAttributesGetter))
         .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(additionalExtractors)
         .addOperationMetrics(HttpClientMetrics.get())
         .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);

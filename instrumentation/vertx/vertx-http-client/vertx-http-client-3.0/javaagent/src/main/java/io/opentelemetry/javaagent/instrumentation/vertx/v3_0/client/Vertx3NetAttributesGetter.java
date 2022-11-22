@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
+package io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -12,8 +12,9 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class Vertx4NetAttributesGetter
+enum Vertx3NetAttributesGetter
     implements NetClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
+  INSTANCE;
 
   @Override
   public String transport(HttpClientRequest request, @Nullable HttpClientResponse response) {
@@ -23,22 +24,12 @@ final class Vertx4NetAttributesGetter
   @Nullable
   @Override
   public String peerName(HttpClientRequest request) {
-    return request.getHost();
+    return null;
   }
 
   @Override
   public Integer peerPort(HttpClientRequest request) {
-    return request.getPort();
-  }
-
-  @Nullable
-  @Override
-  public String sockPeerAddr(HttpClientRequest request, @Nullable HttpClientResponse response) {
-    if (response == null) {
-      return null;
-    }
-    SocketAddress socketAddress = response.netSocket().remoteAddress();
-    return socketAddress == null ? null : socketAddress.hostAddress();
+    return null;
   }
 
   @Nullable
