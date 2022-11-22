@@ -212,7 +212,7 @@ public class WeakConcurrentMap<K, V>
   public static class WithInlinedExpunction<K, V> extends WeakConcurrentMap<K, V> {
 
     public WithInlinedExpunction() {
-      super(false);
+      super(true);
     }
 
     @Override
