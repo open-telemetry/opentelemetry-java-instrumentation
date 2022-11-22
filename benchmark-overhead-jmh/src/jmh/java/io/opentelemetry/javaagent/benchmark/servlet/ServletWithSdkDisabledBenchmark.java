@@ -7,5 +7,5 @@ package io.opentelemetry.javaagent.benchmark.servlet;
 
 import org.openjdk.jmh.annotations.Fork;
 
-@Fork(jvmArgsAppend = "-Dotel.experimental.sdk.enabled=false")
+@Fork(jvmArgsAppend = "-Dotel.sdk.disabled=true")
 public class ServletWithSdkDisabledBenchmark extends ServletBenchmark {}
