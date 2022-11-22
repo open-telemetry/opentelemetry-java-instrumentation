@@ -81,7 +81,8 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedResponseHeaders) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
     internalNetExtractor =
-        new InternalNetClientAttributesExtractor<>(netAttributesGetter, this::isValidNetPeerPort);
+        new InternalNetClientAttributesExtractor<>(
+            netAttributesGetter, this::shouldCapturePeerPort);
   }
 
   @Override
@@ -93,7 +94,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalNetExtractor.onStart(attributes, request);
   }
 
-  private boolean isValidNetPeerPort(int port, REQUEST request) {
+  private boolean shouldCapturePeerPort(int port, REQUEST request) {
     String url = getter.url(request);
     if (url == null) {
       return true;

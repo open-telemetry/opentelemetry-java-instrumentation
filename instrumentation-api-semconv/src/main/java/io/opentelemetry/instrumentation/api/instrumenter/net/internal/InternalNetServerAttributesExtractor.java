@@ -25,13 +25,13 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
       Logger.getLogger(InternalNetServerAttributesExtractor.class.getName());
 
   private final NetServerAttributesGetter<REQUEST> getter;
-  private final BiPredicate<Integer, REQUEST> netHostPortCondition;
+  private final BiPredicate<Integer, REQUEST> captureHostPortCondition;
 
   public InternalNetServerAttributesExtractor(
       NetServerAttributesGetter<REQUEST> getter,
-      BiPredicate<Integer, REQUEST> netHostPortCondition) {
+      BiPredicate<Integer, REQUEST> captureHostPortCondition) {
     this.getter = getter;
-    this.netHostPortCondition = netHostPortCondition;
+    this.captureHostPortCondition = captureHostPortCondition;
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request, @Nullable String hostHeader) {
@@ -73,7 +73,7 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
     if (hostName != null) {
       internalSet(attributes, SemanticAttributes.NET_HOST_NAME, hostName);
 
-      if (hostPort != null && hostPort > 0 && netHostPortCondition.test(hostPort, request)) {
+      if (hostPort != null && hostPort > 0 && captureHostPortCondition.test(hostPort, request)) {
         internalSet(attributes, SemanticAttributes.NET_HOST_PORT, (long) hostPort);
       }
     }

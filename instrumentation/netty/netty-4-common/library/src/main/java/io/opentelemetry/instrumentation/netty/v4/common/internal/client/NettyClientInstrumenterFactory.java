@@ -81,7 +81,7 @@ public final class NettyClientInstrumenterFactory {
                 PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping));
 
     if (connectionTelemetryEnabled) {
-      // when the connection telemetry is enabled, we do noty want these CONNECT spans to be
+      // when the connection telemetry is enabled, we do not want these CONNECT spans to be
       // suppressed by higher-level HTTP spans - this would happen in the reactor-netty
       // instrumentation
       // the solution for this is to deliberately avoid using the HTTP extractor and use the plain

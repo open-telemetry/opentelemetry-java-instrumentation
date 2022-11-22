@@ -102,7 +102,8 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
       Function<Context, String> httpRouteHolderGetter) {
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
     internalNetExtractor =
-        new InternalNetServerAttributesExtractor<>(netAttributesGetter, this::isValidNetHostPort);
+        new InternalNetServerAttributesExtractor<>(
+            netAttributesGetter, this::shouldCaptureHostPort);
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
@@ -121,7 +122,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalNetExtractor.onStart(attributes, request, host(request));
   }
 
-  private boolean isValidNetHostPort(int port, REQUEST request) {
+  private boolean shouldCaptureHostPort(int port, REQUEST request) {
     String scheme = getter.scheme(request);
     if (scheme == null) {
       return true;

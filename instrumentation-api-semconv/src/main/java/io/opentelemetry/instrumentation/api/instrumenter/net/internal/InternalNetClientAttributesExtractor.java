@@ -20,13 +20,13 @@ import javax.annotation.Nullable;
 public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
-  private final BiPredicate<Integer, REQUEST> netPeerPortCondition;
+  private final BiPredicate<Integer, REQUEST> capturePeerPortCondition;
 
   public InternalNetClientAttributesExtractor(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter,
-      BiPredicate<Integer, REQUEST> netPeerPortCondition) {
+      BiPredicate<Integer, REQUEST> capturePeerPortCondition) {
     this.getter = getter;
-    this.netPeerPortCondition = netPeerPortCondition;
+    this.capturePeerPortCondition = capturePeerPortCondition;
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
@@ -37,7 +37,7 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
     if (peerName != null) {
       internalSet(attributes, SemanticAttributes.NET_PEER_NAME, peerName);
-      if (peerPort != null && peerPort > 0 && netPeerPortCondition.test(peerPort, request)) {
+      if (peerPort != null && peerPort > 0 && capturePeerPortCondition.test(peerPort, request)) {
         internalSet(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
       }
     }
