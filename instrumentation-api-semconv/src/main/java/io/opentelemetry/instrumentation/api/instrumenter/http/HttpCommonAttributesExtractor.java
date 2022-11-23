@@ -9,12 +9,15 @@ import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHtt
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.api.instrumenter.http.CapturedHttpHeadersUtil.responseAttributeKey;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.AlternativeNamePortGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -25,6 +28,8 @@ import javax.annotation.Nullable;
 abstract class HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, GETTER extends HttpCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
+
+  private static final Logger logger = Logger.getLogger(HttpCommonAttributesGetter.class.getName());
 
   final GETTER getter;
   private final List<String> capturedRequestHeaders;
@@ -111,6 +116,45 @@ abstract class HttpCommonAttributesExtractor<
       return Long.parseLong(number);
     } catch (NumberFormatException e) {
       // not a number
+      return null;
+    }
+  }
+
+  static final class HttpNetNamePortGetter<REQUEST> implements AlternativeNamePortGetter<REQUEST> {
+
+    private final HttpCommonAttributesGetter<REQUEST, ?> getter;
+
+    HttpNetNamePortGetter(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+      this.getter = getter;
+    }
+
+    @Nullable
+    @Override
+    public String name(REQUEST request) {
+      String host = firstHeaderValue(getter.requestHeader(request, "host"));
+      if (host == null) {
+        return null;
+      }
+      int hostHeaderSeparator = host.indexOf(':');
+      return hostHeaderSeparator == -1 ? host : host.substring(0, hostHeaderSeparator);
+    }
+
+    @Nullable
+    @Override
+    public Integer port(REQUEST request) {
+      String host = firstHeaderValue(getter.requestHeader(request, "host"));
+      if (host == null) {
+        return null;
+      }
+      int hostHeaderSeparator = host.indexOf(':');
+      if (hostHeaderSeparator == -1) {
+        return null;
+      }
+      try {
+        return Integer.parseInt(host.substring(hostHeaderSeparator + 1));
+      } catch (NumberFormatException e) {
+        logger.log(FINE, e.getMessage(), e);
+      }
       return null;
     }
   }
