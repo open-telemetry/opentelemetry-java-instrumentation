@@ -33,7 +33,8 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   }
 
   @NoMuzzle
-  @SuppressWarnings("deprecation") // implementing deprecated method (removed in 3.0) for better compatibility
+  @SuppressWarnings(
+      "deprecation") // implementing deprecated method (removed in 3.0) for better compatibility
   @Override
   public ConsumerRecord<K, V> intercept(ConsumerRecord<K, V> record) {
     start(record);
