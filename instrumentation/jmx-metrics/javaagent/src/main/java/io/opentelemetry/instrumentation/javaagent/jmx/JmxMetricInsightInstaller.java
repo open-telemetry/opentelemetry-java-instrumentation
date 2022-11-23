@@ -59,7 +59,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       if (inputStream != null) {
         JmxMetricInsight.getLogger().log(FINE, "Opened input stream {0}", yamlResource);
         RuleParser parserInstance = RuleParser.get();
-        parserInstance.addMetricDefsTo(conf, inputStream);
+        parserInstance.addMetricDefsTo(conf, inputStream, platform);
       } else {
         JmxMetricInsight.getLogger().log(INFO, "No support found for {0}", platform);
       }
@@ -80,14 +80,15 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   private static void buildFromUserRules(
       MetricConfiguration conf, ConfigProperties configProperties) {
-    String jmxDir = configProperties.getString("otel.jmx.config");
-    if (jmxDir != null) {
-      JmxMetricInsight.getLogger().log(FINE, "JMX config file name: {0}", jmxDir);
+    String files = configProperties.getString("otel.jmx.config", "");
+    String[] configFiles = files.isEmpty() ? new String[0] : files.split(",");
+    for (String configFile : configFiles) {
+      JmxMetricInsight.getLogger().log(FINE, "JMX config file name: {0}", configFile);
       RuleParser parserInstance = RuleParser.get();
-      try (InputStream inputStream = Files.newInputStream(new File(jmxDir.trim()).toPath())) {
-        parserInstance.addMetricDefsTo(conf, inputStream);
+      try (InputStream inputStream = Files.newInputStream(new File(configFile).toPath())) {
+        parserInstance.addMetricDefsTo(conf, inputStream, configFile);
       } catch (Exception e) {
-        JmxMetricInsight.getLogger().warning(e.getMessage());
+        JmxMetricInsight.getLogger().warning(e.toString());
       }
     }
   }
