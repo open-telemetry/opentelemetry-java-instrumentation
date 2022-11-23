@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import java.net.SocketAddress;
-import java.net.URI;
 import javax.annotation.Nullable;
 
 public final class GrpcRequest {
@@ -36,12 +35,16 @@ public final class GrpcRequest {
     if (authority == null) {
       return;
     }
-    try {
-      URI uri = new URI(null, authority, null, null, null);
-      logicalHost = uri.getHost();
-      logicalPort = uri.getPort();
-    } catch (Throwable e) {
-      // do nothing
+    int index = authority.indexOf(':');
+    if (index == -1) {
+      logicalHost = authority;
+    } else {
+      logicalHost = authority.substring(0, index);
+      try {
+        logicalPort = Integer.parseInt(authority.substring(index + 1));
+      } catch (NumberFormatException e) {
+        // ignore
+      }
     }
   }
 
