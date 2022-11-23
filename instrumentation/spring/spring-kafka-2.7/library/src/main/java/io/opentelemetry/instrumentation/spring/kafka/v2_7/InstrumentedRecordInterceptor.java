@@ -66,8 +66,9 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
     }
     try {
       return (ConsumerRecord<K, V>) interceptRecord.invoke(decorated, record);
-    } catch (Throwable ignored) {
-      return record;
+    } catch (Throwable e) {
+      rethrow(e);
+      return null; // unreachable
     }
   }
 
@@ -75,6 +76,11 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   public ConsumerRecord<K, V> intercept(ConsumerRecord<K, V> record, Consumer<K, V> consumer) {
     start(record);
     return decorated == null ? record : decorated.intercept(record, consumer);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <E extends Throwable> void rethrow(Throwable e) throws E {
+    throw (E) e;
   }
 
   private void start(ConsumerRecord<K, V> record) {
