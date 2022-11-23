@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
 import java.io.File;
@@ -84,6 +85,7 @@ public class AgentStarterImpl implements AgentStarter {
     try {
       loggingCustomizer.init();
       AgentInstaller.installBytebuddyAgent(instrumentation);
+      WeakConcurrentMapCleaner.start();
     } catch (Throwable t) {
       // this is logged below and not rethrown to avoid logging it twice
       startupError = t;
