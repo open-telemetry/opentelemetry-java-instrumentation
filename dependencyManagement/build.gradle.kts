@@ -89,7 +89,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.0-alpha",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.1-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
   "org.assertj:assertj-core:3.23.1",
   "org.awaitility:awaitility:4.2.0",
