@@ -86,7 +86,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
       try (InputStream inputStream = Files.newInputStream(Paths.get(configFile))) {
         parserInstance.addMetricDefsTo(conf, inputStream, configFile);
       } catch (Exception e) {
-        // NoSuchFileException, AccessDeniedException ?
+        // yaml parsing errors are caught and logged inside of addMetricDefsTo
+        // only file access related exceptions are expected here
         JmxMetricInsight.getLogger().warning(e.toString());
       }
     }
