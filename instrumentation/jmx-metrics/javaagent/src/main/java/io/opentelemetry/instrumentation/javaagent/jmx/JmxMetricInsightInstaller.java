@@ -16,9 +16,10 @@ import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
 @AutoService(AgentListener.class)
@@ -70,9 +71,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   private static void buildFromDefaultRules(
       MetricConfiguration conf, ConfigProperties configProperties) {
-    String targetSystem = configProperties.getString("otel.jmx.target.system", "");
-    String[] platforms = targetSystem.isEmpty() ? new String[0] : targetSystem.split(",");
-
+    List<String> platforms = configProperties.getList("otel.jmx.target.system");
     for (String platform : platforms) {
       addRulesForPlatform(platform, conf);
     }
@@ -80,14 +79,14 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   private static void buildFromUserRules(
       MetricConfiguration conf, ConfigProperties configProperties) {
-    String files = configProperties.getString("otel.jmx.config", "");
-    String[] configFiles = files.isEmpty() ? new String[0] : files.split(",");
+    List<String> configFiles = configProperties.getList("otel.jmx.config");
     for (String configFile : configFiles) {
       JmxMetricInsight.getLogger().log(FINE, "JMX config file name: {0}", configFile);
       RuleParser parserInstance = RuleParser.get();
-      try (InputStream inputStream = Files.newInputStream(new File(configFile).toPath())) {
+      try (InputStream inputStream = Files.newInputStream(Paths.get(configFile))) {
         parserInstance.addMetricDefsTo(conf, inputStream, configFile);
       } catch (Exception e) {
+        // NoSuchFileException, AccessDeniedException ?
         JmxMetricInsight.getLogger().warning(e.toString());
       }
     }

@@ -58,11 +58,15 @@ public class RuleParser {
 
       JmxConfig config = loadConfig(is);
       if (config != null) {
-        logger.log(INFO, id + ": found {0} metric rules", config.getRules().size());
+        logger.log(
+            INFO, "{0}: found {1} metric rules", new Object[] {id, config.getRules().size()});
         config.addMetricDefsTo(conf);
       }
     } catch (Exception exception) {
-      logger.log(WARNING, "Failed to parse YAML rules from " + id + ": " + rootCause(exception));
+      logger.log(
+          WARNING,
+          "Failed to parse YAML rules from {0}: {1}",
+          new Object[] {id, rootCause(exception)});
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
       logger.log(WARNING, exception.toString());
