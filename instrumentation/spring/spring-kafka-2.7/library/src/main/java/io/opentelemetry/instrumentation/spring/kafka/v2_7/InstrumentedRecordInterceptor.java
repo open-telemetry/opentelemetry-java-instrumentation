@@ -53,9 +53,8 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   @SuppressWarnings({
     "deprecation",
     "unchecked"
-  }) // implementing deprecated method for better compatibility
-  // deprecated method removed in 3.0
-  // @Override
+  }) // implementing deprecated method (removed in 3.0) for better compatibility
+  @Override
   public ConsumerRecord<K, V> intercept(ConsumerRecord<K, V> record) {
     if (interceptRecord == null) {
       return null;
