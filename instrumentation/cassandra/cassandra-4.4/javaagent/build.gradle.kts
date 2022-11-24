@@ -19,6 +19,7 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation("io.projectreactor:reactor-core:3.4.21")
+  testImplementation(project(":instrumentation:cassandra:testing"))
 }
 
 tasks {

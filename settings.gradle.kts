@@ -174,6 +174,7 @@ include(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-sha
 include(":instrumentation:cassandra:cassandra-3.0:javaagent")
 include(":instrumentation:cassandra:cassandra-4.0:javaagent")
 include(":instrumentation:cassandra:cassandra-4.4:javaagent")
+include(":instrumentation:cassandra:testing")
 include(":instrumentation:cdi-testing")
 include(":instrumentation:graphql-java-12.0:javaagent")
 include(":instrumentation:graphql-java-12.0:library")
