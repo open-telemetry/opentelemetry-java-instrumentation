@@ -6,11 +6,11 @@ OpenTelemetry Zipkin Exporter Starter is a starter package that includes the ope
 
 ## Quickstart
 
-### Add these dependencies to your project.
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `1.1.0`
 
+* Minimum version: `1.1.0`
 
 #### Maven
 

@@ -16,7 +16,7 @@ import ratpack.server.PublicAddress;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class RatpackNetAttributesGetter implements NetServerAttributesGetter<Request> {
+public final class RatpackNetServerAttributesGetter implements NetServerAttributesGetter<Request> {
   @Override
   public String transport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

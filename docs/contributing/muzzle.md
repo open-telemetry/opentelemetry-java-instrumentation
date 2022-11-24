@@ -12,6 +12,7 @@ Muzzle will prevent loading an instrumentation if it detects any mismatch or con
 ## How it works
 
 Muzzle has two phases:
+
 * at compile time it collects references to the third-party symbols and used helper classes;
 * at runtime it compares those references to the actual API symbols on the classpath.
 
@@ -73,12 +74,15 @@ it's not an optional feature.
 The gradle plugin defines two tasks:
 
 * `muzzle` task runs the runtime muzzle verification against different library versions:
+
     ```sh
     ./gradlew :instrumentation:google-http-client-1.19:javaagent:muzzle
     ```
+
     If a new, incompatible version of the instrumented library is published it fails the build.
 
 * `printMuzzleReferences` task prints all API references in a given module:
+
     ```sh
     ./gradlew :instrumentation:google-http-client-1.19:javaagent:printMuzzleReferences
     ```

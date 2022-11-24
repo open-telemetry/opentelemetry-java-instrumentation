@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id("com.bmuschko.docker-remote-api") version "9.0.0"
+    id("com.bmuschko.docker-remote-api") version "8.1.0"
     id("com.github.ben-manes.versions") version "0.44.0"
     id("com.github.jk1.dependency-license-report") version "2.1"
     id("com.google.cloud.tools.jib") version "3.3.1"
@@ -296,6 +296,8 @@ include(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:library")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing")
 include(":instrumentation:jms-1.1:javaagent")
 include(":instrumentation:jms-1.1:javaagent-unit-tests")
+include(":instrumentation:jmx-metrics:javaagent")
+include(":instrumentation:jmx-metrics:library")
 include(":instrumentation:jsf:jsf-common:javaagent")
 include(":instrumentation:jsf:jsf-common:testing")
 include(":instrumentation:jsf:jsf-mojarra-1.2:javaagent")

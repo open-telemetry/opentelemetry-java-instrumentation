@@ -4,7 +4,7 @@
 * [Process](#process)
 * [What do we measure?](#what-do-we-measure)
 * [Config](#config)
-  + [Agents](#agents)
+* [Agents](#agents)
 * [Automation](#automation)
 * [Setup and Usage](#setup-and-usage)
 * [Visualization](#visualization)
@@ -23,9 +23,10 @@ There is one dynamic test here called [OverheadTests](https://github.com/open-te
 The `@TestFactory` method creates a test pass for each of the [defined configurations](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/benchmark-overhead/src/test/java/io/opentelemetry/config/Configs.java).
 Before the tests run, a single collector instance is started. Each test pass has one or more agents configured and those are tested in series.
 For each agent defined in a configuration, the test runner (using [testcontainers](https://www.testcontainers.org/)) will:
+
 1. create a fresh postgres instance and populate it with initial data.
 2. create a fresh instance of [spring-petclinic-rest](https://github.com/spring-petclinic/spring-petclinic-rest) instrumented with the specified agent
-3. measure the time until the petclinic app is marked "healthy" and then write it to a file
+3. measure the time until the petclinic app is marked "healthy" and then write it to a file.
 4. if configured, perform a warmup phase. During the warmup phase, a bit of traffic is generated in order to get the application into a steady state (primarily helping facilitate jit compilations). Currently, we use a 30 second warmup time.
 5. start a JFR recording by running `jcmd` inside the petclinic container
 6. run the [k6 test script](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/benchmark-overhead/k6/basic.js) with the configured number of iterations through the file and the configured number of concurrent virtual users (VUs).
@@ -65,6 +66,7 @@ relative overhead.
 ## Config
 
 Each config contains the following:
+
 * name
 * description
 * list of agents (see below)
@@ -74,6 +76,7 @@ Each config contains the following:
 * warmupSeconds - how long to wait before starting conducting measurements
 
 Currently, we test:
+
 * no agent versus latest released agent
 * no agent versus latest snapshot
 * latest release vs. latest snapshot

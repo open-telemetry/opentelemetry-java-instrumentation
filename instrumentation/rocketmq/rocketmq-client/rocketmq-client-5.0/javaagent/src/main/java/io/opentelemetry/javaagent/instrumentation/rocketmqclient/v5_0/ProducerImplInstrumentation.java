@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,9 +18,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.Futures;
@@ -52,6 +55,13 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
             .and(takesArgument(4, List.class))
             .and(takesArgument(5, int.class)),
         ProducerImplInstrumentation.class.getName() + "$SendAdvice");
+
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("sendAsync"))
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("org.apache.rocketmq.client.apis.message.Message"))),
+        ProducerImplInstrumentation.class.getName() + "$SendAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -60,8 +70,7 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) SettableFuture<List<SendReceiptImpl>> future0,
         @Advice.Argument(4) List<PublishingMessageImpl> messages) {
-      Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter =
-          RocketMqSingletons.producerInstrumenter();
+      Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter = producerInstrumenter();
       int count = messages.size();
       List<SettableFuture<SendReceiptImpl>> futures = FutureConverter.convert(future0, count);
       for (int i = 0; i < count; i++) {
@@ -87,6 +96,18 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
             future,
             new SendSpanFinishingCallback(instrumenter, context, message),
             MoreExecutors.directExecutor());
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SendAsyncAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Return(readOnly = false) CompletableFuture<SendReceipt> future,
+        @Advice.Thrown Throwable throwable) {
+      if (throwable == null) {
+        future = CompletableFutureWrapper.wrap(future);
       }
     }
   }

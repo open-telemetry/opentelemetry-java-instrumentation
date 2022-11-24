@@ -14,7 +14,9 @@ import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.core.publisher.Mono
 
 class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySpec> implements AgentTestTrait {
 
@@ -31,7 +33,12 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
       })
       connector = new ReactorClientHttpConnector(httpClient)
     }
-    return WebClient.builder().clientConnector(connector).build().method(HttpMethod.resolve(method))
+    return WebClient.builder()
+      .filter(ExchangeFilterFunction.ofResponseProcessor(
+        clientResponse -> {
+          return Mono.error(new TestException(clientResponse.statusCode().value()))
+        }))
+      .clientConnector(connector).build().method(HttpMethod.resolve(method))
       .uri(uri)
       .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
   }
@@ -47,7 +54,11 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
 
   @Override
   int sendRequest(WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers) {
-    return request.exchange().block().statusCode().value()
+    try {
+      return request.exchange().block().statusCode().value()
+    } catch (TestException e) {
+      return e.getStatusCode()
+    }
   }
 
   @Override
@@ -81,11 +92,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   }
 
   @Override
-  boolean testCallbackWithImplicitParent() {
-    true
-  }
-
-  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
     attributes.remove(SemanticAttributes.HTTP_FLAVOR)
@@ -95,5 +101,14 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   @Override
   SingleConnection createSingleConnection(String host, int port) {
     return new SpringWebFluxSingleConnection(isOldVersion(), host, port)
+  }
+
+  static class TestException extends RuntimeException {
+
+    int statusCode
+
+    TestException(int statusCode) {
+      this.statusCode = statusCode
+    }
   }
 }

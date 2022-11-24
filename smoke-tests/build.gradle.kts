@@ -15,7 +15,7 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
 }
 
-val dockerJavaVersion = "3.2.13"
+val dockerJavaVersion = "3.2.14"
 dependencies {
   testCompileOnly("com.google.auto.value:auto-value-annotations")
   testAnnotationProcessor("com.google.auto.value:auto-value")
@@ -23,7 +23,7 @@ dependencies {
   api("org.spockframework:spock-core")
   api(project(":testing-common"))
 
-  implementation(platform("io.grpc:grpc-bom:1.50.2"))
+  implementation(platform("io.grpc:grpc-bom:1.51.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")

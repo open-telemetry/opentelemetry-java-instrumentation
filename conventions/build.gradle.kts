@@ -46,10 +46,10 @@ dependencies {
   implementation("org.ow2.asm:asm-tree:9.4")
   implementation("org.apache.httpcomponents:httpclient:4.5.13")
   implementation("org.gradle:test-retry-gradle-plugin:1.4.1")
-  implementation("org.owasp:dependency-check-gradle:7.3.0")
+  implementation("org.owasp:dependency-check-gradle:7.3.2")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.6.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.18")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.19")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.6.8")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:3.0.1")

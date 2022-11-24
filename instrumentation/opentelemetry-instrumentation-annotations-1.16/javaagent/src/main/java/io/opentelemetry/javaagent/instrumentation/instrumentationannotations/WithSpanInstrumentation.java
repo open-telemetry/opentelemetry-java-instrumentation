@@ -41,7 +41,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 public class WithSpanInstrumentation implements TypeInstrumentation {
 
   private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.instrumentation.opentelemetry-annotations.exclude-methods";
+      "otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods";
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;

@@ -25,6 +25,10 @@ updates:
     # need to scope gradle dependency updates down in this repo because most of the instrumentations
     # intentionally test against old library versions
     directory: "/dependencyManagement"
+    ignore:
+      - dependency-name: "ch.qos.logback:logback-classic"
+        # logback 1.4+ requires Java 11
+        versions: [ "[1.4,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
@@ -94,6 +98,14 @@ updates:
     # need to scope gradle dependency updates down in this repo because most of the instrumentations
     # intentionally test against old library versions
     directory: "/.github/dependabot-symlinks"
+    ignore:
+      - dependency-name: "com.bmuschko.docker-remote-api"
+        # Publishing Servlet images for smoke tests is failing starting from 9.0.0
+        # (see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7185)
+        # in particular, these commands are failing (reproducible locally):
+        # ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
+        # ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
+        versions: [ "[9,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"

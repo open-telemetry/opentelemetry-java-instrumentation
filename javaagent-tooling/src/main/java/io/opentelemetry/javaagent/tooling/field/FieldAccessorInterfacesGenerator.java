@@ -50,7 +50,7 @@ final class FieldAccessorInterfacesGenerator {
       String typeName, String fieldTypeName) {
     // We are using Object class name instead of fieldTypeName here because this gets injected
     // onto the bootstrap class loader where context class may be unavailable
-    TypeDescription fieldTypeDesc = TypeDescription.OBJECT;
+    TypeDescription fieldTypeDesc = TypeDescription.ForLoadedType.of(Object.class);
     return byteBuddy
         .makeInterface()
         .merge(SyntheticState.SYNTHETIC)
@@ -64,7 +64,7 @@ final class FieldAccessorInterfacesGenerator {
         .withoutCode()
         .defineMethod(
             getRealSetterName(typeName, fieldTypeName),
-            TypeDescription.VOID,
+            TypeDescription.ForLoadedType.of(void.class),
             Visibility.PUBLIC,
             SyntheticState.SYNTHETIC)
         .withParameter(fieldTypeDesc, "value")

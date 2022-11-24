@@ -12,5 +12,5 @@ dependencies {
   testImplementation("org.apache.camel:camel-http:2.20.1")
 
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
-  testImplementation("io.opentelemetry:opentelemetry-extension-aws")
+  testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 }

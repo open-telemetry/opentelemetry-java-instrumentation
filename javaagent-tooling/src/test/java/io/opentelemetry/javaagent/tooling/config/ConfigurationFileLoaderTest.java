@@ -36,7 +36,7 @@ class ConfigurationFileLoaderTest {
   }
 
   // regression for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6696
-  @SetSystemProperty(key = "otel.experimental.sdk.enabled", value = "false") // don't setup the SDK
+  @SetSystemProperty(key = "otel.sdk.disabled", value = "true") // don't setup the SDK
   @Test
   void fileConfigOverwritesUserPropertiesSupplier(@TempDir Path tempDir) throws IOException {
     // given

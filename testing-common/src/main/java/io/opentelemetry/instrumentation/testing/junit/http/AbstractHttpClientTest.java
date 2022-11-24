@@ -934,32 +934,20 @@ public abstract class AbstractHttpClientTest<REQUEST> {
               if (attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
                 assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
               }
+              if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+                assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
+              }
+              if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
+                int uriPort = uri.getPort();
+                // default values are ignored
+                if (uriPort <= 0 || uriPort == 80 || uriPort == 443) {
+                  assertThat(attrs).doesNotContainKey(SemanticAttributes.NET_PEER_PORT);
+                } else {
+                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uriPort);
+                }
+              }
 
               if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
-                // TODO: net.peer.name and net.peer.port should always be populated from the URI or
-                // the Host header, verify these assertions below
-                if (attrs.get(SemanticAttributes.NET_PEER_NAME) != null) {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
-                }
-                if (attrs.get(SemanticAttributes.NET_PEER_PORT) != null) {
-                  if (uri.getPort() > 0) {
-                    assertThat(attrs)
-                        .containsEntry(SemanticAttributes.NET_PEER_PORT, (long) uri.getPort());
-                  } else {
-                    // https://192.0.2.1/ where some instrumentation may have set this to 443, but
-                    // not all.
-                    assertThat(attrs)
-                        .hasEntrySatisfying(
-                            SemanticAttributes.NET_PEER_PORT,
-                            port -> {
-                              // Some instrumentation seem to set NET_PEER_PORT to -1 incorrectly.
-                              if (port > 0) {
-                                assertThat(port).isEqualTo(options.testHttps ? 443 : 80);
-                              }
-                            });
-                  }
-                }
-
                 // In these cases the peer connection is not established, so the HTTP client should
                 // not report any socket-level attributes
                 assertThat(attrs)
@@ -970,13 +958,6 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                     .doesNotContainKey("net.sock.peer.port");
 
               } else {
-                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_NAME, uri.getHost());
-                }
-                if (httpClientAttributes.contains(SemanticAttributes.NET_PEER_PORT)) {
-                  assertThat(attrs).containsEntry(SemanticAttributes.NET_PEER_PORT, uri.getPort());
-                }
-
                 // TODO: Move to test knob rather than always treating as optional
                 if (attrs.get(SemanticAttributes.NET_SOCK_PEER_ADDR) != null) {
                   assertThat(attrs)

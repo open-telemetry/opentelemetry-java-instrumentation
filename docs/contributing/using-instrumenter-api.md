@@ -413,7 +413,7 @@ In some rare cases it may be useful to completely disable the constructed `Instr
 example, based on a configuration property. The `InstrumenterBuilder` exposes a `setEnabled()`
 method for that: passing `false` will turn the newly created `Instrumenter` into a no-op instance.
 
-### Finally, set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`!
+### Finally, set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`
 
 The `Instrumenter` creation process ends with calling one of the following `InstrumenterBuilder`
 methods:

@@ -10,11 +10,9 @@ javaPlatform {
   allowDependencies()
 }
 
-val otelVersion: String by project
-
 dependencies {
-  api(platform("io.opentelemetry:opentelemetry-bom:${otelVersion}"))
-  api(platform("io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha"))
+  api(platform("io.opentelemetry:opentelemetry-bom"))
+  api(platform("io.opentelemetry:opentelemetry-bom-alpha"))
   api(platform(project(":bom")))
 }
 

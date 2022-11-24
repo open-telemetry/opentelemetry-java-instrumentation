@@ -4,7 +4,7 @@ Provides OpenTelemetry instrumentation for [gRPC](https://grpc.io/).
 
 ## Quickstart
 
-### Add the following dependencies to your project:
+### Add the following dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-grpc-1.6).
 

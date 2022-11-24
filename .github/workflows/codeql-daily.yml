@@ -35,5 +35,5 @@ jobs:
     # open an issue on failure because it can be easy to miss CI failure notifications
     needs:
       - analyze
-    if: failure()
+    if: failure() && github.run_attempt == 1
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

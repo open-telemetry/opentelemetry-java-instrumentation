@@ -33,3 +33,21 @@ afterEvaluate {
     }
   }
 }
+
+evaluationDependsOn(":dependencyManagement")
+val dependencyManagementConf = configurations.create("dependencyManagement") {
+  isCanBeConsumed = false
+  isCanBeResolved = false
+  isVisible = false
+}
+afterEvaluate {
+  configurations.configureEach {
+    if (isCanBeResolved && !isCanBeConsumed) {
+      extendsFrom(dependencyManagementConf)
+    }
+  }
+}
+
+dependencies {
+  add(dependencyManagementConf.name, platform(project(":dependencyManagement")))
+}

@@ -4,7 +4,7 @@ Provides OpenTelemetry instrumentation for [C3P0](https://www.mchange.com/projec
 
 ## Quickstart
 
-### Add these dependencies to your project:
+### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
 release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-c3p0-0.9).

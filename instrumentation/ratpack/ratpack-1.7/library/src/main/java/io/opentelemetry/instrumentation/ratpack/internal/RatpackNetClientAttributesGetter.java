@@ -15,7 +15,7 @@ import ratpack.http.client.RequestSpec;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class RatpackHttpNetAttributesGetter
+public final class RatpackNetClientAttributesGetter
     implements NetClientAttributesGetter<RequestSpec, HttpResponse> {
 
   @Override

@@ -1,3 +1,5 @@
+# Extensions
+
 ## Introduction
 
 Extensions add new features and capabilities to the agent without having to create a separate distribution (for examples and ideas, see [Use cases for extensions](#sample-use-cases)).
@@ -20,6 +22,7 @@ To add the extension to the instrumentation agent:
           -Dotel.javaagent.extensions=build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-all.jar
           -jar myapp.jar
      ```
+
 Note: to load multiple extensions, you can specify a comma-separated list of extension jars or directories (that
 contain extension jars) for the `otel.javaagent.extensions` value.
 
@@ -28,6 +31,7 @@ contain extension jars) for the `otel.javaagent.extensions` value.
 To simplify deployment, you can embed extensions into the OpenTelemetry Java Agent to produce a single jar file. With an integrated extension, you no longer need the `-Dotel.javaagent.extensions` command line option.
 
 For more information, see the `extendedAgent` task in [build.gradle](build.gradle).
+
 ## Extensions examples
 
 * Custom `IdGenerator`: [DemoIdGenerator](src/main/java/com/example/javaagent/DemoIdGenerator.java)

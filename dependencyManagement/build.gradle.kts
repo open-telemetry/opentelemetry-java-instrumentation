@@ -11,11 +11,6 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-// this line is managed by .github/scripts/update-sdk-version.sh
-val otelVersion = "1.19.0"
-
-rootProject.extra["otelVersion"] = otelVersion
-
 // Need both BOM and groovy jars
 val groovyVersion = "4.0.6"
 
@@ -31,23 +26,23 @@ val groovyVersion = "4.0.6"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.14.0",
+  "com.fasterxml.jackson:jackson-bom:2.14.1",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:${otelVersion}",
-  "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
+  "io.opentelemetry:opentelemetry-bom:1.20.1",
+  "io.opentelemetry:opentelemetry-bom-alpha:1.20.1-alpha",
   "org.junit:junit-bom:5.9.1",
-  "org.testcontainers:testcontainers-bom:1.17.5",
+  "org.testcontainers:testcontainers-bom:1.17.6",
   "org.spockframework:spock-bom:2.3-groovy-4.0"
 )
 
 val autoServiceVersion = "1.0.1"
-val autoValueVersion = "1.10"
+val autoValueVersion = "1.10.1"
 val errorProneVersion = "2.16"
-val byteBuddyVersion = "1.12.18"
+val byteBuddyVersion = "1.12.19"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.9.0"
-val slf4jVersion = "2.0.2"
+val slf4jVersion = "2.0.4"
 
 val CORE_DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:${autoServiceVersion}",
@@ -78,11 +73,11 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "ch.qos.logback:logback-classic:1.3.1", // 1.4+ requires Java 11+
+  "ch.qos.logback:logback-classic:1.3.5", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.10.4",
+  "com.uber.nullaway:nullaway:0.10.5",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
@@ -94,6 +89,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.1-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
   "org.assertj:assertj-core:3.23.1",
   "org.awaitility:awaitility:4.2.0",

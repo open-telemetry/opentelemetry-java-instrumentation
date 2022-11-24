@@ -25,10 +25,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:mongo:mongo-async-3.3:javaagent"))
   testInstrumentation(project(":instrumentation:mongo:mongo-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:mongo:mongo-3.7:javaagent"))
-
-  latestDepTestLibrary("org.mongodb:mongodb-driver-core:4.7.+")
-  latestDepTestLibrary("org.mongodb:mongodb-driver-sync:4.7.+")
-  latestDepTestLibrary("org.mongodb:mongodb-driver-reactivestreams:4.7.+")
 }
 
 tasks {
