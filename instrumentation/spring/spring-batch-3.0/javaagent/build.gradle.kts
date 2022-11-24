@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework.batch")
     module.set("spring-batch-core")
-    versions.set("[3.0.0.RELEASE,)")
+    versions.set("[3.0.0.RELEASE,5)")
     assertInverse.set(true)
   }
 }
@@ -17,6 +17,9 @@ dependencies {
   testImplementation("javax.inject:javax.inject:1")
   // SimpleAsyncTaskExecutor context propagation
   testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
+
+  // spring batch 5.0 uses spring framework 6.0
+  latestDepTestLibrary("org.springframework.batch:spring-batch-core:4.+")
 }
 
 tasks {
