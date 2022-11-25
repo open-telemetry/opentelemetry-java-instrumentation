@@ -486,6 +486,8 @@ hideFromDependabot(":instrumentation:wicket-8.0:javaagent")
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
 
+// this effectively hides the submodule from dependabot because dependabot only regex parses gradle
+// files looking for certain patterns
 fun hideFromDependabot(projectPath: String) {
   include(projectPath)
 }
