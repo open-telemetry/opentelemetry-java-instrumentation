@@ -2,13 +2,6 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-// TODO: remove once spring-boot 3 gets released
-repositories {
-  mavenCentral()
-  maven("https://repo.spring.io/milestone")
-  mavenLocal()
-}
-
 muzzle {
   pass {
     group.set("org.springframework.kafka")
@@ -17,8 +10,6 @@ muzzle {
     assertInverse.set(true)
   }
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
@@ -34,15 +25,11 @@ dependencies {
 
   testImplementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
-  // TODO: remove once spring-boot 3 gets released
-  if (latestDepTest) {
-    testImplementation("org.springframework.boot:spring-boot-starter-test:3.0.0-RC2")
-    testImplementation("org.springframework.boot:spring-boot-starter:3.0.0-RC2")
-  } else {
-    testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
-    testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
-  }
+  testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
+  testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
 }
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 testing {
   suites {
@@ -53,9 +40,8 @@ testing {
         // the "library" configuration is not recognized by the test suite plugin
         if (latestDepTest) {
           implementation("org.springframework.kafka:spring-kafka:+")
-          // TODO: use stable spring-boot 3 when it gets released
-          implementation("org.springframework.boot:spring-boot-starter-test:3.0.0-RC2")
-          implementation("org.springframework.boot:spring-boot-starter:3.0.0-RC2")
+          implementation("org.springframework.boot:spring-boot-starter-test:+")
+          implementation("org.springframework.boot:spring-boot-starter:+")
         } else {
           implementation("org.springframework.kafka:spring-kafka:2.7.0")
           implementation("org.springframework.boot:spring-boot-starter-test:2.5.3")
