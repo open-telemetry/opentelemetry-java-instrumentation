@@ -34,6 +34,8 @@ dependencies {
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
 
   latestDepTestLibrary("org.springframework.integration:spring-integration-core:5.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:2.+")
 }
 
 tasks {
