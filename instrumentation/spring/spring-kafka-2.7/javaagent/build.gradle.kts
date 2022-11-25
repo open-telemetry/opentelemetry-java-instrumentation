@@ -29,6 +29,9 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
 
   latestDepTestLibrary("org.springframework.kafka:spring-kafka:2.+")
+  // TODO: temp change, will be reverted in #7271
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:2.+")
 }
 
 testing {
