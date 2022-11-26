@@ -6,8 +6,7 @@ muzzle {
   pass {
     group.set("com.datastax.oss")
     module.set("java-driver-core")
-    versions.set("[4.0,)")
-    assertInverse.set(true)
+    versions.set("[4.0,4.4)")
   }
 }
 
