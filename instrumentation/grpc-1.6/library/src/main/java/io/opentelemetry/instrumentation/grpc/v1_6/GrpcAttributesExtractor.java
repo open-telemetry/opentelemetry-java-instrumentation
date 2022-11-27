@@ -27,8 +27,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
   }
 
   @Override
-  public void onStart(
-      AttributesBuilder attributes, Context parentContext, GrpcRequest request) {
+  public void onStart(AttributesBuilder attributes, Context parentContext, GrpcRequest request) {
     for (String key : capturedRequestMetadata) {
       List<String> value = getter.metadataValue(request, key);
       if (!value.isEmpty()) {
