@@ -11,8 +11,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraRequest;
 
-/** Entrypoint for instrumenting cassandra sessions. */
-public final class CassandraTelemetry {
+public final class CassandraTelemetry
+    extends io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraTelemetry {
 
   /** Returns a new {@link CassandraTelemetry} configured with the given {@link OpenTelemetry}. */
   public static CassandraTelemetry create(OpenTelemetry openTelemetry) {
@@ -30,15 +30,11 @@ public final class CassandraTelemetry {
   private final Instrumenter<CassandraRequest, ExecutionInfo> instrumenter;
 
   CassandraTelemetry(Instrumenter<CassandraRequest, ExecutionInfo> instrumenter) {
+    super(instrumenter);
     this.instrumenter = instrumenter;
   }
 
-  /**
-   * Construct a new tracing-enable CqlSession using the provided {@link CqlSession} instance.
-   *
-   * @param session An instance of CqlSession configured as desired.
-   * @return a {@link TracingCqlSession}.
-   */
+  @Override
   public CqlSession wrap(CqlSession session) {
     io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.TracingCqlSession
         originalTracingCqlSession =

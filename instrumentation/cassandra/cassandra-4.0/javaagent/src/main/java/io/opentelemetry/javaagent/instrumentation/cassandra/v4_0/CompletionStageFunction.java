@@ -19,6 +19,6 @@ class CompletionStageFunction implements Function<Object, Object> {
     if (session.getClass().getName().endsWith("cassandra4.TracingCqlSession")) {
       return session;
     }
-    return new TracingCqlSession((CqlSession) session);
+    return CassandraSingletons.telemetry.wrap((CqlSession) session);
   }
 }
