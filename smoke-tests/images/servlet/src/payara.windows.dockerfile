@@ -1,14 +1,14 @@
 ARG jdkImage
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM mcr.microsoft.com/windows/servercore:1809 as builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
 ARG version
 
 ADD https://s3-eu-west-1.amazonaws.com/payara.fish/Payara+Downloads/${version}/payara-${version}.zip /server.zip
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 RUN ["powershell", "-Command", "remove-item -Path /server/payara5/glassfish/modules/phonehome-bootstrap.jar"]
 
-FROM ${jdkImage}-windowsservercore-1809
+FROM ${jdkImage}-windowsservercore-ltsc2022
 
 # Make /server the base directory to simplify all further paths
 COPY --from=builder /server/payara5 /server

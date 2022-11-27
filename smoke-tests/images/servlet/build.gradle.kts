@@ -25,8 +25,7 @@ val targets = mapOf(
     ImageTarget(listOf("11.0.7"), listOf("openj9"), listOf("11", "16"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0")
   ),
   "liberty" to listOf(
-    // running configure.sh is failing while building the image with Java 17
-    ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "16"), mapOf("release" to "2020-11-11_0736")),
+    ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
     // running configure.sh is failing while building the image with Java 19
     ImageTarget(listOf("21.0.0.10"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900")),
     ImageTarget(listOf("21.0.0.10"), listOf("openj9"), listOf("8", "11", "16"), mapOf("release" to "2021-09-20_1900"))
@@ -145,7 +144,9 @@ fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfil
     }
   } else if (vm == "openj9") {
     if (isWindows) {
-      "adoptopenjdk:$jdk-openj9"
+      // ibm-semeru-runtimes doesn't publish windows images
+      // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
+      throw GradleException("Unexpected vm: $vm")
     } else {
       "ibm-semeru-runtimes:open-$jdk-jdk"
     }
@@ -207,6 +208,11 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
 
       for (version in entry.version) {
         for (vm in entry.vm) {
+          if (vm == "openj9" && isWindows) {
+            // ibm-semeru-runtimes doesn't publish windows images
+            // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
+            continue
+          }
           for (jdk in entry.jdk) {
             if (supportsWindows || !isWindows) {
               resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows))
