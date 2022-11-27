@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 
 public class TracingCqlSession implements CqlSession {
   private final CqlSession session;
+
   private final Instrumenter<CassandraRequest, ExecutionInfo> instrumenter;
 
   public TracingCqlSession(

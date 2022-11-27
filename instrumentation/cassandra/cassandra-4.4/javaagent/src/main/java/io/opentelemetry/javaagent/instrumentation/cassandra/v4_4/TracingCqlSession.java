@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nullable;
 
-public class TracingCqlSession implements CqlSession {
+class TracingCqlSession implements CqlSession {
 
   private final CqlSession originalTracingCqlSession;
 

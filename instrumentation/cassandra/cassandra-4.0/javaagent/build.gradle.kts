@@ -11,10 +11,9 @@ muzzle {
 }
 
 dependencies {
-  library("com.datastax.oss:java-driver-core:4.0.0")
+  implementation(project(":instrumentation:cassandra:cassandra-4.0:library"))
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
+  library("com.datastax.oss:java-driver-core:4.0.0")
 
   testImplementation(project(":instrumentation:cassandra:testing"))
 }

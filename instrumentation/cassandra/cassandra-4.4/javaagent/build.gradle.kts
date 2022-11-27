@@ -11,7 +11,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:cassandra:cassandra-4.0:javaagent"))
+  implementation(project(":instrumentation:cassandra:cassandra-4.0:library"))
 
   library("com.datastax.oss:java-driver-core:4.4.0")
 
