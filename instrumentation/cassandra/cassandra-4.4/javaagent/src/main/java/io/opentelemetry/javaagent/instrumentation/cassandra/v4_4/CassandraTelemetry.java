@@ -9,10 +9,10 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraRequest;
+import io.opentelemetry.instrumentation.cassandra.CassandraRequest;
 
 public final class CassandraTelemetry
-    extends io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraTelemetry {
+    extends io.opentelemetry.instrumentation.cassandra.CassandraTelemetry {
 
   /** Returns a new {@link CassandraTelemetry} configured with the given {@link OpenTelemetry}. */
   public static CassandraTelemetry create(OpenTelemetry openTelemetry) {
@@ -36,10 +36,8 @@ public final class CassandraTelemetry
 
   @Override
   public CqlSession wrap(CqlSession session) {
-    io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.TracingCqlSession
-        originalTracingCqlSession =
-            new io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.TracingCqlSession(
-                session, instrumenter);
+    io.opentelemetry.instrumentation.cassandra.TracingCqlSession originalTracingCqlSession =
+        new io.opentelemetry.instrumentation.cassandra.TracingCqlSession(session, instrumenter);
     return new TracingCqlSession(originalTracingCqlSession);
   }
 }

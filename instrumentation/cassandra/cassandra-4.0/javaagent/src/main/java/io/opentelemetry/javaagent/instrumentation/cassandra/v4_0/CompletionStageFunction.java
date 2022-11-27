@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 import com.datastax.oss.driver.api.core.CqlSession;
 import java.util.function.Function;
 
-class CompletionStageFunction implements Function<Object, Object> {
+public class CompletionStageFunction implements Function<Object, Object> {
 
   @Override
   public Object apply(Object session) {

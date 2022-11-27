@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.cassandra.CassandraTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 
 final class CassandraSingletons {

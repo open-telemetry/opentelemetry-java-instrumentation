@@ -9,7 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 
 public class CassandraTelemetryBuilder
-    extends io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraTelemetryBuilder {
+    extends io.opentelemetry.instrumentation.cassandra.CassandraTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
