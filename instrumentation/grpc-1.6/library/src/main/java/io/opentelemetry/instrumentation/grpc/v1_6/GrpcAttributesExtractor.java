@@ -28,11 +28,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, GrpcRequest grpcRequest) {
-    if (status != null) {
-      attributes.put(SemanticAttributes.RPC_GRPC_STATUS_CODE, status.getCode().value());
-    }
-
+      AttributesBuilder attributes, Context parentContext, GrpcRequest request) {
     for (String key : capturedRequestMetadata) {
       List<String> value = getter.metadataValue(request, key);
       if (!value.isEmpty()) {
@@ -48,6 +44,8 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       GrpcRequest request,
       @Nullable Status status,
       @Nullable Throwable error) {
-    // Request attributes captured on request start.
+    if (status != null) {
+      attributes.put(SemanticAttributes.RPC_GRPC_STATUS_CODE, status.getCode().value());
+    }
   }
 }
