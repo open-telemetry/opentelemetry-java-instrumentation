@@ -21,8 +21,6 @@ dependencies {
   testLibrary("org.springframework.amqp:spring-rabbit:2.1.7.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.22.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter:1.5.22.RELEASE")
-
-  latestDepTestLibrary("org.springframework.amqp:spring-rabbit:2.+")
 }
 
 tasks {
@@ -31,10 +29,22 @@ tasks {
   }
 }
 
-configurations.testRuntimeClasspath {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+// spring 6 requires java 17
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
+}
+
+// spring 6 uses slf4j 2.0
+if (!latestDepTest) {
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      // requires old logback (and therefore also old slf4j)
+      force("ch.qos.logback:logback-classic:1.2.11")
+      force("org.slf4j:slf4j-api:1.7.36")
+    }
   }
 }

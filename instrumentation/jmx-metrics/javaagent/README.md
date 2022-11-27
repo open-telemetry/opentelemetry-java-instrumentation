@@ -30,20 +30,20 @@ No targets are enabled by default. The supported target environments are listed 
 - [wildfly](wildfly.md)
 - [hadoop](hadoop.md)
 
-## Configuration File
+## Configuration Files
 
-To provide your own metric definitions, create a YAML configuration file, and specify its location using the `otel.jmx.config` property. For example
+To provide your own metric definitions, create one or more YAML configuration files, and specify their location using the `otel.jmx.config` property. Absolute or relative pathnames can be specified. For example
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.config=path/to/config_file.yaml \
+     -Dotel.jmx.config=path/to/config_file.yaml,more_rules.yaml \
      ... \
      -jar myapp.jar
 ```
 
 ### Basic Syntax
 
-The configuration file can contain multiple entries (which we call _rules_), defining a number of metrics. Each rule must identify a set of MBeans and the name of the MBean attribute to query, along with additional information on how to report the values. Let's look at a simple example.
+Each configuration file can contain multiple entries (which we call _rules_), defining a number of metrics. Each rule must identify a set of MBeans and the name of the MBean attribute to query, along with additional information on how to report the values. Let's look at a simple example.
 
 ```yaml
 ---

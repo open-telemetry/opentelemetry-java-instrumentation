@@ -258,7 +258,9 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
     try {
       while (!Thread.interrupted()) {
         Reference<?> reference = REFERENCE_QUEUE.remove();
-        removeWeakKey((WeakKey<?>) reference);
+        if (reference != null) {
+          removeWeakKey((WeakKey<?>) reference);
+        }
       }
     } catch (InterruptedException ignored) {
       // do nothing
