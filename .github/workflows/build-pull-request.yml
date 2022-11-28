@@ -12,7 +12,7 @@ jobs:
     uses: ./.github/workflows/build-common.yml
     with:
       # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
-      skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
+      skip-windows-smoke-tests: false
       cache-read-only: true
 
   test-latest-deps:
