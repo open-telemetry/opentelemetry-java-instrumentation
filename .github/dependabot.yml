@@ -27,6 +27,9 @@ updates:
         # ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
         # ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
         versions: [ "[9,)" ]
+      - dependency-name: "net.sf.jt400:jt400"
+        # using old version of this obscure artifact to test instrumentation of Java 1.1 bytecode
+        versions: [ "(,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
