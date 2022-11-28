@@ -16,7 +16,7 @@ dependencies {
   testImplementation("com.google.guava:guava")
   testImplementation(project(":instrumentation-annotations"))
 
-  testImplementation("cglib:cglib:3.2.5")
+  testImplementation("cglib:cglib:3.3.0")
 
   // test instrumenting java 1.1 bytecode
   // TODO do we want this?
