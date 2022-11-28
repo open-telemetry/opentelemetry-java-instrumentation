@@ -32,6 +32,8 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +51,7 @@ public final class OpenTelemetryDriver implements Driver {
 
   private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+  private static final Collection<Driver> DRIVER_CANDIDATES = new ArrayList<>();
 
   static {
     try {
@@ -99,8 +102,52 @@ public final class OpenTelemetryDriver implements Driver {
     return REGISTERED.get();
   }
 
-  private static Driver findDriver(String realUrl) {
-    for (Driver candidate : Collections.list(DriverManager.getDrivers())) {
+  /**
+   * Add driver candidate that wasn't registered against {@link DriverManager}. This is mainly
+   * useful when drivers are initialized at native image build time, and you don't want to postpone
+   * class initialization, for runtime initialization could make driver incompatible with other
+   * systems. Drivers registered with this method have higher priority over those registered against
+   * {@link DriverManager}.
+   *
+   * @param driver {@link Driver} that should be registered
+   */
+  public static void addDriverCandidate(Driver driver) {
+    if (driver != null) {
+      DRIVER_CANDIDATES.add(driver);
+    }
+  }
+
+  /**
+   * Remove driver added via {@link #addDriverCandidate(Driver)}.
+   *
+   * @param driver {@link Driver} that should be unregistered
+   * @return true if the driver was unregistered
+   */
+  public static boolean removeDriverCandidate(Driver driver) {
+    return DRIVER_CANDIDATES.remove(driver);
+  }
+
+  /**
+   * Find driver that accepts {@code realUrl}. Drivers registered against {@link #DRIVER_CANDIDATES}
+   * are preferred over {@link DriverManager} drivers.
+   */
+  static Driver findDriver(String realUrl) {
+    Driver driver = null;
+    if (!DRIVER_CANDIDATES.isEmpty()) {
+      driver = findDriver(realUrl, DRIVER_CANDIDATES);
+    }
+    if (driver == null) {
+      driver = findDriver(realUrl, Collections.list(DriverManager.getDrivers()));
+    }
+    if (driver == null) {
+      throw new IllegalStateException("Unable to find a driver that accepts url: " + realUrl);
+    }
+
+    return driver;
+  }
+
+  private static Driver findDriver(String realUrl, Collection<Driver> drivers) {
+    for (Driver candidate : drivers) {
       try {
         if (!(candidate instanceof OpenTelemetryDriver) && candidate.acceptsURL(realUrl)) {
           return candidate;
@@ -109,8 +156,7 @@ public final class OpenTelemetryDriver implements Driver {
         // intentionally ignore exception
       }
     }
-
-    throw new IllegalStateException("Unable to find a driver that accepts url: " + realUrl);
+    return null;
   }
 
   /**
