@@ -20,7 +20,7 @@ dependencies {
 
   // test instrumenting java 1.1 bytecode
   // TODO do we want this?
-  testImplementation("net.sf.jt400:jt400:6.1")
+  testImplementation("net.sf.jt400:jt400:11.1")
 }
 
 tasks {
