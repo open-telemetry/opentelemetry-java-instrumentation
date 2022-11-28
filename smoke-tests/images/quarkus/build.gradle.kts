@@ -4,7 +4,7 @@ import java.time.format.DateTimeFormatter
 
 buildscript {
   dependencies {
-    classpath("com.google.cloud.tools:jib-quarkus-extension-gradle:0.1.1")
+    classpath("com.google.cloud.tools:jib-quarkus-extension-gradle:0.1.2")
   }
 }
 
@@ -12,7 +12,7 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "2.8.0.Final"
+  id("io.quarkus") version "2.14.2.Final"
 }
 
 dependencies {
