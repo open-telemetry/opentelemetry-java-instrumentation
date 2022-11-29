@@ -72,13 +72,12 @@ class Wildfly17Jdk11 extends WildflySmokeTest {
 class Wildfly17Jdk17 extends WildflySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "17.0.1.Final", jdk = "18")
-class Wildfly17Jdk18 extends WildflyJdk8SmokeTest {
+@AppServer(version = "17.0.1.Final", jdk = "19")
+class Wildfly17Jdk19 extends WildflyJdk8SmokeTest {
 }
 
-@AppServer(version = "17.0.1.Final", jdk = "19")
-class Wildfly17Jdk19 extends WildflySmokeTest {
+@AppServer(version = "17.0.1.Final", jdk = "20")
+class Wildfly17Jdk20 extends WildflySmokeTest {
 }
 
 @AppServer(version = "21.0.0.Final", jdk = "8")
@@ -93,13 +92,12 @@ class Wildfly21Jdk11 extends WildflySmokeTest {
 class Wildfly21Jdk17 extends WildflySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "21.0.0.Final", jdk = "18")
-class Wildfly21Jdk18 extends WildflyJdk8SmokeTest {
+@AppServer(version = "21.0.0.Final", jdk = "19")
+class Wildfly21Jdk19 extends WildflyJdk8SmokeTest {
 }
 
-@AppServer(version = "21.0.0.Final", jdk = "19")
-class Wildfly21Jdk19 extends WildflySmokeTest {
+@AppServer(version = "21.0.0.Final", jdk = "20")
+class Wildfly21Jdk20 extends WildflySmokeTest {
 }
 
 @AppServer(version = "25.0.1.Final", jdk = "8")
@@ -114,13 +112,12 @@ class Wildfly25Jdk11 extends WildflySmokeTest {
 class Wildfly25Jdk17 extends WildflySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "25.0.1.Final", jdk = "18")
-class Wildfly25Jdk18 extends WildflyJdk8SmokeTest {
+@AppServer(version = "25.0.1.Final", jdk = "19")
+class Wildfly25Jdk19 extends WildflyJdk8SmokeTest {
 }
 
-@AppServer(version = "25.0.1.Final", jdk = "19")
-class Wildfly25Jdk19 extends WildflySmokeTest {
+@AppServer(version = "25.0.1.Final", jdk = "20")
+class Wildfly25Jdk20 extends WildflySmokeTest {
 }
 
 @AppServer(version = "17.0.1.Final", jdk = "8-openj9")
