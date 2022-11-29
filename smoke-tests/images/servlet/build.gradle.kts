@@ -145,7 +145,7 @@ fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfil
   } else if (vm == "openj9") {
     if (isWindows) {
       // ibm-semeru-runtimes doesn't publish windows images
-      // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
+      // adoptopenjdk doesn't publish Windows 2022 images (and is deprecated)
       throw GradleException("Unexpected vm: $vm")
     } else {
       "ibm-semeru-runtimes:open-$jdk-jdk"
