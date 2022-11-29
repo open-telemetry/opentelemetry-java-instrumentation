@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.scalaexecutors;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -30,7 +31,8 @@ public class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("doSubmit")
+        // doSubmit is internal method prior to 2.11, and externalPush is the internal method after
+        namedOneOf("doSubmit", "externalPush")
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
         ScalaForkJoinPoolInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
   }
