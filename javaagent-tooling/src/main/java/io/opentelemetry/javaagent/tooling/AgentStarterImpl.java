@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
@@ -13,7 +14,6 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
-import java.util.Iterator;
 import java.util.ServiceLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -63,13 +63,22 @@ public class AgentStarterImpl implements AgentStarter {
   public void start() {
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), javaagentFile);
 
-    Iterator<LoggingCustomizer> loggingCustomizers =
-        ServiceLoader.load(LoggingCustomizer.class, extensionClassLoader).iterator();
-    LoggingCustomizer loggingCustomizer;
-    if (loggingCustomizers.hasNext()) {
-      loggingCustomizer = loggingCustomizers.next();
-    } else {
-      loggingCustomizer = NoopLoggingCustomizer.INSTANCE;
+    String loggerImplementationName = ConfigPropertiesUtil.getString("otel.javaagent.logging");
+    // default to the built-in stderr slf4j-simple logger
+    if (loggerImplementationName == null) {
+      loggerImplementationName = "simple";
+    }
+
+    LoggingCustomizer loggingCustomizer = null;
+    for (LoggingCustomizer customizer : ServiceLoader.load(LoggingCustomizer.class)) {
+      if (customizer.name().equalsIgnoreCase(loggerImplementationName)) {
+        loggingCustomizer = customizer;
+        break;
+      }
+    }
+    // unsupported logger implementation; defaulting to noop
+    if (loggingCustomizer == null) {
+      loggingCustomizer = new NoopLoggingCustomizer();
     }
 
     Throwable startupError = null;

@@ -63,6 +63,7 @@ dependencies {
   baseJavaagentLibs(project(":javaagent-extension-api"))
 
   baseJavaagentLibs(project(":javaagent-tooling"))
+  baseJavaagentLibs(project(":javaagent-internal-logging-application"))
   baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
@@ -74,6 +75,7 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-slf4j:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-url-class-loader:javaagent"))
 
   // concurrentlinkedhashmap-lru and weak-lock-free are copied in to the instrumentation-api module
@@ -83,6 +85,7 @@ dependencies {
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
   //  but I couldn't get that to work
   licenseReportDependencies(project(":javaagent-tooling"))
+  licenseReportDependencies(project(":javaagent-internal-logging-application"))
   licenseReportDependencies(project(":javaagent-internal-logging-simple"))
   licenseReportDependencies(project(":javaagent-extension-api"))
 

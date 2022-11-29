@@ -35,7 +35,7 @@ final class NoopLoggerFactory implements InternalLogger.Factory {
     public void log(Level level, String message, @Nullable Throwable error) {}
 
     @Override
-    protected String name() {
+    public String name() {
       return name;
     }
   }

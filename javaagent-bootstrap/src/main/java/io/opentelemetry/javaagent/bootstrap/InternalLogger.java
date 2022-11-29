@@ -28,11 +28,11 @@ public abstract class InternalLogger {
     return loggerFactory.get().create(name);
   }
 
-  protected abstract boolean isLoggable(Level level);
+  public abstract boolean isLoggable(Level level);
 
-  protected abstract void log(Level level, String message, @Nullable Throwable error);
+  public abstract void log(Level level, String message, @Nullable Throwable error);
 
-  protected abstract String name();
+  public abstract String name();
 
   public enum Level {
     ERROR,
