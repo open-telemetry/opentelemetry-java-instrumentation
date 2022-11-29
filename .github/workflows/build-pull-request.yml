@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - if: >
+      - if: |
           needs.common.result != 'success' ||
           (!startsWith(github.base_ref, 'release/') && needs.muzzle.result != 'success')
         run: exit 1
