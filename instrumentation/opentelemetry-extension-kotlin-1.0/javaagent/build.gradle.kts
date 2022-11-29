@@ -27,7 +27,7 @@ dependencies {
 }
 
 if (!(findProperty("testLatestDeps") as Boolean)) {
-  // run tests agains an early version of opentelemetry-extension-kotlin, latest dep tests will use
+  // run tests against an early version of opentelemetry-extension-kotlin, latest dep tests will use
   // the current version
   configurations.configureEach {
     if (!name.contains("muzzle")) {
