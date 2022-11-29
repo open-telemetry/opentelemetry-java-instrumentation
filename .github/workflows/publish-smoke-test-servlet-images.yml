@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-2019
+          - windows-latest
           - ubuntu-latest
         smoke-test-server:
           - jetty
@@ -29,13 +29,13 @@ jobs:
           - websphere
           - wildfly
         exclude:
-          - os: windows-2019
+          - os: windows-latest
             smoke-test-server: websphere
       fail-fast: false
     steps:
       - name: Support long paths
         run: git config --system core.longpaths true
-        if: matrix.os == 'windows-2019'
+        if: matrix.os == 'windows-latest'
 
       - uses: actions/checkout@v3
 
@@ -62,11 +62,11 @@ jobs:
           cache-read-only: ${{ matrix.smoke-test-suite != 'tomcat' }}
 
       - name: Build Linux docker images
-        if: matrix.os != 'windows-2019'
+        if: matrix.os != 'windows-latest'
         run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
       - name: Build Windows docker images
-        if: matrix.os == 'windows-2019'
+        if: matrix.os == 'windows-latest'
         run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PextraTag=${{ env.TAG }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
   open-issue-on-failure:

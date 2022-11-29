@@ -42,7 +42,7 @@ val errorProneVersion = "2.16"
 val byteBuddyVersion = "1.12.19"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.9.0"
-val slf4jVersion = "2.0.4"
+val slf4jVersion = "2.0.5"
 
 val CORE_DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:${autoServiceVersion}",
@@ -100,7 +100,6 @@ val DEPENDENCIES = listOf(
   "org.codehaus.mojo:animal-sniffer-annotations:1.22",
   "org.junit-pioneer:junit-pioneer:1.9.0",
   "org.objenesis:objenesis:3.3",
-  "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.7.5",
   "javax.validation:validation-api:2.0.1.Final",

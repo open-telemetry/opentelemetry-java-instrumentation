@@ -25,10 +25,22 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }
 
-configurations.testRuntimeClasspath {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+// spring 6 (spring boot 3) requires java 17
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
+}
+
+// spring 6 (spring boot 3) uses slf4j 2.0
+if (!latestDepTest) {
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      // requires old logback (and therefore also old slf4j)
+      force("ch.qos.logback:logback-classic:1.2.11")
+      force("org.slf4j:slf4j-api:1.7.36")
+    }
   }
 }

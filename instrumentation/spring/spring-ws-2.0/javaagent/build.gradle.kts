@@ -38,6 +38,9 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-web-services:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:2.0.0.RELEASE")
 
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web-services:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+")
+
   testImplementation("wsdl4j:wsdl4j:1.6.3")
   testImplementation("com.sun.xml.messaging.saaj:saaj-impl:1.5.2")
   testImplementation("javax.xml.bind:jaxb-api:2.2.11")

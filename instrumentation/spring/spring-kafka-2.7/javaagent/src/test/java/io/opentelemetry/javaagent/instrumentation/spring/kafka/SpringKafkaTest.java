@@ -49,7 +49,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         () -> {
           kafkaTemplate.executeInTransaction(
               ops -> {
-                ops.send("testSingleTopic", "10", "testSpan");
+                send("testSingleTopic", "10", "testSpan");
                 return 0;
               });
         });
@@ -113,7 +113,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         () -> {
           kafkaTemplate.executeInTransaction(
               ops -> {
-                ops.send("testSingleTopic", "10", "error");
+                send("testSingleTopic", "10", "error");
                 return 0;
               });
         });
@@ -240,7 +240,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         () -> {
           kafkaTemplate.executeInTransaction(
               ops -> {
-                ops.send("testBatchTopic", "10", "error");
+                send("testBatchTopic", "10", "error");
                 return 0;
               });
         });

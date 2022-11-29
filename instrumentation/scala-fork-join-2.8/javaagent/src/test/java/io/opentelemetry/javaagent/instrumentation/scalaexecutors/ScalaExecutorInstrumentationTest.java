@@ -14,13 +14,13 @@ import scala.concurrent.forkjoin.ForkJoinPool;
 import scala.concurrent.forkjoin.ForkJoinTask;
 
 class ScalaExecutorInstrumentationTest
-    extends AbstractExecutorServiceTest<ForkJoinPool, ScalaAsyncChild> {
+    extends AbstractExecutorServiceTest<ForkJoinPoolBridge, ScalaAsyncChild> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   ScalaExecutorInstrumentationTest() {
-    super(new ForkJoinPool(), testing);
+    super(new ForkJoinPoolBridge(new ForkJoinPool()), testing);
   }
 
   @Override
@@ -34,7 +34,7 @@ class ScalaExecutorInstrumentationTest
   }
 
   @Test
-  void submitForkJoinTask() {
-    executeTwoTasks(task -> executor().submit((ForkJoinTask<?>) task));
+  void executeForkJoinTask() {
+    executeTwoTasks(task -> executor().execute((ForkJoinTask<?>) task));
   }
 }

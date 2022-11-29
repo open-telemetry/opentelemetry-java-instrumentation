@@ -23,6 +23,7 @@ dependencies {
 
   latestDepTestLibrary("org.springframework:spring-context:5.+")
   latestDepTestLibrary("org.springframework:spring-aop:5.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot:2.+")
 }
 
 tasks.withType<Test>().configureEach {
