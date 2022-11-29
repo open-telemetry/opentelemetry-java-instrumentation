@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class Vertx4NetAttributesGetter
@@ -21,18 +22,42 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  public String peerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String peerName(HttpClientRequest request) {
     return request.getHost();
   }
 
   @Override
-  public Integer peerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public Integer peerPort(HttpClientRequest request) {
     return request.getPort();
   }
 
   @Nullable
   @Override
-  public String peerIp(HttpClientRequest request, @Nullable HttpClientResponse response) {
-    return null;
+  public String sockPeerAddr(HttpClientRequest request, @Nullable HttpClientResponse response) {
+    if (response == null) {
+      return null;
+    }
+    SocketAddress socketAddress = response.netSocket().remoteAddress();
+    return socketAddress == null ? null : socketAddress.hostAddress();
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+    if (response == null) {
+      return null;
+    }
+    SocketAddress socketAddress = response.netSocket().remoteAddress();
+    return socketAddress == null ? null : socketAddress.host();
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
+    if (response == null) {
+      return null;
+    }
+    SocketAddress socketAddress = response.netSocket().remoteAddress();
+    return socketAddress == null ? null : socketAddress.port();
   }
 }

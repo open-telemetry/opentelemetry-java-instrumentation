@@ -29,7 +29,6 @@ capture `http.url`.
 **[2]:** In case of Armeria, return values are [SessionProtocol](https://github.com/line/armeria/blob/master/core/src/main/java/com/linecorp/armeria/common/SessionProtocol.java),
 not values defined by spec.
 
-
 ## Http Client
 
 | Attribute | Required | Implemented? |

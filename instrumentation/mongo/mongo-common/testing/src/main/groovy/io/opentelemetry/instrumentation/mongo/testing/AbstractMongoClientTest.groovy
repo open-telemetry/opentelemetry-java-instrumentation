@@ -28,7 +28,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   int port
 
   def setupSpec() {
-    mongodb = new GenericContainer("mongo:3.2")
+    mongodb = new GenericContainer("mongo:4.0")
       .withExposedPorts(27017)
       .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("mongodb")))
     mongodb.start()
@@ -97,8 +97,10 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
-          assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
-            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          assert it == '{"create":"' + collectionName + '","capped":"?"}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?"}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?","lsid":{"id":"?"}}'
           true
         }
       }
@@ -124,8 +126,10 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0), {
-          assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
-            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          assert it == '{"create":"' + collectionName + '","capped":"?"}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?"}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?","lsid":{"id":"?"}}'
           true
         })
       }
@@ -151,8 +155,10 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
-          assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
-            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          assert it == '{"create":"' + collectionName + '","capped":"?"}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?"}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"create":"' + collectionName + '","capped":"?","$db":"?","lsid":{"id":"?"}}'
           true
         }
       }
@@ -179,9 +185,11 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "count", collectionName, dbName, span(0)) {
-          assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
-            it == "{\"count\":\"$collectionName\"}" ||
-            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          assert it == '{"count":"' + collectionName + '","query":{}}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?"}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","lsid":{"id":"?"}}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"count":"' + collectionName + '","$db":"?","lsid":{"id":"?"}}'
           true
         }
       }
@@ -209,14 +217,17 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "insert", collectionName, dbName, span(0)) {
-          assert it == "{\"insert\":\"$collectionName\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}" ||
-            it == "{\"insert\": \"$collectionName\", \"ordered\": \"?\", \"\$db\": \"?\", \"documents\": [{\"_id\": \"?\", \"password\": \"?\"}]}"
+          assert it == '{"insert":"' + collectionName + '","ordered":"?","documents":[{"_id":"?","password":"?"}]}' ||
+            it == '{"insert":"' + collectionName + '","ordered":"?","$db":"?","documents":[{"_id":"?","password":"?"}]}' ||
+            it == '{"insert":"' + collectionName + '","ordered":"?","$db":"?","lsid":{"id":"?"},"documents":[{"_id":"?","password":"?"}]}'
           true
         }
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
-          assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
-            it == "{\"count\":\"$collectionName\"}" ||
-            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          assert it == '{"count":"' + collectionName + '","query":{}}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?"}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","lsid":{"id":"?"}}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"count":"' + collectionName + '","$db":"?","lsid":{"id":"?"}}'
           true
         }
       }
@@ -244,14 +255,17 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "update", collectionName, dbName, span(0)) {
-          assert it == "{\"update\":\"$collectionName\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}" ||
-            it == "{\"update\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"updates\": [{\"q\": {\"password\": \"?\"}, \"u\": {\"\$set\": {\"password\": \"?\"}}}]}"
+          assert it == '{"update":"' + collectionName + '","ordered":"?","updates":[{"q":{"password":"?"},"u":{"$set":{"password":"?"}}}]}' ||
+            it == '{"update":"' + collectionName + '","ordered":"?","$db":"?","updates":[{"q":{"password":"?"},"u":{"$set":{"password":"?"}}}]}' ||
+            it == '{"update":"' + collectionName + '","ordered":"?","$db":"?","lsid":{"id":"?"},"updates":[{"q":{"password":"?"},"u":{"$set":{"password":"?"}}}]}'
           true
         }
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
-          assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
-            it == "{\"count\":\"$collectionName\"}" ||
-            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          assert it == '{"count":"' + collectionName + '","query":{}}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?"}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","lsid":{"id":"?"}}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"count":"' + collectionName + '","$db":"?","lsid":{"id":"?"}}'
           true
         }
       }
@@ -279,14 +293,17 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "delete", collectionName, dbName, span(0)) {
-          assert it == "{\"delete\":\"$collectionName\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}" ||
-            it == "{\"delete\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"deletes\": [{\"q\": {\"password\": \"?\"}, \"limit\": \"?\"}]}"
+          assert it == '{"delete":"' + collectionName + '","ordered":"?","deletes":[{"q":{"password":"?"},"limit":"?"}]}' ||
+            it == '{"delete":"' + collectionName + '","ordered":"?","$db":"?","deletes":[{"q":{"password":"?"},"limit":"?"}]}' ||
+            it == '{"delete":"' + collectionName + '","ordered":"?","$db":"?","lsid":{"id":"?"},"deletes":[{"q":{"password":"?"},"limit":"?"}]}'
           true
         }
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
-          assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
-            it == "{\"count\":\"$collectionName\"}" ||
-            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          assert it == '{"count":"' + collectionName + '","query":{}}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?"}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","lsid":{"id":"?"}}' ||
+            it == '{"count":"' + collectionName + '","query":{},"$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"count":"' + collectionName + '","$db":"?","lsid":{"id":"?"}}'
           true
         }
       }
@@ -313,11 +330,17 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "find", collectionName, dbName, span(0)) {
-          assert it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?"}'
+          assert it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?"}' ||
+            it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?","$db":"?"}' ||
+            it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?","$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?","$db":"?","lsid":{"id":"?"}}'
           true
         }
         mongoSpan(it, 2, "getMore", collectionName, dbName, span(0)) {
-          assert it == '{"getMore":"?","collection":"?","batchSize":"?"}'
+          assert it == '{"getMore":"?","collection":"?","batchSize":"?"}' ||
+            it == '{"getMore":"?","collection":"?","batchSize":"?","$db":"?"}' ||
+            it == '{"getMore":"?","collection":"?","batchSize":"?","$db":"?","$readPreference":{"mode":"?"}}' ||
+            it == '{"getMore":"?","collection":"?","batchSize":"?","$db":"?","lsid":{"id":"?"}}'
           true
         }
       }
@@ -357,7 +380,8 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
           hasNoParent()
         }
         mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
-          assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}"
+          assert it == '{"create":"' + collectionName + '","capped":"?"}' ||
+            '{"create":"' + collectionName + '","capped":"?","$readPreference":{"mode":"?"}}'
           true
         }
       }
@@ -388,7 +412,6 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.NET_PEER_NAME" "localhost"
-        "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
         "$SemanticAttributes.NET_PEER_PORT" port
         "$SemanticAttributes.DB_STATEMENT" {
           statementEval.call(it.replaceAll(" ", ""))

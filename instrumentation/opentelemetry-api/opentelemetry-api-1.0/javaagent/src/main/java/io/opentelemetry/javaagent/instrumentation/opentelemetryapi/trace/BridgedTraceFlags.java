@@ -42,6 +42,11 @@ final class BridgedTraceFlags implements TraceFlags, io.opentelemetry.api.trace.
     return delegate.asByte();
   }
 
+  @Override
+  public String toString() {
+    return delegate.toString();
+  }
+
   private static BridgedTraceFlags[] buildInstances() {
     BridgedTraceFlags[] instances = new BridgedTraceFlags[256];
     for (int i = 0; i < 256; i++) {

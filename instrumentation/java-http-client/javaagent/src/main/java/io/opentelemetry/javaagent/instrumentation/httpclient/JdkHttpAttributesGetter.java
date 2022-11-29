@@ -31,21 +31,8 @@ class JdkHttpAttributesGetter implements HttpClientAttributesGetter<HttpRequest,
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(
-      HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpRequest httpRequest, @Nullable HttpResponse<?> httpResponse) {
-    return null;
-  }
-
-  @Override
-  public Integer statusCode(HttpRequest httpRequest, HttpResponse<?> httpResponse) {
+  public Integer statusCode(
+      HttpRequest httpRequest, HttpResponse<?> httpResponse, @Nullable Throwable error) {
     return httpResponse.statusCode();
   }
 
@@ -55,19 +42,6 @@ class JdkHttpAttributesGetter implements HttpClientAttributesGetter<HttpRequest,
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(HttpRequest httpRequest, HttpResponse<?> httpResponse) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      HttpRequest httpRequest, HttpResponse<?> httpResponse) {
-    return null;
   }
 
   @Override

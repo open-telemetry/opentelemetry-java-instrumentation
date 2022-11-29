@@ -1,4 +1,4 @@
-name: Reusable - Open issue on failure
+name: Reusable - Open issue on workflow failure
 
 on:
   workflow_call:
@@ -11,7 +11,7 @@ jobs:
 
       - name: Open issue
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue create --title "$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER failed" \
                           --label bug \

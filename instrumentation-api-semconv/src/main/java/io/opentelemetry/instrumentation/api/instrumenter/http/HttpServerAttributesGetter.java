@@ -30,12 +30,4 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   String scheme(REQUEST request);
-
-  /**
-   * The primary server name of the matched virtual host. This should be obtained via configuration,
-   * not from the Host header. If no such configuration can be obtained, this method should return
-   * {@code null}.
-   */
-  @Nullable
-  String serverName(REQUEST request);
 }

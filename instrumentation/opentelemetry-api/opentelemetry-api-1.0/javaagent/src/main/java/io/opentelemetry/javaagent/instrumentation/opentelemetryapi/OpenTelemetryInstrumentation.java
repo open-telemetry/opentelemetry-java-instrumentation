@@ -45,6 +45,9 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, named("application.io.opentelemetry.api.OpenTelemetry"))),
         OpenTelemetryInstrumentation.class.getName() + "$SetAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(isStatic()).and(named("resetForTest")).and(takesArguments(0)),
+        OpenTelemetryInstrumentation.class.getName() + "$ResetForTestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -73,6 +76,21 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
               WARNING,
               "You are currently using the OpenTelemetry Instrumentation Java Agent;"
                   + " all GlobalOpenTelemetry.set calls are ignored - the agent provides"
+                  + " the global OpenTelemetry object used by your application.",
+              new Throwable());
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ResetForTestAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      Logger.getLogger(application.io.opentelemetry.api.GlobalOpenTelemetry.class.getName())
+          .log(
+              WARNING,
+              "You are currently using the OpenTelemetry Instrumentation Java Agent;"
+                  + " all GlobalOpenTelemetry.resetForTest calls are ignored - the agent provides"
                   + " the global OpenTelemetry object used by your application.",
               new Throwable());
     }

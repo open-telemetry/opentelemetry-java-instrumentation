@@ -127,4 +127,6 @@ public class FakeBackendMain {
     server.start().join();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop().join()));
   }
+
+  private FakeBackendMain() {}
 }

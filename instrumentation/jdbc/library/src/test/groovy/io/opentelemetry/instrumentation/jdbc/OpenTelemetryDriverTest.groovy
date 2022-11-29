@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection
 import spock.lang.Specification
 
+import java.sql.Driver
 import java.sql.DriverManager
 import java.sql.SQLFeatureNotSupportedException
 
@@ -121,6 +122,83 @@ class OpenTelemetryDriverTest extends Specification {
     connection == null
   }
 
+  def "verify add driver candidate"() {
+    when:
+    deregisterTestDriver()
+    TestDriver driver = new TestDriver()
+    OpenTelemetryDriver.INSTANCE.addDriverCandidate(driver)
+    def connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null)
+    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(driver)
+
+    then:
+    connection != null
+    connection instanceof OpenTelemetryConnection
+  }
+
+  def "verify remove driver candidate"() {
+    when:
+    deregisterTestDriver()
+    TestDriver driver = new TestDriver()
+    OpenTelemetryDriver.INSTANCE.addDriverCandidate(driver)
+    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(driver)
+    def connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null)
+
+    then:
+    connection == null
+    def e = thrown(IllegalStateException)
+    e.message == "Unable to find a driver that accepts url: jdbc:test:"
+  }
+
+  def "verify driver candidate has higher priority"() {
+    when:
+    deregisterTestDriver()
+    TestDriver localDriver = new TestDriver()
+    TestDriver globalDriver = new TestDriver()
+
+    OpenTelemetryDriver.INSTANCE.addDriverCandidate(localDriver)
+    DriverManager.registerDriver(globalDriver)
+    Driver winner = OpenTelemetryDriver.INSTANCE.findDriver("jdbc:test:")
+    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(localDriver)
+
+    then:
+    winner == localDriver
+    winner != globalDriver
+  }
+
+  def "verify two clashing driver candidates"() {
+    when:
+    TestDriver localDriver1 = new TestDriver()
+    TestDriver localDriver2 = new TestDriver()
+
+    OpenTelemetryDriver.INSTANCE.addDriverCandidate(localDriver1)
+    OpenTelemetryDriver.INSTANCE.addDriverCandidate(localDriver2)
+    Driver winner = OpenTelemetryDriver.INSTANCE.findDriver("jdbc:test:")
+    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(localDriver1)
+    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(localDriver2)
+
+    then:
+    winner == localDriver1
+    winner != localDriver2
+  }
+
+  def "verify drivers in DriverManager are used as fallback"() {
+    when:
+    registerTestDriver()
+    TestDriver localDriver = new TestDriver() {
+      boolean acceptsURL(String url) {
+        return false
+      }
+    }
+    OpenTelemetryDriver.INSTANCE.addDriverCandidate(localDriver)
+
+    Driver winner = OpenTelemetryDriver.INSTANCE.findDriver("jdbc:test:")
+    OpenTelemetryDriver.INSTANCE.removeDriverCandidate(localDriver)
+
+    then:
+    winner != null
+    winner != localDriver
+  }
+
   def "verify connection with accepted url"() {
     when:
     registerTestDriver()
@@ -174,6 +252,12 @@ class OpenTelemetryDriverTest extends Specification {
   private static void registerTestDriver() {
     if (!(DriverManager.drivers.any { it instanceof TestDriver })) {
       DriverManager.registerDriver(new TestDriver())
+    }
+  }
+
+  private static void deregisterTestDriver() {
+    if ((DriverManager.drivers.any { it instanceof TestDriver })) {
+      DriverManager.deregisterDriver(new TestDriver())
     }
   }
 

@@ -30,49 +30,13 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   // Attributes which are not always available when the request is ready.
 
   /**
-   * Extracts the {@code http.request_content_length} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
-   */
-  @Nullable
-  Long requestContentLength(REQUEST request, @Nullable RESPONSE response);
-
-  /**
-   * Extracts the {@code http.request_content_length_uncompressed} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
-   * {@code response} is {@code null} or not.
-   */
-  @Nullable
-  Long requestContentLengthUncompressed(REQUEST request, @Nullable RESPONSE response);
-
-  /**
    * Extracts the {@code http.status_code} span attribute.
    *
    * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
    * {@code response} is non-{@code null}.
    */
   @Nullable
-  Integer statusCode(REQUEST request, RESPONSE response);
-
-  /**
-   * Extracts the {@code http.response_content_length} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
-   * {@code response} is non-{@code null}.
-   */
-  @Nullable
-  Long responseContentLength(REQUEST request, RESPONSE response);
-
-  /**
-   * Extracts the {@code http.response_content_length_uncompressed} span attribute.
-   *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
-   * {@code response} is non-{@code null}.
-   */
-  @Nullable
-  Long responseContentLengthUncompressed(REQUEST request, RESPONSE response);
+  Integer statusCode(REQUEST request, RESPONSE response, @Nullable Throwable error);
 
   /**
    * Extracts all values of header named {@code name} from the response, or an empty list if there

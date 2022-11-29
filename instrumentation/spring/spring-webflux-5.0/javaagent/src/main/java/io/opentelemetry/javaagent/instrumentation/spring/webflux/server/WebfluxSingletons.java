@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteGetter;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
@@ -30,7 +30,9 @@ public final class WebfluxSingletons {
     }
 
     INSTRUMENTER =
-        builder.setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled()).newInstrumenter();
+        builder
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .buildInstrumenter();
   }
 
   public static Instrumenter<Object, Void> instrumenter() {
@@ -39,9 +41,14 @@ public final class WebfluxSingletons {
 
   public static HttpRouteGetter<ServerWebExchange> httpRouteGetter() {
     return (context, exchange) -> {
-      PathPattern bestPattern =
-          exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-      return bestPattern == null ? null : bestPattern.getPatternString();
+      Object bestPatternObj = exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+      if (bestPatternObj == null) {
+        return null;
+      }
+      if (bestPatternObj instanceof PathPattern) {
+        return ((PathPattern) bestPatternObj).getPatternString();
+      }
+      return bestPatternObj.toString();
     };
   }
 

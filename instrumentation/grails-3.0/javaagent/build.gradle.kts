@@ -12,23 +12,13 @@ muzzle {
     // version 3.3.6 depends on org.grails:grails-datastore-core:6.1.10.BUILD-SNAPSHOT
     // which (also obviously) does not exist
     skip("3.1.15", "3.3.6")
+    // these versions pass if you add the grails maven repository (https://repo.grails.org/artifactory/core)
+    skip("3.2.0", "3.3.0", "3.3.1", "3.3.2", "3.3.3", "3.3.10", "3.3.13", "3.3.14", "3.3.15", "3.3.16", "4.0.0", "4.0.1", "4.0.5", "4.0.6", "4.0.7", "4.0.8", "4.0.9", "4.0.10", "4.0.11", "4.0.12", "4.0.13")
     assertInverse.set(true)
   }
 }
 
-repositories {
-  mavenCentral()
-  maven {
-    setUrl("https://repo.grails.org/artifactory/core")
-    mavenContent {
-      releasesOnly()
-    }
-  }
-  mavenLocal()
-}
-
-// first version where our tests work
-val grailsVersion = "3.0.6"
+val grailsVersion = "3.0.6" // first version that the tests pass on
 val springBootVersion = "1.2.5.RELEASE"
 
 dependencies {
@@ -43,6 +33,9 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
+
+  latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+")
 }
 
 // testing-common pulls in groovy 4 and spock as dependencies, exclude them
@@ -62,4 +55,18 @@ configurations.configureEach {
       }
     }
   }
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

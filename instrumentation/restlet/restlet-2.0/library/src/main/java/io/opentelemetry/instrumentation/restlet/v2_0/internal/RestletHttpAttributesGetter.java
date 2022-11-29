@@ -61,18 +61,6 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   @Nullable
-  public Long requestContentLength(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(Request request, @Nullable Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String flavor(Request request) {
     switch (request.getProtocol().toString()) {
       case "HTTP/1.0":
@@ -88,26 +76,8 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
-  @Nullable
-  public String serverName(Request request) {
-    return null;
-  }
-
-  @Override
-  public Integer statusCode(Request request, Response response) {
+  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatus().getCode();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(Request request, Response response) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(Request request, Response response) {
-    return null;
   }
 
   @Override

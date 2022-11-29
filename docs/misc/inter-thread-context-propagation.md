@@ -1,6 +1,7 @@
 # The story of context propagation across threads
 
 ## The need
+
 Take a look at the following two pseudo-code snippets (see below for explanations).
 
 ```
@@ -8,10 +9,10 @@ Executor pool = Executors.newFixedThreadPool(10)
 
 public void doGet(HttpServletRequest request, HttpServletResponse response) {
     Future f1 = pool.submit(() -> {
-        return userRepository.queryShippingAddress(requet)
+        return userRepository.queryShippingAddress(request)
     })
     Future f2 = pool.submit(() -> {
-        return warehouse.currentState(requet)
+        return warehouse.currentState(request)
     })
     writeResponse(response, f1.get(), f2.get())
 }
@@ -23,7 +24,7 @@ Executor pool = Executors.newFixedThreadPool(10)
 public void doGet(HttpServletRequest request, HttpServletResponse response) {
     final AsyncContext acontext = request.startAsync();
     acontext.start(() -> {
-            String address = userRepository.queryShippingAddress(requet)
+            String address = userRepository.queryShippingAddress(request)
             HttpServletResponse response = acontext.getResponse();
             writeResponse(response, address)
             acontext.complete();
@@ -42,6 +43,7 @@ parent-child relationship between span: span representing shipping address query
 of the span which denotes accepting HTTP request.
 
 ## The solution
+
 Java auto instrumentation uses an obvious solution to the requirement above: we attach current execution
 context (represented in the code by `Context`) with each `Runnable`, `Callable` and `ForkJoinTask`.
 "Current" means the context active on the thread which calls `Executor.execute` (and its analogues
@@ -52,7 +54,7 @@ on that thread for the duration of the execution. This can be illustrated by the
 ```
     var job = () -> {
         try(Scope scope = this.context.makeCurrent()) {
-            return userRepository.queryShippingAddress(requet)
+            return userRepository.queryShippingAddress(request)
         }}
     job.context = Context.current()
     Future f1 = pool.submit()
@@ -60,7 +62,9 @@ on that thread for the duration of the execution. This can be illustrated by the
 ```
 
 ## The drawback
+
 Here is a simplified example of what async servlet processing may look like
+
 ```
 protected void service(HttpServletRequest req, HttpServletResponse resp) {
     //This method is instrumented and we start new scope here
@@ -75,6 +79,7 @@ protected void service(HttpServletRequest req, HttpServletResponse resp) {
     }
 }
 ```
+
 If we now take a look inside `context.complete` method from above it may be implemented like this:
 
 ```
@@ -97,6 +102,7 @@ to huge traces being active for hours and hours.
 In addition this makes some of our tests extremely flaky.
 
 ## The currently accepted trade-offs
+
 We acknowledge the problem with too active context propagation. We still think that out of the box
 support for asynchronous multi-threaded traces is very important. We have diagnostics in place to
 help us with detecting when we too eagerly propagate the execution context too far. We hope to

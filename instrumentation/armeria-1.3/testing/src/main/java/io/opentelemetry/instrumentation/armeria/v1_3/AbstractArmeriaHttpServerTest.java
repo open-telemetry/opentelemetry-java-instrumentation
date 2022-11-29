@@ -23,14 +23,10 @@ import com.linecorp.armeria.common.QueryParams;
 import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.HashSet;
-import java.util.Set;
 
 public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTest<Server> {
 
@@ -189,15 +185,6 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
             return "/*";
           }
           return expectedHttpRoute(endpoint);
-        });
-
-    options.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> keys = new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          keys.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
-          keys.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
-          keys.add(SemanticAttributes.HTTP_SERVER_NAME);
-          return keys;
         });
 
     options.setTestPathParam(true);

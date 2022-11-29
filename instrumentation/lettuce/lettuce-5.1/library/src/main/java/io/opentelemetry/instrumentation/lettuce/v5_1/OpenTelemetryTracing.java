@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.RedisCommand;
@@ -40,8 +41,8 @@ final class OpenTelemetryTracing implements Tracing {
           NetClientAttributesExtractor.create(new LettuceNetAttributesGetter());
   private final TracerProvider tracerProvider;
 
-  OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer) {
-    this.tracerProvider = new OpenTelemetryTracerProvider(tracer);
+  OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
+    this.tracerProvider = new OpenTelemetryTracerProvider(tracer, sanitizer);
   }
 
   @Override
@@ -69,10 +70,7 @@ final class OpenTelemetryTracing implements Tracing {
   @Nullable
   public Endpoint createEndpoint(SocketAddress socketAddress) {
     if (socketAddress instanceof InetSocketAddress) {
-      InetSocketAddress address = (InetSocketAddress) socketAddress;
-
-      String ip = address.getAddress() == null ? null : address.getAddress().getHostAddress();
-      return new OpenTelemetryEndpoint(ip, address.getPort(), address.getHostString());
+      return new OpenTelemetryEndpoint((InetSocketAddress) socketAddress);
     }
     return null;
   }
@@ -81,8 +79,9 @@ final class OpenTelemetryTracing implements Tracing {
 
     private final Tracer openTelemetryTracer;
 
-    OpenTelemetryTracerProvider(io.opentelemetry.api.trace.Tracer tracer) {
-      openTelemetryTracer = new OpenTelemetryTracer(tracer);
+    OpenTelemetryTracerProvider(
+        io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
+      openTelemetryTracer = new OpenTelemetryTracer(tracer, sanitizer);
     }
 
     @Override
@@ -112,23 +111,21 @@ final class OpenTelemetryTracing implements Tracing {
   }
 
   static class OpenTelemetryEndpoint implements Endpoint {
-    @Nullable final String ip;
-    final int port;
-    @Nullable final String name;
+    @Nullable final InetSocketAddress address;
 
-    OpenTelemetryEndpoint(@Nullable String ip, int port, @Nullable String name) {
-      this.ip = ip;
-      this.port = port;
-      this.name = name;
+    OpenTelemetryEndpoint(@Nullable InetSocketAddress address) {
+      this.address = address;
     }
   }
 
   private static class OpenTelemetryTracer extends Tracer {
 
     private final io.opentelemetry.api.trace.Tracer tracer;
+    private final RedisCommandSanitizer sanitizer;
 
-    OpenTelemetryTracer(io.opentelemetry.api.trace.Tracer tracer) {
+    OpenTelemetryTracer(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
       this.tracer = tracer;
+      this.sanitizer = sanitizer;
     }
 
     @Override
@@ -155,7 +152,7 @@ final class OpenTelemetryTracing implements Tracing {
               .setSpanKind(SpanKind.CLIENT)
               .setParent(context)
               .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystemValues.REDIS);
-      return new OpenTelemetrySpan(context, spanBuilder);
+      return new OpenTelemetrySpan(context, spanBuilder, sanitizer);
     }
   }
 
@@ -167,6 +164,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     private final Context context;
     private final SpanBuilder spanBuilder;
+    private final RedisCommandSanitizer sanitizer;
 
     @Nullable private String name;
     @Nullable private List<Object> events;
@@ -174,12 +172,14 @@ final class OpenTelemetryTracing implements Tracing {
     @Nullable private Span span;
     @Nullable private String args;
 
-    OpenTelemetrySpan(Context context, SpanBuilder spanBuilder) {
+    OpenTelemetrySpan(Context context, SpanBuilder spanBuilder, RedisCommandSanitizer sanitizer) {
       this.context = context;
       this.spanBuilder = spanBuilder;
+      this.sanitizer = sanitizer;
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span name(String name) {
       if (span != null) {
         span.updateName(name);
@@ -191,6 +191,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
         fillEndpoint((OpenTelemetryEndpoint) endpoint);
@@ -211,6 +212,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     // Added and called in 6.0+
     // @Override
+    @CanIgnoreReturnValue
     @SuppressWarnings("UnusedMethod")
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       start();
@@ -250,6 +252,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     // Not called by Lettuce in 6.0+ (though we call it ourselves above).
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
       span = spanBuilder.startSpan();
       if (name != null) {
@@ -273,6 +276,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span annotate(String value) {
       if (span != null) {
         span.addEvent(value);
@@ -287,6 +291,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span tag(String key, String value) {
       if (key.equals("redis.args")) {
         args = value;
@@ -301,6 +306,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public synchronized Tracer.Span error(Throwable throwable) {
       if (span != null) {
         span.recordException(throwable);
@@ -319,7 +325,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     private void finish(Span span) {
       if (name != null) {
-        String statement = RedisCommandSanitizer.sanitize(name, splitArgs(args));
+        String statement = sanitizer.sanitize(name, splitArgs(args));
         span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
       }
       span.end();

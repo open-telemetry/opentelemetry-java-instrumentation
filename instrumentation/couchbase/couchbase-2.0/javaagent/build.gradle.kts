@@ -3,22 +3,13 @@ plugins {
 }
 
 muzzle {
-  // Version 2.7.5 and 2.7.8 were not released properly and muzzle cannot test against it causing failure.
-  // So we have to skip them resulting in this verbose setup.
   pass {
     group.set("com.couchbase.client")
     module.set("java-client")
-    versions.set("[2.0.0,2.7.5)")
-  }
-  pass {
-    group.set("com.couchbase.client")
-    module.set("java-client")
-    versions.set("[2.7.6,2.7.8)")
-  }
-  pass {
-    group.set("com.couchbase.client")
-    module.set("java-client")
-    versions.set("[2.7.9,3.0.0)")
+    versions.set("[2,3)")
+    // these versions were released as ".bundle" instead of ".jar"
+    skip("2.7.5", "2.7.8")
+    assertInverse.set(true)
   }
   fail {
     group.set("com.couchbase.client")
@@ -41,6 +32,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

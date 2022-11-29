@@ -25,7 +25,7 @@ public final class RmiClientSingletons {
                 "io.opentelemetry.rmi",
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
-            .newInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<Method, Void> instrumenter() {

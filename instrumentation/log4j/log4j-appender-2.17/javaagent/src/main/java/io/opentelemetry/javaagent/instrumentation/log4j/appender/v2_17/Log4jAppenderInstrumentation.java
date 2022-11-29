@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.appender.internal.LogEmitterProvider;
+import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -23,6 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.message.Message;
 
 class Log4jAppenderInstrumentation implements TypeInstrumentation {
@@ -60,14 +61,15 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
     public static void methodEnter(
         @Advice.This Logger logger,
         @Advice.Argument(0) Level level,
+        @Advice.Argument(1) Marker marker,
         @Advice.Argument(4) Message message,
         @Advice.Argument(5) Throwable t,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      callDepth = CallDepth.forClass(LogEmitterProvider.class);
+      callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        Log4jHelper.capture(logger, level, message, t);
+        Log4jHelper.capture(logger, level, marker, message, t);
       }
     }
 

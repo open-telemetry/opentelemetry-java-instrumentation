@@ -11,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import java.lang.instrument.Instrumentation;
+import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -62,7 +63,8 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
       TransformSafeLogger.getLogger(FieldBackedImplementationInstaller.class);
 
   private static final boolean FIELD_INJECTION_ENABLED =
-      Config.get().getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
+      InstrumentationConfig.get()
+          .getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
 
   private final Class<?> instrumenterClass;
   private final VirtualFieldMappings virtualFieldMappings;
@@ -116,22 +118,22 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   private AgentBuilder.Identified.Extendable injectHelpersIntoBootstrapClassloader(
       AgentBuilder.Identified.Extendable builder) {
     /*
-     * We inject into bootstrap classloader because field accessor interfaces are needed by virtual
-     * field implementations. Unfortunately this forces us to remove stored type checking because
-     * actual classes may not be available at this point.
+     * We inject into the bootstrap class loader because field accessor interfaces are needed by
+     * virtual field implementations. Unfortunately this forces us to remove stored type checking
+     * because actual classes may not be available at this point.
      */
     builder = builder.transform(fieldAccessorInterfacesInjector);
 
     /*
-     * We inject virtual field implementations into bootstrap classloader because same implementation
-     * may be used by different instrumentations and it has to use same static map in case of
-     * fallback to map-backed storage.
+     * We inject virtual field implementations into the bootstrap class loader because same
+     * implementation may be used by different instrumentations and it has to use same static map in
+     * case of fallback to map-backed storage.
      */
     builder = builder.transform(virtualFieldImplementationsInjector);
     return builder;
   }
 
-  /** Get transformer that forces helper injection onto bootstrap classloader. */
+  /** Get transformer that forces helper injection onto bootstrap class loader. */
   private AgentBuilder.Transformer bootstrapHelperInjector(
       Collection<DynamicType.Unloaded<?>> helpers) {
     // TODO: Better to pass through the context of the Instrumenter
@@ -144,13 +146,15 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
           DynamicType.Builder<?> builder,
           TypeDescription typeDescription,
           ClassLoader classLoader,
-          JavaModule module) {
+          JavaModule javaModule,
+          ProtectionDomain protectionDomain) {
         return injector.transform(
             builder,
             typeDescription,
             // virtual field implementation classes will always go to the bootstrap
             null,
-            module);
+            javaModule,
+            protectionDomain);
       }
     };
   }
@@ -243,7 +247,8 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   }
 
   private static AgentBuilder.Transformer getTransformerForAsmVisitor(AsmVisitorWrapper visitor) {
-    return (builder, typeDescription, classLoader, module) -> builder.visit(visitor);
+    return (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
+        builder.visit(visitor);
   }
 
   // Originally found in AgentBuilder.Transformer.NoOp, but removed in 1.10.7
@@ -255,7 +260,8 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
         DynamicType.Builder<?> builder,
         TypeDescription typeDescription,
         ClassLoader classLoader,
-        JavaModule module) {
+        JavaModule javaModule,
+        ProtectionDomain protectionDomain) {
       return builder;
     }
   }

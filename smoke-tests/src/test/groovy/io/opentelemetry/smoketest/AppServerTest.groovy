@@ -48,7 +48,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20211216.1584506476"
+    String extraTag = "20220731.2770161172"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }
@@ -265,10 +265,10 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes("http.target", "/app/exception") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
+    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
-    traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 1
+    traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
 
     where:
     [appServer, jdk, isWindows] << getTestParams()

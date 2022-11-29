@@ -6,69 +6,60 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.SpanNames;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /**
- * Uses Spring-AOP to wrap methods marked by {@link WithSpan} in a {@link
- * io.opentelemetry.api.trace.Span}.
+ * Uses Spring-AOP to wrap methods marked by {@link WithSpan} (or the deprecated {@link
+ * io.opentelemetry.extension.annotations.WithSpan}) in a {@link Span}.
  *
  * <p>Ensure methods annotated with {@link WithSpan} are implemented on beans managed by the Spring
  * container.
  *
- * <p>Note: This Aspect uses spring-aop to proxy beans. Therefore the {@link WithSpan} annotation
+ * <p>Note: This Aspect uses spring-aop to proxy beans. Therefore, the {@link WithSpan} annotation
  * can not be applied to constructors.
  */
-@Aspect
-public class WithSpanAspect {
+abstract class WithSpanAspect {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-boot-autoconfigure";
 
   private final Instrumenter<JoinPointRequest, Object> instrumenter;
+  private final JoinPointRequest.Factory requestFactory;
 
-  public WithSpanAspect(
-      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
+  WithSpanAspect(
+      OpenTelemetry openTelemetry,
+      ParameterNameDiscoverer parameterNameDiscoverer,
+      JoinPointRequest.Factory requestFactory,
+      WithSpanAspectParameterAttributeNamesExtractor.SpanAttributeNameSupplier
+          spanAttributeNameSupplier) {
 
     ParameterAttributeNamesExtractor parameterAttributeNamesExtractor =
-        new WithSpanAspectParameterAttributeNamesExtractor(parameterNameDiscoverer);
+        new WithSpanAspectParameterAttributeNamesExtractor(
+            parameterNameDiscoverer, spanAttributeNameSupplier);
 
     instrumenter =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, WithSpanAspect::spanName)
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, JoinPointRequest::spanName)
+            .addAttributesExtractor(
+                CodeAttributesExtractor.create(JointPointCodeAttributesExtractor.INSTANCE))
             .addAttributesExtractor(
                 MethodSpanAttributesExtractor.newInstance(
                     JoinPointRequest::method,
                     parameterAttributeNamesExtractor,
                     JoinPointRequest::args))
-            .newInstrumenter(WithSpanAspect::spanKind);
+            .buildInstrumenter(JoinPointRequest::spanKind);
+    this.requestFactory = requestFactory;
   }
 
-  private static String spanName(JoinPointRequest request) {
-    WithSpan annotation = request.annotation();
-    String spanName = annotation.value();
-    if (spanName.isEmpty()) {
-      return SpanNames.fromMethod(request.method());
-    }
-    return spanName;
-  }
-
-  private static SpanKind spanKind(JoinPointRequest request) {
-    return request.annotation().kind();
-  }
-
-  @Around("@annotation(io.opentelemetry.extension.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
-
-    JoinPointRequest request = new JoinPointRequest(pjp);
+    JoinPointRequest request = requestFactory.create(pjp);
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return pjp.proceed();

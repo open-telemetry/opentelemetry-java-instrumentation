@@ -17,6 +17,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +37,7 @@ class PropagatorBasedSpanLinksExtractorTest {
     TextMapPropagator propagator = W3CTraceContextPropagator.getInstance();
 
     SpanLinksExtractor<Map<String, String>> underTest =
-        SpanLinksExtractor.extractFromRequest(propagator, new MapGetter());
+        new PropagatorBasedSpanLinksExtractor<>(propagator, new MapGetter());
 
     Map<String, String> request =
         singletonMap("traceparent", String.format("00-%s-%s-01", TRACE_ID, SPAN_ID));

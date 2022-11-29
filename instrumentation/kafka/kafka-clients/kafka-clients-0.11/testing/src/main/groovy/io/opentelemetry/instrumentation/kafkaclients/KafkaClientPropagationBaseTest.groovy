@@ -13,8 +13,8 @@ import java.time.Duration
 
 abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest implements AgentTestTrait {
 
-  private static final boolean propagationEnabled = Boolean.parseBoolean(
-    System.getProperty("otel.instrumentation.kafka.client-propagation.enabled", "true"))
+  private static final boolean producerPropagationEnabled = Boolean.parseBoolean(
+    System.getProperty("otel.instrumentation.kafka.producer-propagation.enabled", "true"))
 
   @Unroll
   def "test kafka client header propagation manual config"() {
@@ -28,7 +28,7 @@ abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest implem
     def records = consumer.poll(Duration.ofSeconds(5).toMillis())
     records.count() == 1
     for (record in records) {
-      assert record.headers().iterator().hasNext() == propagationEnabled
+      assert record.headers().iterator().hasNext() == producerPropagationEnabled
     }
   }
 }

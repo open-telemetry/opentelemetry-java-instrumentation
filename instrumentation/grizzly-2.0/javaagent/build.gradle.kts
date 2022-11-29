@@ -14,6 +14,8 @@ muzzle {
 dependencies {
   compileOnly("org.glassfish.grizzly:grizzly-http:2.0")
 
+  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   testImplementation("javax.xml.bind:jaxb-api:2.2.3")
   testImplementation("javax.ws.rs:javax.ws.rs-api:2.0")
   testLibrary("org.glassfish.jersey.containers:jersey-container-grizzly2-http:2.0")
@@ -24,6 +26,10 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.grizzly.enabled=true")
+
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM

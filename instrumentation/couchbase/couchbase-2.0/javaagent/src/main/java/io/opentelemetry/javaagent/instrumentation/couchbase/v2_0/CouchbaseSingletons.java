@@ -6,15 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class CouchbaseSingletons {
 
@@ -33,17 +34,19 @@ public final class CouchbaseSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(DbClientAttributesExtractor.create(couchbaseAttributesGetter))
             .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(
+                PeerServiceAttributesExtractor.create(
+                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
                     CouchbaseRequestInfo.init(context, couchbaseRequest));
 
-    if (Config.get()
+    if (InstrumentationConfig.get()
         .getBoolean("otel.instrumentation.couchbase.experimental-span-attributes", false)) {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 
-    INSTRUMENTER = builder.newInstrumenter(SpanKindExtractor.alwaysClient());
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<CouchbaseRequestInfo, Void> instrumenter() {

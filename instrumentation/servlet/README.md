@@ -1,18 +1,19 @@
 # Instrumentation for Java Servlets
 
-# Settings
+## Settings
 
 | System property | Type | Default | Description |
 |---|---|---|---|
 | `otel.instrumentation.servlet.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes. |
 | `otel.instrumentation.servlet.experimental.capture-request-parameters` | List | Empty | Request parameters to be captured (experimental). |
 
-## A word about version
+### A word about version
 
-We support Servlet API starting from version 2.2. 
+We support Servlet API starting from version 2.2.
 But various instrumentations apply to different versions of the API.
 
 They are divided into the following sub-modules:
+
 - `servlet-common` contains shared code for both `javax.servlet` and `jakarta.servlet` packages.
 - Version-specific modules contain the version-specific instrumentations and request/response
   accessor.
@@ -21,7 +22,7 @@ They are divided into the following sub-modules:
   - `servlet-3.0` contains instrumentation for Servlet API versions `[3.0, 5)`
   - `servlet-5.0` contains instrumentation for Servlet API versions `[5,)`
 
-## Implementation details
+### Implementation details
 
 In order to fully understand how java servlet instrumentation work,
 let us first take a look at the following stacktrace from Spring PetClinic application.
@@ -80,7 +81,8 @@ Each framework instrumentation can decide what is the best span name based on fr
 Of course, still adhering to OpenTelemetry
 [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md).
 
-## Additional instrumentations
+### Additional instrumentations
+
 `HttpServletResponseInstrumentation` instruments `javax.servlet.http.HttpServletResponse.sendError`
 and `javax.servlet.http.HttpServletResponse.sendRedirect` methods to create new `INTERNAL` spans
 around their invocations.

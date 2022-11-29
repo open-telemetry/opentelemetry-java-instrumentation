@@ -9,6 +9,16 @@ import application.io.opentelemetry.api.metrics.ObservableLongCounter;
 
 public final class ApplicationObservableLongCounter implements ObservableLongCounter {
 
+  private final io.opentelemetry.api.metrics.ObservableLongCounter agentCounter;
+
   public ApplicationObservableLongCounter(
-      io.opentelemetry.api.metrics.ObservableLongCounter agentCounter) {}
+      io.opentelemetry.api.metrics.ObservableLongCounter agentCounter) {
+    this.agentCounter = agentCounter;
+  }
+
+  // not adding @Override because this method was introduced in 1.12
+  @SuppressWarnings("unused")
+  public void close() {
+    agentCounter.close();
+  }
 }

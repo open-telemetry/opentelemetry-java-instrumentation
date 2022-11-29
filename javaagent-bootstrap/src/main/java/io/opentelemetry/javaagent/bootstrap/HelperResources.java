@@ -17,9 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 /**
- * A holder of resources needed by instrumentation. We store them in the bootstrap classloader so
- * instrumentation can store from the agent classloader and apps can retrieve from the app
- * classloader.
+ * A holder of resources needed by instrumentation. We store them in the bootstrap class loader so
+ * instrumentation can store from the agent class loader and apps can retrieve from the app class
+ * loader.
  */
 public final class HelperResources {
 
@@ -45,7 +45,7 @@ public final class HelperResources {
   private static List<URL> append(@Nullable List<URL> resources, List<URL> toAdd) {
     List<URL> newResources = resources == null ? new ArrayList<>() : new ArrayList<>(resources);
     for (URL newResource : toAdd) {
-      // make sure to de-dupe resources - each extension classloader has the agent classloader as
+      // make sure to de-dupe resources - each extension class loader has the agent class loader as
       // its parent, and the MultipleParentClassLoader (that every individual extension CL gets put
       // into) concatenates all found resources on getResources(); this means that if you ask for a
       // built-in agent resource, each extension CL will also return URL pointing to it, thus the

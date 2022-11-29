@@ -31,6 +31,7 @@ import com.rabbitmq.client.MessageProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -112,6 +113,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
       context = channelInstrumenter().start(parentContext, request);
       CURRENT_RABBIT_CONTEXT.set(context);
+      helper().setChannelAndMethod(context, request);
       scope = context.makeCurrent();
     }
 
@@ -156,7 +158,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         if (props == null) {
           props = MessageProperties.MINIMAL_BASIC;
         }
-        helper().onProps(span, props);
+        helper().onProps(context, span, props);
 
         // We need to copy the BasicProperties and provide a header map we can modify
         Map<String, Object> headers = props.getHeaders();
@@ -209,16 +211,21 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      ReceiveRequest request =
-          ReceiveRequest.create(queue, timer, response, channel.getConnection());
+      ReceiveRequest request = ReceiveRequest.create(queue, response, channel.getConnection());
       if (!receiveInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
       // can't create span and put into scope in method enter above, because can't add parent after
       // span creation
-      Context context = receiveInstrumenter().start(parentContext, request);
-      receiveInstrumenter().end(context, request, null, throwable);
+      InstrumenterUtil.startAndEnd(
+          receiveInstrumenter(),
+          parentContext,
+          request,
+          null,
+          throwable,
+          timer.startTime(),
+          timer.now());
     }
   }
 

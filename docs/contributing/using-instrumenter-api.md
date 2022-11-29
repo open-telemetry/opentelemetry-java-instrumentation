@@ -319,41 +319,6 @@ default `jdk()` implementation that removes the known JDK wrapper exception type
 You can set the `ErrorCauseExtractor` in the `InstrumenterBuilder` using
 the `setErrorCauseExtractor()` method.
 
-### Provide custom operation start and end times using the `TimeExtractor`
-
-In some cases, the instrumented library provides a way to retrieve accurate timestamps of when the
-operation starts and ends. The `TimeExtractor` interface can be used to
-feed this information into OpenTelemetry trace and metrics data.
-
-`extractStartTime()` can only extract the timestamp from the request. `extractEndTime()`
-accepts the request, an optional response, and an optional `Throwable` error. Consider the following
-example:
-
-```java
-class MyTimeExtractor implements TimeExtractor<Request, Response> {
-
-  @Override
-  public Instant extractStartTime(Request request) {
-    return request.startTimestamp();
-  }
-
-  @Override
-  public Instant extractEndTime(Request request, @Nullable Response response, @Nullable Throwable error) {
-    if (response != null) {
-      return response.endTimestamp();
-    }
-    return request.clock().now();
-  }
-}
-```
-
-The sample implementations above use the request to retrieve the start timestamp. The response is
-used to compute the end time if it is available; in case it is missing (for example, when an error
-occurs) the same time source is used to compute the current timestamp.
-
-You can set the time extractor in the `InstrumenterBuilder` using the `setTimeExtractor()`
-method.
-
 ### Register metrics by implementing the `OperationMetrics` and `OperationListener`
 
 If you need to add metrics to the `Instrumenter` you can implement the `OperationMetrics`
@@ -384,7 +349,7 @@ class MyOperationMetrics implements OperationListener {
   MyOperationMetrics(Meter meter) {
     activeRequests = meter
         .upDownCounterBuilder("mylib.active_requests")
-        .setUnit("requests")
+        .setUnit("{requests}")
         .build();
   }
 
@@ -448,7 +413,7 @@ In some rare cases it may be useful to completely disable the constructed `Instr
 example, based on a configuration property. The `InstrumenterBuilder` exposes a `setEnabled()`
 method for that: passing `false` will turn the newly created `Instrumenter` into a no-op instance.
 
-### Finally, set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`!
+### Finally, set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`
 
 The `Instrumenter` creation process ends with calling one of the following `InstrumenterBuilder`
 methods:

@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework")
     module.set("spring-context")
-    versions.set("[4.0.0.RELEASE,)")
+    versions.set("[4.0.0.RELEASE,6)")
   }
 }
 
@@ -20,8 +20,20 @@ dependencies {
   library("org.springframework:spring-context:4.0.0.RELEASE")
   library("org.springframework:spring-aop:4.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot:1.1.0.RELEASE")
+
+  latestDepTestLibrary("org.springframework:spring-context:5.+")
+  latestDepTestLibrary("org.springframework:spring-aop:5.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot:2.+")
 }
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
 }

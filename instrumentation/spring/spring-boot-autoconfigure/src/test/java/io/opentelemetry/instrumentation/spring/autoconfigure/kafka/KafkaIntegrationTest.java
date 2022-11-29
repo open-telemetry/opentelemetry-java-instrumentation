@@ -1,0 +1,141 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.spring.autoconfigure.kafka;
+
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.time.Duration;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.assertj.core.api.AbstractLongAssert;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
+
+class KafkaIntegrationTest {
+
+  @RegisterExtension
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  static KafkaContainer kafka;
+
+  private ApplicationContextRunner contextRunner;
+
+  @BeforeAll
+  static void setUpKafka() {
+    kafka =
+        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"))
+            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
+            .withStartupTimeout(Duration.ofMinutes(1));
+    kafka.start();
+  }
+
+  @AfterAll
+  static void tearDownKafka() {
+    kafka.stop();
+  }
+
+  @BeforeEach
+  void setUpContext() {
+    contextRunner =
+        new ApplicationContextRunner()
+            .withConfiguration(
+                AutoConfigurations.of(
+                    KafkaAutoConfiguration.class,
+                    KafkaInstrumentationAutoConfiguration.class,
+                    TestConfig.class))
+            .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry)
+            .withPropertyValues(
+                "spring.kafka.bootstrap-servers=" + kafka.getBootstrapServers(),
+                "spring.kafka.consumer.auto-offset-reset=earliest",
+                "spring.kafka.consumer.linger-ms=10",
+                "spring.kafka.listener.idle-between-polls=1000",
+                "spring.kafka.producer.transaction-id-prefix=test-");
+  }
+
+  @Test
+  void shouldInstrumentProducerAndConsumer() {
+    contextRunner.run(KafkaIntegrationTest::runShouldInstrumentProducerAndConsumer);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void runShouldInstrumentProducerAndConsumer(
+      ConfigurableApplicationContext applicationContext) {
+    KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
+
+    testing.runWithSpan(
+        "producer",
+        () -> {
+          kafkaTemplate.executeInTransaction(
+              ops -> {
+                ops.usingCompletableFuture().send("testTopic", "10", "testSpan");
+                return 0;
+              });
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer"),
+                span ->
+                    span.hasName("testTopic send")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testTopic"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                span ->
+                    span.hasName("testTopic process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testTopic"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                AbstractLongAssert::isNotNegative)),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+  }
+
+  @Configuration
+  static class TestConfig {
+
+    @Bean
+    public NewTopic testTopic() {
+      return TopicBuilder.name("testTopic").partitions(1).replicas(1).build();
+    }
+
+    @KafkaListener(id = "testListener", topics = "testTopic")
+    public void listener(ConsumerRecord<String, String> record) {
+      testing.runWithSpan("consumer", () -> {});
+    }
+  }
+}

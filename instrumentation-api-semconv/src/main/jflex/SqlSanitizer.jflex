@@ -50,7 +50,7 @@ WHITESPACE          = [ \t\r\n]+
   }
 
   // max length of the sanitized statement - SQLs longer than this will be trimmed
-  private static final int LIMIT = 32 * 1024;
+  static final int LIMIT = 32 * 1024;
 
   private final StringBuilder builder = new StringBuilder();
 

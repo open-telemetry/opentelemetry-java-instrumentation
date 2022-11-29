@@ -5,19 +5,16 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
-
-import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
-import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -75,27 +72,20 @@ public class AgentStarterImpl implements AgentStarter {
   }
 
   private void internalStart() {
-    List<LoggingCustomizer> loggingCustomizers = load(LoggingCustomizer.class);
-    if (loggingCustomizers.size() > 1) {
-      throw new IllegalStateException(
-          "More than one LoggingCustomizerProvider found: "
-              + loggingCustomizers.stream()
-                  .map(Object::getClass)
-                  .map(Class::getName)
-                  .collect(Collectors.joining(", ")));
-    }
+    Iterator<LoggingCustomizer> loggingCustomizers =
+        ServiceLoader.load(LoggingCustomizer.class).iterator();
     LoggingCustomizer loggingCustomizer;
-    if (loggingCustomizers.isEmpty()) {
-      loggingCustomizer = new DefaultLoggingCustomizer();
+    if (loggingCustomizers.hasNext()) {
+      loggingCustomizer = loggingCustomizers.next();
     } else {
-      loggingCustomizer = loggingCustomizers.get(0);
+      loggingCustomizer = NoopLoggingCustomizer.INSTANCE;
     }
 
     Throwable startupError = null;
     try {
       loggingCustomizer.init();
-      ConfigInitializer.initialize();
-      AgentInstaller.installBytebuddyAgent(instrumentation, Config.get());
+      AgentInstaller.installBytebuddyAgent(instrumentation);
+      WeakConcurrentMapCleaner.start();
     } catch (Throwable t) {
       // this is logged below and not rethrown to avoid logging it twice
       startupError = t;

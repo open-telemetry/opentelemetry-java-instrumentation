@@ -9,15 +9,18 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 public class AgentLoadedChecker {
+
   public static void main(String[] args) throws ClassNotFoundException {
-    // Empty classloader that delegates to bootstrap
+    // Empty class loader that delegates to bootstrap
     URLClassLoader emptyClassLoader = new URLClassLoader(new URL[] {}, null);
     Class<?> agentClass =
         emptyClassLoader.loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
 
     if (agentClass.getClassLoader() != null) {
       throw new IllegalStateException(
-          "Agent loaded into classloader other than bootstrap: " + agentClass.getClassLoader());
+          "Agent loaded into class loader other than bootstrap: " + agentClass.getClassLoader());
     }
   }
+
+  private AgentLoadedChecker() {}
 }

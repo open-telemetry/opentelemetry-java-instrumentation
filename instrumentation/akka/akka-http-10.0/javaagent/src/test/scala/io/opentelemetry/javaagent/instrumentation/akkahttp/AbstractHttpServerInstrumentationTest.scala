@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
 import io.opentelemetry.api.common.AttributeKey
-
-import collection.JavaConverters._
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
   HttpServerTestOptions,

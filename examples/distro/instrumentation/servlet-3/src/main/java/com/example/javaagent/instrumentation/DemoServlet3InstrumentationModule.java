@@ -43,4 +43,9 @@ public final class DemoServlet3InstrumentationModule extends InstrumentationModu
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new DemoServlet3Instrumentation());
   }
+
+  @Override
+  public boolean isHelperClass(String className) {
+    return className.startsWith("com.example.javaagent.instrumentation");
+  }
 }

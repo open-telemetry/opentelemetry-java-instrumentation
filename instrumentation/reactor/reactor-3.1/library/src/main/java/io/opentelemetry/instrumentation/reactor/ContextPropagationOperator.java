@@ -162,7 +162,7 @@ public final class ContextPropagationOperator {
       implements BiFunction<Scannable, CoreSubscriber<? super T>, CoreSubscriber<? super T>> {
 
     /** Holds reference to strategy to prevent it from being collected. */
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings({"FieldCanBeLocal", "UnusedVariable"})
     private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
     public Lifter(ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {

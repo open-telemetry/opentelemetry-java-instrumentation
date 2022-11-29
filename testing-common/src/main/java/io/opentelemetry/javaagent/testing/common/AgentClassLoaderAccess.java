@@ -20,7 +20,7 @@ public final class AgentClassLoaderAccess {
           agentInitializerClass.getDeclaredMethod("getExtensionsClassLoader");
       agentClassLoader = (ClassLoader) getExtensionsClassLoader.invoke(null);
     } catch (Throwable t) {
-      throw new AssertionError("Could not access agent classLoader", t);
+      throw new AssertionError("Could not access agent class loader", t);
     }
   }
 
@@ -29,7 +29,7 @@ public final class AgentClassLoaderAccess {
     try {
       return agentClassLoader.loadClass(name);
     } catch (ClassNotFoundException e) {
-      throw new AssertionError("Could not load class from agent classloader", e);
+      throw new AssertionError("Could not load class from agent class loader", e);
     }
   }
 

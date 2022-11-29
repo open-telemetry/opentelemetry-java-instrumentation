@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -44,9 +45,7 @@ import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogData;
-import io.opentelemetry.sdk.logs.data.LogDataBuilder;
-import io.opentelemetry.sdk.logs.data.Severity;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
@@ -64,6 +63,7 @@ import io.opentelemetry.sdk.metrics.internal.data.ImmutableSumData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtQuantile;
+import io.opentelemetry.sdk.testing.logs.TestLogRecordData;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -188,10 +188,9 @@ public final class AgentTestingExporterAccess {
                       io.opentelemetry.sdk.resources.Resource.create(
                           fromProto(resource.getAttributesList())))
                   .setInstrumentationScopeInfo(
-                      InstrumentationScopeInfo.create(
-                          instrumentationScope.getName(),
-                          instrumentationScope.getVersion(),
-                          /* schemaUrl= */ null))
+                      InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                          .setVersion(instrumentationScope.getVersion())
+                          .build())
                   .setName(span.getName())
                   .setStartEpochNanos(span.getStartTimeUnixNano())
                   .setEndEpochNanos(span.getEndTimeUnixNano())
@@ -267,10 +266,9 @@ public final class AgentTestingExporterAccess {
                   metric,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
-                  InstrumentationScopeInfo.create(
-                      instrumentationScope.getName(),
-                      instrumentationScope.getVersion(),
-                      /* schemaUrl= */ null)));
+                  InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                      .setVersion(instrumentationScope.getVersion())
+                      .build()));
         }
       }
     }
@@ -278,7 +276,7 @@ public final class AgentTestingExporterAccess {
   }
 
   @SuppressWarnings("unchecked")
-  public static List<LogData> getExportedLogs() {
+  public static List<LogRecordData> getExportedLogRecords() {
     List<byte[]> exportRequests;
     try {
       exportRequests = (List<byte[]>) getLogExportRequests.invokeExact();
@@ -298,7 +296,7 @@ public final class AgentTestingExporterAccess {
                 })
             .flatMap(request -> request.getResourceLogsList().stream())
             .collect(toList());
-    List<LogData> logs = new ArrayList<>();
+    List<LogRecordData> logs = new ArrayList<>();
     for (ResourceLogs resourceLogs : allResourceLogs) {
       Resource resource = resourceLogs.getResource();
       for (ScopeLogs ilLogs : resourceLogs.getScopeLogsList()) {
@@ -309,10 +307,9 @@ public final class AgentTestingExporterAccess {
                   logRecord,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
-                  InstrumentationScopeInfo.create(
-                      instrumentationScope.getName(),
-                      instrumentationScope.getVersion(),
-                      /* schemaUrl= */ null)));
+                  InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                      .setVersion(instrumentationScope.getVersion())
+                      .build()));
         }
       }
     }
@@ -394,11 +391,13 @@ public final class AgentTestingExporterAccess {
     }
   }
 
-  private static LogData createLogData(
+  private static LogRecordData createLogData(
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationScopeInfo instrumentationScopeInfo) {
-    return LogDataBuilder.create(resource, instrumentationScopeInfo)
+    return TestLogRecordData.builder()
+        .setResource(resource)
+        .setInstrumentationScopeInfo(instrumentationScopeInfo)
         .setEpoch(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
         .setSpanContext(
             SpanContext.create(

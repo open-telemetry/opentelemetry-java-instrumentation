@@ -7,15 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  assemble:
-    uses: ./.github/workflows/reusable-assemble.yml
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-
-  test:
-    uses: ./.github/workflows/reusable-test.yml
+  common:
+    uses: ./.github/workflows/build-common.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
@@ -28,38 +21,27 @@ jobs:
       GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
       GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
-  smoke-test:
-    uses: ./.github/workflows/reusable-smoke-test.yml
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-
   muzzle:
     uses: ./.github/workflows/reusable-muzzle.yml
 
-  gradle-plugins:
-    uses: ./.github/workflows/reusable-gradle-plugins.yml
-
-  examples:
-    uses: ./.github/workflows/reusable-examples.yml
+  shell-script-check:
+    uses: ./.github/workflows/reusable-shell-script-check.yml
 
   markdown-link-check:
     uses: ./.github/workflows/reusable-markdown-link-check.yml
+
+  markdown-lint-check:
+    uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
   misspell-check:
     uses: ./.github/workflows/reusable-misspell-check.yml
 
   open-issue-on-failure:
     needs:
-      - assemble
-      - test
+      - common
       - test-latest-deps
-      - smoke-test
       - muzzle
-      - gradle-plugins
-      - examples
       - markdown-link-check
       - misspell-check
-    if: failure()
+    if: failure() && github.run_attempt == 1
     uses: ./.github/workflows/reusable-open-issue-on-failure.yml

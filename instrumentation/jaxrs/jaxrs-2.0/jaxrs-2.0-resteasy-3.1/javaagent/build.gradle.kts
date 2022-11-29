@@ -3,9 +3,6 @@ plugins {
 }
 
 muzzle {
-  // Cant assert fails because muzzle assumes all instrumentations will fail
-  // Instrumentations in jaxrs-2.0-common will pass
-
   // Resteasy changes a class's package in 3.1.0 then moves it back in 3.5.0 and then moves it forward again in 4.0.0
   // so the jaxrs-2.0-resteasy-3.0 module applies to [3.0, 3.1) and [3.5, 4.0)
   // and the jaxrs-2.0-resteasy-3.1 module applies to [3.1, 3.5) and [4.0, )
@@ -19,6 +16,20 @@ muzzle {
     group.set("org.jboss.resteasy")
     module.set("resteasy-core")
     versions.set("[4.0.0.Final,6)")
+  }
+
+  fail {
+    group.set("org.jboss.resteasy")
+    module.set("resteasy-jaxrs")
+    versions.set("(2.1.0.GA,3.1.0.Final)")
+    // missing dependencies
+    skip("2.3.10.Final")
+  }
+
+  fail {
+    group.set("org.jboss.resteasy")
+    module.set("resteasy-core")
+    versions.set("[6.0.0.Final,)")
   }
 }
 

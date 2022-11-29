@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue
-
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -20,6 +18,9 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
+
+import static org.junit.jupiter.api.Assumptions.assumeFalse
+import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
@@ -200,16 +201,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
 
     @Override
-    protected boolean testCausality() {
-      return HttpClientTest.this.testCausality()
-    }
-
-    @Override
-    protected boolean testCausalityWithCallback() {
-      return HttpClientTest.this.testCausalityWithCallback()
-    }
-
-    @Override
     protected boolean testCallback() {
       return HttpClientTest.this.testCallback()
     }
@@ -219,6 +210,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
       // function is used.  There is no way to stop a test from a derived class hence the flag
       return HttpClientTest.this.testCallbackWithParent()
+    }
+
+    @Override
+    protected boolean testCallbackWithImplicitParent() {
+      return HttpClientTest.this.testCallbackWithImplicitParent()
     }
 
     @Override
@@ -289,13 +285,27 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
     expect:
-    junitTest.requestWithCallbackAndParent()
+    try {
+      junitTest.requestWithCallbackAndParent()
+    } catch (Exception ignored) {
+    }
   }
 
   def "trace request with callback and no parent"() {
     assumeTrue(testCallback())
+    assumeFalse(testCallbackWithImplicitParent())
     expect:
-    junitTest.requestWithCallbackAndNoParent()
+    try {
+      junitTest.requestWithCallbackAndNoParent()
+    } catch (Exception ignored) {
+    }
+  }
+
+  def "trace request with callback and implicit parent"() {
+    assumeTrue(testCallback())
+    assumeTrue(testCallbackWithImplicitParent())
+    expect:
+    junitTest.requestWithCallbackAndImplicitParent()
   }
 
   def "basic request with 1 redirect"() {
@@ -388,14 +398,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * propagate trace context.
    */
   def "high concurrency test"() {
-    assumeTrue(testCausality())
     expect:
     junitTest.highConcurrency()
   }
 
   def "high concurrency test with callback"() {
-    assumeTrue(testCausality())
-    assumeTrue(testCausalityWithCallback())
     assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
     expect:
@@ -479,14 +486,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     true
   }
 
-  boolean testCausality() {
-    true
-  }
-
-  boolean testCausalityWithCallback() {
-    true
-  }
-
   boolean testCallback() {
     return true
   }
@@ -495,6 +494,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
     // function is used.  There is no way to stop a test from a derived class hence the flag
     true
+  }
+
+  boolean testCallbackWithImplicitParent() {
+    // depending on async behavior callback can be executed within
+    // parent span scope or outside of the scope, e.g. in reactor-netty or spring
+    // callback is correlated.
+    false
   }
 
   boolean testErrorWithCallback() {

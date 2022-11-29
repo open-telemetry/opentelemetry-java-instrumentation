@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 
 /** A builder of {@link AwsSdkTelemetry}. */
@@ -23,6 +24,7 @@ public class AwsSdkTelemetryBuilder {
    * removed in the future, so only enable this if you know you do not require attributes filled by
    * this instrumentation to be stable across versions
    */
+  @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;

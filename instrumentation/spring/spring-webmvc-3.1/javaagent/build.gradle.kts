@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework")
     module.set("spring-webmvc")
-    versions.set("[3.1.0.RELEASE,]")
+    versions.set("[3.1.0.RELEASE,6)")
     // these versions depend on org.springframework:spring-web which has a bad dependency on
     // javax.faces:jsf-api:1.1 which was released as pom only
     skip("1.2.1", "1.2.2", "1.2.3", "1.2.4")
@@ -16,8 +16,6 @@ muzzle {
     assertInverse.set(true)
   }
 }
-
-val versions: Map<String, String> by project
 
 dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
@@ -36,11 +34,15 @@ dependencies {
   testImplementation("javax.validation:validation-api:1.1.0.Final")
   testImplementation("org.hibernate:hibernate-validator:5.4.2.Final")
 
-  testImplementation("org.spockframework:spock-spring:${versions["org.spockframework"]}")
+  testImplementation("org.spockframework:spock-spring")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-security:1.5.17.RELEASE")
+
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+")
 
   testImplementation("org.springframework.security.oauth:spring-security-oauth2:2.0.16.RELEASE")
 
@@ -52,4 +54,15 @@ dependencies {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
 }

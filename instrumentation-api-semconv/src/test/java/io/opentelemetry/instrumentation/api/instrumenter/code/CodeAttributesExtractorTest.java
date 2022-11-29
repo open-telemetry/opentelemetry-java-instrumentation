@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 class CodeAttributesExtractorTest {
 
-  static final class TestAtttributesGetter implements CodeAttributesGetter<Map<String, String>> {
+  static final class TestAttributesGetter implements CodeAttributesGetter<Map<String, String>> {
     @Override
     public Class<?> codeClass(Map<String, String> request) {
       try {
@@ -46,7 +46,7 @@ class CodeAttributesExtractorTest {
     Context context = Context.root();
 
     CodeAttributesExtractor<Map<String, String>, Void> underTest =
-        CodeAttributesExtractor.create(new TestAtttributesGetter());
+        CodeAttributesExtractor.create(new TestAttributesGetter());
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -68,7 +68,7 @@ class CodeAttributesExtractorTest {
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
     CodeAttributesExtractor<Map<String, String>, Void> underTest =
-        CodeAttributesExtractor.create(new TestAtttributesGetter());
+        CodeAttributesExtractor.create(new TestAttributesGetter());
 
     // when
     AttributesBuilder attributes = Attributes.builder();

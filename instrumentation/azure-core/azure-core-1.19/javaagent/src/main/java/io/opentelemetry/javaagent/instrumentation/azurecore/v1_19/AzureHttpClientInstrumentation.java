@@ -36,6 +36,7 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SuppressNestedClientAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SuppressNestedClientAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

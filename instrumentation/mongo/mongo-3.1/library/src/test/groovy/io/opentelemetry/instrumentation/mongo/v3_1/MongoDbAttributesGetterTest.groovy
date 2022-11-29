@@ -18,7 +18,7 @@ class MongoDbAttributesGetterTest extends Specification {
 
   def 'should sanitize statements to json'() {
     setup:
-    def extractor = new MongoDbAttributesGetter(DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
+    def extractor = new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
 
     expect:
     sanitizeStatementAcrossVersions(extractor,
@@ -38,7 +38,7 @@ class MongoDbAttributesGetterTest extends Specification {
 
   def 'should only preserve string value if it is the value of the first top-level key'() {
     setup:
-    def extractor = new MongoDbAttributesGetter(DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
+    def extractor = new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
 
     expect:
     sanitizeStatementAcrossVersions(extractor,
@@ -50,7 +50,7 @@ class MongoDbAttributesGetterTest extends Specification {
 
   def 'should truncate simple command'() {
     setup:
-    def extractor = new MongoDbAttributesGetter(20)
+    def extractor = new MongoDbAttributesGetter(true, 20)
 
     def normalized = sanitizeStatementAcrossVersions(extractor,
       new BsonDocument("cmd", new BsonString("c"))
@@ -63,7 +63,7 @@ class MongoDbAttributesGetterTest extends Specification {
 
   def 'should truncate array'() {
     setup:
-    def extractor = new MongoDbAttributesGetter(27)
+    def extractor = new MongoDbAttributesGetter(true, 27)
 
     def normalized = sanitizeStatementAcrossVersions(extractor,
       new BsonDocument("cmd", new BsonString("c"))

@@ -10,12 +10,12 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.GlobalLoggerProvider;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.appender.internal.LogBuilder;
-import io.opentelemetry.instrumentation.api.appender.internal.Severity;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.javaagent.bootstrap.AgentLogEmitterProvider;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -37,7 +37,7 @@ public final class LogEventMapper {
   private static final int TRACE_INT = 5000;
 
   private static final boolean captureExperimentalAttributes =
-      Config.get()
+      InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
 
   private final Map<String, AttributeKey<String>> captureMdcAttributes;
@@ -47,7 +47,7 @@ public final class LogEventMapper {
 
   private LogEventMapper() {
     List<String> captureMdcAttributes =
-        Config.get()
+        InstrumentationConfig.get()
             .getList(
                 "otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes",
                 emptyList());
@@ -63,8 +63,8 @@ public final class LogEventMapper {
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
-    LogBuilder builder =
-        AgentLogEmitterProvider.get().logEmitterBuilder(instrumentationName).build().logBuilder();
+    LogRecordBuilder builder =
+        GlobalLoggerProvider.get().loggerBuilder(instrumentationName).build().logRecordBuilder();
 
     // message
     if (message != null) {
@@ -82,7 +82,7 @@ public final class LogEventMapper {
     // throwable
     if (throwable != null) {
       // TODO (trask) extract method for recording exception into
-      // instrumentation-appender-api-internal
+      // io.opentelemetry:opentelemetry-api-logs
       attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
       attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();
@@ -98,7 +98,7 @@ public final class LogEventMapper {
       attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
     }
 
-    builder.setAttributes(attributes.build());
+    builder.setAllAttributes(attributes.build());
 
     // span context
     builder.setContext(Context.current());

@@ -10,8 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -42,10 +41,9 @@ public class InstrumenterBenchmark {
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
           .addAttributesExtractor(
-              HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
-          .addAttributesExtractor(
-              NetServerAttributesExtractor.create(new ConstantNetAttributesGetter()))
-          .newInstrumenter();
+              HttpClientAttributesExtractor.create(
+                  ConstantHttpAttributesGetter.INSTANCE, new ConstantNetAttributesGetter()))
+          .buildInstrumenter();
 
   @Benchmark
   public Context start() {
@@ -81,35 +79,13 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public Long requestContentLength(Void unused, @Nullable Void unused2) {
-      return 100L;
-    }
-
-    @Override
-    @Nullable
-    public Long requestContentLengthUncompressed(Void unused, @Nullable Void unused2) {
-      return null;
-    }
-
-    @Override
     public String flavor(Void unused, @Nullable Void unused2) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
     }
 
     @Override
-    public Integer statusCode(Void unused, Void unused2) {
+    public Integer statusCode(Void unused, Void unused2, @Nullable Throwable error) {
       return 200;
-    }
-
-    @Override
-    public Long responseContentLength(Void unused, Void unused2) {
-      return 100L;
-    }
-
-    @Override
-    @Nullable
-    public Long responseContentLengthUncompressed(Void unused, Void unused2) {
-      return null;
     }
 
     @Override
@@ -119,21 +95,33 @@ public class InstrumenterBenchmark {
   }
 
   static class ConstantNetAttributesGetter
-      extends InetSocketAddressNetServerAttributesGetter<Void> {
+      extends InetSocketAddressNetClientAttributesGetter<Void, Void> {
 
-    private static final InetSocketAddress ADDRESS =
+    private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
 
-    @Override
     @Nullable
-    public InetSocketAddress getAddress(Void unused) {
-      return ADDRESS;
+    @Override
+    public String transport(Void request, @Nullable Void response) {
+      return SemanticAttributes.NetTransportValues.IP_TCP;
     }
 
-    @Override
     @Nullable
-    public String transport(Void unused) {
-      return SemanticAttributes.NetTransportValues.IP_TCP;
+    @Override
+    public String peerName(Void request) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public Integer peerPort(Void request) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    protected InetSocketAddress getPeerSocketAddress(Void request, @Nullable Void response) {
+      return PEER_ADDRESS;
     }
   }
 }

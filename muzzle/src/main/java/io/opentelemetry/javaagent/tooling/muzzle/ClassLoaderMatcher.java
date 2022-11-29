@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 /**
  * This class verifies that a given {@link ClassLoader} satisfies all expectations of a given {@link
@@ -23,19 +24,23 @@ import java.util.ServiceLoader;
 public class ClassLoaderMatcher {
 
   /**
-   * For all {@link InstrumentationModule}s found in the current thread's context classloader calls
+   * For all {@link InstrumentationModule}s found in the current thread's context class loader calls
    * {@link #matches(InstrumentationModule, ClassLoader, boolean)} and returns the aggregated
    * result.
    *
    * <p>The returned map will be empty if and only if no instrumentation modules were found.
    */
   public static Map<String, List<Mismatch>> matchesAll(
-      ClassLoader classLoader, boolean injectHelpers) {
+      ClassLoader classLoader, boolean injectHelpers, Set<String> excludedInstrumentationNames) {
     Map<String, List<Mismatch>> result = new HashMap<>();
     ServiceLoader.load(InstrumentationModule.class)
         .forEach(
             module -> {
-              result.put(module.getClass().getName(), matches(module, classLoader, injectHelpers));
+              if (module.instrumentationNames().stream()
+                  .noneMatch(excludedInstrumentationNames::contains)) {
+                result.put(
+                    module.getClass().getName(), matches(module, classLoader, injectHelpers));
+              }
             });
     return result;
   }
@@ -88,7 +93,7 @@ public class ClassLoaderMatcher {
                 helperResourceBuilder.getResources(),
                 Thread.currentThread().getContextClassLoader(),
                 null)
-            .transform(null, null, classLoader, null);
+            .transform(null, null, classLoader, null, null);
       }
     } catch (RuntimeException e) {
       mismatches = ReferenceMatcher.add(mismatches, new Mismatch.HelperClassesInjectionError());

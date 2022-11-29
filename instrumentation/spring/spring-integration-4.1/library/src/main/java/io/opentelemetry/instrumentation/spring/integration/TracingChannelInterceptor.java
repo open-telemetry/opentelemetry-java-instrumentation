@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.integration;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -29,23 +28,23 @@ import org.springframework.util.LinkedMultiValueMap;
 
 final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
-  private static final boolean PRODUCER_SPAN_ENABLED =
-      Config.get().getBoolean("otel.instrumentation.spring-integration.producer.enabled", false);
-
   private static final ThreadLocal<Map<MessageChannel, ContextAndScope>> LOCAL_CONTEXT_AND_SCOPE =
       ThreadLocal.withInitial(IdentityHashMap::new);
 
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
   private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
+  private final boolean producerSpanEnabled;
 
   TracingChannelInterceptor(
       ContextPropagators propagators,
       Instrumenter<MessageWithChannel, Void> consumerInstrumenter,
-      Instrumenter<MessageWithChannel, Void> producerInstrumenter) {
+      Instrumenter<MessageWithChannel, Void> producerInstrumenter,
+      boolean producerSpanEnabled) {
     this.propagators = propagators;
     this.consumerInstrumenter = consumerInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
+    this.producerSpanEnabled = producerSpanEnabled;
   }
 
   @Override
@@ -230,8 +229,8 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     }
   }
 
-  private static boolean createProducerSpan(MessageChannel messageChannel) {
-    if (!PRODUCER_SPAN_ENABLED) {
+  private boolean createProducerSpan(MessageChannel messageChannel) {
+    if (!producerSpanEnabled || directWithAttributesChannelClass == null) {
       return false;
     }
 

@@ -8,11 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.jms.JMSException;
 
-enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWithDestination, Void> {
+public enum JmsMessageAttributesGetter
+    implements MessagingAttributesGetter<MessageWithDestination, Void> {
   INSTANCE;
 
   private static final Logger logger = Logger.getLogger(JmsMessageAttributesGetter.class.getName());
@@ -85,9 +88,22 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
   public String messageId(MessageWithDestination messageWithDestination, Void unused) {
     try {
       return messageWithDestination.message().getJMSMessageID();
-    } catch (JMSException e) {
-      logger.log(FINE, "Failure getting JMS message id", e);
+    } catch (JMSException exception) {
+      logger.log(FINE, "Failure getting JMS message id", exception);
       return null;
     }
+  }
+
+  @Override
+  public List<String> header(MessageWithDestination messageWithDestination, String name) {
+    try {
+      String value = messageWithDestination.message().getStringProperty(name);
+      if (value != null) {
+        return Collections.singletonList(value);
+      }
+    } catch (JMSException exception) {
+      logger.log(FINE, "Failure getting JMS message header", exception);
+    }
+    return Collections.emptyList();
   }
 }

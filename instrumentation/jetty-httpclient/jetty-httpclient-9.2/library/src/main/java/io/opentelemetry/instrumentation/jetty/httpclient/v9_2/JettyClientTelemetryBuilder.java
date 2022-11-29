@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterBuilder;
@@ -25,12 +26,14 @@ public final class JettyClientTelemetryBuilder {
     instrumenterBuilder = new JettyClientInstrumenterBuilder(openTelemetry);
   }
 
+  @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setHttpClientTransport(
       HttpClientTransport httpClientTransport) {
     this.httpClientTransport = httpClientTransport;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setSslContextFactory(SslContextFactory sslContextFactory) {
     this.sslContextFactory = sslContextFactory;
     return this;
@@ -40,6 +43,7 @@ public final class JettyClientTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
     instrumenterBuilder.addAttributeExtractor(attributesExtractor);
@@ -51,6 +55,7 @@ public final class JettyClientTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     instrumenterBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
@@ -61,6 +66,7 @@ public final class JettyClientTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     instrumenterBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;

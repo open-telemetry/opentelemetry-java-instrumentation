@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons.instrumenter;
+import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_REQUEST;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -13,11 +14,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
+import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyErrorHolder;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -51,8 +52,7 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
       if (clientContext != null) {
         ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).remove();
         contextAttr.remove();
-        HttpRequestAndChannel request =
-            ctx.channel().attr(NettyClientSingletons.HTTP_REQUEST).getAndRemove();
+        HttpRequestAndChannel request = ctx.channel().attr(HTTP_REQUEST).getAndRemove();
         instrumenter().end(clientContext, request, null, throwable);
         return;
       }

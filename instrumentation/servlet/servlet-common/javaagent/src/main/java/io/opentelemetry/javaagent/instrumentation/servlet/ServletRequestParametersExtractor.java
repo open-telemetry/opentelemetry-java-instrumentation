@@ -10,8 +10,8 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +23,7 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      Config.get()
+      InstrumentationConfig.get()
           .getList(
               "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
 

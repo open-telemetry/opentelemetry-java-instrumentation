@@ -98,11 +98,13 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
           hasNoParent()
           attributes {
             "$SemanticAttributes.NET_TRANSPORT" SemanticAttributes.NetTransportValues.IP_TCP
-            "$SemanticAttributes.NET_PEER_PORT" Long
-            "$SemanticAttributes.NET_PEER_IP" "127.0.0.1"
+            "$SemanticAttributes.NET_HOST_NAME" "localhost"
+            "$SemanticAttributes.NET_HOST_PORT" port
+            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
+            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
             "$SemanticAttributes.HTTP_METHOD" "GET"
             "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_HOST" { it == "localhost" || it == "localhost:$port" }
             "$SemanticAttributes.HTTP_TARGET" "/jetty-context/" + path
             "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
             "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1

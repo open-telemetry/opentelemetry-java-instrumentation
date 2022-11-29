@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.sdk.logs.data.Severity
+import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Unroll
 
@@ -50,9 +50,9 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
       await()
         .untilAsserted(
           () -> {
-            assertThat(logs).hasSize(1)
+            assertThat(logRecords).hasSize(1)
           })
-      def log = logs.get(0)
+      def log = logRecords.get(0)
       if (testArgs == "params") {
         assertThat(log.getBody().asString()).isEqualTo("xyz: 123")
       } else {
@@ -81,7 +81,7 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
       }
     } else {
       Thread.sleep(500) // sleep a bit just to make sure no log is captured
-      logs.size() == 0
+      logRecords.size() == 0
     }
 
     where:

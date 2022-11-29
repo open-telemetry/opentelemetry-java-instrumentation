@@ -13,7 +13,7 @@ explanations of how to use a particular method and why it works the way it does.
 
 An `InstrumentationModule` describes a set of individual `TypeInstrumentation` that need to be
 applied together to correctly instrument a specific library. Type instrumentations grouped in a
-module share helper classes, [muzzle runtime checks](muzzle.md), and applicable classloader criteria,
+module share helper classes, [muzzle runtime checks](muzzle.md), and applicable class loader criteria,
 and can only be enabled or disabled as a set.
 
 The OpenTelemetry javaagent finds all modules by using Java's `ServiceLoader` API. To make your
@@ -88,14 +88,14 @@ public List<String> helperResourceNames() {
 
 All classes referenced by service providers defined in the `helperResourceNames()` method are treated
 as helper classes: they're checked for invalid references and automatically injected into the
-application classloader.
+application class loader.
 
 ### Inject additional instrumentation helper classes manually with the `getAdditionalHelperClassNames()` method
 
 If you don't use the [muzzle gradle plugins](muzzle.md), or are in a scenario that requires
 providing the helper classes manually (for example, an unusual SPI implementation), you can
 override the `getAdditionalHelperClassNames()` method to provide a list of additional helper
-classes to be injected into the application classloader when the instrumentation is applied:
+classes to be injected into the application class loader when the instrumentation is applied:
 
 ```java
 public List<String> getAdditionalHelperClassNames() {
@@ -108,7 +108,7 @@ public List<String> getAdditionalHelperClassNames() {
 The order of the class names returned by this method matters: if you have several helper classes
 extending one another, you'll want to return the base class first. For example, if you have a
 `B extends A` class, the list should contain `A` first and `B` second. The helper classes are
-injected into the application classloader after those provided by the muzzle codegen plugin.
+injected into the application class loader after those provided by the muzzle codegen plugin.
 
 ### Restrict the criteria for applying the instrumentation by extending the `classLoaderMatcher()` method
 
@@ -344,14 +344,18 @@ compile time for it to work.
 ### Why we don't use ByteBuddy @Advice.Origin Method
 
 Instead of
+
 ```
 @Advice.Origin Method method
 ```
+
 we prefer to use
+
 ```
 @Advice.Origin("#t") Class<?> declaringClass,
 @Advice.Origin("#m") String methodName
 ```
+
 because the former inserts a call to `Class.getMethod(...)` in transformed method. In contrast,
 getting the declaring class and method name is just loading constants from constant pool, which is
 a much simpler operation.

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -44,6 +46,8 @@ public interface AttributesExtractor<REQUEST, RESPONSE> {
    */
   static <REQUEST, RESPONSE, T> AttributesExtractor<REQUEST, RESPONSE> constant(
       AttributeKey<T> attributeKey, T attributeValue) {
-    return new ConstantAttributesExtractor<>(attributeKey, attributeValue);
+    return new ConstantAttributesExtractor<>(
+        requireNonNull(attributeKey, "attributeKey"),
+        requireNonNull(attributeValue, "attributeValue"));
   }
 }

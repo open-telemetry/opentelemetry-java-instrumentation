@@ -18,3 +18,29 @@ dependencies {
 
   implementation(project(":instrumentation:micrometer:micrometer-1.5:javaagent"))
 }
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+// spring 6 (spring boot 3) requires java 17
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
+}
+
+// spring 6 (spring boot 3) uses slf4j 2.0
+if (!latestDepTest) {
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      // requires old logback (and therefore also old slf4j)
+      force("ch.qos.logback:logback-classic:1.2.11")
+      force("org.slf4j:slf4j-api:1.7.36")
+    }
+  }
+}

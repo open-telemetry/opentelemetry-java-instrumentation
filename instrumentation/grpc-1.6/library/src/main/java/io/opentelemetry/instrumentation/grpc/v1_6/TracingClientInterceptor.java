@@ -11,6 +11,7 @@ import io.grpc.ClientCall;
 import io.grpc.ClientInterceptor;
 import io.grpc.ForwardingClientCall;
 import io.grpc.ForwardingClientCallListener;
+import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
@@ -20,9 +21,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.URI;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingClientInterceptor implements ClientInterceptor {
@@ -43,8 +41,12 @@ final class TracingClientInterceptor implements ClientInterceptor {
   @Override
   public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
       MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
-    GrpcRequest request = new GrpcRequest(method, null, null);
+    GrpcRequest request = new GrpcRequest(method, null, null, next.authority());
     Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      return next.newCall(method, callOptions);
+    }
+
     Context context = instrumenter.start(parentContext, request);
     ClientCall<REQUEST, RESPONSE> result;
     try (Scope ignored = context.makeCurrent()) {
@@ -52,18 +54,12 @@ final class TracingClientInterceptor implements ClientInterceptor {
         // call other interceptors
         result = next.newCall(method, callOptions);
       } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
+        instrumenter.end(context, request, Status.UNKNOWN, e);
         throw e;
       }
     }
-    SocketAddress address = null;
-    try {
-      URI uri = new URI(null, next.authority(), null, null, null);
-      address = InetSocketAddress.createUnresolved(uri.getHost(), uri.getPort());
-    } catch (Throwable e) {
-      // do nothing
-    }
-    request.setRemoteAddress(address);
+
+    request.setPeerSocketAddress(result.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
 
     return new TracingClientCall<>(result, parentContext, context, request);
   }
@@ -93,12 +89,14 @@ final class TracingClientInterceptor implements ClientInterceptor {
     @Override
     public void start(Listener<RESPONSE> responseListener, Metadata headers) {
       propagators.getTextMapPropagator().inject(context, headers, MetadataSetter.INSTANCE);
+      // store metadata so that it can be used by custom AttributesExtractors
+      request.setMetadata(headers);
       try (Scope ignored = context.makeCurrent()) {
         super.start(
             new TracingClientCallListener(responseListener, parentContext, context, request),
             headers);
       } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
+        instrumenter.end(context, request, Status.UNKNOWN, e);
         throw e;
       }
     }
@@ -108,7 +106,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       try (Scope ignored = context.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
-        instrumenter.end(context, request, null, e);
+        instrumenter.end(context, request, Status.UNKNOWN, e);
         throw e;
       }
       Span span = Span.fromContext(context);

@@ -21,11 +21,28 @@ public interface NetClientAttributesGetter<REQUEST, RESPONSE> {
   String transport(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  String peerName(REQUEST request, @Nullable RESPONSE response);
+  String peerName(REQUEST request);
 
   @Nullable
-  Integer peerPort(REQUEST request, @Nullable RESPONSE response);
+  Integer peerPort(REQUEST request);
 
   @Nullable
-  String peerIp(REQUEST request, @Nullable RESPONSE response);
+  default String sockFamily(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
+  default String sockPeerAddr(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
+  default String sockPeerName(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
+  default Integer sockPeerPort(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
 }

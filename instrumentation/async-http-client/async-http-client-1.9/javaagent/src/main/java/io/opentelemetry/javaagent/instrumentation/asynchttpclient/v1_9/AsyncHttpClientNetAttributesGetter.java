@@ -20,18 +20,12 @@ final class AsyncHttpClientNetAttributesGetter
   }
 
   @Override
-  public String peerName(Request request, @Nullable Response response) {
+  public String peerName(Request request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(Request request, @Nullable Response response) {
+  public Integer peerPort(Request request) {
     return request.getUri().getPort();
-  }
-
-  @Override
-  @Nullable
-  public String peerIp(Request request, @Nullable Response response) {
-    return null;
   }
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyClientSingletons.connectionInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -17,11 +17,11 @@ import io.netty.resolver.AddressResolverGroup;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.ConnectionCompleteListener;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.common.NettyConnectionRequest;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.client.ConnectionCompleteListener;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;

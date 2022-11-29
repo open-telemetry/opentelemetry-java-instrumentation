@@ -29,10 +29,12 @@ public final class DataSourceSingletons {
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<DataSource, Void> instrumenter() {
     return INSTRUMENTER;
   }
+
+  private DataSourceSingletons() {}
 }

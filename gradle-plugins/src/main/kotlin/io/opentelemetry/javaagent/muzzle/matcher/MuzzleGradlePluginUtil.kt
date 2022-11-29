@@ -26,7 +26,7 @@ package io.opentelemetry.javaagent.muzzle.matcher
  */
 
 // TODO the next line is not true anymore. Switch from System.err to Gradle logger.
-// Runs in special classloader so tedious to provide access to the Gradle logger.
+// Runs in special class loader so tedious to provide access to the Gradle logger.
 class MuzzleGradlePluginUtil {
 
   companion object {
@@ -53,23 +53,21 @@ class MuzzleGradlePluginUtil {
      */
     @Suppress("UNCHECKED_CAST")
     fun assertInstrumentationMuzzled(agentClassLoader: ClassLoader, userClassLoader: ClassLoader,
-                                     excludedInstrumentationModules: List<String>, assertPass: Boolean) {
+                                     excludedInstrumentationNames: Set<String>, assertPass: Boolean) {
 
       val matcherClass = agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher")
 
       // We cannot reference Mismatch class directly here, because we are loaded from a different
-      // classloader.
+      // class loader.
 
       // We cannot reference Mismatch class directly here, because we are loaded from a different
-      // classloader.
+      // class loader.
       val allMismatches = matcherClass
-        .getMethod("matchesAll", ClassLoader::class.java, Boolean::class.javaPrimitiveType)
-        .invoke(null, userClassLoader, assertPass)
+        .getMethod("matchesAll", ClassLoader::class.java, Boolean::class.javaPrimitiveType, Set::class.java)
+        .invoke(null, userClassLoader, assertPass, excludedInstrumentationNames)
         as Map<String, List<Any>>
 
-      allMismatches.filterKeys {
-        !excludedInstrumentationModules.contains(it)
-      }.forEach { (moduleName, mismatches) ->
+      allMismatches.forEach { moduleName, mismatches ->
         val passed = mismatches.isEmpty()
         if (passed && !assertPass) {
           System.err.println("MUZZLE PASSED $moduleName BUT FAILURE WAS EXPECTED")

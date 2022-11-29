@@ -1,5 +1,5 @@
 plugins {
-  id("org.unbroken-dome.xjc") version "2.0.0"
+  id("org.unbroken-dome.xjc")
   id("otel.javaagent-instrumentation")
 }
 
@@ -38,6 +38,9 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-web-services:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:2.0.0.RELEASE")
 
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web-services:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+")
+
   testImplementation("wsdl4j:wsdl4j:1.6.3")
   testImplementation("com.sun.xml.messaging.saaj:saaj-impl:1.5.2")
   testImplementation("javax.xml.bind:jaxb-api:2.2.11")
@@ -45,4 +48,18 @@ dependencies {
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+}
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
+  }
 }

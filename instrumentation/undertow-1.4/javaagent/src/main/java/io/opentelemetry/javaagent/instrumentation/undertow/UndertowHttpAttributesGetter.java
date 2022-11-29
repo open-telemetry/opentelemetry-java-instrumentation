@@ -27,21 +27,6 @@ public class UndertowHttpAttributesGetter
   }
 
   @Override
-  @Nullable
-  public Long requestContentLength(
-      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    long requestContentLength = exchange.getRequestContentLength();
-    return requestContentLength != -1 ? requestContentLength : null;
-  }
-
-  @Override
-  @Nullable
-  public Long requestContentLengthUncompressed(
-      HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    return null;
-  }
-
-  @Override
   public String flavor(HttpServerExchange exchange) {
     String flavor = exchange.getProtocol().toString();
     // remove HTTP/ prefix to comply with semantic conventions
@@ -52,22 +37,9 @@ public class UndertowHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(HttpServerExchange exchange, HttpServerExchange unused) {
+  public Integer statusCode(
+      HttpServerExchange exchange, HttpServerExchange unused, @Nullable Throwable error) {
     return exchange.getStatusCode();
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLength(HttpServerExchange exchange, HttpServerExchange unused) {
-    long responseContentLength = exchange.getResponseContentLength();
-    return responseContentLength != -1 ? responseContentLength : null;
-  }
-
-  @Override
-  @Nullable
-  public Long responseContentLengthUncompressed(
-      HttpServerExchange exchange, HttpServerExchange unused) {
-    return null;
   }
 
   @Override
@@ -97,12 +69,6 @@ public class UndertowHttpAttributesGetter
   @Override
   @Nullable
   public String route(HttpServerExchange exchange) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String serverName(HttpServerExchange exchange) {
     return null;
   }
 }

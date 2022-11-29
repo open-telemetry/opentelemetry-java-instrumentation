@@ -9,7 +9,6 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
-import io.netty.channel.ChannelOption
 import io.netty.channel.ChannelPipeline
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.embedded.EmbeddedChannel
@@ -21,16 +20,10 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
-import io.netty.handler.ssl.SslContext
-import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.timeout.ReadTimeoutHandler
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
+import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -40,131 +33,18 @@ import java.util.concurrent.TimeUnit
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
-class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implements AgentTestTrait {
+class Netty41ClientTest extends AgentInstrumentationSpecification {
 
   @Shared
-  private EventLoopGroup eventLoopGroup = buildEventLoopGroup()
+  private HttpClientTestServer server
 
-  @Shared
-  private Bootstrap bootstrap = buildBootstrap(false)
-
-  @Shared
-  private Bootstrap httpsBootstrap = buildBootstrap(true)
-
-  @Shared
-  private Bootstrap readTimeoutBootstrap = buildBootstrap(false, true)
+  def setupSpec() {
+    server = new HttpClientTestServer(openTelemetry)
+    server.start()
+  }
 
   def cleanupSpec() {
-    eventLoopGroup?.shutdownGracefully()
-  }
-
-  Bootstrap buildBootstrap(boolean https, boolean readTimeout = false) {
-    Bootstrap bootstrap = new Bootstrap()
-    bootstrap.group(eventLoopGroup)
-      .channel(getChannelClass())
-      .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
-      .handler(new ChannelInitializer<SocketChannel>() {
-        @Override
-        protected void initChannel(SocketChannel socketChannel) throws Exception {
-          ChannelPipeline pipeline = socketChannel.pipeline()
-          if (https) {
-            SslContext sslContext = SslContextBuilder.forClient().build()
-            pipeline.addLast(sslContext.newHandler(socketChannel.alloc()))
-          }
-          if (readTimeout) {
-            pipeline.addLast(new ReadTimeoutHandler(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-          }
-          pipeline.addLast(new HttpClientCodec())
-        }
-      })
-
-    return bootstrap
-  }
-
-  EventLoopGroup buildEventLoopGroup() {
-    return new NioEventLoopGroup()
-  }
-
-  Class<Channel> getChannelClass() {
-    return NioSocketChannel
-  }
-
-  Bootstrap getBootstrap(URI uri) {
-    if (uri.getScheme() == "https") {
-      return httpsBootstrap
-    } else if (uri.getPath() == "/read-timeout") {
-      return readTimeoutBootstrap
-    }
-    return bootstrap
-  }
-
-  @Override
-  DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def target = uri.path
-    if (uri.query != null) {
-      target += "?" + uri.query
-    }
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), target, Unpooled.EMPTY_BUFFER)
-    request.headers().set(HttpHeaderNames.HOST, uri.host + ":" + uri.port)
-    headers.each { k, v -> request.headers().set(k, v) }
-    return request
-  }
-
-  @Override
-  int sendRequest(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers) {
-    def channel = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()
-    def result = new CompletableFuture<Integer>()
-    channel.pipeline().addLast(new ClientHandler(result))
-    channel.writeAndFlush(request).get()
-    return result.get(20, TimeUnit.SECONDS)
-  }
-
-  @Override
-  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
-    Channel ch
-    try {
-      ch = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()
-    } catch (Exception exception) {
-      requestResult.complete(exception)
-      return
-    }
-    def result = new CompletableFuture<Integer>()
-    result.whenComplete { status, throwable ->
-      requestResult.complete({ status }, throwable)
-    }
-    ch.pipeline().addLast(new ClientHandler(result))
-    ch.writeAndFlush(request)
-  }
-
-  @Override
-  String expectedClientSpanName(URI uri, String method) {
-    switch (uri.toString()) {
-      case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
-        return "CONNECT"
-      default:
-        return super.expectedClientSpanName(uri, method)
-    }
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(URI uri) {
-    switch (uri.toString()) {
-      case "http://localhost:61/": // unopened port
-      case "https://192.0.2.1/": // non routable address
-        return []
-    }
-    return super.httpAttributes(uri)
-  }
-
-  @Override
-  boolean testRedirects() {
-    false
-  }
-
-  @Override
-  boolean testReadTimeout() {
-    true
+    server.stop()
   }
 
   def "test connection reuse and second request with lazy execute"() {
@@ -201,8 +81,14 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        clientSpan(it, 1, span(0))
-        serverSpan(it, 2, span(1))
+        span(1) {
+          kind SpanKind.CLIENT
+          childOf span(0)
+        }
+        span(2) {
+          kind SpanKind.SERVER
+          childOf span(1)
+        }
       }
     }
 
@@ -220,8 +106,14 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        clientSpan(it, 1, span(0))
-        serverSpan(it, 2, span(1))
+        span(1) {
+          kind SpanKind.CLIENT
+          childOf span(0)
+        }
+        span(2) {
+          kind SpanKind.SERVER
+          childOf span(1)
+        }
       }
       trace(1, 3) {
         span(0) {
@@ -229,8 +121,14 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           kind SpanKind.INTERNAL
           hasNoParent()
         }
-        clientSpan(it, 1, span(0))
-        serverSpan(it, 2, span(1))
+        span(1) {
+          kind SpanKind.CLIENT
+          childOf span(0)
+        }
+        span(2) {
+          kind SpanKind.SERVER
+          childOf span(1)
+        }
       }
     }
 
@@ -249,7 +147,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     then:
     // The first one returns the removed tracing handler
-    pipeline.remove(HttpClientTracingHandler.getName()) != null
+    pipeline.remove("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler") != null
   }
 
   def "when a handler is added to the netty pipeline we add ONLY ONE tracing handler"() {
@@ -260,9 +158,9 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     when:
     pipeline.addLast("name", new HttpClientCodec())
     // The first one returns the removed tracing handler
-    pipeline.remove(HttpClientTracingHandler.getName())
+    pipeline.remove("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler")
     // There is only one
-    pipeline.remove(HttpClientTracingHandler.getName()) == null
+    pipeline.remove("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler") == null
 
     then:
     thrown NoSuchElementException
@@ -279,7 +177,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
     then:
     // The first one returns the removed tracing handler
-    null != pipeline.remove(HttpClientTracingHandler.getName())
+    null != pipeline.remove("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler")
     null != pipeline.remove("some_handler")
     null != pipeline.remove("a_traced_handler")
   }
@@ -307,9 +205,9 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     channel.pipeline().addLast(new TracedHandlerFromInitializerHandler())
 
     then:
-    null != channel.pipeline().get(HttpClientTracingHandler.getName())
+    null != channel.pipeline().get("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler")
     null != channel.pipeline().remove("added_in_initializer")
-    null == channel.pipeline().get(HttpClientTracingHandler.getName())
+    null == channel.pipeline().get("io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler")
   }
 
   def "request with trace annotated method #method"() {
@@ -336,20 +234,47 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           attributes {
           }
         }
-        clientSpan(it, 2, span(1), method)
-        serverSpan(it, 3, span(2))
+        span(2) {
+          childOf span(1)
+          kind SpanKind.CLIENT
+        }
+        span(3) {
+          childOf span(2)
+          kind SpanKind.SERVER
+        }
       }
     }
 
     where:
-    method << BODY_METHODS
+    method << ["POST", "PUT"]
   }
 
   class TracedClass {
+    private final Bootstrap bootstrap
+
+    private TracedClass() {
+      EventLoopGroup group = new NioEventLoopGroup()
+      bootstrap = new Bootstrap()
+      bootstrap.group(group)
+        .channel(NioSocketChannel)
+        .handler(new ChannelInitializer<SocketChannel>() {
+          @Override
+          protected void initChannel(SocketChannel socketChannel) throws Exception {
+            ChannelPipeline pipeline = socketChannel.pipeline()
+            pipeline.addLast(new HttpClientCodec())
+          }
+        })
+    }
+
     int tracedMethod(String method) {
-      def uri = resolveAddress("/success")
       runWithSpan("tracedMethod") {
-        doRequest(method, uri)
+        def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), "/success", Unpooled.EMPTY_BUFFER)
+        request.headers().set(HttpHeaderNames.HOST, "localhost:" + server.httpPort())
+        def ch = bootstrap.connect("localhost", server.httpPort()).sync().channel()
+        def result = new CompletableFuture<Integer>()
+        ch.pipeline().addLast(new ClientHandler(result))
+        ch.writeAndFlush(request).get()
+        return result.get(20, TimeUnit.SECONDS)
       }
     }
   }
@@ -388,10 +313,5 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
       // This replicates how reactor 0.8.x add the HttpClientCodec
       ch.pipeline().addLast("added_in_initializer", new HttpClientCodec())
     }
-  }
-
-  @Override
-  SingleConnection createSingleConnection(String host, int port) {
-    return new SingleNettyConnection(host, port)
   }
 }

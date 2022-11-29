@@ -23,23 +23,26 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
+val byteBuddyVersion = "1.12.19"
+val aetherVersion = "1.1.0"
+
 dependencies {
   implementation("com.google.guava:guava:31.1-jre")
   // we need to use byte buddy variant that does not shade asm
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.12.9") {
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")
   }
-  implementation("net.bytebuddy:byte-buddy-dep:1.12.9")
+  implementation("net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}")
 
-  implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
-  implementation("org.eclipse.aether:aether-transport-http:1.1.0")
+  implementation("org.eclipse.aether:aether-connector-basic:${aetherVersion}")
+  implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
 
-  testImplementation("org.assertj:assertj-core:3.22.0")
+  testImplementation("org.assertj:assertj-core:3.23.1")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.8.2"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -137,15 +140,14 @@ afterEvaluate {
       }
     }
   }
+}
 
 // Sign only if we have a key to do so
-  val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
-// Stub out entire signing block off of CI since Gradle provides no way of lazy configuration of
-// signing tasks.
-  if (System.getenv("CI") != null && signingKey != null) {
-    signing {
-      useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
-      sign(publishing.publications["pluginMaven"])
-    }
-  }
+val signingKey: String? = System.getenv("GPG_PRIVATE_KEY")
+signing {
+  setRequired({
+    // only require signing on CI and when a signing key is present
+    System.getenv("CI") != null && signingKey != null
+  })
+  useInMemoryPgpKeys(signingKey, System.getenv("GPG_PASSWORD"))
 }

@@ -63,7 +63,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
 
   // this override is needed because dropwizard reports peer ip as the client ip
   @Override
-  String peerIp(ServerEndpoint endpoint) {
+  String sockPeerAddr(ServerEndpoint endpoint) {
     TEST_CLIENT_IP
   }
 

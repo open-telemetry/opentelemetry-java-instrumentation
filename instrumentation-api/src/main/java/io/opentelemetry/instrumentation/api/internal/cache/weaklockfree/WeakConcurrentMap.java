@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -49,7 +49,6 @@ import javax.annotation.Nullable;
   "HashCodeToString",
   "MissingSummary",
   "UngroupedOverloads",
-  "ThreadPriorityCheck",
   "FieldMissingNullable"
 })
 public class WeakConcurrentMap<K, V>
@@ -68,15 +67,10 @@ public class WeakConcurrentMap<K, V>
         }
       };
 
-  private static final AtomicLong ID = new AtomicLong();
-
-  private final Thread thread;
-
   private final boolean reuseKeys;
 
-  /** @param cleanerThread {@code true} if a thread should be started that removes stale entries. */
-  public WeakConcurrentMap(boolean cleanerThread) {
-    this(cleanerThread, isPersistentClassLoader(LookupKey.class.getClassLoader()));
+  public WeakConcurrentMap() {
+    this(isPersistentClassLoader(LookupKey.class.getClassLoader()));
   }
 
   /**
@@ -102,37 +96,24 @@ public class WeakConcurrentMap<K, V>
   }
 
   /**
-   * @param cleanerThread {@code true} if a thread should be started that removes stale entries.
    * @param reuseKeys {@code true} if the lookup keys should be reused via a {@link ThreadLocal}.
    *     Note that setting this to {@code true} may result in class loader leaks. See {@link
    *     #isPersistentClassLoader(ClassLoader)} for more details.
    */
-  public WeakConcurrentMap(boolean cleanerThread, boolean reuseKeys) {
-    this(cleanerThread, reuseKeys, new ConcurrentHashMap<>());
+  public WeakConcurrentMap(boolean reuseKeys) {
+    this(reuseKeys, new ConcurrentHashMap<>());
   }
 
   /**
-   * @param cleanerThread {@code true} if a thread should be started that removes stale entries.
    * @param reuseKeys {@code true} if the lookup keys should be reused via a {@link ThreadLocal}.
    *     Note that setting this to {@code true} may result in class loader leaks. See {@link
    *     #isPersistentClassLoader(ClassLoader)} for more details.
    * @param target ConcurrentMap implementation that this class wraps.
    */
   public WeakConcurrentMap(
-      boolean cleanerThread,
-      boolean reuseKeys,
-      ConcurrentMap<AbstractWeakConcurrentMap.WeakKey<K>, V> target) {
+      boolean reuseKeys, ConcurrentMap<AbstractWeakConcurrentMap.WeakKey<K>, V> target) {
     super(target);
     this.reuseKeys = reuseKeys;
-    if (cleanerThread) {
-      thread = new Thread(this);
-      thread.setName("weak-ref-cleaner-" + ID.getAndIncrement());
-      thread.setPriority(Thread.MIN_PRIORITY);
-      thread.setDaemon(true);
-      thread.start();
-    } else {
-      thread = null;
-    }
   }
 
   @Override
@@ -152,11 +133,6 @@ public class WeakConcurrentMap<K, V>
     lookupKey.reset();
   }
 
-  /** @return The cleaner thread or {@code null} if no such thread was set. */
-  public Thread getCleanerThread() {
-    return thread;
-  }
-
   /*
    * A lookup key must only be used for looking up instances within a map. For this to work, it implements an identical contract for
    * hash code and equals as the WeakKey implementation. At the same time, the lookup key implementation does not extend WeakReference
@@ -169,6 +145,7 @@ public class WeakConcurrentMap<K, V>
     private K key;
     private int hashCode;
 
+    @SuppressWarnings("CanIgnoreReturnValueSuggester")
     LookupKey<K> withValue(K key) {
       this.key = key;
       hashCode = System.identityHashCode(key);
@@ -205,10 +182,6 @@ public class WeakConcurrentMap<K, V>
    */
   public static class WithInlinedExpunction<K, V> extends WeakConcurrentMap<K, V> {
 
-    public WithInlinedExpunction() {
-      super(false);
-    }
-
     @Override
     public V get(K key) {
       expungeStaleEntries();
@@ -237,6 +210,12 @@ public class WeakConcurrentMap<K, V>
     public V putIfAbsent(K key, V value) {
       expungeStaleEntries();
       return super.putIfAbsent(key, value);
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+      expungeStaleEntries();
+      return super.computeIfAbsent(key, mappingFunction);
     }
 
     @Override

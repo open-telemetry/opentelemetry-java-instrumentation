@@ -23,14 +23,8 @@ tasks {
         disableWarningsInGeneratedCode.set(true)
         allDisabledChecksAsWarnings.set(true)
 
+        // Ignore warnings for generated and vendored classes
         excludedPaths.set(".*/build/generated/.*|.*/concurrentlinkedhashmap/.*")
-
-        // Still Java 8
-        disable("Varifier")
-
-        // We often override a method returning Iterable which this makes tedious
-        // for questionable value.
-        disable("PreferredInterfaceType")
 
         // it's very convenient to debug stuff in the javaagent using System.out.println
         // and we don't want to conditionally only check this in CI
@@ -40,42 +34,63 @@ tasks {
 
         disable("BooleanParameter")
 
+        // We often override a method returning Iterable which this makes tedious
+        // for questionable value.
+        disable("PreferredInterfaceType")
+
         // Doesn't work well with Java 8
         disable("FutureReturnValueIgnored")
 
-        // Require Guava
+        // Still Java 8
+        disable("Varifier")
+
+        // Doesn't currently use Var annotations.
+        disable("Var") // "-Xep:Var:OFF"
+
+        // ImmutableRefactoring suggests using com.google.errorprone.annotations.Immutable,
+        // but currently uses javax.annotation.concurrent.Immutable
+        disable("ImmutableRefactoring")
+
+        // AutoValueImmutableFields suggests returning Guava types from API methods
         disable("AutoValueImmutableFields")
-        disable("StringSplitter")
+        // Suggests using Guava types for fields but we don't use Guava
         disable("ImmutableMemberCollection")
 
         // Fully qualified names may be necessary when deprecating a class to avoid
         // deprecation warning.
         disable("UnnecessarilyFullyQualified")
 
-        // Don't currently use this (to indicate a local variable that's mutated) but could
-        // consider for future.
-        disable("Var")
-
-        // We use animal sniffer
-        disable("AndroidJdkLibsChecker")
+        // TODO (trask) use animal sniffer
         disable("Java7ApiChecker")
         disable("Java8ApiChecker")
+        disable("AndroidJdkLibsChecker")
 
-        // Prevents defensive null checks and we have nullaway anyways
-        disable("ParameterMissingNullable")
-
-        // javax.annotation.Nullable doesn't support type parameter assertions
-        disable("VoidMissingNullable")
-
-        // Overlaps with nullaway
-        disable("FieldMissingNullable")
-        disable("ReturnMissingNullable")
-
+        // apparently disabling android doesn't disable this
         disable("StaticOrDefaultInterfaceMethod")
 
-        // Great check, but for bytecode manipulation it's too common to separate over
-        // onEnter / onExit
-        // TODO(anuraaga): Only disable for auto instrumentation project.
+        // We don't depend on Guava so use normal splitting
+        disable("StringSplitter")
+
+        // Prevents lazy initialization
+        disable("InitializeInline")
+
+        // Seems to trigger even when a deprecated method isn't called anywhere.
+        // We don't get much benefit from it anyways.
+        disable("InlineMeSuggester")
+
+        disable("DoNotCallSuggester")
+
+        // We have nullaway so don't need errorprone nullable checks which have more false positives.
+        disable("FieldMissingNullable")
+        disable("ParameterMissingNullable")
+        disable("ReturnMissingNullable")
+        disable("VoidMissingNullable")
+
+        // allow UPPERCASE type parameter names
+        disable("TypeParameterNaming")
+
+        // In bytecode instrumentation it's very common to separate across onEnter / onExit
+        // TODO(anuraaga): Only disable for javaagent instrumentation modules.
         disable("MustBeClosedChecker")
 
         // Common to avoid an allocation. Revisit if it's worth opt-in suppressing instead of
@@ -86,29 +101,19 @@ tasks {
         disable("JdkObsolete")
         disable("JavaUtilDate")
 
-        // Storing into a variable in onEnter triggers this unfortunately.
-        // TODO(anuraaga): Only disable for auto instrumentation project.
-        disable("UnusedVariable")
-
         // TODO(anuraaga): Remove this, we use this pattern in several tests and it will mean
         // some moving.
         disable("DefaultPackage")
 
-        // TODO(anuraaga): Remove this, all our advice classes miss constructors but probably should
-        // address this.
+        // we use modified OtelPrivateConstructorForUtilityClass which ignores *Advice classes
         disable("PrivateConstructorForUtilityClass")
 
         // TODO(anuraaga): Remove this, probably after instrumenter API migration instead of dealing
         // with older APIs.
         disable("InconsistentOverloads")
-        disable("TypeParameterNaming")
-
-        // We don't use tools that recognize.
-        disable("InlineMeSuggester")
-        disable("DoNotCallSuggester")
 
         if (name.contains("Jmh") || name.contains("Test")) {
-          disable("HashCodeToString")
+          // Allow underscore in test-type method names
           disable("MemberName")
         }
       }

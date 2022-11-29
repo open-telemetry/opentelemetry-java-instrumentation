@@ -5,12 +5,17 @@
 
 package io.opentelemetry.instrumentation.spring.integration;
 
+import static java.util.Collections.emptyList;
+
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +27,9 @@ public final class SpringIntegrationTelemetryBuilder {
   private final List<AttributesExtractor<MessageWithChannel, Void>> additionalAttributeExtractors =
       new ArrayList<>();
 
+  private List<String> capturedHeaders = emptyList();
+  private boolean producerSpanEnabled = false;
+
   SpringIntegrationTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -30,9 +38,31 @@ public final class SpringIntegrationTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @CanIgnoreReturnValue
   public SpringIntegrationTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<MessageWithChannel, Void> attributesExtractor) {
     additionalAttributeExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Configures the messaging headers that will be captured as span attributes.
+   *
+   * @param capturedHeaders A list of messaging header names.
+   */
+  @CanIgnoreReturnValue
+  public SpringIntegrationTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
+    this.capturedHeaders = capturedHeaders;
+    return this;
+  }
+
+  /**
+   * Sets whether additional {@link SpanKind#PRODUCER PRODUCER} span should be emitted by this
+   * instrumentation.
+   */
+  @CanIgnoreReturnValue
+  public SpringIntegrationTelemetryBuilder setProducerSpanEnabled(boolean producerSpanEnabled) {
+    this.producerSpanEnabled = producerSpanEnabled;
     return this;
   }
 
@@ -56,9 +86,11 @@ public final class SpringIntegrationTelemetryBuilder {
                 SpringIntegrationTelemetryBuilder::consumerSpanName)
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
-                MessagingAttributesExtractor.create(
-                    SpringMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS))
-            .newConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
+                buildMessagingAttributesExtractor(
+                    SpringMessagingAttributesGetter.INSTANCE,
+                    MessageOperation.PROCESS,
+                    capturedHeaders))
+            .buildConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
 
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
         Instrumenter.<MessageWithChannel, Void>builder(
@@ -67,10 +99,25 @@ public final class SpringIntegrationTelemetryBuilder {
                 SpringIntegrationTelemetryBuilder::producerSpanName)
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
-                MessagingAttributesExtractor.create(
-                    SpringMessagingAttributesGetter.INSTANCE, MessageOperation.SEND))
-            .newInstrumenter(SpanKindExtractor.alwaysProducer());
+                buildMessagingAttributesExtractor(
+                    SpringMessagingAttributesGetter.INSTANCE,
+                    MessageOperation.SEND,
+                    capturedHeaders))
+            .buildInstrumenter(SpanKindExtractor.alwaysProducer());
     return new SpringIntegrationTelemetry(
-        openTelemetry.getPropagators(), consumerInstrumenter, producerInstrumenter);
+        openTelemetry.getPropagators(),
+        consumerInstrumenter,
+        producerInstrumenter,
+        producerSpanEnabled);
+  }
+
+  private static MessagingAttributesExtractor<MessageWithChannel, Void>
+      buildMessagingAttributesExtractor(
+          MessagingAttributesGetter<MessageWithChannel, Void> getter,
+          MessageOperation operation,
+          List<String> capturedHeaders) {
+    return MessagingAttributesExtractor.builder(getter, operation)
+        .setCapturedHeaders(capturedHeaders)
+        .build();
   }
 }

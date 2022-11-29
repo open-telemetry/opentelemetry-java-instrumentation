@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobBuilderHel
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobParserJobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepBuilderHelperInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -54,7 +55,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean defaultEnabled() {
+  public boolean defaultEnabled(ConfigProperties config) {
     // TODO: replace this with an experimental flag
     return false;
   }

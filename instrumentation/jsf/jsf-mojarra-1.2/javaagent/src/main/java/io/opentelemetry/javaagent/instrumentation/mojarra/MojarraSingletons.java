@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.mojarra;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.jsf.JsfErrorCauseExtractor;
 import io.opentelemetry.javaagent.instrumentation.jsf.JsfRequest;
 
@@ -22,7 +22,7 @@ public class MojarraSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
             .setErrorCauseExtractor(new JsfErrorCauseExtractor())
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<JsfRequest, Void> instrumenter() {

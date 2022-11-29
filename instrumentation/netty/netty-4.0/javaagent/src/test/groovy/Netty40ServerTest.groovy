@@ -61,8 +61,10 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
 
           def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
           handlers.each { pipeline.addLast(it) }
-          pipeline.addLast([
-            channelRead0       : { ctx, msg ->
+          pipeline.addLast(new SimpleChannelInboundHandler() {
+
+            @Override
+            protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
               if (msg instanceof HttpRequest) {
                 def request = msg as HttpRequest
                 def uri = URI.create(request.uri)
@@ -109,16 +111,22 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
                   return response
                 }
               }
-            },
-            exceptionCaught    : { ChannelHandlerContext ctx, Throwable cause ->
+            }
+
+            @Override
+            void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
               ByteBuf content = Unpooled.copiedBuffer(cause.message, CharsetUtil.UTF_8)
               FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR, content)
               response.headers().set(CONTENT_TYPE, "text/plain")
               response.headers().set(CONTENT_LENGTH, content.readableBytes())
               ctx.write(response)
-            },
-            channelReadComplete: { it.flush() }
-          ] as SimpleChannelInboundHandler)
+            }
+
+            @Override
+            void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+              ctx.flush()
+            }
+          })
         }
       ] as ChannelInitializer).channel(NioServerSocketChannel)
     bootstrap.bind(port).sync()

@@ -321,10 +321,12 @@
     <module name="NonEmptyAtclauseDescription"/>
     <module name="InvalidJavadocPosition"/>
     <module name="JavadocTagContinuationIndentation"/>
+    <!-- The Error Prone MissingSummary check is better / more nuanced.
     <module name="SummaryJavadoc">
       <property name="forbiddenSummaryFragments"
         value="^@return the *|^This method returns |^A [{]@code [a-zA-Z0-9]+[}]( is a )"/>
     </module>
+    -->
     <module name="JavadocParagraph"/>
     <module name="RequireEmptyLineBeforeBlockTagGroup"/>
     <module name="AtclauseOrder">
@@ -362,9 +364,10 @@
       <!-- modified from "expected" to "ignored" to match Intellij -->
       <property name="exceptionVariableName" value="ignored"/>
     </module>
-    <module name="CommentsIndentation">
+    <!-- using Google Java Format which sometimes conflicts with this indentation rule -->
+    <!-- module name="CommentsIndentation">
       <property name="tokens" value="SINGLE_LINE_COMMENT, BLOCK_COMMENT_BEGIN"/>
-    </module>
+    </module -->
     <!-- https://checkstyle.org/config_filters.html#SuppressionXpathFilter -->
     <module name="SuppressionXpathFilter">
       <property name="file" value="${org.checkstyle.google.suppressionxpathfilter.config}"

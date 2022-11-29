@@ -1,24 +1,11 @@
 plugins {
   id "java"
-  id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-apply from: "$rootDir/gradle/shadow.gradle"
-
-def relocatePackages = ext.relocatePackages
-
 dependencies {
+  compileOnly(project(":bootstrap"))
   compileOnly("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:${versions.opentelemetry}")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
-}
-
-tasks {
-  shadowJar {
-    mergeServiceFiles()
-
-    exclude("**/module-info.class")
-
-    relocatePackages(it)
-  }
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
 }

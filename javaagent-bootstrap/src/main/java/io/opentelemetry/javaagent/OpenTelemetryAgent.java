@@ -22,10 +22,10 @@ import java.util.jar.Manifest;
  * <p>The bootstrap process of the agent is somewhat complicated and care has to be taken to make
  * sure things do not get broken by accident.
  *
- * <p>JVM loads this class onto app's classloader, afterwards agent needs to inject its classes onto
- * bootstrap classpath. This leads to this class being visible on bootstrap. This in turn means that
- * this class may be loaded again on bootstrap by accident if we ever reference it after bootstrap
- * has been setup.
+ * <p>JVM loads this class onto app's class loader, afterwards agent needs to inject its classes
+ * onto bootstrap classpath. This leads to this class being visible on bootstrap. This in turn means
+ * that this class may be loaded again on bootstrap by accident if we ever reference it after
+ * bootstrap has been setup.
  *
  * <p>In order to avoid this we need to make sure we do a few things:
  *

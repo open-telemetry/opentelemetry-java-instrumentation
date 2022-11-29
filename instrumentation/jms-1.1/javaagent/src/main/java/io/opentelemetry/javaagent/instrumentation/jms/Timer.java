@@ -25,7 +25,7 @@ public final class Timer {
     return startTime;
   }
 
-  public Instant endTime() {
+  public Instant now() {
     long durationNanos = System.nanoTime() - startNanoTime;
     return startTime().plusNanos(durationNanos);
   }

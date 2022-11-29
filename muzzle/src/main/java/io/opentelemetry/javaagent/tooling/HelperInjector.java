@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,7 +37,7 @@ import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
 
 /**
- * Injects instrumentation helper classes into the user's classloader.
+ * Injects instrumentation helper classes into the user's class loader.
  *
  * <p>Care must be taken when using this class. It is used both by the javaagent during its runtime
  * and by gradle muzzle verification plugin during build time. And some code paths in this class
@@ -44,8 +45,8 @@ import net.bytebuddy.utility.JavaModule;
  * latter. Unfortunately, these two "modes of operations" and not easily discernible just by reading
  * source code. Be careful.
  *
- * <p>In a nutshell, an instance of {@link Instrumentation} is needed for class injection into
- * bootstrap classloader. This should NOT happen during build-time muzzle verification phase.
+ * <p>In a nutshell, an instance of {@link Instrumentation} is needed for class injection into the
+ * bootstrap class loader. This should NOT happen during build-time muzzle verification phase.
  */
 public class HelperInjector implements Transformer {
 
@@ -96,7 +97,7 @@ public class HelperInjector implements Transformer {
    * Construct HelperInjector.
    *
    * @param helperClassNames binary names of the helper classes to inject. These class names must be
-   *     resolvable by the classloader returned by
+   *     resolvable by the class loader returned by
    *     io.opentelemetry.javaagent.tooling.Utils#getAgentClassLoader(). Classes are injected in the
    *     order provided. This is important if there is interdependency between helper classes that
    *     requires them to be injected in a specific order. And be careful, the class's package in
@@ -107,7 +108,7 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<HelperResource> helperResources,
-      // TODO can this be replaced with the context classloader?
+      // TODO can this be replaced with the context class loader?
       ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
@@ -167,9 +168,10 @@ public class HelperInjector implements Transformer {
       DynamicType.Builder<?> builder,
       TypeDescription typeDescription,
       ClassLoader classLoader,
-      JavaModule module) {
+      JavaModule javaModule,
+      ProtectionDomain protectionDomain) {
     if (!helperClassNames.isEmpty()) {
-      injectHelperClasses(typeDescription, classLoader, module);
+      injectHelperClasses(typeDescription, classLoader);
     }
 
     if (classLoader != null && helpersSource != null && !helperResources.isEmpty()) {
@@ -215,7 +217,7 @@ public class HelperInjector implements Transformer {
               if (logger.isLoggable(FINE)) {
                 logger.log(
                     FINE,
-                    "Injecting resources onto classloader {0} -> {1}",
+                    "Injecting resources onto class loader {0} -> {1}",
                     new Object[] {classLoader, helperResource.getApplicationPath()});
               }
               HelperResources.register(classLoader, helperResource.getApplicationPath(), resources);
@@ -226,13 +228,12 @@ public class HelperInjector implements Transformer {
         });
   }
 
-  private void injectHelperClasses(
-      TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
+  private void injectHelperClasses(TypeDescription typeDescription, ClassLoader classLoader) {
     classLoader = maskNullClassLoader(classLoader);
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
       logger.log(
           SEVERE,
-          "Cannot inject helpers into bootstrap classloader without an instance of Instrumentation. Programmer error!");
+          "Cannot inject helpers into the bootstrap class loader without an instance of Instrumentation. Programmer error!");
       return;
     }
 
@@ -243,7 +244,7 @@ public class HelperInjector implements Transformer {
             if (logger.isLoggable(FINE)) {
               logger.log(
                   FINE,
-                  "Injecting classes onto classloader {0} -> {1}",
+                  "Injecting classes onto class loader {0} -> {1}",
                   new Object[] {cl, helperClassNames});
             }
 

@@ -16,16 +16,8 @@ Configuration:
 
 ![enable google format](https://user-images.githubusercontent.com/5099946/131759832-36437aa0-a5f7-42c0-9425-8c5b45c16765.png)
 
-
-## [Save Actions](https://plugins.jetbrains.com/plugin/7642-save-actions)
-
-Installation:
-
-![save action](https://user-images.githubusercontent.com/5099946/131758940-7a1820db-3cf4-4e30-b346-c45c1ff4646e.png)
-
-Configuration:
-
-![Recommended Settings](save-actions.png)
+Note: If google-java-format generates errors in Intellij,
+see <https://github.com/google/google-java-format/issues/787#issuecomment-1200762464>.
 
 ## Troubleshooting
 

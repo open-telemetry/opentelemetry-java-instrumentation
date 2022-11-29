@@ -72,11 +72,12 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
   }
 
   public static class Holder {
+
     public static final List<String> bootstrapPackagesPrefixes = findBootstrapPackagePrefixes();
 
     /**
      * We have to make sure that {@link BootstrapPackagePrefixesHolder} is loaded from bootstrap
-     * classloader. After that we can use in {@link LoadClassAdvice}.
+     * class loader. After that we can use in {@link LoadClassAdvice}.
      */
     private static List<String> findBootstrapPackagePrefixes() {
       try {
@@ -95,6 +96,8 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
         return Constants.BOOTSTRAP_PACKAGE_PREFIXES;
       }
     }
+
+    private Holder() {}
   }
 
   @SuppressWarnings("unused")

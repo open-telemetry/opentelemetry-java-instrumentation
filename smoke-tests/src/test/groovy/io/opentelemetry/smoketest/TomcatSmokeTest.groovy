@@ -39,8 +39,13 @@ class Tomcat8Jdk11 extends TomcatSmokeTest {
 class Tomcat8Jdk17 extends TomcatSmokeTest {
 }
 
+// TODO (trask) remove Java 18 test once Java 19 is GA
 @AppServer(version = "8.5.72", jdk = "18")
 class Tomcat8Jdk18 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "8.5.72", jdk = "19")
+class Tomcat8Jdk19 extends TomcatSmokeTest {
 }
 
 @AppServer(version = "8.5.72", jdk = "8-openj9")
@@ -63,8 +68,13 @@ class Tomcat9Jdk11 extends TomcatSmokeTest {
 class Tomcat9Jdk17 extends TomcatSmokeTest {
 }
 
+// TODO (trask) remove Java 18 test once Java 19 is GA
 @AppServer(version = "9.0.54", jdk = "18")
 class Tomcat9Jdk18 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "9.0.54", jdk = "19")
+class Tomcat9Jdk19 extends TomcatSmokeTest {
 }
 
 @AppServer(version = "9.0.54", jdk = "8-openj9")
@@ -87,8 +97,13 @@ class Tomcat10Jdk11 extends TomcatSmokeTest {
 class Tomcat10Jdk17 extends TomcatSmokeTest {
 }
 
+// TODO (trask) remove Java 18 test once Java 19 is GA
 @AppServer(version = "10.0.12", jdk = "18")
 class Tomcat10Jdk18 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "10.0.12", jdk = "19")
+class Tomcat10Jdk19 extends TomcatSmokeTest {
 }
 
 @AppServer(version = "10.0.12", jdk = "8-openj9")

@@ -31,30 +31,28 @@ public final class GraphQLTelemetry {
   }
 
   private final Instrumenter<InstrumentationExecutionParameters, ExecutionResult> instrumenter;
-  private final boolean captureExperimentalSpanAttributes;
   private final boolean sanitizeQuery;
 
-  GraphQLTelemetry(
-      OpenTelemetry openTelemetry,
-      boolean captureExperimentalSpanAttributes,
-      boolean sanitizeQuery) {
+  GraphQLTelemetry(OpenTelemetry openTelemetry, boolean sanitizeQuery) {
     InstrumenterBuilder<InstrumentationExecutionParameters, ExecutionResult> builder =
         Instrumenter.<InstrumentationExecutionParameters, ExecutionResult>builder(
-                openTelemetry, INSTRUMENTATION_NAME, ignored -> "GraphQL Query")
+                openTelemetry, INSTRUMENTATION_NAME, ignored -> "GraphQL Operation")
             .setSpanStatusExtractor(
-                (instrumentationExecutionParameters, executionResult, error) -> {
+                (spanStatusBuilder, instrumentationExecutionParameters, executionResult, error) -> {
                   if (!executionResult.getErrors().isEmpty()) {
-                    return StatusCode.ERROR;
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault()
+                        .extract(
+                            spanStatusBuilder,
+                            instrumentationExecutionParameters,
+                            executionResult,
+                            error);
                   }
-                  return SpanStatusExtractor.getDefault()
-                      .extract(instrumentationExecutionParameters, executionResult, error);
                 });
-    if (captureExperimentalSpanAttributes) {
-      builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
-    }
+    builder.addAttributesExtractor(new GraphqlAttributesExtractor());
 
-    this.instrumenter = builder.newInstrumenter();
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.instrumenter = builder.buildInstrumenter();
     this.sanitizeQuery = sanitizeQuery;
   }
 
@@ -62,7 +60,6 @@ public final class GraphQLTelemetry {
    * Returns a new {@link Instrumentation} that generates telemetry for received GraphQL requests.
    */
   public Instrumentation newInstrumentation() {
-    return new OpenTelemetryInstrumentation(
-        instrumenter, captureExperimentalSpanAttributes, sanitizeQuery);
+    return new OpenTelemetryInstrumentation(instrumenter, sanitizeQuery);
   }
 }

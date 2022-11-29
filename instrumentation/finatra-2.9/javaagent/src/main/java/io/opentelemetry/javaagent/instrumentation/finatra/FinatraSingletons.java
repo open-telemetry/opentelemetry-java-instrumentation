@@ -9,16 +9,25 @@ import com.twitter.finatra.http.contexts.RouteInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
-import io.opentelemetry.instrumentation.api.util.ClassNames;
 
 public final class FinatraSingletons {
 
-  private static final Instrumenter<Class<?>, Void> INSTRUMENTER =
-      Instrumenter.<Class<?>, Void>builder(
-              GlobalOpenTelemetry.get(), "io.opentelemetry.finatra-2.9", ClassNames::simpleName)
-          .newInstrumenter();
+  private static final Instrumenter<Class<?>, Void> INSTRUMENTER;
+
+  static {
+    FinatraCodeAttributesGetter codeAttributesGetter = new FinatraCodeAttributesGetter();
+    INSTRUMENTER =
+        Instrumenter.<Class<?>, Void>builder(
+                GlobalOpenTelemetry.get(),
+                "io.opentelemetry.finatra-2.9",
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            .buildInstrumenter();
+  }
 
   public static Instrumenter<Class<?>, Void> instrumenter() {
     return INSTRUMENTER;

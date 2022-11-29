@@ -32,6 +32,10 @@ dependencies {
   testLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:2.2.1.RELEASE")
 
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
+
+  latestDepTestLibrary("org.springframework.integration:spring-integration-core:5.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:2.+")
 }
 
 tasks {
@@ -70,6 +74,14 @@ tasks {
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].getService())
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+}
+
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
   }
 }

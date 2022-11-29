@@ -13,17 +13,39 @@ import javax.annotation.Nullable;
 public final class GrpcRequest {
 
   private final MethodDescriptor<?, ?> method;
-  @Nullable private final Metadata metadata;
 
-  @Nullable private volatile SocketAddress remoteAddress;
+  @Nullable private volatile Metadata metadata;
+
+  @Nullable private volatile String logicalHost;
+  private volatile int logicalPort = -1;
+  @Nullable private volatile SocketAddress peerSocketAddress;
 
   GrpcRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
-      @Nullable SocketAddress remoteAddress) {
+      @Nullable SocketAddress peerSocketAddress,
+      @Nullable String authority) {
     this.method = method;
     this.metadata = metadata;
-    this.remoteAddress = remoteAddress;
+    this.peerSocketAddress = peerSocketAddress;
+    setLogicalAddress(authority);
+  }
+
+  private void setLogicalAddress(@Nullable String authority) {
+    if (authority == null) {
+      return;
+    }
+    int index = authority.indexOf(':');
+    if (index == -1) {
+      logicalHost = authority;
+    } else {
+      logicalHost = authority.substring(0, index);
+      try {
+        logicalPort = Integer.parseInt(authority.substring(index + 1));
+      } catch (NumberFormatException e) {
+        // ignore
+      }
+    }
   }
 
   public MethodDescriptor<?, ?> getMethod() {
@@ -35,12 +57,25 @@ public final class GrpcRequest {
     return metadata;
   }
 
-  @Nullable
-  public SocketAddress getRemoteAddress() {
-    return remoteAddress;
+  void setMetadata(Metadata metadata) {
+    this.metadata = metadata;
   }
 
-  void setRemoteAddress(SocketAddress remoteAddress) {
-    this.remoteAddress = remoteAddress;
+  @Nullable
+  public String getLogicalHost() {
+    return logicalHost;
+  }
+
+  public int getLogicalPort() {
+    return logicalPort;
+  }
+
+  @Nullable
+  public SocketAddress getPeerSocketAddress() {
+    return peerSocketAddress;
+  }
+
+  void setPeerSocketAddress(SocketAddress peerSocketAddress) {
+    this.peerSocketAddress = peerSocketAddress;
   }
 }

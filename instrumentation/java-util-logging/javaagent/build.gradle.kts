@@ -5,11 +5,11 @@ plugins {
 dependencies {
   compileOnly(project(":instrumentation:java-util-logging:shaded-stub-for-instrumenting"))
 
-  compileOnly(project(":instrumentation-appender-api-internal"))
+  compileOnly("io.opentelemetry:opentelemetry-api-logs")
   compileOnly(project(":javaagent-bootstrap"))
 
   // ensure no cross interference
-  testInstrumentation(project(":instrumentation:jboss-logmanager:jboss-logmanager-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent"))
 
   testImplementation("org.awaitility:awaitility")
 }

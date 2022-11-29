@@ -11,83 +11,73 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
-val otelVersion = "1.14.0"
-rootProject.extra["otelVersion"] = otelVersion
-
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.1"
+val groovyVersion = "4.0.6"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
-// old baseline versions
-// but we do try to force those libraries' transitive dependencies to new versions where possible
-// so that we don't end up with explosion of dependency versions in Intellij, which causes
-// Intellij to spend lots of time indexing all of those different dependency versions,
-// and makes debugging painful because Intellij has no idea which dependency version's source
-// to use when stepping through code.
+// old baseline versions but we do try to force those libraries' transitive dependencies to new
+// versions where possible so that we don't end up with explosion of dependency versions in
+// Intellij, which causes Intellij to spend lots of time indexing all of those different dependency
+// versions, and makes debugging painful because Intellij has no idea which dependency version's
+// source to use when stepping through code.
 //
-// Sometimes libraries we instrument do require a specific version of a transitive dependency
-// and that can be applied in the specific instrumentation gradle file, e.g.
+// Sometimes libraries we instrument do require a specific version of a transitive dependency and
+// that can be applied in the specific instrumentation gradle file, e.g.
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.13.2.20220328",
+  "com.fasterxml.jackson:jackson-bom:2.14.1",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:${otelVersion}",
-  "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
-  "org.junit:junit-bom:5.8.2"
+  "io.opentelemetry:opentelemetry-bom:1.20.1",
+  "io.opentelemetry:opentelemetry-bom-alpha:1.20.1-alpha",
+  "org.junit:junit-bom:5.9.1",
+  "org.testcontainers:testcontainers-bom:1.17.6",
+  "org.spockframework:spock-bom:2.3-groovy-4.0"
 )
 
-val DEPENDENCY_SETS = listOf(
-  DependencySet(
-    "com.google.auto.service",
-    "1.0.1",
-    listOf("auto-service", "auto-service-annotations")
-  ),
-  DependencySet(
-    "com.google.auto.value",
-    "1.9",
-    listOf("auto-value", "auto-value-annotations")
-  ),
-  DependencySet(
-    "com.google.errorprone",
-    "2.12.1",
-    listOf("error_prone_annotations", "error_prone_core", "error_prone_test_helpers")
-  ),
-  DependencySet(
-    "net.bytebuddy",
-    // When updating, also update conventions/build.gradle.kts
-    "1.12.9",
-    listOf("byte-buddy", "byte-buddy-dep", "byte-buddy-agent", "byte-buddy-gradle-plugin")
-  ),
-  DependencySet(
-    "org.openjdk.jmh",
-    "1.35",
-    listOf("jmh-core", "jmh-generator-bytecode")
-  ),
-  DependencySet(
-    "org.mockito",
-    "4.4.0",
-    listOf("mockito-core", "mockito-junit-jupiter", "mockito-inline")
-  ),
-  DependencySet(
-    "org.slf4j",
-    "1.7.36",
-    listOf("slf4j-api", "slf4j-simple", "log4j-over-slf4j", "jcl-over-slf4j", "jul-to-slf4j")
-  ),
-  DependencySet(
-    "org.testcontainers",
-    "1.16.3",
-    listOf("testcontainers", "junit-jupiter", "cassandra", "couchbase", "elasticsearch", "kafka", "localstack", "selenium")
-  )
+val autoServiceVersion = "1.0.1"
+val autoValueVersion = "1.10.1"
+val errorProneVersion = "2.16"
+val byteBuddyVersion = "1.12.19"
+val jmhVersion = "1.36"
+val mockitoVersion = "4.9.0"
+val slf4jVersion = "2.0.5"
+
+val CORE_DEPENDENCIES = listOf(
+  "com.google.auto.service:auto-service:${autoServiceVersion}",
+  "com.google.auto.service:auto-service-annotations:${autoServiceVersion}",
+  "com.google.auto.value:auto-value:${autoValueVersion}",
+  "com.google.auto.value:auto-value-annotations:${autoValueVersion}",
+  "com.google.errorprone:error_prone_annotations:${errorProneVersion}",
+  "com.google.errorprone:error_prone_core:${errorProneVersion}",
+  "com.google.errorprone:error_prone_test_helpers:${errorProneVersion}",
+  // When updating, also update conventions/build.gradle.kts
+  "net.bytebuddy:byte-buddy:${byteBuddyVersion}",
+  "net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}",
+  "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}",
+  "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
+  "org.openjdk.jmh:jmh-core:${jmhVersion}",
+  "org.openjdk.jmh:jmh-generator-bytecode:${jmhVersion}",
+  "org.mockito:mockito-core:${mockitoVersion}",
+  "org.mockito:mockito-junit-jupiter:${mockitoVersion}",
+  "org.mockito:mockito-inline:${mockitoVersion}",
+  "org.slf4j:slf4j-api:${slf4jVersion}",
+  "org.slf4j:slf4j-simple:${slf4jVersion}",
+  "org.slf4j:log4j-over-slf4j:${slf4jVersion}",
+  "org.slf4j:jcl-over-slf4j:${slf4jVersion}",
+  "org.slf4j:jul-to-slf4j:${slf4jVersion}"
 )
 
+// See the comment above about why we keep this rather large list.
+// There are dependencies included here that appear to have no usages, but are maintained at
+// this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "ch.qos.logback:logback-classic:1.2.11",
+  "ch.qos.logback:logback-classic:1.3.5", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.9.6",
+  "com.uber.nullaway:nullaway:0.10.5",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
@@ -99,20 +89,22 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.proto:opentelemetry-proto:0.16.0-alpha",
-  "org.assertj:assertj-core:3.22.0",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.1-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
+  "org.assertj:assertj-core:3.23.1",
   "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.junit-pioneer:junit-pioneer:1.6.2",
-  "org.objenesis:objenesis:3.2",
-  "org.spockframework:spock-core:2.2-M1-groovy-4.0",
-  "org.spockframework:spock-junit4:2.2-M1-groovy-4.0",
+  "org.codehaus.mojo:animal-sniffer-annotations:1.22",
+  "org.junit-pioneer:junit-pioneer:1.9.0",
+  "org.objenesis:objenesis:3.3",
   "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE"
+  "org.springframework.boot:spring-boot-dependencies:2.7.5",
+  "javax.validation:validation-api:2.0.1.Final",
+  "org.yaml:snakeyaml:1.33"
 )
 
 javaPlatform {
@@ -126,11 +118,10 @@ dependencies {
     dependencyVersions[split[0]] = split[2]
   }
   constraints {
-    for (set in DEPENDENCY_SETS) {
-      for (module in set.modules) {
-        api("${set.group}:${module}:${set.version}")
-        dependencyVersions[set.group] = set.version
-      }
+    for (dependency in CORE_DEPENDENCIES) {
+      api(dependency)
+      val split = dependency.split(':')
+      dependencyVersions[split[0]] = split[2]
     }
     for (dependency in DEPENDENCIES) {
       api(dependency)

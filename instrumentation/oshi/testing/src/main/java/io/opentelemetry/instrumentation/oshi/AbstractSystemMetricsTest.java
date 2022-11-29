@@ -66,7 +66,7 @@ public abstract class AbstractSystemMetricsTest {
             metrics ->
                 metrics.anySatisfy(
                     metric ->
-                        assertThat(metric).hasUnit("packets").hasLongSumSatisfying(sum -> {})));
+                        assertThat(metric).hasUnit("{packets}").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
@@ -74,7 +74,7 @@ public abstract class AbstractSystemMetricsTest {
             metrics ->
                 metrics.anySatisfy(
                     metric ->
-                        assertThat(metric).hasUnit("errors").hasLongSumSatisfying(sum -> {})));
+                        assertThat(metric).hasUnit("{errors}").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
@@ -89,6 +89,8 @@ public abstract class AbstractSystemMetricsTest {
             metrics ->
                 metrics.anySatisfy(
                     metric ->
-                        assertThat(metric).hasUnit("operations").hasLongSumSatisfying(sum -> {})));
+                        assertThat(metric)
+                            .hasUnit("{operations}")
+                            .hasLongSumSatisfying(sum -> {})));
   }
 }

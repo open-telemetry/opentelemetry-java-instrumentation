@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.ExperimentalConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.springframework.web.servlet.ModelAndView;
 
 public final class SpringWebMvcSingletons {
@@ -22,7 +22,7 @@ public final class SpringWebMvcSingletons {
         Instrumenter.<Object, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, new HandlerSpanNameExtractor())
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
 
     MODEL_AND_VIEW_INSTRUMENTER =
         Instrumenter.<ModelAndView, Void>builder(
@@ -31,7 +31,7 @@ public final class SpringWebMvcSingletons {
                 new ModelAndViewSpanNameExtractor())
             .addAttributesExtractor(new ModelAndViewAttributesExtractor())
             .setEnabled(ExperimentalConfig.get().viewTelemetryEnabled())
-            .newInstrumenter();
+            .buildInstrumenter();
   }
 
   public static Instrumenter<Object, Void> handlerInstrumenter() {

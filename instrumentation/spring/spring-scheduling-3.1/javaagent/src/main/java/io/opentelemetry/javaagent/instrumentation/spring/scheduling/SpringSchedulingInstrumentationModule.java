@@ -21,6 +21,6 @@ public class SpringSchedulingInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new TaskInstrumentation());
+    return singletonList(new TaskSchedulerInstrumentation());
   }
 }
