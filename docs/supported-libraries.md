@@ -156,7 +156,7 @@ These are the application servers that the smoke tests are run against:
 | [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x                       | OpenJDK 8         | [`ubuntu-latest`], [`windows-latest`] |
 | [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
 | [TomEE](https://tomee.apache.org/)                                                        | 7.x, 8.x                    | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
-| [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.x, 21.x                  | OpenJDK 8         | [`ubuntu-latest`], [`windows-latest`] |
+| [Open Liberty](https://openliberty.io/)                                                   | 20.x, 21.x                  | OpenJDK 8         | [`ubuntu-latest`], [`windows-latest`] |
 | [Websphere Traditional](https://www.ibm.com/uk-en/cloud/websphere-application-server)     | 8.5.5.x, 9.0.x              | IBM JDK 8         | Red Hat Enterprise Linux 8.4   |
 | [WildFly](https://www.wildfly.org/)                                                       | 13.x                        | OpenJDK 8         | [`ubuntu-latest`], [`windows-latest`] |
 | [WildFly](https://www.wildfly.org/)                                                       | 17.x, 21.x, 25.x            | OpenJDK 8, 11, 17 | [`ubuntu-latest`], [`windows-latest`] |
