@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.gwt;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import java.lang.reflect.Method;
@@ -29,9 +30,7 @@ public final class GwtSingletons {
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            // TODO(anuraaga): This should be a server span, but we currently have no way to merge
-            // with the HTTP instrumentation's server span.
-            .buildInstrumenter();
+            .buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   public static Instrumenter<Method, Void> instrumenter() {
