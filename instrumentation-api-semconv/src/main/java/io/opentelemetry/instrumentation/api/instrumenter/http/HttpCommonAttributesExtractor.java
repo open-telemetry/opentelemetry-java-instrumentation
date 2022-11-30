@@ -14,7 +14,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.AlternativeNamePortGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.logging.Logger;
@@ -120,7 +120,7 @@ abstract class HttpCommonAttributesExtractor<
     }
   }
 
-  static final class HttpNetNamePortGetter<REQUEST> implements AlternativeNamePortGetter<REQUEST> {
+  static final class HttpNetNamePortGetter<REQUEST> implements FallbackNamePortGetter<REQUEST> {
 
     private final HttpCommonAttributesGetter<REQUEST, ?> getter;
 

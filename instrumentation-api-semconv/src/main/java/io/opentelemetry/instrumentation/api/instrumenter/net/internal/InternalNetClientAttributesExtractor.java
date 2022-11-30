@@ -21,15 +21,15 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
   private final NetClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final BiPredicate<Integer, REQUEST> capturePeerPortCondition;
-  private final AlternativeNamePortGetter<REQUEST> alternativeNamePortGetter;
+  private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
 
   public InternalNetClientAttributesExtractor(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter,
       BiPredicate<Integer, REQUEST> capturePeerPortCondition,
-      AlternativeNamePortGetter<REQUEST> alternativeNamePortGetter) {
+      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter) {
     this.getter = getter;
     this.capturePeerPortCondition = capturePeerPortCondition;
-    this.alternativeNamePortGetter = alternativeNamePortGetter;
+    this.fallbackNamePortGetter = fallbackNamePortGetter;
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
@@ -76,7 +76,7 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
   private String extractPeerName(REQUEST request) {
     String peerName = getter.peerName(request);
     if (peerName == null) {
-      peerName = alternativeNamePortGetter.name(request);
+      peerName = fallbackNamePortGetter.name(request);
     }
     return peerName;
   }
@@ -84,7 +84,7 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
   private Integer extractPeerPort(REQUEST request) {
     Integer peerPort = getter.peerPort(request);
     if (peerPort == null) {
-      peerPort = alternativeNamePortGetter.port(request);
+      peerPort = fallbackNamePortGetter.port(request);
     }
     return peerPort;
   }

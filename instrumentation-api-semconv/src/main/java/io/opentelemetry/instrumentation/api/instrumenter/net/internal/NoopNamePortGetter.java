@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
 
 import javax.annotation.Nullable;
 
-enum NoopNamePortGetter implements AlternativeNamePortGetter<Object> {
+enum NoopNamePortGetter implements FallbackNamePortGetter<Object> {
   INSTANCE;
 
   @Nullable
