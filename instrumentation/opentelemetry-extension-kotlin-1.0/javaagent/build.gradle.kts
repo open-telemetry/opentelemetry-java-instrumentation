@@ -33,7 +33,6 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     if (!name.contains("muzzle")) {
       resolutionStrategy {
         eachDependency {
-          // specifying a fixed version for all libraries with io.netty' group
           if (requested.group == "io.opentelemetry" && requested.name == "opentelemetry-extension-kotlin") {
             useVersion("1.0.0")
           }
