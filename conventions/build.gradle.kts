@@ -45,7 +45,7 @@ dependencies {
   implementation("org.ow2.asm:asm:9.4")
   implementation("org.ow2.asm:asm-tree:9.4")
   implementation("org.apache.httpcomponents:httpclient:4.5.13")
-  implementation("org.gradle:test-retry-gradle-plugin:1.4.1")
+  implementation("org.gradle:test-retry-gradle-plugin:1.5.0")
   implementation("org.owasp:dependency-check-gradle:7.3.2")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.6.0")
   // When updating, also update dependencyManagement/build.gradle.kts
