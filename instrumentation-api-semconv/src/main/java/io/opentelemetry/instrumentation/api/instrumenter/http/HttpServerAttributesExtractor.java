@@ -79,7 +79,9 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
     internalNetExtractor =
         new InternalNetServerAttributesExtractor<>(
-            netAttributesGetter, this::shouldCaptureHostPort);
+            netAttributesGetter,
+            this::shouldCaptureHostPort,
+            new HttpNetNamePortGetter<>(httpAttributesGetter));
     this.httpRouteHolderGetter = httpRouteHolderGetter;
   }
 
@@ -95,7 +97,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
 
-    internalNetExtractor.onStart(attributes, request, host(request));
+    internalNetExtractor.onStart(attributes, request);
   }
 
   private boolean shouldCaptureHostPort(int port, REQUEST request) {
@@ -120,11 +122,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
     super.onEnd(attributes, context, request, response, error);
     internalSet(attributes, SemanticAttributes.HTTP_ROUTE, httpRouteHolderGetter.apply(context));
-  }
-
-  @Nullable
-  private String host(REQUEST request) {
-    return firstHeaderValue(getter.requestHeader(request, "host"));
   }
 
   @Nullable
