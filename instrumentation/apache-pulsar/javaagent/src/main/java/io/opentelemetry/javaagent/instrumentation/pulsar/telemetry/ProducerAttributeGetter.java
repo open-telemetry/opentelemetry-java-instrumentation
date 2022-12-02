@@ -8,13 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.telemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.apache.pulsar.client.api.Message;
 import javax.annotation.Nullable;
+import org.apache.pulsar.client.api.Message;
 
-class ProducerAttributeGetter
-    implements MessagingAttributesGetter<Message<?>, Attributes> {
-  public static final ProducerAttributeGetter INSTANCE =
-      new ProducerAttributeGetter();
+class ProducerAttributeGetter implements MessagingAttributesGetter<Message<?>, Attributes> {
+  public static final ProducerAttributeGetter INSTANCE = new ProducerAttributeGetter();
 
   @Nullable
   @Override

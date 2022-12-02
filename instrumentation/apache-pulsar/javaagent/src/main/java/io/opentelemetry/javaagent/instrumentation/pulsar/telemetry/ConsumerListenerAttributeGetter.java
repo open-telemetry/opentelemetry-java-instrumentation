@@ -7,11 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.telemetry;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.apache.pulsar.client.api.Message;
 import javax.annotation.Nullable;
+import org.apache.pulsar.client.api.Message;
 
-class ConsumerListenerAttributeGetter
-    implements MessagingAttributesGetter<Message<?>, Void> {
+class ConsumerListenerAttributeGetter implements MessagingAttributesGetter<Message<?>, Void> {
   public static final ConsumerListenerAttributeGetter INSTANCE =
       new ConsumerListenerAttributeGetter();
 

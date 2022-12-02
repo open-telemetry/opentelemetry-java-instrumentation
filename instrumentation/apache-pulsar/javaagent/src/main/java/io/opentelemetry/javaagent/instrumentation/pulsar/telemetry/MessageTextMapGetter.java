@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.telemetry;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.client.impl.MessageImpl;
 
 class MessageTextMapGetter implements TextMapGetter<Message<?>> {
   public static final TextMapGetter<Message<?>> INSTANCE = new MessageTextMapGetter();

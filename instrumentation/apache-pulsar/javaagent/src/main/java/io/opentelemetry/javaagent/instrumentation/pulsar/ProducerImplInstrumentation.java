@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -94,8 +95,8 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
     private final SendCallback delegator;
     private final ClientEnhanceInfo info;
 
-    public SendCallbackWrapper(Context context, Message<?> message, SendCallback callback,
-        ClientEnhanceInfo info) {
+    public SendCallbackWrapper(
+        Context context, Message<?> message, SendCallback callback, ClientEnhanceInfo info) {
       this.context = context;
       this.message = message;
       this.delegator = callback;
@@ -110,7 +111,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       }
 
       Instrumenter<Message<?>, Attributes> instrumenter = PulsarTelemetry.producerInstrumenter();
-      Attributes attributes =  Attributes.empty();
+      Attributes attributes = Attributes.empty();
       if (null != info) {
         attributes = Attributes.of(SemanticAttributes.MESSAGING_URL, info.brokerURL);
       }

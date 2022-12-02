@@ -21,7 +21,6 @@ class VirtualFieldStore {
 
   private VirtualFieldStore() {}
 
-
   static void inject(Message<?> instance, Context context) {
     MSG_FIELD.set(instance, context);
   }
@@ -46,5 +45,4 @@ class VirtualFieldStore {
   static ClientEnhanceInfo extract(Consumer<?> instance) {
     return CONSUMER_FIELD.get(instance);
   }
-
 }

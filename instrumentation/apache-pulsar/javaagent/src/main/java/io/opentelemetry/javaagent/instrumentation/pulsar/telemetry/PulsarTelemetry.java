@@ -35,7 +35,6 @@ public final class PulsarTelemetry {
   private static final Instrumenter<Message<?>, Attributes> PRODUER_INSTRUMENTER =
       createProducerInstrumenter();
 
-
   public static Instrumenter<Message<?>, Void> consumerListenerInstrumenter() {
     return CONSUMER_LISTENER_INSTRUMENTER;
   }
@@ -48,33 +47,26 @@ public final class PulsarTelemetry {
     return PRODUER_INSTRUMENTER;
   }
 
-
   private static Instrumenter<Message<?>, Attributes> createConsumerReceiveInstrumenter() {
     MessagingAttributesGetter<Message<?>, Attributes> getter =
         ConsumerReceiveAttributeGetter.INSTANCE;
     AttributesExtractor<Message<?>, Attributes> extractor =
         ConsumerReceiveAttributeExtractor.INSTANCE;
 
-    return Instrumenter.<Message<?>, Attributes>builder(TELEMETRY,
-        INSTRUMENTATION,
-        CONSUMER_RECEIVE)
+    return Instrumenter.<Message<?>, Attributes>builder(
+            TELEMETRY, INSTRUMENTATION, CONSUMER_RECEIVE)
         .addAttributesExtractor(extractor)
         .addAttributesExtractor(
-            MessagingAttributesExtractor.create(getter, MessageOperation.RECEIVE)
-        )
+            MessagingAttributesExtractor.create(getter, MessageOperation.RECEIVE))
         .buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
   }
 
   private static Instrumenter<Message<?>, Void> createConsumerListenerInstrumenter() {
-    MessagingAttributesGetter<Message<?>, Void> getter =
-        ConsumerListenerAttributeGetter.INSTANCE;
+    MessagingAttributesGetter<Message<?>, Void> getter = ConsumerListenerAttributeGetter.INSTANCE;
 
-    return Instrumenter.<Message<?>, Void>builder(TELEMETRY,
-        INSTRUMENTATION,
-        CONSUMER_PROCESS)
+    return Instrumenter.<Message<?>, Void>builder(TELEMETRY, INSTRUMENTATION, CONSUMER_PROCESS)
         .addAttributesExtractor(
-            MessagingAttributesExtractor.create(getter, MessageOperation.PROCESS)
-        )
+            MessagingAttributesExtractor.create(getter, MessageOperation.PROCESS))
         .buildInstrumenter();
   }
 
@@ -82,13 +74,9 @@ public final class PulsarTelemetry {
     MessagingAttributesGetter<Message<?>, Attributes> getter = ProducerAttributeGetter.INSTANCE;
     AttributesExtractor<Message<?>, Attributes> extractor = ProducerAttributeExtractor.INSTANCE;
 
-    return Instrumenter.<Message<?>, Attributes>builder(TELEMETRY,
-        INSTRUMENTATION,
-        PRODUCER_SEND)
+    return Instrumenter.<Message<?>, Attributes>builder(TELEMETRY, INSTRUMENTATION, PRODUCER_SEND)
         .addAttributesExtractor(extractor)
-        .addAttributesExtractor(
-            MessagingAttributesExtractor.create(getter, MessageOperation.SEND)
-        )
+        .addAttributesExtractor(MessagingAttributesExtractor.create(getter, MessageOperation.SEND))
         .buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);
   }
 

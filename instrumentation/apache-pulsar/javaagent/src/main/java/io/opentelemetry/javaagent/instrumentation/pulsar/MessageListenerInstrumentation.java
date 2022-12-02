@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -68,8 +69,7 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
     public void received(Consumer<T> consumer, Message<T> msg) {
       Context parent = VirtualFieldStore.extract(msg);
 
-      Instrumenter<Message<?>, Void> instrumenter =
-          PulsarTelemetry.consumerListenerInstrumenter();
+      Instrumenter<Message<?>, Void> instrumenter = PulsarTelemetry.consumerListenerInstrumenter();
       if (!instrumenter.shouldStart(parent, msg)) {
         this.delegator.received(consumer, msg);
         return;
