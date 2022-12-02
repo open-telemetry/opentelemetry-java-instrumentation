@@ -1,6 +1,5 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar
 
-import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.Message
@@ -15,6 +14,7 @@ import java.nio.charset.Charset
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class PulsarClientTest extends AgentInstrumentationSpecification {
@@ -57,7 +57,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       trace(0, 3) {
         span(0) {
           name("parent")
-          kind(SpanKind.INTERNAL)
+          kind(INTERNAL)
           hasNoParent()
         }
 
@@ -94,7 +94,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       trace(0, 3) {
         span(0) {
           name("parent")
-          kind(SpanKind.INTERNAL)
+          kind(INTERNAL)
           hasNoParent()
         }
 
@@ -112,8 +112,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
         span(3) {
           name("CONSUMER/PROCESS")
-          kind(CONSUMER)
-          childOf(span(1))
+          kind(INTERNAL)
+          childOf(span(2))
         }
       }
     }
