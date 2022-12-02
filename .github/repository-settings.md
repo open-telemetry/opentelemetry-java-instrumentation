@@ -52,21 +52,27 @@ Same settings as above for `main`, except:
 
 ### `dependabot/**/**` and `opentelemetrybot/*`
 
+* Require a pull request before merging: UNCHECKED
+
+  (So that these PR branches can be updated directly)
+
 * Require status checks to pass before merging: UNCHECKED
 
-  (So that dependabot PRs can be rebased)
+  (N/A since these branches are updated directly and not merged into)
 
 * Restrict who can push to matching branches: UNCHECKED
 
-  (So that bots can create PR branches in this repository)
+  (So that dependabot and GitHub Action's
+  [`GITHUB_TOKEN`](https://docs.github.com/en/actions/security-guides/automatic-token-authentication)
+  can create PR branches in this repository)
 
 * Allow force pushes > Everyone
 
-  (So that dependabot PRs can be rebased)
+  (So that dependabot PRs can be rebased, which requires a force push)
 
 * Allow deletions: CHECKED
 
-  (So that bot PR branches can be deleted)
+  (So that these branches can be deleted after corresponding PR is merged)
 
 ### `**/**`
 
