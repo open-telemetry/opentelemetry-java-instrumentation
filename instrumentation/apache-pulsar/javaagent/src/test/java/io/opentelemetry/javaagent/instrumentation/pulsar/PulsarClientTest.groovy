@@ -62,15 +62,9 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         }
 
         span(1) {
-          name("Producer/sendAsync")
+          name("PRODUCER/SEND")
           kind(PRODUCER)
           childOf span(0)
-        }
-
-        span(2) {
-          name("Producer/Callback")
-          kind(PRODUCER)
-          childOf(span(0))
         }
       }
     }
@@ -105,25 +99,19 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         }
 
         span(1) {
-          name("Producer/sendAsync")
+          name("PRODUCER/SEND")
           kind(PRODUCER)
           childOf span(0)
         }
 
         span(2) {
-          name("Producer/Callback")
-          kind(PRODUCER)
-          childOf(span(0))
-        }
-
-        span(3) {
-          name("ConsumerImpl/messageProcessed")
+          name("CONSUMER/RECEIVE")
           kind(CONSUMER)
           childOf span(1)
         }
 
-        span(4) {
-          name("MessageListener/received")
+        span(3) {
+          name("CONSUMER/PROCESS")
           kind(CONSUMER)
           childOf(span(1))
         }

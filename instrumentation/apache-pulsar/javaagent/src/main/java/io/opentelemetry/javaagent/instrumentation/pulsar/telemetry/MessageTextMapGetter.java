@@ -3,23 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pulsar.textmap;
+package io.opentelemetry.javaagent.instrumentation.pulsar.telemetry;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
+import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.impl.MessageImpl;
 
-public final class MessageTextMapGetter implements TextMapGetter<MessageImpl<?>> {
-  public static final TextMapGetter<MessageImpl<?>> INSTANCE = new MessageTextMapGetter();
+class MessageTextMapGetter implements TextMapGetter<Message<?>> {
+  public static final TextMapGetter<Message<?>> INSTANCE = new MessageTextMapGetter();
 
   @Override
-  public Iterable<String> keys(MessageImpl<?> message) {
+  public Iterable<String> keys(Message<?> message) {
     return message.getProperties().keySet();
   }
 
   @Nullable
   @Override
-  public String get(@Nullable MessageImpl<?> message, String key) {
+  public String get(@Nullable Message<?> message, String key) {
     return null == message ? null : message.getProperties().get(key);
   }
 }

@@ -146,6 +146,7 @@ hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.0:jav
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:library")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
+hideFromDependabot(":instrumentation:apache-pulsar:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:library")
 hideFromDependabot(":instrumentation:armeria-1.3:testing")
@@ -481,9 +482,6 @@ hideFromDependabot(":instrumentation:vibur-dbcp-11.0:javaagent")
 hideFromDependabot(":instrumentation:vibur-dbcp-11.0:library")
 hideFromDependabot(":instrumentation:vibur-dbcp-11.0:testing")
 hideFromDependabot(":instrumentation:wicket-8.0:javaagent")
-
-//apache pulsar
-include(":instrumentation:apache-pulsar:javaagent")
 
 // benchmark
 include(":benchmark-overhead-jmh")

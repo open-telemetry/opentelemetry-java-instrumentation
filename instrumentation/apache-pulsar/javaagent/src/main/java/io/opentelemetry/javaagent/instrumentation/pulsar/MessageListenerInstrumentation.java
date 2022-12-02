@@ -5,23 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.CONSUMER_NAME;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.MESSAGE_ID;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SUBSCRIPTION;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.pulsar.info.MessageEnhanceInfo;
+import io.opentelemetry.javaagent.instrumentation.pulsar.telemetry.PulsarTelemetry;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -74,32 +66,22 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> msg) {
-      VirtualField<Message<?>, MessageEnhanceInfo> virtualField =
-          VirtualField.find(Message.class, MessageEnhanceInfo.class);
-      MessageEnhanceInfo info = virtualField.get(msg);
+      Context parent = VirtualFieldStore.extract(msg);
 
-      Context parent = info == null ? Context.current() : info.getContext();
-      String topic = null == info ? consumer.getTopic() : info.getTopic();
-      String mid = null == info ? "unknown" : info.getMessageId();
-
-      Span span =
-          TRACER
-              .spanBuilder("MessageListener/received")
-              .setParent(parent)
-              .setSpanKind(SpanKind.CONSUMER)
-              .setAttribute(TOPIC, topic)
-              .setAttribute(MESSAGE_ID, mid)
-              .setAttribute(SUBSCRIPTION, consumer.getSubscription())
-              .setAttribute(CONSUMER_NAME, consumer.getConsumerName())
-              .startSpan();
-
-      try (Scope scope = span.makeCurrent()) {
+      Instrumenter<Message<?>, Void> instrumenter =
+          PulsarTelemetry.consumerListenerInstrumenter();
+      if (!instrumenter.shouldStart(parent, msg)) {
         this.delegator.received(consumer, msg);
+        return;
+      }
+
+      Context current = instrumenter.start(parent, msg);
+      try (Scope scope = current.makeCurrent()) {
+        this.delegator.received(consumer, msg);
+        instrumenter.end(current, msg, null, null);
       } catch (Throwable t) {
-        span.recordException(t);
+        instrumenter.end(current, msg, null, t);
         throw t;
-      } finally {
-        span.end();
       }
     }
 

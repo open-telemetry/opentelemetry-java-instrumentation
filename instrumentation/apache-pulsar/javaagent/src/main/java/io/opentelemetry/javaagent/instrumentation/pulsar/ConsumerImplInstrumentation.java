@@ -5,36 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.CONSUMER_NAME;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.PROPAGATOR;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SERVICE_URL;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.SUBSCRIPTION;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TOPIC;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.PulsarTelemetry.TRACER;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.pulsar.info.ClientEnhanceInfo;
-import io.opentelemetry.javaagent.instrumentation.pulsar.info.MessageEnhanceInfo;
-import io.opentelemetry.javaagent.instrumentation.pulsar.textmap.MessageTextMapGetter;
+import io.opentelemetry.javaagent.instrumentation.pulsar.telemetry.PulsarTelemetry;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.ConsumerImpl;
-import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 
 public class ConsumerImplInstrumentation implements TypeInstrumentation {
@@ -69,11 +58,8 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String url = pulsarClient.getLookup().getServiceUrl();
-      ClientEnhanceInfo info = new ClientEnhanceInfo(topic, url);
-
-      VirtualField<Consumer<?>, ClientEnhanceInfo> virtualField =
-          VirtualField.find(Consumer.class, ClientEnhanceInfo.class);
-      virtualField.set(consumer, info);
+      ClientEnhanceInfo info = ClientEnhanceInfo.create(topic, url);
+      VirtualFieldStore.inject(consumer, info);
     }
   }
 
@@ -85,29 +71,13 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.This ConsumerImpl<?> consumer,
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Local(value = "otelScope") Scope scope) {
-      VirtualField<Consumer<?>, ClientEnhanceInfo> virtualField =
-          VirtualField.find(Consumer.class, ClientEnhanceInfo.class);
-      ClientEnhanceInfo info = virtualField.get(consumer);
-      if (null == info) {
-        scope = null;
-        return;
+      Instrumenter<Message<?>, Attributes> instrumenter =
+          PulsarTelemetry.consumerReceiveInstrumenter();
+
+      Context parent = Context.current();
+      if (instrumenter.shouldStart(parent, message)) {
+        scope = instrumenter.start(parent, message).makeCurrent();
       }
-
-      MessageImpl<?> messageImpl = (MessageImpl<?>) message;
-      Context context =
-          PROPAGATOR.extract(Context.current(), messageImpl, MessageTextMapGetter.INSTANCE);
-
-      scope =
-          TRACER
-              .spanBuilder("ConsumerImpl/messageProcessed")
-              .setParent(context)
-              .setSpanKind(SpanKind.CONSUMER)
-              .setAttribute(TOPIC, info.topic)
-              .setAttribute(SERVICE_URL, info.brokerUrl)
-              .setAttribute(SUBSCRIPTION, consumer.getSubscription())
-              .setAttribute(CONSUMER_NAME, consumer.getConsumerName())
-              .startSpan()
-              .makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
@@ -116,23 +86,24 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Thrown Throwable t,
         @Advice.Local(value = "otelScope") Scope scope) {
-      if (scope != null) {
-        VirtualField<Message<?>, MessageEnhanceInfo> virtualField =
-            VirtualField.find(Message.class, MessageEnhanceInfo.class);
-        MessageEnhanceInfo messageInfo = virtualField.get(message);
-
-        if (null != messageInfo) {
-          messageInfo.setFields(Context.current(), consumer.getTopic(), message.getMessageId());
-        }
-
-        Span span = Span.current();
-        if (t != null) {
-          span.recordException(t);
-        }
-
-        span.end();
-        scope.close();
+      if (scope == null) {
+        return;
       }
+
+      ClientEnhanceInfo cinfo = VirtualFieldStore.extract(consumer);
+      String topic = null == cinfo ? ClientEnhanceInfo.DEFAULT_TOPIC : cinfo.topic;
+      String brokerURL = null == cinfo ? ClientEnhanceInfo.DEFAULT_BROKER_URL : cinfo.brokerURL;
+      Attributes attributes = Attributes.of(
+          SemanticAttributes.MESSAGING_URL, brokerURL,
+          SemanticAttributes.MESSAGING_DESTINATION, topic);
+
+      Context current = Context.current();
+      VirtualFieldStore.inject(message, current);
+
+      Instrumenter<Message<?>, Attributes> instrumenter =
+          PulsarTelemetry.consumerReceiveInstrumenter();
+      instrumenter.end(current, message, attributes, t);
+      scope.close();
     }
   }
 }

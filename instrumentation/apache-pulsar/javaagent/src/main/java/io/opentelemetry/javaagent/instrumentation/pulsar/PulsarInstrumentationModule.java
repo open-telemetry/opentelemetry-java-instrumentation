@@ -21,7 +21,6 @@ public class PulsarInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     List<TypeInstrumentation> instrumentations = new ArrayList<>(4);
     instrumentations.add(new ConsumerImplInstrumentation());
-    instrumentations.add(new MessageInstrumentation());
     instrumentations.add(new ProducerImplInstrumentation());
     instrumentations.add(new MessageListenerInstrumentation());
     return instrumentations;
