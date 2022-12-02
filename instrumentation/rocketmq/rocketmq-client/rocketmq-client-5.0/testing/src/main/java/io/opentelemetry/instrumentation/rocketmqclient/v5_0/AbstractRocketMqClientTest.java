@@ -72,9 +72,6 @@ public abstract class AbstractRocketMqClientTest {
     container.start();
     ClientConfiguration clientConfiguration =
         ClientConfiguration.newBuilder().setEndpoints(container.endpoints).build();
-    // Inner topic of the container.
-    ClientServiceProvider provider = ClientServiceProvider.loadService();
-    String consumerGroup = "group-normal-topic-0";
     FilterExpression filterExpression = new FilterExpression(tag, FilterExpressionType.TAG);
     consumer =
         provider
@@ -253,7 +250,7 @@ public abstract class AbstractRocketMqClientTest {
                               equalTo(
                                   AttributeKey.stringArrayKey(
                                       "messaging.header.test_message_header"),
-                                  Arrays.asList(new String[] {"test"})))
+                                  Collections.singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
@@ -273,7 +270,7 @@ public abstract class AbstractRocketMqClientTest {
                                 equalTo(
                                     AttributeKey.stringArrayKey(
                                         "messaging.header.test_message_header"),
-                                    Arrays.asList(new String[] {"test"})))
+                                    Collections.singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),
                     span ->

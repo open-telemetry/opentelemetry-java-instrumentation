@@ -15,6 +15,7 @@ import java.util.jar.JarFile
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OS_TYPE
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.LINUX
 import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.WINDOWS
+import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
 abstract class AppServerTest extends SmokeTest {
@@ -29,6 +30,11 @@ abstract class AppServerTest extends SmokeTest {
     (serverVersion, jdk) = getAppServer()
     isWindows = System.getProperty("os.name").toLowerCase().contains("windows") &&
       "1" != System.getenv("USE_LINUX_CONTAINERS")
+
+    // ibm-semeru-runtimes doesn't publish windows images
+    // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
+    assumeFalse(isWindows && jdk.endsWith("-openj9"))
+
     startTarget(jdk, serverVersion, isWindows)
   }
 
@@ -48,7 +54,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20220731.2770161172"
+    String extraTag = "20221129.3575751672"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }

@@ -26,7 +26,7 @@ val groovyVersion = "4.0.6"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.14.0",
+  "com.fasterxml.jackson:jackson-bom:2.14.1",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:1.20.1",
@@ -42,7 +42,7 @@ val errorProneVersion = "2.16"
 val byteBuddyVersion = "1.12.19"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.9.0"
-val slf4jVersion = "2.0.4"
+val slf4jVersion = "2.0.5"
 
 val CORE_DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:${autoServiceVersion}",
@@ -89,7 +89,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.0-alpha",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.1-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
   "org.assertj:assertj-core:3.23.1",
   "org.awaitility:awaitility:4.2.0",
@@ -98,9 +98,8 @@ val DEPENDENCIES = listOf(
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
   "org.codehaus.mojo:animal-sniffer-annotations:1.22",
-  "org.junit-pioneer:junit-pioneer:1.9.0",
+  "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.3",
-  "org.scala-lang:scala-library:2.11.12",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
   "org.springframework.boot:spring-boot-dependencies:2.7.5",
   "javax.validation:validation-api:2.0.1.Final",

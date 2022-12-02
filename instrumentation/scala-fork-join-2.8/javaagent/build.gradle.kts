@@ -1,7 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
-  id("org.unbroken-dome.test-sets")
 }
 
 muzzle {
@@ -13,10 +12,6 @@ muzzle {
   }
 }
 
-testSets {
-  create("slickTest")
-}
-
 dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
@@ -24,21 +19,5 @@ dependencies {
 
   latestDepTestLibrary("org.scala-lang:scala-library:2.11.+")
 
-  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
-
   testImplementation(project(":instrumentation:executors:testing"))
-
-  add("slickTestImplementation", project(":testing-common"))
-  add("slickTestImplementation", "org.scala-lang:scala-library")
-  add("slickTestImplementation", "com.typesafe.slick:slick_2.11:3.2.0")
-  add("slickTestImplementation", "com.h2database:h2:1.4.197")
-}
-
-// Run Slick library tests along with the rest of tests
-tasks {
-  val slickTest by existing
-
-  check {
-    dependsOn(slickTest)
-  }
 }

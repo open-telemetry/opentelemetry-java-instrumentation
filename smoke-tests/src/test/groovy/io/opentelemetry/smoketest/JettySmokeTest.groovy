@@ -31,13 +31,12 @@ class Jetty9Jdk11 extends JettySmokeTest {
 class Jetty9Jdk17 extends JettySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "9.4.39", jdk = "18")
-class Jetty9Jdk18 extends JettySmokeTest {
-}
-
 @AppServer(version = "9.4.39", jdk = "19")
 class Jetty9Jdk19 extends JettySmokeTest {
+}
+
+@AppServer(version = "9.4.39", jdk = "20")
+class Jetty9Jdk20 extends JettySmokeTest {
 }
 
 @AppServer(version = "9.4.39", jdk = "8-openj9")
@@ -48,8 +47,12 @@ class Jetty9Jdk8Openj9 extends JettySmokeTest {
 class Jetty9Jdk11Openj9 extends JettySmokeTest {
 }
 
-@AppServer(version = "9.4.39", jdk = "16-openj9")
-class Jetty9Jdk16Openj9 extends JettySmokeTest {
+@AppServer(version = "9.4.39", jdk = "17-openj9")
+class Jetty9Jdk17Openj9 extends JettySmokeTest {
+}
+
+@AppServer(version = "9.4.39", jdk = "18-openj9")
+class Jetty9Jdk18Openj9 extends JettySmokeTest {
 }
 
 @AppServer(version = "10.0.7", jdk = "11")
@@ -60,21 +63,24 @@ class Jetty10Jdk11 extends JettySmokeTest {
 class Jetty10Jdk17 extends JettySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "10.0.7", jdk = "18")
-class Jetty10Jdk18 extends JettySmokeTest {
-}
-
 @AppServer(version = "10.0.7", jdk = "19")
 class Jetty10Jdk19 extends JettySmokeTest {
+}
+
+@AppServer(version = "10.0.7", jdk = "20")
+class Jetty10Jdk20 extends JettySmokeTest {
 }
 
 @AppServer(version = "10.0.7", jdk = "11-openj9")
 class Jetty10Jdk11Openj9 extends JettySmokeTest {
 }
 
-@AppServer(version = "10.0.7", jdk = "16-openj9")
-class Jetty10Jdk16Openj9 extends JettySmokeTest {
+@AppServer(version = "10.0.7", jdk = "17-openj9")
+class Jetty10Jdk17Openj9 extends JettySmokeTest {
+}
+
+@AppServer(version = "10.0.7", jdk = "18-openj9")
+class Jetty10Jdk18Openj9 extends JettySmokeTest {
 }
 
 @AppServer(version = "11.0.7", jdk = "11")
@@ -85,19 +91,22 @@ class Jetty11Jdk11 extends JettySmokeTest {
 class Jetty11Jdk17 extends JettySmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "11.0.7", jdk = "18")
-class Jetty11Jdk18 extends JettySmokeTest {
-}
-
 @AppServer(version = "11.0.7", jdk = "19")
 class Jetty11Jdk19 extends JettySmokeTest {
+}
+
+@AppServer(version = "11.0.7", jdk = "20")
+class Jetty11Jdk20 extends JettySmokeTest {
 }
 
 @AppServer(version = "11.0.7", jdk = "11-openj9")
 class Jetty11Jdk11Openj9 extends JettySmokeTest {
 }
 
-@AppServer(version = "11.0.7", jdk = "16-openj9")
-class Jetty11Jdk16Openj9 extends JettySmokeTest {
+@AppServer(version = "11.0.7", jdk = "17-openj9")
+class Jetty11Jdk17Openj9 extends JettySmokeTest {
+}
+
+@AppServer(version = "11.0.7", jdk = "18-openj9")
+class Jetty11Jdk18Openj9 extends JettySmokeTest {
 }

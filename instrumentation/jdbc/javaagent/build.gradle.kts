@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.scala-conventions")
 }
 
 muzzle {
@@ -34,6 +35,11 @@ dependencies {
   latestDepTestLibrary("org.apache.derby:derby:10.14.+")
 
   testImplementation(project(":instrumentation:jdbc:testing"))
+
+  // these dependencies are for SlickTest
+  testImplementation("org.scala-lang:scala-library:2.11.12")
+  testImplementation("com.typesafe.slick:slick_2.11:3.2.0")
+  testImplementation("com.h2database:h2:1.4.197")
 }
 
 sourceSets {
@@ -46,6 +52,22 @@ sourceSets {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+tasks {
+  val testSlick by registering(Test::class) {
+    filter {
+      includeTestsMatching("SlickTest")
+    }
+    include("**/SlickTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("SlickTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+  }
+
+  check {
+    dependsOn(testSlick)
+  }
 }

@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.scala-conventions")
 }
 
 muzzle {
@@ -12,6 +13,8 @@ dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
   testImplementation(project(":instrumentation:executors:testing"))
+
+  testImplementation("org.scala-lang:scala-library:2.11.12")
 }
 
 testing {

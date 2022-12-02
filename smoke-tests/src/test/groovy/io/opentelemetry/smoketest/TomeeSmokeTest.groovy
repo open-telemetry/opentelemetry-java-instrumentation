@@ -56,13 +56,12 @@ class Tomee8Jdk11 extends TomeeSmokeTest {
 class Tomee8Jdk17 extends TomeeSmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "8.0.8", jdk = "18")
-class Tomee8Jdk18 extends TomeeSmokeTest {
-}
-
 @AppServer(version = "8.0.8", jdk = "19")
 class Tomee8Jdk19 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "8.0.8", jdk = "20")
+class Tomee8Jdk20 extends TomeeSmokeTest {
 }
 
 @AppServer(version = "8.0.8", jdk = "8-openj9")
@@ -73,8 +72,12 @@ class Tomee8Jdk8Openj9 extends TomeeSmokeTest {
 class Tomee8Jdk11Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "8.0.8", jdk = "16-openj9")
-class Tomee8Jdk16Openj9 extends TomeeSmokeTest {
+@AppServer(version = "8.0.8", jdk = "17-openj9")
+class Tomee8Jdk17Openj9 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "8.0.8", jdk = "18-openj9")
+class Tomee8Jdk18Openj9 extends TomeeSmokeTest {
 }
 
 @AppServer(version = "9.0.0-M7", jdk = "8")
@@ -89,13 +92,12 @@ class Tomee9Jdk11 extends TomeeSmokeTest {
 class Tomee9Jdk17 extends TomeeSmokeTest {
 }
 
-// TODO (trask) remove Java 18 test once Java 19 is GA
-@AppServer(version = "9.0.0-M7", jdk = "18")
-class Tomee9Jdk18 extends TomeeSmokeTest {
-}
-
 @AppServer(version = "9.0.0-M7", jdk = "19")
 class Tomee9Jdk19 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "9.0.0-M7", jdk = "20")
+class Tomee9Jdk20 extends TomeeSmokeTest {
 }
 
 @AppServer(version = "9.0.0-M7", jdk = "8-openj9")
@@ -106,6 +108,10 @@ class Tomee9Jdk8Openj9 extends TomeeSmokeTest {
 class Tomee9Jdk11Openj9 extends TomeeSmokeTest {
 }
 
-@AppServer(version = "9.0.0-M7", jdk = "16-openj9")
-class Tomee9Jdk16Openj9 extends TomeeSmokeTest {
+@AppServer(version = "9.0.0-M7", jdk = "17-openj9")
+class Tomee9Jdk17Openj9 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "9.0.0-M7", jdk = "18-openj9")
+class Tomee9Jdk18Openj9 extends TomeeSmokeTest {
 }

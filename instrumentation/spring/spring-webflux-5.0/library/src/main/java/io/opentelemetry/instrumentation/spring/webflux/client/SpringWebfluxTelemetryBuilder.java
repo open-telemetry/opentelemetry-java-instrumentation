@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.spring.webflux.client.internal.SpringWebfluxNetAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +31,8 @@ public final class SpringWebfluxTelemetryBuilder {
       new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>
       httpAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(SpringWebfluxHttpAttributesGetter.INSTANCE);
+          HttpClientAttributesExtractor.builder(
+              SpringWebfluxHttpAttributesGetter.INSTANCE, new SpringWebfluxNetAttributesGetter());
 
   private boolean captureExperimentalSpanAttributes = false;
 
@@ -92,7 +92,6 @@ public final class SpringWebfluxTelemetryBuilder {
   public SpringWebfluxTelemetry build() {
     SpringWebfluxHttpAttributesGetter httpAttributesGetter =
         SpringWebfluxHttpAttributesGetter.INSTANCE;
-    SpringWebfluxNetAttributesGetter netAttributesGetter = new SpringWebfluxNetAttributesGetter();
 
     InstrumenterBuilder<ClientRequest, ClientResponse> builder =
         Instrumenter.<ClientRequest, ClientResponse>builder(
@@ -101,7 +100,6 @@ public final class SpringWebfluxTelemetryBuilder {
                 HttpSpanNameExtractor.create(httpAttributesGetter))
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
 

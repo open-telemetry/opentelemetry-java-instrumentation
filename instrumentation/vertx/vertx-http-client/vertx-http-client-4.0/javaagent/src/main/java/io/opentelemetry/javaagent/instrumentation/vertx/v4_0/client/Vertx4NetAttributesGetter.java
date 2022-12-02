@@ -5,16 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.net.SocketAddress;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class Vertx4NetAttributesGetter
-    extends InetSocketAddressNetClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
+    implements NetClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
 
   @Override
   public String transport(HttpClientRequest request, @Nullable HttpClientResponse response) {
@@ -34,15 +33,31 @@ final class Vertx4NetAttributesGetter
 
   @Nullable
   @Override
-  protected InetSocketAddress getPeerSocketAddress(
-      HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String sockPeerAddr(HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
     }
-    SocketAddress address = response.netSocket().remoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
+    SocketAddress socketAddress = response.netSocket().remoteAddress();
+    return socketAddress == null ? null : socketAddress.hostAddress();
+  }
+
+  @Nullable
+  @Override
+  public String sockPeerName(HttpClientRequest request, @Nullable HttpClientResponse response) {
+    if (response == null) {
+      return null;
     }
-    return null;
+    SocketAddress socketAddress = response.netSocket().remoteAddress();
+    return socketAddress == null ? null : socketAddress.host();
+  }
+
+  @Nullable
+  @Override
+  public Integer sockPeerPort(HttpClientRequest request, @Nullable HttpClientResponse response) {
+    if (response == null) {
+      return null;
+    }
+    SocketAddress socketAddress = response.netSocket().remoteAddress();
+    return socketAddress == null ? null : socketAddress.port();
   }
 }

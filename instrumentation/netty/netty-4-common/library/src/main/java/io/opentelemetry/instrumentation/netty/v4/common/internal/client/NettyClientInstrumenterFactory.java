@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.netty.common.internal.HttpClientSpanKeyAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
@@ -54,21 +53,17 @@ public final class NettyClientInstrumenterFactory {
       List<String> capturedResponseHeaders,
       List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
           additionalHttpAttributeExtractors) {
-    NettyHttpClientAttributesGetter httpClientAttributesGetter =
-        new NettyHttpClientAttributesGetter();
+    NettyHttpClientAttributesGetter httpAttributesGetter = new NettyHttpClientAttributesGetter();
     NettyNetClientAttributesGetter netAttributesGetter = new NettyNetClientAttributesGetter();
 
     return Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
-            openTelemetry,
-            instrumentationName,
-            HttpSpanNameExtractor.create(httpClientAttributesGetter))
-        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpClientAttributesGetter))
+            openTelemetry, instrumentationName, HttpSpanNameExtractor.create(httpAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
         .addAttributesExtractor(
-            HttpClientAttributesExtractor.builder(httpClientAttributesGetter)
+            HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
                 .setCapturedRequestHeaders(capturedRequestHeaders)
                 .setCapturedResponseHeaders(capturedResponseHeaders)
                 .build())
-        .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractor(
             PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping))
         .addAttributesExtractors(additionalHttpAttributeExtractors)
@@ -82,10 +77,18 @@ public final class NettyClientInstrumenterFactory {
     InstrumenterBuilder<NettyConnectionRequest, Channel> instrumenterBuilder =
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 openTelemetry, instrumentationName, NettyConnectionRequest::spanName)
-            .addAttributesExtractor(NetClientAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceMapping));
-    if (!connectionTelemetryEnabled) {
+
+    if (connectionTelemetryEnabled) {
+      // when the connection telemetry is enabled, we do not want these CONNECT spans to be
+      // suppressed by higher-level HTTP spans - this would happen in the reactor-netty
+      // instrumentation
+      // the solution for this is to deliberately avoid using the HTTP extractor and use the plain
+      // net attributes extractor instead
+      instrumenterBuilder.addAttributesExtractor(
+          NetClientAttributesExtractor.create(netAttributesGetter));
+    } else {
       // when the connection telemetry is not enabled, netty creates CONNECT spans whenever a
       // connection error occurs - because there is no HTTP span in that scenario, if raw netty
       // connection occurs before an HTTP message is even formed
@@ -93,7 +96,9 @@ public final class NettyClientInstrumenterFactory {
       // client) is used, the connection phase is a part of the HTTP span for these
       // for that to happen, the CONNECT span will "pretend" to be a full HTTP span when connection
       // telemetry is off
-      instrumenterBuilder.addAttributesExtractor(HttpClientSpanKeyAttributesExtractor.INSTANCE);
+      instrumenterBuilder.addAttributesExtractor(
+          HttpClientAttributesExtractor.create(
+              NettyConnectHttpAttributesGetter.INSTANCE, netAttributesGetter));
     }
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =

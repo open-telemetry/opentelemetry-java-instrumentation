@@ -12,41 +12,52 @@ class UrlParser {
   @Nullable
   static String getHost(String url) {
 
-    int schemeEndIndex = url.indexOf(':');
-    if (schemeEndIndex == -1) {
-      // not a valid url
+    int startIndex = getHostStartIndex(url);
+    if (startIndex == -1) {
       return null;
     }
 
-    int len = url.length();
-    if (len <= schemeEndIndex + 2
-        || url.charAt(schemeEndIndex + 1) != '/'
-        || url.charAt(schemeEndIndex + 2) != '/') {
-      // has no authority component
+    int endIndexExclusive = getHostEndIndexExclusive(url, startIndex);
+    if (endIndexExclusive == startIndex) {
       return null;
     }
 
-    // look for the end of the host:
-    //   ':' ==> start of port, or
-    //   '/', '?', '#' ==> start of path
-    int index;
-    for (index = schemeEndIndex + 3; index < len; index++) {
-      char c = url.charAt(index);
-      if (c == ':' || c == '/' || c == '?' || c == '#') {
-        break;
-      }
-    }
-    String host = url.substring(schemeEndIndex + 3, index);
-    return host.isEmpty() ? null : host;
+    return url.substring(startIndex, endIndexExclusive);
   }
 
   @Nullable
   static Integer getPort(String url) {
 
+    int hostStartIndex = getHostStartIndex(url);
+    if (hostStartIndex == -1) {
+      return null;
+    }
+
+    int hostEndIndexExclusive = getHostEndIndexExclusive(url, hostStartIndex);
+    if (hostEndIndexExclusive == hostStartIndex) {
+      return null;
+    }
+
+    if (hostEndIndexExclusive < url.length() && url.charAt(hostEndIndexExclusive) != ':') {
+      return null;
+    }
+
+    int portStartIndex = hostEndIndexExclusive + 1;
+
+    int portEndIndexExclusive = getPortEndIndexExclusive(url, portStartIndex);
+    if (portEndIndexExclusive == portStartIndex) {
+      return null;
+    }
+
+    return safeParse(url.substring(portStartIndex, portEndIndexExclusive));
+  }
+
+  private static int getHostStartIndex(String url) {
+
     int schemeEndIndex = url.indexOf(':');
     if (schemeEndIndex == -1) {
       // not a valid url
-      return null;
+      return -1;
     }
 
     int len = url.length();
@@ -54,39 +65,39 @@ class UrlParser {
         || url.charAt(schemeEndIndex + 1) != '/'
         || url.charAt(schemeEndIndex + 2) != '/') {
       // has no authority component
-      return null;
+      return -1;
     }
 
+    return schemeEndIndex + 3;
+  }
+
+  private static int getHostEndIndexExclusive(String url, int startIndex) {
     // look for the end of the host:
     //   ':' ==> start of port, or
     //   '/', '?', '#' ==> start of path
     int index;
-    int portIndex = -1;
-    for (index = schemeEndIndex + 3; index < len; index++) {
+    int len = url.length();
+    for (index = startIndex; index < len; index++) {
       char c = url.charAt(index);
-      if (c == ':') {
-        portIndex = index + 1;
-        break;
-      }
-      if (c == '/' || c == '?' || c == '#') {
+      if (c == ':' || c == '/' || c == '?' || c == '#') {
         break;
       }
     }
+    return index;
+  }
 
-    if (portIndex == -1) {
-      return null;
-    }
-
+  private static int getPortEndIndexExclusive(String url, int startIndex) {
     // look for the end of the port:
     //   '/', '?', '#' ==> start of path
-    for (index = portIndex; index < len; index++) {
+    int index;
+    int len = url.length();
+    for (index = startIndex; index < len; index++) {
       char c = url.charAt(index);
       if (c == '/' || c == '?' || c == '#') {
         break;
       }
     }
-    String port = url.substring(portIndex, index);
-    return port.isEmpty() ? null : safeParse(port);
+    return index;
   }
 
   @Nullable

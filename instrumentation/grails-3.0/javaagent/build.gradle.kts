@@ -29,10 +29,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-webmvc-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent"))
 
   testLibrary("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
+
+  latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+")
 }
 
 // testing-common pulls in groovy 4 and spock as dependencies, exclude them

@@ -18,18 +18,17 @@ val extraTag = findProperty("extraTag")
 val targets = mapOf(
   "jetty" to listOf(
     ImageTarget(listOf("9.4.39"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("sourceVersion" to "9.4.39.v20210325")),
-    ImageTarget(listOf("9.4.39"), listOf("openj9"), listOf("8", "11", "16"), mapOf("sourceVersion" to "9.4.39.v20210325")),
+    ImageTarget(listOf("9.4.39"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("sourceVersion" to "9.4.39.v20210325")),
     ImageTarget(listOf("10.0.7"), listOf("hotspot"), listOf("11", "17", "19", "20"), mapOf("sourceVersion" to "10.0.7")),
-    ImageTarget(listOf("10.0.7"), listOf("openj9"), listOf("11", "16"), mapOf("sourceVersion" to "10.0.7")),
+    ImageTarget(listOf("10.0.7"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "10.0.7")),
     ImageTarget(listOf("11.0.7"), listOf("hotspot"), listOf("11", "17", "19", "20"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
-    ImageTarget(listOf("11.0.7"), listOf("openj9"), listOf("11", "16"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0")
+    ImageTarget(listOf("11.0.7"), listOf("openj9"), listOf("11", "17", "18"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0")
   ),
   "liberty" to listOf(
-    // running configure.sh is failing while building the image with Java 17
-    ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "16"), mapOf("release" to "2020-11-11_0736")),
+    ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
     // running configure.sh is failing while building the image with Java 19
     ImageTarget(listOf("21.0.0.10"), listOf("hotspot"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900")),
-    ImageTarget(listOf("21.0.0.10"), listOf("openj9"), listOf("8", "11", "16"), mapOf("release" to "2021-09-20_1900"))
+    ImageTarget(listOf("21.0.0.10"), listOf("openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-09-20_1900"))
   ),
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6"), listOf("hotspot", "openj9"), listOf("8", "11")),
@@ -38,19 +37,19 @@ val targets = mapOf(
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
     ImageTarget(listOf("8.5.72"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "8")),
-    ImageTarget(listOf("8.5.72"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "8")),
+    ImageTarget(listOf("8.5.72"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "8")),
     ImageTarget(listOf("9.0.54"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("9.0.54"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "9")),
+    ImageTarget(listOf("9.0.54"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "9")),
     ImageTarget(listOf("10.0.12"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), mapOf("majorVersion" to "10"), "servlet-5.0"),
-    ImageTarget(listOf("10.0.12"), listOf("openj9"), listOf("8", "11"), mapOf("majorVersion" to "10"), "servlet-5.0")
+    ImageTarget(listOf("10.0.12"), listOf("openj9"), listOf("8", "11", "17", "18"), mapOf("majorVersion" to "10"), "servlet-5.0")
   ),
   "tomee" to listOf(
     ImageTarget(listOf("7.0.9"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("8.0.8"), listOf("hotspot"), listOf("8", "11", "17", "19", "20")),
-    ImageTarget(listOf("8.0.8"), listOf("openj9"), listOf("8", "11", "16")),
+    ImageTarget(listOf("8.0.8"), listOf("openj9"), listOf("8", "11", "17", "18")),
     ImageTarget(listOf("9.0.0-M7"), listOf("hotspot"), listOf("8", "11", "17", "19", "20"), war = "servlet-5.0"),
-    ImageTarget(listOf("9.0.0-M7"), listOf("openj9"), listOf("8", "11", "16"), war = "servlet-5.0")
+    ImageTarget(listOf("9.0.0-M7"), listOf("openj9"), listOf("8", "11", "17", "18"), war = "servlet-5.0")
   ),
   "websphere" to listOf(
     // TODO (trask) this is a recent change, check back in a while and see if it's been fixed
@@ -60,7 +59,7 @@ val targets = mapOf(
   "wildfly" to listOf(
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("hotspot"), listOf("8", "11", "17", "19", "20")),
-    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("openj9"), listOf("8", "11", "16"))
+    ImageTarget(listOf("17.0.1.Final", "21.0.0.Final", "25.0.1.Final"), listOf("openj9"), listOf("8", "11", "17", "18"))
   )
 )
 
@@ -145,7 +144,9 @@ fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfil
     }
   } else if (vm == "openj9") {
     if (isWindows) {
-      "adoptopenjdk:$jdk-openj9"
+      // ibm-semeru-runtimes doesn't publish windows images
+      // adoptopenjdk doesn't publish Windows 2022 images (and is deprecated)
+      throw GradleException("Unexpected vm: $vm")
     } else {
       "ibm-semeru-runtimes:open-$jdk-jdk"
     }
@@ -207,6 +208,11 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
 
       for (version in entry.version) {
         for (vm in entry.vm) {
+          if (vm == "openj9" && isWindows) {
+            // ibm-semeru-runtimes doesn't publish windows images
+            // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
+            continue
+          }
           for (jdk in entry.jdk) {
             if (supportsWindows || !isWindows) {
               resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows))

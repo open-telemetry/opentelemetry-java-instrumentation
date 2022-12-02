@@ -41,6 +41,17 @@ java {
   withSourcesJar()
 }
 
+// this task is helpful for tracking down and aligning dependency versions across modules in order
+// to limit versions that are be loaded by Intellij
+// (the normal dependencies task selector only executes the task on a single project)
+//
+// ./gradlew intellijDeps
+//           | grep -Po "\--- \K.*"
+//           | sed "s/:[0-9].* -> \(.*\)/:\1/"
+//           | sed "s/:[0-9].* -> \(.*\)/:\1/"
+//           | sort -u
+tasks.register<DependencyReportTask>("intellijDeps")
+
 tasks.withType<JavaCompile>().configureEach {
   with(options) {
     release.set(otelJava.minJavaVersionSupported.map { it.majorVersion.toInt() })

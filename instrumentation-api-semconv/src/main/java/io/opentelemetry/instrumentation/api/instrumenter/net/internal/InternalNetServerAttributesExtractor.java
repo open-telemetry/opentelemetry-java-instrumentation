@@ -6,28 +6,32 @@
 package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.util.logging.Logger;
-import javax.annotation.Nullable;
+import java.util.function.BiPredicate;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class InternalNetServerAttributesExtractor {
+public final class InternalNetServerAttributesExtractor<REQUEST> {
 
-  private static final Logger logger =
-      Logger.getLogger(InternalNetServerAttributesExtractor.class.getName());
+  private final NetServerAttributesGetter<REQUEST> getter;
+  private final BiPredicate<Integer, REQUEST> captureHostPortCondition;
+  private final FallbackNamePortGetter<REQUEST> fallbackNamePortGetter;
 
-  public static <REQUEST> void onStart(
+  public InternalNetServerAttributesExtractor(
       NetServerAttributesGetter<REQUEST> getter,
-      AttributesBuilder attributes,
-      REQUEST request,
-      @Nullable String hostHeader) {
+      BiPredicate<Integer, REQUEST> captureHostPortCondition,
+      FallbackNamePortGetter<REQUEST> fallbackNamePortGetter) {
+    this.getter = getter;
+    this.captureHostPortCondition = captureHostPortCondition;
+    this.fallbackNamePortGetter = fallbackNamePortGetter;
+  }
+
+  public void onStart(AttributesBuilder attributes, REQUEST request) {
     internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request));
 
     boolean setSockFamily = false;
@@ -44,29 +48,13 @@ public class InternalNetServerAttributesExtractor {
       }
     }
 
-    String hostName = getter.hostName(request);
-    Integer hostPort = getter.hostPort(request);
-
-    int hostHeaderSeparator = -1;
-    if (hostHeader != null) {
-      hostHeaderSeparator = hostHeader.indexOf(':');
-    }
-    if (hostName == null && hostHeader != null) {
-      hostName =
-          hostHeaderSeparator == -1 ? hostHeader : hostHeader.substring(0, hostHeaderSeparator);
-    }
-    if (hostPort == null && hostHeader != null && hostHeaderSeparator != -1) {
-      try {
-        hostPort = Integer.parseInt(hostHeader.substring(hostHeaderSeparator + 1));
-      } catch (NumberFormatException e) {
-        logger.log(FINE, e.getMessage(), e);
-      }
-    }
+    String hostName = extractHostName(request);
+    Integer hostPort = extractHostPort(request);
 
     if (hostName != null) {
       internalSet(attributes, SemanticAttributes.NET_HOST_NAME, hostName);
 
-      if (hostPort != null && hostPort > 0) {
+      if (hostPort != null && hostPort > 0 && captureHostPortCondition.test(hostPort, request)) {
         internalSet(attributes, SemanticAttributes.NET_HOST_PORT, (long) hostPort);
       }
     }
@@ -91,5 +79,19 @@ public class InternalNetServerAttributesExtractor {
     }
   }
 
-  private InternalNetServerAttributesExtractor() {}
+  private String extractHostName(REQUEST request) {
+    String peerName = getter.hostName(request);
+    if (peerName == null) {
+      peerName = fallbackNamePortGetter.name(request);
+    }
+    return peerName;
+  }
+
+  private Integer extractHostPort(REQUEST request) {
+    Integer peerPort = getter.hostPort(request);
+    if (peerPort == null) {
+      peerPort = fallbackNamePortGetter.port(request);
+    }
+    return peerPort;
+  }
 }

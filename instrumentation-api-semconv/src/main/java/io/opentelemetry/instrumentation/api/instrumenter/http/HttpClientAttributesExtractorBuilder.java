@@ -8,17 +8,22 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import java.util.List;
 
 /** A builder of {@link HttpClientAttributesExtractor}. */
 public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
-  final HttpClientAttributesGetter<REQUEST, RESPONSE> getter;
+  final HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
+  final NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter;
   List<String> capturedRequestHeaders = emptyList();
   List<String> capturedResponseHeaders = emptyList();
 
-  HttpClientAttributesExtractorBuilder(HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    this.getter = getter;
+  HttpClientAttributesExtractorBuilder(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      NetClientAttributesGetter<REQUEST, RESPONSE> netAttributesGetter) {
+    this.httpAttributesGetter = httpAttributesGetter;
+    this.netAttributesGetter = netAttributesGetter;
   }
 
   /**
@@ -64,6 +69,6 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public HttpClientAttributesExtractor<REQUEST, RESPONSE> build() {
     return new HttpClientAttributesExtractor<>(
-        getter, capturedRequestHeaders, capturedResponseHeaders);
+        httpAttributesGetter, netAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
   }
 }
