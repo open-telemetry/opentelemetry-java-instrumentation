@@ -115,7 +115,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       Instrumenter<Message<?>, Attributes> instrumenter = PulsarTelemetry.producerInstrumenter();
       Attributes attributes = Attributes.empty();
       if (null != info) {
-        attributes = Attributes.of(SemanticAttributes.MESSAGING_URL, info.brokerURL);
+        attributes = Attributes.of(SemanticAttributes.MESSAGING_URL, info.brokerUrl);
       }
 
       try (Scope ignore = context.makeCurrent()) {

@@ -14,15 +14,15 @@ class ClientEnhanceInfo {
   public static final String DEFAULT_BROKER_URL = "unknown";
 
   public final String topic;
-  public final String brokerURL;
+  public final String brokerUrl;
 
-  private ClientEnhanceInfo(String topic, String brokerURL) {
-    this.topic = Strings.isNullOrEmpty(topic) ? DEFAULT_TOPIC : topic;
-    this.brokerURL = Strings.isNullOrEmpty(brokerURL) ? DEFAULT_BROKER_URL : brokerURL;
+  private ClientEnhanceInfo(String topic, String brokerUrl) {
+    this.topic = isNullOrEmpty(topic) ? DEFAULT_TOPIC : topic;
+    this.brokerUrl = isNullOrEmpty(brokerUrl) ? DEFAULT_BROKER_URL : brokerUrl;
   }
 
-  public static ClientEnhanceInfo create(String topic, String brokerURL) {
-    return new ClientEnhanceInfo(topic, brokerURL);
+  public static ClientEnhanceInfo create(String topic, String brokerUrl) {
+    return new ClientEnhanceInfo(topic, brokerUrl);
   }
 
   private static boolean isNullOrEmpty(String s) {

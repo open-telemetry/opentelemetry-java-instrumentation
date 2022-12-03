@@ -95,10 +95,10 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
       ClientEnhanceInfo cinfo = VirtualFieldStore.extract(consumer);
       String topic = null == cinfo ? ClientEnhanceInfo.DEFAULT_TOPIC : cinfo.topic;
-      String brokerURL = null == cinfo ? ClientEnhanceInfo.DEFAULT_BROKER_URL : cinfo.brokerURL;
+      String brokerUrl = null == cinfo ? ClientEnhanceInfo.DEFAULT_BROKER_URL : cinfo.brokerUrl;
       Attributes attributes =
           Attributes.of(
-              SemanticAttributes.MESSAGING_URL, brokerURL,
+              SemanticAttributes.MESSAGING_URL, brokerUrl,
               SemanticAttributes.MESSAGING_DESTINATION, topic);
 
       Context current = Context.current();
