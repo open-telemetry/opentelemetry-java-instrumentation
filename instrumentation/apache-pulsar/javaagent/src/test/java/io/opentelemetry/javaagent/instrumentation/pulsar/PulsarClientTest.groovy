@@ -1,6 +1,18 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pulsar
 
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import java.nio.charset.Charset
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.Message
 import org.apache.pulsar.client.api.MessageListener
@@ -9,13 +21,6 @@ import org.apache.pulsar.client.api.PulsarClient
 import org.apache.pulsar.client.api.Schema
 import org.testcontainers.containers.PulsarContainer
 import org.testcontainers.utility.DockerImageName
-
-import java.nio.charset.Charset
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class PulsarClientTest extends AgentInstrumentationSpecification {
 

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar;
 
-import com.google.common.base.Strings;
-
 /**
  * for producer and consumer, cache service_url and determine whether the instance has been
  * enhanced.
@@ -25,5 +23,9 @@ class ClientEnhanceInfo {
 
   public static ClientEnhanceInfo create(String topic, String brokerURL) {
     return new ClientEnhanceInfo(topic, brokerURL);
+  }
+
+  private static boolean isNullOrEmpty(String s) {
+    return s == null || s.isEmpty();
   }
 }
