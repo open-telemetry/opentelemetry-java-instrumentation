@@ -25,21 +25,21 @@ class VirtualFieldStore {
     MSG_FIELD.set(instance, context);
   }
 
+  static void inject(Producer<?> instance, ClientEnhanceInfo info) {
+    PRODUCER_FIELD.set(instance, info);
+  }
+
+  static void inject(Consumer<?> instance, ClientEnhanceInfo info) {
+    CONSUMER_FIELD.set(instance, info);
+  }
+
   static Context extract(Message<?> instance) {
     Context ctx = MSG_FIELD.get(instance);
     return ctx == null ? Context.current() : ctx;
   }
 
-  static void inject(Producer<?> instance, ClientEnhanceInfo info) {
-    PRODUCER_FIELD.set(instance, info);
-  }
-
   static ClientEnhanceInfo extract(Producer<?> instance) {
     return PRODUCER_FIELD.get(instance);
-  }
-
-  static void inject(Consumer<?> instance, ClientEnhanceInfo info) {
-    CONSUMER_FIELD.set(instance, info);
   }
 
   static ClientEnhanceInfo extract(Consumer<?> instance) {
