@@ -42,6 +42,7 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConsumerConfigurationDataMethodAdviser {
+    private ConsumerConfigurationDataMethodAdviser() {}
 
     @Advice.OnMethodExit
     public static void after(

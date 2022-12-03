@@ -50,6 +50,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConsumerImplConstructorAdviser {
+    private ConsumerImplConstructorAdviser() {}
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void after(
@@ -66,6 +67,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConsumerImplMethodAdviser {
+    private ConsumerImplMethodAdviser() {}
 
     @Advice.OnMethodEnter
     public static void before(

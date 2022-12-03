@@ -53,6 +53,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ProducerImplConstructorAdviser {
+    private ProducerImplConstructorAdviser() {}
 
     @Advice.OnMethodExit
     public static void intercept(
@@ -68,6 +69,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ProducerSendAsyncMethodAdviser {
+    private ProducerSendAsyncMethodAdviser() {}
 
     @Advice.OnMethodEnter
     public static void before(
