@@ -32,7 +32,7 @@ class ConsumerReceiveAttributeGetter implements MessagingAttributesGetter<Messag
   @Nullable
   @Override
   public String destination(Message<?> message) {
-    return null;
+    return message.getTopicName();
   }
 
   @Override

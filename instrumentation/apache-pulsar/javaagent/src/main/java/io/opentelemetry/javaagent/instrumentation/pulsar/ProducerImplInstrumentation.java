@@ -57,13 +57,10 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     public static void intercept(
-        @Advice.This ProducerImpl<?> producer,
-        @Advice.Argument(value = 0) PulsarClient client,
-        @Advice.Argument(value = 1) String topic) {
+        @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClient client) {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
-      String url = pulsarClient.getLookup().getServiceUrl();
-      ClientEnhanceInfo info = ClientEnhanceInfo.create(topic, url);
-      VirtualFieldStore.inject(producer, info);
+      String brokerUrl = pulsarClient.getLookup().getServiceUrl();
+      VirtualFieldStore.inject(producer, brokerUrl);
     }
   }
 
@@ -77,32 +74,30 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) Message<?> message,
         @Advice.Argument(value = 1, readOnly = false) SendCallback callback) {
       Context parent = Context.current();
-      ClientEnhanceInfo info = VirtualFieldStore.extract(producer);
       Instrumenter<Message<?>, Attributes> instrumenter = PulsarTelemetry.producerInstrumenter();
 
       Context current = null;
       if (instrumenter.shouldStart(parent, message)) {
-        current = instrumenter.start(Context.current(), message);
+        current = instrumenter.start(parent, message);
       }
 
-      callback = new SendCallbackWrapper(current, message, callback, info);
+      callback = new SendCallbackWrapper(current, message, callback, producer);
     }
   }
 
   public static class SendCallbackWrapper implements SendCallback {
-    private static final long serialVersionUID = 1L;
 
     private final Context context;
     private final Message<?> message;
     private final SendCallback delegator;
-    private final ClientEnhanceInfo info;
+    private final ProducerImpl<?> producer;
 
     public SendCallbackWrapper(
-        Context context, Message<?> message, SendCallback callback, ClientEnhanceInfo info) {
+        Context context, Message<?> message, SendCallback callback, ProducerImpl<?> producer) {
       this.context = context;
       this.message = message;
       this.delegator = callback;
-      this.info = info;
+      this.producer = producer;
     }
 
     @Override
@@ -113,10 +108,8 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       }
 
       Instrumenter<Message<?>, Attributes> instrumenter = PulsarTelemetry.producerInstrumenter();
-      Attributes attributes = Attributes.empty();
-      if (null != info) {
-        attributes = Attributes.of(SemanticAttributes.MESSAGING_URL, info.brokerUrl);
-      }
+      String brokerUrl = VirtualFieldStore.extract(producer);
+      Attributes attributes = Attributes.of(SemanticAttributes.MESSAGING_URL, brokerUrl);
 
       try (Scope ignore = context.makeCurrent()) {
         this.delegator.sendComplete(e);
