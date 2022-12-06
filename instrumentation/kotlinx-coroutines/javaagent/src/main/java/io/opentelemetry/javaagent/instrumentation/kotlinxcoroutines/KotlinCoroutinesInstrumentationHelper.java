@@ -14,7 +14,7 @@ public final class KotlinCoroutinesInstrumentationHelper {
   public static CoroutineContext addOpenTelemetryContext(CoroutineContext coroutineContext) {
     Context current = Context.current();
     Context inCoroutine = ContextExtensionsKt.getOpenTelemetryContext(coroutineContext);
-    if (current == inCoroutine) {
+    if (current == inCoroutine || inCoroutine != Context.root()) {
       return coroutineContext;
     }
     return coroutineContext.plus(ContextExtensionsKt.asContextElement(current));
