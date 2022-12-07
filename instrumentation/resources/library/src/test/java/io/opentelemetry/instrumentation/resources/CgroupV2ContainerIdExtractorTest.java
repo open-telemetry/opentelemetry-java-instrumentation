@@ -6,12 +6,13 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.instrumentation.resources.CgroupV2ContainerIdExtractor.V2_CGROUP_PATH;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -62,13 +63,9 @@ class CgroupV2ContainerIdExtractorTest {
     return fileToStreamOfLines("podman_proc_self_mountinfo");
   }
 
-  private static Stream<String> fileToStreamOfLines(String filename) throws IOException {
-    try (InputStream in =
-        CgroupV2ContainerIdExtractorTest.class.getClassLoader().getResourceAsStream(filename)) {
-      byte[] buff = new byte[100 * 1024];
-      int rc = in.read(buff);
-      String file = new String(buff, 0, rc, StandardCharsets.UTF_8);
-      return Stream.of(file.split("\n"));
-    }
+  private static Stream<String> fileToStreamOfLines(String filename) {
+    InputStream in =
+        CgroupV2ContainerIdExtractorTest.class.getClassLoader().getResourceAsStream(filename);
+    return new BufferedReader(new InputStreamReader(in, UTF_8)).lines();
   }
 }
