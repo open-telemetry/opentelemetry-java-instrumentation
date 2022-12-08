@@ -20,6 +20,7 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("org.junit-pioneer:junit-pioneer")
 
   jmhImplementation(project(":instrumentation-api-semconv"))
 }
@@ -34,5 +35,11 @@ tasks {
     options.errorprone {
       isEnabled.set(false)
     }
+  }
+
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 }
