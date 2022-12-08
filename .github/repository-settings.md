@@ -44,7 +44,7 @@ Same settings as above for `main`, except:
 
 ### `gh-pages`
 
-* Everything UNCHECKED.
+* Everything UNCHECKED
 
   (This branch is currently only used for directly pushing benchmarking results from the
   [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
@@ -52,21 +52,21 @@ Same settings as above for `main`, except:
 
 ### `dependabot/**/**` and `opentelemetrybot/*`
 
-* Require status checks to pass before merging: UNCHECKED
+#### Protect matching branches
 
-  (So that dependabot PRs can be rebased)
+* Everything UNCHECKED
 
-* Restrict who can push to matching branches: UNCHECKED
+  (These are temporary branches for submitting PRs to `main` and `release/*` branches)
 
-  (So that bots can create PR branches in this repository)
+#### Rules applied to everyone including administrators
 
 * Allow force pushes > Everyone
 
-  (So that dependabot PRs can be rebased)
+  (So that dependabot PRs can be rebased, which requires a force push)
 
 * Allow deletions: CHECKED
 
-  (So that bot PR branches can be deleted)
+  (So that these branches can be deleted after corresponding PR is merged)
 
 ### `**/**`
 
