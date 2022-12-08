@@ -5,70 +5,38 @@
 
 package io.opentelemetry.javaagent.logging.application;
 
+import com.google.auto.value.AutoValue;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import java.io.PrintStream;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
-final class InMemoryLog {
+@AutoValue
+abstract class InMemoryLog {
 
-  final String name;
-  final InternalLogger.Level level;
-  final String message;
-  @Nullable final Throwable error;
+  abstract String name();
 
-  InMemoryLog(String name, InternalLogger.Level level, String message, @Nullable Throwable error) {
-    this.name = name;
-    this.level = level;
-    this.message = message;
-    this.error = error;
+  abstract InternalLogger.Level level();
+
+  abstract String message();
+
+  @Nullable
+  abstract Throwable error();
+
+  static InMemoryLog create(
+      String name, InternalLogger.Level level, String message, @Nullable Throwable error) {
+    return new AutoValue_InMemoryLog(name, level, message, error);
   }
 
   void dump(PrintStream out) {
     out.print("[otel.javaagent] ");
-    out.print(level);
+    out.print(level());
     out.print(" ");
-    out.print(name);
+    out.print(name());
     out.print(" - ");
-    out.println(message);
+    out.println(message());
+    Throwable error = error();
     if (error != null) {
       error.printStackTrace(out);
     }
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    InMemoryLog log = (InMemoryLog) o;
-    return name.equals(log.name)
-        && level == log.level
-        && Objects.equals(message, log.message)
-        && Objects.equals(error, log.error);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(name, level, message, error);
-  }
-
-  @Override
-  public String toString() {
-    return "InMemoryLog{"
-        + "name='"
-        + name
-        + '\''
-        + ", level="
-        + level
-        + ", message='"
-        + message
-        + '\''
-        + ", error="
-        + error
-        + '}';
   }
 }

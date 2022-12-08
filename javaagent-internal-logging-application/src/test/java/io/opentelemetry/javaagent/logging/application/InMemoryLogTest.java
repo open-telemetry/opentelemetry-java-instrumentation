@@ -19,7 +19,7 @@ class InMemoryLogTest {
   @Test
   void testDump() throws UnsupportedEncodingException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    InMemoryLog log = new InMemoryLog("test-logger", INFO, "a", new RuntimeException("boom!"));
+    InMemoryLog log = InMemoryLog.create("test-logger", INFO, "a", new RuntimeException("boom!"));
 
     log.dump(new PrintStream(out));
 

@@ -13,7 +13,7 @@ public abstract class ApplicationLoggerBridge {
       new AtomicReference<>();
 
   public static void set(ApplicationLoggerBridge bridge) {
-    ApplicationLoggerBridge.applicationLoggerBridge.compareAndSet(null, bridge);
+    applicationLoggerBridge.compareAndSet(null, bridge);
   }
 
   public static void installApplicationLogger(InternalLogger.Factory applicationLoggerFactory) {

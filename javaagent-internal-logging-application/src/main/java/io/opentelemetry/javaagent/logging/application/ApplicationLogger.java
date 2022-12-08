@@ -32,7 +32,7 @@ final class ApplicationLogger extends InternalLogger {
   public void log(Level level, String message, @Nullable Throwable error) {
     InternalLogger actual = this.actual;
     if (actual == null) {
-      inMemoryLogStore.write(new InMemoryLog(name, level, message, error));
+      inMemoryLogStore.write(InMemoryLog.create(name, level, message, error));
       return;
     }
     actual.log(level, message, error);

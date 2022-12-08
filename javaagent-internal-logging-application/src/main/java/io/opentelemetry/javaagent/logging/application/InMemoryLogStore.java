@@ -45,7 +45,7 @@ final class InMemoryLogStore {
     // will cause more logs to be added to this store - we need to work on a copy here to avoid a
     // ConcurrentModificationException
     for (InMemoryLog log : copy) {
-      applicationLoggerFactory.create(log.name).log(log.level, log.message, log.error);
+      applicationLoggerFactory.create(log.name()).log(log.level(), log.message(), log.error());
     }
   }
 
@@ -63,14 +63,14 @@ final class InMemoryLogStore {
   }
 
   void dump(PrintStream out) {
-    // logs() makes a copy, to avoid ConcurrentModificationException
-    for (InMemoryLog log : logs()) {
+    // make a copy to avoid ConcurrentModificationException in case some other threads writes a log
+    for (InMemoryLog log : copyLogs()) {
       log.dump(out);
     }
   }
 
   // visible for tests
-  List<InMemoryLog> logs() {
+  List<InMemoryLog> copyLogs() {
     synchronized (lock) {
       return new ArrayList<>(inMemoryLogs);
     }

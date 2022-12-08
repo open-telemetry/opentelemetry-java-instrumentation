@@ -40,45 +40,45 @@ class InMemoryLogStoreTest {
   @Test
   void shouldWriteLog() {
     InMemoryLogStore underTest = new InMemoryLogStore(42);
-    InMemoryLog log = new InMemoryLog("test-logger", INFO, "a", null);
+    InMemoryLog log = InMemoryLog.create("test-logger", INFO, "a", null);
 
     underTest.write(log);
 
-    assertThat(underTest.logs()).containsExactly(log);
+    assertThat(underTest.copyLogs()).containsExactly(log);
   }
 
   @Test
   void shouldNotWriteLogsOverLimit() {
     InMemoryLogStore underTest = new InMemoryLogStore(2);
-    InMemoryLog log = new InMemoryLog("test-logger", INFO, "a", null);
+    InMemoryLog log = InMemoryLog.create("test-logger", INFO, "a", null);
 
     underTest.write(log);
     underTest.write(log);
     underTest.write(log);
 
-    assertThat(underTest.logs()).hasSize(2);
+    assertThat(underTest.copyLogs()).hasSize(2);
   }
 
   @Test
   void shouldFlush() {
     InMemoryLogStore underTest = new InMemoryLogStore(42);
-    InMemoryLog log = new InMemoryLog("test-logger", INFO, "a", null);
+    InMemoryLog log = InMemoryLog.create("test-logger", INFO, "a", null);
 
     underTest.write(log);
     underTest.write(log);
-    assertThat(underTest.logs()).hasSize(2);
+    assertThat(underTest.copyLogs()).hasSize(2);
 
     when(applicationLoggerBridge.create("test-logger")).thenReturn(applicationLogger);
     underTest.flush(applicationLoggerBridge);
     verify(applicationLogger, times(2)).log(INFO, "a", null);
 
-    assertThat(underTest.logs()).isEmpty();
+    assertThat(underTest.copyLogs()).isEmpty();
   }
 
   @Test
   void shouldDumpLogs() throws UnsupportedEncodingException {
     InMemoryLogStore underTest = new InMemoryLogStore(42);
-    InMemoryLog log = new InMemoryLog("test-logger", INFO, "a", null);
+    InMemoryLog log = InMemoryLog.create("test-logger", INFO, "a", null);
 
     underTest.write(log);
     underTest.write(log);

@@ -66,7 +66,7 @@ class ApplicationLoggerFactoryTest {
     assertThat(beforeInstall).isInstanceOf(ApplicationLogger.class);
 
     beforeInstall.log(INFO, "before", null);
-    verify(logStore).write(new InMemoryLog("logger", INFO, "before", null));
+    verify(logStore).write(InMemoryLog.create("logger", INFO, "before", null));
 
     when(applicationLoggerBridge.create("logger")).thenReturn(applicationLogger);
     underTest.install(applicationLoggerBridge);
@@ -76,6 +76,6 @@ class ApplicationLoggerFactoryTest {
 
     beforeInstall.log(INFO, "after", null);
     verify(applicationLogger).log(INFO, "after", null);
-    verify(logStore, never()).write(new InMemoryLog("logger", INFO, "after", null));
+    verify(logStore, never()).write(InMemoryLog.create("logger", INFO, "after", null));
   }
 }

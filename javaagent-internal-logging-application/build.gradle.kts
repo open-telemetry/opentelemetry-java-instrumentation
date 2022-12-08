@@ -17,4 +17,7 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
   testCompileOnly("com.google.auto.service:auto-service-annotations")
+
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
 }

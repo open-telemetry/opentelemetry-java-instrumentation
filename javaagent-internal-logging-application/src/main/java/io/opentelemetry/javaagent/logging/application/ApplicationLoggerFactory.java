@@ -28,34 +28,34 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
   @Override
   protected void install(InternalLogger.Factory applicationLoggerFactory) {
     // just use the first bridge that gets discovered and ignore the rest
-    if (installed.compareAndSet(false, true)) {
-
-      // flushing may cause additional classes to be loaded (e.g. slf4j loads logback, which we
-      // instrument), so we're doing this repeatedly to clear the in-memory store and preserve the
-      // log ordering
-      while (inMemoryLogStore.currentSize() > 0) {
-        inMemoryLogStore.flush(applicationLoggerFactory);
-      }
-
-      // actually install the application logger - from this point, everything will be logged
-      // directly through the application logging system
-      inMemoryLoggers
-          .values()
-          .forEach(
-              logger ->
-                  logger.replaceByActualLogger(applicationLoggerFactory.create(logger.name())));
-      this.actual = applicationLoggerFactory;
-
-      // if there are any leftover logs left in the memory store, flush them - this will cause some
-      // logs to go out of order, but at least we'll not lose any of them
-      if (inMemoryLogStore.currentSize() > 0) {
-        inMemoryLogStore.flush(applicationLoggerFactory);
-      }
-
-      // finally, free the memory
-      inMemoryLogStore.freeMemory();
-      inMemoryLoggers.clear();
+    if (!installed.compareAndSet(false, true)) {
+      return;
     }
+
+    // flushing may cause additional classes to be loaded (e.g. slf4j loads logback, which we
+    // instrument), so we're doing this repeatedly to clear the in-memory store and preserve the
+    // log ordering
+    while (inMemoryLogStore.currentSize() > 0) {
+      inMemoryLogStore.flush(applicationLoggerFactory);
+    }
+
+    // actually install the application logger - from this point, everything will be logged
+    // directly through the application logging system
+    inMemoryLoggers
+        .values()
+        .forEach(
+            logger -> logger.replaceByActualLogger(applicationLoggerFactory.create(logger.name())));
+    this.actual = applicationLoggerFactory;
+
+    // if there are any leftover logs left in the memory store, flush them - this will cause some
+    // logs to go out of order, but at least we'll not lose any of them
+    if (inMemoryLogStore.currentSize() > 0) {
+      inMemoryLogStore.flush(applicationLoggerFactory);
+    }
+
+    // finally, free the memory
+    inMemoryLogStore.freeMemory();
+    inMemoryLoggers.clear();
   }
 
   @Override

@@ -40,7 +40,7 @@ class ApplicationLoggerTest {
 
     underTest.log(INFO, "a", null);
 
-    verify(logStore).write(new InMemoryLog("test", INFO, "a", null));
+    verify(logStore).write(InMemoryLog.create("test", INFO, "a", null));
   }
 
   @Test
