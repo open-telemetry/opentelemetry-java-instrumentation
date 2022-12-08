@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework")
     module.set("spring-web")
-    versions.set("[6.0.0)")
+    versions.set("[6.0.0,)")
     assertInverse.set(true)
   }
 }
