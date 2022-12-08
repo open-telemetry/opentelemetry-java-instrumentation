@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test.boot
+package boot
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 @SpringBootApplication
-class AppConfig extends WebMvcConfigurerAdapter {
+class AppConfig {
 
 }

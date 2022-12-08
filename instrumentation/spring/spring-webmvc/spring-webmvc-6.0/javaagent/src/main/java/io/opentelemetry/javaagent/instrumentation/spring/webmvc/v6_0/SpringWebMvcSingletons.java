@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.spring.webmvc.SpringWebMvcInstrumenterFactory;
 import org.springframework.web.servlet.ModelAndView;
 
 public final class SpringWebMvcSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-3.1";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-6.0";
 
   private static final Instrumenter<Object, Void> HANDLER_INSTRUMENTER;
 

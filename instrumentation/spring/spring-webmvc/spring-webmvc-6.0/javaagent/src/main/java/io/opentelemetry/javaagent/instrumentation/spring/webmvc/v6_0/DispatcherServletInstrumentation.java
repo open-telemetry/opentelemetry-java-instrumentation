@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcSingletons.modelAndViewInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcSingletons.modelAndViewInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter;
+import org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter;
 
 public class DispatcherServletInstrumentation implements TypeInstrumentation {
 
@@ -64,7 +64,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
       if (springCtx.containsBean("otelAutoDispatcherFilter")) {
         OpenTelemetryHandlerMappingFilter filter =
             (OpenTelemetryHandlerMappingFilter) springCtx.getBean("otelAutoDispatcherFilter");
-        if (handlerMappings != null && filter != null) {
+        if (handlerMappings != null) {
           filter.setHandlerMappings(handlerMappings);
         }
       }

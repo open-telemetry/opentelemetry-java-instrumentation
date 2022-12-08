@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import java.lang.reflect.Method;
-import javax.servlet.Servlet;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.Controller;
@@ -32,7 +31,7 @@ public class HandlerSpanNameExtractor implements SpanNameExtractor<Object> {
       // org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter
       clazz = handler.getClass();
       methodName = "handleRequest";
-    } else if (handler instanceof Servlet) {
+    } else if (isServlet(handler)) {
       // org.springframework.web.servlet.handler.SimpleServletHandlerAdapter
       clazz = handler.getClass();
       methodName = "service";
@@ -43,5 +42,11 @@ public class HandlerSpanNameExtractor implements SpanNameExtractor<Object> {
     }
 
     return SpanNames.fromMethod(clazz, methodName);
+  }
+
+  private static boolean isServlet(Object handler) {
+    String handlerClassName = handler.getClass().getName();
+    return handlerClassName.equals("javax.servlet.Servlet")
+        || handlerClassName.equals("jakarta.servlet.Servlet");
   }
 }

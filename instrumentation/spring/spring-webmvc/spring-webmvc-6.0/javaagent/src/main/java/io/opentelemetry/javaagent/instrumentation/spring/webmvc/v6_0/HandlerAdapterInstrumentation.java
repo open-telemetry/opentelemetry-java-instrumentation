@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcSingletons.handlerInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcSingletons.handlerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -23,7 +23,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.spring.webmvc.IsGrailsHandler;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -46,7 +46,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(isPublic())
             .and(nameStartsWith("handle"))
-            .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
+            .and(takesArgument(0, named("jakarta.servlet.http.HttpServletRequest")))
             .and(takesArguments(3)),
         HandlerAdapterInstrumentation.class.getName() + "$ControllerAdvice");
   }

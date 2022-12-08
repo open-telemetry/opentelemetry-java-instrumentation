@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.springweb.v3_1;
+package io.opentelemetry.javaagent.instrumentation.spring.web.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -76,7 +76,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
               dispatcherServletClass
                   .getClassLoader()
                   .loadClass(
-                      "org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter");
+                      "org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter");
           GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
           beanDefinition.setScope(SCOPE_SINGLETON);
           beanDefinition.setBeanClass(clazz);

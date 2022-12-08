@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test.boot
+package boot
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.springframework.http.HttpStatus
