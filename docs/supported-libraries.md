@@ -133,7 +133,7 @@ These are the supported libraries and frameworks:
 
 **[2]** Provides `http.route`: Provides route-based span name for existing `SERVER` span. If applicable, provides `http.route` span and metric attribute on existing `SERVER` span and metrics.
 
-**[3]** Controller Spans are `INTERNAL` spans capturing the controller and/or view execution. See [Suppressing controller and/or view spans]](https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-controller-andor-view-spans).
+**[3]** Controller Spans are `INTERNAL` spans capturing the controller and/or view execution. See [Suppressing controller and/or view spans](https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-controller-andor-view-spans).
 
 [HTTP Server Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-server-semantic-conventions
 [HTTP Client Spans]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#http-client
