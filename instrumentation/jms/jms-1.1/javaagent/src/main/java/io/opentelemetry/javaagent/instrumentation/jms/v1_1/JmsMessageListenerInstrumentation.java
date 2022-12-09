@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.jms;
+package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.spring.jms.SpringJmsSingletons.listenerInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.listenerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -19,33 +18,28 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
-import io.opentelemetry.javaagent.instrumentation.jms.v1_1.JavaxMessageAdapter;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
+public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.springframework.jms.listener.SessionAwareMessageListener");
+    return hasClassesNamed("javax.jms.MessageListener");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(
-        named("org.springframework.jms.listener.SessionAwareMessageListener"));
+    return implementsInterface(named("javax.jms.MessageListener"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("onMessage")
-            .and(isPublic())
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("javax.jms.Message"))),
-        SpringJmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
+        named("onMessage").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
+        JmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
   }
 
   @SuppressWarnings("unused")
