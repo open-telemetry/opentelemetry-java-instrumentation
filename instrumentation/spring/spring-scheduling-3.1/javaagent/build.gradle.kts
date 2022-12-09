@@ -16,8 +16,6 @@ dependencies {
   // classes and packages to be imported. Versions 3.1.0+ work with the instrumentation.
   library("org.springframework:spring-context:3.1.0.RELEASE")
   testLibrary("org.springframework:spring-context:3.2.3.RELEASE")
-
-  latestDepTestLibrary("org.springframework:spring-context:5.+")
 }
 
 tasks.withType<Test>().configureEach {
@@ -27,4 +25,13 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+// spring 6 requires java 17
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
 }
