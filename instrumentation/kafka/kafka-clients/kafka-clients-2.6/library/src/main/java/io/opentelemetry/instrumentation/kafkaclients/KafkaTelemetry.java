@@ -47,13 +47,13 @@ public final class KafkaTelemetry {
   private static final TextMapSetter<Headers> SETTER = KafkaHeadersSetter.INSTANCE;
 
   private final OpenTelemetry openTelemetry;
-  private final Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter;
+  private final Instrumenter<ProducerRecord<?, ?>, RecordMetadata> producerInstrumenter;
   private final Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter;
   private final boolean producerPropagationEnabled;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
-      Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter,
+      Instrumenter<ProducerRecord<?, ?>, RecordMetadata> producerInstrumenter,
       Instrumenter<ConsumerRecord<?, ?>, Void> consumerProcessInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
@@ -238,7 +238,7 @@ public final class KafkaTelemetry {
 
     @Override
     public void onCompletion(RecordMetadata metadata, Exception exception) {
-      producerInstrumenter.end(context, request, null, exception);
+      producerInstrumenter.end(context, request, metadata, exception);
 
       if (callback != null) {
         try (Scope ignored = parentContext.makeCurrent()) {

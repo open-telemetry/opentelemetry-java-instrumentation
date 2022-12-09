@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -18,10 +21,16 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
  */
 public final class KafkaConsumerAdditionalAttributesExtractor
     implements AttributesExtractor<ConsumerRecord<?, ?>, Void> {
+
+  // TODO: remove this constant when this attribute appears in SemanticAttributes
+  private static final AttributeKey<Long> MESSAGING_KAFKA_MESSAGE_OFFSET =
+      longKey("messaging.kafka.message.offset");
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ConsumerRecord<?, ?> consumerRecord) {
     attributes.put(SemanticAttributes.MESSAGING_KAFKA_PARTITION, (long) consumerRecord.partition());
+    attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, consumerRecord.offset());
     if (consumerRecord.value() == null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
     }

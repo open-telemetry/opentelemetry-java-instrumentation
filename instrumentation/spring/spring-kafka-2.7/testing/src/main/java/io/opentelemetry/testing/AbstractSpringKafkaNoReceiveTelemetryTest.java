@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -47,7 +48,13 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
-                                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                                satisfies(
+                                    SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                    AbstractLongAssert::isNotNegative),
+                                satisfies(
+                                    AttributeKey.longKey("messaging.kafka.message.offset"),
+                                    AbstractLongAssert::isNotNegative)),
                     span ->
                         span.hasName("testSingleTopic process")
                             .hasKind(SpanKind.CONSUMER)
@@ -63,6 +70,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                    AbstractLongAssert::isNotNegative),
+                                satisfies(
+                                    AttributeKey.longKey("messaging.kafka.message.offset"),
                                     AbstractLongAssert::isNotNegative)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
@@ -93,7 +103,13 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
-                                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                                equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                                satisfies(
+                                    SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                    AbstractLongAssert::isNotNegative),
+                                satisfies(
+                                    AttributeKey.longKey("messaging.kafka.message.offset"),
+                                    AbstractLongAssert::isNotNegative)),
                     span ->
                         span.hasName("testSingleTopic process")
                             .hasKind(SpanKind.CONSUMER)
@@ -111,6 +127,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                    AbstractLongAssert::isNotNegative),
+                                satisfies(
+                                    AttributeKey.longKey("messaging.kafka.message.offset"),
                                     AbstractLongAssert::isNotNegative)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
@@ -138,7 +157,13 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                              equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                              equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                              satisfies(
+                                  SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                  AbstractLongAssert::isNotNegative),
+                              satisfies(
+                                  AttributeKey.longKey("messaging.kafka.message.offset"),
+                                  AbstractLongAssert::isNotNegative)),
                   span ->
                       span.hasName("testBatchTopic send")
                           .hasKind(SpanKind.PRODUCER)
@@ -146,7 +171,13 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                              equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                              equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                              satisfies(
+                                  SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                  AbstractLongAssert::isNotNegative),
+                              satisfies(
+                                  AttributeKey.longKey("messaging.kafka.message.offset"),
+                                  AbstractLongAssert::isNotNegative)));
 
               producer1.set(trace.getSpan(1));
               producer2.set(trace.getSpan(2));
@@ -197,7 +228,13 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                               equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                              equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                              equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                              satisfies(
+                                  SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                  AbstractLongAssert::isNotNegative),
+                              satisfies(
+                                  AttributeKey.longKey("messaging.kafka.message.offset"),
+                                  AbstractLongAssert::isNotNegative)));
 
               producer.set(trace.getSpan(1));
             },

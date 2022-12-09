@@ -31,6 +31,8 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
+            "messaging.kafka.message.offset" { it >= 0 }
           }
         }
       }
@@ -57,6 +59,8 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
             "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
             "$SemanticAttributes.MESSAGING_DESTINATION" SHARED_TOPIC
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+            "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
+            "messaging.kafka.message.offset" { it >= 0 }
           }
         }
       }
@@ -72,7 +76,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
             "$SemanticAttributes.MESSAGING_KAFKA_PARTITION" { it >= 0 }
-            "kafka.offset" Long
+            "messaging.kafka.message.offset" { it >= 0 }
             "kafka.record.queue_time_ms" { it >= 0 }
           }
           span(1) {

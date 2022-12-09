@@ -29,7 +29,7 @@ public class ProducerCallback implements Callback {
 
   @Override
   public void onCompletion(RecordMetadata metadata, Exception exception) {
-    producerInstrumenter().end(context, request, null, exception);
+    producerInstrumenter().end(context, request, metadata, exception);
 
     if (callback != null) {
       try (Scope ignored = parentContext.makeCurrent()) {

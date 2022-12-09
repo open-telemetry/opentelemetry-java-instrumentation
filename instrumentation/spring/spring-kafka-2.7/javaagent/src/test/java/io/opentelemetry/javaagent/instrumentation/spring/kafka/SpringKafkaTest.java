@@ -68,7 +68,13 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)));
 
           producer.set(trace.getSpan(1));
         },
@@ -99,7 +105,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_PARTITION,
                                 AbstractLongAssert::isNotNegative),
-                            satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                longKey("messaging.kafka.message.offset"),
+                                AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative)),
@@ -132,7 +140,13 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testSingleTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)));
 
           producer.set(trace.getSpan(1));
         },
@@ -165,7 +179,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_PARTITION,
                                 AbstractLongAssert::isNotNegative),
-                            satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                longKey("messaging.kafka.message.offset"),
+                                AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative)),
@@ -194,7 +210,13 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)),
               span ->
                   span.hasName("testBatchTopic send")
                       .hasKind(SpanKind.PRODUCER)
@@ -202,7 +224,13 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)));
 
           producer1.set(trace.getSpan(1));
           producer2.set(trace.getSpan(2));
@@ -259,7 +287,13 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)));
 
           producer.set(trace.getSpan(1));
         },
