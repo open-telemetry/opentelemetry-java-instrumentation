@@ -6,22 +6,30 @@
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.Version
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import spring.jpa.JpaCustomer
-import spring.jpa.JpaCustomerRepository
-import spring.jpa.JpaPersistenceConfig
+import org.springframework.data.jpa.repository.JpaRepository
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
-class SpringJpaTest extends AgentInstrumentationSpecification {
+abstract class AbstractSpringJpaTest<ENTITY, REPOSITORY extends JpaRepository<ENTITY, Long>> extends AgentInstrumentationSpecification {
+
+  abstract ENTITY newCustomer(String firstName, String lastName)
+
+  abstract Long id(ENTITY customer)
+
+  abstract void setFirstName(ENTITY customer, String firstName)
+
+  abstract Class<REPOSITORY> repositoryClass()
+
+  abstract REPOSITORY repository()
+
+  abstract List<ENTITY> findByLastName(REPOSITORY repository, String lastName)
+
+  abstract List<ENTITY> findSpecialCustomers(REPOSITORY repository)
+
   def "test object method"() {
     setup:
-    def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
-    def repo = context.getBean(JpaCustomerRepository)
-
-    // when Spring JPA sets up, it issues metadata queries -- clear those traces
-    clearExportedData()
+    def repo = repository()
 
     when:
     runWithSpan("toString test") {
@@ -43,18 +51,15 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
 
   def "test CRUD"() {
     def isHibernate4 = Version.getVersionString().startsWith("4.")
-    // moved inside test -- otherwise, miss the opportunity to instrument
-    def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
-    def repo = context.getBean(JpaCustomerRepository)
 
-    // when Spring JPA sets up, it issues metadata queries -- clear those traces
-    clearExportedData()
+    def repo = repository()
+    def repoClassName = repositoryClass().name
 
     setup:
-    def customer = new JpaCustomer("Bob", "Anonymous")
+    def customer = newCustomer("Bob", "Anonymous")
 
     expect:
-    customer.id == null
+    id(customer) == null
     !repo.findAll().iterator().hasNext() // select
 
     assertTraces(1) {
@@ -63,7 +68,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.findAll"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_NAMESPACE" repoClassName
             "$SemanticAttributes.CODE_FUNCTION" "findAll"
           }
         }
@@ -87,22 +92,22 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
 
     when:
     repo.save(customer) // insert
-    def savedId = customer.id
+    def savedId = id(customer)
 
     then:
-    customer.id != null
+    id(customer) != null
     assertTraces(1) {
       trace(0, 2 + (isHibernate4 ? 0 : 1)) {
         span(0) {
           name "JpaCustomerRepository.save"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_NAMESPACE" repoClassName
             "$SemanticAttributes.CODE_FUNCTION" "save"
           }
         }
         def offset = 0
-        // hibernate5 has extra span
+        // hibernate5+ has extra span
         if (!isHibernate4) {
           offset = 1
           span(1) {
@@ -114,7 +119,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.DB_NAME" "test"
               "$SemanticAttributes.DB_USER" "sa"
               "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" "call next value for hibernate_sequence"
+              "$SemanticAttributes.DB_STATEMENT" ~/^call next value for /
             }
           }
         }
@@ -137,18 +142,18 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    customer.firstName = "Bill"
+    setFirstName(customer, "Bill")
     repo.save(customer)
 
     then:
-    customer.id == savedId
+    id(customer) == savedId
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
           name "JpaCustomerRepository.save"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_NAMESPACE" repoClassName
             "$SemanticAttributes.CODE_FUNCTION" "save"
           }
         }
@@ -185,7 +190,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     clearExportedData()
 
     when:
-    customer = repo.findByLastName("Anonymous")[0] // select
+    customer = findByLastName(repo, "Anonymous")[0] // select
 
     then:
     assertTraces(1) {
@@ -194,7 +199,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.findByLastName"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_NAMESPACE" repoClassName
             "$SemanticAttributes.CODE_FUNCTION" "findByLastName"
           }
         }
@@ -226,7 +231,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.delete"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_NAMESPACE" repoClassName
             "$SemanticAttributes.CODE_FUNCTION" "delete"
           }
         }
@@ -263,16 +268,14 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
   }
 
   def "test custom repository method"() {
-    def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
-    def repo = context.getBean(JpaCustomerRepository)
-
-    // when Spring JPA sets up, it issues metadata queries -- clear those traces
-    clearExportedData()
-
     setup:
-    def customers = repo.findSpecialCustomers()
+    def repo = repository()
+    def repoClassName = repositoryClass().name
 
-    expect:
+    when:
+    def customers = findSpecialCustomers(repo)
+
+    then:
     customers.isEmpty()
 
     assertTraces(1) {
@@ -281,7 +284,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "JpaCustomerRepository.findSpecialCustomers"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" JpaCustomerRepository.name
+            "$SemanticAttributes.CODE_NAMESPACE" repoClassName
             "$SemanticAttributes.CODE_FUNCTION" "findSpecialCustomers"
           }
         }

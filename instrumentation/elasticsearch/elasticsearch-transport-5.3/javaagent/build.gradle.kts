@@ -36,7 +36,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-data-1.8:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-data:spring-data-1.8:javaagent"))
 
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
