@@ -118,6 +118,22 @@ if (testLatestDeps) {
       }
     }
   }
+} else {
+  afterEvaluate {
+    // Disable compiling latest dep tests for non latest dep builds in CI. This is needed to avoid
+    // breaking build because of a new library version which could force backporting latest dep
+    // fixes to release branches.
+    // This is only needed for modules where base version and latest dep tests use a different
+    // source directory.
+    var latestDepCompileTaskNames = arrayOf("compileLatestDepTestJava", "compileLatestDepTestGroovy", "compileLatestDepTestScala")
+    for (compileTaskName in latestDepCompileTaskNames) {
+      if (tasks.names.contains(compileTaskName)) {
+        tasks.named(compileTaskName).configure {
+          enabled = false
+        }
+      }
+    }
+  }
 }
 
 tasks {
