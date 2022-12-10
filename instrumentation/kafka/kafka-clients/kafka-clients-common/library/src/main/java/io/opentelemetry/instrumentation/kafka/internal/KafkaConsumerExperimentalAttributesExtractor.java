@@ -22,14 +22,12 @@ import org.apache.kafka.common.record.TimestampType;
 public final class KafkaConsumerExperimentalAttributesExtractor
     implements AttributesExtractor<ConsumerRecord<?, ?>, Void> {
 
-  private static final AttributeKey<Long> KAFKA_OFFSET = longKey("kafka.offset");
   private static final AttributeKey<Long> KAFKA_RECORD_QUEUE_TIME_MS =
       longKey("kafka.record.queue_time_ms");
 
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ConsumerRecord<?, ?> consumerRecord) {
-    attributes.put(KAFKA_OFFSET, consumerRecord.offset());
 
     // don't record a duration if the message was sent from an old Kafka client
     if (consumerRecord.timestampType() != TimestampType.NO_TIMESTAMP_TYPE) {

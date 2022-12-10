@@ -13,13 +13,14 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum KafkaProducerAttributesGetter
-    implements MessagingAttributesGetter<ProducerRecord<?, ?>, Void> {
+enum KafkaProducerAttributesGetter
+    implements MessagingAttributesGetter<ProducerRecord<?, ?>, RecordMetadata> {
   INSTANCE;
 
   @Override
@@ -80,7 +81,8 @@ public enum KafkaProducerAttributesGetter
 
   @Override
   @Nullable
-  public String messageId(ProducerRecord<?, ?> producerRecord, @Nullable Void unused) {
+  public String messageId(
+      ProducerRecord<?, ?> producerRecord, @Nullable RecordMetadata recordMetadata) {
     return null;
   }
 

@@ -17,6 +17,7 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
@@ -31,7 +32,7 @@ public final class KafkaSingletons {
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
 
-  private static final Instrumenter<ProducerRecord<?, ?>, Void> PRODUCER_INSTRUMENTER;
+  private static final Instrumenter<ProducerRecord<?, ?>, RecordMetadata> PRODUCER_INSTRUMENTER;
   private static final Instrumenter<ConsumerRecords<?, ?>, Void> CONSUMER_RECEIVE_INSTRUMENTER;
   private static final Instrumenter<ConsumerRecord<?, ?>, Void> CONSUMER_PROCESS_INSTRUMENTER;
 
@@ -53,7 +54,7 @@ public final class KafkaSingletons {
     return PRODUCER_PROPAGATION_ENABLED;
   }
 
-  public static Instrumenter<ProducerRecord<?, ?>, Void> producerInstrumenter() {
+  public static Instrumenter<ProducerRecord<?, ?>, RecordMetadata> producerInstrumenter() {
     return PRODUCER_INSTRUMENTER;
   }
 

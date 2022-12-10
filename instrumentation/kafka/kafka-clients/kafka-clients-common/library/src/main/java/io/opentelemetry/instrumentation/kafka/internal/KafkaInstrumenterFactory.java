@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -80,17 +81,17 @@ public final class KafkaInstrumenterFactory {
     return this;
   }
 
-  public Instrumenter<ProducerRecord<?, ?>, Void> createProducerInstrumenter() {
+  public Instrumenter<ProducerRecord<?, ?>, RecordMetadata> createProducerInstrumenter() {
     return createProducerInstrumenter(Collections.emptyList());
   }
 
-  public Instrumenter<ProducerRecord<?, ?>, Void> createProducerInstrumenter(
-      Iterable<AttributesExtractor<ProducerRecord<?, ?>, Void>> extractors) {
+  public Instrumenter<ProducerRecord<?, ?>, RecordMetadata> createProducerInstrumenter(
+      Iterable<AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata>> extractors) {
 
     KafkaProducerAttributesGetter getter = KafkaProducerAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.SEND;
 
-    return Instrumenter.<ProducerRecord<?, ?>, Void>builder(
+    return Instrumenter.<ProducerRecord<?, ?>, RecordMetadata>builder(
             openTelemetry,
             instrumentationName,
             MessagingSpanNameExtractor.create(getter, operation))
@@ -169,10 +170,11 @@ public final class KafkaInstrumenterFactory {
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  private static <T> MessagingAttributesExtractor<T, Void> buildMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, Void> getter,
-      MessageOperation operation,
-      List<String> capturedHeaders) {
+  private static <REQUEST, RESPONSE>
+      MessagingAttributesExtractor<REQUEST, RESPONSE> buildMessagingAttributesExtractor(
+          MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+          MessageOperation operation,
+          List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(capturedHeaders)
         .build();
