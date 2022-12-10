@@ -146,7 +146,7 @@ hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.0:jav
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:library")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 hideFromDependabot(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
-hideFromDependabot(":instrumentation:apache-pulsar:javaagent")
+hideFromDependabot(":instrumentation:apache-pulsar:apache-pulsar-2.8:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:javaagent")
 hideFromDependabot(":instrumentation:armeria-1.3:library")
 hideFromDependabot(":instrumentation:armeria-1.3:testing")
