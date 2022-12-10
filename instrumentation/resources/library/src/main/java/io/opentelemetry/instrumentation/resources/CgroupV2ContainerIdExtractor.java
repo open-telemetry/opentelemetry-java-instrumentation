@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /** Utility for extracting the container ID from runtimes inside cgroup v2 containers. */
 class CgroupV2ContainerIdExtractor {
@@ -23,8 +24,7 @@ class CgroupV2ContainerIdExtractor {
       Logger.getLogger(CgroupV2ContainerIdExtractor.class.getName());
 
   static final Path V2_CGROUP_PATH = Paths.get("/proc/self/mountinfo");
-  private static final Pattern CONTAINER_RE =
-      Pattern.compile(".*/docker/containers/([0-9a-f]{64})/.*");
+  private static final Pattern CONTAINER_ID_RE = Pattern.compile("^[0-9a-f]{64}$");
 
   private final ContainerResource.Filesystem filesystem;
 
@@ -44,10 +44,12 @@ class CgroupV2ContainerIdExtractor {
     try {
       return filesystem
           .lines(V2_CGROUP_PATH)
-          .map(CONTAINER_RE::matcher)
+          .filter(line -> line.contains("hostname"))
+          .flatMap(line -> Stream.of(line.split("/")))
+          .map(CONTAINER_ID_RE::matcher)
           .filter(Matcher::matches)
           .findFirst()
-          .map(matcher -> matcher.group(1));
+          .map(matcher -> matcher.group(0));
     } catch (IOException e) {
       logger.log(Level.WARNING, "Unable to read v2 cgroup path", e);
     }
