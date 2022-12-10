@@ -29,7 +29,7 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Messag
   @Nullable
   @Override
   public String destination(Message<?> message) {
-    return message.getTopicName();
+    return null;
   }
 
   @Override

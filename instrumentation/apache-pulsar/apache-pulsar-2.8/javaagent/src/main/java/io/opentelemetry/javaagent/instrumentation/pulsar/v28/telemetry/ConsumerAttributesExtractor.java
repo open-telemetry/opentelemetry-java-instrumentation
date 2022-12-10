@@ -10,6 +10,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.pulsar.client.api.Message;
 
 enum ConsumerAttributesExtractor implements AttributesExtractor<Message<?>, Attributes> {
@@ -29,6 +30,10 @@ enum ConsumerAttributesExtractor implements AttributesExtractor<Message<?>, Attr
       @Nullable Throwable error) {
     if (null != attributes && !attributes.isEmpty()) {
       attributesBuilder.putAll(attributes);
+    }
+
+    if (message.getTopicName() != null) {
+      attributesBuilder.put(SemanticAttributes.MESSAGING_DESTINATION, message.getTopicName());
     }
   }
 }
