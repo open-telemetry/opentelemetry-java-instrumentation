@@ -16,4 +16,5 @@ dependencies {
 
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation("org.testcontainers:pulsar:1.17.1")
+  testImplementation("org.apache.pulsar:pulsar-client-admin:2.8.0")
 }
