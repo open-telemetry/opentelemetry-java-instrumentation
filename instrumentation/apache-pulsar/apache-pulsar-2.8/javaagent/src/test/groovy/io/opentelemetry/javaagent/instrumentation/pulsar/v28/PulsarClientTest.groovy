@@ -44,14 +44,17 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   @Shared
   private Producer<String> producer1
 
+  @Shared
+  private String brokerUrl
+
   @Override
   def setupSpec() {
     PulsarContainer pulsar = new PulsarContainer(DEFAULT_IMAGE_NAME);
     pulsar.start()
 
-    def url = pulsar.pulsarBrokerUrl
-    client = PulsarClient.builder().serviceUrl(url).build()
-    admin = PulsarAdmin.builder().serviceHttpUrl("http://localhost:8080").build()
+    brokerUrl = pulsar.pulsarBrokerUrl
+    client = PulsarClient.builder().serviceUrl(brokerUrl).build()
+    admin = PulsarAdmin.builder().serviceHttpUrl(pulsar.httpServiceUrl).build()
   }
 
   @Override
@@ -93,7 +96,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_URL" "pulsar://localhost:6650"
+            "$SemanticAttributes.MESSAGING_URL" brokerUrl
             "$SemanticAttributes.MESSAGING_DESTINATION" topic
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -147,7 +150,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_URL" "pulsar://localhost:6650"
+            "$SemanticAttributes.MESSAGING_URL" brokerUrl
             "$SemanticAttributes.MESSAGING_DESTINATION" topic
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -161,7 +164,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_URL" "pulsar://localhost:6650"
+            "$SemanticAttributes.MESSAGING_URL" brokerUrl
             "$SemanticAttributes.MESSAGING_DESTINATION" topic
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -212,7 +215,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_URL" "pulsar://localhost:6650"
+            "$SemanticAttributes.MESSAGING_URL" brokerUrl
             "$SemanticAttributes.MESSAGING_DESTINATION".contains(topic)
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -266,7 +269,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_URL" "pulsar://localhost:6650"
+            "$SemanticAttributes.MESSAGING_URL" brokerUrl
             "$SemanticAttributes.MESSAGING_DESTINATION".contains(topic)
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
@@ -280,7 +283,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_URL" "pulsar://localhost:6650"
+            "$SemanticAttributes.MESSAGING_URL" brokerUrl
             "$SemanticAttributes.MESSAGING_DESTINATION".contains(topic)
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
