@@ -85,8 +85,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     private ConsumerInternalReceiveAdviser() {}
 
     @Advice.OnMethodEnter
-    public static void before(
-        @Advice.Local(value = "startTime") long startTime) {
+    public static void before(@Advice.Local(value = "startTime") long startTime) {
       startTime = System.currentTimeMillis();
     }
 
@@ -115,8 +114,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     private ConsumerSyncReceiveAdviser() {}
 
     @Advice.OnMethodEnter
-    public static void before(
-        @Advice.Local(value = "startTime") long startTime) {
+    public static void before(@Advice.Local(value = "startTime") long startTime) {
       startTime = System.currentTimeMillis();
     }
 
@@ -141,8 +139,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     private ConsumerAsyncReceiveAdviser() {}
 
     @Advice.OnMethodEnter
-    public static void before(
-        @Advice.Local(value = "startTime") long startTime) {
+    public static void before(@Advice.Local(value = "startTime") long startTime) {
       startTime = System.currentTimeMillis();
     }
 

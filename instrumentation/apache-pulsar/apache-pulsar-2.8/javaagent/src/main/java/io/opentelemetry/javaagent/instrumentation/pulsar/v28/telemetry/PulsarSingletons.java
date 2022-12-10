@@ -11,7 +11,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
@@ -73,7 +72,7 @@ public final class PulsarSingletons {
         PulsarMessagingAttributesGetter.INSTANCE;
 
     return Instrumenter.<Message<?>, Attributes>builder(
-        TELEMETRY, INSTRUMENTATION, CONSUMER_PROCESS)
+            TELEMETRY, INSTRUMENTATION, CONSUMER_PROCESS)
         .addAttributesExtractor(
             MessagingAttributesExtractor.create(getter, MessageOperation.PROCESS))
         .addAttributesExtractor(ConsumerAttributesExtractor.INSTANCE)
@@ -81,7 +80,8 @@ public final class PulsarSingletons {
   }
 
   private static Instrumenter<Message<?>, Attributes> createProducerInstrumenter() {
-    MessagingAttributesGetter<Message<?>, Attributes> getter = PulsarMessagingAttributesGetter.INSTANCE;
+    MessagingAttributesGetter<Message<?>, Attributes> getter =
+        PulsarMessagingAttributesGetter.INSTANCE;
 
     return Instrumenter.<Message<?>, Attributes>builder(TELEMETRY, INSTRUMENTATION, PRODUCER_SEND)
         .addAttributesExtractor(ProducerAttributesExtractor.INSTANCE)
