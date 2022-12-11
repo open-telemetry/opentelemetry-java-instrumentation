@@ -156,7 +156,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION" topic
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGE_TYPE" "common"
+            "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
           }
         }
 
@@ -279,7 +279,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION".contains(topic)
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
             "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGE_TYPE" "common"
+            "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
           }
         }
 
