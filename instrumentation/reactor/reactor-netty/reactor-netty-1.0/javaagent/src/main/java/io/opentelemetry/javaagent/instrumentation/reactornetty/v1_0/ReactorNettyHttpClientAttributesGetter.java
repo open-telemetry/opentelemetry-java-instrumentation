@@ -25,6 +25,12 @@ final class ReactorNettyHttpClientAttributesGetter
 
     // use the baseUrl if it was configured
     String baseUrl = request.baseUrl();
+
+    if (uri == null) {
+      // internally reactor netty appends "/" to the baseUrl
+      return baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
+    }
+
     if (baseUrl != null) {
       if (baseUrl.endsWith("/") && uri.startsWith("/")) {
         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
@@ -48,7 +54,7 @@ final class ReactorNettyHttpClientAttributesGetter
   }
 
   private static boolean isAbsolute(String uri) {
-    return uri.startsWith("http://") || uri.startsWith("https://");
+    return uri != null && !uri.isEmpty() && !uri.startsWith("/");
   }
 
   @Nullable
