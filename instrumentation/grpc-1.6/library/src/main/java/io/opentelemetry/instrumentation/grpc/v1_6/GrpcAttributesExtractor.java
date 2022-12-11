@@ -28,7 +28,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, GrpcRequest request) {
-    // Attributes are captured only at request end
+    // Request attributes captured on request end.
   }
 
   @Override
