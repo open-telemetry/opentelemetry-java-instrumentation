@@ -15,8 +15,8 @@ import org.apache.pulsar.client.impl.TopicMessageImpl;
 public class VirtualFieldStore {
   private static final VirtualField<Message<?>, Context> MSG_FIELD =
       VirtualField.find(Message.class, Context.class);
-  private static final VirtualField<Producer<?>, String> PRODUCER_FIELD =
-      VirtualField.find(Producer.class, String.class);
+  private static final VirtualField<Producer<?>, StringTuple2> PRODUCER_FIELD =
+      VirtualField.find(Producer.class, StringTuple2.class);
   private static final VirtualField<Consumer<?>, String> CONSUMER_FIELD =
       VirtualField.find(Consumer.class, String.class);
 
@@ -32,8 +32,8 @@ public class VirtualFieldStore {
     }
   }
 
-  public static void inject(Producer<?> instance, String serviceUrl) {
-    PRODUCER_FIELD.set(instance, serviceUrl);
+  public static void inject(Producer<?> instance, String serviceUrl, String topic) {
+    PRODUCER_FIELD.set(instance, StringTuple2.create(serviceUrl, topic));
   }
 
   public static void inject(Consumer<?> instance, String serviceUrl) {
@@ -52,9 +52,8 @@ public class VirtualFieldStore {
     return ctx == null ? Context.current() : ctx;
   }
 
-  public static String extract(Producer<?> instance) {
-    String brokerUrl = PRODUCER_FIELD.get(instance);
-    return brokerUrl == null ? "unknown" : brokerUrl;
+  public static StringTuple2 extract(Producer<?> instance) {
+    return PRODUCER_FIELD.get(instance);
   }
 
   public static String extract(Consumer<?> instance) {

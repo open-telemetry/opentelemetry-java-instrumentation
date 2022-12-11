@@ -83,7 +83,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           name("parent")
           kind(INTERNAL)
@@ -138,7 +138,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     latch.await(1, TimeUnit.MINUTES)
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           name("parent")
           kind(INTERNAL)
@@ -206,7 +206,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           name("parent")
           kind(INTERNAL)
@@ -261,7 +261,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     latch.await(1, TimeUnit.MINUTES)
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           name("parent")
           kind(INTERNAL)

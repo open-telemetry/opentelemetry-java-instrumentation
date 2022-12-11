@@ -50,10 +50,6 @@ enum ProducerAttributesExtractor implements AttributesExtractor<Message<?>, Attr
 
       attributesBuilder.put(SemanticAttributes.MESSAGE_TYPE, type.name());
     }
-
-    if (message.getTopicName() != null) {
-      attributesBuilder.put(SemanticAttributes.MESSAGING_DESTINATION, message.getTopicName());
-    }
   }
 
   enum MessageType {
