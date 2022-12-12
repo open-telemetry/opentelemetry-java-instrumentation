@@ -8,11 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.spring.webmvc;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.Controller;
 
 public class HandlerSpanNameExtractor implements SpanNameExtractor<Object> {
+
+  @Nullable private static final Class<?> JAVAX_SERVLET = loadOrNull("javax.servlet.Servlet");
+  @Nullable private static final Class<?> JAKARTA_SERVLET = loadOrNull("jakarta.servlet.Servlet");
+
   @Override
   public String extract(Object handler) {
     Class<?> clazz;
@@ -45,8 +50,16 @@ public class HandlerSpanNameExtractor implements SpanNameExtractor<Object> {
   }
 
   private static boolean isServlet(Object handler) {
-    String handlerClassName = handler.getClass().getName();
-    return handlerClassName.equals("javax.servlet.Servlet")
-        || handlerClassName.equals("jakarta.servlet.Servlet");
+    return (JAVAX_SERVLET != null && JAVAX_SERVLET.isInstance(handler))
+        || (JAKARTA_SERVLET != null && JAKARTA_SERVLET.isInstance(handler));
+  }
+
+  @Nullable
+  private static Class<?> loadOrNull(String className) {
+    try {
+      return Class.forName(className);
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
   }
 }
