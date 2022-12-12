@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc;
 
 public final class IsGrailsHandler {
 

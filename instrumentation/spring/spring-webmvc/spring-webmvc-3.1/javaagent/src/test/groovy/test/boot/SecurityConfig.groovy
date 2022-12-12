@@ -5,6 +5,7 @@
 
 package test.boot
 
+import boot.SavingAuthenticationProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order

@@ -20,10 +20,10 @@ muzzle {
 dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
+  implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent"))
+
   compileOnly("org.springframework:spring-webmvc:3.1.0.RELEASE")
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
-//  compileOnly("org.springframework:spring-webmvc:2.5.6")
-//  compileOnly("javax.servlet:servlet-api:2.4")
 
   // Include servlet instrumentation for verifying the tomcat requests
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
@@ -31,10 +31,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-3.1:javaagent"))
 
-  testImplementation("javax.validation:validation-api:1.1.0.Final")
-  testImplementation("org.hibernate:hibernate-validator:5.4.2.Final")
-
-  testImplementation("org.spockframework:spock-spring")
+  testImplementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")
@@ -43,12 +40,6 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+")
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+")
-
-  testImplementation("org.springframework.security.oauth:spring-security-oauth2:2.0.16.RELEASE")
-
-  // For spring security
-  testImplementation("jakarta.xml.bind:jakarta.xml.bind-api:2.3.2")
-  testImplementation("org.glassfish.jaxb:jaxb-runtime:2.3.2")
 }
 
 tasks.withType<Test>().configureEach {
