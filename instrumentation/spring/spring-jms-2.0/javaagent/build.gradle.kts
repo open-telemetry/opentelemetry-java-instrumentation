@@ -31,14 +31,15 @@ tasks {
 }
 
 dependencies {
-  implementation(project(":instrumentation:jms-1.1:javaagent"))
+  implementation(project(":instrumentation:jms:jms-common:javaagent"))
+  implementation(project(":instrumentation:jms:jms-1.1:javaagent"))
   library("org.springframework:spring-jms:2.0")
   compileOnly("javax.jms:jms-api:1.1-rev-1")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testInstrumentation(project(":instrumentation:jms-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
 
   testImplementation("org.springframework.boot:spring-boot-starter-activemq:2.5.3")
   testImplementation("org.springframework.boot:spring-boot-starter-test:2.5.3") {
