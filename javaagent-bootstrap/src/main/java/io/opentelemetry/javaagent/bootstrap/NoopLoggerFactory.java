@@ -18,7 +18,7 @@ final class NoopLoggerFactory implements InternalLogger.Factory {
     return new NoopLogger(name);
   }
 
-  private static final class NoopLogger extends InternalLogger {
+  private static final class NoopLogger implements InternalLogger {
 
     private final String name;
 

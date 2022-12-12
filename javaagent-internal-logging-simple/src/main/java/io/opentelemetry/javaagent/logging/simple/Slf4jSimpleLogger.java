@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class Slf4jSimpleLogger extends InternalLogger {
+final class Slf4jSimpleLogger implements InternalLogger {
 
   static Slf4jSimpleLogger create(String name) {
     return new Slf4jSimpleLogger(name);

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.logging.application;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import javax.annotation.Nullable;
 
-final class ApplicationLogger extends InternalLogger {
+final class ApplicationLogger implements InternalLogger {
 
   private final InMemoryLogStore inMemoryLogStore;
   private final String name;

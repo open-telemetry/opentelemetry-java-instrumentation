@@ -27,7 +27,7 @@ public final class Slf4jApplicationLoggerBridge implements InternalLogger.Factor
     return new Slf4jApplicationLogger(name);
   }
 
-  static final class Slf4jApplicationLogger extends InternalLogger {
+  static final class Slf4jApplicationLogger implements InternalLogger {
 
     private final Logger slf4jLogger;
 
