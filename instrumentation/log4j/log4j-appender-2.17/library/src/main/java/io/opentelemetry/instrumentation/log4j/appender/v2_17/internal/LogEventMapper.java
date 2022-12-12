@@ -146,9 +146,7 @@ public final class LogEventMapper<T> {
                 if (value != null
                     && (!checkSpecialMapMessageAttribute
                         || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
-                  attributes.put(
-                      mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey),
-                      value.toString());
+                  attributes.put(getMapMessageAttributeKey(key), value.toString());
                 }
               });
     }
@@ -179,6 +177,11 @@ public final class LogEventMapper<T> {
   public static AttributeKey<String> getContextDataAttributeKey(String key) {
     return contextDataAttributeKeyCache.computeIfAbsent(
         key, k -> AttributeKey.stringKey("log4j.context_data." + k));
+  }
+
+  public static AttributeKey<String> getMapMessageAttributeKey(String key) {
+    return mapMessageAttributeKeyCache.computeIfAbsent(
+        key, k -> AttributeKey.stringKey("log4j.map_message." + k));
   }
 
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {

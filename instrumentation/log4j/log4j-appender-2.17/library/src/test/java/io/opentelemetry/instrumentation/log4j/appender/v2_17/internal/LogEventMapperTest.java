@@ -6,15 +6,14 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
@@ -61,7 +60,7 @@ class LogEventMapperTest {
 
     // then
     assertThat(attributes.build())
-        .containsOnly(entry(AttributeKey.stringKey("log4j.context_data.key2"), "value2"));
+        .containsOnly(attributeEntry("log4j.context_data.key2", "value2"));
   }
 
   @Test
@@ -81,8 +80,8 @@ class LogEventMapperTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(AttributeKey.stringKey("log4j.context_data.key1"), "value1"),
-            entry(AttributeKey.stringKey("log4j.context_data.key2"), "value2"));
+            attributeEntry("log4j.context_data.key1", "value1"),
+            attributeEntry("log4j.context_data.key2", "value2"));
   }
 
   @Test
@@ -126,7 +125,8 @@ class LogEventMapperTest {
 
     // then
     verify(logRecordBuilder).setBody("value2");
-    assertThat(attributes.build()).containsOnly(entry(AttributeKey.stringKey("key1"), "value1"));
+    assertThat(attributes.build()).containsOnly(
+        attributeEntry("log4j.map_message.key1", "value1"));
   }
 
   @Test
@@ -150,8 +150,8 @@ class LogEventMapperTest {
     verify(logRecordBuilder, never()).setBody(anyString());
     assertThat(attributes.build())
         .containsOnly(
-            entry(AttributeKey.stringKey("key1"), "value1"),
-            entry(AttributeKey.stringKey("key2"), "value2"));
+            attributeEntry("log4j.map_message.key1", "value1"),
+            attributeEntry("log4j.map_message.key2", "value2"));
   }
 
   @Test
@@ -175,8 +175,8 @@ class LogEventMapperTest {
     verify(logRecordBuilder).setBody("a message");
     assertThat(attributes.build())
         .containsOnly(
-            entry(AttributeKey.stringKey("key1"), "value1"),
-            entry(AttributeKey.stringKey("message"), "value2"));
+            attributeEntry("log4j.map_message.key1", "value1"),
+            attributeEntry("log4j.map_message.message", "value2"));
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {

@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.LogAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.GlobalLoggerProvider;
 import io.opentelemetry.api.logs.Severity;
@@ -72,11 +74,11 @@ class OpenTelemetryAppenderConfigTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
-    assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes()).isEqualTo(Attributes.empty());
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("log message 1")
+        .hasAttributes(Attributes.empty());
   }
 
   @Test
@@ -111,22 +113,22 @@ class OpenTelemetryAppenderConfigTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
-    assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getEpochNanos())
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("log message 1")
+        .hasSeverity(Severity.INFO)
+        .hasSeverityText("INFO")
+        .hasAttributesSatisfyingExactly(
+            equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
+            equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "Error!"),
+            satisfies(SemanticAttributes.EXCEPTION_STACKTRACE,
+                v -> v.contains("logWithExtras"))
+        );
+
+    assertThat(logDataList.get(0).getEpochNanos())
         .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
         .isLessThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
-    assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
-    assertThat(logData.getSeverityText()).isEqualTo("INFO");
-    assertThat(logData.getAttributes().size()).isEqualTo(3);
-    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE))
-        .isEqualTo(IllegalStateException.class.getName());
-    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE))
-        .isEqualTo("Error!");
-    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE))
-        .contains("logWithExtras");
   }
 
   @Test
@@ -141,15 +143,14 @@ class OpenTelemetryAppenderConfigTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
-    assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes().size()).isEqualTo(2);
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key1")))
-        .isEqualTo("val1");
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.context_data.key2")))
-        .isEqualTo("val2");
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("log message 1")
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("log4j.context_data.key1"), "val1"),
+            equalTo(stringKey("log4j.context_data.key2"), "val2")
+        );
   }
 
   @Test
@@ -161,13 +162,13 @@ class OpenTelemetryAppenderConfigTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
-    assertThat(logData.getBody().asString()).isEmpty();
-    assertThat(logData.getAttributes().size()).isEqualTo(2);
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2");
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(stringKey("log4j.map_message.key2"), "val2")
+        );
   }
 
   @Test
@@ -179,12 +180,13 @@ class OpenTelemetryAppenderConfigTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
-    assertThat(logData.getBody().asString()).isEqualTo("val2");
-    assertThat(logData.getAttributes().size()).isEqualTo(1);
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("val2")
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("log4j.map_message.key1"), "val1")
+        );
   }
 
   @Test
@@ -196,7 +198,7 @@ class OpenTelemetryAppenderConfigTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("log4j.marker")))
+    assertThat(logData.getAttributes().get(stringKey("log4j.marker")))
         .isEqualTo(markerName);
   }
 
@@ -209,12 +211,13 @@ class OpenTelemetryAppenderConfigTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
-    assertThat(logData.getBody().asString()).isEqualTo("a message");
-    assertThat(logData.getAttributes().size()).isEqualTo(2);
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2");
+    assertThat(logDataList.get(0))
+        .hasResource(resource)
+        .hasInstrumentationScope(instrumentationScopeInfo)
+        .hasBody("a message")
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(stringKey("log4j.map_message.key2"), "val2")
+        );
   }
 }
