@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+### 📈 Enhancements
+
+- Remove deprecated HTTP semconv code
+  ([#7259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7259))
+- Rocketmq 5: set context for async callback
+  ([#7238](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7238))
+- HTTP semconv: filter out default peer/host ports
+  ([#7258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7258))
+- Allow multiple YAML configuration files for JMX rules
+  ([#7284](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7284))
+- OpenTelemetryDriver better support for native images
+  ([#7089](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7089))
+- Support Spring Kafka 3
+  ([#7271](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7271))
+- Add instrumentation for opentelemetry-extension-kotlin
+  ([#7341](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7341))
+- Populate `messaging.kafka.message.offset` in all kafka instrumentations
+  ([#7374](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7374))
+- More flexible cgroupv2 container id parsing (and podman support)
+  ([#7361](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7361))
+- Instrument spring-web 6 & spring-webmvc 6
+  ([#7366](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7366))
+
+### 🛠️ Bug fixes
+
+- Webflux instrumentation doesn't capture `http.status_code` in some cases
+  ([#7251](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7251))
+- Clean WeakConcurrentMap from background thread
+  ([#6240](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/6240))
+- Update gwt rpc span from INTERNAL to SERVER
+  ([#7342](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7342))
+- JMXMetricInsight should log nothing at INFO level
+  ([#7367](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7367))
+- Fix NullPointerException when uri is null
+  ([#7387](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7387))
+- Agent context storage wrapper should not override other wrappers
+  ([#7355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7355))
+
 ## Version 1.20.2 (2022-11-22)
 
 ### 🛠️ Bug fixes
