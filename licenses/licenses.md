@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2022-12-09 13:28:49 PST_
+_2022-12-12 10:32:28 PST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -194,31 +194,45 @@ _2022-12-09 13:28:49 PST_
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**43** **Group:** `org.yaml` **Name:** `snakeyaml` **Version:** `1.33`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
-> - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml](https://bitbucket.org/snakeyaml/snakeyaml)
-> - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-
-## MIT License
-
-**44** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.5`
-> - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
-> - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-
-**45** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.5`
-> - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
-> - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-
-## The 3-Clause BSD License
-
-**46** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.4`
+**43** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.4`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**47** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.4`
+**44** **Group:** `org.yaml` **Name:** `snakeyaml` **Version:** `1.33`
+> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml](https://bitbucket.org/snakeyaml/snakeyaml)
+> - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+## MIT License
+
+**45** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.5`
+> - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
+> - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
+
+**46** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.5`
+> - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
+> - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
+
+## The 3-Clause BSD License
+
+**47** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.4`
+> - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
+> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
+> - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
+> - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
+
+**48** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.4`
+> - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
+> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
+> - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
+> - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
+
+**49** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.4`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -227,4 +241,4 @@ _2022-12-09 13:28:49 PST_
 
 ## Unknown
 
-**48** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.0.0`
+**50** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.0.0`
