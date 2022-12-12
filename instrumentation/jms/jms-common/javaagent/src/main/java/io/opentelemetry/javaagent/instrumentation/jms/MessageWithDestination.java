@@ -45,13 +45,8 @@ public abstract class MessageWithDestination {
 
   private static MessageWithDestination createMessageWithQueue(
       MessageAdapter message, DestinationAdapter queue) {
-    String queueName;
-    try {
-      queueName = queue.getQueueName();
-    } catch (Exception e) {
-      queueName = "unknown";
-    }
 
+    String queueName = getDestinationName(queue, DestinationAdapter::getQueueName);
     boolean temporary = queue.isTemporaryQueue() || queueName.startsWith(TIBCO_TMP_PREFIX);
 
     return new AutoValue_MessageWithDestination(message, queueName, "queue", temporary);
@@ -59,15 +54,24 @@ public abstract class MessageWithDestination {
 
   private static MessageWithDestination createMessageWithTopic(
       MessageAdapter message, DestinationAdapter topic) {
-    String topicName;
-    try {
-      topicName = topic.getTopicName();
-    } catch (Exception e) {
-      topicName = "unknown";
-    }
 
+    String topicName = getDestinationName(topic, DestinationAdapter::getTopicName);
     boolean temporary = topic.isTemporaryTopic() || topicName.startsWith(TIBCO_TMP_PREFIX);
 
     return new AutoValue_MessageWithDestination(message, topicName, "topic", temporary);
+  }
+
+  private static String getDestinationName(DestinationAdapter destination, NameGetter nameGetter) {
+    try {
+      return nameGetter.getName(destination);
+    } catch (Exception e) {
+      return "unknown";
+    }
+  }
+
+  @FunctionalInterface
+  private interface NameGetter {
+
+    String getName(DestinationAdapter destination) throws Exception;
   }
 }

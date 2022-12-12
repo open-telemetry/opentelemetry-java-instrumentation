@@ -15,8 +15,8 @@ public final class JmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";
 
   private static final Instrumenter<MessageWithDestination, Void> PRODUCER_INSTRUMENTER;
-  private static final Instrumenter<MessageWithDestination, Void> CONSUMER_INSTRUMENTER;
-  private static final Instrumenter<MessageWithDestination, Void> LISTENER_INSTRUMENTER;
+  private static final Instrumenter<MessageWithDestination, Void> CONSUMER_RECEIVE_INSTRUMENTER;
+  private static final Instrumenter<MessageWithDestination, Void> CONSUMER_PROCESS_INSTRUMENTER;
 
   static {
     JmsInstrumenterFactory factory =
@@ -25,21 +25,21 @@ public final class JmsSingletons {
             .setMessagingReceiveInstrumentationEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
 
-    PRODUCER_INSTRUMENTER = factory.buildProducerInstrumenter();
-    CONSUMER_INSTRUMENTER = factory.buildConsumerInstrumenter();
-    LISTENER_INSTRUMENTER = factory.buildListenerInstrumenter();
+    PRODUCER_INSTRUMENTER = factory.createProducerInstrumenter();
+    CONSUMER_RECEIVE_INSTRUMENTER = factory.createConsumerReceiveInstrumenter();
+    CONSUMER_PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter();
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {
     return PRODUCER_INSTRUMENTER;
   }
 
-  public static Instrumenter<MessageWithDestination, Void> consumerInstrumenter() {
-    return CONSUMER_INSTRUMENTER;
+  public static Instrumenter<MessageWithDestination, Void> consumerReceiveInstrumenter() {
+    return CONSUMER_RECEIVE_INSTRUMENTER;
   }
 
-  public static Instrumenter<MessageWithDestination, Void> listenerInstrumenter() {
-    return LISTENER_INSTRUMENTER;
+  public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter() {
+    return CONSUMER_PROCESS_INSTRUMENTER;
   }
 
   private JmsSingletons() {}

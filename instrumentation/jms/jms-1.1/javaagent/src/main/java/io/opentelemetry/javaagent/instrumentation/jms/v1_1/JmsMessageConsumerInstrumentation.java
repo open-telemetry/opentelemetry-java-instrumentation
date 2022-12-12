@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -75,9 +75,9 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       MessageWithDestination request =
           MessageWithDestination.create(JavaxMessageAdapter.create(message), null);
 
-      if (consumerInstrumenter().shouldStart(parentContext, request)) {
+      if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
         InstrumenterUtil.startAndEnd(
-            consumerInstrumenter(),
+            consumerReceiveInstrumenter(),
             parentContext,
             request,
             null,

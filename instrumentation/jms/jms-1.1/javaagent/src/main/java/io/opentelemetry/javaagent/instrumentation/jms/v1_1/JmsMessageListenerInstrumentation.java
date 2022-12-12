@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.listenerInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -55,11 +55,11 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       request = MessageWithDestination.create(JavaxMessageAdapter.create(message), null);
 
-      if (!listenerInstrumenter().shouldStart(parentContext, request)) {
+      if (!consumerProcessInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = listenerInstrumenter().start(parentContext, request);
+      context = consumerProcessInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -73,7 +73,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      listenerInstrumenter().end(context, request, null, throwable);
+      consumerProcessInstrumenter().end(context, request, null, throwable);
     }
   }
 }

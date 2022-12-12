@@ -88,7 +88,7 @@ class MessageWithDestinationTest {
     // given
     when(message.getJmsDestination()).thenReturn(destination);
     when(destination.isTopic()).thenReturn(true);
-    when(destination.isTemporaryQueue()).thenReturn(useTemporaryDestination);
+    when(destination.isTemporaryTopic()).thenReturn(useTemporaryDestination);
 
     if (topicName == null) {
       when(destination.getTopicName()).thenThrow(RuntimeException.class);
