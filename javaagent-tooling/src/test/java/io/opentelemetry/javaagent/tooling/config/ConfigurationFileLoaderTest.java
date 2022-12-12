@@ -46,7 +46,7 @@ class ConfigurationFileLoaderTest {
 
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk();
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
 
     // then
     assertThat(autoConfiguredSdk.getConfig().getString("custom.key")).isEqualTo("42");

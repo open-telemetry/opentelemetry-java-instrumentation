@@ -62,18 +62,9 @@ public class AgentStarterImpl implements AgentStarter {
   @Override
   public void start() {
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), javaagentFile);
-    ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
-    try {
-      Thread.currentThread().setContextClassLoader(extensionClassLoader);
-      internalStart();
-    } finally {
-      Thread.currentThread().setContextClassLoader(savedContextClassLoader);
-    }
-  }
 
-  private void internalStart() {
     Iterator<LoggingCustomizer> loggingCustomizers =
-        ServiceLoader.load(LoggingCustomizer.class).iterator();
+        ServiceLoader.load(LoggingCustomizer.class, extensionClassLoader).iterator();
     LoggingCustomizer loggingCustomizer;
     if (loggingCustomizers.hasNext()) {
       loggingCustomizer = loggingCustomizers.next();
@@ -84,7 +75,7 @@ public class AgentStarterImpl implements AgentStarter {
     Throwable startupError = null;
     try {
       loggingCustomizer.init();
-      AgentInstaller.installBytebuddyAgent(instrumentation);
+      AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader);
       WeakConcurrentMapCleaner.start();
     } catch (Throwable t) {
       // this is logged below and not rethrown to avoid logging it twice
