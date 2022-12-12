@@ -61,9 +61,7 @@ class MessageWithDestinationTest {
     // given
     when(message.getJmsDestination()).thenReturn(destination);
     when(destination.isQueue()).thenReturn(true);
-    if (useTemporaryDestination) {
-      when(destination.isTemporaryQueue()).thenReturn(true);
-    }
+    when(destination.isTemporaryQueue()).thenReturn(useTemporaryDestination);
 
     if (queueName == null) {
       when(destination.getQueueName()).thenThrow(RuntimeException.class);
@@ -90,9 +88,7 @@ class MessageWithDestinationTest {
     // given
     when(message.getJmsDestination()).thenReturn(destination);
     when(destination.isTopic()).thenReturn(true);
-    if (useTemporaryDestination) {
-      when(destination.isTemporaryTopic()).thenReturn(true);
-    }
+    when(destination.isTemporaryQueue()).thenReturn(useTemporaryDestination);
 
     if (topicName == null) {
       when(destination.getTopicName()).thenThrow(RuntimeException.class);
