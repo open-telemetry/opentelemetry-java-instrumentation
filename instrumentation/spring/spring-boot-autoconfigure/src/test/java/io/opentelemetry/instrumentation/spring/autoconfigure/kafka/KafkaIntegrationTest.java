@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.kafka;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
@@ -106,7 +107,13 @@ class KafkaIntegrationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testTopic"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                            satisfies(
+                                SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                longKey("messaging.kafka.message.offset"),
+                                AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("testTopic process")
                         .hasKind(SpanKind.CONSUMER)
@@ -121,6 +128,9 @@ class KafkaIntegrationTest {
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                                AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                longKey("messaging.kafka.message.offset"),
                                 AbstractLongAssert::isNotNegative)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }

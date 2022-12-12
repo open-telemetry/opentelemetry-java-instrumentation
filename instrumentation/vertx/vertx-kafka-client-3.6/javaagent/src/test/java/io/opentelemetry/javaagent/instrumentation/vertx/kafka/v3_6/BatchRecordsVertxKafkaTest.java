@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -69,7 +70,13 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)),
               span ->
                   span.hasName("testBatchTopic send")
                       .hasKind(SpanKind.PRODUCER)
@@ -77,7 +84,13 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)));
 
           producer1.set(trace.getSpan(1));
           producer2.set(trace.getSpan(2));
@@ -126,7 +139,9 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_PARTITION,
                                 AbstractLongAssert::isNotNegative),
-                            satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                AttributeKey.longKey("messaging.kafka.message.offset"),
+                                AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative)),
@@ -149,7 +164,9 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_PARTITION,
                                 AbstractLongAssert::isNotNegative),
-                            satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                AttributeKey.longKey("messaging.kafka.message.offset"),
+                                AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative)),
@@ -180,7 +197,13 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")));
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)));
 
           producer.set(trace.getSpan(1));
         },
@@ -227,7 +250,9 @@ class BatchRecordsVertxKafkaTest extends AbstractVertxKafkaTest {
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_PARTITION,
                                 AbstractLongAssert::isNotNegative),
-                            satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
+                            satisfies(
+                                AttributeKey.longKey("messaging.kafka.message.offset"),
+                                AbstractLongAssert::isNotNegative),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative)),

@@ -123,7 +123,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
         serverSpan(it, 0, getContextPath() + "/greeting/greet")
         span(1) {
           name "test.gwt.shared.MessageService/sendMessage"
-          kind SpanKind.INTERNAL
+          kind SpanKind.SERVER
           childOf(span(0))
           attributes {
             "$SemanticAttributes.RPC_SYSTEM" "gwt"
@@ -147,7 +147,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
         serverSpan(it, 0, getContextPath() + "/greeting/greet")
         span(1) {
           name "test.gwt.shared.MessageService/sendMessage"
-          kind SpanKind.INTERNAL
+          kind SpanKind.SERVER
           childOf(span(0))
           errorEvent(IOException)
           attributes {

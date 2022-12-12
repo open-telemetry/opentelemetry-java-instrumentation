@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -70,7 +71,13 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)),
               span ->
                   span.hasName("testBatchTopic process")
                       .hasKind(SpanKind.CONSUMER)
@@ -85,6 +92,9 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
                               AbstractLongAssert::isNotNegative)),
               span -> span.hasName("process testSpan1").hasParent(trace.getSpan(2)),
 
@@ -96,7 +106,13 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)),
               span ->
                   span.hasName("testBatchTopic process")
                       .hasKind(SpanKind.CONSUMER)
@@ -111,6 +127,9 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
                               AbstractLongAssert::isNotNegative)),
               span -> span.hasName("process testSpan2").hasParent(trace.getSpan(5)));
 
@@ -159,7 +178,13 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                       .hasAttributesSatisfyingExactly(
                           equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                           equalTo(SemanticAttributes.MESSAGING_DESTINATION, "testBatchTopic"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")),
+                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic"),
+                          satisfies(
+                              SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
+                              AbstractLongAssert::isNotNegative)),
               span ->
                   span.hasName("testBatchTopic process")
                       .hasKind(SpanKind.CONSUMER)
@@ -174,6 +199,9 @@ class NoReceiveTelemetryBatchRecordsVertxKafkaTest extends AbstractVertxKafkaTes
                               AbstractLongAssert::isNotNegative),
                           satisfies(
                               SemanticAttributes.MESSAGING_KAFKA_PARTITION,
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(
+                              AttributeKey.longKey("messaging.kafka.message.offset"),
                               AbstractLongAssert::isNotNegative)),
               span -> span.hasName("process error").hasParent(trace.getSpan(2)));
 

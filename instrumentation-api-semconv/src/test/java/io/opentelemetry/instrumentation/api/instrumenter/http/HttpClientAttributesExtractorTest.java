@@ -203,6 +203,44 @@ class HttpClientAttributesExtractorTest {
     assertThat(attributes.build()).isEmpty();
   }
 
+  @Test
+  void extractNetPeerNameAndPortFromHostHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "thehost:777");
+
+    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_PEER_NAME, "thehost"),
+            entry(SemanticAttributes.NET_PEER_PORT, 777L));
+  }
+
+  @Test
+  void extractNetHostAndPortFromNetAttributesGetter() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "notthehost:77777"); // this should have lower precedence
+    request.put("peerName", "thehost");
+    request.put("peerPort", "777");
+
+    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(
+            new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_PEER_NAME, "thehost"),
+            entry(SemanticAttributes.NET_PEER_PORT, 777L));
+  }
+
   @ParameterizedTest
   @ArgumentsSource(DefaultPeerPortArgumentSource.class)
   void defaultPeerPort(int peerPort, String url) {

@@ -56,7 +56,7 @@ final class ReactorNettyNetClientAttributesGetter
     String baseUrl = request.baseUrl();
     String uri = request.uri();
 
-    if (baseUrl != null && uri.startsWith("/")) {
+    if (baseUrl != null && !isAbsolute(uri)) {
       return UrlParser.getHost(baseUrl);
     } else {
       return UrlParser.getHost(uri);
@@ -68,10 +68,14 @@ final class ReactorNettyNetClientAttributesGetter
     String baseUrl = request.baseUrl();
     String uri = request.uri();
 
-    if (baseUrl != null && uri.startsWith("/")) {
+    if (baseUrl != null && !isAbsolute(uri)) {
       return UrlParser.getPort(baseUrl);
     } else {
       return UrlParser.getPort(uri);
     }
+  }
+
+  private static boolean isAbsolute(String uri) {
+    return uri != null && !uri.isEmpty() && !uri.startsWith("/");
   }
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.internal.FallbackNamePortGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -29,12 +30,13 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
 
   private NetServerAttributesExtractor(NetServerAttributesGetter<REQUEST> getter) {
     internalExtractor =
-        new InternalNetServerAttributesExtractor<>(getter, (integer, request) -> true);
+        new InternalNetServerAttributesExtractor<>(
+            getter, (integer, request) -> true, FallbackNamePortGetter.noop());
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalExtractor.onStart(attributes, request, null);
+    internalExtractor.onStart(attributes, request);
   }
 
   @Override

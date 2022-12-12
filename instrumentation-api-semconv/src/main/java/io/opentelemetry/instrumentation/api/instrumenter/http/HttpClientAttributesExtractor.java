@@ -82,7 +82,9 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     super(httpAttributesGetter, capturedRequestHeaders, capturedResponseHeaders);
     internalNetExtractor =
         new InternalNetClientAttributesExtractor<>(
-            netAttributesGetter, this::shouldCapturePeerPort);
+            netAttributesGetter,
+            this::shouldCapturePeerPort,
+            new HttpNetNamePortGetter<>(httpAttributesGetter));
   }
 
   @Override

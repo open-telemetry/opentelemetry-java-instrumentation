@@ -17,13 +17,14 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaTelemetryBuilder {
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-2.6";
 
   private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<ProducerRecord<?, ?>, Void>> producerAttributesExtractors =
-      new ArrayList<>();
+  private final List<AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata>>
+      producerAttributesExtractors = new ArrayList<>();
   private final List<AttributesExtractor<ConsumerRecord<?, ?>, Void>> consumerAttributesExtractors =
       new ArrayList<>();
   private List<String> capturedHeaders = emptyList();
@@ -36,7 +37,7 @@ public final class KafkaTelemetryBuilder {
 
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addProducerAttributesExtractors(
-      AttributesExtractor<ProducerRecord<?, ?>, Void> extractor) {
+      AttributesExtractor<ProducerRecord<?, ?>, RecordMetadata> extractor) {
     producerAttributesExtractors.add(extractor);
     return this;
   }
