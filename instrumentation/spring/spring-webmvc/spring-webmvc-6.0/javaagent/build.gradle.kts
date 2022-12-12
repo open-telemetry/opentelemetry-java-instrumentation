@@ -7,6 +7,11 @@ muzzle {
     group.set("org.springframework")
     module.set("spring-webmvc")
     versions.set("[6.0.0,)")
+    // these versions depend on org.springframework:spring-web which has a bad dependency on
+    // javax.faces:jsf-api:1.1 which was released as pom only
+    skip("1.2.1", "1.2.2", "1.2.3", "1.2.4")
+    // 3.2.1.RELEASE has transitive dependencies like spring-web as "provided" instead of "compile"
+    skip("3.2.1.RELEASE")
     extraDependency("jakarta.servlet:jakarta.servlet-api:5.0.0")
     assertInverse.set(true)
   }
