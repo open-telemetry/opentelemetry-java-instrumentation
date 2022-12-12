@@ -3,7 +3,7 @@
 | System property | Type    | Default | Description                                          |
 |---|---------|--|------------------------------------------------------|
 | `otel.instrumentation.logback-appender.experimental-log-attributes` | Boolean | `false` | Enable the capture of experimental span attributes `thread.name` and `thread.id`. |
-| `otel.instrumentation.logback-appender.experimental.capture-code-attributes` | Boolean | `false` | Enable the capture of [source code attributes]. (note: capturing source code attributes at logging sites can add a performance overhead) |
+| `otel.instrumentation.logback-appender.experimental.capture-code-attributes` | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead. |
 | `otel.instrumentation.logback-appender.experimental.capture-marker-attribute` | Boolean | `false` | Enable the capture of Logback markers as attributes. |
 | `otel.instrumentation.logback-appender.experimental.capture-mdc-attributes` | String  |  | List of MDC attributes to capture (`*` is a special value to capture them all). |
 
