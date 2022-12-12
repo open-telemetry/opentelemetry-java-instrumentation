@@ -122,9 +122,7 @@ class OpenTelemetryAppenderConfigTest {
         .hasAttributesSatisfyingExactly(
             equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
             equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "Error!"),
-            satisfies(SemanticAttributes.EXCEPTION_STACKTRACE,
-                v -> v.contains("logWithExtras"))
-        );
+            satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
 
     assertThat(logDataList.get(0).getEpochNanos())
         .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
@@ -149,8 +147,7 @@ class OpenTelemetryAppenderConfigTest {
         .hasBody("log message 1")
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("log4j.context_data.key1"), "val1"),
-            equalTo(stringKey("log4j.context_data.key2"), "val2")
-        );
+            equalTo(stringKey("log4j.context_data.key2"), "val2"));
   }
 
   @Test
@@ -167,8 +164,7 @@ class OpenTelemetryAppenderConfigTest {
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("log4j.map_message.key1"), "val1"),
-            equalTo(stringKey("log4j.map_message.key2"), "val2")
-        );
+            equalTo(stringKey("log4j.map_message.key2"), "val2"));
   }
 
   @Test
@@ -184,9 +180,7 @@ class OpenTelemetryAppenderConfigTest {
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasBody("val2")
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("log4j.map_message.key1"), "val1")
-        );
+        .hasAttributesSatisfyingExactly(equalTo(stringKey("log4j.map_message.key1"), "val1"));
   }
 
   @Test
@@ -198,8 +192,7 @@ class OpenTelemetryAppenderConfigTest {
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
     LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getAttributes().get(stringKey("log4j.marker")))
-        .isEqualTo(markerName);
+    assertThat(logData.getAttributes().get(stringKey("log4j.marker"))).isEqualTo(markerName);
   }
 
   @Test
@@ -217,7 +210,6 @@ class OpenTelemetryAppenderConfigTest {
         .hasBody("a message")
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("log4j.map_message.key1"), "val1"),
-            equalTo(stringKey("log4j.map_message.key2"), "val2")
-        );
+            equalTo(stringKey("log4j.map_message.key2"), "val2"));
   }
 }

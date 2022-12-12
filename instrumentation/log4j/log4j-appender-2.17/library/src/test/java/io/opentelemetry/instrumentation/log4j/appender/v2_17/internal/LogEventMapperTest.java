@@ -125,8 +125,7 @@ class LogEventMapperTest {
 
     // then
     verify(logRecordBuilder).setBody("value2");
-    assertThat(attributes.build()).containsOnly(
-        attributeEntry("log4j.map_message.key1", "value1"));
+    assertThat(attributes.build()).containsOnly(attributeEntry("log4j.map_message.key1", "value1"));
   }
 
   @Test
