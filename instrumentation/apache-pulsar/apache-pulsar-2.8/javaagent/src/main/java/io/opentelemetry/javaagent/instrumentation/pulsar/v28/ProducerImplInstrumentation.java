@@ -57,7 +57,8 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     public static void intercept(
-        @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClient client,
+        @Advice.This ProducerImpl<?> producer,
+        @Advice.Argument(value = 0) PulsarClient client,
         @Advice.Argument(value = 1) String topic) {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String brokerUrl = pulsarClient.getLookup().getServiceUrl();
@@ -112,8 +113,12 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
       Instrumenter<Message<?>, Attributes> instrumenter = PulsarSingletons.producerInstrumenter();
       StringTuple2 tuple2 = VirtualFieldStore.extract(producer);
-      Attributes attributes = Attributes.of(SemanticAttributes.MESSAGING_URL, tuple2.f1,
-          SemanticAttributes.MESSAGING_DESTINATION, tuple2.f2);
+      Attributes attributes =
+          Attributes.of(
+              SemanticAttributes.MESSAGING_URL,
+              tuple2.f1,
+              SemanticAttributes.MESSAGING_DESTINATION,
+              tuple2.f2);
 
       try (Scope ignore = context.makeCurrent()) {
         this.delegator.sendComplete(e);
