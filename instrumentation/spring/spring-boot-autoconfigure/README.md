@@ -365,7 +365,7 @@ The traces below were exported using Zipkin.
 
 #### Spring Support
 
-Auto-configuration is natively supported by Springboot applications. To enable these features in "vanilla" use `@EnableOpenTelemetryTracing` to complete a component scan of this package.
+Auto-configuration is natively supported by Springboot applications. To enable these features in "vanilla" use `@EnableOpenTelemetry` to complete a component scan of this package.
 
 ##### Usage
 

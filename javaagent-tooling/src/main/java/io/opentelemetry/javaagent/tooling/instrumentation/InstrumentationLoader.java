@@ -13,6 +13,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.AgentExtension;
+import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -27,7 +28,8 @@ public class InstrumentationLoader implements AgentExtension {
   @Override
   public AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config) {
     int numberOfLoadedModules = 0;
-    for (InstrumentationModule instrumentationModule : loadOrdered(InstrumentationModule.class)) {
+    for (InstrumentationModule instrumentationModule :
+        loadOrdered(InstrumentationModule.class, Utils.getExtensionsClassLoader())) {
       if (logger.isLoggable(FINE)) {
         logger.log(
             FINE,

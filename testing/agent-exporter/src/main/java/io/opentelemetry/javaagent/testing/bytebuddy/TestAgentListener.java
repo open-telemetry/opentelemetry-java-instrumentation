@@ -10,6 +10,7 @@ import static java.util.logging.Level.SEVERE;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
+import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.GlobalIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
@@ -51,7 +52,8 @@ public class TestAgentListener implements AgentBuilder.Listener {
   private static Trie<IgnoreAllow> buildOtherConfiguredIgnores() {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
-        SafeServiceLoader.loadOrdered(IgnoredTypesConfigurer.class)) {
+        SafeServiceLoader.loadOrdered(
+            IgnoredTypesConfigurer.class, Utils.getExtensionsClassLoader())) {
       // skip built-in agent ignores
       if (configurer instanceof AdditionalLibraryIgnoredTypesConfigurer
           || configurer instanceof GlobalIgnoredTypesConfigurer) {
