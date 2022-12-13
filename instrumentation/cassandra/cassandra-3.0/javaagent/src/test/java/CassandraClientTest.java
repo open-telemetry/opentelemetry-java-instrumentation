@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_TABLE;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_NAME;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_OPERATION;
@@ -90,55 +90,30 @@ public class CassandraClientTest {
                       span.hasName("DB Query")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes)
-                                      .containsEntry(NET_SOCK_PEER_ADDR, "127.0.0.1")
-                                      .containsEntry(NET_SOCK_PEER_NAME, "localhost")
-                                      .containsEntry(NET_SOCK_PEER_PORT, cassandraPort)
-                                      .containsEntry(DB_SYSTEM, "cassandra")
-                                      .containsEntry(DB_STATEMENT, "USE " + parameter.keyspace))
-                          .hasAttributesSatisfying(
-                              attributes -> {
-                                assertThat(attributes.get(DB_OPERATION))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.operation));
-                                assertThat(attributes.get(DB_CASSANDRA_TABLE))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.table));
-                                assertThat(attributes.get(DB_NAME))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.keyspace));
-                              })),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                              equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                              equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(DB_NAME, null),
+                              equalTo(DB_STATEMENT, "USE " + parameter.keyspace),
+                              equalTo(DB_OPERATION, null),
+                              equalTo(DB_CASSANDRA_TABLE, null))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
                       span.hasName(parameter.spanName)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes)
-                                      .containsEntry(NET_SOCK_PEER_ADDR, "127.0.0.1")
-                                      .containsEntry(NET_SOCK_PEER_NAME, "localhost")
-                                      .containsEntry(NET_SOCK_PEER_PORT, cassandraPort)
-                                      .containsEntry(DB_SYSTEM, "cassandra")
-                                      .containsEntry(DB_NAME, parameter.keyspace)
-                                      .containsEntry(DB_STATEMENT, parameter.expectedStatement))
-                          .hasAttributesSatisfying(
-                              attributes -> {
-                                assertThat(attributes.get(DB_OPERATION))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.operation));
-                                assertThat(attributes.get(DB_CASSANDRA_TABLE))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.table));
-                              })));
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                              equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                              equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(DB_NAME, parameter.keyspace),
+                              equalTo(DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(DB_OPERATION, parameter.operation),
+                              equalTo(DB_CASSANDRA_TABLE, parameter.table))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -147,26 +122,15 @@ public class CassandraClientTest {
                       span.hasName(parameter.spanName)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes)
-                                      .containsEntry(NET_SOCK_PEER_ADDR, "127.0.0.1")
-                                      .containsEntry(NET_SOCK_PEER_NAME, "localhost")
-                                      .containsEntry(NET_SOCK_PEER_PORT, cassandraPort)
-                                      .containsEntry(DB_SYSTEM, "cassandra")
-                                      .containsEntry(DB_STATEMENT, parameter.expectedStatement))
-                          .hasAttributesSatisfying(
-                              attributes -> {
-                                assertThat(attributes.get(DB_OPERATION))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.operation));
-                                assertThat(attributes.get(DB_CASSANDRA_TABLE))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.table));
-                                assertThat(attributes.get(DB_NAME)).isNull();
-                              })));
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                              equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                              equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(DB_NAME, parameter.keyspace),
+                              equalTo(DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(DB_OPERATION, parameter.operation),
+                              equalTo(DB_CASSANDRA_TABLE, parameter.table))));
     }
 
     session.close();
@@ -196,29 +160,15 @@ public class CassandraClientTest {
                       span.hasName("DB Query")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes)
-                                      .containsEntry(NET_SOCK_PEER_ADDR, "127.0.0.1")
-                                      .containsEntry(NET_SOCK_PEER_NAME, "localhost")
-                                      .containsEntry(NET_SOCK_PEER_PORT, cassandraPort)
-                                      .containsEntry(DB_SYSTEM, "cassandra")
-                                      .containsEntry(DB_STATEMENT, "USE " + parameter.keyspace))
-                          .hasAttributesSatisfying(
-                              attributes -> {
-                                assertThat(attributes.get(DB_OPERATION))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.operation));
-                                assertThat(attributes.get(DB_CASSANDRA_TABLE))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.table));
-                                assertThat(attributes.get(DB_NAME))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.keyspace));
-                              })),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                              equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                              equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(DB_NAME, null),
+                              equalTo(DB_STATEMENT, "USE " + parameter.keyspace),
+                              equalTo(DB_OPERATION, null),
+                              equalTo(DB_CASSANDRA_TABLE, null))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -226,26 +176,15 @@ public class CassandraClientTest {
                       span.hasName(parameter.spanName)
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes)
-                                      .containsEntry(NET_SOCK_PEER_ADDR, "127.0.0.1")
-                                      .containsEntry(NET_SOCK_PEER_NAME, "localhost")
-                                      .containsEntry(NET_SOCK_PEER_PORT, cassandraPort)
-                                      .containsEntry(DB_SYSTEM, "cassandra")
-                                      .containsEntry(DB_NAME, parameter.keyspace)
-                                      .containsEntry(DB_STATEMENT, parameter.expectedStatement))
-                          .hasAttributesSatisfying(
-                              attributes -> {
-                                assertThat(attributes.get(DB_OPERATION))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.operation));
-                                assertThat(attributes.get(DB_CASSANDRA_TABLE))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.table));
-                              }),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                              equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                              equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(DB_NAME, parameter.keyspace),
+                              equalTo(DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(DB_OPERATION, parameter.operation),
+                              equalTo(DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -259,26 +198,15 @@ public class CassandraClientTest {
                       span.hasName(parameter.spanName)
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes)
-                                      .containsEntry(NET_SOCK_PEER_ADDR, "127.0.0.1")
-                                      .containsEntry(NET_SOCK_PEER_NAME, "localhost")
-                                      .containsEntry(NET_SOCK_PEER_PORT, cassandraPort)
-                                      .containsEntry(DB_SYSTEM, "cassandra")
-                                      .containsEntry(DB_STATEMENT, parameter.expectedStatement))
-                          .hasAttributesSatisfying(
-                              attributes -> {
-                                assertThat(attributes.get(DB_OPERATION))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.operation));
-                                assertThat(attributes.get(DB_CASSANDRA_TABLE))
-                                    .satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isEqualTo(parameter.table));
-                                assertThat(attributes.get(DB_NAME)).isNull();
-                              }),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                              equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                              equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(DB_NAME, parameter.keyspace),
+                              equalTo(DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(DB_OPERATION, parameter.operation),
+                              equalTo(DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)

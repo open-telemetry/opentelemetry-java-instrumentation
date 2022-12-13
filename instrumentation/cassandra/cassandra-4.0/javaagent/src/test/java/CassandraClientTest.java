@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID;
@@ -85,39 +86,23 @@ public class CassandraClientTest {
                     span.hasName(parameter.spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attributes ->
-                                assertThat(attributes)
-                                    .containsEntry(NET_SOCK_PEER_ADDR, "127.0.0.1")
-                                    .containsEntry(NET_SOCK_PEER_NAME, "localhost")
-                                    .containsEntry(NET_SOCK_PEER_PORT, cassandraPort)
-                                    .containsEntry(DB_SYSTEM, "cassandra")
-                                    .containsEntry(DB_STATEMENT, parameter.expectedStatement)
-                                    .containsEntry(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE")
-                                    .containsEntry(DB_CASSANDRA_COORDINATOR_DC, "datacenter1")
-                                    .hasEntrySatisfying(
-                                        DB_CASSANDRA_COORDINATOR_ID,
-                                        val -> assertThat(val).isInstanceOf(String.class))
-                                    .hasEntrySatisfying(
-                                        DB_CASSANDRA_IDEMPOTENCE,
-                                        val -> assertThat(val).isInstanceOf(Boolean.class))
-                                    .containsEntry(DB_CASSANDRA_PAGE_SIZE, 5000)
-                                    .containsEntry(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))
-                        .hasAttributesSatisfying(
-                            attributes -> {
-                              assertThat(attributes.get(DB_OPERATION))
-                                  .satisfiesAnyOf(
-                                      v -> assertThat(v).isNull(),
-                                      v -> assertThat(v).isEqualTo(parameter.operation));
-                              assertThat(attributes.get(DB_NAME))
-                                  .satisfiesAnyOf(
-                                      v -> assertThat(v).isNull(),
-                                      v -> assertThat(v).isEqualTo(parameter.keyspace));
-                              assertThat(attributes.get(DB_CASSANDRA_TABLE))
-                                  .satisfiesAnyOf(
-                                      v -> assertThat(v).isNull(),
-                                      v -> assertThat(v).isEqualTo(parameter.table));
-                            })));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                            equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                            equalTo(DB_SYSTEM, "cassandra"),
+                            equalTo(DB_NAME, parameter.keyspace),
+                            equalTo(DB_STATEMENT, parameter.expectedStatement),
+                            equalTo(DB_OPERATION, parameter.operation),
+                            equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                            equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                            satisfies(
+                                DB_CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                DB_CASSANDRA_IDEMPOTENCE, val -> val.isInstanceOf(Boolean.class)),
+                            equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
+                            equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                            equalTo(DB_CASSANDRA_TABLE, parameter.table))));
 
     session.close();
   }
@@ -144,39 +129,23 @@ public class CassandraClientTest {
                     span.hasName(parameter.spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
-                            attributes ->
-                                assertThat(attributes)
-                                    .containsEntry(NET_SOCK_PEER_ADDR, "127.0.0.1")
-                                    .containsEntry(NET_SOCK_PEER_NAME, "localhost")
-                                    .containsEntry(NET_SOCK_PEER_PORT, cassandraPort)
-                                    .containsEntry(DB_SYSTEM, "cassandra")
-                                    .containsEntry(DB_STATEMENT, parameter.expectedStatement)
-                                    .containsEntry(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE")
-                                    .containsEntry(DB_CASSANDRA_COORDINATOR_DC, "datacenter1")
-                                    .hasEntrySatisfying(
-                                        DB_CASSANDRA_COORDINATOR_ID,
-                                        val -> assertThat(val).isInstanceOf(String.class))
-                                    .hasEntrySatisfying(
-                                        DB_CASSANDRA_IDEMPOTENCE,
-                                        val -> assertThat(val).isInstanceOf(Boolean.class))
-                                    .containsEntry(DB_CASSANDRA_PAGE_SIZE, 5000)
-                                    .containsEntry(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))
-                        .hasAttributesSatisfying(
-                            attributes -> {
-                              assertThat(attributes.get(DB_OPERATION))
-                                  .satisfiesAnyOf(
-                                      v -> assertThat(v).isNull(),
-                                      v -> assertThat(v).isEqualTo(parameter.operation));
-                              assertThat(attributes.get(DB_NAME))
-                                  .satisfiesAnyOf(
-                                      v -> assertThat(v).isNull(),
-                                      v -> assertThat(v).isEqualTo(parameter.keyspace));
-                              assertThat(attributes.get(DB_CASSANDRA_TABLE))
-                                  .satisfiesAnyOf(
-                                      v -> assertThat(v).isNull(),
-                                      v -> assertThat(v).isEqualTo(parameter.table));
-                            }),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(NET_SOCK_PEER_NAME, "localhost"),
+                            equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                            equalTo(DB_SYSTEM, "cassandra"),
+                            equalTo(DB_NAME, parameter.keyspace),
+                            equalTo(DB_STATEMENT, parameter.expectedStatement),
+                            equalTo(DB_OPERATION, parameter.operation),
+                            equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                            equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                            satisfies(
+                                DB_CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                DB_CASSANDRA_IDEMPOTENCE, val -> val.isInstanceOf(Boolean.class)),
+                            equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
+                            equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                            equalTo(DB_CASSANDRA_TABLE, parameter.table)),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
 
