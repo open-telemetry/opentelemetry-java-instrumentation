@@ -24,6 +24,10 @@
   ([#7361](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7361))
 - Instrument spring-web 6 & spring-webmvc 6
   ([#7366](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7366))
+- Change log4j MapMessage attribute names
+  ([#7397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7397))
+- Don't call Thread#setContextClassLoader()
+  ([#7391](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7391))
 
 ### 🛠️ Bug fixes
 
@@ -39,6 +43,15 @@
   ([#7387](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7387))
 - Agent context storage wrapper should not override other wrappers
   ([#7355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7355))
+- Do not install GC metrics when GarbageCollectionNotificationInfo is not available
+  ([#7405](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7405))
+- Fix connection pool timeouts unit
+  ([#7404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7404))
+
+### 🧰 Tooling
+
+- Allow disabling muzzle checks for specific methods
+  ([#7289](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7289))
 
 ## Version 1.20.2 (2022-11-22)
 
