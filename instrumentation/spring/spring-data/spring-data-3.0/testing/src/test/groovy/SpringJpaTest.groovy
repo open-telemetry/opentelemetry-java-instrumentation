@@ -39,7 +39,7 @@ class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustomerReposi
   }
 
   Class<JpaCustomerRepository> repositoryClass() {
-    return JpaCustomerRepository.class
+    return JpaCustomerRepository
   }
 
   JpaCustomerRepository repository() {
