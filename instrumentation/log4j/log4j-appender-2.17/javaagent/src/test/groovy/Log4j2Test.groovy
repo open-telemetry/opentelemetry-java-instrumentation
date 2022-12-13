@@ -146,8 +146,8 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(4)
-    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("key1", "val1")
-    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("key2", "val2")
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("log4j.map_message.key1", "val1")
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("log4j.map_message.key2", "val2")
     OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
     OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
   }
@@ -172,7 +172,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     assertThat(log.getSeverity()).isEqualTo(Severity.INFO)
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(3)
-    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("key1", "val1")
+    OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry("log4j.map_message.key1", "val1")
     OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
     OpenTelemetryAssertions.assertThat(log.getAttributes()).containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
   }
@@ -198,8 +198,8 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     assertThat(log.getSeverityText()).isEqualTo("INFO")
     assertThat(log.getAttributes().size()).isEqualTo(4)
     OpenTelemetryAssertions.assertThat(log.getAttributes())
-        .containsEntry("key1","val1")
-        .containsEntry("key2", "val2")
+        .containsEntry("log4j.map_message.key1","val1")
+        .containsEntry("log4j.map_message.key2", "val2")
         .containsEntry(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName())
         .containsEntry(SemanticAttributes.THREAD_ID, Thread.currentThread().getId())
   }
