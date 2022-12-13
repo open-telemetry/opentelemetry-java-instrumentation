@@ -66,7 +66,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       String brokerUrl = pulsarClient.getLookup().getServiceUrl();
       String topic = producer.getTopic();
       topic = topic == null ? "unknown" : topic;
-      brokerUrl = brokerUrl == null ? "unknown" : topic;
+      brokerUrl = brokerUrl == null ? "unknown" : brokerUrl;
       VirtualFieldStore.inject(producer, brokerUrl, topic);
     }
   }
