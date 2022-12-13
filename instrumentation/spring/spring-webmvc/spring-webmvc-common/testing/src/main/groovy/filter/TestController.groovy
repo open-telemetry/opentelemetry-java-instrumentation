@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test.filter
+package filter
 
 
 import org.springframework.http.HttpStatus
