@@ -122,7 +122,9 @@ public final class GarbageCollector {
 
   private static boolean isNotificationClassPresent() {
     try {
-      Class.forName("com.sun.management.GarbageCollectionNotificationInfo", false,
+      Class.forName(
+          "com.sun.management.GarbageCollectionNotificationInfo",
+          false,
           GarbageCollectorMXBean.class.getClassLoader());
       return true;
     } catch (ClassNotFoundException e) {
