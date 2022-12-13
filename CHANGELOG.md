@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.21.0 (2022-12-13)
+
 ### 📈 Enhancements
 
 - Remove deprecated HTTP semconv code
