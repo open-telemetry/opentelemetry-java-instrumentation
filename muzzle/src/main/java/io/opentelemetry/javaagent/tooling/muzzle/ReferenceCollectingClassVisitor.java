@@ -28,6 +28,8 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /** Visit a class and collect all references made by the visited class. */
 // Additional things we could check
@@ -244,11 +246,33 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
               .build());
     }
 
+    MethodVisitor methodVisitor =
+        super.visitMethod(access, name, descriptor, signature, exceptions);
+    MethodVisitor methodNode =
+        new MethodNode(Opcodes.ASM9, access, name, descriptor, signature, exceptions) {
+          @Override
+          public void visitEnd() {
+            super.visitEnd();
+
+            boolean skip = false;
+            if (invisibleAnnotations != null) {
+              for (AnnotationNode annotationNode : invisibleAnnotations) {
+                if (Type.getDescriptor(NoMuzzle.class).equals(annotationNode.desc)) {
+                  skip = true;
+                  break;
+                }
+              }
+            }
+            MethodVisitor target =
+                skip ? methodVisitor : new AdviceReferenceMethodVisitor(methodVisitor);
+            if (target != null) {
+              accept(target);
+            }
+          }
+        };
     // Additional references we could check
     // - Classes in signature (return type, params) and visible from this package
-    return new AdviceReferenceMethodVisitor(
-        new VirtualFieldCollectingMethodVisitor(
-            super.visitMethod(access, name, descriptor, signature, exceptions)));
+    return new VirtualFieldCollectingMethodVisitor(methodNode);
   }
 
   private static VisibilityFlag computeVisibilityFlag(int access) {

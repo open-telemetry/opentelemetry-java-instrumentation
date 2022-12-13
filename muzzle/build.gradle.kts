@@ -14,6 +14,7 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   api("net.bytebuddy:byte-buddy-dep")
+  implementation("org.ow2.asm:asm-tree")
 
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":instrumentation-api"))

@@ -40,6 +40,7 @@ val autoServiceVersion = "1.0.1"
 val autoValueVersion = "1.10.1"
 val errorProneVersion = "2.16"
 val byteBuddyVersion = "1.12.19"
+val asmVersion = "9.4"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.9.0"
 val slf4jVersion = "2.0.5"
@@ -57,6 +58,8 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
+  "org.ow2.asm:asm:${asmVersion}",
+  "org.ow2.asm:asm-tree:${asmVersion}",
   "org.openjdk.jmh:jmh-core:${jmhVersion}",
   "org.openjdk.jmh:jmh-generator-bytecode:${jmhVersion}",
   "org.mockito:mockito-core:${mockitoVersion}",
