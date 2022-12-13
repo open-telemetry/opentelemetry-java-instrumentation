@@ -15,6 +15,7 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.List;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
 import javax.management.NotificationFilter;
@@ -32,6 +33,8 @@ import javax.management.openmbean.CompositeData;
  */
 public final class GarbageCollector {
 
+  private static final Logger logger = Logger.getLogger(GarbageCollector.class.getName());
+
   private static final AttributeKey<String> GC_KEY = AttributeKey.stringKey("gc");
   private static final AttributeKey<String> ACTION_KEY = AttributeKey.stringKey("action");
 
@@ -43,6 +46,13 @@ public final class GarbageCollector {
 
   /** Register observers for java runtime memory metrics. */
   public static void registerObservers(OpenTelemetry openTelemetry) {
+    if (!isNotificationClassPresent()) {
+      logger.fine(
+          "The com.sun.management.GarbageCollectionNotificationInfo class is not available;"
+              + " GC metrics will not be reported.");
+      return;
+    }
+
     registerObservers(
         openTelemetry,
         ManagementFactory.getGarbageCollectorMXBeans(),
@@ -108,6 +118,16 @@ public final class GarbageCollector {
   private static GarbageCollectionNotificationInfo extractNotificationInfo(
       Notification notification) {
     return GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
+  }
+
+  private static boolean isNotificationClassPresent() {
+    try {
+      Class.forName("com.sun.management.GarbageCollectionNotificationInfo", false,
+          GarbageCollectorMXBean.class.getClassLoader());
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
   }
 
   private GarbageCollector() {}
