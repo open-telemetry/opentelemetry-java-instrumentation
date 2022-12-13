@@ -19,7 +19,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
-import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
@@ -78,7 +77,7 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
-  public static void installBytebuddyAgent(Instrumentation inst) {
+  public static void installBytebuddyAgent(Instrumentation inst, ClassLoader extensionClassLoader) {
     addByteBuddyRawSetting();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
@@ -90,34 +89,37 @@ public class AgentInstaller {
     logVersionInfo();
     if (ConfigPropertiesUtil.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
-      List<AgentListener> agentListeners = loadOrdered(AgentListener.class);
-      installBytebuddyAgent(inst, agentListeners);
+      List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
+      installBytebuddyAgent(inst, extensionClassLoader, agentListeners);
     } else {
       logger.fine("Tracing is disabled, not installing instrumentations.");
     }
   }
 
   private static void installBytebuddyAgent(
-      Instrumentation inst, Iterable<AgentListener> agentListeners) {
+      Instrumentation inst,
+      ClassLoader extensionClassLoader,
+      Iterable<AgentListener> agentListeners) {
 
     WeakRefAsyncOperationEndStrategies.initialize();
 
-    EmbeddedInstrumentationProperties.setPropertiesLoader(
-        AgentInitializer.getExtensionsClassLoader());
+    EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
 
     setDefineClassHandler();
 
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
-    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = installOpenTelemetrySdk();
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
+        installOpenTelemetrySdk(extensionClassLoader);
 
     ConfigProperties sdkConfig = autoConfiguredSdk.getConfig();
     InstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
-    setBootstrapPackages(sdkConfig);
+    setBootstrapPackages(sdkConfig, extensionClassLoader);
 
-    for (BeforeAgentListener agentListener : loadOrdered(BeforeAgentListener.class)) {
+    for (BeforeAgentListener agentListener :
+        loadOrdered(BeforeAgentListener.class, extensionClassLoader)) {
       agentListener.beforeAgent(autoConfiguredSdk);
     }
 
@@ -140,7 +142,7 @@ public class AgentInstaller {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }
 
-    agentBuilder = configureIgnoredTypes(sdkConfig, agentBuilder);
+    agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
 
     if (AgentConfig.isDebugModeEnabled(sdkConfig)) {
       agentBuilder =
@@ -152,7 +154,7 @@ public class AgentInstaller {
     }
 
     int numberOfLoadedExtensions = 0;
-    for (AgentExtension agentExtension : loadOrdered(AgentExtension.class)) {
+    for (AgentExtension agentExtension : loadOrdered(AgentExtension.class, extensionClassLoader)) {
       if (logger.isLoggable(FINE)) {
         logger.log(
             FINE,
@@ -196,9 +198,11 @@ public class AgentInstaller {
     }
   }
 
-  private static void setBootstrapPackages(ConfigProperties config) {
+  private static void setBootstrapPackages(
+      ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
-    for (BootstrapPackagesConfigurer configurer : load(BootstrapPackagesConfigurer.class)) {
+    for (BootstrapPackagesConfigurer configurer :
+        load(BootstrapPackagesConfigurer.class, extensionClassLoader)) {
       configurer.configure(builder, config);
     }
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(builder.build());
@@ -209,9 +213,10 @@ public class AgentInstaller {
   }
 
   private static AgentBuilder configureIgnoredTypes(
-      ConfigProperties config, AgentBuilder agentBuilder) {
+      ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
-    for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
+    for (IgnoredTypesConfigurer configurer :
+        loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
       configurer.configure(builder, config);
     }
 

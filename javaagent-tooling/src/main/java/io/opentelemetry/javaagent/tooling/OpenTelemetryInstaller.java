@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.Arrays;
 
@@ -21,17 +19,14 @@ public final class OpenTelemetryInstaller {
    *
    * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
-  public static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk() {
-    AutoConfiguredOpenTelemetrySdkBuilder builder =
-        AutoConfiguredOpenTelemetrySdk.builder().setResultAsGlobal(true);
+  public static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(
+      ClassLoader extensionClassLoader) {
 
-    ClassLoader classLoader = AgentInitializer.getExtensionsClassLoader();
-    if (classLoader != null) {
-      // May be null in unit tests.
-      builder.setServiceClassLoader(classLoader);
-    }
-
-    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk = builder.build();
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
+        AutoConfiguredOpenTelemetrySdk.builder()
+            .setResultAsGlobal(true)
+            .setServiceClassLoader(extensionClassLoader)
+            .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
 
     OpenTelemetrySdkAccess.internalSetForceFlush(
