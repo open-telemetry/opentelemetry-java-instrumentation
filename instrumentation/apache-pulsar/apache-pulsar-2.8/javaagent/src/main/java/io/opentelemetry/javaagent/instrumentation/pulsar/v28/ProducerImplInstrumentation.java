@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v28;
 
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -41,7 +42,10 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(isPublic()),
+        isConstructor()
+            .and(isPublic())
+            .and(
+                takesArgument(0, hasSuperType(named("org.apache.pulsar.client.api.PulsarClient")))),
         ProducerImplInstrumentation.class.getName() + "$ProducerImplConstructorAdviser");
 
     transformer.applyAdviceToMethod(
@@ -57,11 +61,10 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     public static void intercept(
-        @Advice.This ProducerImpl<?> producer,
-        @Advice.Argument(value = 0) PulsarClient client,
-        @Advice.Argument(value = 1) String topic) {
+        @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClient client) {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
       String brokerUrl = pulsarClient.getLookup().getServiceUrl();
+      String topic = producer.getTopic();
       topic = topic == null ? "unknown" : topic;
       brokerUrl = brokerUrl == null ? "unknown" : topic;
       VirtualFieldStore.inject(producer, brokerUrl, topic);

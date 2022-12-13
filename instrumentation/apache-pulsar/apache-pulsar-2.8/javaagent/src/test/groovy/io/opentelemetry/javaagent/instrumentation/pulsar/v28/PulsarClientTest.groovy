@@ -15,6 +15,7 @@ import org.apache.pulsar.client.api.MessageListener
 import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.PulsarClient
 import org.apache.pulsar.client.api.Schema
+import org.apache.pulsar.client.api.SubscriptionInitialPosition
 import org.testcontainers.containers.PulsarContainer
 import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
@@ -337,6 +338,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     consumer = client.newConsumer(Schema.STRING)
       .topic(topic1, topic)
       .subscriptionName("test_sub")
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
       .messageListener(new MessageListener<String>() {
         @Override
         void received(Consumer<String> consumer, Message<String> msg) {
