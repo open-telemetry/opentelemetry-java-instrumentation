@@ -43,7 +43,7 @@ val byteBuddyVersion = "1.12.19"
 val asmVersion = "9.4"
 val jmhVersion = "1.36"
 val mockitoVersion = "4.9.0"
-val slf4jVersion = "2.0.5"
+val slf4jVersion = "2.0.6"
 
 val CORE_DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:${autoServiceVersion}",
