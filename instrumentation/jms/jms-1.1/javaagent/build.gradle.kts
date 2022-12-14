@@ -14,6 +14,12 @@ muzzle {
     module.set("javax.jms-api")
     versions.set("(,)")
   }
+  pass {
+    group.set("jakarta.jms")
+    module.set("jakarta.jms-api")
+    versions.set("(,3)")
+    assertInverse.set(true)
+  }
 }
 
 testSets {
@@ -36,9 +42,6 @@ tasks {
 }
 
 dependencies {
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   implementation(project(":instrumentation:jms:jms-common:javaagent"))
 
   compileOnly("javax.jms:jms-api:1.1-rev-1")

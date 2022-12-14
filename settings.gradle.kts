@@ -291,6 +291,7 @@ hideFromDependabot(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:javaa
 hideFromDependabot(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:library")
 hideFromDependabot(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing")
 hideFromDependabot(":instrumentation:jms:jms-1.1:javaagent")
+hideFromDependabot(":instrumentation:jms:jms-3.0:javaagent")
 hideFromDependabot(":instrumentation:jms:jms-common:javaagent")
 hideFromDependabot(":instrumentation:jms:jms-common:javaagent-unit-tests")
 hideFromDependabot(":instrumentation:jmx-metrics:javaagent")
