@@ -29,6 +29,10 @@ dependencies {
   testImplementation("org.apache.activemq:artemis-jakarta-client:2.27.1")
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
