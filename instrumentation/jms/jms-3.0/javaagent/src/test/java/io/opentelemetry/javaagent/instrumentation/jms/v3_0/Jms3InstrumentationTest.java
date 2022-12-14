@@ -29,6 +29,8 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
@@ -167,7 +169,7 @@ class Jms3InstrumentationTest {
   @ParameterizedTest
   void testMessageListener(
       DestinationFactory destinationFactory, String destinationKind, boolean isTemporary)
-      throws JMSException {
+      throws Exception {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -178,23 +180,23 @@ class Jms3InstrumentationTest {
     MessageConsumer consumer = session.createConsumer(destination);
     cleanup.deferCleanup(consumer);
 
-    AtomicReference<TextMessage> receivedMessage = new AtomicReference<>();
+    CompletableFuture<TextMessage> receivedMessageFuture = new CompletableFuture<>();
     consumer.setMessageListener(
         message ->
-            testing.runWithSpan("consumer", () -> receivedMessage.set((TextMessage) message)));
+            testing.runWithSpan(
+                "consumer", () -> receivedMessageFuture.complete((TextMessage) message)));
 
     // when
     testing.runWithSpan("parent", () -> producer.send(destination, sentMessage));
 
     // then
-    testing.waitForTraces(1);
-
-    assertThat(receivedMessage.get().getText()).isEqualTo(sentMessage.getText());
+    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();
     // artemis consumers don't know whether the destination is temporary or not
     String producerDestinationName = isTemporary ? "(temporary)" : actualDestinationName;
-    String messageId = receivedMessage.get().getJMSMessageID();
+    String messageId = receivedMessage.getJMSMessageID();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -249,7 +251,7 @@ class Jms3InstrumentationTest {
   @ParameterizedTest
   void shouldCaptureMessageHeaders(
       DestinationFactory destinationFactory, String destinationKind, boolean isTemporary)
-      throws JMSException {
+      throws Exception {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -262,23 +264,23 @@ class Jms3InstrumentationTest {
     MessageConsumer consumer = session.createConsumer(destination);
     cleanup.deferCleanup(consumer);
 
-    AtomicReference<TextMessage> receivedMessage = new AtomicReference<>();
+    CompletableFuture<TextMessage> receivedMessageFuture = new CompletableFuture<>();
     consumer.setMessageListener(
         message ->
-            testing.runWithSpan("consumer", () -> receivedMessage.set((TextMessage) message)));
+            testing.runWithSpan(
+                "consumer", () -> receivedMessageFuture.complete((TextMessage) message)));
 
     // when
     testing.runWithSpan("parent", () -> producer.send(sentMessage));
 
     // then
-    testing.waitForTraces(1);
-
-    assertThat(receivedMessage.get().getText()).isEqualTo(sentMessage.getText());
+    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();
     // artemis consumers don't know whether the destination is temporary or not
     String producerDestinationName = isTemporary ? "(temporary)" : actualDestinationName;
-    String messageId = receivedMessage.get().getJMSMessageID();
+    String messageId = receivedMessage.getJMSMessageID();
 
     testing.waitAndAssertTraces(
         trace ->
