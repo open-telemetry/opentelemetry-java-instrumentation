@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v28
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
+import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.api.Consumer
@@ -50,7 +51,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
   @Override
   def setupSpec() {
-    PulsarContainer pulsar = new PulsarContainer(DEFAULT_IMAGE_NAME);
+    pulsar = new PulsarContainer(DEFAULT_IMAGE_NAME);
     pulsar.start()
 
     brokerUrl = pulsar.pulsarBrokerUrl
@@ -85,19 +86,27 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     assertTraces(1) {
       trace(0, 2) {
-        span(0) {
+        SpanData parent = spans.find {
+          it0 ->
+            it0.name.equalsIgnoreCase("parent")
+        }
+        SpanData producer = spans.find {
+          it0 ->
+            it0.name.equalsIgnoreCase("PRODUCER/SEND")
+        }
+        SpanAssert.assertSpan(parent) {
           name("parent")
           kind(INTERNAL)
           hasNoParent()
         }
-
-        span(1) {
+        SpanAssert.assertSpan(producer) {
           name("PRODUCER/SEND")
           kind(PRODUCER)
-          childOf span(0)
+          childOf parent
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
             "$SemanticAttributes.MESSAGING_URL" brokerUrl
+            "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
             "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
             "$SemanticAttributes.MESSAGING_DESTINATION" topic
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
