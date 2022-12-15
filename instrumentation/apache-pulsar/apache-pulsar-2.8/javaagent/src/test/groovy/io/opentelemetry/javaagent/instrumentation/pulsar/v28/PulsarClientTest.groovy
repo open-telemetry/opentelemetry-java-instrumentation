@@ -118,7 +118,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         attribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key) {
           v ->
-            Assert.assertTrue(v instanceof Long) && v > 0
+            return v instanceof Long && v > 0
         }
       }
     }
