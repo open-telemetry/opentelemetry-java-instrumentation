@@ -39,6 +39,9 @@ dependencies {
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
+
+  // version 7.17.8 (which is currently the latest release) has broken module metadata
+  latestDepTestLibrary("org.elasticsearch.client:transport:7.17.7")
 }
 
 tasks.withType<Test>().configureEach {
