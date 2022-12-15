@@ -116,10 +116,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
         "$SemanticAttributes.MESSAGING_DESTINATION" topic
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-        attribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key) {
-          v ->
-            return v instanceof Long && v > 0
-        }
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
       }
     }
   }
@@ -132,6 +129,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     consumer = client.newConsumer(Schema.STRING)
       .subscriptionName("test_sub")
       .topic(topic)
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
       .messageListener(new MessageListener<String>() {
         @Override
         void received(Consumer<String> consumer, Message<String> msg) {
@@ -154,54 +152,73 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     latch.await(1, TimeUnit.MINUTES)
 
-    assertTraces(1) {
-      trace(0, 4) {
-        span(0) {
-          name("parent")
-          kind(INTERNAL)
-          hasNoParent()
-        }
+    def traces = waitForTraces(1)
+    def spans = traces[0]
+    Assert.assertEquals(spans.size(), 4)
+    def parent = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("parent")
+    }
+    def send = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("PRODUCER/SEND")
+    }
+    def receive = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("CONSUMER/RECEIVE")
+    }
 
-        span(1) {
-          name("PRODUCER/SEND")
-          kind(PRODUCER)
-          childOf span(0)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_URL" brokerUrl
-            "$SemanticAttributes.MESSAGING_DESTINATION" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
-          }
-        }
+    def process = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("CONSUMER/PROCESS")
+    }
 
-        span(2) {
-          name("CONSUMER/RECEIVE")
-          kind(CONSUMER)
-          childOf span(1)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_URL" brokerUrl
-            "$SemanticAttributes.MESSAGING_DESTINATION" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-          }
-        }
+    SpanAssert.assertSpan(parent) {
+      name("parent")
+      kind(INTERNAL)
+      hasNoParent()
+    }
 
-        span(3) {
-          name("CONSUMER/PROCESS")
-          kind(INTERNAL)
-          childOf(span(2))
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_DESTINATION" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-          }
-        }
+    SpanAssert.assertSpan(send) {
+      name("PRODUCER/SEND")
+      kind(PRODUCER)
+      childOf parent
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_URL" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION" topic
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
+      }
+    }
+
+    SpanAssert.assertSpan(receive) {
+      name("CONSUMER/RECEIVE")
+      kind(CONSUMER)
+      childOf(send)
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_URL" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION" topic
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGING_OPERATION" "RECEIVE"
+      }
+    }
+
+    SpanAssert.assertSpan(process) {
+      name("CONSUMER/PROCESS")
+      kind(INTERNAL)
+      childOf(receive)
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_DESTINATION" topic
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        "$SemanticAttributes.MESSAGING_OPERATION" "RECEIVE"
       }
     }
   }
@@ -222,27 +239,40 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       msgId = producer.send(msg)
     }
 
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          name("parent")
-          kind(INTERNAL)
-          hasNoParent()
-        }
+    def traces = waitForTraces(1)
+    def spans = traces[0]
+    Assert.assertEquals(spans.size(), 4)
 
-        span(1) {
-          name("PRODUCER/SEND")
-          kind(PRODUCER)
-          childOf span(0)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_URL" brokerUrl
-            "$SemanticAttributes.MESSAGING_DESTINATION".contains(topic)
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-          }
+    def parent = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("parent")
+    }
+    def send = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("PRODUCER/SEND")
+    }
+
+    SpanAssert.assertSpan(parent) {
+      name("parent")
+      kind(INTERNAL)
+      hasNoParent()
+    }
+
+    SpanAssert.assertSpan(send) {
+      name("PRODUCER/SEND")
+      kind(PRODUCER)
+      childOf parent
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_URL" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION" {
+          t ->
+            return t.toString().contains(topic)
         }
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
       }
     }
   }
@@ -277,54 +307,85 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     latch.await(1, TimeUnit.MINUTES)
 
-    assertTraces(1) {
-      trace(0, 4) {
-        span(0) {
-          name("parent")
-          kind(INTERNAL)
-          hasNoParent()
-        }
+    def traces = waitForTraces(1)
+    Assert.assertEquals(traces.size(), 1)
+    def spans = traces[0]
+    Assert.assertEquals(spans.size(), 4)
 
-        span(1) {
-          name("PRODUCER/SEND")
-          kind(PRODUCER)
-          childOf span(0)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_URL" brokerUrl
-            "$SemanticAttributes.MESSAGING_DESTINATION".contains(topic)
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-            "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
-          }
-        }
+    def parent = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("parent")
+    }
+    def send = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("PRODUCER/SEND")
+    }
+    def receive = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("CONSUMER/RECEIVE")
+    }
 
-        span(2) {
-          name("CONSUMER/RECEIVE")
-          kind(CONSUMER)
-          childOf span(1)
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_URL" brokerUrl
-            "$SemanticAttributes.MESSAGING_DESTINATION".contains(topic)
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-          }
-        }
+    def process = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("CONSUMER/PROCESS")
+    }
 
-        span(3) {
-          name("CONSUMER/PROCESS")
-          kind(INTERNAL)
-          childOf(span(2))
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_DESTINATION".contains(topic)
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-          }
+    SpanAssert.assertSpan(parent) {
+      name("parent")
+      kind(INTERNAL)
+      hasNoParent()
+    }
+
+    SpanAssert.assertSpan(send) {
+      name("PRODUCER/SEND")
+      kind(PRODUCER)
+      childOf parent
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_URL" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION" {
+          v ->
+            return v.toString().contains(topic)
         }
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
+      }
+    }
+
+    SpanAssert.assertSpan(receive) {
+      name("CONSUMER/RECEIVE")
+      kind(CONSUMER)
+      childOf(send)
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_URL" brokerUrl
+        "$SemanticAttributes.MESSAGING_DESTINATION" {
+          v ->
+            return v.toString().contains(topic)
+        }
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGING_OPERATION" "RECEIVE"
+      }
+    }
+
+    SpanAssert.assertSpan(process) {
+      name("CONSUMER/PROCESS")
+      kind(INTERNAL)
+      childOf(receive)
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_DESTINATION" {
+          v ->
+            return v.toString().contains(topic)
+        }
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGING_OPERATION" "PROCESS"
       }
     }
   }
@@ -365,54 +426,56 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       .subscribe()
 
     latch.await(1, TimeUnit.MINUTES)
+
     if (latch.getCount() == 0) {
-      assertTraces(1) {
-        trace(0, 7) {
-          span(0) {
-            name("parent")
-            kind(INTERNAL)
-            hasNoParent()
-          }
+      def traces = waitForTraces(1)
+      Assert.assertEquals(traces.size(), 1)
+      def spans = traces[0]
+      Assert.assertEquals(spans.size(), 7)
 
-          def sendSpans = spans.findAll {
-            it.name.equalsIgnoreCase("PRODUCER/SEND")
-          }
+      def parent = spans.find {
+        it0 ->
+          it0.name.equalsIgnoreCase("parent")
+      }
 
-          sendSpans.forEach {
-            SpanAssert.assertSpan(it) {
-              childOf(span(0))
-            }
-          }
 
-          def receiveSpans = spans.findAll {
-            it.name.equalsIgnoreCase("CONSUMER/RECEIVE")
-          }
+      def sendSpans = spans.findAll {
+        it.name.equalsIgnoreCase("PRODUCER/SEND")
+      }
 
-          def processSpans = spans.findAll {
-            it.name.equalsIgnoreCase("CONSUMER/PROCESS")
-          }
+      sendSpans.forEach {
+        SpanAssert.assertSpan(it) {
+          childOf(parent)
+        }
+      }
 
-          receiveSpans.forEach {
-            def parentSpanId = it.getParentSpanId()
-            def parent = sendSpans.find {
-              (it.spanId == parentSpanId)
-            }
+      def receiveSpans = spans.findAll {
+        it.name.equalsIgnoreCase("CONSUMER/RECEIVE")
+      }
 
-            SpanAssert.assertSpan(it) {
-              childOf(parent)
-            }
-          }
+      def processSpans = spans.findAll {
+        it.name.equalsIgnoreCase("CONSUMER/PROCESS")
+      }
 
-          processSpans.forEach {
-            def parentSpanId = it.getParentSpanId()
-            def parent = processSpans.find {
-              (it.spanId == parentSpanId)
-            }
+      receiveSpans.forEach {
+        def parentSpanId = it.getParentSpanId()
+        def parent0 = sendSpans.find {
+          (it.spanId == parentSpanId)
+        }
 
-            SpanAssert.assertSpan(it) {
-              childOf(parent)
-            }
-          }
+        SpanAssert.assertSpan(it) {
+          childOf(parent0)
+        }
+      }
+
+      processSpans.forEach {
+        def parentSpanId = it.getParentSpanId()
+        def parent0 = processSpans.find {
+          (it.spanId == parentSpanId)
+        }
+
+        SpanAssert.assertSpan(it) {
+          childOf(parent0)
         }
       }
     }
