@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v28
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
-import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.api.Consumer
@@ -17,6 +16,7 @@ import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.PulsarClient
 import org.apache.pulsar.client.api.Schema
 import org.apache.pulsar.client.api.SubscriptionInitialPosition
+import org.junit.Assert
 import org.testcontainers.containers.PulsarContainer
 import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
@@ -84,34 +84,41 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       msgId = producer.send(msg)
     }
 
-    assertTraces(1) {
-      trace(0, 2) {
-        SpanData parent = spans.find {
-          it0 ->
-            it0.name.equalsIgnoreCase("parent")
-        }
-        SpanData producer = spans.find {
-          it0 ->
-            it0.name.equalsIgnoreCase("PRODUCER/SEND")
-        }
-        SpanAssert.assertSpan(parent) {
-          name("parent")
-          kind(INTERNAL)
-          hasNoParent()
-        }
-        SpanAssert.assertSpan(producer) {
-          name("PRODUCER/SEND")
-          kind(PRODUCER)
-          childOf parent
-          attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-            "$SemanticAttributes.MESSAGING_URL" brokerUrl
-            "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
-            "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
-            "$SemanticAttributes.MESSAGING_DESTINATION" topic
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-          }
+    def traces = waitForTraces(1)
+    Assert.assertEquals(traces.size(), 1)
+    def spans = traces[0]
+    Assert.assertEquals(spans.size(), 2)
+    def parent = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("parent")
+    }
+    def producer = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("PRODUCER/SEND")
+    }
+    Assert.assertNotNull(parent)
+    Assert.assertNotNull(producer)
+
+    SpanAssert.assertSpan(parent) {
+      name("parent")
+      kind(INTERNAL)
+      hasNoParent()
+    }
+
+    SpanAssert.assertSpan(producer) {
+      name("PRODUCER/SEND")
+      kind(PRODUCER)
+      childOf parent
+      attributes {
+        "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
+        "$SemanticAttributes.MESSAGING_URL" brokerUrl
+        "$SemanticAttributes.MESSAGE_TYPE" "NORMAL"
+        "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
+        "$SemanticAttributes.MESSAGING_DESTINATION" topic
+        "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
+        attribute(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key) {
+          v ->
+            Assert.assertTrue(v instanceof Long) && v > 0
         }
       }
     }
