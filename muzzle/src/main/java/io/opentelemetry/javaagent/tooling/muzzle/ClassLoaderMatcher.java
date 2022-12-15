@@ -91,7 +91,7 @@ public class ClassLoaderMatcher {
                 instrumentationModule.instrumentationName(),
                 allHelperClasses,
                 helperResourceBuilder.getResources(),
-                Thread.currentThread().getContextClassLoader(),
+                ClassLoaderMatcher.class.getClassLoader(),
                 null)
             .transform(null, null, classLoader, null, null);
       }
