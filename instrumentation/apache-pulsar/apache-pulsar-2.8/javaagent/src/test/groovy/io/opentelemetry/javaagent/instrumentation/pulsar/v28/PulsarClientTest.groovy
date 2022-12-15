@@ -16,12 +16,12 @@ import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.PulsarClient
 import org.apache.pulsar.client.api.Schema
 import org.apache.pulsar.client.api.SubscriptionInitialPosition
+import org.awaitility.Awaitility
 import org.junit.Assert
 import org.testcontainers.containers.PulsarContainer
 import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
 
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -125,7 +125,6 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     setup:
     def topic = "persistent://public/default/testNonPartitionedTopic_" + UUID.randomUUID()
     admin.topics().createNonPartitionedTopic(topic)
-    def latch = new CountDownLatch(1)
     consumer = client.newConsumer(Schema.STRING)
       .subscriptionName("test_sub")
       .topic(topic)
@@ -133,7 +132,6 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       .messageListener(new MessageListener<String>() {
         @Override
         void received(Consumer<String> consumer, Message<String> msg) {
-          latch.countDown()
           consumer.acknowledge(msg)
         }
       })
@@ -150,10 +148,9 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       msgId = producer.send(msg)
     }
 
-    latch.await(1, TimeUnit.MINUTES)
-
     def traces = waitForTraces(1)
     def spans = traces[0]
+    Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> spans.size() == 4)
     Assert.assertEquals(spans.size(), 4)
     def parent = spans.find {
       it0 ->
@@ -205,7 +202,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.MESSAGING_DESTINATION" topic
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-        "$SemanticAttributes.MESSAGING_OPERATION" "RECEIVE"
+        "$SemanticAttributes.MESSAGING_OPERATION" "receive"
       }
     }
 
@@ -218,7 +215,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.MESSAGING_DESTINATION_KIND" "topic"
         "$SemanticAttributes.MESSAGING_DESTINATION" topic
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
-        "$SemanticAttributes.MESSAGING_OPERATION" "RECEIVE"
+        "$SemanticAttributes.MESSAGING_OPERATION" "process"
       }
     }
   }
@@ -241,7 +238,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     def traces = waitForTraces(1)
     def spans = traces[0]
-    Assert.assertEquals(spans.size(), 4)
+    Assert.assertEquals(spans.size(), 2)
 
     def parent = spans.find {
       it0 ->
@@ -281,14 +278,13 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     setup:
     def topic = "persistent://public/default/testPartitionedTopic_" + UUID.randomUUID()
     admin.topics().createPartitionedTopic(topic, 2)
-    def latch = new CountDownLatch(1)
     consumer = client.newConsumer(Schema.STRING)
       .subscriptionName("test_sub")
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
       .topic(topic)
       .messageListener(new MessageListener<String>() {
         @Override
         void received(Consumer<String> consumer, Message<String> msg) {
-          latch.countDown()
           consumer.acknowledge(msg)
         }
       })
@@ -305,11 +301,10 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       msgId = producer.send(msg)
     }
 
-    latch.await(1, TimeUnit.MINUTES)
-
     def traces = waitForTraces(1)
     Assert.assertEquals(traces.size(), 1)
     def spans = traces[0]
+    Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> spans.size() == 4)
     Assert.assertEquals(spans.size(), 4)
 
     def parent = spans.find {
@@ -405,8 +400,6 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       .enableBatching(false)
       .create()
 
-    def latch = new CountDownLatch(2)
-
     runWithSpan("parent") {
       producer.send(UUID.randomUUID().toString())
       producer1.send(UUID.randomUUID().toString())
@@ -419,65 +412,69 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       .messageListener(new MessageListener<String>() {
         @Override
         void received(Consumer<String> consumer, Message<String> msg) {
-          latch.countDown()
           consumer.acknowledge(msg)
         }
       })
       .subscribe()
 
-    latch.await(1, TimeUnit.MINUTES)
+    def traces = waitForTraces(1)
+    Assert.assertEquals(traces.size(), 1)
+    def spans = traces[0]
+    Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> spans.size() == 7)
+    Assert.assertEquals(spans.size(), 7)
 
-    if (latch.getCount() == 0) {
-      def traces = waitForTraces(1)
-      Assert.assertEquals(traces.size(), 1)
-      def spans = traces[0]
-      Assert.assertEquals(spans.size(), 7)
-
-      def parent = spans.find {
-        it0 ->
-          it0.name.equalsIgnoreCase("parent")
-      }
+    def parent = spans.find {
+      it0 ->
+        it0.name.equalsIgnoreCase("parent")
+    }
 
 
-      def sendSpans = spans.findAll {
-        it.name.equalsIgnoreCase("PRODUCER/SEND")
-      }
+    def sendSpans = spans.findAll {
+      it0 ->
+        it0.name.equalsIgnoreCase("PRODUCER/SEND")
+    }
 
-      sendSpans.forEach {
-        SpanAssert.assertSpan(it) {
+    sendSpans.forEach {
+      it0 ->
+        SpanAssert.assertSpan(it0) {
           childOf(parent)
         }
-      }
+    }
 
-      def receiveSpans = spans.findAll {
-        it.name.equalsIgnoreCase("CONSUMER/RECEIVE")
-      }
+    def receiveSpans = spans.findAll {
+      it0 ->
+        it0.name.equalsIgnoreCase("CONSUMER/RECEIVE")
+    }
 
-      def processSpans = spans.findAll {
-        it.name.equalsIgnoreCase("CONSUMER/PROCESS")
-      }
+    def processSpans = spans.findAll {
+      it0 ->
+        it0.name.equalsIgnoreCase("CONSUMER/PROCESS")
+    }
 
-      receiveSpans.forEach {
-        def parentSpanId = it.getParentSpanId()
+    receiveSpans.forEach {
+      it0 ->
+        def parentSpanId = it0.getParentSpanId()
         def parent0 = sendSpans.find {
-          (it.spanId == parentSpanId)
+          v ->
+            (v.spanId == parentSpanId)
         }
 
-        SpanAssert.assertSpan(it) {
+        SpanAssert.assertSpan(it0) {
           childOf(parent0)
         }
-      }
+    }
 
-      processSpans.forEach {
-        def parentSpanId = it.getParentSpanId()
+    processSpans.forEach {
+      it0 ->
+        def parentSpanId = it0.getParentSpanId()
         def parent0 = processSpans.find {
-          (it.spanId == parentSpanId)
+          v ->
+            (v.spanId == parentSpanId)
         }
 
-        SpanAssert.assertSpan(it) {
+        SpanAssert.assertSpan(it0) {
           childOf(parent0)
         }
-      }
     }
   }
 }
