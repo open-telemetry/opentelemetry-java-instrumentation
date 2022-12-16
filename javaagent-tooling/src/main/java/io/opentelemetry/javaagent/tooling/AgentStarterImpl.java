@@ -70,7 +70,8 @@ public class AgentStarterImpl implements AgentStarter {
     }
 
     LoggingCustomizer loggingCustomizer = null;
-    for (LoggingCustomizer customizer : ServiceLoader.load(LoggingCustomizer.class)) {
+    for (LoggingCustomizer customizer :
+        ServiceLoader.load(LoggingCustomizer.class, extensionClassLoader)) {
       if (customizer.name().equalsIgnoreCase(loggerImplementationName)) {
         loggingCustomizer = customizer;
         break;
