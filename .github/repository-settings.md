@@ -1,17 +1,13 @@
 # Repository settings
 
 Repository settings in addition to what's documented already at
-<https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md>.
+<https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md#repository-settings>.
 
 ## General > Pull Requests
 
 * Allow squash merging > Default to pull request title and description
 
 * Allow auto-merge
-
-* Automatically delete head branches: CHECKED
-
-  (So that bot PR branches will be deleted)
 
 ## Actions > General
 
@@ -36,11 +32,11 @@ Repository settings in addition to what's documented already at
 
 ### `release/*`
 
-Same settings as above for `main`, except:
+Same settings as above for [`main`](#main).
 
-* Restrict pushes that create matching branches: UNCHECKED
+### `opentelemetrybot/**/**`
 
-  (So that opentelemetrybot can create release branches)
+Same settings as for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md#branch-protection-rule-dependabot)
 
 ### `gh-pages`
 
@@ -49,27 +45,3 @@ Same settings as above for `main`, except:
   (This branch is currently only used for directly pushing benchmarking results from the
   [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
   job)
-
-### `dependabot/**/**` and `opentelemetrybot/*`
-
-#### Protect matching branches
-
-* Everything UNCHECKED
-
-  (These are temporary branches for submitting PRs to `main` and `release/*` branches)
-
-#### Rules applied to everyone including administrators
-
-* Allow force pushes > Everyone
-
-  (So that dependabot PRs can be rebased, which requires a force push)
-
-* Allow deletions: CHECKED
-
-  (So that these branches can be deleted after corresponding PR is merged)
-
-### `**/**`
-
-* Status checks that are required:
-
-  EasyCLA
