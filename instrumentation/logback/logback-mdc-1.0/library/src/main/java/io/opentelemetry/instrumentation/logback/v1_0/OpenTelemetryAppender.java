@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.v1_0;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
+import static io.opentelemetry.instrumentation.logback.v1_0.MdcPropertyMapHelper.instrument;
+import static io.opentelemetry.instrumentation.logback.v1_0.MdcPropertyMapHelper.isInstrumented;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
@@ -16,8 +15,6 @@ import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.instrumentation.logback.v1_0.internal.UnionMap;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -27,30 +24,18 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
   public static ILoggingEvent wrapEvent(ILoggingEvent event) {
-    Span currentSpan = Span.current();
-    if (!currentSpan.getSpanContext().isValid()) {
+    SpanContext spanContext = Span.current().getSpanContext();
+    if (!spanContext.isValid()) {
       return event;
     }
 
-    Map<String, String> eventContext = event.getMDCPropertyMap();
-    if (eventContext != null && eventContext.containsKey(TRACE_ID)) {
-      // Assume already instrumented event if traceId is present.
+    Map<String, String> mdcPropertyMap = event.getMDCPropertyMap();
+    if (isInstrumented(mdcPropertyMap)) {
       return event;
     }
 
-    Map<String, String> contextData = new HashMap<>();
-    SpanContext spanContext = currentSpan.getSpanContext();
-    contextData.put(TRACE_ID, spanContext.getTraceId());
-    contextData.put(SPAN_ID, spanContext.getSpanId());
-    contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
-
-    if (eventContext == null) {
-      eventContext = contextData;
-    } else {
-      eventContext = new UnionMap<>(eventContext, contextData);
-    }
-
-    return new LoggingEventWrapper(event, eventContext);
+    Map<String, String> instrumented = instrument(mdcPropertyMap, spanContext);
+    return new LoggingEventWrapper(event, instrumented);
   }
 
   @Override
