@@ -16,12 +16,12 @@ import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.PulsarClient
 import org.apache.pulsar.client.api.Schema
 import org.apache.pulsar.client.api.SubscriptionInitialPosition
-import org.awaitility.Awaitility
 import org.junit.Assert
 import org.testcontainers.containers.PulsarContainer
 import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
 
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -124,6 +124,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
   def "test consume non-partitioned topic"() {
     setup:
     def topic = "persistent://public/default/testNonPartitionedTopic_" + UUID.randomUUID()
+    def latch = new CountDownLatch(1)
     admin.topics().createNonPartitionedTopic(topic)
     consumer = client.newConsumer(Schema.STRING)
       .subscriptionName("test_sub")
@@ -133,6 +134,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         @Override
         void received(Consumer<String> consumer, Message<String> msg) {
           consumer.acknowledge(msg)
+          latch.countDown()
         }
       })
       .subscribe()
@@ -148,9 +150,12 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       msgId = producer.send(msg)
     }
 
+    latch.await(1, TimeUnit.MINUTES)
+    // Wait until all the spans finished.
+    Thread.sleep(TimeUnit.SECONDS.toMillis(20))
+
     def traces = waitForTraces(1)
     def spans = traces[0]
-    Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> spans.size() == 4)
     Assert.assertEquals(spans.size(), 4)
     def parent = spans.find {
       it0 ->
@@ -278,6 +283,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     setup:
     def topic = "persistent://public/default/testPartitionedTopic_" + UUID.randomUUID()
     admin.topics().createPartitionedTopic(topic, 2)
+
+    def latch = new CountDownLatch(1)
     consumer = client.newConsumer(Schema.STRING)
       .subscriptionName("test_sub")
       .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
@@ -286,6 +293,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         @Override
         void received(Consumer<String> consumer, Message<String> msg) {
           consumer.acknowledge(msg)
+          latch.countDown()
         }
       })
       .subscribe()
@@ -301,10 +309,13 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       msgId = producer.send(msg)
     }
 
+    latch.await(1, TimeUnit.MINUTES)
+    // Wait until all the spans finished.
+    Thread.sleep(TimeUnit.SECONDS.toMillis(20))
+
     def traces = waitForTraces(1)
     Assert.assertEquals(traces.size(), 1)
     def spans = traces[0]
-    Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> spans.size() == 4)
     Assert.assertEquals(spans.size(), 4)
 
     def parent = spans.find {
@@ -391,6 +402,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
     def topic = "persistent://public/default/testNonPartitionedTopic_" + UUID.randomUUID()
     def topic1 = "persistent://public/default/testNonPartitionedTopic_" + UUID.randomUUID()
+
+    def latch = new CountDownLatch(2)
     producer = client.newProducer(Schema.STRING)
       .topic(topic)
       .enableBatching(false)
@@ -413,14 +426,18 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         @Override
         void received(Consumer<String> consumer, Message<String> msg) {
           consumer.acknowledge(msg)
+          latch.countDown()
         }
       })
       .subscribe()
 
+    latch.await(1, TimeUnit.MINUTES)
+    // Wait until all the spans finished.
+    Thread.sleep(TimeUnit.SECONDS.toMillis(20))
+
     def traces = waitForTraces(1)
     Assert.assertEquals(traces.size(), 1)
     def spans = traces[0]
-    Awaitility.waitAtMost(1, TimeUnit.MINUTES).until(() -> spans.size() == 7)
     Assert.assertEquals(spans.size(), 7)
 
     def parent = spans.find {
