@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
-import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.net.URI;
@@ -133,31 +132,28 @@ public abstract class AbstractVaadinTest
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = testing.waitForTraces(1);
-              TracesAssert.assertThat(traces)
+              assertThat(traces.get(0))
                   .satisfies(
-                      trace ->
-                          assertThat(trace.get(0))
-                              .satisfies(
-                                  spans -> {
-                                    OpenTelemetryAssertions.assertThat(spans.get(0))
-                                        .hasName(getContextPath() + "/main")
-                                        .hasNoParent()
-                                        .hasKind(SpanKind.SERVER);
-                                    OpenTelemetryAssertions.assertThat(spans.get(1))
-                                        .hasName("SpringVaadinServletService.handleRequest")
-                                        .hasParent(spans.get(0))
-                                        .hasKind(SpanKind.INTERNAL);
-                                    // we don't assert all the handler spans as these vary between
-                                    // vaadin versions
-                                    OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 2))
-                                        .hasName("UidlRequestHandler.handleRequest")
-                                        .hasParent(spans.get(1))
-                                        .hasKind(SpanKind.INTERNAL);
-                                    OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 1))
-                                        .hasName("EventRpcHandler.handle/click")
-                                        .hasParent(spans.get(spans.size() - 2))
-                                        .hasKind(SpanKind.INTERNAL);
-                                  }));
+                      spans -> {
+                        OpenTelemetryAssertions.assertThat(spans.get(0))
+                            .hasName(getContextPath() + "/main")
+                            .hasNoParent()
+                            .hasKind(SpanKind.SERVER);
+                        OpenTelemetryAssertions.assertThat(spans.get(1))
+                            .hasName("SpringVaadinServletService.handleRequest")
+                            .hasParent(spans.get(0))
+                            .hasKind(SpanKind.INTERNAL);
+                        // we don't assert all the handler spans as these vary between
+                        // vaadin versions
+                        OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 2))
+                            .hasName("UidlRequestHandler.handleRequest")
+                            .hasParent(spans.get(1))
+                            .hasKind(SpanKind.INTERNAL);
+                        OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 1))
+                            .hasName("EventRpcHandler.handle/click")
+                            .hasParent(spans.get(spans.size() - 2))
+                            .hasKind(SpanKind.INTERNAL);
+                      });
             });
   }
 
