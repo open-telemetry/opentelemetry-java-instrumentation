@@ -498,7 +498,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         }
 
         SpanAssert.assertSpan(it0) {
-          kind(CONSUMER)
+          kind(INTERNAL)
           childOf(parent0)
         }
     }
