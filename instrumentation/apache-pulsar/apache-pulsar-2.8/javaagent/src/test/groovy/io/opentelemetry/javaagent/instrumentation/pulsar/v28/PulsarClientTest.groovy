@@ -51,7 +51,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
 
   @Override
   def setupSpec() {
-    pulsar = new PulsarContainer(DEFAULT_IMAGE_NAME);
+    pulsar = new PulsarContainer(DEFAULT_IMAGE_NAME)
     pulsar.start()
 
     brokerUrl = pulsar.pulsarBrokerUrl
