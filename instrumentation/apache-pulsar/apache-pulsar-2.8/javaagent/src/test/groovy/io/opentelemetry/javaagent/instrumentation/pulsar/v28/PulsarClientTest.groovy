@@ -221,6 +221,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.MESSAGING_DESTINATION" topic
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         "$SemanticAttributes.MESSAGING_OPERATION" "process"
+        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
       }
     }
   }
@@ -374,7 +375,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-        "$SemanticAttributes.MESSAGING_OPERATION" "RECEIVE"
+        "$SemanticAttributes.MESSAGING_OPERATION" "receive"
       }
     }
 
@@ -391,7 +392,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         }
         "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
-        "$SemanticAttributes.MESSAGING_OPERATION" "PROCESS"
+        "$SemanticAttributes.MESSAGING_OPERATION" "process"
       }
     }
   }
@@ -445,6 +446,11 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         it0.name.equalsIgnoreCase("parent")
     }
 
+    SpanAssert.assertSpan(parent) {
+      hasNoParent()
+      kind(INTERNAL)
+    }
+
 
     def sendSpans = spans.findAll {
       it0 ->
@@ -454,6 +460,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     sendSpans.forEach {
       it0 ->
         SpanAssert.assertSpan(it0) {
+          kind(PRODUCER)
           childOf(parent)
         }
     }
@@ -477,6 +484,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         }
 
         SpanAssert.assertSpan(it0) {
+          kind(CONSUMER)
           childOf(parent0)
         }
     }
@@ -490,6 +498,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         }
 
         SpanAssert.assertSpan(it0) {
+          kind(CONSUMER)
           childOf(parent0)
         }
     }
