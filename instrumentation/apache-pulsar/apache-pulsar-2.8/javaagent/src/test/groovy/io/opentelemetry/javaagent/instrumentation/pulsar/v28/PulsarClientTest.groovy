@@ -492,7 +492,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     processSpans.forEach {
       it0 ->
         def parentSpanId = it0.getParentSpanId()
-        def parent0 = processSpans.find {
+        def parent0 = receiveSpans.find {
           v ->
             (v.spanId == parentSpanId)
         }
