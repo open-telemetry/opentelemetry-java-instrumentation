@@ -8,13 +8,13 @@ import java.util.logging.Logger;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.net.URIAuthority;
 
-public class ApacheHttpRequest {
-  private static final Logger logger = Logger.getLogger(ApacheHttpResponse.class.getName());
+public class ApacheHttpClientRequest {
+  private static final Logger logger = Logger.getLogger(ApacheHttpClientResponse.class.getName());
 
   private final Context parentContext;
   private final HttpRequest httpRequest;
 
-  public ApacheHttpRequest(Context parentContext, HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(Context parentContext, HttpRequest httpRequest) {
     this.parentContext = parentContext;
     this.httpRequest = httpRequest;
   }
