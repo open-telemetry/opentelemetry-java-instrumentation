@@ -25,8 +25,7 @@ public class ApacheHttpClientHelper {
   private static final Logger logger = Logger.getLogger(ApacheHttpClientHelper.class.getName());
 
   public static ApacheHttpClientRequest createRequest(
-      Context parentContext,
-      ClassicHttpRequest request) {
+      Context parentContext, ClassicHttpRequest request) {
     HttpEntity originalEntity = request.getEntity();
     if (originalEntity != null) {
       HttpEntity wrappedHttpEntity = new WrappedHttpEntity(parentContext, originalEntity);

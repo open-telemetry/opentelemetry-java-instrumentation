@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.getContentLengthMetrics;
@@ -7,17 +12,19 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
-public class ApacheContentLengthAttributesGetter implements
-    AttributesExtractor<ApacheHttpClientRequest, ApacheHttpClientResponse> {
+public class ApacheContentLengthAttributesGetter
+    implements AttributesExtractor<ApacheHttpClientRequest, ApacheHttpClientResponse> {
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext,
-      ApacheHttpClientRequest request) {
-  }
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, ApacheHttpClientRequest request) {}
 
   @Override
-  public void onEnd(AttributesBuilder attributes, Context context,
-      ApacheHttpClientRequest request, ApacheHttpClientResponse response,
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      ApacheHttpClientRequest request,
+      ApacheHttpClientResponse response,
       Throwable error) {
     Context parentContext = request.getParentContext();
     ApacheContentLengthMetrics metrics = getContentLengthMetrics(parentContext);

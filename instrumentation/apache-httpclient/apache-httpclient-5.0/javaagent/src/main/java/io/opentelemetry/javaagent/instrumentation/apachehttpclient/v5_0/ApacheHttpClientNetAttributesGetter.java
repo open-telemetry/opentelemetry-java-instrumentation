@@ -12,7 +12,8 @@ import javax.annotation.Nullable;
 final class ApacheHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<ApacheHttpClientRequest, ApacheHttpClientResponse> {
   @Override
-  public String transport(ApacheHttpClientRequest request, @Nullable ApacheHttpClientResponse response) {
+  public String transport(
+      ApacheHttpClientRequest request, @Nullable ApacheHttpClientResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
