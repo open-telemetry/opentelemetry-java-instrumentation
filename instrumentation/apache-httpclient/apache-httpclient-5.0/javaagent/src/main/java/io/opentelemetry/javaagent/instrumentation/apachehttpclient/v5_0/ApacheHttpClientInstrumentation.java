@@ -131,7 +131,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      otelRequest = new ApacheHttpRequest(request);
+      otelRequest = new ApacheHttpRequest(parentContext, request);
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -167,7 +167,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      otelRequest = new ApacheHttpRequest(request);
+      otelRequest = new ApacheHttpRequest(parentContext, request);
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -209,7 +209,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      otelRequest = new ApacheHttpRequest(request);
+      otelRequest = new ApacheHttpRequest(parentContext, request);
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -251,7 +251,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      otelRequest = new ApacheHttpRequest(new RequestWithHost(host, request));
+      otelRequest = new ApacheHttpRequest(parentContext, new RequestWithHost(host, request));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -289,7 +289,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      otelRequest = new ApacheHttpRequest(new RequestWithHost(host, request));
+      otelRequest = new ApacheHttpRequest(parentContext, new RequestWithHost(host, request));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -334,7 +334,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      otelRequest = new ApacheHttpRequest(new RequestWithHost(host, request));
+      otelRequest = new ApacheHttpRequest(parentContext, new RequestWithHost(host, request));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }

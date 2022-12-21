@@ -1,13 +1,22 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
+import io.opentelemetry.context.Context;
 import java.util.List;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.net.URIAuthority;
 
 public class ApacheHttpRequest {
+  private final Context parentContext;
   private final HttpRequest httpRequest;
 
-  public ApacheHttpRequest(HttpRequest httpRequest) {this.httpRequest = httpRequest;}
+  public ApacheHttpRequest(Context parentContext, HttpRequest httpRequest) {
+    this.parentContext = parentContext;
+    this.httpRequest = httpRequest;
+  }
+
+  public Context getParentContext() {
+    return parentContext;
+  }
 
   public String getPeerName() {
     return httpRequest.getAuthority().getHostName();

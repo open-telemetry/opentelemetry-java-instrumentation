@@ -17,9 +17,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -27,10 +30,13 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.nio.AsyncRequestProducer;
+import org.apache.hc.core5.http.nio.AsyncResponseConsumer;
+import org.apache.hc.core5.http.nio.CapacityChannel;
 import org.apache.hc.core5.http.nio.DataStreamChannel;
 import org.apache.hc.core5.http.nio.RequestChannel;
 import org.apache.hc.core5.http.protocol.BasicHttpContext;
@@ -69,6 +75,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) AsyncRequestProducer requestProducer,
+        @Advice.Argument(value = 1, readOnly = false) AsyncResponseConsumer<?> responseConsumer,
         @Advice.Argument(value = 3, readOnly = false) HttpContext httpContext,
         @Advice.Argument(value = 4, readOnly = false) FutureCallback<?> futureCallback) {
 
@@ -80,23 +87,80 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
       requestProducer =
-          new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
+          new WrappedRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
+      responseConsumer = new WrappedResponseConsumer<>(parentContext, responseConsumer);
       futureCallback = wrappedFutureCallback;
     }
   }
 
-  public static class DelegatingRequestProducer implements AsyncRequestProducer {
+  public static class WrappedResponseConsumer<T> implements AsyncResponseConsumer<T> {
+    private static final VirtualField<Context, ApacheContentLengthMetrics> virtualField =
+        VirtualField.find(Context.class, ApacheContentLengthMetrics.class);
+    private final AsyncResponseConsumer<T> delegate;
     private final Context parentContext;
-    private final AsyncRequestProducer delegate;
-    private final WrappedFutureCallback<?> wrappedFutureCallback;
 
-    public DelegatingRequestProducer(
-        Context parentContext,
-        AsyncRequestProducer delegate,
-        WrappedFutureCallback<?> wrappedFutureCallback) {
+    public WrappedResponseConsumer(Context parentContext, AsyncResponseConsumer<T> delegate) {
       this.parentContext = parentContext;
       this.delegate = delegate;
-      this.wrappedFutureCallback = wrappedFutureCallback;
+    }
+
+    @Override
+    public void consumeResponse(HttpResponse httpResponse, EntityDetails entityDetails,
+        HttpContext httpContext, FutureCallback<T> futureCallback) throws HttpException,
+        IOException {
+      delegate.consumeResponse(httpResponse, entityDetails, httpContext, futureCallback);
+    }
+
+    @Override
+    public void informationResponse(HttpResponse httpResponse, HttpContext httpContext) throws
+        HttpException, IOException {
+      delegate.informationResponse(httpResponse, httpContext);
+    }
+
+    @Override
+    public void failed(Exception e) {
+      delegate.failed(e);
+    }
+
+    @Override
+    public void updateCapacity(CapacityChannel capacityChannel) throws IOException {
+      delegate.updateCapacity(capacityChannel);
+    }
+
+    @Override
+    public void consume(ByteBuffer byteBuffer) throws IOException {
+      ApacheContentLengthMetrics metrics = virtualField.get(parentContext);
+      if (metrics == null) {
+        metrics = new ApacheContentLengthMetrics();
+        virtualField.set(parentContext, metrics);
+      }
+      metrics.addResponseBytes(byteBuffer.limit());
+      delegate.consume(byteBuffer);
+    }
+
+    @Override
+    public void streamEnd(List<? extends Header> list) throws HttpException, IOException {
+      delegate.streamEnd(list);
+    }
+
+    @Override
+    public void releaseResources() {
+      delegate.releaseResources();
+    }
+  }
+
+  public static class WrappedRequestProducer implements AsyncRequestProducer {
+    private final Context parentContext;
+    private final AsyncRequestProducer delegate;
+    private final WrappedFutureCallback<?> callback;
+
+    public WrappedRequestProducer(
+        Context parentContext,
+        AsyncRequestProducer delegate,
+        WrappedFutureCallback<?> callback) {
+      this.parentContext = parentContext;
+      this.delegate = delegate;
+      this.callback = callback;
     }
 
     @Override
@@ -107,8 +171,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void sendRequest(RequestChannel channel, HttpContext context)
         throws HttpException, IOException {
-      DelegatingRequestChannel requestChannel =
-          new DelegatingRequestChannel(channel, parentContext, wrappedFutureCallback);
+      RequestChannel requestChannel = new WrappedRequestChannel(channel, parentContext, callback);
       delegate.sendRequest(requestChannel, context);
     }
 
@@ -124,7 +187,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void produce(DataStreamChannel channel) throws IOException {
-      delegate.produce(channel);
+      delegate.produce(new WrappedDataStreamChannel(parentContext, channel));
     }
 
     @Override
@@ -133,12 +196,50 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class DelegatingRequestChannel implements RequestChannel {
+  public static class WrappedDataStreamChannel implements DataStreamChannel {
+    private static final VirtualField<Context, ApacheContentLengthMetrics> virtualField =
+        VirtualField.find(Context.class, ApacheContentLengthMetrics.class);
+    private final Context parentContext;
+    private final DataStreamChannel delegate;
+
+    public WrappedDataStreamChannel(Context parentContext, DataStreamChannel delegate) {
+      this.parentContext = parentContext;
+      this.delegate = delegate;
+    }
+
+    @Override
+    public void requestOutput() {
+      delegate.requestOutput();
+    }
+
+    @Override
+    public int write(ByteBuffer byteBuffer) throws IOException {
+      ApacheContentLengthMetrics metrics = virtualField.get(parentContext);
+      if (metrics == null) {
+        metrics = new ApacheContentLengthMetrics();
+        virtualField.set(parentContext, metrics);
+      }
+      metrics.addRequestBytes(byteBuffer.limit());
+      return delegate.write(byteBuffer);
+    }
+
+    @Override
+    public void endStream() throws IOException {
+      delegate.endStream();
+    }
+
+    @Override
+    public void endStream(List<? extends Header> list) throws IOException {
+      delegate.endStream(list);
+    }
+  }
+
+  public static class WrappedRequestChannel implements RequestChannel {
     private final RequestChannel delegate;
     private final Context parentContext;
     private final WrappedFutureCallback<?> wrappedFutureCallback;
 
-    public DelegatingRequestChannel(
+    public WrappedRequestChannel(
         RequestChannel requestChannel,
         Context parentContext,
         WrappedFutureCallback<?> wrappedFutureCallback) {
@@ -150,7 +251,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
-      ApacheHttpRequest otelRequest = new ApacheHttpRequest(request);
+      ApacheHttpRequest otelRequest = new ApacheHttpRequest(parentContext, request);
       if (instrumenter().shouldStart(parentContext, otelRequest)) {
         wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
         wrappedFutureCallback.otelRequest = otelRequest;
@@ -161,7 +262,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
   }
 
   public static class WrappedFutureCallback<T> implements FutureCallback<T> {
-
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;

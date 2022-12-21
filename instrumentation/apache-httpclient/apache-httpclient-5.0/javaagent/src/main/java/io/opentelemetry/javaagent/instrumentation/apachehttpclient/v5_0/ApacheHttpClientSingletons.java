@@ -39,6 +39,7 @@ public final class ApacheHttpClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+            .addAttributesExtractor(new ApacheContentLengthAttributesGetter())
             .addOperationMetrics(HttpClientMetrics.get())
             .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
