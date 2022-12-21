@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -118,6 +119,8 @@ public class JettyHttpClient9TracingInterceptor
                   (proxy, method, args) -> {
                     try (Scope ignored = context.makeCurrent()) {
                       return method.invoke(listener, args);
+                    } catch (InvocationTargetException exception) {
+                      throw exception.getCause();
                     }
                   });
 
