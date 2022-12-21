@@ -14,7 +14,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
@@ -22,12 +24,23 @@ import org.apache.hc.core5.http.ProtocolVersion;
 public class ApacheHttpClientHelper {
   private static final Logger logger = Logger.getLogger(ApacheHttpClientHelper.class.getName());
 
+  public static ApacheHttpClientRequest createRequest(
+      Context parentContext,
+      ClassicHttpRequest request) {
+    HttpEntity originalEntity = request.getEntity();
+    if (originalEntity != null) {
+      HttpEntity wrappedHttpEntity = new WrappedHttpEntity(parentContext, originalEntity);
+      request.setEntity(wrappedHttpEntity);
+    }
+    return new ApacheHttpClientRequest(parentContext, request);
+  }
+
   public static void doMethodExit(
-      Context context, ApacheHttpRequest request, Object result, Throwable throwable) {
+      Context context, ApacheHttpClientRequest request, Object result, Throwable throwable) {
     if (throwable != null) {
       instrumenter().end(context, request, null, throwable);
     } else if (result instanceof HttpResponse) {
-      ApacheHttpResponse otelResponse = new ApacheHttpResponse((HttpResponse) result);
+      ApacheHttpClientResponse otelResponse = new ApacheHttpClientResponse((HttpResponse) result);
       instrumenter().end(context, request, otelResponse, null);
     } else {
       // ended in WrappingStatusSettingResponseHandler

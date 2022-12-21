@@ -10,31 +10,31 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 final class ApacheHttpClientHttpAttributesGetter
-    implements HttpClientAttributesGetter<ApacheHttpRequest, ApacheHttpResponse> {
+    implements HttpClientAttributesGetter<ApacheHttpClientRequest, ApacheHttpClientResponse> {
 
   @Override
-  public String getMethod(ApacheHttpRequest request) {
+  public String getMethod(ApacheHttpClientRequest request) {
     return request.getMethod();
   }
 
   @Override
-  public String getUrl(ApacheHttpRequest request) {
+  public String getUrl(ApacheHttpClientRequest request) {
     return request.getUrl();
   }
 
   @Override
-  public List<String> getRequestHeader(ApacheHttpRequest request, String name) {
+  public List<String> getRequestHeader(ApacheHttpClientRequest request, String name) {
     return request.getHeader(name);
   }
 
   @Override
-  public Integer getStatusCode(ApacheHttpRequest request, ApacheHttpResponse response, @Nullable Throwable error) {
+  public Integer getStatusCode(ApacheHttpClientRequest request, ApacheHttpClientResponse response, @Nullable Throwable error) {
     return response.getStatusCode();
   }
 
   @Override
   @Nullable
-  public String getFlavor(ApacheHttpRequest request, @Nullable ApacheHttpResponse response) {
+  public String getFlavor(ApacheHttpClientRequest request, @Nullable ApacheHttpClientResponse response) {
     String flavor = request.getFlavor();
     if (flavor == null && response != null) {
       flavor = response.getFlavor();
@@ -43,7 +43,7 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> getResponseHeader(ApacheHttpRequest request, ApacheHttpResponse response, String name) {
+  public List<String> getResponseHeader(ApacheHttpClientRequest request, ApacheHttpClientResponse response, String name) {
     return response.getHeader(name);
   }
 }

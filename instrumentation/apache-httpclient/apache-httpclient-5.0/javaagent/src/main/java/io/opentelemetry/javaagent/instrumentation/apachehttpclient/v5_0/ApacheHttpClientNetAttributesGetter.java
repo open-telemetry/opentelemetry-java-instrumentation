@@ -10,20 +10,20 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class ApacheHttpClientNetAttributesGetter
-    implements NetClientAttributesGetter<ApacheHttpRequest, ApacheHttpResponse> {
+    implements NetClientAttributesGetter<ApacheHttpClientRequest, ApacheHttpClientResponse> {
   @Override
-  public String getTransport(ApacheHttpRequest request, @Nullable ApacheHttpResponse response) {
+  public String getTransport(ApacheHttpClientRequest request, @Nullable ApacheHttpClientResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String getPeerName(ApacheHttpRequest request) {
+  public String getPeerName(ApacheHttpClientRequest request) {
     return request.getPeerName();
   }
 
   @Override
-  public Integer getPeerPort(ApacheHttpRequest request) {
+  public Integer getPeerPort(ApacheHttpClientRequest request) {
     return request.getPeerPort();
   }
 }

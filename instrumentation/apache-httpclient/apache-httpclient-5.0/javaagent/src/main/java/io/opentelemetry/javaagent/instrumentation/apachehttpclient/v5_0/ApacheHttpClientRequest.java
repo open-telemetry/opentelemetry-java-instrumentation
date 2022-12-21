@@ -5,11 +5,11 @@ import java.util.List;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.net.URIAuthority;
 
-public class ApacheHttpRequest {
+public class ApacheHttpClientRequest {
   private final Context parentContext;
   private final HttpRequest httpRequest;
 
-  public ApacheHttpRequest(Context parentContext, HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(Context parentContext, HttpRequest httpRequest) {
     this.parentContext = parentContext;
     this.httpRequest = httpRequest;
   }
