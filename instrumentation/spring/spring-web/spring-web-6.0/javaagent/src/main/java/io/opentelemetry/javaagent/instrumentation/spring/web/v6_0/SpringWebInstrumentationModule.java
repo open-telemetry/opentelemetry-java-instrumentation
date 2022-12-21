@@ -30,10 +30,11 @@ public class SpringWebInstrumentationModule extends InstrumentationModule {
 
   @Override
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
-    // make the filter class loadable by ClassPathResource - in some cases (e.g. spring-guice)
-    // Spring might want to read the class file metadata; this line will make the filter class file
-    // visible to the bean class loader
-    helperResourceBuilder.registerForAllClassLoaders(
+    // make the filter class file loadable by ClassPathResource - in some cases (e.g. spring-guice,
+    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7428) Spring
+    // might want to read the class file metadata; this line will make the filter class file visible
+    // to the bean class loader
+    helperResourceBuilder.register(
         "org/springframework/web/servlet/v6_0/OpenTelemetryHandlerMappingFilter.class");
   }
 
