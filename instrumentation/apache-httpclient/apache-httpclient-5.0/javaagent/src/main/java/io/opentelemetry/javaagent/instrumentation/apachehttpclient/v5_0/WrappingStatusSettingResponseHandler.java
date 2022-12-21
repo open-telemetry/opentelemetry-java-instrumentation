@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.A
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
-import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
@@ -18,13 +17,13 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 public class WrappingStatusSettingResponseHandler<T> implements HttpClientResponseHandler<T> {
   final Context context;
   final Context parentContext;
-  final ClassicHttpRequest request;
+  final ApacheHttpRequest request;
   final HttpClientResponseHandler<T> handler;
 
   public WrappingStatusSettingResponseHandler(
       Context context,
       Context parentContext,
-      ClassicHttpRequest request,
+      ApacheHttpRequest request,
       HttpClientResponseHandler<T> handler) {
     this.context = context;
     this.parentContext = parentContext;
@@ -34,7 +33,11 @@ public class WrappingStatusSettingResponseHandler<T> implements HttpClientRespon
 
   @Override
   public T handleResponse(ClassicHttpResponse response) throws IOException, HttpException {
-    instrumenter().end(context, request, response, null);
+    ApacheHttpResponse otelResponse = null;
+    if (response != null) {
+      otelResponse = new ApacheHttpResponse(response);
+    }
+    instrumenter().end(context, request, otelResponse, null);
     // ending the span before executing the callback handler (and scoping the callback handler to
     // the parent context), even though we are inside of a synchronous http client callback
     // underneath HttpClient.execute(..), in order to not attribute other CLIENT span timings that

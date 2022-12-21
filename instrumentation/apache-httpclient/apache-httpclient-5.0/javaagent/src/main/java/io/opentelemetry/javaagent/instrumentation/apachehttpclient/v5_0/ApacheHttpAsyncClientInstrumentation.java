@@ -150,9 +150,10 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
-      if (instrumenter().shouldStart(parentContext, request)) {
-        wrappedFutureCallback.context = instrumenter().start(parentContext, request);
-        wrappedFutureCallback.httpRequest = request;
+      ApacheHttpRequest otelRequest = new ApacheHttpRequest(request);
+      if (instrumenter().shouldStart(parentContext, otelRequest)) {
+        wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
+        wrappedFutureCallback.otelRequest = otelRequest;
       }
 
       delegate.sendRequest(request, entityDetails, context);
@@ -168,7 +169,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
-    private volatile HttpRequest httpRequest;
+    private volatile ApacheHttpRequest otelRequest;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
@@ -187,7 +188,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
+      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -209,7 +210,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), ex);
+      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -232,7 +233,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
+      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
 
       if (parentContext == null) {
         cancelDelegate();
@@ -263,8 +264,13 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    private HttpResponse getResponseFromHttpContext() {
-      return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
+    private ApacheHttpResponse getResponseFromHttpContext() {
+      HttpResponse httpResponse = (HttpResponse) httpContext.getAttribute(
+          HttpCoreContext.HTTP_RESPONSE);
+      if (httpResponse != null) {
+        return new ApacheHttpResponse(httpResponse);
+      }
+      return null;
     }
   }
 }
