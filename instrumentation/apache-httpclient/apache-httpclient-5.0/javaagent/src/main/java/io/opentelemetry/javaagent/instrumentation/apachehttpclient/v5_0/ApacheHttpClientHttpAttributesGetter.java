@@ -28,13 +28,17 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public Integer getStatusCode(ApacheHttpClientRequest request, ApacheHttpClientResponse response, @Nullable Throwable error) {
+  public Integer getStatusCode(
+      ApacheHttpClientRequest request,
+      ApacheHttpClientResponse response,
+      @Nullable Throwable error) {
     return response.getStatusCode();
   }
 
   @Override
   @Nullable
-  public String getFlavor(ApacheHttpClientRequest request, @Nullable ApacheHttpClientResponse response) {
+  public String getFlavor(
+      ApacheHttpClientRequest request, @Nullable ApacheHttpClientResponse response) {
     String flavor = request.getFlavor();
     if (flavor == null && response != null) {
       flavor = response.getFlavor();
@@ -43,7 +47,8 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public List<String> getResponseHeader(ApacheHttpClientRequest request, ApacheHttpClientResponse response, String name) {
+  public List<String> getResponseHeader(
+      ApacheHttpClientRequest request, ApacheHttpClientResponse response, String name) {
     return response.getHeader(name);
   }
 }

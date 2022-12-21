@@ -103,15 +103,18 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     @Override
-    public void consumeResponse(HttpResponse httpResponse, EntityDetails entityDetails,
-        HttpContext httpContext, FutureCallback<T> futureCallback) throws HttpException,
-        IOException {
+    public void consumeResponse(
+        HttpResponse httpResponse,
+        EntityDetails entityDetails,
+        HttpContext httpContext,
+        FutureCallback<T> futureCallback)
+        throws HttpException, IOException {
       delegate.consumeResponse(httpResponse, entityDetails, httpContext, futureCallback);
     }
 
     @Override
-    public void informationResponse(HttpResponse httpResponse, HttpContext httpContext) throws
-        HttpException, IOException {
+    public void informationResponse(HttpResponse httpResponse, HttpContext httpContext)
+        throws HttpException, IOException {
       delegate.informationResponse(httpResponse, httpContext);
     }
 
@@ -149,9 +152,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final WrappedFutureCallback<?> callback;
 
     public WrappedRequestProducer(
-        Context parentContext,
-        AsyncRequestProducer delegate,
-        WrappedFutureCallback<?> callback) {
+        Context parentContext, AsyncRequestProducer delegate, WrappedFutureCallback<?> callback) {
       this.parentContext = parentContext;
       this.delegate = delegate;
       this.callback = callback;
@@ -353,8 +354,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     private ApacheHttpClientResponse getResponseFromHttpContext() {
-      HttpResponse httpResponse = (HttpResponse) httpContext.getAttribute(
-          HttpCoreContext.HTTP_RESPONSE);
+      HttpResponse httpResponse =
+          (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
       if (httpResponse != null) {
         return new ApacheHttpClientResponse(httpResponse);
       }
