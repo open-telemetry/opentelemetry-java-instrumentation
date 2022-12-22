@@ -12,13 +12,13 @@ group = "io.opentelemetry.instrumentation"
 
 dependencies {
   api("io.opentelemetry:opentelemetry-semconv")
+  api("io.opentelemetry:opentelemetry-sdk-metrics")
   api(project(":instrumentation-api"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":testing-common"))
-  testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 

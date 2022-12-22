@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -82,7 +81,7 @@ public final class HttpServerMetrics implements OperationListener {
 
   @Override
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    activeRequests.add(1, applyActiveRequestsView(startAttributes), context);
+    activeRequests.add(1, startAttributes, context);
 
     return context.with(
         HTTP_SERVER_REQUEST_METRICS_STATE,
