@@ -34,9 +34,7 @@ public final class ApacheHttpClientRequest {
   private final Context parentContext;
 
   public ApacheHttpClientRequest(
-      Context parentContext,
-      @Nullable HttpHost httpHost,
-      HttpRequest httpRequest) {
+      Context parentContext, @Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && httpHost != null) {
       this.uri = getCalculatedUri(httpHost, calculatedUri);
