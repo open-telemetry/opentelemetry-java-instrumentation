@@ -6,11 +6,9 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyActiveRequestsView;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyServerDurationAndSizeView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongHistogram;
@@ -23,7 +21,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -102,36 +99,22 @@ public final class HttpServerMetrics implements OperationListener {
           context);
       return;
     }
-    activeRequests.add(-1, applyActiveRequestsView(state.startAttributes()), context);
-    Attributes durationAndSizeAttributes =
-        applyServerDurationAndSizeView(state.startAttributes(), endAttributes);
+    Attributes attributes = mergeAttributes(state.startAttributes(), endAttributes);
+    activeRequests.add(-1, attributes, context);
     duration.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, durationAndSizeAttributes, context);
-    Long requestLength =
-        getAttribute(
-            SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, endAttributes, state.startAttributes());
+        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+    Long requestLength = attributes.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
     if (requestLength != null) {
-      requestSize.record(requestLength, durationAndSizeAttributes);
+      requestSize.record(requestLength, attributes);
     }
-    Long responseLength =
-        getAttribute(
-            SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-            endAttributes,
-            state.startAttributes());
+    Long responseLength = attributes.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
     if (responseLength != null) {
-      responseSize.record(responseLength, durationAndSizeAttributes);
+      responseSize.record(responseLength, attributes);
     }
   }
 
-  @Nullable
-  private static <T> T getAttribute(AttributeKey<T> key, Attributes... attributesList) {
-    for (Attributes attributes : attributesList) {
-      T value = attributes.get(key);
-      if (value != null) {
-        return value;
-      }
-    }
-    return null;
+  public static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {
+    return Attributes.builder().putAll(attr1).putAll(attr2).build();
   }
 
   @AutoValue

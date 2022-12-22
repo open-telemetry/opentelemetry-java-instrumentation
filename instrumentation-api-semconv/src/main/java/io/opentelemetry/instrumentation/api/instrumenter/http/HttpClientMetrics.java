@@ -9,7 +9,6 @@ import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
@@ -88,10 +87,7 @@ public final class HttpClientMetrics implements OperationListener {
           context);
       return;
     }
-    AttributesBuilder builder = Attributes.builder();
-    builder.putAll(state.startAttributes());
-    builder.putAll(endAttributes);
-    Attributes attributes = builder.build();
+    Attributes attributes = mergeAttributes(state.startAttributes(), endAttributes);
     duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
     Long requestLength = attributes.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
     if (requestLength != null) {
@@ -101,6 +97,10 @@ public final class HttpClientMetrics implements OperationListener {
     if (responseLength != null) {
       responseSize.record(responseLength, attributes);
     }
+  }
+
+  public static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {
+    return Attributes.builder().putAll(attr1).putAll(attr2).build();
   }
 
   @AutoValue
