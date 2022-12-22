@@ -100,8 +100,8 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     }
 
     @Override
-    public void consumeContent(ContentDecoder contentDecoder, IOControl ioControl) throws
-        IOException {
+    public void consumeContent(ContentDecoder contentDecoder, IOControl ioControl)
+        throws IOException {
       delegate.consumeContent(new WrappedContentDecoder(parentContext, contentDecoder), ioControl);
     }
 
