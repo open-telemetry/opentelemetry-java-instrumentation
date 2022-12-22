@@ -13,9 +13,12 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
@@ -28,20 +31,49 @@ public final class ApacheHttpClientRequest {
   @Nullable private final URI uri;
 
   private final HttpRequest delegate;
+  private LongAdder requestBytes;
 
-  public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
-    URI calculatedUri = getUri(httpRequest);
-    if (calculatedUri != null && httpHost != null) {
-      uri = getCalculatedUri(httpHost, calculatedUri);
-    } else {
-      uri = calculatedUri;
-    }
-    delegate = httpRequest;
+  private ApacheHttpClientRequest(URI uri, HttpRequest httpRequest) {
+    this.uri = uri;
+    this.delegate = httpRequest;
   }
 
-  public ApacheHttpClientRequest(HttpUriRequest httpRequest) {
-    uri = httpRequest.getURI();
-    delegate = httpRequest;
+  public static ApacheHttpClientRequest createRequest(HttpHost httpHost, HttpRequest httpRequest) {
+    URI calculatedUri = getUri(httpRequest);
+    if (calculatedUri != null && httpHost != null) {
+      calculatedUri = getCalculatedUri(httpHost, calculatedUri);
+    }
+    return wrapEntity(new ApacheHttpClientRequest(calculatedUri, httpRequest));
+  }
+
+  public static ApacheHttpClientRequest createRequest(HttpUriRequest httpRequest) {
+    return wrapEntity(new ApacheHttpClientRequest(httpRequest.getURI(), httpRequest));
+  }
+
+  private static ApacheHttpClientRequest wrapEntity(ApacheHttpClientRequest request) {
+    if (request.delegate instanceof HttpEntityEnclosingRequest) {
+      HttpEntityEnclosingRequest httpRequest = (HttpEntityEnclosingRequest) request.delegate;
+      HttpEntity originalEntity = httpRequest.getEntity();
+      if (originalEntity != null) {
+        HttpEntity wrappedEntity = new WrappedHttpEntity(request, originalEntity);
+        httpRequest.setEntity(wrappedEntity);
+      }
+    }
+    return request;
+  }
+
+  public void addRequestBytes(int byteLength) {
+    if (requestBytes == null) {
+      requestBytes = new LongAdder();
+    }
+    requestBytes.add(byteLength);
+  }
+
+  public Long getRequestBytes() {
+    if (requestBytes == null) {
+      return null;
+    }
+    return requestBytes.sum();
   }
 
   public List<String> getHeader(String name) {

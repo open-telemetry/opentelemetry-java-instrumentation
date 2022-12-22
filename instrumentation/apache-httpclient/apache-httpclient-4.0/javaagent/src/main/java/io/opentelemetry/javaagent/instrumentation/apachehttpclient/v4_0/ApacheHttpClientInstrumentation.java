@@ -134,7 +134,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
 
-      otelRequest = new ApacheHttpClientRequest(request);
+      otelRequest = ApacheHttpClientRequest.createRequest(request);
 
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
@@ -173,7 +173,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
 
-      otelRequest = new ApacheHttpClientRequest(request);
+      otelRequest = ApacheHttpClientRequest.createRequest(request);
 
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
@@ -219,7 +219,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
 
-      otelRequest = new ApacheHttpClientRequest(host, request);
+      otelRequest = ApacheHttpClientRequest.createRequest(host, request);
 
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
@@ -258,7 +258,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
 
-      otelRequest = new ApacheHttpClientRequest(host, request);
+      otelRequest = ApacheHttpClientRequest.createRequest(host, request);
 
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
