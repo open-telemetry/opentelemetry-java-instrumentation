@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.createOrGetContentLengthMetrics;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,6 +20,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -29,9 +31,11 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.nio.ContentDecoder;
 import org.apache.http.nio.ContentEncoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
+import org.apache.http.nio.protocol.HttpAsyncResponseConsumer;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 
@@ -66,6 +70,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
+        @Advice.Argument(value = 1, readOnly = false) HttpAsyncResponseConsumer<?> responseConsumer,
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
@@ -74,17 +79,74 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
       requestProducer =
-          new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
+          new WrappedRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
+      responseConsumer = new WrappedResponseConsumer<>(parentContext, responseConsumer);
       futureCallback = wrappedFutureCallback;
     }
   }
 
-  public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
+  public static class WrappedResponseConsumer<T> implements HttpAsyncResponseConsumer<T> {
+    private final Context parentContext;
+    private final HttpAsyncResponseConsumer<T> delegate;
+
+    public WrappedResponseConsumer(Context parentContext, HttpAsyncResponseConsumer<T> delegate) {
+      this.parentContext = parentContext;
+      this.delegate = delegate;
+    }
+
+    @Override
+    public void responseReceived(HttpResponse httpResponse) throws IOException, HttpException {
+      delegate.responseReceived(httpResponse);
+    }
+
+    @Override
+    public void consumeContent(ContentDecoder contentDecoder, IOControl ioControl) throws
+        IOException {
+      delegate.consumeContent(new WrappedContentDecoder(parentContext, contentDecoder), ioControl);
+    }
+
+    @Override
+    public void responseCompleted(HttpContext httpContext) {
+      delegate.responseCompleted(httpContext);
+    }
+
+    @Override
+    public void failed(Exception e) {
+      delegate.failed(e);
+    }
+
+    @Override
+    public Exception getException() {
+      return delegate.getException();
+    }
+
+    @Override
+    public T getResult() {
+      return delegate.getResult();
+    }
+
+    @Override
+    public boolean isDone() {
+      return delegate.isDone();
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+    }
+
+    @Override
+    public boolean cancel() {
+      return delegate.cancel();
+    }
+  }
+
+  public static class WrappedRequestProducer implements HttpAsyncRequestProducer {
     private final Context parentContext;
     private final HttpAsyncRequestProducer delegate;
     private final WrappedFutureCallback<?> wrappedFutureCallback;
 
-    public DelegatingRequestProducer(
+    public WrappedRequestProducer(
         Context parentContext,
         HttpAsyncRequestProducer delegate,
         WrappedFutureCallback<?> wrappedFutureCallback) {
@@ -103,7 +165,8 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       HttpHost target = delegate.getTarget();
       HttpRequest request = delegate.generateRequest();
 
-      ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(target, request);
+      ApacheHttpClientRequest otelRequest;
+      otelRequest = new ApacheHttpClientRequest(parentContext, target, request);
 
       if (instrumenter().shouldStart(parentContext, otelRequest)) {
         wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
@@ -115,7 +178,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void produceContent(ContentEncoder encoder, IOControl ioctrl) throws IOException {
-      delegate.produceContent(encoder, ioctrl);
+      delegate.produceContent(new WrappedContentEncoder(parentContext, encoder), ioctrl);
     }
 
     @Override
@@ -141,6 +204,55 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public void close() throws IOException {
       delegate.close();
+    }
+  }
+
+  public static class WrappedContentEncoder implements ContentEncoder {
+    private final Context parentContext;
+    private final ContentEncoder delegate;
+
+    public WrappedContentEncoder(Context parentContext, ContentEncoder delegate) {
+      this.parentContext = parentContext;
+      this.delegate = delegate;
+    }
+
+    @Override
+    public int write(ByteBuffer byteBuffer) throws IOException {
+      ApacheContentLengthMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+      metrics.addRequestBytes(byteBuffer.limit());
+      return delegate.write(byteBuffer);
+    }
+
+    @Override
+    public void complete() throws IOException {
+      delegate.complete();
+    }
+
+    @Override
+    public boolean isCompleted() {
+      return delegate.isCompleted();
+    }
+  }
+
+  public static class WrappedContentDecoder implements ContentDecoder {
+    private final Context parentContext;
+    private final ContentDecoder delegate;
+
+    public WrappedContentDecoder(Context parentContext, ContentDecoder delegate) {
+      this.delegate = delegate;
+      this.parentContext = parentContext;
+    }
+
+    @Override
+    public int read(ByteBuffer byteBuffer) throws IOException {
+      ApacheContentLengthMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+      metrics.addResponseBytes(byteBuffer.limit());
+      return delegate.read(byteBuffer);
+    }
+
+    @Override
+    public boolean isCompleted() {
+      return delegate.isCompleted();
     }
   }
 
