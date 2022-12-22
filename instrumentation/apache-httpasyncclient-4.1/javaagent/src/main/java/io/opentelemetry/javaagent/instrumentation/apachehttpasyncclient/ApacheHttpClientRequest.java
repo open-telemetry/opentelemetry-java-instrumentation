@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -30,16 +31,25 @@ public final class ApacheHttpClientRequest {
 
   private final HttpRequest delegate;
   @Nullable private final HttpHost target;
+  private final Context parentContext;
 
-  public ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(
+      Context parentContext,
+      @Nullable HttpHost httpHost,
+      HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && httpHost != null) {
-      uri = getCalculatedUri(httpHost, calculatedUri);
+      this.uri = getCalculatedUri(httpHost, calculatedUri);
     } else {
-      uri = calculatedUri;
+      this.uri = calculatedUri;
     }
-    delegate = httpRequest;
-    target = httpHost;
+    this.delegate = httpRequest;
+    this.target = httpHost;
+    this.parentContext = parentContext;
+  }
+
+  public Context getParentContext() {
+    return parentContext;
   }
 
   public List<String> getHeader(String name) {
