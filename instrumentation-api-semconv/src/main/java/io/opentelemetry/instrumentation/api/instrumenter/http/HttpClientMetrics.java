@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.TemporaryMetricsView.applyClientDurationAndSizeView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
@@ -21,7 +20,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -90,35 +88,19 @@ public final class HttpClientMetrics implements OperationListener {
           context);
       return;
     }
-    Attributes durationAndSizeAttributes =
-        applyClientDurationAndSizeView(state.startAttributes(), endAttributes);
-    duration.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, durationAndSizeAttributes, context);
-    Long requestLength =
-        getAttribute(
-            SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, endAttributes, state.startAttributes());
+    AttributesBuilder builder = Attributes.builder();
+    builder.putAll(state.startAttributes());
+    builder.putAll(endAttributes);
+    Attributes attributes = builder.build();
+    duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+    Long requestLength = attributes.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
     if (requestLength != null) {
-      requestSize.record(requestLength, durationAndSizeAttributes);
+      requestSize.record(requestLength, attributes);
     }
-    Long responseLength =
-        getAttribute(
-            SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-            endAttributes,
-            state.startAttributes());
+    Long responseLength = attributes.get(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
     if (responseLength != null) {
-      responseSize.record(responseLength, durationAndSizeAttributes);
+      responseSize.record(responseLength, attributes);
     }
-  }
-
-  @Nullable
-  private static <T> T getAttribute(AttributeKey<T> key, Attributes... attributesList) {
-    for (Attributes attributes : attributesList) {
-      T value = attributes.get(key);
-      if (value != null) {
-        return value;
-      }
-    }
-    return null;
   }
 
   @AutoValue
