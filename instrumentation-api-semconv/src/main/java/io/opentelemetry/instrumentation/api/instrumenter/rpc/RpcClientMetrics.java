@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.rpc;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.rpc.MetricsView.applyClientView;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -70,10 +69,12 @@ public final class RpcClientMetrics implements OperationListener {
           context);
       return;
     }
-    clientDurationHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        applyClientView(state.startAttributes(), endAttributes),
-        context);
+    Attributes attributes = mergeAttributes(state.startAttributes(), endAttributes);
+    clientDurationHistogram.record((endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+  }
+
+  private static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {
+    return Attributes.builder().putAll(attr1).putAll(attr2).build();
   }
 
   @AutoValue

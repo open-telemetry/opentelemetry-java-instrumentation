@@ -113,7 +113,7 @@ public final class HttpServerMetrics implements OperationListener {
     }
   }
 
-  public static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {
+  private static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {
     return Attributes.builder().putAll(attr1).putAll(attr2).build();
   }
 
