@@ -8,7 +8,7 @@ muzzle {
     module.set("cxf-rt-frontend-jaxws")
     // all earlier versions in maven central also pass muzzle check,
     // but 3.0.0 is already 8 years old and testing earlier versions adds complexity
-    versions.set("[3.0.0,)")
+    versions.set("[3.0.0,4)")
     extraDependency("javax.servlet:javax.servlet-api:3.0.1")
   }
 }
@@ -36,6 +36,9 @@ dependencies {
   testImplementation("javax.activation:javax.activation-api:1.2.0")
   testImplementation("javax.annotation:javax.annotation-api:1.2")
   testImplementation("com.sun.xml.messaging.saaj:saaj-impl:1.5.2")
+
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxws:3.+")
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http:3.+")
 }
 
 tasks.withType<Test>().configureEach {

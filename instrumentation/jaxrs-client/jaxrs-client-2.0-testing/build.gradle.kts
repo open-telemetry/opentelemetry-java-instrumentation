@@ -21,6 +21,7 @@ dependencies {
   latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+")
   latestDepTestLibrary("org.glassfish.jersey.core:jersey-client:2.+")
   latestDepTestLibrary("org.jboss.resteasy:resteasy-client:3.0.26.Final")
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-rs-client:3.+")
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM

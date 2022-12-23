@@ -8,7 +8,7 @@ muzzle {
   pass {
     group.set("org.apache.cxf")
     module.set("cxf-rt-frontend-jaxrs")
-    versions.set("[3.2,)")
+    versions.set("[3.2,4)")
     extraDependency("javax.servlet:javax.servlet-api:3.1.0")
   }
   pass {
@@ -42,6 +42,9 @@ dependencies {
   testLibrary("org.apache.cxf:cxf-rt-ws-policy:3.2.0")
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-webapp:9.+")
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxrs:3.+")
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http-jetty:3.+")
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-ws-policy:3.+")
 }
 
 tasks.withType<Test>().configureEach {
