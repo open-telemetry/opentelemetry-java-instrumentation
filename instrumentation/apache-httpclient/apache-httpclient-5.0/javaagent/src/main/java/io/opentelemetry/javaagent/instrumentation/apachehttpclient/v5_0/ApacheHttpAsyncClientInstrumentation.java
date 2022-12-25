@@ -256,7 +256,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;
-    private final HttpContext httpContext;
+    private final HttpCoreContext httpContext;
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
@@ -265,7 +265,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
       this.parentContext = parentContext;
-      this.httpContext = httpContext;
+      this.httpContext = HttpCoreContext.adapt(httpContext);
       // Note: this can be null in real life, so we have to handle this carefully
       this.delegate = delegate;
     }
@@ -279,7 +279,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
+      endInstrumentationSuccessfully();
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -301,7 +301,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
+      endInstrumentationWithException(ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -324,7 +324,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
+      endInstrumentationSuccessfully();
 
       if (parentContext == null) {
         cancelDelegate();
@@ -354,9 +354,26 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
     }
 
+    private void endInstrumentationSuccessfully() {
+      instrumenter().end(context, getRequest(), getResponse(), null);
+    }
+
+    private void endInstrumentationWithException(Throwable throwable) {
+      instrumenter().end(context, getRequest(), getResponse(), throwable);
+    }
+
     @Nullable
-    private HttpResponse getResponseFromHttpContext() {
-      return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
+    private HttpResponse getResponse() {
+      return httpContext.getResponse();
+    }
+
+    private ApacheHttpClientRequest getRequest() {
+      // Replacing with actual request: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6747
+      HttpRequest request = httpContext.getRequest();
+      if (request != null) {
+        return new ApacheHttpClientRequest(parentContext, request);
+      }
+      return otelRequest;
     }
   }
 }
