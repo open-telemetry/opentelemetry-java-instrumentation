@@ -8,9 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.apache.hc.core5.http.HttpResponse;
 
 final class ApacheHttpClientHttpAttributesGetter
-    implements HttpClientAttributesGetter<ApacheHttpClientRequest, ApacheHttpClientResponse> {
+    implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   public String method(ApacheHttpClientRequest request) {
@@ -29,26 +30,23 @@ final class ApacheHttpClientHttpAttributesGetter
 
   @Override
   public Integer statusCode(
-      ApacheHttpClientRequest request,
-      ApacheHttpClientResponse response,
-      @Nullable Throwable error) {
-    return response.getStatusCode();
+      ApacheHttpClientRequest request, HttpResponse response, @Nullable Throwable error) {
+    return response.getCode();
   }
 
   @Override
   @Nullable
-  public String flavor(
-      ApacheHttpClientRequest request, @Nullable ApacheHttpClientResponse response) {
+  public String flavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     String flavor = request.getFlavor();
     if (flavor == null && response != null) {
-      flavor = response.getFlavor();
+      flavor = ApacheHttpClientHelper.getFlavor(response.getVersion());
     }
     return flavor;
   }
 
   @Override
   public List<String> responseHeader(
-      ApacheHttpClientRequest request, ApacheHttpClientResponse response, String name) {
-    return response.getHeader(name);
+      ApacheHttpClientRequest request, HttpResponse response, String name) {
+    return ApacheHttpClientHelper.getHeader(response, name);
   }
 }

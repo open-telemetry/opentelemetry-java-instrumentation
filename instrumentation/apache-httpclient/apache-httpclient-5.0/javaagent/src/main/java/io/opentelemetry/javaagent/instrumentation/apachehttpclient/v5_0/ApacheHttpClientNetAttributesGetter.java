@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
+import org.apache.hc.core5.http.HttpResponse;
 
 final class ApacheHttpClientNetAttributesGetter
-    implements NetClientAttributesGetter<ApacheHttpClientRequest, ApacheHttpClientResponse> {
+    implements NetClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
   @Override
-  public String transport(
-      ApacheHttpClientRequest request, @Nullable ApacheHttpClientResponse response) {
+  public String transport(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
