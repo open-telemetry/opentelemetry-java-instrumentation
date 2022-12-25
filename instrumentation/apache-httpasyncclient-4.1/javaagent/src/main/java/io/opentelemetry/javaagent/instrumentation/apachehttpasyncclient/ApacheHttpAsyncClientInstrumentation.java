@@ -245,8 +245,10 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public int read(ByteBuffer byteBuffer) throws IOException {
-      ApacheContentLengthMetrics metrics = createOrGetContentLengthMetrics(parentContext);
-      metrics.addResponseBytes(byteBuffer.limit());
+      if (!delegate.isCompleted()) {
+        ApacheContentLengthMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+        metrics.addResponseBytes(byteBuffer.limit());
+      }
       return delegate.read(byteBuffer);
     }
 
