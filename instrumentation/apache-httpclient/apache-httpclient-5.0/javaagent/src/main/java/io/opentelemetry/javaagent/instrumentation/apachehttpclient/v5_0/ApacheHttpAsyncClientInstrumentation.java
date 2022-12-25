@@ -109,6 +109,10 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         HttpContext httpContext,
         FutureCallback<T> futureCallback)
         throws HttpException, IOException {
+      if (entityDetails != null) {
+        BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+        metrics.setResponseContentLength(entityDetails.getContentLength());
+      }
       delegate.consumeResponse(httpResponse, entityDetails, httpContext, futureCallback);
     }
 
@@ -131,7 +135,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void consume(ByteBuffer byteBuffer) throws IOException {
       if (byteBuffer.hasRemaining()) {
-        ApacheContentLengthMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
         metrics.addResponseBytes(byteBuffer.limit());
       }
       delegate.consume(byteBuffer);
@@ -209,7 +213,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public int write(ByteBuffer byteBuffer) throws IOException {
-      ApacheContentLengthMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+      BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
       metrics.addRequestBytes(byteBuffer.limit());
       return delegate.write(byteBuffer);
     }
@@ -242,6 +246,10 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
+      if (entityDetails != null) {
+        BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+        metrics.setRequestContentLength(entityDetails.getContentLength());
+      }
       ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(parentContext, request);
       if (instrumenter().shouldStart(parentContext, otelRequest)) {
         wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
@@ -368,7 +376,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     private ApacheHttpClientRequest getRequest() {
-      // Replacing with actual request: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6747
+      // Replacing with actual request:
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6747
       HttpRequest request = httpContext.getRequest();
       if (request != null) {
         return new ApacheHttpClientRequest(parentContext, request);
