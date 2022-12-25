@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CountingOutputStream extends FilterOutputStream {
   private final ApacheHttpClientRequest request;
+  private final AtomicBoolean closed;
 
   /**
    * Wraps another output stream, counting the number of bytes written.
@@ -20,18 +22,23 @@ public class CountingOutputStream extends FilterOutputStream {
   public CountingOutputStream(ApacheHttpClientRequest request, OutputStream out) {
     super(out);
     this.request = request;
+    this.closed = new AtomicBoolean(false);
   }
 
   @Override
   public void write(byte[] b, int off, int len) throws IOException {
     out.write(b, off, len);
-    request.addRequestBytes(len);
+    if (!closed.get()) {
+      request.addRequestBytes(len);
+    }
   }
 
   @Override
   public void write(int b) throws IOException {
     out.write(b);
-    request.addRequestBytes(1);
+    if (!closed.get()) {
+      request.addRequestBytes(1);
+    }
   }
 
   // Overriding close() because FilterOutputStream's close() method pre-JDK8 has bad behavior:
@@ -40,5 +47,6 @@ public class CountingOutputStream extends FilterOutputStream {
   @Override
   public void close() throws IOException {
     out.close();
+    closed.compareAndSet(false, true);
   }
 }
