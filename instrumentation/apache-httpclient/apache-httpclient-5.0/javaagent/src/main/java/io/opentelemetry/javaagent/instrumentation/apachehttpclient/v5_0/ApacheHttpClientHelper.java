@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
@@ -17,7 +15,6 @@ import java.util.logging.Logger;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 
@@ -32,17 +29,6 @@ public class ApacheHttpClientHelper {
       request.setEntity(wrappedHttpEntity);
     }
     return new ApacheHttpClientRequest(parentContext, request);
-  }
-
-  public static void doMethodExit(
-      Context context, ApacheHttpClientRequest request, Object result, Throwable throwable) {
-    if (throwable != null) {
-      instrumenter().end(context, request, null, throwable);
-    } else if (result instanceof HttpResponse) {
-      instrumenter().end(context, request, (HttpResponse) result, null);
-    } else {
-      // ended in WrappingStatusSettingResponseHandler
-    }
   }
 
   public static List<String> getHeader(MessageHeaders messageHeaders, String name) {
