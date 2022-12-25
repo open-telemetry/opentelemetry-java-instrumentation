@@ -11,9 +11,10 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import org.apache.hc.core5.http.HttpResponse;
 
 public class ApacheContentLengthAttributesGetter
-    implements AttributesExtractor<ApacheHttpClientRequest, ApacheHttpClientResponse> {
+    implements AttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   public void onStart(
@@ -24,7 +25,7 @@ public class ApacheContentLengthAttributesGetter
       AttributesBuilder attributes,
       Context context,
       ApacheHttpClientRequest request,
-      ApacheHttpClientResponse response,
+      HttpResponse response,
       Throwable error) {
     Context parentContext = request.getParentContext();
     ApacheContentLengthMetrics metrics = getContentLengthMetrics(parentContext);

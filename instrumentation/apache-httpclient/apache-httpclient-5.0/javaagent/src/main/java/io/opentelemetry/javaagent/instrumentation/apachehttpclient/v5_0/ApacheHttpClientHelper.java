@@ -39,8 +39,7 @@ public class ApacheHttpClientHelper {
     if (throwable != null) {
       instrumenter().end(context, request, null, throwable);
     } else if (result instanceof HttpResponse) {
-      ApacheHttpClientResponse otelResponse = new ApacheHttpClientResponse((HttpResponse) result);
-      instrumenter().end(context, request, otelResponse, null);
+      instrumenter().end(context, request, (HttpResponse) result, null);
     } else {
       // ended in WrappingStatusSettingResponseHandler
     }

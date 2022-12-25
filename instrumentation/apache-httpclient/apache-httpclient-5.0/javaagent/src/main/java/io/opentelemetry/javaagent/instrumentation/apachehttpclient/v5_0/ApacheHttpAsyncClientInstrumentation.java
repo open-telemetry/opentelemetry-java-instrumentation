@@ -355,13 +355,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    private ApacheHttpClientResponse getResponseFromHttpContext() {
-      HttpResponse httpResponse =
-          (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
-      if (httpResponse != null) {
-        return new ApacheHttpClientResponse(httpResponse);
-      }
-      return null;
+    private HttpResponse getResponseFromHttpContext() {
+      return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }
 }

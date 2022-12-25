@@ -33,11 +33,7 @@ public class WrappingStatusSettingResponseHandler<T> implements HttpClientRespon
 
   @Override
   public T handleResponse(ClassicHttpResponse response) throws IOException, HttpException {
-    ApacheHttpClientResponse otelResponse = null;
-    if (response != null) {
-      otelResponse = new ApacheHttpClientResponse(response);
-    }
-    instrumenter().end(context, otelRequest, otelResponse, null);
+    instrumenter().end(context, otelRequest, response, null);
     // ending the span before executing the callback handler (and scoping the callback handler to
     // the parent context), even though we are inside of a synchronous http client callback
     // underneath HttpClient.execute(..), in order to not attribute other CLIENT span timings that
