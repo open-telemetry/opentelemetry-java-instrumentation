@@ -11,9 +11,11 @@ import io.opentelemetry.context.Context;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CountingOutputStream extends FilterOutputStream {
   private final ApacheContentLengthMetrics metrics;
+  private final AtomicBoolean closed;
 
   /**
    * Wraps another output stream, counting the number of bytes written.
@@ -23,18 +25,23 @@ public class CountingOutputStream extends FilterOutputStream {
   public CountingOutputStream(Context parentContext, OutputStream out) {
     super(out);
     this.metrics = createOrGetContentLengthMetrics(parentContext);
+    this.closed = new AtomicBoolean(false);
   }
 
   @Override
   public void write(byte[] b, int off, int len) throws IOException {
     out.write(b, off, len);
-    metrics.addRequestBytes(len);
+    if (!closed.get()) {
+      metrics.addRequestBytes(len);
+    }
   }
 
   @Override
   public void write(int b) throws IOException {
     out.write(b);
-    metrics.addRequestBytes(1);
+    if (!closed.get()) {
+      metrics.addRequestBytes(1);
+    }
   }
 
   // Overriding close() because FilterOutputStream's close() method pre-JDK8 has bad behavior:
@@ -43,5 +50,6 @@ public class CountingOutputStream extends FilterOutputStream {
   @Override
   public void close() throws IOException {
     out.close();
+    closed.compareAndSet(false, true);
   }
 }
