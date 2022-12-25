@@ -27,8 +27,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
 
 class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @Override
@@ -80,12 +82,19 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return CloseableHttpResponse response,
+        @Advice.Argument(2) HttpContext httpContext,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope != null) {
         scope.close();
+        // Replacing with actual request: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6747
+        HttpCoreContext coreContext = HttpCoreContext.adapt(httpContext);
+        HttpRequest request = coreContext.getRequest();
+        if (request != null) {
+          otelRequest = new ApacheHttpClientRequest(otelRequest.getParentContext(), request);
+        }
         if (throwable != null) {
           instrumenter().end(context, otelRequest, null, throwable);
         } else {
