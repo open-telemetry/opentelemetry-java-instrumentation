@@ -14,7 +14,7 @@ import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CountingOutputStream extends FilterOutputStream {
-  private final ApacheContentLengthMetrics metrics;
+  private final BytesTransferMetrics metrics;
   private final AtomicBoolean closed;
 
   /**

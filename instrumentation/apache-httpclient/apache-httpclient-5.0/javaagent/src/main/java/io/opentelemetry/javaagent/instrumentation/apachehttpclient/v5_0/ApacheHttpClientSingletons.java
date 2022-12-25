@@ -21,10 +21,10 @@ public final class ApacheHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.0";
 
   private static final Instrumenter<ApacheHttpClientRequest, HttpResponse> INSTRUMENTER;
-  private static final VirtualField<Context, ApacheContentLengthMetrics> metricsByContext;
+  private static final VirtualField<Context, BytesTransferMetrics> metricsByContext;
 
   static {
-    metricsByContext = VirtualField.find(Context.class, ApacheContentLengthMetrics.class);
+    metricsByContext = VirtualField.find(Context.class, BytesTransferMetrics.class);
     ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
         new ApacheHttpClientHttpAttributesGetter();
     ApacheHttpClientNetAttributesGetter netAttributesGetter =
@@ -44,7 +44,7 @@ public final class ApacheHttpClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .addAttributesExtractor(new ApacheContentLengthAttributesGetter())
+            .addAttributesExtractor(new ApacheHttpClientContentLengthAttributesGetter())
             .addOperationMetrics(HttpClientMetrics.get())
             .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
@@ -53,16 +53,16 @@ public final class ApacheHttpClientSingletons {
     return INSTRUMENTER;
   }
 
-  public static ApacheContentLengthMetrics createOrGetContentLengthMetrics(Context parentContext) {
-    ApacheContentLengthMetrics metrics = metricsByContext.get(parentContext);
+  public static BytesTransferMetrics createOrGetContentLengthMetrics(Context parentContext) {
+    BytesTransferMetrics metrics = metricsByContext.get(parentContext);
     if (metrics == null) {
-      metrics = new ApacheContentLengthMetrics();
+      metrics = new BytesTransferMetrics();
       metricsByContext.set(parentContext, metrics);
     }
     return metrics;
   }
 
-  public static ApacheContentLengthMetrics getContentLengthMetrics(Context parentContext) {
+  public static BytesTransferMetrics getContentLengthMetrics(Context parentContext) {
     return metricsByContext.get(parentContext);
   }
 

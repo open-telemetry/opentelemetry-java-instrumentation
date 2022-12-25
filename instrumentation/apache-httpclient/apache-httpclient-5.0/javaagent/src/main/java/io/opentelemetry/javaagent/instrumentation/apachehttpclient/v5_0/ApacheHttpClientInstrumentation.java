@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.createOrGetContentLengthMetrics;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -26,6 +27,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.protocol.BasicHttpContext;
@@ -74,6 +76,12 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       RequestWithHost requestWithHost = new RequestWithHost(host, request);
       otelRequest = ApacheHttpClientHelper.createRequest(parentContext, requestWithHost);
       if (instrumenter().shouldStart(parentContext, otelRequest)) {
+        HttpEntity entity = request.getEntity();
+        if (entity != null) {
+          long contentLength = entity.getContentLength();
+          BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+          metrics.setRequestContentLength(contentLength);
+        }
         context = instrumenter().start(parentContext, otelRequest);
         scope = context.makeCurrent();
       }
@@ -89,11 +97,21 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       if (scope != null) {
         scope.close();
-        // Replacing with actual request: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6747
+        // Replacing with actual request:
+        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6747
         HttpCoreContext coreContext = HttpCoreContext.adapt(httpContext);
         HttpRequest request = coreContext.getRequest();
         if (request != null) {
           otelRequest = new ApacheHttpClientRequest(otelRequest.getParentContext(), request);
+        }
+        if (response != null) {
+          HttpEntity entity = response.getEntity();
+          if (entity != null) {
+            long contentLength = entity.getContentLength();
+            Context parentContext = otelRequest.getParentContext();
+            BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+            metrics.setResponseContentLength(contentLength);
+          }
         }
         if (throwable != null) {
           instrumenter().end(context, otelRequest, null, throwable);
