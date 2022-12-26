@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.createOrGetContentLengthMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.createOrGetBytesTransferMetrics;
 
 import io.opentelemetry.context.Context;
 import java.io.FilterOutputStream;
@@ -24,7 +24,7 @@ public class CountingOutputStream extends FilterOutputStream {
    */
   public CountingOutputStream(Context parentContext, OutputStream out) {
     super(out);
-    this.metrics = createOrGetContentLengthMetrics(parentContext);
+    this.metrics = createOrGetBytesTransferMetrics(parentContext);
     this.closed = new AtomicBoolean(false);
   }
 
