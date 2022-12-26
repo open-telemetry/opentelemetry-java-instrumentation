@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -20,9 +20,6 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    List<TypeInstrumentation> instrumentationList = new ArrayList<>();
-    instrumentationList.add(new ApacheAbstractHttpClientInstrumentation());
-    instrumentationList.add(new ApacheCloseableHttpClientInstrumentation());
-    return instrumentationList;
+    return Collections.singletonList(new ApacheHttpClientInstrumentation());
   }
 }
