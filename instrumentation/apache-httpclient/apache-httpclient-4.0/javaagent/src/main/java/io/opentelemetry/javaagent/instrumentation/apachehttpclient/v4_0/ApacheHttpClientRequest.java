@@ -20,6 +20,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
+import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientRequest {
 
@@ -38,6 +39,12 @@ public final class ApacheHttpClientRequest {
     this.parentContext = parentContext;
     this.uri = calculatedUri;
     this.delegate = httpRequest;
+  }
+
+  public ApacheHttpClientRequest(Context parentContext, HttpUriRequest httpRequest) {
+    this.uri = httpRequest.getURI();
+    this.delegate = httpRequest;
+    this.parentContext = parentContext;
   }
 
   public Context getParentContext() {
