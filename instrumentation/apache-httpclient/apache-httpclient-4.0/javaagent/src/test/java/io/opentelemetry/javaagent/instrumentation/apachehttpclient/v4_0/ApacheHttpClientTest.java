@@ -1,7 +1,9 @@
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;/*
+/*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.CONNECTION_TIMEOUT;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
@@ -49,7 +51,9 @@ public class ApacheHttpClientTest {
     if (readTimeout) {
       HttpConnectionParams.setSoTimeout(httpParams, (int) READ_TIMEOUT.toMillis());
     }
-    httpParams.setParameter(ClientPNames.CONNECTION_MANAGER_FACTORY_CLASS_NAME, ThreadSafeClientConnManagerFactory.class.getName());
+    httpParams.setParameter(
+        ClientPNames.CONNECTION_MANAGER_FACTORY_CLASS_NAME,
+        ThreadSafeClientConnManagerFactory.class.getName());
     return new DefaultHttpClient(httpParams);
   }
 
@@ -62,7 +66,8 @@ public class ApacheHttpClientTest {
 
   public static class ThreadSafeClientConnManagerFactory implements ClientConnectionManagerFactory {
     @Override
-    public ClientConnectionManager newInstance(HttpParams httpParams, SchemeRegistry schemeRegistry) {
+    public ClientConnectionManager newInstance(
+        HttpParams httpParams, SchemeRegistry schemeRegistry) {
       return new ThreadSafeClientConnManager(schemeRegistry);
     }
   }
@@ -183,7 +188,8 @@ public class ApacheHttpClientTest {
     }
   }
 
-  abstract static class AbstractTest<T extends HttpRequest> extends AbstractApacheHttpClientTest<T> {
+  abstract static class AbstractTest<T extends HttpRequest>
+      extends AbstractApacheHttpClientTest<T> {
     @Override
     final HttpResponse executeRequest(T request, URI uri) throws Exception {
       HttpResponse httpResponse = doExecuteRequest(request, uri);
@@ -191,8 +197,7 @@ public class ApacheHttpClientTest {
       return httpResponse;
     }
 
-    abstract HttpResponse doExecuteRequest(T request, URI uri)
-        throws Exception;
+    abstract HttpResponse doExecuteRequest(T request, URI uri) throws Exception;
   }
 
   private static class HttpResponseHandler implements ResponseHandler<Void> {

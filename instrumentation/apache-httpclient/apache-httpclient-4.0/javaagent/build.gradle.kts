@@ -24,5 +24,5 @@ muzzle {
 }
 
 dependencies {
-  library("org.apache.httpcomponents:httpclient:4.1");
+  library("org.apache.httpcomponents:httpclient:4.1")
 }
