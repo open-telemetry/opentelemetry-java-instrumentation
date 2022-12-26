@@ -46,6 +46,10 @@ public final class ApacheHttpClientRequest {
     this.parentContext = parentContext;
   }
 
+  public HttpHost getTarget() {
+    return target;
+  }
+
   public Context getParentContext() {
     return parentContext;
   }
@@ -60,8 +64,8 @@ public final class ApacheHttpClientRequest {
       return Collections.emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
-    for (int i = 0; i < headers.length; ++i) {
-      headersList.add(headers[i].getValue());
+    for (Header header : headers) {
+      headersList.add(header.getValue());
     }
     return headersList;
   }

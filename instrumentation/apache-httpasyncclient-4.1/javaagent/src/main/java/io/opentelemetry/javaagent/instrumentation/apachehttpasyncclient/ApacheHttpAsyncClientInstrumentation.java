@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.createOrGetContentLengthMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.getContentLengthMetrics;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -26,6 +27,8 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -96,6 +99,14 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void responseReceived(HttpResponse httpResponse) throws IOException, HttpException {
+      if (httpResponse != null) {
+        HttpEntity entity = httpResponse.getEntity();
+        if (entity != null) {
+          long contentLength = entity.getContentLength();
+          BytesTransferMetrics metrics = getContentLengthMetrics(parentContext);
+          metrics.setResponseContentLength(contentLength);
+        }
+      }
       delegate.responseReceived(httpResponse);
     }
 
@@ -169,6 +180,14 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       otelRequest = new ApacheHttpClientRequest(parentContext, target, request);
 
       if (instrumenter().shouldStart(parentContext, otelRequest)) {
+        if (request instanceof HttpEntityEnclosingRequest) {
+          HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
+          if (entity != null) {
+            long contentLength = entity.getContentLength();
+            BytesTransferMetrics metrics = getContentLengthMetrics(parentContext);
+            metrics.setRequestContentLength(contentLength);
+          }
+        }
         wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
         wrappedFutureCallback.otelRequest = otelRequest;
       }
@@ -218,7 +237,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public int write(ByteBuffer byteBuffer) throws IOException {
-      ApacheContentLengthMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+      BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
       metrics.addRequestBytes(byteBuffer.limit());
       return delegate.write(byteBuffer);
     }
@@ -246,7 +265,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public int read(ByteBuffer byteBuffer) throws IOException {
       if (byteBuffer.hasRemaining()) {
-        ApacheContentLengthMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
         metrics.addResponseBytes(byteBuffer.limit());
       }
       return delegate.read(byteBuffer);
@@ -263,16 +282,17 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;
-    @Nullable private final HttpContext httpContext;
+    @Nullable private final HttpCoreContext httpContext;
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
     private volatile ApacheHttpClientRequest otelRequest;
+    private volatile HttpHost httpHost;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
       this.parentContext = parentContext;
-      this.httpContext = httpContext;
+      this.httpContext = HttpCoreContext.adapt(httpContext);
       // Note: this can be null in real life, so we have to handle this carefully
       this.delegate = delegate;
     }
@@ -286,7 +306,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         return;
       }
 
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
+      endInstrumentationSuccessfully();
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -308,7 +328,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
 
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
+      endInstrumentationWithException(ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -331,7 +351,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
+      endInstrumentationSuccessfully();
 
       if (parentContext == null) {
         cancelDelegate();
@@ -361,12 +381,31 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
     }
 
+    private void endInstrumentationSuccessfully() {
+      instrumenter().end(context, getRequest(), getResponse(), null);
+    }
+
+    private void endInstrumentationWithException(Throwable throwable) {
+      instrumenter().end(context, getRequest(), getResponse(), throwable);
+    }
+
     @Nullable
-    private HttpResponse getResponseFromHttpContext() {
-      if (httpContext == null) {
-        return null;
+    private ApacheHttpClientRequest getRequest() {
+      if (httpContext != null) {
+        HttpRequest request = httpContext.getRequest();
+        if (request != null) {
+          return new ApacheHttpClientRequest(parentContext, otelRequest.getTarget(), request);
+        }
       }
-      return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
+      return otelRequest;
+    }
+
+    @Nullable
+    private HttpResponse getResponse() {
+      if (httpContext != null) {
+        return httpContext.getResponse();
+      }
+      return null;
     }
   }
 }

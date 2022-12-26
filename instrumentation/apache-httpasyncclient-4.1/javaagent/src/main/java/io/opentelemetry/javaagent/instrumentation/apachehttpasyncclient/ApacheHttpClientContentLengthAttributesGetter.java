@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.http.HttpResponse;
 
-public class ApacheContentLengthAttributesGetter
+public class ApacheHttpClientContentLengthAttributesGetter
     implements AttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
@@ -28,18 +28,14 @@ public class ApacheContentLengthAttributesGetter
       HttpResponse response,
       Throwable error) {
     Context parentContext = request.getParentContext();
-    ApacheContentLengthMetrics metrics = getContentLengthMetrics(parentContext);
+    BytesTransferMetrics metrics = getContentLengthMetrics(parentContext);
     if (metrics != null) {
-      // response-length indicates bytes read by the stream even when content-length header is not
-      // present (for example: chunked encoding).
-      long responseBytes = metrics.getResponseBytes();
-      if (responseBytes != 0L) {
+      Long responseBytes = metrics.getResponseContentLength();
+      if (responseBytes != null) {
         attributes.put(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseBytes);
       }
-      // request-length indicates bytes written to the stream even when content-length header is not
-      // present (for example: chunked encoding).
-      long requestBytes = metrics.getRequestBytes();
-      if (requestBytes != 0L) {
+      Long requestBytes = metrics.getRequestContentLength();
+      if (requestBytes != null) {
         attributes.put(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestBytes);
       }
     }
