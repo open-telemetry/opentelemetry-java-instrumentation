@@ -1,7 +1,9 @@
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;/*
+/*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -18,7 +20,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
-abstract class AbstractApacheHttpClientTest<T extends HttpRequest> extends AbstractHttpClientTest<T> {
+abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
+    extends AbstractHttpClientTest<T> {
   @Override
   protected String userAgent() {
     return "apachehttpclient";
