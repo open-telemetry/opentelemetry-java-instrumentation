@@ -287,7 +287,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      endInstrumentationSuccessfully();
+      instrumenter().end(context, otelRequest, getResponse(), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -309,7 +309,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      endInstrumentationWithException(ex);
+      instrumenter().end(context, otelRequest, getResponse(), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -332,7 +332,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      endInstrumentationSuccessfully();
+      instrumenter().end(context, otelRequest, getResponse(), null);
 
       if (parentContext == null) {
         cancelDelegate();
@@ -362,27 +362,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
     }
 
-    private void endInstrumentationSuccessfully() {
-      instrumenter().end(context, getRequest(), getResponse(), null);
-    }
-
-    private void endInstrumentationWithException(Throwable throwable) {
-      instrumenter().end(context, getRequest(), getResponse(), throwable);
-    }
-
     @Nullable
     private HttpResponse getResponse() {
       return httpContext.getResponse();
-    }
-
-    private ApacheHttpClientRequest getRequest() {
-      // Replacing with actual request:
-      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6747
-      HttpRequest request = httpContext.getRequest();
-      if (request != null) {
-        return new ApacheHttpClientRequest(parentContext, request);
-      }
-      return otelRequest;
     }
   }
 }

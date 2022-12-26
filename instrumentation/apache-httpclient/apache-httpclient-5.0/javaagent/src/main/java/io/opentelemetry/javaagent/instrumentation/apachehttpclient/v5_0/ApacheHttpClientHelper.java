@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.createOrGetBytesTransferMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
@@ -12,23 +15,43 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 
 public class ApacheHttpClientHelper {
   private static final Logger logger = Logger.getLogger(ApacheHttpClientHelper.class.getName());
 
-  public static ApacheHttpClientRequest createRequest(
-      Context parentContext, ClassicHttpRequest request) {
+  public static void doOnMethodEnter(Context parentContext, ClassicHttpRequest request) {
     HttpEntity originalEntity = request.getEntity();
     if (originalEntity != null) {
       HttpEntity wrappedHttpEntity = new WrappedHttpEntity(parentContext, originalEntity);
       request.setEntity(wrappedHttpEntity);
     }
-    return new ApacheHttpClientRequest(parentContext, request);
+  }
+
+  public static void doMethodExit(
+      Context context, ApacheHttpClientRequest otelRequest, Object result, Throwable throwable) {
+    if (result instanceof CloseableHttpResponse) {
+      HttpEntity entity = ((CloseableHttpResponse) result).getEntity();
+      if (entity != null) {
+        long contentLength = entity.getContentLength();
+        Context parentContext = otelRequest.getParentContext();
+        BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+        metrics.setResponseContentLength(contentLength);
+      }
+    }
+    if (throwable != null) {
+      instrumenter().end(context, otelRequest, null, throwable);
+    } else if (result instanceof HttpResponse) {
+      instrumenter().end(context, otelRequest, (HttpResponse) result, null);
+    } else {
+      // ended in WrappingStatusSettingResponseHandler
+    }
   }
 
   public static List<String> getHeader(MessageHeaders messageHeaders, String name) {
