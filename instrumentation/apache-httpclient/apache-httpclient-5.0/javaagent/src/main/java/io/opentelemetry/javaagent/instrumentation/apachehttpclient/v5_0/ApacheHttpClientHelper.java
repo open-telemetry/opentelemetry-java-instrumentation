@@ -8,12 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
 public class ApacheHttpClientHelper {
+
   public static void doMethodExit(
-      Context context, HttpRequest request, Object result, Throwable throwable) {
+      Context context, ClassicHttpRequest request, Object result, Throwable throwable) {
     if (throwable != null) {
       instrumenter().end(context, request, null, throwable);
     } else if (result instanceof HttpResponse) {
