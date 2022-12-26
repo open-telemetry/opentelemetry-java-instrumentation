@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 
 class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
   @Shared
@@ -94,6 +95,7 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" 0
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -167,6 +169,7 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" 0
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
