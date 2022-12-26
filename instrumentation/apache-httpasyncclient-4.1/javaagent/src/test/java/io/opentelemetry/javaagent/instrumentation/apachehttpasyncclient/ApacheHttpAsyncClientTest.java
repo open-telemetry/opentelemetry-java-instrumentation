@@ -234,6 +234,8 @@ class ApacheHttpAsyncClientTest {
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
           attributes.add(SemanticAttributes.HTTP_SCHEME);
           attributes.add(SemanticAttributes.HTTP_TARGET);
+          attributes.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
+          attributes.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
           return attributes;
         });
   }
