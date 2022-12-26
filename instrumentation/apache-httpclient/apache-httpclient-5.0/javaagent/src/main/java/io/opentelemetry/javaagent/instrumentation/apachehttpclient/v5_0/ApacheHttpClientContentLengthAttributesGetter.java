@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.getContentLengthMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.getBytesTransferMetrics;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -28,7 +28,7 @@ public class ApacheHttpClientContentLengthAttributesGetter
       HttpResponse response,
       Throwable error) {
     Context parentContext = request.getParentContext();
-    BytesTransferMetrics metrics = getContentLengthMetrics(parentContext);
+    BytesTransferMetrics metrics = getBytesTransferMetrics(parentContext);
     if (metrics != null) {
       Long responseLength = metrics.getResponseContentLength();
       if (responseLength != null) {

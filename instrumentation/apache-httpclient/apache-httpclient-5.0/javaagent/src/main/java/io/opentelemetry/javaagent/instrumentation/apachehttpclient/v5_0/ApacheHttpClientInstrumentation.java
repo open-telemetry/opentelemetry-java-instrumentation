@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.createOrGetContentLengthMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.createOrGetBytesTransferMetrics;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -79,7 +79,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         HttpEntity entity = request.getEntity();
         if (entity != null) {
           long contentLength = entity.getContentLength();
-          BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+          BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
           metrics.setRequestContentLength(contentLength);
         }
         context = instrumenter().start(parentContext, otelRequest);
@@ -109,7 +109,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
           if (entity != null) {
             long contentLength = entity.getContentLength();
             Context parentContext = otelRequest.getParentContext();
-            BytesTransferMetrics metrics = createOrGetContentLengthMetrics(parentContext);
+            BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
             metrics.setResponseContentLength(contentLength);
           }
         }
