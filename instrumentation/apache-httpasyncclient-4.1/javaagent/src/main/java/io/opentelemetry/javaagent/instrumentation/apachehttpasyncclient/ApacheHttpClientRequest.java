@@ -46,10 +46,6 @@ public final class ApacheHttpClientRequest {
     this.parentContext = parentContext;
   }
 
-  public HttpHost getTarget() {
-    return target;
-  }
-
   public Context getParentContext() {
     return parentContext;
   }
