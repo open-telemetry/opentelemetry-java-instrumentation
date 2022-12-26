@@ -94,7 +94,6 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" 0
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
@@ -168,7 +167,6 @@ class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_URL" "${httpHost.toURI()}/_cluster/health"
             "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" 0
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
