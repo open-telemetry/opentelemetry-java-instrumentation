@@ -19,6 +19,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
+import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientRequest {
 
@@ -38,16 +39,9 @@ public final class ApacheHttpClientRequest {
     delegate = httpRequest;
   }
 
-  private ApacheHttpClientRequest(@Nullable URI uri, HttpRequest delegate) {
-    this.uri = uri;
-    this.delegate = delegate;
-  }
-
-  public ApacheHttpClientRequest withRequest(@Nullable HttpRequest httpRequest) {
-    if (httpRequest == null) {
-      return this;
-    }
-    return new ApacheHttpClientRequest(uri, httpRequest);
+  public ApacheHttpClientRequest(HttpUriRequest httpRequest) {
+    uri = httpRequest.getURI();
+    delegate = httpRequest;
   }
 
   public List<String> getHeader(String name) {
