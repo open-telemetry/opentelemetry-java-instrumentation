@@ -5,13 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientSingletons.createOrGetBytesTransferMetrics;
+
+import io.opentelemetry.context.Context;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CountingOutputStream extends FilterOutputStream {
-  private final ApacheHttpClientRequest request;
+  private final BytesTransferMetrics metrics;
   private final AtomicBoolean closed;
 
   /**
@@ -19,9 +22,9 @@ public class CountingOutputStream extends FilterOutputStream {
    *
    * @param out the output stream to be wrapped
    */
-  public CountingOutputStream(ApacheHttpClientRequest request, OutputStream out) {
+  public CountingOutputStream(Context parentContext, OutputStream out) {
     super(out);
-    this.request = request;
+    this.metrics = createOrGetBytesTransferMetrics(parentContext);
     this.closed = new AtomicBoolean(false);
   }
 
@@ -29,7 +32,7 @@ public class CountingOutputStream extends FilterOutputStream {
   public void write(byte[] b, int off, int len) throws IOException {
     out.write(b, off, len);
     if (!closed.get()) {
-      request.addRequestBytes(len);
+      metrics.addRequestBytes(len);
     }
   }
 
@@ -37,7 +40,7 @@ public class CountingOutputStream extends FilterOutputStream {
   public void write(int b) throws IOException {
     out.write(b);
     if (!closed.get()) {
-      request.addRequestBytes(1);
+      metrics.addRequestBytes(1);
     }
   }
 

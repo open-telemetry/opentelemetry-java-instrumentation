@@ -7,22 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
-import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientRequest {
 
@@ -31,49 +28,20 @@ public final class ApacheHttpClientRequest {
   @Nullable private final URI uri;
 
   private final HttpRequest delegate;
-  private LongAdder requestBytes;
+  private final Context parentContext;
 
-  private ApacheHttpClientRequest(URI uri, HttpRequest httpRequest) {
-    this.uri = uri;
+  public ApacheHttpClientRequest(Context parentContext, HttpHost target, HttpRequest httpRequest) {
+    URI calculatedUri = getUri(httpRequest);
+    if (calculatedUri != null && target != null) {
+      calculatedUri = getCalculatedUri(target, calculatedUri);
+    }
+    this.parentContext = parentContext;
+    this.uri = calculatedUri;
     this.delegate = httpRequest;
   }
 
-  public static ApacheHttpClientRequest createRequest(HttpHost httpHost, HttpRequest httpRequest) {
-    URI calculatedUri = getUri(httpRequest);
-    if (calculatedUri != null && httpHost != null) {
-      calculatedUri = getCalculatedUri(httpHost, calculatedUri);
-    }
-    return wrapEntity(new ApacheHttpClientRequest(calculatedUri, httpRequest));
-  }
-
-  public static ApacheHttpClientRequest createRequest(HttpUriRequest httpRequest) {
-    return wrapEntity(new ApacheHttpClientRequest(httpRequest.getURI(), httpRequest));
-  }
-
-  private static ApacheHttpClientRequest wrapEntity(ApacheHttpClientRequest request) {
-    if (request.delegate instanceof HttpEntityEnclosingRequest) {
-      HttpEntityEnclosingRequest httpRequest = (HttpEntityEnclosingRequest) request.delegate;
-      HttpEntity originalEntity = httpRequest.getEntity();
-      if (originalEntity != null) {
-        HttpEntity wrappedEntity = new WrappedHttpEntity(request, originalEntity);
-        httpRequest.setEntity(wrappedEntity);
-      }
-    }
-    return request;
-  }
-
-  public void addRequestBytes(int byteLength) {
-    if (requestBytes == null) {
-      requestBytes = new LongAdder();
-    }
-    requestBytes.add(byteLength);
-  }
-
-  public Long getRequestBytes() {
-    if (requestBytes == null) {
-      return null;
-    }
-    return requestBytes.sum();
+  public Context getParentContext() {
+    return parentContext;
   }
 
   public List<String> getHeader(String name) {
