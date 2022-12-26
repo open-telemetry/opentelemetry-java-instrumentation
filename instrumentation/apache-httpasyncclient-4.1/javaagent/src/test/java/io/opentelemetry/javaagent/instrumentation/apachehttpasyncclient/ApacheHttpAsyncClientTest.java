@@ -22,7 +22,6 @@ import java.util.concurrent.CancellationException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
@@ -75,23 +74,23 @@ class ApacheHttpAsyncClientTest {
   }
 
   @Nested
-  class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpRequestBase> {
+  class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    public HttpRequestBase buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(new HttpUriRequest(method, uri), headers);
     }
 
     @Override
     public int sendRequest(
-        HttpRequestBase request, String method, URI uri, Map<String, String> headers)
+        HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(getClient(uri).execute(request, null).get());
     }
 
     @Override
     public void sendRequestWithCallback(
-        HttpRequestBase request,
+        HttpUriRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
@@ -106,16 +105,17 @@ class ApacheHttpAsyncClientTest {
   }
 
   @Nested
-  class ApacheClientHostRequestTest extends AbstractHttpClientTest<HttpRequestBase> {
+  class ApacheClientHostRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    public HttpRequestBase buildRequest(String method, URI uri, Map<String, String> headers) {
-      return configureRequest(new HttpUriRequest(method, URI.create(fullPathFromUri(uri))), headers);
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+      return configureRequest(
+          new HttpUriRequest(method, URI.create(fullPathFromUri(uri))), headers);
     }
 
     @Override
     public int sendRequest(
-        HttpRequestBase request, String method, URI uri, Map<String, String> headers)
+        HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
           getClient(uri)
@@ -125,7 +125,7 @@ class ApacheHttpAsyncClientTest {
 
     @Override
     public void sendRequestWithCallback(
-        HttpRequestBase request,
+        HttpUriRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
@@ -144,16 +144,16 @@ class ApacheHttpAsyncClientTest {
   }
 
   @Nested
-  class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<HttpRequestBase> {
+  class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    public HttpRequestBase buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(new HttpUriRequest(method, URI.create(uri.toString())), headers);
     }
 
     @Override
     public int sendRequest(
-        HttpRequestBase request, String method, URI uri, Map<String, String> headers)
+        HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
           getClient(uri)
@@ -163,7 +163,7 @@ class ApacheHttpAsyncClientTest {
 
     @Override
     public void sendRequestWithCallback(
-        HttpRequestBase request,
+        HttpUriRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
@@ -181,7 +181,7 @@ class ApacheHttpAsyncClientTest {
     }
   }
 
-  HttpRequestBase configureRequest(HttpRequestBase request, Map<String, String> headers) {
+  HttpUriRequest configureRequest(HttpUriRequest request, Map<String, String> headers) {
     request.addHeader("user-agent", "httpasyncclient");
     headers.forEach((key, value) -> request.setHeader(new BasicHeader(key, value)));
     return request;
@@ -234,8 +234,6 @@ class ApacheHttpAsyncClientTest {
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
           attributes.add(SemanticAttributes.HTTP_SCHEME);
           attributes.add(SemanticAttributes.HTTP_TARGET);
-          attributes.add(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
-          attributes.add(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
           return attributes;
         });
   }

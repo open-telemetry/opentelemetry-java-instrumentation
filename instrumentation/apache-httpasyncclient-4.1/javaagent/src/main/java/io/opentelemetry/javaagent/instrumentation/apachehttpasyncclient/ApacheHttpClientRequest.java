@@ -42,17 +42,6 @@ public final class ApacheHttpClientRequest {
     target = httpHost;
   }
 
-  private ApacheHttpClientRequest(@Nullable URI uri, HttpRequest delegate,
-      @Nullable HttpHost target) {
-    this.uri = uri;
-    this.delegate = delegate;
-    this.target = target;
-  }
-
-  public ApacheHttpClientRequest with(HttpRequest delegate) {
-    return new ApacheHttpClientRequest(uri, delegate, target);
-  }
-
   public List<String> getHeader(String name) {
     return headersToList(delegate.getHeaders(name));
   }
