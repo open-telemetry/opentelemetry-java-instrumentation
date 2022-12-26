@@ -49,7 +49,7 @@ public final class ApacheHttpAsyncClientSingletons {
             .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
-  public static BytesTransferMetrics createOrGetContentLengthMetrics(Context parentContext) {
+  public static BytesTransferMetrics createOrGetBytesTransferMetrics(Context parentContext) {
     BytesTransferMetrics metrics = metricsByContext.get(parentContext);
     if (metrics == null) {
       metrics = new BytesTransferMetrics();
@@ -58,7 +58,7 @@ public final class ApacheHttpAsyncClientSingletons {
     return metrics;
   }
 
-  public static BytesTransferMetrics getContentLengthMetrics(Context parentContext) {
+  public static BytesTransferMetrics getBytesTransferMetrics(Context parentContext) {
     return metricsByContext.get(parentContext);
   }
 
