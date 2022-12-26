@@ -1,9 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 public class BytesTransferMetrics {
-  private final AtomicLong bytesIn = new AtomicLong();
+  private final AtomicLong bytesOut = new AtomicLong();
 
   private long requestContentLength = -1;
 
@@ -30,9 +35,19 @@ public class BytesTransferMetrics {
   }
 
   /**
+   * Add request bytes produced. This may not always represent the request size, for example in case
+   * when connection is closed while writing request, this will repsent the bytes written till this
+   * point.
+   *
+   * @param byteLength bytes written from request.
+   */
+  public void addRequestBytes(int byteLength) {
+    bytesOut.addAndGet(byteLength);
+  }
+
+  /**
    * Get request content length, priority is given if explicit content-length is present like in
-   * case when the request is not chunked. For chunked response, since the response is lazily
-   * fetched, there is no way for us to be able to compute the response content length otherwise.
+   * case when the request is not chunked, else value is computed using the bytes written.
    *
    * @return content-length of request, null if content-length is not applicable.
    */
@@ -40,22 +55,23 @@ public class BytesTransferMetrics {
     if (requestContentLength >= 0) {
       return requestContentLength;
     }
+    long bytesWritten = bytesOut.get();
+    if (bytesWritten > 0) {
+      return bytesWritten;
+    }
     return null;
   }
 
   /**
-   * Get response content length, priority is given if explicit content-length is present like in
-   * case when the response is not chunked, else value is computed using the bytes read.
+   * Get response content length when explicit content-length is present like in case when the
+   * response is not chunked. Since the response is read lazily there is no way we can find the
+   * response content length when the response is chunked.
    *
    * @return content-length of response, null if content-length is not applicable.
    */
   public Long getResponseContentLength() {
     if (responseContentLength >= 0) {
       return responseContentLength;
-    }
-    long bytesRead = bytesIn.get();
-    if (bytesRead > 0) {
-      return bytesRead;
     }
     return null;
   }
