@@ -286,7 +286,6 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     private volatile Context context;
     private volatile ApacheHttpClientRequest otelRequest;
-    private volatile HttpHost httpHost;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
