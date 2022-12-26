@@ -20,7 +20,6 @@ import java.util.concurrent.CountDownLatch
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 
 class ElasticsearchRest5Test extends AgentInstrumentationSpecification {
   @Shared
