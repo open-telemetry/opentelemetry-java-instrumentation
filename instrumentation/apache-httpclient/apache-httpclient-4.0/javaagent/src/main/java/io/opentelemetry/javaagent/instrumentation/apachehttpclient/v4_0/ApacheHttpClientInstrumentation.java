@@ -56,7 +56,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.http.HttpRequest")))
             .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
-        this.getClass().getName() + "RequestAdvice");
+        this.getClass().getName() + "$RequestAdvice");
   }
 
   @SuppressWarnings("unused")
