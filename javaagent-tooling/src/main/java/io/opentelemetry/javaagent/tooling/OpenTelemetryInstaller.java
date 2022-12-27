@@ -27,11 +27,12 @@ public final class OpenTelemetryInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal(true)
-            .addMeterProviderCustomizer(((builder, properties) -> {
-              HttpMetricsViews.registerViews(builder);
-              RpcMetricsView.registerViews(builder);
-              return builder;
-            }))
+            .addMeterProviderCustomizer(
+                ((builder, properties) -> {
+                  HttpMetricsViews.registerViews(builder);
+                  RpcMetricsView.registerViews(builder);
+                  return builder;
+                }))
             .setServiceClassLoader(extensionClassLoader)
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();

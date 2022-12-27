@@ -81,12 +81,15 @@ public final class RpcServerMetrics implements OperationListener {
   }
 
   private static Attributes filterRedundantAttributes(Attributes attributes) {
-    return attributes.toBuilder().removeIf(key -> {
-      if (key == SemanticAttributes.NET_SOCK_HOST_ADDR) {
-        return attributes.get(SemanticAttributes.NET_HOST_NAME) != null;
-      }
-      return false;
-    }).build();
+    return attributes.toBuilder()
+        .removeIf(
+            key -> {
+              if (key == SemanticAttributes.NET_SOCK_HOST_ADDR) {
+                return attributes.get(SemanticAttributes.NET_HOST_NAME) != null;
+              }
+              return false;
+            })
+        .build();
   }
 
   @AutoValue
