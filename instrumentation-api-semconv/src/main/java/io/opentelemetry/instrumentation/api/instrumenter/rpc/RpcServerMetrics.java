@@ -70,8 +70,8 @@ public final class RpcServerMetrics implements OperationListener {
       return;
     }
     Attributes attributes = mergeAttributes(state.startAttributes(), endAttributes);
-    serverDurationHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+    double durationMs = (endNanos - state.startTimeNanos()) / NANOS_PER_MS;
+    serverDurationHistogram.record(durationMs, attributes, context);
   }
 
   private static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {

@@ -3,18 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling;
+package io.opentelemetry.javaagent.tooling.view;
+
+import static io.opentelemetry.javaagent.tooling.view.ViewHelper.createView;
+import static io.opentelemetry.javaagent.tooling.view.ViewHelper.registerView;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
 import io.opentelemetry.sdk.metrics.View;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashSet;
 import java.util.Set;
 
-final class HttpMetricsView {
-  public static final View durationClientView = buildDurationClientView();
-  public static final View durationServerView = buildDurationServerView();
-  public static final View activeRequestsView = buildActiveRequestsView();
+public final class HttpMetricsViews {
+  private static final View durationClientView = buildDurationClientView();
+  private static final View durationServerView = buildDurationServerView();
+  private static final View activeRequestsView = buildActiveRequestsView();
 
   private static Set<AttributeKey<?>> buildDurationAlwaysInclude() {
     // the list of included metrics is from
@@ -34,7 +38,7 @@ final class HttpMetricsView {
     view.add(SemanticAttributes.NET_PEER_NAME);
     view.add(SemanticAttributes.NET_PEER_PORT);
     view.add(AttributeKey.stringKey("net.peer.sock.addr"));
-    return createView(stringifyView(view));
+    return createView(view);
   }
 
   private static View buildDurationServerView() {
@@ -48,7 +52,7 @@ final class HttpMetricsView {
     view.add(SemanticAttributes.NET_HOST_NAME);
     view.add(SemanticAttributes.NET_HOST_PORT);
     view.add(SemanticAttributes.HTTP_ROUTE);
-    return createView(stringifyView(view));
+    return createView(view);
   }
 
   private static View buildActiveRequestsView() {
@@ -60,18 +64,26 @@ final class HttpMetricsView {
     view.add(SemanticAttributes.HTTP_FLAVOR);
     view.add(SemanticAttributes.NET_HOST_NAME);
     // TODO: net host port?
-    return createView(stringifyView(view));
+    return createView(view);
   }
 
-  private static Set<String> stringifyView(Set<AttributeKey<?>> attributeKeys) {
-    Set<String> keys = new HashSet<>(attributeKeys.size());
-    attributeKeys.forEach(attributeKey -> keys.add(attributeKey.getKey()));
-    return keys;
+  public static void registerViews(SdkMeterProviderBuilder builder) {
+    registerClientView(builder);
+    registerServerView(builder);
   }
 
-  private static View createView(Set<String> attributeKeys) {
-    return View.builder().setAttributeFilter(attributeKeys::contains).build();
+  private static void registerClientView(SdkMeterProviderBuilder builder) {
+    registerView(builder, "http.client.duration", durationClientView);
+    registerView(builder, "http.client.request.size", durationClientView);
+    registerView(builder, "http.client.response.size", durationClientView);
   }
 
-  private HttpMetricsView() {}
+  private static void registerServerView(SdkMeterProviderBuilder builder) {
+    registerView(builder, "http.server.active_requests", activeRequestsView);
+    registerView(builder, "http.server.duration", durationServerView);
+    registerView(builder, "http.server.request.size", durationServerView);
+    registerView(builder, "http.server.response.size", durationServerView);
+  }
+
+  private HttpMetricsViews() {}
 }

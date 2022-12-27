@@ -5,17 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.HttpMetricsView.activeRequestsView;
-import static io.opentelemetry.javaagent.tooling.HttpMetricsView.durationClientView;
-import static io.opentelemetry.javaagent.tooling.HttpMetricsView.durationServerView;
-
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.tooling.view.HttpMetricsViews;
+import io.opentelemetry.javaagent.tooling.view.RpcMetricsView;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.metrics.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
-import io.opentelemetry.sdk.metrics.View;
 import java.util.Arrays;
 
 public final class OpenTelemetryInstaller {
@@ -32,19 +27,11 @@ public final class OpenTelemetryInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal(true)
-            .addMeterProviderCustomizer(
-                (builder, configProperties) -> {
-                  registerView(builder, "http.client.duration", durationClientView);
-                  registerView(builder, "http.client.request.size", durationClientView);
-                  registerView(builder, "http.client.response.size", durationClientView);
-
-                  registerView(builder, "http.server.active_requests", activeRequestsView);
-                  registerView(builder, "http.server.duration", durationServerView);
-                  registerView(builder, "http.server.request.size", durationServerView);
-                  registerView(builder, "http.server.response.size", durationServerView);
-
-                  return builder;
-                })
+            .addMeterProviderCustomizer(((builder, properties) -> {
+              HttpMetricsViews.registerViews(builder);
+              RpcMetricsView.registerViews(builder);
+              return builder;
+            }))
             .setServiceClassLoader(extensionClassLoader)
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
@@ -59,10 +46,6 @@ public final class OpenTelemetryInstaller {
         });
 
     return autoConfiguredSdk;
-  }
-
-  private static void registerView(SdkMeterProviderBuilder builder, String name, View view) {
-    builder.registerView(InstrumentSelector.builder().setMeterName(name).build(), view);
   }
 
   private OpenTelemetryInstaller() {}

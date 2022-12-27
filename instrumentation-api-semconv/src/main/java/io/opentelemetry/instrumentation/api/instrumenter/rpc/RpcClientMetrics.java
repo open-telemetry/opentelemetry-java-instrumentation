@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -70,8 +71,8 @@ public final class RpcClientMetrics implements OperationListener {
       return;
     }
     Attributes attributes = mergeAttributes(state.startAttributes(), endAttributes);
-    clientDurationHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+    double durationMs = (endNanos - state.startTimeNanos()) / NANOS_PER_MS;
+    clientDurationHistogram.record(durationMs, attributes, context);
   }
 
   private static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {
