@@ -12,7 +12,9 @@ import io.opentelemetry.sdk.metrics.View;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ViewHelper {
+public final class ViewHelper {
+  private ViewHelper() {}
+
   public static void registerView(SdkMeterProviderBuilder builder, String name, View view) {
     builder.registerView(InstrumentSelector.builder().setMeterName(name).build(), view);
   }
