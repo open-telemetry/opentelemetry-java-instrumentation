@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.ratpack.client
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -312,7 +313,7 @@ class BarService implements Service {
     this.opentelemetry = opentelemetry
   }
 
-  private def tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
+  private Tracer tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
 
   void onStart(StartEvent event) {
     def parentContext = Context.current()
@@ -346,7 +347,7 @@ class BarForkService implements Service {
     this.opentelemetry = opentelemetry
   }
 
-  private def tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
+  private Tracer tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
 
   void onStart(StartEvent event) {
     Execution.fork().start {
