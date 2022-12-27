@@ -20,6 +20,7 @@ dependencies {
 
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 }
 
 tasks {

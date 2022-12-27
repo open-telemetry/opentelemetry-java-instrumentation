@@ -18,6 +18,7 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
@@ -28,8 +29,9 @@ class HttpServerMetricsTest {
   @Test
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
-    SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    SdkMeterProviderBuilder builder = SdkMeterProvider.builder();
+    ViewLoader.loadViews(builder, "http-server-view.yaml");
+    SdkMeterProvider meterProvider = builder.registerMetricReader(metricReader).build();
 
     OperationListener listener = HttpServerMetrics.get().create(meterProvider.get("test"));
 
