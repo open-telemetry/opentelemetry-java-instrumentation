@@ -27,7 +27,9 @@ class TomcatClassloadingTest extends AgentInstrumentationSpecification {
       getResources(_) >> []
       getClassLoaderResources(_) >> []
     }
-    classloader = new ParallelWebappClassLoader(null)
+    def parentClassLoader = new ClassLoader(null) {
+    }
+    classloader = new ParallelWebappClassLoader(parentClassLoader)
     classloader.setResources(resources)
     classloader.init()
     classloader.start()
