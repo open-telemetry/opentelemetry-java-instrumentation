@@ -238,7 +238,7 @@ class InstrumentedHttpClientTest extends Specification {
     }
   }
 
-  def "propagate http trace in ratpack services"() {
+  def "propagate http trace in ratpack services with compute thread"() {
     expect:
     def latch = new CountDownLatch(1)
 
@@ -254,6 +254,37 @@ class InstrumentedHttpClientTest extends Specification {
           telemetry.configureServerRegistry(bindings)
           bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
           bindings.bindInstance(new BarService(latch, "${otherApp.address}foo", openTelemetry))
+        },
+      )
+      spec.handlers { chain ->
+        chain.get("foo") { ctx -> ctx.render("bar") }
+      }
+    }
+
+    app.address
+    latch.await()
+    def spanData = spanExporter.finishedSpanItems.find { it.name == "a-span" }
+    def trace = spanExporter.finishedSpanItems.findAll { it.traceId == spanData.traceId }
+
+    trace.size() == 3
+  }
+
+  def "propagate http trace in ratpack services with fork executions"() {
+    expect:
+    def latch = new CountDownLatch(1)
+
+    def otherApp = EmbeddedApp.of { spec ->
+      spec.handlers {
+        it.get("foo") { ctx -> ctx.render("bar") }
+      }
+    }
+
+    def app = EmbeddedApp.of { spec ->
+      spec.registry(
+        Guice.registry { bindings ->
+          telemetry.configureServerRegistry(bindings)
+          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
+          bindings.bindInstance(new BarForkService(latch, "${otherApp.address}foo", openTelemetry))
         },
       )
       spec.handlers { chain ->
@@ -299,6 +330,42 @@ class BarService implements Service {
           span.end()
           latch.countDown()
         }
+    }
+  }
+}
+
+
+class BarForkService implements Service {
+  private final String url
+  private final CountDownLatch latch
+  private final OpenTelemetry opentelemetry
+
+  BarForkService(CountDownLatch latch, String url, OpenTelemetry opentelemetry) {
+    this.latch = latch
+    this.url = url
+    this.opentelemetry = opentelemetry
+  }
+
+  private def tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
+
+  void onStart(StartEvent event) {
+    Execution.fork().start {
+      def parentContext = Context.current()
+      def span = tracer.spanBuilder("a-span")
+        .setParent(parentContext)
+        .startSpan()
+
+      Context otelContext = parentContext.with(span)
+      otelContext.makeCurrent().withCloseable {
+        Execution.current().add(Context, otelContext)
+        def httpClient = event.registry.get(HttpClient)
+        httpClient.get(new URI(url))
+          .flatMap { httpClient.get(new URI(url)) }
+          .then {
+            span.end()
+            latch.countDown()
+          }
+      }
     }
   }
 }
