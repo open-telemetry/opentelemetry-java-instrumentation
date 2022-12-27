@@ -369,4 +369,3 @@ class BarForkService implements Service {
     }
   }
 }
-
