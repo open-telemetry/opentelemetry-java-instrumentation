@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -70,12 +71,22 @@ public final class RpcServerMetrics implements OperationListener {
       return;
     }
     Attributes attributes = mergeAttributes(state.startAttributes(), endAttributes);
+    attributes = filterRedundantAttributes(attributes);
     double durationMs = (endNanos - state.startTimeNanos()) / NANOS_PER_MS;
     serverDurationHistogram.record(durationMs, attributes, context);
   }
 
   private static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {
     return Attributes.builder().putAll(attr1).putAll(attr2).build();
+  }
+
+  private static Attributes filterRedundantAttributes(Attributes attributes) {
+    return attributes.toBuilder().removeIf(key -> {
+      if (key == SemanticAttributes.NET_SOCK_HOST_ADDR) {
+        return attributes.get(SemanticAttributes.NET_HOST_NAME) != null;
+      }
+      return false;
+    }).build();
   }
 
   @AutoValue
