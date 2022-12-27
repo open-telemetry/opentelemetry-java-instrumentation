@@ -70,7 +70,8 @@ public final class RpcClientMetrics implements OperationListener {
       return;
     }
     Attributes attributes = mergeAttributes(state.startAttributes(), endAttributes);
-    clientDurationHistogram.record((endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+    clientDurationHistogram.record(
+        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
   }
 
   private static Attributes mergeAttributes(Attributes attr1, Attributes attr2) {

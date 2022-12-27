@@ -32,18 +32,19 @@ public final class OpenTelemetryInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal(true)
-            .addMeterProviderCustomizer((builder, configProperties) -> {
-              registerView(builder, "http.client.duration", durationClientView);
-              registerView(builder, "http.client.request.size", durationClientView);
-              registerView(builder, "http.client.response.size", durationClientView);
+            .addMeterProviderCustomizer(
+                (builder, configProperties) -> {
+                  registerView(builder, "http.client.duration", durationClientView);
+                  registerView(builder, "http.client.request.size", durationClientView);
+                  registerView(builder, "http.client.response.size", durationClientView);
 
-              registerView(builder, "http.server.active_requests", activeRequestsView);
-              registerView(builder, "http.server.duration", durationServerView);
-              registerView(builder, "http.server.request.size", durationServerView);
-              registerView(builder, "http.server.response.size", durationServerView);
+                  registerView(builder, "http.server.active_requests", activeRequestsView);
+                  registerView(builder, "http.server.duration", durationServerView);
+                  registerView(builder, "http.server.request.size", durationServerView);
+                  registerView(builder, "http.server.response.size", durationServerView);
 
-              return builder;
-            })
+                  return builder;
+                })
             .setServiceClassLoader(extensionClassLoader)
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();

@@ -100,8 +100,7 @@ public final class HttpServerMetrics implements OperationListener {
     }
     Attributes attributes = mergeAttributes(state.startAttributes(), endAttributes);
     activeRequests.add(-1, attributes, context);
-    duration.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+    duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
     Long requestLength = attributes.get(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
     if (requestLength != null) {
       requestSize.record(requestLength, attributes);
