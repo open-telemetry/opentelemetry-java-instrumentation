@@ -28,7 +28,7 @@ final class OpenTelemetryHttpClient {
         httpClientSpec -> {
           httpClientSpec.requestIntercept(
               requestSpec -> {
-                Context parentOtelCtx = Context.current();
+                Context parentOtelCtx = Execution.current().maybeGet(Context.class).orElse(Context.current());
                 if (!instrumenter.shouldStart(parentOtelCtx, requestSpec)) {
                   return;
                 }

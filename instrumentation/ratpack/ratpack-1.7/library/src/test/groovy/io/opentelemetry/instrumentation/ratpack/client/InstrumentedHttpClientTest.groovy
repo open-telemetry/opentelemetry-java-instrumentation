@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.ratpack.client
 
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
+import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.ratpack.RatpackTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk
@@ -15,10 +17,13 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import ratpack.exec.Execution
 import ratpack.exec.Promise
 import ratpack.func.Action
 import ratpack.guice.Guice
 import ratpack.http.client.HttpClient
+import ratpack.service.Service
+import ratpack.service.StartEvent
 import ratpack.test.embed.EmbeddedApp
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
@@ -232,4 +237,69 @@ class InstrumentedHttpClientTest extends Specification {
       attributes[HTTP_STATUS_CODE] == 200L
     }
   }
+
+  def "propagate http trace in ratpack services"() {
+    expect:
+    def latch = new CountDownLatch(1)
+
+    def otherApp = EmbeddedApp.of { spec ->
+      spec.handlers {
+        it.get("foo") { ctx -> ctx.render("bar") }
+      }
+    }
+
+    def app = EmbeddedApp.of { spec ->
+      spec.registry(
+        Guice.registry { bindings ->
+          telemetry.configureServerRegistry(bindings)
+          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
+          bindings.bindInstance(new BarService(latch, "${otherApp.address}foo", openTelemetry))
+        },
+      )
+      spec.handlers { chain ->
+        chain.get("foo") { ctx -> ctx.render("bar") }
+      }
+    }
+
+    app.address
+    latch.await()
+    def spanData = spanExporter.finishedSpanItems.find { it.name == "a-span" }
+    def trace = spanExporter.finishedSpanItems.findAll { it.traceId == spanData.traceId }
+
+    trace.size() == 3
+  }
 }
+
+class BarService implements Service {
+  private final String url
+  private final CountDownLatch latch
+  private final OpenTelemetry opentelemetry
+
+  BarService(CountDownLatch latch, String url, OpenTelemetry opentelemetry) {
+    this.latch = latch
+    this.url = url
+    this.opentelemetry = opentelemetry
+  }
+
+  private def tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
+
+  void onStart(StartEvent event) {
+    def parentContext = Context.current()
+    def span = tracer.spanBuilder("a-span")
+      .setParent(parentContext)
+      .startSpan()
+
+    Context otelContext = parentContext.with(span)
+    otelContext.makeCurrent().withCloseable {
+      Execution.current().add(Context, otelContext)
+      def httpClient = event.registry.get(HttpClient)
+      httpClient.get(new URI(url))
+        .flatMap { httpClient.get(new URI(url)) }
+        .then {
+          span.end()
+          latch.countDown()
+        }
+    }
+  }
+}
+
