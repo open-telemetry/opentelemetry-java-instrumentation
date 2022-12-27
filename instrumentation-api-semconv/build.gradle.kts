@@ -12,7 +12,6 @@ group = "io.opentelemetry.instrumentation"
 
 dependencies {
   api("io.opentelemetry:opentelemetry-semconv")
-  api("io.opentelemetry:opentelemetry-sdk-metrics")
   api(project(":instrumentation-api"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
