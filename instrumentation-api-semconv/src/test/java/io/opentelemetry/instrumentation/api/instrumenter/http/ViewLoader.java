@@ -16,7 +16,7 @@ public class ViewLoader {
   }
 
   private static InputStream resourceFileInputStream(String resourceFileName) {
-    URL resourceUrl = HttpServerMetricsTest.class.getResource("/" + resourceFileName);
+    URL resourceUrl = ViewLoader.class.getResource("/" + resourceFileName);
     if (resourceUrl == null) {
       throw new IllegalStateException("Could not find resource file: " + resourceFileName);
     }
