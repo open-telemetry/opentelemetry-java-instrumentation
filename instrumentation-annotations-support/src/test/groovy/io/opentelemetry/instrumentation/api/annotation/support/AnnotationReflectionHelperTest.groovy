@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support
 
+import groovy.transform.CompileStatic
 import spock.lang.Specification
 
 import java.lang.invoke.MethodHandles
@@ -41,10 +42,18 @@ class AnnotationReflectionHelperTest extends Specification {
     cls == null
   }
 
+  // Using @CompileStatic to ensure that groovy does not call MethodHandles.lookup using method
+  // handles. MethodHandles.lookup is caller sensitive. Test fails with lookup where the caller is
+  // an anonymous class.
+  @CompileStatic
+  private static MethodHandles.Lookup getLookup() {
+    return MethodHandles.lookup()
+  }
+
   def "returns bound functional interface to annotation element"() {
     given:
     def function = AnnotationReflectionHelper.bindAnnotationElementMethod(
-      MethodHandles.lookup(),
+      getLookup(),
       CustomAnnotation,
       "value",
       String
