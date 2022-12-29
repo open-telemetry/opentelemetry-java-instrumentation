@@ -42,7 +42,7 @@ val errorProneVersion = "2.16"
 val byteBuddyVersion = "1.12.20"
 val asmVersion = "9.4"
 val jmhVersion = "1.36"
-val mockitoVersion = "4.10.0"
+val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.6"
 
 val CORE_DEPENDENCIES = listOf(
