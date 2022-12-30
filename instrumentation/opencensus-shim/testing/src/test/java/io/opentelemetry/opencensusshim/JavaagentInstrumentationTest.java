@@ -1,3 +1,5 @@
+package io.opentelemetry.opencensusshim;
+
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opencensus.trace.AttributeValue;
@@ -12,7 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 
-public class Test {
+public class JavaagentInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
