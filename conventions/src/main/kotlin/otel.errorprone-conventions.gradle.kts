@@ -112,6 +112,9 @@ tasks {
         // with older APIs.
         disable("InconsistentOverloads")
 
+        // lots of low level APIs use arrays
+        disable("AvoidObjectArrays")
+
         if (name.contains("Jmh") || name.contains("Test")) {
           // Allow underscore in test-type method names
           disable("MemberName")
