@@ -38,6 +38,7 @@ import org.apache.http.nio.ContentEncoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.nio.protocol.HttpAsyncResponseConsumer;
+import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 
@@ -73,10 +74,13 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(value = 1, readOnly = false) HttpAsyncResponseConsumer<?> responseConsumer,
-        @Advice.Argument(2) HttpContext httpContext,
+        @Advice.Argument(value = 2, readOnly = false) HttpContext httpContext,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
+      if (httpContext != null) {
+        httpContext = new BasicHttpContext();
+      }
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
@@ -304,7 +308,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         return;
       }
 
-      instrumenter().end(context, otelRequest, getResponse(), null);
+      instrumenter().end(context, getOtelRequest(), getResponse(result), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -326,7 +330,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
 
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponse(), ex);
+      instrumenter().end(context, getOtelRequest(), getResponse(), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -349,7 +353,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponse(), null);
+      instrumenter().end(context, getOtelRequest(), getResponse(), null);
 
       if (parentContext == null) {
         cancelDelegate();
@@ -379,12 +383,29 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
     }
 
-    @Nullable
     private HttpResponse getResponse() {
+      return getResponse(null);
+    }
+
+    @Nullable
+    private HttpResponse getResponse(T result) {
       if (httpContext != null) {
         return httpContext.getResponse();
       }
+      if (result instanceof HttpResponse) {
+        return (HttpResponse) result;
+      }
       return null;
+    }
+
+    private ApacheHttpClientRequest getOtelRequest() {
+      if (httpContext != null) {
+        HttpRequest internalHttpRequest = httpContext.getRequest();
+        if (internalHttpRequest != null) {
+          return new ApacheHttpClientRequest(parentContext, null, internalHttpRequest);
+        }
+      }
+      return otelRequest;
     }
   }
 }

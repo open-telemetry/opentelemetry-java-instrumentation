@@ -287,7 +287,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      instrumenter().end(context, otelRequest, getResponse(), null);
+      instrumenter().end(context, getOtelRequest(), getResponse(result), null);
 
       if (parentContext == null) {
         completeDelegate(result);
@@ -309,7 +309,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponse(), ex);
+      instrumenter().end(context, getOtelRequest(), getResponse(), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
@@ -332,7 +332,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponse(), null);
+      instrumenter().end(context, getOtelRequest(), getResponse(), null);
 
       if (parentContext == null) {
         cancelDelegate();
@@ -362,9 +362,29 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Nullable
     private HttpResponse getResponse() {
-      return httpContext.getResponse();
+      return getResponse(null);
+    }
+
+    @Nullable
+    private HttpResponse getResponse(T result) {
+      if (httpContext != null) {
+        return httpContext.getResponse();
+      }
+      if (result instanceof HttpResponse) {
+        return (HttpResponse) result;
+      }
+      return null;
+    }
+
+    private ApacheHttpClientRequest getOtelRequest() {
+      if (httpContext != null) {
+        HttpRequest internalHttpRequest = httpContext.getRequest();
+        if (internalHttpRequest != null) {
+          return new ApacheHttpClientRequest(parentContext, internalHttpRequest);
+        }
+      }
+      return otelRequest;
     }
   }
 }
