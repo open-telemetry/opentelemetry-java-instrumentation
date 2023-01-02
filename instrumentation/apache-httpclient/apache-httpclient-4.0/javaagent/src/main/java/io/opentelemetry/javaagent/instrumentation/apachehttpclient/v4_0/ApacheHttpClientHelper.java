@@ -29,10 +29,12 @@ public final class ApacheHttpClientHelper {
     }
   }
 
-  public static void doMethodExit(
+  public static void endInstrumentation(
       Context context, ApacheHttpClientRequest request, Object response, Throwable throwable) {
+    HttpResponse httpResponse = null;
     if (response instanceof HttpResponse) {
-      HttpEntity entity = ((HttpResponse) response).getEntity();
+      httpResponse = (HttpResponse) response;
+      HttpEntity entity = httpResponse.getEntity();
       if (entity != null) {
         long contentLength = entity.getContentLength();
         Context parentContext = request.getParentContext();
@@ -40,13 +42,7 @@ public final class ApacheHttpClientHelper {
         metrics.setResponseContentLength(contentLength);
       }
     }
-    if (throwable != null) {
-      instrumenter().end(context, request, null, throwable);
-    } else if (response instanceof HttpResponse) {
-      instrumenter().end(context, request, (HttpResponse) response, null);
-    } else {
-      // ended in WrappingStatusSettingResponseHandler
-    }
+    instrumenter().end(context, request, httpResponse, throwable);
   }
 
   private ApacheHttpClientHelper() {}

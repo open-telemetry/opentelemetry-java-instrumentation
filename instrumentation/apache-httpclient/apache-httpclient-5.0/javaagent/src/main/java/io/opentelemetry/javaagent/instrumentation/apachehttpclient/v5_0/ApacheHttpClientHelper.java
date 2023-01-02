@@ -34,7 +34,7 @@ public class ApacheHttpClientHelper {
     }
   }
 
-  public static void doMethodExit(
+  public static void endInstrumentation(
       Context context, ApacheHttpClientRequest otelRequest, Object result, Throwable throwable) {
     if (result instanceof CloseableHttpResponse) {
       HttpEntity entity = ((CloseableHttpResponse) result).getEntity();
@@ -45,13 +45,11 @@ public class ApacheHttpClientHelper {
         metrics.setResponseContentLength(contentLength);
       }
     }
-    if (throwable != null) {
-      instrumenter().end(context, otelRequest, null, throwable);
-    } else if (result instanceof HttpResponse) {
-      instrumenter().end(context, otelRequest, (HttpResponse) result, null);
-    } else {
-      // ended in WrappingStatusSettingResponseHandler
+    HttpResponse httpResponse = null;
+    if (result instanceof HttpResponse) {
+      httpResponse = (HttpResponse) result;
     }
+    instrumenter().end(context, otelRequest, httpResponse, throwable);
   }
 
   public static List<String> getHeader(MessageHeaders messageHeaders, String name) {

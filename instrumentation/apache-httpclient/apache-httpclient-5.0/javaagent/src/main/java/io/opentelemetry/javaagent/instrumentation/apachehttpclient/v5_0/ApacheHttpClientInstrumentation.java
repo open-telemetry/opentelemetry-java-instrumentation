@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientHelper.doOnMethodEnter;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientHelper.endInstrumentation;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -138,7 +140,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ApacheHttpClientHelper.doOnMethodEnter(parentContext, request);
+      doOnMethodEnter(parentContext, request);
       context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
     }
@@ -155,7 +157,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 
@@ -177,7 +179,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ApacheHttpClientHelper.doOnMethodEnter(parentContext, request);
+      doOnMethodEnter(parentContext, request);
       context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
 
@@ -201,7 +203,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 
@@ -223,7 +225,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ApacheHttpClientHelper.doOnMethodEnter(parentContext, request);
+      doOnMethodEnter(parentContext, request);
       context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
 
@@ -247,7 +249,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 
@@ -269,7 +271,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ApacheHttpClientHelper.doOnMethodEnter(parentContext, request);
+      doOnMethodEnter(parentContext, request);
       context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
     }
@@ -286,7 +288,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 
@@ -309,7 +311,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ApacheHttpClientHelper.doOnMethodEnter(parentContext, request);
+      doOnMethodEnter(parentContext, request);
       context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
 
@@ -333,7 +335,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 
@@ -356,7 +358,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ApacheHttpClientHelper.doOnMethodEnter(parentContext, request);
+      doOnMethodEnter(parentContext, request);
       context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
 
@@ -380,7 +382,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 }
