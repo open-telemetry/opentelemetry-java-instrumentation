@@ -59,8 +59,6 @@ final class TracingClientInterceptor implements ClientInterceptor {
       }
     }
 
-    request.setPeerSocketAddress(result.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
-
     return new TracingClientCall<>(result, parentContext, context, request);
   }
 
@@ -163,6 +161,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       @Override
       public void onReady() {
         try (Scope ignored = context.makeCurrent()) {
+          request.setPeerSocketAddress(getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
           delegate().onReady();
         }
       }
