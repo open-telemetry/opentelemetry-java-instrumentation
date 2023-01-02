@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 
-enum HttpHeaderSetter implements TextMapSetter<ApacheHttpClientRequest> {
+public enum HttpHeaderSetter implements TextMapSetter<ApacheHttpClientRequest> {
   INSTANCE;
 
   @Override

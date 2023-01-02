@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApacheHttpAsyncClientInstrumentationModule extends InstrumentationModule {
+public final class ApacheHttpAsyncClientInstrumentationModule extends InstrumentationModule {
   public ApacheHttpAsyncClientInstrumentationModule() {
     super("apache-httpasyncclient", "apache-httpasyncclient-4.1");
   }

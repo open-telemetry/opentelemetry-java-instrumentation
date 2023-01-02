@@ -12,7 +12,7 @@ import java.io.OutputStream;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.HttpEntityWrapper;
 
-public class WrappedHttpEntity extends HttpEntityWrapper {
+public final class WrappedHttpEntity extends HttpEntityWrapper {
   private final Context parentContext;
 
   public WrappedHttpEntity(Context parentContext, HttpEntity delegate) {

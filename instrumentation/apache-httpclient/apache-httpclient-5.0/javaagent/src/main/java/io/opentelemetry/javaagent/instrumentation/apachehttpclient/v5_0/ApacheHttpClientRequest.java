@@ -10,7 +10,7 @@ import java.util.List;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.net.URIAuthority;
 
-final class ApacheHttpClientRequest {
+public final class ApacheHttpClientRequest {
   private final Context parentContext;
   private final HttpRequest httpRequest;
 

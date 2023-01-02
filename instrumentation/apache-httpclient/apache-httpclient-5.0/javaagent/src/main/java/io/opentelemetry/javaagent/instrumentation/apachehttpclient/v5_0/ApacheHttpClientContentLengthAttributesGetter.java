@@ -15,15 +15,14 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nonnull;
 import org.apache.hc.core5.http.HttpResponse;
 
-final class ApacheHttpClientContentLengthAttributesGetter
+public final class ApacheHttpClientContentLengthAttributesGetter
     implements AttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
   public void onStart(
       @Nonnull AttributesBuilder attributes,
       @Nonnull Context parentContext,
-      @Nonnull ApacheHttpClientRequest request
-  ) {}
+      @Nonnull ApacheHttpClientRequest request) {}
 
   @Override
   public void onEnd(

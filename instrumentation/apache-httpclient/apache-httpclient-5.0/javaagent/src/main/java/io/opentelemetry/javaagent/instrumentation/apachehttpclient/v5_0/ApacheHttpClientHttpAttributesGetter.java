@@ -10,7 +10,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.HttpResponse;
 
-final class ApacheHttpClientHttpAttributesGetter
+public final class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override

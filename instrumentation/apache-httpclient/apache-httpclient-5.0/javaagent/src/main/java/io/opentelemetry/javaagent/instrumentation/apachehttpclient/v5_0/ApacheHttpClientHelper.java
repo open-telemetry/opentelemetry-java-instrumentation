@@ -24,7 +24,7 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 
-public class ApacheHttpClientHelper {
+public final class ApacheHttpClientHelper {
   private static final Logger logger = Logger.getLogger(ApacheHttpClientHelper.class.getName());
 
   public static Context startInstrumentation(

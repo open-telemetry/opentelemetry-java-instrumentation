@@ -30,7 +30,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 
-public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
+public final class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.http.client.HttpClient");

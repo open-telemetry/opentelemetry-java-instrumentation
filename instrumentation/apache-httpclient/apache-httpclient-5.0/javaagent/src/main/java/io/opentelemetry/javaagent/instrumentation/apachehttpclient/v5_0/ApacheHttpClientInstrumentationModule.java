@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApacheHttpClientInstrumentationModule extends InstrumentationModule {
+public final class ApacheHttpClientInstrumentationModule extends InstrumentationModule {
 
   public ApacheHttpClientInstrumentationModule() {
     super("apache-httpclient", "apache-httpclient-5.0");
