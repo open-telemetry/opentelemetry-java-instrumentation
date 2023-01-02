@@ -13,9 +13,8 @@ public enum HttpHeaderSetter implements TextMapSetter<ApacheHttpClientRequest> {
 
   @Override
   public void set(@Nullable ApacheHttpClientRequest carrier, String key, String value) {
-    if (carrier == null) {
-      return;
+    if (carrier != null) {
+      carrier.setHeader(key, value);
     }
-    carrier.setHeader(key, value);
   }
 }
