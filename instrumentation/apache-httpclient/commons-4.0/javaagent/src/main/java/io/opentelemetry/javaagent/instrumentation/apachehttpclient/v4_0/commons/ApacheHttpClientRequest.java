@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons;
 
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -23,15 +25,16 @@ import org.apache.http.ProtocolVersion;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientRequest {
-
   private static final Logger logger = Logger.getLogger(ApacheHttpClientRequest.class.getName());
 
   @Nullable private final URI uri;
+  @Nullable private final HttpHost target;
 
   private final HttpRequest delegate;
   private final Context parentContext;
 
-  public ApacheHttpClientRequest(Context parentContext, HttpHost target, HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(
+      Context parentContext, @Nullable HttpHost target, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && target != null) {
       calculatedUri = getCalculatedUri(target, calculatedUri);
@@ -39,10 +42,12 @@ public final class ApacheHttpClientRequest {
     this.parentContext = parentContext;
     this.uri = calculatedUri;
     this.delegate = httpRequest;
+    this.target = target;
   }
 
   public ApacheHttpClientRequest(Context parentContext, HttpUriRequest httpRequest) {
     this.uri = httpRequest.getURI();
+    this.target = null;
     this.delegate = httpRequest;
     this.parentContext = parentContext;
   }
@@ -136,5 +141,14 @@ public final class ApacheHttpClientRequest {
       logger.log(FINE, e.getMessage(), e);
       return null;
     }
+  }
+
+  @Nullable
+  public InetSocketAddress peerSocketAddress() {
+    if (target == null) {
+      return null;
+    }
+    InetAddress inetAddress = target.getAddress();
+    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 }

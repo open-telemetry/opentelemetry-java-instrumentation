@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.A
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientRequest;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
@@ -17,7 +18,12 @@ import org.apache.http.HttpResponse;
 
 public final class ApacheHttpClientHelper {
 
-  public static void doOnMethodEnter(Context parentContext, HttpRequest request) {
+  public static Context startInstrumentation(
+      Context parentContext, HttpRequest request, ApacheHttpClientRequest otelRequest) {
+    if (!instrumenter().shouldStart(parentContext, otelRequest)) {
+      return null;
+    }
+
     if (request instanceof HttpEntityEnclosingRequest) {
       HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
       if (entity != null) {
@@ -28,6 +34,8 @@ public final class ApacheHttpClientHelper {
         ((HttpEntityEnclosingRequest) request).setEntity(wrappedHttpEntity);
       }
     }
+
+    return instrumenter().start(parentContext, otelRequest);
   }
 
   public static void endInstrumentation(

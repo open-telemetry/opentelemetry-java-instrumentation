@@ -15,7 +15,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nonnull;
 import org.apache.hc.core5.http.HttpResponse;
 
-public class ApacheHttpClientContentLengthAttributesGetter
+final class ApacheHttpClientContentLengthAttributesGetter
     implements AttributesExtractor<ApacheHttpClientRequest, HttpResponse> {
 
   @Override

@@ -20,6 +20,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientRequest;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;

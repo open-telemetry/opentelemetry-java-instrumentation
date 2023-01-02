@@ -25,6 +25,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:apache-httpclient:commons:javaagent"))
+  implementation(project(":instrumentation:apache-httpclient:commons-4.0:javaagent"))
   // 4.0.x uses GuardedBy which interferes with compiling tests
   library("org.apache.httpcomponents:httpclient:4.1")
 }

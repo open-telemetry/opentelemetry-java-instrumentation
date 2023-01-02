@@ -13,6 +13,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtrac
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientContentLengthAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientHttpAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientNetAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientRequest;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.HttpHeaderSetter;
 import org.apache.http.HttpResponse;
 
 public final class ApacheHttpClientSingletons {
