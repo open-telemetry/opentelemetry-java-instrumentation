@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientSingletons.getBytesTransferMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics.getFromParentContext;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.http.HttpResponse;
 
@@ -28,7 +29,7 @@ public class ApacheHttpClientContentLengthAttributesGetter
       HttpResponse response,
       Throwable error) {
     Context parentContext = request.getParentContext();
-    BytesTransferMetrics metrics = getBytesTransferMetrics(parentContext);
+    BytesTransferMetrics metrics = getFromParentContext(parentContext);
     if (metrics != null) {
       Long responseLength = metrics.getResponseContentLength();
       if (responseLength != null) {

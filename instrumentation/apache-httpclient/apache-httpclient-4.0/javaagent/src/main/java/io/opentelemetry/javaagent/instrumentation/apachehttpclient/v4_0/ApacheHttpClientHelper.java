@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientSingletons.createOrGetBytesTransferMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics.createOrGetWithParentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
@@ -21,7 +22,7 @@ public final class ApacheHttpClientHelper {
       HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
       if (entity != null) {
         long contentLength = entity.getContentLength();
-        BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         metrics.setRequestContentLength(contentLength);
         HttpEntity wrappedHttpEntity = new WrappedHttpEntity(parentContext, entity);
         ((HttpEntityEnclosingRequest) request).setEntity(wrappedHttpEntity);
@@ -38,7 +39,7 @@ public final class ApacheHttpClientHelper {
       if (entity != null) {
         long contentLength = entity.getContentLength();
         Context parentContext = request.getParentContext();
-        BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         metrics.setResponseContentLength(contentLength);
       }
     }

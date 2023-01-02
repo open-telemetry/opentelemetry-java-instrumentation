@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.createOrGetBytesTransferMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics.createOrGetWithParentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -20,6 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -110,7 +111,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         FutureCallback<T> futureCallback)
         throws HttpException, IOException {
       if (entityDetails != null) {
-        BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         metrics.setResponseContentLength(entityDetails.getContentLength());
       }
       delegate.consumeResponse(httpResponse, entityDetails, httpContext, futureCallback);
@@ -135,7 +136,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Override
     public void consume(ByteBuffer byteBuffer) throws IOException {
       if (byteBuffer.hasRemaining()) {
-        BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         metrics.addResponseBytes(byteBuffer.limit());
       }
       delegate.consume(byteBuffer);
@@ -213,7 +214,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public int write(ByteBuffer byteBuffer) throws IOException {
-      BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+      BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
       metrics.addRequestBytes(byteBuffer.limit());
       return delegate.write(byteBuffer);
     }
@@ -247,7 +248,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
       if (entityDetails != null) {
-        BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         metrics.setRequestContentLength(entityDetails.getContentLength());
       }
       ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(parentContext, request);

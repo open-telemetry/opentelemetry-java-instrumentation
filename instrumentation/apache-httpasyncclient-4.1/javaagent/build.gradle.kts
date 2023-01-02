@@ -14,5 +14,6 @@ muzzle {
 }
 
 dependencies {
+  implementation(project(":instrumentation:apache-httpclient:commons:javaagent"))
   library("org.apache.httpcomponents:httpasyncclient:4.1")
 }

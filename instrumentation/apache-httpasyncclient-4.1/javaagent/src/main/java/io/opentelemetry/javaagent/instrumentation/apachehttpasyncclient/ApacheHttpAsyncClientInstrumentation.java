@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.createOrGetBytesTransferMetrics;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics.createOrGetWithParentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -19,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
@@ -106,7 +107,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         HttpEntity entity = httpResponse.getEntity();
         if (entity != null) {
           long contentLength = entity.getContentLength();
-          BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+          BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
           metrics.setResponseContentLength(contentLength);
         }
       }
@@ -187,7 +188,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
           HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
           if (entity != null) {
             long contentLength = entity.getContentLength();
-            BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+            BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
             metrics.setRequestContentLength(contentLength);
           }
         }
@@ -240,7 +241,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public int write(ByteBuffer byteBuffer) throws IOException {
-      BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+      BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
       metrics.addRequestBytes(byteBuffer.limit());
       return delegate.write(byteBuffer);
     }
@@ -268,7 +269,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public int read(ByteBuffer byteBuffer) throws IOException {
       if (byteBuffer.hasRemaining()) {
-        BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         metrics.addResponseBytes(byteBuffer.limit());
       }
       return delegate.read(byteBuffer);

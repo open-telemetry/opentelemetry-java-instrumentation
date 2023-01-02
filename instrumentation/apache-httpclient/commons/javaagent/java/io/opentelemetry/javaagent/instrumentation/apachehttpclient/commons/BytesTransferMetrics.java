@@ -1,13 +1,19 @@
-/*
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons;/*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
-
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class BytesTransferMetrics {
+  private static final VirtualField<Context, BytesTransferMetrics> byContext;
+
+  static  {
+    byContext = VirtualField.find(Context.class, BytesTransferMetrics.class);
+  }
+
   private final AtomicLong bytesOut = new AtomicLong();
 
   private final AtomicLong bytesIn = new AtomicLong();
@@ -94,5 +100,18 @@ public class BytesTransferMetrics {
       return bytesRead;
     }
     return null;
+  }
+
+  public static BytesTransferMetrics createOrGetWithParentContext(Context parentContext) {
+    BytesTransferMetrics metrics = byContext.get(parentContext);
+    if (metrics == null) {
+      metrics = new BytesTransferMetrics();
+      byContext.set(parentContext, metrics);
+    }
+    return metrics;
+  }
+
+  public static BytesTransferMetrics getFromParentContext(Context parentContext) {
+    return byContext.get(parentContext);
   }
 }

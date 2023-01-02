@@ -5,12 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.getBytesTransferMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics.getFromParentContext;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import javax.annotation.Nonnull;
 import org.apache.hc.core5.http.HttpResponse;
 
 public class ApacheHttpClientContentLengthAttributesGetter
@@ -18,17 +20,20 @@ public class ApacheHttpClientContentLengthAttributesGetter
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, ApacheHttpClientRequest request) {}
+      @Nonnull AttributesBuilder attributes,
+      @Nonnull Context parentContext,
+      @Nonnull ApacheHttpClientRequest request
+  ) {}
 
   @Override
   public void onEnd(
-      AttributesBuilder attributes,
-      Context context,
+      @Nonnull AttributesBuilder attributes,
+      @Nonnull Context context,
       ApacheHttpClientRequest request,
       HttpResponse response,
       Throwable error) {
     Context parentContext = request.getParentContext();
-    BytesTransferMetrics metrics = getBytesTransferMetrics(parentContext);
+    BytesTransferMetrics metrics = getFromParentContext(parentContext);
     if (metrics != null) {
       Long responseLength = metrics.getResponseContentLength();
       if (responseLength != null) {

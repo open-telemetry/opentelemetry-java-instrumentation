@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.CountingOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import org.apache.http.HttpEntity;

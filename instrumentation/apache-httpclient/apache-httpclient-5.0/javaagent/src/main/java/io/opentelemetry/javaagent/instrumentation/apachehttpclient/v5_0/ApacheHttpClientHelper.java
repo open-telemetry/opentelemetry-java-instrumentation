@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.createOrGetBytesTransferMetrics;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics.createOrGetWithParentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,12 +27,19 @@ import org.apache.hc.core5.http.ProtocolVersion;
 public class ApacheHttpClientHelper {
   private static final Logger logger = Logger.getLogger(ApacheHttpClientHelper.class.getName());
 
-  public static void doOnMethodEnter(Context parentContext, ClassicHttpRequest request) {
+  public static Context startInstrumentation(
+      Context parentContext, ClassicHttpRequest request, ApacheHttpClientRequest otelRequest) {
+    if (!instrumenter().shouldStart(parentContext, otelRequest)) {
+      return null;
+    }
+
     HttpEntity originalEntity = request.getEntity();
     if (originalEntity != null) {
       HttpEntity wrappedHttpEntity = new WrappedHttpEntity(parentContext, originalEntity);
       request.setEntity(wrappedHttpEntity);
     }
+
+    return instrumenter().start(parentContext, otelRequest);
   }
 
   public static void endInstrumentation(
@@ -41,7 +49,7 @@ public class ApacheHttpClientHelper {
       if (entity != null) {
         long contentLength = entity.getContentLength();
         Context parentContext = otelRequest.getParentContext();
-        BytesTransferMetrics metrics = createOrGetBytesTransferMetrics(parentContext);
+        BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         metrics.setResponseContentLength(contentLength);
       }
     }
