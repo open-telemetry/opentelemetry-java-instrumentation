@@ -29,7 +29,7 @@ public class Servlet2HttpAttributesGetter
       @Nullable Throwable error) {
     HttpServletResponse response = responseContext.response();
 
-    if (!accessor.isResponseCommitted(response) && error != null) {
+    if (response != null && !accessor.isResponseCommitted(response) && error != null) {
       // if response is not committed and there is a throwable set status to 500 /
       // INTERNAL_SERVER_ERROR, due to servlet spec
       // https://javaee.github.io/servlet-spec/downloads/servlet-4.0/servlet-4_0_FINAL.pdf:

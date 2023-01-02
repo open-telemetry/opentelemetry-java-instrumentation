@@ -69,6 +69,12 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     RESPONSE response = responseContext.response();
 
+    // OpenLiberty might call the AsyncListener with an AsyncEvent that does not contain a response
+    // in some cases where the connection is dropped
+    if (response == null) {
+      return null;
+    }
+
     if (!accessor.isResponseCommitted(response) && error != null) {
       // if response is not committed and there is a throwable set status to 500 /
       // INTERNAL_SERVER_ERROR, due to servlet spec
