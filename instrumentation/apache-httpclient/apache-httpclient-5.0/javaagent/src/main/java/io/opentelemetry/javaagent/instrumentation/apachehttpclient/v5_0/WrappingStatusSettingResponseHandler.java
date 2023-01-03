@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientHelper.endInstrumentation;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInstrumentationHelper.endInstrumentation;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -35,7 +35,7 @@ public final class WrappingStatusSettingResponseHandler<T> implements HttpClient
   public T handleResponse(ClassicHttpResponse response) throws IOException, HttpException {
     endInstrumentation(context, otelRequest, response, null);
     // ending the span before executing the callback handler (and scoping the callback handler to
-    // the parent context), even though we are inside of a synchronous http client callback
+    // the parent context), even though we are inside the synchronous http client callback
     // underneath HttpClient.execute(..), in order to not attribute other CLIENT span timings that
     // may be performed in the callback handler to the http client span (and so we don't end up with
     // nested CLIENT spans, which we currently suppress)

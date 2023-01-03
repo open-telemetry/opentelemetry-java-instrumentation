@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons;
 
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class BytesTransferMetrics {
@@ -21,30 +19,6 @@ public final class BytesTransferMetrics {
   private final AtomicLong bytesOut = new AtomicLong();
 
   private final AtomicLong bytesIn = new AtomicLong();
-
-  private long requestContentLength = -1;
-
-  private long responseContentLength = -1;
-
-  /**
-   * Set content-length of request sent by the client. In case of chunked request, the value
-   * returned by the client is -1.
-   *
-   * @param contentLength request content length or -ve value for chunked.
-   */
-  public void setRequestContentLength(long contentLength) {
-    this.requestContentLength = contentLength;
-  }
-
-  /**
-   * Set content-length of response received by the client. In case of chunked response, the value
-   * returned by the client is -1.
-   *
-   * @param contentLength response content length or -ve value for chunked.
-   */
-  public void setResponseContentLength(long contentLength) {
-    this.responseContentLength = contentLength;
-  }
 
   /**
    * Add request bytes produced. This may not always represent the request size, for example in case
@@ -79,9 +53,6 @@ public final class BytesTransferMetrics {
    * @return content-length of request, null if content-length is not applicable.
    */
   public Long getRequestContentLength() {
-    if (requestContentLength >= 0) {
-      return requestContentLength;
-    }
     long bytesWritten = bytesOut.get();
     if (bytesWritten > 0) {
       return bytesWritten;
@@ -96,9 +67,6 @@ public final class BytesTransferMetrics {
    * @return content-length of response, null if content-length is not applicable.
    */
   public Long getResponseContentLength() {
-    if (responseContentLength >= 0) {
-      return responseContentLength;
-    }
     long bytesRead = bytesIn.get();
     if (bytesRead > 0) {
       return bytesRead;
@@ -115,21 +83,7 @@ public final class BytesTransferMetrics {
     return metrics;
   }
 
-  public static void addAttributes(Context parentContext, AttributesBuilder attributes) {
-    BytesTransferMetrics metrics = byContext.get(parentContext);
-    if (metrics != null) {
-      metrics.addAttributes(attributes);
-    }
-  }
-
-  public void addAttributes(AttributesBuilder attributes) {
-    Long responseLength = getResponseContentLength();
-    if (responseLength != null) {
-      attributes.put(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseLength);
-    }
-    Long requestLength = getRequestContentLength();
-    if (requestLength != null) {
-      attributes.put(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestLength);
-    }
+  public static BytesTransferMetrics getBytesTransferMetrics(Context parentContext) {
+    return byContext.get(parentContext);
   }
 }

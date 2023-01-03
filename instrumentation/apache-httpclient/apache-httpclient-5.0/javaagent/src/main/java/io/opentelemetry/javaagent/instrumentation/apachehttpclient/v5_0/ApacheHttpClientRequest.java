@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import java.util.List;
 import org.apache.hc.core5.http.HttpRequest;
 
@@ -18,8 +19,12 @@ public final class ApacheHttpClientRequest {
     this.httpRequest = httpRequest;
   }
 
-  public Context getParentContext() {
-    return parentContext;
+  public ApacheHttpClientRequest withHttpRequest(HttpRequest httpRequest) {
+    return new ApacheHttpClientRequest(parentContext, httpRequest);
+  }
+
+  public BytesTransferMetrics getBytesTransferMetrics() {
+    return BytesTransferMetrics.getBytesTransferMetrics(parentContext);
   }
 
   public String getPeerName() {
@@ -27,7 +32,7 @@ public final class ApacheHttpClientRequest {
   }
 
   public Integer getPeerPort() {
-    return ApacheHttpClientUtils.getPeerPort(httpRequest);
+    return ApacheHttpClientAttributesHelper.getPeerPort(httpRequest);
   }
 
   public String getMethod() {
@@ -35,15 +40,19 @@ public final class ApacheHttpClientRequest {
   }
 
   public String getUrl() {
-    return ApacheHttpClientUtils.getUrl(httpRequest);
+    return ApacheHttpClientAttributesHelper.getUrl(httpRequest);
   }
 
   public String getFlavor() {
-    return ApacheHttpClientUtils.getFlavor(httpRequest.getVersion());
+    return ApacheHttpClientAttributesHelper.getFlavor(httpRequest.getVersion());
   }
 
   public List<String> getHeader(String name) {
-    return ApacheHttpClientUtils.getHeader(httpRequest, name);
+    return ApacheHttpClientAttributesHelper.getHeader(httpRequest, name);
+  }
+
+  public String getFirstHeader(String name) {
+    return ApacheHttpClientAttributesHelper.getFirstHeader(httpRequest, name);
   }
 
   public void setHeader(String key, String value) {

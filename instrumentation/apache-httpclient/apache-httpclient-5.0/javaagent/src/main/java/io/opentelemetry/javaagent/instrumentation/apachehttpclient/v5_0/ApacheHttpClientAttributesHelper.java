@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static java.util.logging.Level.FINE;
@@ -14,14 +19,25 @@ import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 import org.apache.hc.core5.net.URIAuthority;
 
-public final class ApacheHttpClientUtils {
-  private static final Logger logger = Logger.getLogger(ApacheHttpClientUtils.class.getName());
+public final class ApacheHttpClientAttributesHelper {
+  private static final Logger logger;
 
-  public ApacheHttpClientUtils() {
+  static {
+    logger = Logger.getLogger(ApacheHttpClientAttributesHelper.class.getName());
   }
+
+  public ApacheHttpClientAttributesHelper() {}
 
   public static List<String> getHeader(MessageHeaders messageHeaders, String name) {
     return headersToList(messageHeaders.getHeaders(name));
+  }
+
+  public static String getFirstHeader(MessageHeaders messageHeader, String name) {
+    Header firstHeader = messageHeader.getFirstHeader(name);
+    if (firstHeader != null) {
+      return firstHeader.getValue();
+    }
+    return null;
   }
 
   // minimize memory overhead by not using streams

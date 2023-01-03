@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons;
 
 import static java.util.logging.Level.FINE;
@@ -18,14 +23,25 @@ import org.apache.http.HttpMessage;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
 
-public final class ApacheHttpClientUtils {
-  private static final Logger logger = Logger.getLogger(ApacheHttpClientUtils.class.getName());
+public final class ApacheHttpClientAttributesHelper {
+  private static final Logger logger;
 
-  public ApacheHttpClientUtils() {
+  static {
+    logger = Logger.getLogger(ApacheHttpClientAttributesHelper.class.getName());
   }
+
+  public ApacheHttpClientAttributesHelper() {}
 
   public static List<String> getHeader(HttpMessage httpMessage, String name) {
     return headersToList(httpMessage.getHeaders(name));
+  }
+
+  public static String getFirstHeader(HttpMessage httpMessage, String name) {
+    Header firstHeader = httpMessage.getFirstHeader(name);
+    if (firstHeader != null) {
+      return firstHeader.getValue();
+    }
+    return null;
   }
 
   // minimize memory overhead by not using streams
@@ -68,6 +84,17 @@ public final class ApacheHttpClientUtils {
     return calculatedUri;
   }
 
+  @Nullable
+  private static URI getUri(HttpRequest httpRequest) {
+    try {
+      // this can be relative or absolute
+      return new URI(httpRequest.getRequestLine().getUri());
+    } catch (URISyntaxException e) {
+      logger.log(FINE, e.getMessage(), e);
+      return null;
+    }
+  }
+
   public static Integer getPeerPort(URI uri) {
     return uri == null ? null : uri.getPort();
   }
@@ -78,17 +105,6 @@ public final class ApacheHttpClientUtils {
     }
     InetAddress inetAddress = target.getAddress();
     return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
-  }
-
-  @Nullable
-  private static URI getUri(HttpRequest httpRequest) {
-    try {
-      // this can be relative or absolute
-      return new URI(httpRequest.getRequestLine().getUri());
-    } catch (URISyntaxException e) {
-      logger.log(FINE, e.getMessage(), e);
-      return null;
-    }
   }
 
   @Nullable

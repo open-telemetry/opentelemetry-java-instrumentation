@@ -37,6 +37,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     optionsBuilder.setUserAgent(userAgent());
     optionsBuilder.enableTestReadTimeout();
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
+    optionsBuilder.setResponseCodeOnRedirectError(302);
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {

@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientHelper.endInstrumentation;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientHelper.startInstrumentation;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInstrumentationHelper.endInstrumentation;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInstrumentationHelper.startInstrumentation;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -134,6 +134,11 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, request);
       context = startInstrumentation(parentContext, request, otelRequest);
+
+      if (context == null) {
+        return;
+      }
+
       scope = context.makeCurrent();
     }
 
@@ -166,6 +171,11 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, request);
       context = startInstrumentation(parentContext, request, otelRequest);
+
+      if (context == null) {
+        return;
+      }
+
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -205,6 +215,11 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, request);
       context = startInstrumentation(parentContext, request, otelRequest);
+
+      if (context == null) {
+        return;
+      }
+
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -244,6 +259,11 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, new RequestWithHost(host, request));
       context = startInstrumentation(parentContext, request, otelRequest);
+
+      if (context == null) {
+        return;
+      }
+
       scope = context.makeCurrent();
     }
 
@@ -277,6 +297,11 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, new RequestWithHost(host, request));
       context = startInstrumentation(parentContext, request, otelRequest);
+
+      if (context == null) {
+        return;
+      }
+
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -317,6 +342,11 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, new RequestWithHost(host, request));
       context = startInstrumentation(parentContext, request, otelRequest);
+
+      if (context == null) {
+        return;
+      }
+
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code

@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
+import org.apache.http.ProtocolVersion;
 
 public final class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
@@ -39,7 +40,8 @@ public final class ApacheHttpClientHttpAttributesGetter
   public String getFlavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     String flavor = request.getFlavor();
     if (flavor == null && response != null && response.getStatusLine() != null) {
-      flavor = ApacheHttpClientUtils.getFlavor(response.getStatusLine().getProtocolVersion());
+      ProtocolVersion protocolVersion = response.getStatusLine().getProtocolVersion();
+      flavor = ApacheHttpClientAttributesHelper.getFlavor(protocolVersion);
     }
     return flavor;
   }
@@ -47,6 +49,6 @@ public final class ApacheHttpClientHttpAttributesGetter
   @Override
   public List<String> getResponseHeader(
       ApacheHttpClientRequest request, HttpResponse response, String name) {
-    return ApacheHttpClientUtils.getHeader(response, name);
+    return ApacheHttpClientAttributesHelper.getHeader(response, name);
   }
 }

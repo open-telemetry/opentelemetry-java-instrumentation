@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons;
 
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientAttributesHelper.getUri;
+
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.List;
@@ -15,36 +18,33 @@ import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientRequest {
+  private final Context parentContext;
   @Nullable private final URI uri;
   @Nullable private final HttpHost target;
   private final HttpRequest httpRequest;
-  private final Context parentContext;
 
-  public ApacheHttpClientRequest(
-      Context parentContext, @Nullable HttpHost target, HttpRequest httpRequest) {
+  private ApacheHttpClientRequest(
+      Context parentContext, URI uri, HttpHost target, HttpRequest httpRequest) {
     this.parentContext = parentContext;
-    this.uri = ApacheHttpClientUtils.getUri(target, httpRequest);
+    this.uri = uri;
     this.httpRequest = httpRequest;
     this.target = target;
   }
 
+  public ApacheHttpClientRequest(Context parentContext, HttpHost target, HttpRequest httpRequest) {
+    this(parentContext, getUri(target, httpRequest), target, httpRequest);
+  }
+
   public ApacheHttpClientRequest(Context parentContext, HttpUriRequest httpRequest) {
-    this.parentContext = parentContext;
-    this.uri = httpRequest.getURI();
-    this.httpRequest = httpRequest;
-    this.target = null;
+    this(parentContext, httpRequest.getURI(), null, httpRequest);
   }
 
-  public Context getParentContext() {
-    return parentContext;
+  public ApacheHttpClientRequest withHttpRequest(HttpRequest httpRequest) {
+    return new ApacheHttpClientRequest(parentContext, uri, target, httpRequest);
   }
 
-  public List<String> getHeader(String name) {
-    return ApacheHttpClientUtils.getHeader(httpRequest, name);
-  }
-
-  public void setHeader(String name, String value) {
-    httpRequest.setHeader(name, value);
+  public BytesTransferMetrics getBytesTransferMetrics() {
+    return BytesTransferMetrics.getBytesTransferMetrics(parentContext);
   }
 
   public String getMethod() {
@@ -56,7 +56,7 @@ public final class ApacheHttpClientRequest {
   }
 
   public String getFlavor() {
-    return ApacheHttpClientUtils.getFlavor(httpRequest.getProtocolVersion());
+    return ApacheHttpClientAttributesHelper.getFlavor(httpRequest.getProtocolVersion());
   }
 
   @Nullable
@@ -66,11 +66,19 @@ public final class ApacheHttpClientRequest {
 
   @Nullable
   public Integer getPeerPort() {
-    return ApacheHttpClientUtils.getPeerPort(uri);
+    return ApacheHttpClientAttributesHelper.getPeerPort(uri);
+  }
+
+  public List<String> getHeader(String name) {
+    return ApacheHttpClientAttributesHelper.getHeader(httpRequest, name);
+  }
+
+  public String getFirstHeader(String name) {
+    return ApacheHttpClientAttributesHelper.getFirstHeader(httpRequest, name);
   }
 
   @Nullable
   public InetSocketAddress peerSocketAddress() {
-    return ApacheHttpClientUtils.getPeerSocketAddress(target);
+    return ApacheHttpClientAttributesHelper.getPeerSocketAddress(target);
   }
 }
