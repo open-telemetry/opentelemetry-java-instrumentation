@@ -8,7 +8,7 @@ and discuss your ideas or propose the changes you wish to make.
 
 ## Building
 
-In order to build and test this whole repository you need JDK 17+.
+In order to build and test this whole repository you need JDK 17 or higher.
 
 Some instrumentations and tests may put constraints on which java versions they support.
 See [Running the tests](./docs/contributing/running-tests.md) for more details.
