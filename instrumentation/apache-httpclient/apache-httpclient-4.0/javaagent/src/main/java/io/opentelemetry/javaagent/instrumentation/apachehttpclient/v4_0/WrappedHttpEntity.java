@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
-import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.CountingOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,15 +13,15 @@ import org.apache.http.HttpEntity;
 import org.apache.http.entity.HttpEntityWrapper;
 
 public final class WrappedHttpEntity extends HttpEntityWrapper {
-  private final Context parentContext;
+  private final BytesTransferMetrics metrics;
 
-  public WrappedHttpEntity(Context parentContext, HttpEntity delegate) {
+  public WrappedHttpEntity(BytesTransferMetrics metrics, HttpEntity delegate) {
     super(delegate);
-    this.parentContext = parentContext;
+    this.metrics = metrics;
   }
 
   @Override
   public void writeTo(OutputStream outStream) throws IOException {
-    super.writeTo(new CountingOutputStream(parentContext, outStream));
+    super.writeTo(new CountingOutputStream(metrics, outStream));
   }
 }

@@ -24,7 +24,8 @@ public final class ApacheHttpClientHelper {
 
     HttpEntity originalEntity = request.getEntity();
     if (originalEntity != null) {
-      HttpEntity wrappedHttpEntity = new WrappedHttpEntity(parentContext, originalEntity);
+      BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
+      HttpEntity wrappedHttpEntity = new WrappedHttpEntity(metrics, originalEntity);
       request.setEntity(wrappedHttpEntity);
     }
 

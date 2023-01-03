@@ -30,7 +30,7 @@ public final class ApacheHttpClientHelper {
         long contentLength = entity.getContentLength();
         BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         metrics.setRequestContentLength(contentLength);
-        HttpEntity wrappedHttpEntity = new WrappedHttpEntity(parentContext, entity);
+        HttpEntity wrappedHttpEntity = new WrappedHttpEntity(metrics, entity);
         ((HttpEntityEnclosingRequest) request).setEntity(wrappedHttpEntity);
       }
     }

@@ -3,12 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons; /*
-                                                                              * Copyright The OpenTelemetry Authors
-                                                                              * SPDX-License-Identifier: Apache-2.0
-                                                                              */
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons;
 
-import io.opentelemetry.context.Context;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -23,9 +19,9 @@ public final class CountingOutputStream extends FilterOutputStream {
    *
    * @param out the output stream to be wrapped
    */
-  public CountingOutputStream(Context parentContext, OutputStream out) {
+  public CountingOutputStream(BytesTransferMetrics metrics, OutputStream out) {
     super(out);
-    this.metrics = BytesTransferMetrics.createOrGetWithParentContext(parentContext);
+    this.metrics = metrics;
     this.closed = new AtomicBoolean(false);
   }
 
