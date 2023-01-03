@@ -26,13 +26,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
-import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
@@ -43,7 +41,6 @@ import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -53,39 +50,16 @@ import java.util.function.Supplier;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractHttpServerTest<SERVER> {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractHttpServerTest.class);
-
+public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
   public static final String TEST_REQUEST_HEADER = "X-Test-Request";
   public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
 
-  public static final String TEST_CLIENT_IP = "1.1.1.1";
-  public static final String TEST_USER_AGENT = "test-user-agent";
-
   private final HttpServerTestOptions options = new HttpServerTestOptions();
-  private InstrumentationTestRunner testing;
-  private SERVER server;
-  public WebClient client;
-  public int port;
-  public URI address;
-
-  protected abstract SERVER setupServer();
-
-  protected abstract void stopServer(SERVER server);
-
-  protected final InstrumentationTestRunner testing() {
-    return testing;
-  }
 
   @BeforeAll
   void setupOptions() {
@@ -94,48 +68,20 @@ public abstract class AbstractHttpServerTest<SERVER> {
 
     configure(options);
 
-    if (address == null) {
-      address = buildAddress();
-    }
-
-    server = setupServer();
-    if (server != null) {
-      logger.info(
-          getClass().getName()
-              + " http server started at: http://localhost:"
-              + port
-              + options.contextPath);
-    }
+    startServer();
   }
 
   @AfterAll
   void cleanup() {
-    if (server == null) {
-      logger.info(getClass().getName() + " can't stop null server");
-      return;
-    }
-    stopServer(server);
-    server = null;
-    logger.info(getClass().getName() + " http server stopped at: http://localhost:" + port + "/");
+    cleanupServer();
   }
 
-  protected URI buildAddress() {
-    try {
-      return new URI("http://localhost:" + port + options.contextPath + "/");
-    } catch (URISyntaxException exception) {
-      throw new IllegalStateException(exception);
-    }
+  @Override
+  protected final String getContextPath() {
+    return options.contextPath;
   }
 
   protected void configure(HttpServerTestOptions options) {}
-
-  @BeforeEach
-  void verifyExtension() {
-    if (testing == null) {
-      throw new AssertionError(
-          "Subclasses of AbstractHttpServerTest must register HttpServerInstrumentationExtension");
-    }
-  }
 
   public static <T> T controller(ServerEndpoint endpoint, Supplier<T> closure) {
     assert Span.current().getSpanContext().isValid() : "Controller should have a parent span.";
@@ -143,16 +89,6 @@ public abstract class AbstractHttpServerTest<SERVER> {
       return closure.get();
     }
     return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
-  }
-
-  String resolveAddress(ServerEndpoint uri) {
-    String url = uri.resolvePath(address).toString();
-    // Force HTTP/1 via h1c so upgrade requests don't show up as traces
-    url = url.replace("http://", "h1c://");
-    if (uri.getQuery() != null) {
-      url += "?" + uri.getQuery();
-    }
-    return url;
   }
 
   private AggregatedHttpRequest request(ServerEndpoint uri, String method) {
@@ -675,17 +611,5 @@ public abstract class AbstractHttpServerTest<SERVER> {
       default:
         return endpoint.resolvePath(address).getPath();
     }
-  }
-
-  final void setTesting(InstrumentationTestRunner testing, WebClient client, int port) {
-    setTesting(testing, client, port, null);
-  }
-
-  final void setTesting(
-      InstrumentationTestRunner testing, WebClient client, int port, URI address) {
-    this.testing = testing;
-    this.client = client;
-    this.port = port;
-    this.address = address;
   }
 }

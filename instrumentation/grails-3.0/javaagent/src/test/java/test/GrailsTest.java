@@ -53,7 +53,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setContextPath(getContextPath());
+    options.setContextPath("/xyz");
     options.setHasHandlerSpan(unused -> true);
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
@@ -99,10 +99,6 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
         throw new IllegalStateException(exception);
       }
     }
-  }
-
-  private static String getContextPath() {
-    return "/xyz";
   }
 
   @Override

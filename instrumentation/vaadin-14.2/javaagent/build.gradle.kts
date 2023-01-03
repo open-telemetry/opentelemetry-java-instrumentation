@@ -22,7 +22,7 @@ muzzle {
   pass {
     group.set("com.vaadin")
     module.set("flow-server")
-    versions.set("[3.1.0,23.3.0)")
+    versions.set("[3.1.0,)")
   }
 }
 
@@ -68,7 +68,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
 
   add("vaadin14LatestTestImplementation", "com.vaadin:vaadin-spring-boot-starter:14.+")
-  add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:23.2.+")
+  add("latestDepTestImplementation", "com.vaadin:vaadin-spring-boot-starter:+")
 }
 
 configurations {
