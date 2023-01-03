@@ -88,7 +88,7 @@ if (!latestDepTest) {
   configurations {
     listOf(
       testRuntimeClasspath,
-      named("testNoReceiveTelemetryRuntimeClasspath")
+      named("testNoReceiveTelemetryRuntimeClasspath"),
     )
       .forEach {
         it.configure {

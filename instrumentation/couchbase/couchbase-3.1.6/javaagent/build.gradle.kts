@@ -18,7 +18,7 @@ sourceSets {
     val shadedDep = project(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded")
     output.dir(
       shadedDep.file("build/extracted/shadow"),
-      "builtBy" to ":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded:extractShadowJar"
+      "builtBy" to ":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded:extractShadowJar",
     )
   }
 }
@@ -27,8 +27,8 @@ dependencies {
   compileOnly(
     project(
       path = ":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded",
-      configuration = "shadow"
-    )
+      configuration = "shadow",
+    ),
   )
 
   library("com.couchbase.client:java-client:3.1.6")
