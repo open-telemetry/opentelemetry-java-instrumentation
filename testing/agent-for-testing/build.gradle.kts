@@ -36,7 +36,7 @@ tasks {
       manifest.from(
         zipTree(agent.singleFile).matching {
           include("META-INF/MANIFEST.MF")
-        }.singleFile
+        }.singleFile,
       )
     }
   }
@@ -54,9 +54,9 @@ tasks {
 class JavaagentProvider(
   @InputFile
   @PathSensitive(PathSensitivity.RELATIVE)
-  val agentJar: Provider<RegularFile>
+  val agentJar: Provider<RegularFile>,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${file(agentJar).absolutePath}"
+    "-javaagent:${file(agentJar).absolutePath}",
   )
 }

@@ -13,7 +13,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 internal enum class KtorHttpServerAttributesGetter :
   HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
-  INSTANCE;
+  INSTANCE, ;
 
   override fun method(request: ApplicationRequest): String {
     return request.httpMethod.value

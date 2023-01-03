@@ -68,7 +68,7 @@ class CompilerArgumentsProvider : CommandLineArgumentProvider {
     "-localWorkers", "2",
     "-compileReport",
     "-extra", "$buildDir/testapp/extra",
-    "-draftCompile" // makes compile a bit faster
+    "-draftCompile", // makes compile a bit faster
   )
 }
 
