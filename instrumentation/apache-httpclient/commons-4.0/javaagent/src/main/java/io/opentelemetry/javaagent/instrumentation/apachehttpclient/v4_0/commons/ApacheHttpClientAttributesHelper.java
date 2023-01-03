@@ -110,12 +110,18 @@ public final class ApacheHttpClientAttributesHelper {
   @Nullable
   private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
     try {
+      String path = uri.getPath();
+      if (!path.startsWith("/")) {
+        // elasticsearch RestClient sends relative urls
+        // TODO(trask) add test for this and extend to Apache 4, 4.3 and 5
+        path = "/" + path;
+      }
       return new URI(
           httpHost.getSchemeName(),
           null,
           httpHost.getHostName(),
           httpHost.getPort(),
-          uri.getPath(),
+          path,
           uri.getQuery(),
           uri.getFragment());
     } catch (URISyntaxException e) {
