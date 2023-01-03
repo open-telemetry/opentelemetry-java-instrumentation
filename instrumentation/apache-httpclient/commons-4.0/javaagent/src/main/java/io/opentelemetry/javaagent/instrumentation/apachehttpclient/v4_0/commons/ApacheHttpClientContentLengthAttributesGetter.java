@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.http.HttpResponse;
 
 public final class ApacheHttpClientContentLengthAttributesGetter
@@ -27,16 +26,6 @@ public final class ApacheHttpClientContentLengthAttributesGetter
       HttpResponse response,
       Throwable error) {
     Context parentContext = request.getParentContext();
-    BytesTransferMetrics metrics = BytesTransferMetrics.getFromParentContext(parentContext);
-    if (metrics != null) {
-      Long responseLength = metrics.getResponseContentLength();
-      if (responseLength != null) {
-        attributes.put(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseLength);
-      }
-      Long requestLength = metrics.getRequestContentLength();
-      if (requestLength != null) {
-        attributes.put(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestLength);
-      }
-    }
+    BytesTransferMetrics.addAttributes(parentContext, attributes);
   }
 }

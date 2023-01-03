@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons;
 
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class BytesTransferMetrics {
@@ -113,7 +115,21 @@ public final class BytesTransferMetrics {
     return metrics;
   }
 
-  public static BytesTransferMetrics getFromParentContext(Context parentContext) {
-    return byContext.get(parentContext);
+  public static void addAttributes(Context parentContext, AttributesBuilder attributes) {
+    BytesTransferMetrics metrics = byContext.get(parentContext);
+    if (metrics != null) {
+      metrics.addAttributes(attributes);
+    }
+  }
+
+  public void addAttributes(AttributesBuilder attributes) {
+    Long responseLength = getResponseContentLength();
+    if (responseLength != null) {
+      attributes.put(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseLength);
+    }
+    Long requestLength = getRequestContentLength();
+    if (requestLength != null) {
+      attributes.put(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestLength);
+    }
   }
 }
