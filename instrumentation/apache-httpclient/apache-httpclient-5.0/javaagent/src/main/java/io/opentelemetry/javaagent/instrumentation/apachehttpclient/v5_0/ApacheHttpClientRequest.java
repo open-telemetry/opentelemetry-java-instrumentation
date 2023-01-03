@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.context.Context;
 import java.util.List;
 import org.apache.hc.core5.http.HttpRequest;
-import org.apache.hc.core5.net.URIAuthority;
 
 public final class ApacheHttpClientRequest {
   private final Context parentContext;
@@ -28,7 +27,7 @@ public final class ApacheHttpClientRequest {
   }
 
   public Integer getPeerPort() {
-    return httpRequest.getAuthority().getPort();
+    return ApacheHttpClientUtils.getPeerPort(httpRequest);
   }
 
   public String getMethod() {
@@ -36,43 +35,15 @@ public final class ApacheHttpClientRequest {
   }
 
   public String getUrl() {
-    // similar to org.apache.hc.core5.http.message.BasicHttpRequest.getUri()
-    // not calling getUri() to avoid unnecessary conversion
-    StringBuilder url = new StringBuilder();
-    URIAuthority authority = httpRequest.getAuthority();
-    if (authority != null) {
-      String scheme = httpRequest.getScheme();
-      if (scheme != null) {
-        url.append(scheme);
-        url.append("://");
-      } else {
-        url.append("http://");
-      }
-      url.append(authority.getHostName());
-      int port = authority.getPort();
-      if (port >= 0) {
-        url.append(":");
-        url.append(port);
-      }
-    }
-    String path = httpRequest.getPath();
-    if (path != null) {
-      if (url.length() > 0 && !path.startsWith("/")) {
-        url.append("/");
-      }
-      url.append(path);
-    } else {
-      url.append("/");
-    }
-    return url.toString();
+    return ApacheHttpClientUtils.getUrl(httpRequest);
   }
 
   public String getFlavor() {
-    return ApacheHttpClientHelper.getFlavor(httpRequest.getVersion());
+    return ApacheHttpClientUtils.getFlavor(httpRequest.getVersion());
   }
 
   public List<String> getHeader(String name) {
-    return ApacheHttpClientHelper.getHeader(httpRequest, name);
+    return ApacheHttpClientUtils.getHeader(httpRequest, name);
   }
 
   public void setHeader(String key, String value) {

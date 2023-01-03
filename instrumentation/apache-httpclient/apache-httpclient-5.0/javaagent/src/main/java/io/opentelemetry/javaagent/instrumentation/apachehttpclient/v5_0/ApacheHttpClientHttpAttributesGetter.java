@@ -39,7 +39,7 @@ public final class ApacheHttpClientHttpAttributesGetter
   public String getFlavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     String flavor = request.getFlavor();
     if (flavor == null && response != null) {
-      flavor = ApacheHttpClientHelper.getFlavor(response.getVersion());
+      flavor = ApacheHttpClientUtils.getFlavor(response.getVersion());
     }
     return flavor;
   }
@@ -47,6 +47,6 @@ public final class ApacheHttpClientHttpAttributesGetter
   @Override
   public List<String> getResponseHeader(
       ApacheHttpClientRequest request, HttpResponse response, String name) {
-    return ApacheHttpClientHelper.getHeader(response, name);
+    return ApacheHttpClientUtils.getHeader(response, name);
   }
 }

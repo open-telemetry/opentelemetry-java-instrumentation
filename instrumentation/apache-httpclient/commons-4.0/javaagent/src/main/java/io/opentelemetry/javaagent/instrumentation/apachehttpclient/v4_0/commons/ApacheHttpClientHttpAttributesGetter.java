@@ -37,12 +37,16 @@ public final class ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public String getFlavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.getFlavor();
+    String flavor = request.getFlavor();
+    if (flavor == null && response != null && response.getStatusLine() != null) {
+      flavor = ApacheHttpClientUtils.getFlavor(response.getStatusLine().getProtocolVersion());
+    }
+    return flavor;
   }
 
   @Override
   public List<String> getResponseHeader(
       ApacheHttpClientRequest request, HttpResponse response, String name) {
-    return ApacheHttpClientRequest.headersToList(response.getHeaders(name));
+    return ApacheHttpClientUtils.getHeader(response, name);
   }
 }
