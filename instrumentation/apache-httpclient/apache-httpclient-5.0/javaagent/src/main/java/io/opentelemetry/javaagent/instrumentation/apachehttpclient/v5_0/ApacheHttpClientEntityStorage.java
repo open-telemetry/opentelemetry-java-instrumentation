@@ -5,16 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
-public class ApacheHttpClientInternalEntityStorage {
+public class ApacheHttpClientEntityStorage {
   private static final VirtualField<Context, HttpRequest> httpRequestByOtelContext;
   private static final VirtualField<Context, HttpResponse> httpResponseByOtelContext;
 
-  public ApacheHttpClientInternalEntityStorage() {}
+  public ApacheHttpClientEntityStorage() {}
 
   static {
     httpRequestByOtelContext = VirtualField.find(Context.class, HttpRequest.class);
@@ -55,5 +61,43 @@ public class ApacheHttpClientInternalEntityStorage {
       return (HttpResponse) response;
     }
     return null;
+  }
+
+  public static void setCurrentContext(HttpContext httpContext, Context context) {
+    if (httpContext != null) {
+      HttpOtelContext httpOtelContext = HttpOtelContext.adapt(httpContext);
+      httpOtelContext.setContext(context);
+    }
+  }
+
+  public static void clearOtelAttributes(HttpContext httpContext) {
+    if (httpContext != null) {
+      HttpOtelContext.adapt(httpContext).clear();
+    }
+  }
+
+  @Nullable
+  public static Context getCurrentContext(HttpContext httpContext) {
+    if (httpContext == null) {
+      return null;
+    }
+    HttpOtelContext httpOtelContext = HttpOtelContext.adapt(httpContext);
+    Context otelContext = httpOtelContext.getContext();
+    if (otelContext == null) {
+      // for async clients, the contexts should always be set by their instrumentation
+      if (httpOtelContext.isAsyncClient()) {
+        return null;
+      }
+      // for classic clients, context will remain same as the caller
+      otelContext = currentContext();
+    }
+    // verifying if the current context is a http client context
+    // this eliminates suppressed contexts and http processor cases which ran for
+    // apache http server also present in the library
+    Span span = SpanKey.HTTP_CLIENT.fromContextOrNull(otelContext);
+    if (span == null) {
+      return null;
+    }
+    return otelContext;
   }
 }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -66,17 +65,10 @@ public final class ApacheHttpClientProcessorInstrumentation implements TypeInstr
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(value = 1) HttpContext httpContext) {
-      HttpOtelContext httpOtelContext = HttpOtelContext.adapt(httpContext);
-      Context otelContext = httpOtelContext.getContext();
-      if (otelContext == null) {
-        // for async clients, the contexts should always be set by their instrumentation
-        if (httpOtelContext.isAsyncClient()) {
-          return;
-        }
-        // for classic clients, context will remain same as the caller
-        otelContext = currentContext();
+      Context context = ApacheHttpClientEntityStorage.getCurrentContext(httpContext);
+      if (context != null) {
+        ApacheHttpClientEntityStorage.storeHttpRequest(context, httpRequest);
       }
-      ApacheHttpClientInternalEntityStorage.storeHttpRequest(otelContext, httpRequest);
     }
   }
 
@@ -86,17 +78,10 @@ public final class ApacheHttpClientProcessorInstrumentation implements TypeInstr
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpResponse httpResponse,
         @Advice.Argument(value = 1) HttpContext httpContext) {
-      HttpOtelContext httpOtelContext = HttpOtelContext.adapt(httpContext);
-      Context otelContext = httpOtelContext.getContext();
-      if (otelContext == null) {
-        // for async clients, the contexts should always be set by their instrumentation
-        if (httpOtelContext.isAsyncClient()) {
-          return;
-        }
-        // for classic clients, context will remain same as the caller
-        otelContext = currentContext();
+      Context context = ApacheHttpClientEntityStorage.getCurrentContext(httpContext);
+      if (context != null) {
+        ApacheHttpClientEntityStorage.storeHttpResponse(context, httpResponse);
       }
-      ApacheHttpClientInternalEntityStorage.storeHttpResponse(otelContext, httpResponse);
     }
   }
 }

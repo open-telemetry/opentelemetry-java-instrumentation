@@ -20,7 +20,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
-import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientInternalEntityStorage;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientEntityStorage;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientRequest;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.HttpOtelContext;
 import java.io.IOException;
@@ -85,10 +85,10 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
       httpOtelContext.markAsyncClient();
 
       WrappedFutureCallback<?> wrappedFutureCallback =
-          new WrappedFutureCallback<>(parentContext, httpOtelContext, futureCallback);
+          new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
       requestProducer =
           new WrappedRequestProducer(
-              parentContext, httpOtelContext, requestProducer, wrappedFutureCallback);
+              parentContext, httpContext, requestProducer, wrappedFutureCallback);
       responseConsumer = new WrappedResponseConsumer<>(parentContext, responseConsumer);
       futureCallback = wrappedFutureCallback;
     }
@@ -152,17 +152,17 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
 
   public static class WrappedRequestProducer implements HttpAsyncRequestProducer {
     private final Context parentContext;
-    private final HttpOtelContext httpOtelContext;
+    private final HttpContext httpContext;
     private final HttpAsyncRequestProducer delegate;
     private final WrappedFutureCallback<?> wrappedFutureCallback;
 
     public WrappedRequestProducer(
         Context parentContext,
-        HttpOtelContext httpOtelContext,
+        HttpContext httpContext,
         HttpAsyncRequestProducer delegate,
         WrappedFutureCallback<?> wrappedFutureCallback) {
       this.parentContext = parentContext;
-      this.httpOtelContext = httpOtelContext;
+      this.httpContext = httpContext;
       this.delegate = delegate;
       this.wrappedFutureCallback = wrappedFutureCallback;
     }
@@ -188,7 +188,7 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
         // As the http processor instrumentation is going to be called asynchronously,
         // we will need to store the otel context variables in http context for the
         // http processor instrumentation to use
-        httpOtelContext.setContext(context);
+        ApacheHttpClientEntityStorage.setCurrentContext(httpContext, context);
       }
 
       return request;
@@ -281,16 +281,16 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;
-    private final HttpOtelContext httpOtelContext;
+    private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
     private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
-        Context parentContext, HttpOtelContext httpOtelContext, FutureCallback<T> delegate) {
+        Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
       this.parentContext = parentContext;
-      this.httpOtelContext = httpOtelContext;
+      this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
       this.delegate = delegate;
     }
@@ -383,7 +383,7 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
     }
 
     private void removeOtelAttributes() {
-      httpOtelContext.clear();
+      ApacheHttpClientEntityStorage.clearOtelAttributes(httpContext);
     }
 
     private HttpResponse getFinalResponse() {
@@ -391,11 +391,11 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
     }
 
     private HttpResponse getFinalResponse(T result) {
-      return ApacheHttpClientInternalEntityStorage.getFinalResponse(result, context);
+      return ApacheHttpClientEntityStorage.getFinalResponse(result, context);
     }
 
     private ApacheHttpClientRequest getFinalRequest() {
-      return ApacheHttpClientInternalEntityStorage.getFinalRequest(otelRequest, context);
+      return ApacheHttpClientEntityStorage.getFinalRequest(otelRequest, context);
     }
   }
 }

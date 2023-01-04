@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics.createOrGetWithParentContext;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInternalEntityStorage.getFinalRequest;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInternalEntityStorage.getFinalResponse;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientEntityStorage.getFinalRequest;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientEntityStorage.getFinalResponse;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;

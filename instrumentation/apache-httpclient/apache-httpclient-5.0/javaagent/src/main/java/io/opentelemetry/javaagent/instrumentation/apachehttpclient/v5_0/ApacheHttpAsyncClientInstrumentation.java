@@ -87,10 +87,9 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
       httpOtelContext.markAsyncClient();
 
       WrappedFutureCallback<?> wrappedFutureCallback =
-          new WrappedFutureCallback<>(parentContext, httpOtelContext, futureCallback);
+          new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
       requestProducer =
-          new WrappedRequestProducer(
-              parentContext, httpOtelContext, requestProducer, wrappedFutureCallback);
+          new WrappedRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
       responseConsumer = new WrappedResponseConsumer<>(parentContext, responseConsumer);
       futureCallback = wrappedFutureCallback;
     }
@@ -153,17 +152,12 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
 
   public static class WrappedRequestProducer implements AsyncRequestProducer {
     private final Context parentContext;
-    private final HttpOtelContext httpOtelContext;
     private final AsyncRequestProducer delegate;
     private final WrappedFutureCallback<?> callback;
 
     public WrappedRequestProducer(
-        Context parentContext,
-        HttpOtelContext httpOtelContext,
-        AsyncRequestProducer delegate,
-        WrappedFutureCallback<?> callback) {
+        Context parentContext, AsyncRequestProducer delegate, WrappedFutureCallback<?> callback) {
       this.parentContext = parentContext;
-      this.httpOtelContext = httpOtelContext;
       this.delegate = delegate;
       this.callback = callback;
     }
@@ -177,7 +171,7 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
     public void sendRequest(RequestChannel channel, HttpContext context)
         throws HttpException, IOException {
       RequestChannel requestChannel;
-      requestChannel = new WrappedRequestChannel(channel, httpOtelContext, parentContext, callback);
+      requestChannel = new WrappedRequestChannel(channel, parentContext, callback);
       delegate.sendRequest(requestChannel, context);
     }
 
@@ -236,17 +230,14 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
 
   public static class WrappedRequestChannel implements RequestChannel {
     private final RequestChannel delegate;
-    private final HttpOtelContext httpOtelContext;
     private final Context parentContext;
     private final WrappedFutureCallback<?> wrappedFutureCallback;
 
     public WrappedRequestChannel(
         RequestChannel requestChannel,
-        HttpOtelContext httpOtelContext,
         Context parentContext,
         WrappedFutureCallback<?> wrappedFutureCallback) {
       this.delegate = requestChannel;
-      this.httpOtelContext = httpOtelContext;
       this.parentContext = parentContext;
       this.wrappedFutureCallback = wrappedFutureCallback;
     }
@@ -265,7 +256,7 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
         // As the http processor instrumentation is going to be called asynchronously,
         // we will need to store the otel context variables in http context for the
         // http processor instrumentation to use
-        httpOtelContext.setContext(context);
+        ApacheHttpClientEntityStorage.setCurrentContext(httpContext, context);
       }
 
       delegate.sendRequest(request, entityDetails, httpContext);
@@ -276,16 +267,16 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;
-    private final HttpOtelContext httpOtelContext;
+    private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
     private volatile Context context;
     private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
-        Context parentContext, HttpOtelContext httpOtelContext, FutureCallback<T> delegate) {
+        Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
       this.parentContext = parentContext;
-      this.httpOtelContext = httpOtelContext;
+      this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
       this.delegate = delegate;
     }
@@ -378,7 +369,7 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
     }
 
     private void removeOtelAttributes() {
-      httpOtelContext.clear();
+      ApacheHttpClientEntityStorage.clearOtelAttributes(httpContext);
     }
   }
 }
