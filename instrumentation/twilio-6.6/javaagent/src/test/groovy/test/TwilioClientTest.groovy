@@ -253,8 +253,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH.key" 63
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key" 937
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
           }
         }
@@ -322,8 +320,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH.key" 63
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key" 120
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 500
           }
         }
@@ -337,8 +333,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH.key" 63
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key" 937
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
           }
         }
@@ -413,8 +407,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH.key" 63
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key" 120
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 500
           }
         }
@@ -428,8 +420,6 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_FLAVOR.key" SemanticAttributes.HttpFlavorValues.HTTP_1_1
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_URL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH.key" 63
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH.key" 937
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
           }
         }
