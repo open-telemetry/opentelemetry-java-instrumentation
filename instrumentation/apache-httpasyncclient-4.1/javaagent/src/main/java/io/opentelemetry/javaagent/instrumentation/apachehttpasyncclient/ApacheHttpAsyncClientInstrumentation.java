@@ -78,7 +78,7 @@ public final class ApacheHttpAsyncClientInstrumentation implements TypeInstrumen
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
-      if (httpContext != null) {
+      if (httpContext == null) {
         httpContext = new BasicHttpContext();
       }
       HttpOtelContext httpOtelContext = HttpOtelContext.adapt(httpContext);
