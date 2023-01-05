@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientSingletons.helper;
@@ -60,9 +65,7 @@ public final class WrappedRequestProducer implements HttpAsyncRequestProducer {
 
   @Override
   public void produceContent(ContentEncoder encoder, IOControl ioctrl) throws IOException {
-    delegate.produceContent(
-        new WrappedContentEncoder(parentContext, encoder),
-        ioctrl);
+    delegate.produceContent(new WrappedContentEncoder(parentContext, encoder), ioctrl);
   }
 
   @Override

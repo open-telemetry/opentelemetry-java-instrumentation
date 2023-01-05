@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.context.Context;
@@ -6,7 +11,8 @@ import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.OtelH
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
-public final class ApacheHttpClientInernalEntityStorage extends OtelHttpInternalEntityStorage<HttpRequest, HttpResponse> {
+public final class ApacheHttpClientInernalEntityStorage
+    extends OtelHttpInternalEntityStorage<HttpRequest, HttpResponse> {
   private static final ApacheHttpClientInernalEntityStorage INSTANCE;
 
   static {
@@ -16,8 +22,7 @@ public final class ApacheHttpClientInernalEntityStorage extends OtelHttpInternal
   private ApacheHttpClientInernalEntityStorage() {
     super(
         VirtualField.find(Context.class, HttpRequest.class),
-        VirtualField.find(Context.class, HttpResponse.class)
-    );
+        VirtualField.find(Context.class, HttpResponse.class));
   }
 
   public static OtelHttpInternalEntityStorage<HttpRequest, HttpResponse> storage() {

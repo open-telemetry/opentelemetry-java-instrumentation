@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import io.opentelemetry.context.Context;
@@ -26,9 +31,7 @@ public final class WrappedResponseConsumer<T> implements HttpAsyncResponseConsum
   @Override
   public void consumeContent(ContentDecoder contentDecoder, IOControl ioControl)
       throws IOException {
-    delegate.consumeContent(
-        new WrappedContentDecoder(parentContext,
-            contentDecoder), ioControl);
+    delegate.consumeContent(new WrappedContentDecoder(parentContext, contentDecoder), ioControl);
   }
 
   @Override

@@ -23,21 +23,21 @@ public final class ApacheHttpClientInstrumenter {
     netAttributesGetter = new ApacheHttpClientNetAttributesGetter();
 
     return Instrumenter.<OtelHttpRequest, OtelHttpResponse>builder(
-                GlobalOpenTelemetry.get(),
-                instrumentationName,
-                HttpSpanNameExtractor.create(httpAttributesGetter))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                    .build())
-            .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .addAttributesExtractor(new ApacheHttpClientContentLengthAttributesGetter())
-            .addOperationMetrics(HttpClientMetrics.get())
-            .buildClientInstrumenter(new HttpHeaderSetter());
+            GlobalOpenTelemetry.get(),
+            instrumentationName,
+            HttpSpanNameExtractor.create(httpAttributesGetter))
+        .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+        .addAttributesExtractor(
+            HttpClientAttributesExtractor.builder(httpAttributesGetter, netAttributesGetter)
+                .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
+                .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
+                .build())
+        .addAttributesExtractor(
+            PeerServiceAttributesExtractor.create(
+                netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+        .addAttributesExtractor(new ApacheHttpClientContentLengthAttributesGetter())
+        .addOperationMetrics(HttpClientMetrics.get())
+        .buildClientInstrumenter(new HttpHeaderSetter());
   }
 
   private ApacheHttpClientInstrumenter() {}

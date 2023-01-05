@@ -9,7 +9,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttribut
 import java.util.List;
 import javax.annotation.Nullable;
 
-public final class ApacheHttpClientHttpAttributesGetter implements HttpClientAttributesGetter<OtelHttpRequest, OtelHttpResponse> {
+public final class ApacheHttpClientHttpAttributesGetter
+    implements HttpClientAttributesGetter<OtelHttpRequest, OtelHttpResponse> {
   @Override
   public String getMethod(OtelHttpRequest request) {
     return request.getMethod();
@@ -26,7 +27,8 @@ public final class ApacheHttpClientHttpAttributesGetter implements HttpClientAtt
   }
 
   @Override
-  public Integer getStatusCode(OtelHttpRequest request, OtelHttpResponse response, @Nullable Throwable error) {
+  public Integer getStatusCode(
+      OtelHttpRequest request, OtelHttpResponse response, @Nullable Throwable error) {
     return response.statusCode();
   }
 
@@ -37,14 +39,15 @@ public final class ApacheHttpClientHttpAttributesGetter implements HttpClientAtt
     if (flavor == null && response != null) {
       String responseFlavour = response.getFlavour();
       if (responseFlavour != null) {
-       flavor = responseFlavour;
+        flavor = responseFlavour;
       }
     }
     return flavor;
   }
 
   @Override
-  public List<String> getResponseHeader(OtelHttpRequest request, OtelHttpResponse response, String name) {
+  public List<String> getResponseHeader(
+      OtelHttpRequest request, OtelHttpResponse response, String name) {
     return response.getHeader(name);
   }
 }

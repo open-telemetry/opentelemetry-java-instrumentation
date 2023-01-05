@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.context.Context;
@@ -14,8 +19,7 @@ public final class WrappedRequestProducer implements AsyncRequestProducer {
   private final WrappedFutureCallback<?> callback;
 
   public WrappedRequestProducer(
-      Context parentContext, AsyncRequestProducer delegate,
-      WrappedFutureCallback<?> callback) {
+      Context parentContext, AsyncRequestProducer delegate, WrappedFutureCallback<?> callback) {
     this.parentContext = parentContext;
     this.delegate = delegate;
     this.callback = callback;
@@ -30,8 +34,7 @@ public final class WrappedRequestProducer implements AsyncRequestProducer {
   public void sendRequest(RequestChannel channel, HttpContext context)
       throws HttpException, IOException {
     RequestChannel requestChannel;
-    requestChannel = new WrappedRequestChannel(channel,
-        parentContext, callback);
+    requestChannel = new WrappedRequestChannel(channel, parentContext, callback);
     delegate.sendRequest(requestChannel, context);
   }
 
@@ -47,8 +50,7 @@ public final class WrappedRequestProducer implements AsyncRequestProducer {
 
   @Override
   public void produce(DataStreamChannel channel) throws IOException {
-    delegate.produce(
-        new WrappedDataStreamChannel(parentContext, channel));
+    delegate.produce(new WrappedDataStreamChannel(parentContext, channel));
   }
 
   @Override

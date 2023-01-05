@@ -22,7 +22,8 @@ import org.apache.hc.core5.http.HttpResponse;
 public final class ApacheHttpClientInstrumentationHelper {
   private final Instrumenter<OtelHttpRequest, OtelHttpResponse> instrumenter;
 
-  public ApacheHttpClientInstrumentationHelper(Instrumenter<OtelHttpRequest, OtelHttpResponse> instrumenter) {
+  public ApacheHttpClientInstrumentationHelper(
+      Instrumenter<OtelHttpRequest, OtelHttpResponse> instrumenter) {
     this.instrumenter = instrumenter;
   }
 

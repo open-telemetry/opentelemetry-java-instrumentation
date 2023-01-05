@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientContextManager.httpContextManager;
@@ -26,8 +31,7 @@ public final class WrappedRequestChannel implements RequestChannel {
   }
 
   @Override
-  public void sendRequest(
-      HttpRequest request, EntityDetails entityDetails, HttpContext httpContext)
+  public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext httpContext)
       throws HttpException, IOException {
     ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(parentContext, request);
     Context context = helper().startInstrumentation(parentContext, request, otelRequest);

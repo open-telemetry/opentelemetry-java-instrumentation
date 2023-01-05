@@ -13,8 +13,7 @@ public abstract class OtelHttpInternalEntityStorage<REQ, RES> {
   private final VirtualField<Context, RES> responseStorage;
 
   protected OtelHttpInternalEntityStorage(
-      VirtualField<Context, REQ> requestStorage,
-      VirtualField<Context, RES> responseStorage) {
+      VirtualField<Context, REQ> requestStorage, VirtualField<Context, RES> responseStorage) {
     this.requestStorage = requestStorage;
     this.responseStorage = responseStorage;
   }

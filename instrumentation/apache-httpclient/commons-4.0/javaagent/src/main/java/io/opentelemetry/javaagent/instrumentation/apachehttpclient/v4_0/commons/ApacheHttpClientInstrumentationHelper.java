@@ -61,7 +61,7 @@ public final class ApacheHttpClientInstrumentationHelper {
     return request;
   }
 
-  private static  <T> OtelHttpResponse getFinalResponse(T result, Context context) {
+  private static <T> OtelHttpResponse getFinalResponse(T result, Context context) {
     HttpResponse internalResponse = storage().getInternalResponse(context);
     if (internalResponse != null) {
       return new ApacheHttpClientResponse(internalResponse);
