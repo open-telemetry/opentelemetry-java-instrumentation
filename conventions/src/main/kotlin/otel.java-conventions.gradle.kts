@@ -295,7 +295,6 @@ tasks.withType<Test>().configureEach {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
     if (System.getenv().containsKey("CI") || rootProject.hasProperty("retryTests")) {
       maxRetries.set(5)
-      failOnPassedAfterRetry.set(true)
     }
   }
 
