@@ -1,3 +1,4 @@
+import com.gradle.enterprise.gradleplugin.testretry.retry
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.time.Duration
@@ -8,8 +9,6 @@ plugins {
   checkstyle
   codenarc
   idea
-
-  id("org.gradle.test-retry")
 
   id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
@@ -293,9 +292,10 @@ tasks.withType<Test>().configureEach {
   timeout.set(Duration.ofMinutes(15))
 
   retry {
-    val retryTests = System.getenv("CI") != null || rootProject.hasProperty("retryTests")
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    maxRetries.set(if (retryTests) 5 else 0)
+    if (System.getenv().containsKey("CI") || rootProject.hasProperty("retryTests")) {
+      maxRetries.set(5)
+    }
   }
 
   reports {
