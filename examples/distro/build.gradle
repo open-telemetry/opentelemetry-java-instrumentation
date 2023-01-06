@@ -27,7 +27,7 @@ subprojects {
   ext {
     versions = [
       // these lines are managed by .github/scripts/update-sdk-version.sh
-      opentelemetry              : "1.21.0",
+      opentelemetry              : "1.22.0",
 
       // these lines are managed by .github/scripts/update-version.sh
       opentelemetryJavaagent     : "1.22.0-SNAPSHOT",
