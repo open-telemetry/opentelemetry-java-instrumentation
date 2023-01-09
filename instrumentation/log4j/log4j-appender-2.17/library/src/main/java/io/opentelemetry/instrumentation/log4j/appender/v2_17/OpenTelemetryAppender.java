@@ -49,7 +49,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     return new Builder<B>().asBuilder();
   }
 
-  static class Builder<B extends Builder<B>> extends AbstractAppender.Builder<B>
+  public static class Builder<B extends Builder<B>> extends AbstractAppender.Builder<B>
       implements org.apache.logging.log4j.core.util.Builder<OpenTelemetryAppender> {
 
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;

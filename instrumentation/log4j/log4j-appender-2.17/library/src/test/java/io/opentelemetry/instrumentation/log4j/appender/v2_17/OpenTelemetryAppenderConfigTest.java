@@ -32,6 +32,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.ThreadContext;
+import org.apache.logging.log4j.core.impl.Log4jLogEvent;
+import org.apache.logging.log4j.message.FormattedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.BeforeAll;
@@ -66,6 +68,22 @@ class OpenTelemetryAppenderConfigTest {
   void setup() {
     logRecordExporter.reset();
     ThreadContext.clearAll();
+  }
+
+  @Test
+  void initializeWithBuilder() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder().setName("OpenTelemetryAppender").build();
+    appender.start();
+
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setMessage(new FormattedMessage("log message 1", (Object) null))
+            .build());
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogItems();
+    assertThat(logDataList)
+        .satisfiesExactly(logRecordData -> assertThat(logDataList.get(0)).hasBody("log message 1"));
   }
 
   @Test
