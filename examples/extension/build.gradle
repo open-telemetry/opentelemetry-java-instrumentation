@@ -60,7 +60,7 @@ spotless {
 }
 
 dependencies {
-  api(platform("io.opentelemetry:opentelemetry-bom:1.21.0"))
+  api(platform("io.opentelemetry:opentelemetry-bom:1.22.0"))
 
   // these serve as a test of the instrumentation boms
   api(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.opentelemetryJavaagent}"))
