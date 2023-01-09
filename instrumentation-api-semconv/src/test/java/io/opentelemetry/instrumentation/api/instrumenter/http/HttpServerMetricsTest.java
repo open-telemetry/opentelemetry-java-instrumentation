@@ -230,7 +230,6 @@ class HttpServerMetricsTest {
                                                 exemplar
                                                     .hasTraceId(spanContext2.getTraceId())
                                                     .hasSpanId(spanContext2.getSpanId())))),
-
             metric ->
                 assertThat(metric)
                     .hasName("http.server.duration")
@@ -245,7 +244,6 @@ class HttpServerMetricsTest {
                                                 exemplar
                                                     .hasTraceId(spanContext2.getTraceId())
                                                     .hasSpanId(spanContext2.getSpanId())))),
-
             metric ->
                 assertThat(metric)
                     .hasName("http.server.request.size")
@@ -260,7 +258,6 @@ class HttpServerMetricsTest {
                                                 exemplar
                                                     .hasTraceId(spanContext2.getTraceId())
                                                     .hasSpanId(spanContext2.getSpanId())))),
-
             metric ->
                 assertThat(metric)
                     .hasName("http.server.response.size")
