@@ -7,7 +7,7 @@ public class TomeeArquillianJaxWsTest extends AbstractArquillianJaxWsTest {
 
   @Override
   protected String getServicePath(String service) {
-    if ("EjbHelloService".equals(service)) {
+    if (service.equals("EjbHelloService")) {
       service = "webservices/EjbHelloServiceImpl";
     }
     return service;
