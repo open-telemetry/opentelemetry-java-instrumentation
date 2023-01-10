@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.testcontainers.containers.output.OutputFrame;
 
@@ -31,7 +32,7 @@ public interface TestContainerManager {
   void stopTarget();
 
   static boolean useWindowsContainers() {
-    return !"1".equals(System.getenv("USE_LINUX_CONTAINERS"))
+    return !Objects.equals(System.getenv("USE_LINUX_CONTAINERS"), "1")
         && System.getProperty("os.name").toLowerCase().contains("windows");
   }
 }

@@ -15,7 +15,7 @@ public class MessageServiceImpl extends RemoteServiceServlet implements MessageS
 
   @Override
   public String sendMessage(String message) throws IOException {
-    if (message == null || "Error".equals(message)) {
+    if (message == null || message.equals("Error")) {
       throw new IOException();
     }
 
