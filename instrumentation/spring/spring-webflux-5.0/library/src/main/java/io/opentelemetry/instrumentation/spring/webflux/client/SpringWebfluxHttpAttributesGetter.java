@@ -13,6 +13,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
@@ -21,6 +22,7 @@ enum SpringWebfluxHttpAttributesGetter
   INSTANCE;
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
+  private static final MethodHandle FALLBACK_STATUS_CODE = findFallbackStatusCode();
 
   // rawStatusCode() method was introduced in webflux 5.1
   // prior to this method, the best we can get is HttpStatus enum, which only covers standard status
@@ -29,6 +31,15 @@ enum SpringWebfluxHttpAttributesGetter
     try {
       return MethodHandles.publicLookup()
           .findVirtual(ClientResponse.class, "rawStatusCode", MethodType.methodType(int.class));
+    } catch (IllegalAccessException | NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private static MethodHandle findFallbackStatusCode() {
+    try {
+      return MethodHandles.publicLookup()
+          .findVirtual(ClientResponse.class, "statusCode", MethodType.methodType(HttpStatus.class));
     } catch (IllegalAccessException | NoSuchMethodException e) {
       return null;
     }
@@ -56,6 +67,7 @@ enum SpringWebfluxHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer statusCode(
       ClientRequest request, ClientResponse response, @Nullable Throwable error) {
     if (RAW_STATUS_CODE != null) {
@@ -67,8 +79,16 @@ enum SpringWebfluxHttpAttributesGetter
       }
     }
     // prior to webflux 5.1, the best we can get is HttpStatus enum, which only covers standard
-    // status codes
-    return response.statusCode().value();
+    // status codes (note: this method was removed in webflux 6.0)
+    if (FALLBACK_STATUS_CODE != null) {
+      try {
+        HttpStatus httpStatus = (HttpStatus) FALLBACK_STATUS_CODE.invokeExact(response);
+        return httpStatus.value();
+      } catch (Throwable e) {
+        // Ignore
+      }
+    }
+    return null;
   }
 
   @Override
