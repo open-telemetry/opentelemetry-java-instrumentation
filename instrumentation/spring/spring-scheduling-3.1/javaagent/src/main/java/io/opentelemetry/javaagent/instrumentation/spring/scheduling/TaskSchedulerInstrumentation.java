@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -19,7 +20,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.springframework.scheduling.TaskScheduler"));
+    return implementsInterface(named("org.springframework.scheduling.TaskScheduler"))
+        // avoid capturing internal spring scheduling usage, e.g. from spring-kafka
+        .and(not(nameStartsWith("org.springframework.")));
   }
 
   @Override

@@ -22,6 +22,8 @@ dependencies {
   library("org.springframework.kafka:spring-kafka:2.7.0")
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
+  // spring-kafka uses spring-scheduling to implement polling
+  testInstrumentation(project(":instrumentation:spring:spring-scheduling-3.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
