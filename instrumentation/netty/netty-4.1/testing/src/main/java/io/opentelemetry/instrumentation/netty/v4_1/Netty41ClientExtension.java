@@ -22,6 +22,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.net.URI;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -100,9 +101,9 @@ public class Netty41ClientExtension implements BeforeAllCallback, AfterAllCallba
   }
 
   public Bootstrap getBootstrap(URI uri) {
-    if ("https".equals(uri.getScheme())) {
+    if (Objects.equals(uri.getScheme(), "https")) {
       return httpsBootstrap;
-    } else if ("/read-timeout".equals(uri.getPath())) {
+    } else if (Objects.equals(uri.getPath(), "/read-timeout")) {
       return readTimeoutBootstrap;
     }
     return httpBootstrap;

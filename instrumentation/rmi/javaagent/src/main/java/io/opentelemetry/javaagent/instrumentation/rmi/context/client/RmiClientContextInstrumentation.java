@@ -69,7 +69,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
         (builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
           if (JavaModule.isSupported()
               && classLoader == null
-              && "sun.rmi.transport.StreamRemoteCall".equals(typeDescription.getName())
+              && typeDescription.getName().equals("sun.rmi.transport.StreamRemoteCall")
               && javaModule != null) {
             Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
             ClassInjector.UsingInstrumentation.redefineModule(

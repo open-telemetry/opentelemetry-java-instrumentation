@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -570,8 +571,9 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       Type ownerType = Type.getType("L" + owner + ";");
 
       // remember used context classes if this is an VirtualField.find() call
-      if ("io.opentelemetry.instrumentation.api.util.VirtualField".equals(ownerType.getClassName())
-          && "find".equals(name)
+      if (Objects.equals(
+              ownerType.getClassName(), "io.opentelemetry.instrumentation.api.util.VirtualField")
+          && Objects.equals(name, "find")
           && methodType.getDescriptor().equals(getVirtualFieldDescriptor)) {
         // in case of invalid scenario (not using .class ref directly) don't store anything and
         // clear the last LDC <class> stack

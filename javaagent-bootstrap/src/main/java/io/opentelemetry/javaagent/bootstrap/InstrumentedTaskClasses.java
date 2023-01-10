@@ -29,7 +29,7 @@ public final class InstrumentedTaskClasses {
           // to exclude them here too.
           ClassLoader taskClassLoader = taskClass.getClassLoader();
           if (taskClassLoader != null
-              && AGENT_CLASSLOADER_NAME.equals(taskClassLoader.getClass().getName())) {
+              && taskClassLoader.getClass().getName().equals(AGENT_CLASSLOADER_NAME)) {
             return false;
           }
           return true;

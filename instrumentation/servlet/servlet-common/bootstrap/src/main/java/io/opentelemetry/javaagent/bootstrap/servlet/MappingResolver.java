@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -80,7 +81,7 @@ public final class MappingResolver {
       if (matcher.match(path)) {
         String mapping = matcher.getMapping();
         // for jsp return servlet path
-        if ("/*.jsp".equals(mapping) || "/*.jspx".equals(mapping)) {
+        if (Objects.equals(mapping, "/*.jsp") || Objects.equals(mapping, "/*.jspx")) {
           return servletPath;
         }
         return mapping;

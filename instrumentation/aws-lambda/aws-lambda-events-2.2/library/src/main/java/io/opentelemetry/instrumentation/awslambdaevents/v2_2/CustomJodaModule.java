@@ -59,7 +59,7 @@ class CustomJodaModule extends SimpleModule {
 
     @Override
     public DateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-      if (JsonTokenId.ID_STRING != p.getCurrentTokenId()) {
+      if (p.getCurrentTokenId() != JsonTokenId.ID_STRING) {
         throw new IllegalArgumentException("Only stream input is accepted");
       }
 

@@ -89,7 +89,7 @@ public final class KafkaTelemetry {
             (proxy, method, args) -> {
               // Future<RecordMetadata> send(ProducerRecord<K, V> record)
               // Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback)
-              if ("send".equals(method.getName())
+              if (method.getName().equals("send")
                   && method.getParameterCount() >= 1
                   && method.getParameterTypes()[0] == ProducerRecord.class) {
                 ProducerRecord<K, V> record = (ProducerRecord<K, V>) args[0];
@@ -124,7 +124,7 @@ public final class KafkaTelemetry {
               }
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)
-              if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
+              if (method.getName().equals("poll") && result instanceof ConsumerRecords) {
                 buildAndFinishSpan((ConsumerRecords) result);
               }
               return result;

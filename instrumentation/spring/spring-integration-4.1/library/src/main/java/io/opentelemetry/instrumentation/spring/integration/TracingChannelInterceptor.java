@@ -15,6 +15,7 @@ import java.lang.invoke.MethodType;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.aop.framework.Advised;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.messaging.Message;
@@ -242,7 +243,8 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     }
 
     try {
-      return "output".equals(channelGetAttributeMh.invoke(messageChannel, "type"));
+      String type = (String) channelGetAttributeMh.invoke(messageChannel, "type");
+      return Objects.equals(type, "output");
     } catch (Throwable throwable) {
       return false;
     }

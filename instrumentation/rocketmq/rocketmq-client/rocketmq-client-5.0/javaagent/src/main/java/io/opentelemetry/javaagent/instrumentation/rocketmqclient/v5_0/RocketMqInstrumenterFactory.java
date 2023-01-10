@@ -86,7 +86,7 @@ final class RocketMqInstrumenterFactory {
             .addAttributesExtractor(RocketMqConsumerProcessAttributeExtractor.INSTANCE)
             .setSpanStatusExtractor(
                 (spanStatusBuilder, messageView, consumeResult, error) -> {
-                  if (error != null || ConsumeResult.FAILURE.equals(consumeResult)) {
+                  if (error != null || consumeResult == ConsumeResult.FAILURE) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   }
                 });

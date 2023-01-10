@@ -30,7 +30,7 @@ public final class OperationNameUtil {
   }
 
   public static String getSessionMethodOperationName(String methodName) {
-    if ("fireLock".equals(methodName)) {
+    if (methodName.equals("fireLock")) {
       return "Session.lock";
     }
     return "Session." + methodName;

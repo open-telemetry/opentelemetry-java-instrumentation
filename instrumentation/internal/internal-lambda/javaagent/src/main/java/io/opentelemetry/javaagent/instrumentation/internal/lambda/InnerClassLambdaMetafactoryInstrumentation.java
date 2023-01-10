@@ -82,8 +82,8 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
       // This transformation uses ASM instead of Byte-Buddy advice because advice allows adding
       // code to the start and end of the method, but here we are modifying a call in the middle of
       // the method.
-      if (("spinInnerClass".equals(name) || "generateInnerClass".equals(name))
-          && "()Ljava/lang/Class;".equals(descriptor)) {
+      if ((name.equals("spinInnerClass") || name.equals("generateInnerClass"))
+          && descriptor.equals("()Ljava/lang/Class;")) {
         mv =
             new MethodVisitor(api, mv) {
               @Override
@@ -93,8 +93,8 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
                 // if current instruction is a call to ASM ClassWriter.toByteArray() insert call to
                 // our lambda transformer
                 if (opcode == Opcodes.INVOKEVIRTUAL
-                    && "toByteArray".equals(name)
-                    && "()[B".equals(descriptor)) {
+                    && name.equals("toByteArray")
+                    && descriptor.equals("()[B")) {
                   mv.visitVarInsn(Opcodes.ALOAD, 0);
                   mv.visitFieldInsn(
                       Opcodes.GETFIELD, slashClassName, "lambdaClassName", "Ljava/lang/String;");
