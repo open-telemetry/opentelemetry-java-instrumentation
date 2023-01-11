@@ -43,8 +43,9 @@ enum SpringWebHttpAttributesGetter
     return null;
   }
 
-  private static final MethodHandle GET_STATUS_CODE;
-  private static final MethodHandle STATUS_CODE_VALUE;
+  @Nullable private static final MethodHandle GET_STATUS_CODE;
+
+  @Nullable private static final MethodHandle STATUS_CODE_VALUE;
 
   static {
     MethodHandle getStatusCode = null;
