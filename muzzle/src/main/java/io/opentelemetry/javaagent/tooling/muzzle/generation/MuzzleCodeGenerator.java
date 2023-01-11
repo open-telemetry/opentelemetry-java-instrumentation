@@ -23,7 +23,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
 import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -138,15 +137,15 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
     @Override
     public MethodVisitor visitMethod(
         int access, String name, String descriptor, String signature, String[] exceptions) {
-      if (Objects.equals(name, MUZZLE_REFERENCES_METHOD_NAME)) {
+      if (name.equals(MUZZLE_REFERENCES_METHOD_NAME)) {
         generateReferencesMethod = false;
         logMethodAlreadyExistsMessage(MUZZLE_REFERENCES_METHOD_NAME);
       }
-      if (Objects.equals(name, MUZZLE_HELPER_CLASSES_METHOD_NAME)) {
+      if (name.equals(MUZZLE_HELPER_CLASSES_METHOD_NAME)) {
         generateHelperClassNamesMethod = false;
         logMethodAlreadyExistsMessage(MUZZLE_HELPER_CLASSES_METHOD_NAME);
       }
-      if (Objects.equals(name, MUZZLE_VIRTUAL_FIELDS_METHOD_NAME)) {
+      if (name.equals(MUZZLE_VIRTUAL_FIELDS_METHOD_NAME)) {
         generateVirtualFieldsMethod = false;
         logMethodAlreadyExistsMessage(MUZZLE_VIRTUAL_FIELDS_METHOD_NAME);
       }

@@ -80,7 +80,7 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
   private Path getJarPathFromProcessHandle() {
     String[] javaArgs = getProcessHandleArguments.get();
     for (int i = 0; i < javaArgs.length; ++i) {
-      if (Objects.equals(javaArgs[i], "-jar") && (i < javaArgs.length - 1)) {
+      if (javaArgs[i].equals("-jar") && (i < javaArgs.length - 1)) {
         return Paths.get(javaArgs[i + 1]);
       }
     }
