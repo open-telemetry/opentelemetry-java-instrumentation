@@ -174,7 +174,7 @@ class ContextPropagationOperatorInstrumentationTest {
                 interim =
                     (Mono<String>)
                         MONO_CONTEXT_WRITE_METHOD.invoke(
-                            interim, new StoreOpenTelemetryContext(Context.current().with(span)));
+                            interim, new StoreOpenTelemetryContext(span));
               } catch (Throwable e) {
                 throw new RuntimeException(e);
               }
@@ -196,15 +196,16 @@ class ContextPropagationOperatorInstrumentationTest {
   private static class StoreOpenTelemetryContext
       implements Function<reactor.util.context.Context, reactor.util.context.Context> {
 
-    private final Context tracingContext;
+    private final Span span;
 
-    private StoreOpenTelemetryContext(Context tracingContext) {
-      this.tracingContext = tracingContext;
+    private StoreOpenTelemetryContext(Span span) {
+      this.span = span;
     }
 
     @Override
     public reactor.util.context.Context apply(reactor.util.context.Context context) {
-      return ContextPropagationOperator.storeOpenTelemetryContext(context, tracingContext);
+      return ContextPropagationOperator.storeOpenTelemetryContext(
+          context, Context.current().with(span));
     }
   }
 }
