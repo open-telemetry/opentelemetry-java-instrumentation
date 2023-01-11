@@ -16,12 +16,14 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+  bootstrap(project(":instrumentation:spring:spring-scheduling-3.1:bootstrap"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
 
   library("org.springframework.kafka:spring-kafka:2.7.0")
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-scheduling-3.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
