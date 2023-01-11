@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
@@ -32,6 +31,7 @@ import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.tooling.bytebuddy.SafeTypeStrategy;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
@@ -87,7 +87,8 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    if (ConfigPropertiesUtil.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    EarlyInitAgentConfig agentConfig = EarlyInitAgentConfig.create();
+    if (agentConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners);
