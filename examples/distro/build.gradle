@@ -35,7 +35,7 @@ subprojects {
 
       bytebuddy                  : "1.12.21",
       autoservice                : "1.0.1",
-      junit                      : "5.9.1"
+      junit                      : "5.9.2"
     ]
 
     deps = [
