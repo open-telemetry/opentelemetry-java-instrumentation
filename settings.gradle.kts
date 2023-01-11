@@ -454,6 +454,7 @@ hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:java
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:wildfly-testing")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:javaagent")
+hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing")
 hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:javaagent")
