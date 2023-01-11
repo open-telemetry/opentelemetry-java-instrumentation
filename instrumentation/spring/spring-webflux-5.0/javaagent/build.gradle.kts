@@ -44,6 +44,9 @@ dependencies {
   compileOnly("org.springframework:spring-webflux:5.0.0.RELEASE")
   compileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
 
+  // this is needed to pick up SpringCoreIgnoredTypesConfigurer
+  testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
+
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
@@ -56,11 +59,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
-  testImplementation("org.spockframework:spock-spring:1.1-groovy-2.4")
-
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.+")
+  testImplementation("org.spockframework:spock-spring:2.4-M1-groovy-4.0")
 }
 
 tasks.withType<Test>().configureEach {
@@ -73,10 +72,19 @@ tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
 
-configurations.testRuntimeClasspath {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+if (latestDepTest) {
+  // spring 6 requires java 17
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
+} else {
+  // spring 5 requires old logback (and therefore also old slf4j)
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      force("ch.qos.logback:logback-classic:1.2.11")
+      force("org.slf4j:slf4j-api:1.7.36")
+    }
   }
 }
