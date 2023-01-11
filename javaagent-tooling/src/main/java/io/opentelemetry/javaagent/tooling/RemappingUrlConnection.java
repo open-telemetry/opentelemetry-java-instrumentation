@@ -39,9 +39,6 @@ public class RemappingUrlConnection extends URLConnection {
               "#io.opentelemetry.extension.aws",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.aws"),
           rule("#application.io.opentelemetry", "#io.opentelemetry"),
-          rule(
-              "#application.io.opentelemetry.instrumentation.api",
-              "#io.opentelemetry.instrumentation.api"),
           rule("#java.util.logging.Logger", "#io.opentelemetry.javaagent.bootstrap.PatchLogger"));
 
   private final JarFile delegateJarFile;
