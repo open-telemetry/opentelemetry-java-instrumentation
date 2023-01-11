@@ -3,10 +3,10 @@ plugins {
 }
 
 muzzle {
-  fail {
+  pass {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
-    versions.set("[,1.0.0)")
+    versions.set("[1.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("netty")
   }
