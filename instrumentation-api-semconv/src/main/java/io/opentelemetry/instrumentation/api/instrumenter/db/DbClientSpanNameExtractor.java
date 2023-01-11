@@ -25,11 +25,11 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
-   * conventions: {@code <db.operation> <db.name>.<table>}.
+   * conventions: {@code <db.operation> <db.name>.<identifier>}.
    *
    * @see SqlStatementInfo#getOperation() used to extract {@code <db.operation>}.
    * @see DbClientAttributesGetter#name(Object) used to extract {@code <db.name>}.
-   * @see SqlStatementInfo#getTable() used to extract {@code <db.table>}.
+   * @see SqlStatementInfo#getIdentifier() used to extract {@code <db.identifier>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       SqlClientAttributesGetter<REQUEST> getter) {
@@ -96,7 +96,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       String dbName = getter.name(request);
       SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.rawStatement(request));
       return computeSpanName(
-          dbName, sanitizedStatement.getOperation(), sanitizedStatement.getTable());
+          dbName, sanitizedStatement.getOperation(), sanitizedStatement.getIdentifier());
     }
   }
 }

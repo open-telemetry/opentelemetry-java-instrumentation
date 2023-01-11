@@ -104,7 +104,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "test"
+          name "CALL test.TEST_PROC"
           kind CLIENT
           childOf span(1)
           attributes {
@@ -113,6 +113,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_USER" "sa"
             "$SemanticAttributes.DB_STATEMENT" "{call TEST_PROC()}"
             "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$SemanticAttributes.DB_OPERATION" "CALL"
           }
         }
         span(3) {

@@ -13,12 +13,13 @@ import javax.annotation.Nullable;
 public abstract class SqlStatementInfo {
 
   public static SqlStatementInfo create(
-      @Nullable String fullStatement, @Nullable String operation, @Nullable String table) {
-    return new AutoValue_SqlStatementInfo(fullStatement, operation, table);
+      @Nullable String fullStatement, @Nullable String operation, @Nullable String identifier) {
+    return new AutoValue_SqlStatementInfo(fullStatement, operation, identifier);
   }
 
   public SqlStatementInfo mapTable(Function<String, String> mapper) {
-    return SqlStatementInfo.create(getFullStatement(), getOperation(), mapper.apply(getTable()));
+    return SqlStatementInfo.create(
+        getFullStatement(), getOperation(), mapper.apply(getIdentifier()));
   }
 
   @Nullable
@@ -28,5 +29,14 @@ public abstract class SqlStatementInfo {
   public abstract String getOperation();
 
   @Nullable
-  public abstract String getTable();
+  public abstract String getIdentifier();
+
+  @Nullable
+  public String getTable() {
+    String operation = getOperation();
+    if (operation != null && !operation.equals("CALL")) {
+      return getIdentifier();
+    }
+    return null;
+  }
 }

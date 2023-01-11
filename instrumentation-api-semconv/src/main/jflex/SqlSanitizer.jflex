@@ -63,13 +63,13 @@ WHITESPACE          = [ \t\r\n]+
   }
 
   /** @return text matched by current token without enclosing double quotes or backticks */
-  private String readTableName() {
-    String tableName = yytext();
-    if (tableName != null && ((tableName.startsWith("\"") && tableName.endsWith("\""))
-        || (tableName.startsWith("`") && tableName.endsWith("`")))) {
-      tableName = tableName.substring(1, tableName.length() - 1);
+  private String readIdentifierName() {
+    String IdentifierName = yytext();
+    if (IdentifierName != null && ((IdentifierName.startsWith("\"") && IdentifierName.endsWith("\""))
+        || (IdentifierName.startsWith("`") && IdentifierName.endsWith("`")))) {
+      IdentifierName = IdentifierName.substring(1, IdentifierName.length() - 1);
     }
-    return tableName;
+    return IdentifierName;
   }
 
   // you can reference a table in the FROM clause in one of the following ways:
@@ -92,7 +92,7 @@ WHITESPACE          = [ \t\r\n]+
   }
 
   private static abstract class Operation {
-    String mainTable = null;
+    String mainIdentifier = null;
 
     /** @return true if all statement info is gathered */
     boolean handleFrom() {
@@ -119,8 +119,13 @@ WHITESPACE          = [ \t\r\n]+
       return false;
     }
 
+    /** @return true if all statement info is gathered */
+    boolean handleNext() {
+      return false;
+     }
+
     SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainTable);
+      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
     }
   }
 
@@ -152,13 +157,13 @@ WHITESPACE          = [ \t\r\n]+
       }
 
       // subquery in WITH or SELECT clause, before main FROM clause; skipping
-      mainTable = null;
+      mainIdentifier = null;
       return true;
     }
 
     boolean handleJoin() {
       // for SELECT statements with joined tables there's no main table
-      mainTable = null;
+      mainIdentifier = null;
       return true;
     }
 
@@ -173,17 +178,17 @@ WHITESPACE          = [ \t\r\n]+
 
       // SELECT FROM (subquery) case
       if (parenLevel != 0) {
-        mainTable = null;
+        mainIdentifier = null;
         return true;
       }
 
       // whenever >1 table is used there is no main table (e.g. unions)
       if (mainTableSetAlready) {
-        mainTable = null;
+        mainIdentifier = null;
         return true;
       }
 
-      mainTable = readTableName();
+      mainIdentifier = readIdentifierName();
       mainTableSetAlready = true;
       expectingTableName = false;
       // start counting identifiers after encountering main from clause
@@ -199,7 +204,7 @@ WHITESPACE          = [ \t\r\n]+
       // any other list that can appear later needs at least 4 idents)
       if (identifiersAfterMainFromClause > 0
           && identifiersAfterMainFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
-        mainTable = null;
+        mainIdentifier = null;
         return true;
       }
       return false;
@@ -219,7 +224,7 @@ WHITESPACE          = [ \t\r\n]+
         return false;
       }
 
-      mainTable = readTableName();
+      mainIdentifier = readIdentifierName();
       return true;
     }
   }
@@ -237,21 +242,33 @@ WHITESPACE          = [ \t\r\n]+
         return false;
       }
 
-      mainTable = readTableName();
+      mainIdentifier = readIdentifierName();
       return true;
     }
   }
 
   private class Update extends Operation {
     boolean handleIdentifier() {
-      mainTable = readTableName();
+      mainIdentifier = readIdentifierName();
+      return true;
+    }
+  }
+
+  private class Call extends Operation {
+    boolean handleIdentifier() {
+      mainIdentifier = readIdentifierName();
+      return true;
+    }
+
+    boolean handleNext() {
+      mainIdentifier = null;
       return true;
     }
   }
 
   private class Merge extends Operation {
     boolean handleIdentifier() {
-      mainTable = readTableName();
+      mainIdentifier = readIdentifierName();
       return true;
     }
   }
@@ -298,6 +315,14 @@ WHITESPACE          = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "CALL" {
+       if (!insideComment) {
+        setOperation(new Call());
+        }
+        operation.handleIdentifier();
+        appendCurrentFragment();
+        if (isOverLimit()) return YYEOF;
+  }
   "MERGE" {
           if (!insideComment) {
             setOperation(new Merge());
@@ -305,7 +330,6 @@ WHITESPACE          = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-
   "FROM" {
           if (!insideComment && !extractionDone) {
             if (operation == NoOp.INSTANCE) {
@@ -329,6 +353,13 @@ WHITESPACE          = [ \t\r\n]+
           if (!insideComment && !extractionDone) {
             extractionDone = operation.handleJoin();
           }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "NEXT" {
+          if (!insideComment && !extractionDone) {
+              extractionDone = operation.handleNext();
+            }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
