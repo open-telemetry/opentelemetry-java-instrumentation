@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.22.0 (2023-01-12)
 
 ### 📈 Enhancements
 
