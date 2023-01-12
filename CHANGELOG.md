@@ -16,8 +16,6 @@
   ([#7552](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7552))
 - Instrument JMS 3.0 (Jakarta)
   ([#7418](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7418))
-- Muzzle logs should be logged using the io.opentelemetry.* logger name
-  ([#7446](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7446))
 - Shade `application.io.opentelemetry` in agent extension class loader
   ([#7519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7519))
 - Use new reactor contextWrite when available (from reactor 3.4.0)
@@ -37,6 +35,11 @@
   ([#7447](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7447))
 - Fix NPE in servlet AsyncListener on OpenLiberty
   ([#7498](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7498))
+
+### 🧰 Tooling
+
+- Muzzle logs should be logged using the io.opentelemetry.* logger name
+  ([#7446](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7446))
 
 ## Version 1.21.0 (2022-12-13)
 
