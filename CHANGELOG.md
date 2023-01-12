@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+### 📈 Enhancements
+
+- Add resource injection for getResourceAsStream
+  ([#7476](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7476))
+- GRPC: Adds peer socket address when the client call is ready
+  ([#7451](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7451))
+- Make OpenTelemetryAppender.Builder public
+  ([#7521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7521))
+- Disable internal TaskScheduler spans in Spring Kafka instrumentation
+  ([#7553](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7553))
+- Support Spring Web MVC in library instrumentation
+  ([#7552](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7552))
+- Instrument JMS 3.0 (Jakarta)
+  ([#7418](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7418))
+- Muzzle logs should be logged using the io.opentelemetry.* logger name
+  ([#7446](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7446))
+- Shade `application.io.opentelemetry` in agent extension class loader
+  ([#7519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7519))
+- Use new reactor contextWrite when available (from reactor 3.4.0)
+  ([#7538](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7538))
+- Make config file available in early agent initialization phase
+  ([#7550](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7550))
+
+### 🛠️ Bug fixes
+
+- Preserve original exception in jetty http client wrappers
+  ([#7455](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7455))
+- Propagate original exception through kafka wrapper
+  ([#7452](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7452))
+- Fix class file load error when using spring-guice together with spring-web instrumentation
+  ([#7447](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7447))
+- Fix NPE in servlet AsyncListener on OpenLiberty
+  ([#7498](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7498))
+
 ## Version 1.21.0 (2022-12-13)
 
 ### 📈 Enhancements
