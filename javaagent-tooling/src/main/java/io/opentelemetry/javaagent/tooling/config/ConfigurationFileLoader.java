@@ -30,9 +30,18 @@ public final class ConfigurationFileLoader implements AutoConfigurationCustomize
 
   static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
 
+  private static Map<String, String> configFileContents;
+
   @Override
   public void customize(AutoConfigurationCustomizer autoConfiguration) {
-    autoConfiguration.addPropertiesSupplier(ConfigurationFileLoader::loadConfigFile);
+    autoConfiguration.addPropertiesSupplier(ConfigurationFileLoader::getConfigFileContents);
+  }
+
+  static Map<String, String> getConfigFileContents() {
+    if (configFileContents == null) {
+      configFileContents = loadConfigFile();
+    }
+    return configFileContents;
   }
 
   // visible for tests
