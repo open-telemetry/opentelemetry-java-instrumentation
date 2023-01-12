@@ -67,7 +67,7 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) Mono<HandlerFunction<?>> result,
         @Advice.Thrown Throwable throwable) {
       if (throwable == null) {
-        result = result.doOnSuccessOrError(new RouteOnSuccessOrError(thiz));
+        result = result.doOnNext(new RouteOnSuccess(thiz));
       }
     }
   }

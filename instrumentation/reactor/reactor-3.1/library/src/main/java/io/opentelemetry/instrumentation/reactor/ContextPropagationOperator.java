@@ -22,9 +22,13 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
+import static java.lang.invoke.MethodType.methodType;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -41,6 +45,28 @@ import reactor.core.publisher.Operators;
 public final class ContextPropagationOperator {
 
   private static final Object VALUE = new Object();
+
+  @Nullable
+  private static final MethodHandle MONO_CONTEXT_WRITE_METHOD = getContextWriteMethod(Mono.class);
+
+  @Nullable
+  private static final MethodHandle FLUX_CONTEXT_WRITE_METHOD = getContextWriteMethod(Flux.class);
+
+  @Nullable
+  private static MethodHandle getContextWriteMethod(Class<?> type) {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      // ignore
+    }
+    try {
+      return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      // ignore
+    }
+    return null;
+  }
 
   public static ContextPropagationOperator create() {
     return builder().build();
@@ -133,29 +159,65 @@ public final class ContextPropagationOperator {
   }
 
   /** Forces Mono to run in traceContext scope. */
+  @SuppressWarnings("unchecked")
   public static <T> Mono<T> runWithContext(Mono<T> publisher, Context tracingContext) {
-    if (!enabled) {
+    if (!enabled || MONO_CONTEXT_WRITE_METHOD == null) {
       return publisher;
     }
 
     // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
     // (created for this publisher) and with current() span that refers to span created here
     // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
-    return ScalarPropagatingMono.create(publisher)
-        .subscriberContext(ctx -> storeOpenTelemetryContext(ctx, tracingContext));
+    try {
+      return (Mono<T>)
+          MONO_CONTEXT_WRITE_METHOD.invoke(
+              ScalarPropagatingMono.create(publisher),
+              new StoreOpenTelemetryContext(tracingContext));
+    } catch (Throwable t) {
+      // rethrowing without any wrapping to avoid any change to the underlying application behavior
+      throw sneakyThrow(t);
+    }
   }
 
   /** Forces Flux to run in traceContext scope. */
+  @SuppressWarnings("unchecked")
   public static <T> Flux<T> runWithContext(Flux<T> publisher, Context tracingContext) {
-    if (!enabled) {
+    if (!enabled || FLUX_CONTEXT_WRITE_METHOD == null) {
       return publisher;
     }
 
     // this hack forces 'publisher' to run in the onNext callback of `TracingSubscriber`
     // (created for this publisher) and with current() span that refers to span created here
     // without the hack, publisher runs in the onAssembly stage, before traceContext is made current
-    return ScalarPropagatingFlux.create(publisher)
-        .subscriberContext(ctx -> storeOpenTelemetryContext(ctx, tracingContext));
+    try {
+      return (Flux<T>)
+          FLUX_CONTEXT_WRITE_METHOD.invoke(
+              ScalarPropagatingFlux.create(publisher),
+              new StoreOpenTelemetryContext(tracingContext));
+    } catch (Throwable t) {
+      // rethrowing without any wrapping to avoid any change to the underlying application behavior
+      throw sneakyThrow(t);
+    }
+  }
+
+  @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"})
+  private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
+    throw (T) t;
+  }
+
+  private static class StoreOpenTelemetryContext
+      implements Function<reactor.util.context.Context, reactor.util.context.Context> {
+
+    private final Context tracingContext;
+
+    private StoreOpenTelemetryContext(Context tracingContext) {
+      this.tracingContext = tracingContext;
+    }
+
+    @Override
+    public reactor.util.context.Context apply(reactor.util.context.Context context) {
+      return storeOpenTelemetryContext(context, tracingContext);
+    }
   }
 
   public static class Lifter<T>

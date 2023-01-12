@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.lang.invoke.MethodType.methodType;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -16,7 +17,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.time.Duration;
+import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,10 +31,29 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
 
+@SuppressWarnings("deprecation") // reasons
 class ReactorCoreTest extends AbstractReactorCoreTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  private static final MethodHandle MONO_CONTEXT_WRITE_METHOD = getContextWriteMethod(Mono.class);
+
+  private static final MethodHandle FLUX_CONTEXT_WRITE_METHOD = getContextWriteMethod(Flux.class);
+
+  private static MethodHandle getContextWriteMethod(Class<?> type) {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      // ignore
+    }
+    try {
+      return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   private final ContextPropagationOperator tracingOperator = ContextPropagationOperator.create();
   private final Tracer tracer = testing.getOpenTelemetry().getTracer("test");
@@ -74,6 +97,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void fluxInNonBlockingPublisherAssembly() {
     Flux<Integer> source =
         Flux.defer(
@@ -83,30 +107,40 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
             });
     testing.runWithSpan(
         "parent",
-        () ->
-            ContextPropagationOperator.ScalarPropagatingFlux.create(source)
-                .doOnEach(
-                    signal -> {
-                      if (signal.isOnError()) {
-                        // reactor 3.1 does not support getting context here yet
-                        Span.current().setStatus(StatusCode.ERROR);
-                        Span.current().end();
-                      } else if (signal.isOnComplete()) {
-                        Span.current().end();
-                      }
-                    })
-                .subscriberContext(
-                    ctx -> {
-                      Context parent =
-                          ContextPropagationOperator.getOpenTelemetryContext(
-                              ctx, Context.current());
+        () -> {
+          Flux<Integer> interim =
+              ContextPropagationOperator.ScalarPropagatingFlux.create(source)
+                  .doOnEach(
+                      signal -> {
+                        if (signal.isOnError()) {
+                          // reactor 3.1 does not support getting context here yet
+                          Span.current().setStatus(StatusCode.ERROR);
+                          Span.current().end();
+                        } else if (signal.isOnComplete()) {
+                          Span.current().end();
+                        }
+                      });
+          try {
+            interim =
+                (Flux<Integer>)
+                    FLUX_CONTEXT_WRITE_METHOD.invoke(
+                        interim,
+                        (Function<reactor.util.context.Context, reactor.util.context.Context>)
+                            ctx -> {
+                              Context parent =
+                                  ContextPropagationOperator.getOpenTelemetryContext(
+                                      ctx, Context.current());
 
-                      Span innerSpan = tracer.spanBuilder("inner").setParent(parent).startSpan();
-                      return ContextPropagationOperator.storeOpenTelemetryContext(
-                          ctx, parent.with(innerSpan));
-                    })
-                .collectList()
-                .block());
+                              Span innerSpan =
+                                  tracer.spanBuilder("inner").setParent(parent).startSpan();
+                              return ContextPropagationOperator.storeOpenTelemetryContext(
+                                  ctx, parent.with(innerSpan));
+                            });
+          } catch (Throwable t) {
+            throw new AssertionError(t);
+          }
+          interim.collectList().block();
+        });
 
     testing.waitAndAssertTraces(
         trace ->
@@ -307,6 +341,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void doesNotOverrideInnerCurrentSpansWithThereIsOuterCurrent() {
     Flux<Object> publish =
         Flux.create(
@@ -328,22 +363,31 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     // I.e. tracing subscriber context at subscription time will be different from inner in onNext
     Span outer = tracer.spanBuilder("outer").startSpan();
     try (Scope scope = outer.makeCurrent()) {
-      StepVerifier.create(
-              publish
-                  .take(2)
-                  .doOnNext(
-                      n -> {
-                        assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                        Span.current().setAttribute("onNext", true);
-                      })
-                  .subscriberContext(
-                      // subscribers that know that their subscription can happen
-                      // ahead of time and in the 'wrong' context, has to clean up 'wrong' context
-                      context ->
-                          ContextPropagationOperator.storeOpenTelemetryContext(
-                              context, Context.root())))
-          .expectNextCount(2)
-          .verifyComplete();
+      Flux<Object> interim =
+          publish
+              .take(2)
+              .doOnNext(
+                  n -> {
+                    assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                    Span.current().setAttribute("onNext", true);
+                  });
+      try {
+        interim =
+            (Flux<Object>)
+                FLUX_CONTEXT_WRITE_METHOD.invoke(
+                    interim,
+                    (Function<reactor.util.context.Context, reactor.util.context.Context>)
+                        context -> {
+                          // subscribers that know that their subscription can happen
+                          // ahead of time and in the 'wrong' context, has to clean up 'wrong'
+                          // context
+                          return ContextPropagationOperator.storeOpenTelemetryContext(
+                              context, Context.root());
+                        });
+      } catch (Throwable t) {
+        throw new AssertionError(t);
+      }
+      StepVerifier.create(interim).expectNextCount(2).verifyComplete();
 
       outer.end();
     }
@@ -362,26 +406,36 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                         .hasAttributes(attributeEntry("onNext", true))));
   }
 
+  @SuppressWarnings("unchecked")
   private <T> Mono<T> monoSpan(Mono<T> mono, String spanName) {
-    return ContextPropagationOperator.ScalarPropagatingMono.create(mono)
-        .doOnEach(
-            signal -> {
-              if (signal.isOnError()) {
-                // reactor 3.1 does not support getting context here yet
-                Span.current().setStatus(StatusCode.ERROR);
-                Span.current().end();
-              } else if (signal.isOnComplete()) {
-                Span.current().end();
-              }
-            })
-        .subscriberContext(
-            ctx -> {
-              Context parent =
-                  ContextPropagationOperator.getOpenTelemetryContext(ctx, Context.current());
 
-              Span innerSpan = tracer.spanBuilder(spanName).setParent(parent).startSpan();
-              return ContextPropagationOperator.storeOpenTelemetryContext(
-                  ctx, parent.with(innerSpan));
-            });
+    Mono<T> interim =
+        ContextPropagationOperator.ScalarPropagatingMono.create(mono)
+            .doOnEach(
+                signal -> {
+                  if (signal.isOnError()) {
+                    // reactor 3.1 does not support getting context here yet
+                    Span.current().setStatus(StatusCode.ERROR);
+                    Span.current().end();
+                  } else if (signal.isOnComplete()) {
+                    Span.current().end();
+                  }
+                });
+    try {
+      return (Mono<T>)
+          MONO_CONTEXT_WRITE_METHOD.invoke(
+              interim,
+              (Function<reactor.util.context.Context, reactor.util.context.Context>)
+                  ctx -> {
+                    Context parent =
+                        ContextPropagationOperator.getOpenTelemetryContext(ctx, Context.current());
+
+                    Span innerSpan = tracer.spanBuilder(spanName).setParent(parent).startSpan();
+                    return ContextPropagationOperator.storeOpenTelemetryContext(
+                        ctx, parent.with(innerSpan));
+                  });
+    } catch (Throwable t) {
+      throw new AssertionError(t);
+    }
   }
 }

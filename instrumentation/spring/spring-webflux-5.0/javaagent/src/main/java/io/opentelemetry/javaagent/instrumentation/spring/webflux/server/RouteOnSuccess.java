@@ -8,13 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteHolder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpRouteSource;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 
-public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Throwable> {
+public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
 
   private static final Pattern SPECIAL_CHARACTERS_REGEX = Pattern.compile("[()&|]");
   private static final Pattern SPACES_REGEX = Pattern.compile("[ \\t]+");
@@ -23,15 +23,13 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
 
   @Nullable private final String route;
 
-  public RouteOnSuccessOrError(RouterFunction<?> routerFunction) {
+  public RouteOnSuccess(RouterFunction<?> routerFunction) {
     this.route = parseRoute(parsePredicateString(routerFunction));
   }
 
   @Override
-  public void accept(HandlerFunction<?> handler, Throwable throwable) {
-    if (handler != null) {
-      HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.CONTROLLER, route);
-    }
+  public void accept(HandlerFunction<?> handler) {
+    HttpRouteHolder.updateHttpRoute(Context.current(), HttpRouteSource.CONTROLLER, route);
   }
 
   private static String parsePredicateString(RouterFunction<?> routerFunction) {

@@ -12,10 +12,10 @@ import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
-import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.context.annotation.Bean
 import org.springframework.web.server.ResponseStatusException
 import server.EchoHandlerFunction
@@ -43,7 +43,8 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
   static final String INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX = SpringWebFluxTestApplication.getName() + "\$"
   static final String SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX = SpringWebFluxTestApplication.getSimpleName() + "\$"
 
-  @LocalServerPort
+  // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
+  @Value("\${local.server.port}")
   int port
 
   WebClient client
