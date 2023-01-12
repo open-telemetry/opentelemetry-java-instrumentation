@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.web;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -93,8 +92,6 @@ enum SpringWebHttpAttributesGetter
     try {
       Object statusCode = GET_STATUS_CODE.invoke(clientHttpResponse);
       return (int) STATUS_CODE_VALUE.invoke(statusCode);
-    } catch (IOException e) {
-      return 500;
     } catch (Throwable e) {
       return null;
     }
