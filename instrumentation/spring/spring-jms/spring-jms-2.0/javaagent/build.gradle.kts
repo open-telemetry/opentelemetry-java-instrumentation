@@ -7,8 +7,9 @@ muzzle {
   pass {
     group.set("org.springframework")
     module.set("spring-jms")
-    versions.set("[2.0,)")
+    versions.set("[2.0,6)")
     extraDependency("javax.jms:jms-api:1.1-rev-1")
+    excludeInstrumentationName("jms")
     assertInverse.set(true)
   }
 }
