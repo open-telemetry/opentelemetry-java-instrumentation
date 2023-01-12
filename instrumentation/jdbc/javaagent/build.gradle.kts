@@ -14,8 +14,8 @@ dependencies {
   compileOnly(
     project(
       path = ":instrumentation:jdbc:library",
-      configuration = "shadow"
-    )
+      configuration = "shadow",
+    ),
   )
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -47,7 +47,7 @@ sourceSets {
     val shadedDep = project(":instrumentation:jdbc:library")
     output.dir(
       shadedDep.file("build/extracted/shadow-javaagent"),
-      "builtBy" to ":instrumentation:jdbc:library:extractShadowJarJavaagent"
+      "builtBy" to ":instrumentation:jdbc:library:extractShadowJarJavaagent",
     )
   }
 }

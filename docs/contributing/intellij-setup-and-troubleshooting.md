@@ -22,7 +22,7 @@ see <https://github.com/google/google-java-format/issues/787#issuecomment-120076
 ## Troubleshooting
 
 Occasionally, Intellij gets confused, maybe due to the number of modules in this project,
-maybe due ot other reasons. In any case, here's some things that might help:
+maybe due to other reasons. In any case, here's some things that might help:
 
 ### Invalidate Caches > "Just restart"
 

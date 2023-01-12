@@ -32,7 +32,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
     // autoconfigure classes are loaded as resources using ClassPathResource
     // this line will make OpenTelemetryMeterRegistryAutoConfiguration available to all
-    // classloaders, so that the bean class loader (different than the instrumented class loader)
+    // classloaders, so that the bean class loader (different from the instrumented class loader)
     // can load it
     helperResourceBuilder.registerForAllClassLoaders(
         "io/opentelemetry/javaagent/instrumentation/spring/actuator/OpenTelemetryMeterRegistryAutoConfiguration.class");

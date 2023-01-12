@@ -18,6 +18,6 @@ public interface AnotherTestInterface extends TestInterface {
 
   Object clone();
 
-  @SuppressWarnings("checkstyle:NoFinalizer")
+  @SuppressWarnings({"checkstyle:NoFinalizer", "Finalize"})
   void finalize();
 }

@@ -14,6 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -47,6 +49,12 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
             .and(takesArguments(String.class))
             .and(returns(Enumeration.class)),
         ResourceInjectionInstrumentation.class.getName() + "$GetResourcesAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("getResourceAsStream"))
+            .and(takesArguments(String.class))
+            .and(returns(InputStream.class)),
+        ResourceInjectionInstrumentation.class.getName() + "$GetResourceAsStreamAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -57,6 +65,9 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
         @Advice.Return(readOnly = false) URL resource) {
+      if (resource != null) {
+        return;
+      }
 
       URL helper = HelperResources.loadOne(classLoader, name);
       if (helper != null) {
@@ -99,6 +110,29 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
       }
 
       resources = Collections.enumeration(result);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetResourceAsStreamAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This ClassLoader classLoader,
+        @Advice.Argument(0) String name,
+        @Advice.Return(readOnly = false) InputStream inputStream) {
+      if (inputStream != null) {
+        return;
+      }
+
+      URL helper = HelperResources.loadOne(classLoader, name);
+      if (helper != null) {
+        try {
+          inputStream = helper.openStream();
+        } catch (IOException ignored) {
+          // ClassLoader.getResourceAsStream also ignores io exceptions from opening the stream
+        }
+      }
     }
   }
 }

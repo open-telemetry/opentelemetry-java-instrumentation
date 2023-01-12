@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.TEST_CLIENT_IP;
-import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.TEST_USER_AGENT;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest.TEST_CLIENT_IP;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest.TEST_USER_AGENT;
 
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.AgentTestRunner;
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
  * A {@link InstrumentationExtension} which sets up infrastructure, such as a test HTTP client, for
- * {@link AbstractHttpServerTest}.
+ * {@link AbstractHttpServerUsingTest}.
  */
 public final class HttpServerInstrumentationExtension extends InstrumentationExtension {
 
@@ -65,12 +65,12 @@ public final class HttpServerInstrumentationExtension extends InstrumentationExt
     super.beforeAll(extensionContext);
     Object testInstance = extensionContext.getRequiredTestInstance();
 
-    if (!(testInstance instanceof AbstractHttpServerTest)) {
+    if (!(testInstance instanceof AbstractHttpServerUsingTest)) {
       throw new AssertionError(
           "HttpServerInstrumentationExtension can only be applied to a subclass of "
-              + "AbstractHttpServerTest");
+              + "AbstractHttpServerUsingTest");
     }
 
-    ((AbstractHttpServerTest) testInstance).setTesting(getTestRunner(), client, port);
+    ((AbstractHttpServerUsingTest) testInstance).setTesting(getTestRunner(), client, port);
   }
 }

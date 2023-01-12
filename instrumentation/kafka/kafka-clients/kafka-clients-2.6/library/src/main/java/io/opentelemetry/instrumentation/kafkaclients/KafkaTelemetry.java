@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerRecordGetter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
@@ -99,7 +100,11 @@ public final class KafkaTelemetry {
                         : null;
                 return buildAndInjectSpan(record, callback, producer::send);
               }
-              return method.invoke(producer, args);
+              try {
+                return method.invoke(producer, args);
+              } catch (InvocationTargetException exception) {
+                throw exception.getCause();
+              }
             });
   }
 
@@ -111,7 +116,12 @@ public final class KafkaTelemetry {
             KafkaTelemetry.class.getClassLoader(),
             new Class<?>[] {Consumer.class},
             (proxy, method, args) -> {
-              Object result = method.invoke(consumer, args);
+              Object result;
+              try {
+                result = method.invoke(consumer, args);
+              } catch (InvocationTargetException exception) {
+                throw exception.getCause();
+              }
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)
               if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {

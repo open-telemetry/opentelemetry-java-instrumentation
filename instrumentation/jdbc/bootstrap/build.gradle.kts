@@ -15,7 +15,7 @@ sourceSets {
     val shadedDep = project(":instrumentation:jdbc:library")
     output.dir(
       shadedDep.file("build/extracted/shadow-bootstrap"),
-      "builtBy" to ":instrumentation:jdbc:library:extractShadowJarBootstrap"
+      "builtBy" to ":instrumentation:jdbc:library:extractShadowJarBootstrap",
     )
   }
 }

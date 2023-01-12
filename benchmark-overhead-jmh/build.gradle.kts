@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-  jmhImplementation("org.springframework.boot:spring-boot-starter-web:2.5.2")
+  jmhImplementation("org.springframework.boot:spring-boot-starter-web:3.0.1")
 }
 
 tasks {
@@ -50,7 +50,7 @@ tasks {
       "-Dotel.metrics.exporter=none",
       // avoid instrumenting HttpURLConnection for now since it is used to make the requests
       // and this benchmark is focused on servlet overhead for now
-      "-Dotel.instrumentation.http-url-connection.enabled=false"
+      "-Dotel.instrumentation.http-url-connection.enabled=false",
     )
     if (jmhStartFlightRecording != null) {
       args.addAll(
@@ -59,8 +59,8 @@ tasks {
           "-XX:StartFlightRecording=$jmhStartFlightRecording",
           // enabling profiling at non-safepoints helps with micro-profiling
           "-XX:+UnlockDiagnosticVMOptions",
-          "-XX:+DebugNonSafepoints"
-        )
+          "-XX:+DebugNonSafepoints",
+        ),
       )
     }
     // see https://github.com/melix/jmh-gradle-plugin/issues/200

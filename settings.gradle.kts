@@ -14,7 +14,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.11.4"
+  id("com.gradle.enterprise") version "3.12.2"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.8.2"
 }
 
@@ -447,6 +447,7 @@ hideFromDependabot(":instrumentation:spring:spring-kafka-2.7:library")
 hideFromDependabot(":instrumentation:spring:spring-kafka-2.7:testing")
 hideFromDependabot(":instrumentation:spring:spring-rabbit-1.0:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-rmi-4.0:javaagent")
+hideFromDependabot(":instrumentation:spring:spring-scheduling-3.1:bootstrap")
 hideFromDependabot(":instrumentation:spring:spring-scheduling-3.1:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-web:spring-web-3.1:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-web:spring-web-3.1:library")
@@ -456,6 +457,7 @@ hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:java
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:wildfly-testing")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:javaagent")
+hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing")
 hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:javaagent")

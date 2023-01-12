@@ -12,7 +12,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.6"
+val groovyVersion = "4.0.7"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -29,21 +29,21 @@ val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.14.1",
   "com.google.guava:guava-bom:31.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:1.21.0",
-  "io.opentelemetry:opentelemetry-bom-alpha:1.21.0-alpha",
-  "org.junit:junit-bom:5.9.1",
+  "io.opentelemetry:opentelemetry-bom:1.22.0",
+  "io.opentelemetry:opentelemetry-bom-alpha:1.22.0-alpha",
+  "org.junit:junit-bom:5.9.2",
   "org.testcontainers:testcontainers-bom:1.17.6",
   "org.spockframework:spock-bom:2.3-groovy-4.0"
 )
 
 val autoServiceVersion = "1.0.1"
 val autoValueVersion = "1.10.1"
-val errorProneVersion = "2.16"
-val byteBuddyVersion = "1.12.19"
+val errorProneVersion = "2.17.0"
+val byteBuddyVersion = "1.12.20"
 val asmVersion = "9.4"
 val jmhVersion = "1.36"
-val mockitoVersion = "4.9.0"
-val slf4jVersion = "2.0.5"
+val mockitoVersion = "4.11.0"
+val slf4jVersion = "2.0.6"
 
 val CORE_DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:${autoServiceVersion}",
@@ -80,7 +80,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.1",
-  "com.uber.nullaway:nullaway:0.10.5",
+  "com.uber.nullaway:nullaway:0.10.7",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.5.0",
   "commons-codec:commons-codec:1.15",
@@ -92,9 +92,9 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.20.1-alpha",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.21.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:0.19.0-alpha",
-  "org.assertj:assertj-core:3.23.1",
+  "org.assertj:assertj-core:3.24.1",
   "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",

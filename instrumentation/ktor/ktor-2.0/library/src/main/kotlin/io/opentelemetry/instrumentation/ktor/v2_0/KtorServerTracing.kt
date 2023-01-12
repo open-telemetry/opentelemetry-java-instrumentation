@@ -26,7 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import kotlinx.coroutines.withContext
 
 class KtorServerTracing private constructor(
-  private val instrumenter: Instrumenter<ApplicationRequest, ApplicationResponse>
+  private val instrumenter: Instrumenter<ApplicationRequest, ApplicationResponse>,
 ) {
 
   class Configuration {
@@ -95,7 +95,7 @@ class KtorServerTracing private constructor(
       val instrumenterBuilder = Instrumenter.builder<ApplicationRequest, ApplicationResponse>(
         configuration.openTelemetry,
         INSTRUMENTATION_NAME,
-        HttpSpanNameExtractor.create(httpAttributesGetter)
+        HttpSpanNameExtractor.create(httpAttributesGetter),
       )
 
       configuration.additionalExtractors.forEach { instrumenterBuilder.addAttributesExtractor(it) }

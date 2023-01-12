@@ -122,9 +122,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("consume_2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -155,9 +155,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("preLaunch")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -183,9 +183,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("nested")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -239,9 +239,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("brokenPromise")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -260,7 +260,7 @@ class KotlinCoroutinesInstrumentationTest {
         async {
           tracedChild("timeout3")
           true
-        }
+        },
       )
 
       withTimeout(TimeUnit.SECONDS.toMillis(30)) {
@@ -294,9 +294,9 @@ class KotlinCoroutinesInstrumentationTest {
             it
               .hasName("timeout3")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -330,7 +330,7 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("a2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
       }
     }
@@ -344,14 +344,14 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("b2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
       }
     }
 
     testing.waitAndAssertSortedTraces(
       orderByRootSpanName("a", "b"),
-      *assertions.toTypedArray()
+      *assertions.toTypedArray(),
     )
   }
 
@@ -374,9 +374,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -409,9 +409,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -446,9 +446,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("child_2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -485,9 +485,9 @@ class KotlinCoroutinesInstrumentationTest {
           {
             it.hasName("nested2")
               .hasParent(trace.getSpan(0))
-          }
+          },
         )
-      }
+      },
     )
   }
 
@@ -557,7 +557,7 @@ class KotlinCoroutinesInstrumentationTest {
         arguments(DispatcherWrapper(Dispatchers.IO)),
         arguments(DispatcherWrapper(Dispatchers.Unconfined)),
         arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-        arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher()))
+        arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
       )
   }
 

@@ -23,13 +23,13 @@ dependencies {
   api("org.spockframework:spock-core")
   api(project(":testing-common"))
 
-  implementation(platform("io.grpc:grpc-bom:1.51.0"))
+  implementation(platform("io.grpc:grpc-bom:1.52.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:3.21.11")
+  implementation("com.google.protobuf:protobuf-java-util:3.21.12")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
@@ -60,7 +60,7 @@ tasks {
       "tomcat" to listOf("**/Tomcat*.*"),
       "tomee" to listOf("**/Tomee*.*"),
       "websphere" to listOf("**/Websphere*.*"),
-      "wildfly" to listOf("**/Wildfly*.*")
+      "wildfly" to listOf("**/Wildfly*.*"),
     )
 
     val smokeTestSuite: String? by project
