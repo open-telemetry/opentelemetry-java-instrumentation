@@ -56,7 +56,7 @@ public final class MethodRef {
   }
 
   public boolean isConstructor() {
-    return "<init>".equals(name);
+    return name.equals("<init>");
   }
 
   MethodRef merge(MethodRef anotherMethod) {

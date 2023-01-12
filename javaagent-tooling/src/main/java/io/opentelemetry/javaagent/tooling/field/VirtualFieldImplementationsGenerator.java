@@ -119,10 +119,10 @@ final class VirtualFieldImplementationsGenerator {
           @Override
           public MethodVisitor visitMethod(
               int access, String name, String descriptor, String signature, String[] exceptions) {
-            if ("realGet".equals(name)) {
+            if (name.equals("realGet")) {
               generateRealGetMethod(name);
               return null;
-            } else if ("realPut".equals(name)) {
+            } else if (name.equals("realPut")) {
               generateRealPutMethod(name);
               return null;
             } else {

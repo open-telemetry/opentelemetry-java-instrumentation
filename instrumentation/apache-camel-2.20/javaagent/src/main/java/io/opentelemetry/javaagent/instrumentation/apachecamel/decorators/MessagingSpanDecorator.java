@@ -44,7 +44,7 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
   public String getOperationName(
       Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
 
-    if ("mqtt".equals(component)) {
+    if (component.equals("mqtt")) {
       return stripSchemeAndOptions(endpoint);
     }
     return getDestination(exchange, endpoint);

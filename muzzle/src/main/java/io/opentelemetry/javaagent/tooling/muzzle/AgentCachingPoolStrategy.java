@@ -274,7 +274,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return existingResolution;
       }
 
-      if (OBJECT_NAME.equals(className)) {
+      if (className.equals(OBJECT_NAME)) {
         return OBJECT_RESOLUTION;
       }
 
@@ -283,7 +283,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
     @Override
     public TypePool.Resolution register(String className, TypePool.Resolution resolution) {
-      if (OBJECT_NAME.equals(className)) {
+      if (className.equals(OBJECT_NAME)) {
         return resolution;
       }
 

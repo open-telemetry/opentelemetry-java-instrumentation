@@ -62,7 +62,7 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
       }
 
       String sockFamily = getter.sockFamily(request, response);
-      if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
+      if (sockFamily != null && !sockFamily.equals(SemanticAttributes.NetSockFamilyValues.INET)) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
       }
 

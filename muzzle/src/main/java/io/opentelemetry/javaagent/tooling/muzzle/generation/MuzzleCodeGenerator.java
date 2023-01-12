@@ -137,15 +137,15 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
     @Override
     public MethodVisitor visitMethod(
         int access, String name, String descriptor, String signature, String[] exceptions) {
-      if (MUZZLE_REFERENCES_METHOD_NAME.equals(name)) {
+      if (name.equals(MUZZLE_REFERENCES_METHOD_NAME)) {
         generateReferencesMethod = false;
         logMethodAlreadyExistsMessage(MUZZLE_REFERENCES_METHOD_NAME);
       }
-      if (MUZZLE_HELPER_CLASSES_METHOD_NAME.equals(name)) {
+      if (name.equals(MUZZLE_HELPER_CLASSES_METHOD_NAME)) {
         generateHelperClassNamesMethod = false;
         logMethodAlreadyExistsMessage(MUZZLE_HELPER_CLASSES_METHOD_NAME);
       }
-      if (MUZZLE_VIRTUAL_FIELDS_METHOD_NAME.equals(name)) {
+      if (name.equals(MUZZLE_VIRTUAL_FIELDS_METHOD_NAME)) {
         generateVirtualFieldsMethod = false;
         logMethodAlreadyExistsMessage(MUZZLE_VIRTUAL_FIELDS_METHOD_NAME);
       }

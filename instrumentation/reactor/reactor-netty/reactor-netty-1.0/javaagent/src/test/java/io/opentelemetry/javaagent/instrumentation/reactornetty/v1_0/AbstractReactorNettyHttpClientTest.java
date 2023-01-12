@@ -111,8 +111,8 @@ abstract class AbstractReactorNettyHttpClientTest
         (uri, exception) -> {
           if (exception.getClass().getName().endsWith("ReactiveException")) {
             // unopened port or non routable address
-            if ("http://localhost:61/".equals(uri.toString())
-                || "https://192.0.2.1/".equals(uri.toString())) {
+            if (uri.toString().equals("http://localhost:61/")
+                || uri.toString().equals("https://192.0.2.1/")) {
               exception = exception.getCause();
             }
           }
@@ -124,8 +124,8 @@ abstract class AbstractReactorNettyHttpClientTest
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     // unopened port or non routable address
-    if ("http://localhost:61/".equals(uri.toString())
-        || "https://192.0.2.1/".equals(uri.toString())) {
+    if (uri.toString().equals("http://localhost:61/")
+        || uri.toString().equals("https://192.0.2.1/")) {
       return emptySet();
     }
 

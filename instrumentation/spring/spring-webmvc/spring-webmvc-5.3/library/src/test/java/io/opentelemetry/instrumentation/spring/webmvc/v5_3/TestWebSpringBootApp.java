@@ -117,7 +117,7 @@ class TestWebSpringBootApp {
       return controller(
           INDEXED_CHILD,
           () -> {
-            INDEXED_CHILD.collectSpanAttributes(name -> "id".equals(name) ? id : null);
+            INDEXED_CHILD.collectSpanAttributes(name -> name.equals("id") ? id : null);
             return INDEXED_CHILD.getBody();
           });
     }

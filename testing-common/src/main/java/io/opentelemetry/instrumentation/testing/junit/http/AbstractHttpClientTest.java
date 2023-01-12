@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -588,7 +589,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                       span.hasName("callback")
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0)));
-          boolean jdk8 = "1.8".equals(System.getProperty("java.specification.version"));
+          boolean jdk8 = Objects.equals(System.getProperty("java.specification.version"), "1.8");
           if (jdk8) {
             // on some netty based http clients order of `CONNECT` and `callback` spans isn't
             // guaranteed when running on jdk8
@@ -967,7 +968,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   assertThat(attrs)
                       .containsEntry(
                           SemanticAttributes.NET_SOCK_PEER_PORT,
-                          "https".equals(uri.getScheme()) ? server.httpsPort() : server.httpPort());
+                          Objects.equals(uri.getScheme(), "https")
+                              ? server.httpsPort()
+                              : server.httpPort());
                 }
               }
 

@@ -98,7 +98,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   static boolean shouldSetPathAsName(CamelDirection camelDirection) {
-    return CamelDirection.INBOUND.equals(camelDirection);
+    return camelDirection == CamelDirection.INBOUND;
   }
 
   @Nullable
