@@ -27,24 +27,27 @@ dependencies {
   library("org.springframework.data:spring-data-commons:1.8.0.RELEASE")
   compileOnly("org.springframework:spring-aop:1.2")
 
-  testImplementation("org.spockframework:spock-spring")
-  testLibrary("org.springframework:spring-test:3.0.0.RELEASE")
-  testLibrary("org.springframework.data:spring-data-jpa:1.8.0.RELEASE")
-
-  // JPA dependencies
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
-  testImplementation("com.mysema.querydsl:querydsl-jpa:3.7.4")
-  testImplementation("org.hsqldb:hsqldb:2.0.0")
-  testLibrary("org.hibernate:hibernate-entitymanager:4.3.0.Final")
 
-  latestDepTestLibrary("org.springframework:spring-test:5.+")
+  testImplementation(project(":instrumentation:spring:spring-data:spring-data-common:testing"))
+
+  testLibrary("org.hibernate:hibernate-entitymanager:4.3.0.Final")
+  testLibrary("org.springframework.data:spring-data-jpa:1.8.0.RELEASE")
+  testLibrary("org.springframework:spring-test:3.0.0.RELEASE")
+
+  testImplementation("org.hsqldb:hsqldb:2.0.0")
+
+  // limit to spring 5; spring 6 is tested in its separate module
   latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+")
   latestDepTestLibrary("org.springframework.data:spring-data-commons:2.+")
   latestDepTestLibrary("org.springframework.data:spring-data-jpa:2.+")
+  latestDepTestLibrary("org.springframework:spring-test:5.+")
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks {
+  test {
+    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
 }
