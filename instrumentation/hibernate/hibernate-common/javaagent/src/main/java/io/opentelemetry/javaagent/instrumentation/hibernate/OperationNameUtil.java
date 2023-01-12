@@ -22,8 +22,8 @@ public final class OperationNameUtil {
     SqlStatementInfo info = sanitizer.sanitize(query);
     if (info.getOperation() != null) {
       operation = info.getOperation();
-      if (info.getTable() != null) {
-        operation += " " + info.getTable();
+      if (info.getMainIdentifier() != null) {
+        operation += " " + info.getMainIdentifier();
       }
     }
     return operation;
