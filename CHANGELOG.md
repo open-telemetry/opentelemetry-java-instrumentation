@@ -24,6 +24,8 @@
   ([#7538](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7538))
 - Make config file available in early agent initialization phase
   ([#7550](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7550))
+- Support Spring JMS 6.0
+  ([#7438](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7438))
 
 ### 🛠️ Bug fixes
 
