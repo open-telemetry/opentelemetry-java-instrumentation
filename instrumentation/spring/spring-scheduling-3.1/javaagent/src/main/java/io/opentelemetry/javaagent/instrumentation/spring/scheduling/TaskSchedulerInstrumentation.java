@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -34,7 +35,9 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onSchedule(@Advice.Argument(value = 0, readOnly = false) Runnable runnable) {
-      runnable = SpringSchedulingRunnableWrapper.wrapIfNeeded(runnable);
+      if (SpringSchedulingTaskTracing.wrappingEnabled()) {
+        runnable = SpringSchedulingRunnableWrapper.wrapIfNeeded(runnable);
+      }
     }
   }
 }
