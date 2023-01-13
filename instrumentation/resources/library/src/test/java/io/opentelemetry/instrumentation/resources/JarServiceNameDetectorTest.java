@@ -98,6 +98,22 @@ class JarServiceNameDetectorTest {
         .containsEntry(ResourceAttributes.SERVICE_NAME, "my-service");
   }
 
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7567
+  @Test
+  void createResource_sunCommandLineProblematicArgs() {
+    Function<String, String> getProperty =
+        key -> key.equals("sun.java.command") ? "one C:/two" : null;
+    Predicate<Path> fileExists = path -> false;
+
+    JarServiceNameDetector serviceNameProvider =
+        new JarServiceNameDetector(() -> new String[0], getProperty, fileExists);
+
+    Resource resource = serviceNameProvider.createResource(config);
+
+    assertThat(resource.getAttributes()).isEmpty();
+  }
+
   static final class SunCommandLineProvider implements ArgumentsProvider {
 
     @Override
