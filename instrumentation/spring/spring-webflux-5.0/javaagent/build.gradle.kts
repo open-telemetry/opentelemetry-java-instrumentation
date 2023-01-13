@@ -51,10 +51,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
 
-  // Compile with both old and new netty packages since our test references both for old and
-  // latest dep tests.
-  testCompileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
-  testCompileOnly("io.projectreactor.netty:reactor-netty-http:1.0.7")
+  testImplementation(project(":instrumentation:spring:spring-webflux-5.0:testing"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")

@@ -65,7 +65,9 @@ class WebClientTracingFilter implements ExchangeFilterFunction {
             .doOnCancel(
                 // no response and no error means that the request has been cancelled
                 () -> instrumenter.end(context, request, null, null))
-            .subscribe(new TraceWebClientSubscriber(instrumenter, request, subscriber, context));
+            .subscribe(
+                new TraceWebClientSubscriber(
+                    instrumenter, request, subscriber, context, parentContext));
       }
     }
   }

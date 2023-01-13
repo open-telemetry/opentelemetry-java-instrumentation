@@ -23,18 +23,21 @@ final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
   private final ClientRequest request;
   private final CoreSubscriber<? super ClientResponse> actual;
   private final reactor.util.context.Context reactorContext;
-  private final io.opentelemetry.context.Context otelContext;
+  private final io.opentelemetry.context.Context otelClientContext;
+  private final io.opentelemetry.context.Context otelParentContext;
 
   TraceWebClientSubscriber(
       Instrumenter<ClientRequest, ClientResponse> instrumenter,
       ClientRequest request,
       CoreSubscriber<? super ClientResponse> actual,
-      Context otelContext) {
+      Context otelClientContext,
+      Context otelParentContext) {
     this.instrumenter = instrumenter;
     this.request = request;
     this.actual = actual;
-    this.otelContext = otelContext;
     this.reactorContext = actual.currentContext();
+    this.otelClientContext = otelClientContext;
+    this.otelParentContext = otelParentContext;
   }
 
   @Override
@@ -44,25 +47,25 @@ final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
 
   @Override
   public void onNext(ClientResponse response) {
-    try (Scope ignored = otelContext.makeCurrent()) {
+    try (Scope ignored = otelParentContext.makeCurrent()) {
       this.actual.onNext(response);
     } finally {
-      instrumenter.end(otelContext, request, response, null);
+      instrumenter.end(otelClientContext, request, response, null);
     }
   }
 
   @Override
   public void onError(Throwable t) {
-    try (Scope ignored = otelContext.makeCurrent()) {
+    try (Scope ignored = otelParentContext.makeCurrent()) {
       this.actual.onError(t);
     } finally {
-      instrumenter.end(otelContext, request, null, t);
+      instrumenter.end(otelClientContext, request, null, t);
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope ignored = otelContext.makeCurrent()) {
+    try (Scope ignored = otelParentContext.makeCurrent()) {
       this.actual.onComplete();
     }
   }
