@@ -15,7 +15,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 final class CapturedGrpcMetadataUtil {
-  private static final String RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX = "rpc.grpc.request.metadata.";
+  private static final String RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX =
+      "rpc.grpc.request.metadata.";
   private static final ConcurrentMap<String, AttributeKey<List<String>>> requestKeysCache =
       new ConcurrentHashMap<>();
 
