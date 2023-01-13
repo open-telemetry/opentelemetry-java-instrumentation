@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.22.1 (2023-01-13)
 
 - Fix potential startup failure
   ([#7567](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7567))

@@ -14,7 +14,7 @@ buildscript {
   dependencies {
     classpath "com.diffplug.spotless:spotless-plugin-gradle:6.12.1"
     classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
-    classpath "io.opentelemetry.instrumentation:gradle-plugins:1.22.0-alpha"
+    classpath "io.opentelemetry.instrumentation:gradle-plugins:1.22.1-alpha"
   }
 }
 
@@ -30,8 +30,8 @@ subprojects {
       opentelemetry              : "1.22.0",
 
       // these lines are managed by .github/scripts/update-version.sh
-      opentelemetryJavaagent     : "1.22.0",
-      opentelemetryJavaagentAlpha: "1.22.0-alpha",
+      opentelemetryJavaagent     : "1.22.1",
+      opentelemetryJavaagentAlpha: "1.22.1-alpha",
 
       bytebuddy                  : "1.12.21",
       autoservice                : "1.0.1",
