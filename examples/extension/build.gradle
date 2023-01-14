@@ -13,8 +13,8 @@ plugins {
   id "com.github.johnrengelman.shadow" version "7.1.2"
   id "com.diffplug.spotless" version "6.12.1"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.22.0-alpha"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "1.22.0-alpha"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "1.22.1-alpha"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "1.22.1-alpha"
 }
 
 group 'io.opentelemetry.example'
@@ -23,8 +23,8 @@ version '1.0'
 ext {
   versions = [
     // these lines are managed by .github/scripts/update-version.sh
-    opentelemetryJavaagent     : "1.22.0",
-    opentelemetryJavaagentAlpha: "1.22.0-alpha",
+    opentelemetryJavaagent     : "1.22.1",
+    opentelemetryJavaagentAlpha: "1.22.1-alpha",
 
     junit                      : "5.9.2"
   ]
