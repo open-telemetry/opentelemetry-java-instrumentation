@@ -35,7 +35,7 @@ propagation.
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTracing;
+import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetry;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 
@@ -45,7 +45,7 @@ public class OkHttpConfiguration {
 
   //Use this Call.Factory implementation for making standard http client calls.
   public Call.Factory createTracedClient(OpenTelemetry openTelemetry) {
-    return OkHttpTracing.builder(openTelemetry).build().newCallFactory(createClient());
+    return OkHttpTelemetry.builder(openTelemetry).build().newCallFactory(createClient());
   }
 
   //your configuration of the OkHttpClient goes here:
