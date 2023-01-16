@@ -18,7 +18,7 @@ repositories {
 dependencies {
   api(enforcedPlatform("org.junit:junit-bom:5.9.2"))
 
-  testImplementation("org.testcontainers:testcontainers:1.16.2")
+  testImplementation("org.testcontainers:testcontainers:1.17.6")
   testImplementation("org.testcontainers:postgresql:1.17.6")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
