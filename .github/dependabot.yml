@@ -72,3 +72,10 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
+
+  - package-ecosystem: "gradle"
+    directory: "/benchmark-overhead"
+    rebase-strategy: "disabled"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
