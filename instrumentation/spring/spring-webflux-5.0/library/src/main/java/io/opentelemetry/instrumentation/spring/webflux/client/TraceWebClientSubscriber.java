@@ -47,19 +47,17 @@ final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
 
   @Override
   public void onNext(ClientResponse response) {
+    instrumenter.end(otelClientContext, request, response, null);
     try (Scope ignored = otelParentContext.makeCurrent()) {
       this.actual.onNext(response);
-    } finally {
-      instrumenter.end(otelClientContext, request, response, null);
     }
   }
 
   @Override
   public void onError(Throwable t) {
+    instrumenter.end(otelClientContext, request, null, t);
     try (Scope ignored = otelParentContext.makeCurrent()) {
       this.actual.onError(t);
-    } finally {
-      instrumenter.end(otelClientContext, request, null, t);
     }
   }
 
