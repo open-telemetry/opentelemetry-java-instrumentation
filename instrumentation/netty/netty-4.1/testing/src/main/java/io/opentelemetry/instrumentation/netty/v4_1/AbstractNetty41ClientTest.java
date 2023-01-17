@@ -111,7 +111,7 @@ public abstract class AbstractNetty41ClientTest
   protected Set<AttributeKey<?>> httpAttributes(URI uri) {
     String uriString = uri.toString();
     // http://localhost:61/ => unopened port, https://192.0.2.1/ => non routable address
-    if (uriString.equals("http://localhost:61/") || uriString.equals("https://192.0.2.1/")) {
+    if ("http://localhost:61/".equals(uriString) || "https://192.0.2.1/".equals(uriString)) {
       return Collections.emptySet();
     }
     Set<AttributeKey<?>> attributes = super.httpAttributes(uri);

@@ -120,8 +120,8 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
 
           // flavor is extracted from the response, and those URLs cause exceptions (= null
           // response)
-          if (uri.toString().equals("http://localhost:61/")
-              || uri.toString().equals("https://192.0.2.1/")
+          if ("http://localhost:61/".equals(uri.toString())
+              || "https://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
             attributes.remove(SemanticAttributes.HTTP_FLAVOR);
           }

@@ -20,7 +20,6 @@ import java.security.CodeSource;
 import java.security.Permission;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
-import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -124,7 +123,7 @@ public class AgentClassLoader extends URLClassLoader {
 
   private static int getJavaVersion() {
     String javaSpecVersion = System.getProperty("java.specification.version");
-    if (Objects.equals(javaSpecVersion, "1.8")) {
+    if ("1.8".equals(javaSpecVersion)) {
       return 8;
     }
     return Integer.parseInt(javaSpecVersion);
@@ -134,7 +133,7 @@ public class AgentClassLoader extends URLClassLoader {
   public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
     // ContextStorageOverride is meant for library instrumentation we don't want it to apply to our
     // bundled grpc
-    if (Objects.equals(name, "io.grpc.override.ContextStorageOverride")) {
+    if ("io.grpc.override.ContextStorageOverride".equals(name)) {
       throw new ClassNotFoundException(name);
     }
 

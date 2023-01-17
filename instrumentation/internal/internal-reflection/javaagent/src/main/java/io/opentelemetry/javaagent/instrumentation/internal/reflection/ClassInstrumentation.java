@@ -70,9 +70,9 @@ public class ClassInstrumentation implements TypeInstrumentation {
     public MethodVisitor visitMethod(
         int access, String name, String descriptor, String signature, String[] exceptions) {
       MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-      if (name.equals("getInterfaces")
-          && (descriptor.equals("()[Ljava/lang/Class;")
-              || descriptor.equals("(Z)[Ljava/lang/Class;"))) {
+      if ("getInterfaces".equals(name)
+          && ("()[Ljava/lang/Class;".equals(descriptor)
+              || "(Z)[Ljava/lang/Class;".equals(descriptor))) {
         mv =
             new MethodVisitor(api, mv) {
               @Override
@@ -82,12 +82,12 @@ public class ClassInstrumentation implements TypeInstrumentation {
                 // filter the result of call to getInterfaces0, which is used on hotspot, and
                 // J9VMInternals.getInterfaces which is used on openj9
                 if (((opcode == Opcodes.INVOKEVIRTUAL || opcode == Opcodes.INVOKESPECIAL)
-                        && name.equals("getInterfaces0")
-                        && descriptor.equals("()[Ljava/lang/Class;"))
+                        && "getInterfaces0".equals(name)
+                        && "()[Ljava/lang/Class;".equals(descriptor))
                     || (opcode == Opcodes.INVOKESTATIC
-                        && name.equals("getInterfaces")
-                        && owner.equals("java/lang/J9VMInternals")
-                        && descriptor.equals("(Ljava/lang/Class;)[Ljava/lang/Class;"))) {
+                        && "getInterfaces".equals(name)
+                        && "java/lang/J9VMInternals".equals(owner)
+                        && "(Ljava/lang/Class;)[Ljava/lang/Class;".equals(descriptor))) {
                   mv.visitVarInsn(Opcodes.ALOAD, 0);
                   mv.visitMethodInsn(
                       Opcodes.INVOKESTATIC,

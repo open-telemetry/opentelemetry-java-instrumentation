@@ -102,10 +102,9 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
 
           // flavor is extracted from the response, and those URLs cause exceptions (= null
           // response)
-          String uriString = uri.toString();
-          if (uriString.equals("http://localhost:61/")
-              || uriString.equals("https://192.0.2.1/")
-              || uriString.equals(resolveAddress("/read-timeout").toString())) {
+          if ("http://localhost:61/".equals(uri.toString())
+              || "https://192.0.2.1/".equals(uri.toString())
+              || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
             attributes.remove(SemanticAttributes.HTTP_FLAVOR);
           }
 
