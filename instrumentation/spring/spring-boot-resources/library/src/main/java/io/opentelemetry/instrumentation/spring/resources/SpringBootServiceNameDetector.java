@@ -174,8 +174,8 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   @Nullable
   @SuppressWarnings("unchecked")
   private static String parseNameFromYaml(InputStream in) {
-    Yaml yaml = new Yaml();
     try {
+      Yaml yaml = new Yaml();
       Map<String, Object> data = yaml.load(in);
       Map<String, Map<String, Object>> spring =
           (Map<String, Map<String, Object>>) data.get("spring");
@@ -188,6 +188,9 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
       }
     } catch (RuntimeException e) {
       // expected to fail sometimes
+    } catch (NoClassDefFoundError e) {
+      // snakeyaml uses java.beans.Introspector to get/set properties on an object; if module
+      // java.desktop is not present, trying to parse yaml will result in a NoClassDefFoundError
     }
     return null;
   }

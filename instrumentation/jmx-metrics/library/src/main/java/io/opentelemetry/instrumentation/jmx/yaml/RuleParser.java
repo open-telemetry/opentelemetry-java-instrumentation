@@ -70,6 +70,14 @@ public class RuleParser {
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
       logger.log(WARNING, exception.toString());
+    } catch (NoClassDefFoundError e) {
+      // snakeyaml uses java.beans.Introspector to get/set properties on an object; if module
+      // java.desktop is not present, trying to parse yaml will result in a NoClassDefFoundError
+      logger.log(
+          WARNING,
+          "Failed to parse YAML rules from {0}: {1}. "
+              + "If you're using a custom JRE distro built using jlink, ensure that the java.desktop module is included.",
+          new Object[] {id, e.toString()});
     }
   }
 
