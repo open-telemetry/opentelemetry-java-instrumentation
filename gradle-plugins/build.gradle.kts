@@ -40,7 +40,7 @@ dependencies {
 
   implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
 
-  testImplementation("org.assertj:assertj-core:3.24.1")
+  testImplementation("org.assertj:assertj-core:3.24.2")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.9.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
