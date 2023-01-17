@@ -31,7 +31,9 @@ val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_17
 
 java {
   toolchain {
-    languageVersion.set(otelJava.minJavaVersionSupported.map { JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), DEFAULT_JAVA_VERSION.majorVersion.toInt())) })
+    languageVersion.set(
+      otelJava.minJavaVersionSupported.map { JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), DEFAULT_JAVA_VERSION.majorVersion.toInt())) }
+    )
   }
 
   // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
@@ -150,7 +152,6 @@ testing {
       runtimeOnly("org.junit.vintage:junit-vintage-engine")
       implementation("org.junit-pioneer:junit-pioneer")
 
-
       implementation("org.assertj:assertj-core")
       implementation("org.awaitility:awaitility")
       implementation("org.mockito:mockito-core")
@@ -268,7 +269,9 @@ gradle.sharedServices.registerIfAbsent("testcontainersBuildService", Testcontain
   maxParallelUsages.convention(2)
 }
 
-val resourceClassesCsv = listOf("Host", "Os", "Process", "ProcessRuntime").map { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }.joinToString(",")
+val resourceNames = listOf("Host", "Os", "Process", "ProcessRuntime")
+val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }
+
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 
@@ -400,7 +403,9 @@ configurations.configureEach {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")).using(project(":instrumentation-api-semconv"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")).using(project(":instrumentation-annotations"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")).using(project(":instrumentation-annotations-support"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")).using(
+        project(":instrumentation-annotations-support")
+      )
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))

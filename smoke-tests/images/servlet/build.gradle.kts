@@ -8,7 +8,14 @@ plugins {
   id("com.bmuschko.docker-remote-api")
 }
 
-data class ImageTarget(val version: List<String>, val vm: List<String>, val jdk: List<String>, val args: Map<String, String> = emptyMap(), val war: String = "servlet-3.0", val windows: Boolean = true)
+data class ImageTarget(
+  val version: List<String>,
+  val vm: List<String>,
+  val jdk: List<String>,
+  val args: Map<String, String> = emptyMap(),
+  val war: String = "servlet-3.0",
+  val windows: Boolean = true
+)
 
 val extraTag = findProperty("extraTag")
   ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
@@ -112,7 +119,17 @@ tasks {
   }
 }
 
-fun configureImage(parentTask: TaskProvider<out Task>, server: String, dockerfile: String, version: String, vm: String, jdk: String, warProject: String, args: Map<String, String>, isWindows: Boolean): String {
+fun configureImage(
+  parentTask: TaskProvider<out Task>,
+  server: String,
+  dockerfile: String,
+  version: String,
+  vm: String,
+  jdk: String,
+  warProject: String,
+  args: Map<String, String>,
+  isWindows: Boolean
+): String {
   // Using separate build directory for different image
   val dockerWorkingDir = file("$buildDir/docker-$server-$version-jdk$jdk-$vm-$warProject")
   val dockerFileName = "$dockerfile.${if (isWindows) "windows." else ""}dockerfile"

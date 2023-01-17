@@ -26,9 +26,9 @@ publishing {
         }
         artifactId = artifactPrefix(project, base.archivesName.get()) + base.archivesName.get()
 
-        if (groupId != "io.opentelemetry.instrumentation"
-          && groupId != "io.opentelemetry.javaagent"
-          && groupId != "io.opentelemetry.javaagent.instrumentation") {
+        if (groupId != "io.opentelemetry.instrumentation" &&
+          groupId != "io.opentelemetry.javaagent" &&
+          groupId != "io.opentelemetry.javaagent.instrumentation") {
           throw GradleException("Unexpected groupId for this project or its parent ${project.parent}: $groupId")
         }
 
