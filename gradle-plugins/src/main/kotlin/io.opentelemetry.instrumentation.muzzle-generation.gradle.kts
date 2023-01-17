@@ -54,12 +54,8 @@ val languageTasks = LANGUAGES.map { language ->
 }.filterNotNull()
 
 tasks {
-  val byteBuddy by registering {
-    dependsOn(languageTasks)
-  }
-
   named(sourceSet.classesTaskName) {
-    dependsOn(byteBuddy)
+    dependsOn(languageTasks)
   }
 }
 
