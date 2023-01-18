@@ -14,7 +14,10 @@ muzzle {
 sourceSets {
   main {
     val shadedDep = project(":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded")
-    output.dir(shadedDep.file("build/extracted/shadow"), "builtBy" to ":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded:extractShadowJar")
+    output.dir(
+      shadedDep.file("build/extracted/shadow"),
+      "builtBy" to ":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded:extractShadowJar"
+    )
   }
 }
 

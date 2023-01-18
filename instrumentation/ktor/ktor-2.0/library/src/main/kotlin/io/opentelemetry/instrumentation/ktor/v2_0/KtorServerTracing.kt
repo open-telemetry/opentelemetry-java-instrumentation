@@ -34,7 +34,10 @@ class KtorServerTracing private constructor(
 
     internal val additionalExtractors = mutableListOf<AttributesExtractor<in ApplicationRequest, in ApplicationResponse>>()
 
-    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE, KtorNetServerAttributesGetter())
+    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(
+      KtorHttpServerAttributesGetter.INSTANCE,
+      KtorNetServerAttributesGetter()
+    )
 
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
@@ -43,7 +46,9 @@ class KtorServerTracing private constructor(
       this.openTelemetry = openTelemetry
     }
 
-    fun setStatusExtractor(extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) {
+    fun setStatusExtractor(
+      extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
+    ) {
       this.statusExtractor = extractor
     }
 
