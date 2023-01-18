@@ -1,8 +1,6 @@
 plugins {
   `java-library`
 
-  id("net.bytebuddy.byte-buddy")
-
   id("io.opentelemetry.instrumentation.base")
   id("io.opentelemetry.instrumentation.muzzle-generation")
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
