@@ -230,7 +230,7 @@ interface HelperReferenceWrapper {
       private boolean isOverrideable(MethodRef method) {
         return !(method.getFlags().contains(OwnershipFlag.STATIC)
             || method.getFlags().contains(VisibilityFlag.PRIVATE)
-            || method.getName().equals(CONSTRUCTOR_INTERNAL_NAME));
+            || CONSTRUCTOR_INTERNAL_NAME.equals(method.getName()));
       }
 
       private Method toMethod(MethodRef method) {

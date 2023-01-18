@@ -43,10 +43,11 @@ public class GetOutputStreamContext implements ImplicitContextKeyed {
       String requestMethod) {
     GetOutputStreamContext getOutputStreamContext = context.get(KEY);
     String connectionClassName = connectionClass.getName();
-    if (connectionClassName.equals("sun.net.www.protocol.http.HttpURLConnection")
-        && methodName.equals("getOutputStream")
-        && requestMethod.equals(
-            "POST") // To be sure that getOutputStream has transformed GET into POST if
+    if ("sun.net.www.protocol.http.HttpURLConnection".equals(connectionClassName)
+        && "getOutputStream".equals(methodName)
+        && "POST"
+            .equals(
+                requestMethod) // To be sure that getOutputStream has transformed GET into POST if
     // the method raised an exception
     ) {
       getOutputStreamContext.outputStreamMethodOfSunConnectionCalled = true;

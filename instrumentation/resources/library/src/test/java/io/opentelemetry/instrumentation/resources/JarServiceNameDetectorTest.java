@@ -85,7 +85,7 @@ class JarServiceNameDetectorTest {
   @ArgumentsSource(SunCommandLineProvider.class)
   void createResource_sunCommandLine(String commandLine, Path jarPath) {
     Function<String, String> getProperty =
-        key -> key.equals("sun.java.command") ? commandLine : null;
+        key -> "sun.java.command".equals(key) ? commandLine : null;
     Predicate<Path> fileExists = jarPath::equals;
 
     JarServiceNameDetector serviceNameProvider =

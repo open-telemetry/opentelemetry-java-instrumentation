@@ -109,7 +109,7 @@ public class AgentStarterImpl implements AgentStarter {
         Class<?> classBeingRedefined,
         ProtectionDomain protectionDomain,
         byte[] classfileBuffer) {
-      if (!className.equals("sun/launcher/LauncherHelper")) {
+      if (!"sun/launcher/LauncherHelper".equals(className)) {
         return null;
       }
       transformed = true;
@@ -121,7 +121,7 @@ public class AgentStarterImpl implements AgentStarter {
             public MethodVisitor visitMethod(
                 int access, String name, String descriptor, String signature, String[] exceptions) {
               MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-              if (name.equals("checkAndLoadMain")) {
+              if ("checkAndLoadMain".equals(name)) {
                 return new MethodVisitor(api, mv) {
                   @Override
                   public void visitCode() {

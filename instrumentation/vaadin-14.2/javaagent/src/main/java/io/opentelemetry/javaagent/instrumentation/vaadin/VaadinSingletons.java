@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtr
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import java.util.Objects;
 
 public class VaadinSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vaadin-14.2";
@@ -86,7 +85,7 @@ public class VaadinSingletons {
     RpcInvocationHandler rpcInvocationHandler = rpcRequest.getRpcInvocationHandler();
     String spanName =
         SpanNames.fromMethod(rpcInvocationHandler.getClass(), rpcRequest.getMethodName());
-    if (Objects.equals(rpcInvocationHandler.getRpcType(), "event")) {
+    if ("event".equals(rpcInvocationHandler.getRpcType())) {
       String eventType = rpcRequest.getJsonObject().getString("event");
       if (eventType != null) {
         // append event type to make span name more descriptive

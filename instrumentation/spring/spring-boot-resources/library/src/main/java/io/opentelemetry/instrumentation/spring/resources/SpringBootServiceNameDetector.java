@@ -106,8 +106,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
         && !resourceAttributes.containsKey(ResourceAttributes.SERVICE_NAME.getKey())
-        && Objects.equals(
-            resource.getAttribute(ResourceAttributes.SERVICE_NAME), "unknown_service:java");
+        && "unknown_service:java".equals(resource.getAttribute(ResourceAttributes.SERVICE_NAME));
   }
 
   @Override

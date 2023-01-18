@@ -31,7 +31,7 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
   @Override
   protected URLConnection openConnection(URL url) throws IOException {
     String file = url.getFile();
-    if (file.equals("/")) {
+    if ("/".equals(file)) {
       // "/" is used as the default url of the jar
       // This is called by the SecureClassLoader trying to obtain permissions
       // nullInputStream() is not available until Java 11

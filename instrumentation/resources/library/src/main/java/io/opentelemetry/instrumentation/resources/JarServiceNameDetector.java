@@ -19,7 +19,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -73,15 +72,14 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
         && !resourceAttributes.containsKey(ResourceAttributes.SERVICE_NAME.getKey())
-        && Objects.equals(
-            existing.getAttribute(ResourceAttributes.SERVICE_NAME), "unknown_service:java");
+        && "unknown_service:java".equals(existing.getAttribute(ResourceAttributes.SERVICE_NAME));
   }
 
   @Nullable
   private Path getJarPathFromProcessHandle() {
     String[] javaArgs = getProcessHandleArguments.get();
     for (int i = 0; i < javaArgs.length; ++i) {
-      if (javaArgs[i].equals("-jar") && (i < javaArgs.length - 1)) {
+      if ("-jar".equals(javaArgs[i]) && (i < javaArgs.length - 1)) {
         return Paths.get(javaArgs[i + 1]);
       }
     }
