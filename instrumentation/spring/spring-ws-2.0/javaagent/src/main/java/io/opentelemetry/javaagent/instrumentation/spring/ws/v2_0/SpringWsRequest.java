@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.javaagent.instrumentation.spring.ws.AutoValue_SpringWsRequest;
 
 @AutoValue
 public abstract class SpringWsRequest {

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.spring.integration.AutoValue_MessageWithChannel;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.integration.v4_1;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.spring.integration.AutoValue_ContextAndScope;
 import javax.annotation.Nullable;
 
 @AutoValue
