@@ -29,22 +29,16 @@ abstract class MetricStructure {
   //      KEY2: SPECIFICATION2
   //    unit: UNIT
 
-  private String type; // unused, for YAML parser only
   private Map<String, String> metricAttribute; // unused, for YAML parser only
   private String unit;
 
   private MetricInfo.Type metricType;
   private List<MetricAttribute> metricAttributes;
 
-  public String getType() {
-    return type;
-  }
-
   public void setType(String t) {
     // Do not complain about case variations
     t = t.trim().toUpperCase();
     this.metricType = MetricInfo.Type.valueOf(t);
-    this.type = t;
   }
 
   public String getUnit() {

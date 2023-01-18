@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.yaml;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
+import javax.annotation.Nullable;
 
 /**
  * A class representing metric definition as a part of YAML metric rule. Objects of this class are
@@ -16,9 +17,8 @@ public class Metric extends MetricStructure {
   // Used by the YAML parser
   //   metric: METRIC_NAME
   //   desc: DESCRIPTION
-  // The parser never calls setters for these fields with null arguments
-  private String metric;
-  private String desc;
+  @Nullable private String metric;
+  @Nullable private String desc;
 
   public String getMetric() {
     return metric;
@@ -43,7 +43,10 @@ public class Metric extends MetricStructure {
   }
 
   MetricInfo buildMetricInfo(
-      String prefix, String attributeName, String defaultUnit, MetricInfo.Type defaultType) {
+      @Nullable String prefix,
+      String attributeName,
+      String defaultUnit,
+      MetricInfo.Type defaultType) {
     String metricName;
     if (metric == null) {
       metricName = prefix == null ? attributeName : (prefix + attributeName);

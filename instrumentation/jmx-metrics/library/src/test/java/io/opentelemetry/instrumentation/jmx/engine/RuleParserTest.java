@@ -67,7 +67,7 @@ class RuleParserTest {
           + "        metric: METRIC_NAME3\n";
 
   @Test
-  void testConf2() throws Exception {
+  void testConf2() {
     InputStream is = new ByteArrayInputStream(CONF2.getBytes(StandardCharsets.UTF_8));
     JmxConfig config = parser.loadConfig(is);
     assertThat(config).isNotNull();
@@ -102,7 +102,7 @@ class RuleParserTest {
           + "      ATTRIBUTE35:\n";
 
   @Test
-  void testConf3() throws Exception {
+  void testConf3() {
     InputStream is = new ByteArrayInputStream(CONF3.getBytes(StandardCharsets.UTF_8));
     JmxConfig config = parser.loadConfig(is);
     assertThat(config).isNotNull();
@@ -160,24 +160,28 @@ class RuleParserTest {
     assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(3);
 
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
-    assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("A.b");
-    assertThat(m1.getAttributes()).hasSize(3);
+    assertThat(metricDef.getMetricExtractors())
+        .anySatisfy(
+            m -> {
+              assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("A.b");
+              assertThat(m.getAttributes()).hasSize(3);
 
-    MetricInfo mb1 = m1.getInfo();
-    assertThat(mb1.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
-    assertThat(mb1.getDescription()).isEqualTo("DESCRIPTION1");
-    assertThat(mb1.getUnit()).isEqualTo("UNIT1");
-    assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.COUNTER);
+              MetricInfo mb1 = m.getInfo();
+              assertThat(mb1.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
+              assertThat(mb1.getDescription()).isEqualTo("DESCRIPTION1");
+              assertThat(mb1.getUnit()).isEqualTo("UNIT1");
+              assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.COUNTER);
+            })
+        .anySatisfy(
+            m -> {
+              assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE3");
 
-    MetricExtractor m3 = metricDef.getMetricExtractors()[2];
-    assertThat(m3.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE3");
-
-    MetricInfo mb3 = m3.getInfo();
-    assertThat(mb3.getMetricName()).isEqualTo("PREFIX.ATTRIBUTE3");
-    // syntax extension - defining a default unit and type
-    assertThat(mb3.getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
-    assertThat(mb3.getUnit()).isEqualTo("DEFAULT_UNIT");
+              MetricInfo mb3 = m.getInfo();
+              assertThat(mb3.getMetricName()).isEqualTo("PREFIX.ATTRIBUTE3");
+              // syntax extension - defining a default unit and type
+              assertThat(mb3.getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
+              assertThat(mb3.getUnit()).isEqualTo("DEFAULT_UNIT");
+            });
   }
 
   private static final String CONF5 = // minimal valid definition
@@ -278,10 +282,10 @@ class RuleParserTest {
   private static final String EMPTY_CONF = "---\n";
 
   @Test
-  void testEmptyConf() throws Exception {
+  void testEmptyConf() {
     InputStream is = new ByteArrayInputStream(EMPTY_CONF.getBytes(StandardCharsets.UTF_8));
     JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNull();
+    assertThat(config.getRules()).isEmpty();
   }
 
   /*
@@ -413,19 +417,6 @@ class RuleParserTest {
             + "      ATTRIB:\n"
             + "        metricAttribute:\n"
             + "          LABEL: param( )\n"
-            + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
-  }
-
-  @Test
-  void testEmptyPrefix() {
-    String yaml =
-        "---\n"
-            + "rules:\n"
-            + "  - bean: domain:name=you\n"
-            + "    prefix:\n"
-            + "    mapping:\n"
-            + "      A:\n"
             + "        metric: METRIC_NAME\n";
     runNegativeTest(yaml);
   }

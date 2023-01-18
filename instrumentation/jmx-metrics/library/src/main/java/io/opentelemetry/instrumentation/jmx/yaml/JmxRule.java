@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -38,16 +39,16 @@ public class JmxRule extends MetricStructure {
   //     ATTRIBUTE3:
   //       METRIC_FIELDS3
   // The parser never calls setters for these fields with null arguments
-  private String bean;
+  @Nullable private String bean;
   private List<String> beans;
-  private String prefix;
+  @Nullable private String prefix;
   private Map<String, Metric> mapping;
 
   public String getBean() {
     return bean;
   }
 
-  public void setBean(String bean) throws Exception {
+  public void setBean(String bean) {
     this.bean = validateBean(bean);
   }
 
@@ -55,14 +56,18 @@ public class JmxRule extends MetricStructure {
     return beans;
   }
 
-  private static String validateBean(String name) throws MalformedObjectNameException {
-    String trimmed = name.trim();
-    // Check the syntax of the provided name by attempting to create an ObjectName from it.
-    new ObjectName(trimmed);
-    return trimmed;
+  private static String validateBean(String name) {
+    try {
+      String trimmed = name.trim();
+      // Check the syntax of the provided name by attempting to create an ObjectName from it.
+      new ObjectName(trimmed);
+      return trimmed;
+    } catch (MalformedObjectNameException e) {
+      throw new IllegalArgumentException("'" + name + "' is not a valid JMX object name", e);
+    }
   }
 
-  public void setBeans(List<String> beans) throws Exception {
+  public void setBeans(List<String> beans) {
     List<String> list = new ArrayList<>();
     for (String name : beans) {
       list.add(validateBean(name));
@@ -113,7 +118,7 @@ public class JmxRule extends MetricStructure {
    * consistency or semantic issues, an exception will be thrown.
    *
    * @return a valid MetricDefinition object
-   * @throws an exception if any issues within the rule are detected
+   * @throws Exception an exception if any issues within the rule are detected
    */
   public MetricDef buildMetricDef() throws Exception {
     BeanGroup group;
