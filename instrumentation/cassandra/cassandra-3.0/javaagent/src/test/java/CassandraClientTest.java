@@ -95,10 +95,7 @@ public class CassandraClientTest {
                               equalTo(NET_SOCK_PEER_NAME, "localhost"),
                               equalTo(NET_SOCK_PEER_PORT, cassandraPort),
                               equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_NAME, null),
-                              equalTo(DB_STATEMENT, "USE " + parameter.keyspace),
-                              equalTo(DB_OPERATION, null),
-                              equalTo(DB_CASSANDRA_TABLE, null))),
+                              equalTo(DB_STATEMENT, "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -127,7 +124,6 @@ public class CassandraClientTest {
                               equalTo(NET_SOCK_PEER_NAME, "localhost"),
                               equalTo(NET_SOCK_PEER_PORT, cassandraPort),
                               equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_NAME, parameter.keyspace),
                               equalTo(DB_STATEMENT, parameter.expectedStatement),
                               equalTo(DB_OPERATION, parameter.operation),
                               equalTo(DB_CASSANDRA_TABLE, parameter.table))));
@@ -165,10 +161,7 @@ public class CassandraClientTest {
                               equalTo(NET_SOCK_PEER_NAME, "localhost"),
                               equalTo(NET_SOCK_PEER_PORT, cassandraPort),
                               equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_NAME, null),
-                              equalTo(DB_STATEMENT, "USE " + parameter.keyspace),
-                              equalTo(DB_OPERATION, null),
-                              equalTo(DB_CASSANDRA_TABLE, null))),
+                              equalTo(DB_STATEMENT, "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -203,7 +196,6 @@ public class CassandraClientTest {
                               equalTo(NET_SOCK_PEER_NAME, "localhost"),
                               equalTo(NET_SOCK_PEER_PORT, cassandraPort),
                               equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_NAME, parameter.keyspace),
                               equalTo(DB_STATEMENT, parameter.expectedStatement),
                               equalTo(DB_OPERATION, parameter.operation),
                               equalTo(DB_CASSANDRA_TABLE, parameter.table)),
