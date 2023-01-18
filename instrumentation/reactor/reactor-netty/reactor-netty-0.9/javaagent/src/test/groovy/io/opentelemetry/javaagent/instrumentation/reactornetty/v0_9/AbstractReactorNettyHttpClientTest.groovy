@@ -11,7 +11,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import reactor.netty.http.client.HttpClient
@@ -60,7 +60,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+  void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
     request.responseSingle { resp, content ->
       // Make sure to consume content since that's when we close the span.
       content.map { resp }

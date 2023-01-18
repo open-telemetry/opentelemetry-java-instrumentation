@@ -8,7 +8,7 @@ package client
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.core.AsyncResult
@@ -73,7 +73,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest<?> request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+  void sendRequestWithCallback(HttpRequest<?> request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
     sendRequestWithCallback(request) {
       if (it.succeeded()) {
         requestResult.complete(it.result().statusCode())

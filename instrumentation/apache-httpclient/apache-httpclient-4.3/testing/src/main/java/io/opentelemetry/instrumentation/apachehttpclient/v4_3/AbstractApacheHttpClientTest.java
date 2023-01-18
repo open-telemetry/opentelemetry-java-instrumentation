@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
@@ -82,15 +83,15 @@ public abstract class AbstractApacheHttpClientTest {
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
         getClient(uri)
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult));
+                responseCallback(httpClientResult));
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -127,16 +128,16 @@ public abstract class AbstractApacheHttpClientTest {
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
         getClient(uri)
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult),
+                responseCallback(httpClientResult),
                 new BasicHttpContext());
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -169,15 +170,15 @@ public abstract class AbstractApacheHttpClientTest {
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
         getClient(uri)
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult));
+                responseCallback(httpClientResult));
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -214,16 +215,16 @@ public abstract class AbstractApacheHttpClientTest {
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
         getClient(uri)
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult),
+                responseCallback(httpClientResult),
                 new BasicHttpContext());
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -255,11 +256,11 @@ public abstract class AbstractApacheHttpClientTest {
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
-        getClient(uri).execute(request, responseCallback(requestResult));
+        getClient(uri).execute(request, responseCallback(httpClientResult));
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -291,11 +292,11 @@ public abstract class AbstractApacheHttpClientTest {
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
-        getClient(uri).execute(request, responseCallback(requestResult), new BasicHttpContext());
+        getClient(uri).execute(request, responseCallback(httpClientResult), new BasicHttpContext());
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -323,12 +324,12 @@ public abstract class AbstractApacheHttpClientTest {
   }
 
   static ResponseHandler<HttpResponse> responseCallback(
-      AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     return response -> {
       try {
-        requestResult.complete(getResponseCode(response));
+        httpClientResult.complete(getResponseCode(response));
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
         return response;
       }
       return response;

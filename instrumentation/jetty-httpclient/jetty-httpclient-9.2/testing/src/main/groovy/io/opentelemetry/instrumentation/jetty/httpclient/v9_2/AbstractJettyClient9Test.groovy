@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.client.HttpClient
 import org.eclipse.jetty.client.api.ContentResponse
@@ -92,7 +92,7 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, AbstractHttpClientTest.RequestResult requestResult) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
     JettyClientListener jcl = new JettyClientListener()
 
     request.onRequestFailure(jcl)

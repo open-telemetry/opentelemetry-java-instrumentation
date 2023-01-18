@@ -9,6 +9,7 @@ import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.time.Duration;
@@ -75,7 +76,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult)
+      HttpClientResult httpClientResult)
       throws Exception {
     exec.execute(
         Operation.of(
@@ -83,7 +84,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
                 internalSendRequest(client, method, uri, headers)
                     .result(
                         result ->
-                            requestResult.complete(result::getValue, result.getThrowable()))));
+                            httpClientResult.complete(result::getValue, result.getThrowable()))));
   }
 
   // overridden in RatpackForkedHttpClientTest

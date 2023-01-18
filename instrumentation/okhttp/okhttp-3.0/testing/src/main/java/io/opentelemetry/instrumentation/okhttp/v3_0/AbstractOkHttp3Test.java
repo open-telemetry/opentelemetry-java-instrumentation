@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
@@ -82,20 +83,20 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
       String method,
       URI uri,
       Map<String, String> headers,
-      AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     getClient(uri)
         .newCall(request)
         .enqueue(
             new Callback() {
               @Override
               public void onFailure(Call call, IOException e) {
-                requestResult.complete(e);
+                httpClientResult.complete(e);
               }
 
               @Override
               public void onResponse(Call call, Response response) {
                 try (ResponseBody ignored = response.body()) {
-                  requestResult.complete(response.code());
+                  httpClientResult.complete(response.code());
                 }
               }
             });
@@ -146,7 +147,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
     String method = "GET";
     URI uri = resolveAddress("/success");
 
-    RequestResult result = new RequestResult(() -> testing.runWithSpan("child", () -> {}));
+    HttpClientResult result = new HttpClientResult(() -> testing.runWithSpan("child", () -> {}));
     OkHttpClient.Builder builder = getClientBuilder(false);
     builder.addInterceptor(new TestInterceptor());
     Call.Factory testClient = createCallFactory(builder);

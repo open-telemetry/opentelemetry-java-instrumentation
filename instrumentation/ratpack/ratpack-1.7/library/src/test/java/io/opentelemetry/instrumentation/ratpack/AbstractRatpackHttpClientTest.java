@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.time.Duration;
@@ -81,7 +82,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult)
+      HttpClientResult httpClientResult)
       throws Exception {
     // ratpack-test 1.8 supports execute with an Action of registrySpec
     exec.yield(
@@ -92,7 +93,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
                             internalSendRequest(client, method, uri, headers)
                                 .result(
                                     result ->
-                                        requestResult.complete(
+                                        httpClientResult.complete(
                                             result::getValue, result.getThrowable())))
                     .promise())
         .getValueOrThrow();

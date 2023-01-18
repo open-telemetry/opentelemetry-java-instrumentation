@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -51,15 +52,15 @@ public class JdkHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
       String method,
       URI uri,
       Map<String, String> headers,
-      AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
         .whenComplete(
             (response, throwable) -> {
               if (throwable == null) {
-                requestResult.complete(response.statusCode());
+                httpClientResult.complete(response.statusCode());
               } else {
-                requestResult.complete(throwable.getCause());
+                httpClientResult.complete(throwable.getCause());
               }
             });
   }

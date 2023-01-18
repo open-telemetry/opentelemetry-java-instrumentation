@@ -9,10 +9,10 @@ import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpCl
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import java.io.IOException;
 import java.net.URI;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -83,7 +83,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, RequestResult result)
+    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, HttpClientResult result)
         throws Exception {
       getClient(uri).execute(getHost(uri), request, new ResponseHandler(result));
     }
@@ -102,7 +102,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, RequestResult result)
+    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, HttpClientResult result)
         throws Exception {
       getClient(uri).execute(getHost(uri), request, new ResponseHandler(result));
     }
@@ -122,7 +122,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, RequestResult result)
+    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, HttpClientResult result)
         throws Exception {
       getClient(uri).execute(getHost(uri), request, getContext(), new ResponseHandler(result));
     }
@@ -141,7 +141,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, RequestResult result)
+    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, HttpClientResult result)
         throws Exception {
       getClient(uri).execute(getHost(uri), request, getContext(), new ResponseHandler(result));
     }
@@ -160,7 +160,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, RequestResult result)
+    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, HttpClientResult result)
         throws Exception {
       getClient(uri).execute(request, new ResponseHandler(result));
     }
@@ -179,7 +179,7 @@ public class ApacheHttpClientTest {
     }
 
     @Override
-    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, RequestResult result)
+    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, HttpClientResult result)
         throws Exception {
       getClient(uri).execute(request, getContext(), new ResponseHandler(result));
     }
@@ -198,16 +198,16 @@ public class ApacheHttpClientTest {
   }
 
   private static class ResponseHandler implements HttpClientResponseHandler<Void> {
-    private final AbstractHttpClientTest.RequestResult requestResult;
+    private final HttpClientResult httpClientResult;
 
-    public ResponseHandler(AbstractHttpClientTest.RequestResult requestResult) {
-      this.requestResult = requestResult;
+    public ResponseHandler(HttpClientResult httpClientResult) {
+      this.httpClientResult = httpClientResult;
     }
 
     @Override
     public Void handleResponse(ClassicHttpResponse response) throws IOException {
       response.close();
-      requestResult.complete(response.getCode());
+      httpClientResult.complete(response.getCode());
       return null;
     }
   }

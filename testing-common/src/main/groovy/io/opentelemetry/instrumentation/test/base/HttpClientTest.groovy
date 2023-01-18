@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
@@ -79,7 +80,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    *
    * <pre>
    * @Override
-   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
    *   // Hypothetical client accepting a callback
    *   client.executeAsync(request) {
    *     void success(Response response) {
@@ -101,7 +102,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * and instead, {@link #testCallback} should be implemented to return false.
    */
   void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers,
-                               AbstractHttpClientTest.RequestResult requestResult) {
+                               HttpClientResult requestResult) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
   }
@@ -120,7 +121,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     @Override
     protected void sendRequestWithCallback(def request, String method, URI uri, Map<String, String> headers,
-                                           AbstractHttpClientTest.RequestResult requestResult) {
+                                           HttpClientResult requestResult) {
       HttpClientTest.this.sendRequestWithCallback(request, method, uri, headers, requestResult)
     }
 
