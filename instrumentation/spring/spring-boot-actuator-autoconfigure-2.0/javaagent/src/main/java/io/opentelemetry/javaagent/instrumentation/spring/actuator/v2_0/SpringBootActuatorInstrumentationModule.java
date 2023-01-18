@@ -35,7 +35,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     // classloaders, so that the bean class loader (different from the instrumented class loader)
     // can load it
     helperResourceBuilder.registerForAllClassLoaders(
-        "io/opentelemetry/javaagent/instrumentation/spring/actuator/OpenTelemetryMeterRegistryAutoConfiguration.class");
+        "io/opentelemetry/javaagent/instrumentation/spring/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
   }
 
   @Override
