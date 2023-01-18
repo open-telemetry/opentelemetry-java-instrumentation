@@ -114,7 +114,12 @@ class HttpClientMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4")))),
+                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))),
             metric ->
                 assertThat(metric)
                     .hasName("http.client.response.size")
@@ -131,7 +136,12 @@ class HttpClientMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_FLAVOR, "2.0"),
                                             equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
                                             equalTo(SemanticAttributes.NET_PEER_PORT, 1234),
-                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4")))));
+                                            equalTo(stringKey("net.peer.sock.addr"), "1.2.3.4"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 

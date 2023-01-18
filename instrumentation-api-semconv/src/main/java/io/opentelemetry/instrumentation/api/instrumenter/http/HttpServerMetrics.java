@@ -111,7 +111,7 @@ public final class HttpServerMetrics implements OperationListener {
         getAttribute(
             SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, endAttributes, state.startAttributes());
     if (requestLength != null) {
-      requestSize.record(requestLength, durationAndSizeAttributes);
+      requestSize.record(requestLength, durationAndSizeAttributes, context);
     }
     Long responseLength =
         getAttribute(
@@ -119,7 +119,7 @@ public final class HttpServerMetrics implements OperationListener {
             endAttributes,
             state.startAttributes());
     if (responseLength != null) {
-      responseSize.record(responseLength, durationAndSizeAttributes);
+      responseSize.record(responseLength, durationAndSizeAttributes, context);
     }
   }
 
