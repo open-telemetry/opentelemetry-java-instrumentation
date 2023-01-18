@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -43,13 +44,21 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
     return server.intercept(
-        GrpcTelemetry.create(testing.getOpenTelemetry()).newServerInterceptor());
+        GrpcTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedServerRequestMetadata(
+                Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
+            .build()
+            .newServerInterceptor());
   }
 
   @Override
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
     return client.intercept(
-        GrpcTelemetry.create(testing.getOpenTelemetry()).newClientInterceptor());
+        GrpcTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedClientRequestMetadata(
+                Collections.singletonList(CLIENT_REQUEST_METADATA_KEY))
+            .build()
+            .newClientInterceptor());
   }
 
   @Override
