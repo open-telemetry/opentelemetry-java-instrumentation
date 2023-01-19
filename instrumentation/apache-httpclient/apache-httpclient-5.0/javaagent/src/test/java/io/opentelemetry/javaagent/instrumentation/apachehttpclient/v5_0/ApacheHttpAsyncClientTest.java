@@ -88,7 +88,7 @@ class ApacheHttpAsyncClientTest {
 
   abstract class AbstractTest extends AbstractApacheHttpClientTest<SimpleHttpRequest> {
     @Override
-    protected SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       SimpleHttpRequest httpRequest = super.buildRequest(method, uri, headers);
       RequestConfig.Builder configBuilder = RequestConfig.custom();
       configBuilder.setConnectTimeout(getTimeout(connectTimeout()));

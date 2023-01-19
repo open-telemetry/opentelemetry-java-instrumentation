@@ -41,7 +41,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   }
 
   @Override
-  protected final HttpRequest buildRequest(String method, URI uri, Map<String, String> headers)
+  public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers)
       throws Exception {
     GenericUrl genericUrl = new GenericUrl(uri);
 
@@ -65,7 +65,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   }
 
   @Override
-  protected final int sendRequest(
+  public int sendRequest(
       HttpRequest request, String method, URI uri, Map<String, String> headers) throws Exception {
     HttpResponse response = sendRequest(request);
     // read request body to avoid broken pipe errors on the server side

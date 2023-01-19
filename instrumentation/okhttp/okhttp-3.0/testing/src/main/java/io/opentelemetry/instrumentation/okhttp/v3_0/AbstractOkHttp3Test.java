@@ -55,7 +55,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
-  protected Request buildRequest(String method, URI uri, Map<String, String> headers)
+  public Request buildRequest(String method, URI uri, Map<String, String> headers)
       throws Exception {
     RequestBody body =
         HttpMethod.requiresRequestBody(method)
@@ -69,7 +69,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
-  protected int sendRequest(Request request, String method, URI uri, Map<String, String> headers)
+  public int sendRequest(Request request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     Response response = getClient(uri).newCall(request).execute();
     try (ResponseBody ignored = response.body()) {

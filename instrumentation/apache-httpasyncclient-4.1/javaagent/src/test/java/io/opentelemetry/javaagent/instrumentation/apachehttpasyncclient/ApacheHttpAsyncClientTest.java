@@ -77,12 +77,12 @@ class ApacheHttpAsyncClientTest {
   class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    protected HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(new HttpUriRequest(method, uri), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(getClient(uri).execute(request, null).get());
@@ -108,13 +108,13 @@ class ApacheHttpAsyncClientTest {
   class ApacheClientHostRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    protected HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(
           new HttpUriRequest(method, URI.create(fullPathFromUri(uri))), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
@@ -147,12 +147,12 @@ class ApacheHttpAsyncClientTest {
   class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    protected HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(new HttpUriRequest(method, URI.create(uri.toString())), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
@@ -162,7 +162,7 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,

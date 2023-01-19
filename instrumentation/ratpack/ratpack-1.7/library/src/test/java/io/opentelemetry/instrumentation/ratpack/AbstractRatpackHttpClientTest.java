@@ -63,12 +63,12 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
   }
 
   @Override
-  protected final Void buildRequest(String method, URI uri, Map<String, String> headers) {
+  public Void buildRequest(String method, URI uri, Map<String, String> headers) {
     return null;
   }
 
   @Override
-  protected final int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
+  public int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     return exec.yield(
             r -> r.add(Context.class, Context.current()),

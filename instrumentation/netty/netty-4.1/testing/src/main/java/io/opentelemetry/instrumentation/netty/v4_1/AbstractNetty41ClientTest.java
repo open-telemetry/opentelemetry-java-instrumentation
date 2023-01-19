@@ -40,7 +40,7 @@ public abstract class AbstractNetty41ClientTest
   }
 
   @Override
-  protected DefaultFullHttpRequest buildRequest(
+  public DefaultFullHttpRequest buildRequest(
       String method, URI uri, Map<String, String> headers) {
     String target = uri.getPath();
     if (uri.getQuery() != null) {
@@ -55,7 +55,7 @@ public abstract class AbstractNetty41ClientTest
   }
 
   @Override
-  protected int sendRequest(
+  public int sendRequest(
       DefaultFullHttpRequest defaultFullHttpRequest,
       String method,
       URI uri,

@@ -53,7 +53,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   }
 
   @Override
-  protected T buildRequest(String method, URI uri, Map<String, String> headers) {
+  public T buildRequest(String method, URI uri, Map<String, String> headers) {
     T request = createRequest(method, uri);
     request.addHeader("user-agent", userAgent());
     headers.forEach((key, value) -> request.setHeader(new BasicHeader(key, value)));
@@ -61,7 +61,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   }
 
   @Override
-  protected int sendRequest(T request, String method, URI uri, Map<String, String> headers)
+  public int sendRequest(T request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     return getResponseCode(executeRequest(request, uri));
   }
