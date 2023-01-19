@@ -34,8 +34,10 @@ public class GoogleHttpClientTests {
   private final HttpClientTestServer server;
 
   private GoogleHttpClientTests(
-      HttpClientTests<HttpRequest> delegate, HttpClientTypeAdapter<HttpRequest> adapter,
-      InstrumentationTestRunner testRunner, HttpClientTestServer server) {
+      HttpClientTests<HttpRequest> delegate,
+      HttpClientTypeAdapter<HttpRequest> adapter,
+      InstrumentationTestRunner testRunner,
+      HttpClientTestServer server) {
     this.delegate = delegate;
     this.adapter = adapter;
     this.testRunner = testRunner;
@@ -67,37 +69,35 @@ public class GoogleHttpClientTests {
           int responseCode = adapter.sendRequest(request, "GET", uri, Collections.emptyMap());
 
           assertThat(responseCode).isEqualTo(500);
-          testRunner
-              .waitAndAssertTraces(
-                  trace ->
-                      trace.hasSpansSatisfyingExactly(
-                          span ->
-                              span.hasKind(SpanKind.CLIENT)
-                                  .hasStatus(StatusData.error())
-                                  .hasAttributesSatisfying(
-                                      attrs ->
-                                          OpenTelemetryAssertions.assertThat(attrs)
-                                              .hasSize(8)
-                                              .containsEntry(
-                                                  SemanticAttributes.NET_TRANSPORT,
-                                                  SemanticAttributes.NetTransportValues.IP_TCP)
-                                              .containsEntry(
-                                                  SemanticAttributes.NET_PEER_NAME, "localhost")
-                                              .hasEntrySatisfying(
-                                                  SemanticAttributes.NET_PEER_PORT,
-                                                  port -> assertThat(port).isPositive())
-                                              .containsEntry(
-                                                  SemanticAttributes.HTTP_URL, uri.toString())
-                                              .containsEntry(SemanticAttributes.HTTP_METHOD, "GET")
-                                              .containsEntry(
-                                                  SemanticAttributes.HTTP_STATUS_CODE, 500)
-                                              .hasEntrySatisfying(
-                                                  SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                                  length -> assertThat(length).isPositive())
-                                              .containsEntry(
-                                                  SemanticAttributes.HTTP_FLAVOR,
-                                                  SemanticAttributes.HttpFlavorValues.HTTP_1_1)),
-                          span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
+          testRunner.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasKind(SpanKind.CLIENT)
+                              .hasStatus(StatusData.error())
+                              .hasAttributesSatisfying(
+                                  attrs ->
+                                      OpenTelemetryAssertions.assertThat(attrs)
+                                          .hasSize(8)
+                                          .containsEntry(
+                                              SemanticAttributes.NET_TRANSPORT,
+                                              SemanticAttributes.NetTransportValues.IP_TCP)
+                                          .containsEntry(
+                                              SemanticAttributes.NET_PEER_NAME, "localhost")
+                                          .hasEntrySatisfying(
+                                              SemanticAttributes.NET_PEER_PORT,
+                                              port -> assertThat(port).isPositive())
+                                          .containsEntry(
+                                              SemanticAttributes.HTTP_URL, uri.toString())
+                                          .containsEntry(SemanticAttributes.HTTP_METHOD, "GET")
+                                          .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, 500)
+                                          .hasEntrySatisfying(
+                                              SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                              length -> assertThat(length).isPositive())
+                                          .containsEntry(
+                                              SemanticAttributes.HTTP_FLAVOR,
+                                              SemanticAttributes.HttpFlavorValues.HTTP_1_1)),
+                      span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
         });
   }
 

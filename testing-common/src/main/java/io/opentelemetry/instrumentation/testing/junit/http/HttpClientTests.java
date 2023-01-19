@@ -1060,5 +1060,4 @@ public final class HttpClientTests<REQUEST> {
     clientAdapter.sendRequestWithCallback(request, method, uri, headers, httpClientResult);
     return httpClientResult;
   }
-
 }
