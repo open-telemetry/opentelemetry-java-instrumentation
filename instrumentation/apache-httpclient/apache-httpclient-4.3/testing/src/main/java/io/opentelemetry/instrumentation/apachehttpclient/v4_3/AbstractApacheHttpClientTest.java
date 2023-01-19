@@ -78,7 +78,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         BasicHttpRequest request,
         String method,
         URI uri,
@@ -123,7 +123,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         BasicHttpRequest request,
         String method,
         URI uri,
@@ -165,7 +165,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         BasicHttpRequest request,
         String method,
         URI uri,
@@ -210,7 +210,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         BasicHttpRequest request,
         String method,
         URI uri,
@@ -251,7 +251,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,
@@ -287,7 +287,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,

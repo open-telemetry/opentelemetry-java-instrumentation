@@ -78,7 +78,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
-  protected void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       Request request,
       String method,
       URI uri,

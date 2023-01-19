@@ -26,4 +26,15 @@ public interface HttpClientTypeAdapter<REQUEST> {
    */
   int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
       throws Exception;
+
+  default void sendRequestWithCallback(
+      REQUEST request,
+      String method,
+      URI uri,
+      Map<String, String> headers,
+      HttpClientResult httpClientResult)
+      throws Exception {
+    // Must be implemented by http client tests that support async
+    throw new UnsupportedOperationException();
+  }
 }

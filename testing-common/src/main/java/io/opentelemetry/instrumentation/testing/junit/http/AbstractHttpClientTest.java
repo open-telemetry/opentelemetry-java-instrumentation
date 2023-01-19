@@ -55,17 +55,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
 
-  protected void sendRequestWithCallback(
-      REQUEST request,
-      String method,
-      URI uri,
-      Map<String, String> headers,
-      HttpClientResult httpClientResult)
-      throws Exception {
-    // Must be implemented if testAsync is true
-    throw new UnsupportedOperationException();
-  }
-
   /** Returns the connection timeout that should be used when setting up tested clients. */
   protected final Duration connectTimeout() {
     return CONNECTION_TIMEOUT;

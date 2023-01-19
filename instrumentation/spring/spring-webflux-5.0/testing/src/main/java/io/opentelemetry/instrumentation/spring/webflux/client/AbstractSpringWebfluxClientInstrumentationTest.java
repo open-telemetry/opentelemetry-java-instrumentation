@@ -27,7 +27,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     extends AbstractHttpClientTest<WebClient.RequestBodySpec> {
 
   @Override
-  protected WebClient.RequestBodySpec buildRequest(
+  public WebClient.RequestBodySpec buildRequest(
       String method, URI uri, Map<String, String> headers) {
 
     WebClient webClient =
@@ -43,14 +43,14 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   protected abstract WebClient.Builder instrument(WebClient.Builder builder);
 
   @Override
-  protected int sendRequest(
+  public int sendRequest(
       WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers) {
     ClientResponse response = requireNonNull(request.exchange().block());
     return getStatusCode(response);
   }
 
   @Override
-  protected void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       WebClient.RequestBodySpec request,
       String method,
       URI uri,

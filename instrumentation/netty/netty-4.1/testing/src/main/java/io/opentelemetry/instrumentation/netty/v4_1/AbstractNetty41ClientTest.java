@@ -72,7 +72,7 @@ public abstract class AbstractNetty41ClientTest
   @Override
   @SuppressWarnings(
       "CatchingUnchecked") // Checked exception is thrown when connecting to unopened port
-  protected void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       DefaultFullHttpRequest defaultFullHttpRequest,
       String method,
       URI uri,

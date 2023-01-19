@@ -67,7 +67,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   }
 
   @Override
-  protected void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       T request,
       String method,
       URI uri,
