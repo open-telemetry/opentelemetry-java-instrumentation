@@ -1,5 +1,7 @@
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests.CONNECTION_TIMEOUT_MS;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -8,12 +10,9 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ClassInfo;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTypeAdapter;
-import org.junit.jupiter.api.BeforeAll;
 import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
-
-import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests.CONNECTION_TIMEOUT_MS;
 
 class GoogleClientAdapter implements HttpClientTypeAdapter<HttpRequest>  {
 

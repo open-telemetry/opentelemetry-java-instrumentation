@@ -65,7 +65,11 @@ public final class HttpClientTests<REQUEST> {
     this.clientAdapter = clientAdapter;
   }
 
-  public List<DynamicTest> all(){
+  public List<DynamicTest> allList(){
+    return all().collect(Collectors.toList());
+  }
+
+  public Stream<DynamicTest> all(){
     //TODO: This is long and somewhat redundant.
     //TODO: Consider reflection to get all methods that take no args and return a dynamic test
     return Stream.of(
@@ -86,10 +90,16 @@ public final class HttpClientTests<REQUEST> {
             readTimedOut(),
             highConcurrency(),
             highConcurrencyWithCallback(),
-            highConcurrencyOnSingleConnection()
+            highConcurrencyOnSingleConnection(),
+            httpsRequest(),
+            successfulGetRequest("/success"),
+            successfulGetRequest("/success?with=params"),
+            successfulRequestWithParent("PUT"),
+            successfulRequestWithParent("POST"),
+            shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan("PUT"),
+            shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan("POST")
         )
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+        .filter(Objects::nonNull);
   }
 
   DynamicTest successfulRequestWithNotSampledParent() {
@@ -756,95 +766,94 @@ public final class HttpClientTests<REQUEST> {
     });
   }
 
-  // Work-around for lack of @BeforeEach for DynamicTest instances.
-  DynamicTest test(String name, Executable executable) {
-    return dynamicTest(name, () -> {
-      testRunner.clearAllExportedData();
-      executable.execute();
+  DynamicTest httpsRequest() {
+    if (!options.testRemoteConnection || !options.testHttps) {
+      return null;
+    }
+    if(System.getProperty("java.vm.name", "").contains("IBM J9 VM")){
+      System.out.println("IBM JVM has different protocol support for TLS");
+      return null;
+    }
+    return test("https request", () -> {
+
+      String method = "GET";
+      URI uri = URI.create("https://localhost:" + server.httpsPort() + "/success");
+
+      int responseCode = doRequest(method, uri);
+
+      assertThat(responseCode).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
     });
   }
 
+  DynamicTest successfulGetRequest(String path) {
+    return test("successful get request [" + path + "]", () -> {
 
-/*
-  @ParameterizedTest
-  @ValueSource(strings = {"/success", "/success?with=params"})
-  void successfulGetRequest(String path) throws Exception {
     URI uri = resolveAddress(path);
     String method = "GET";
     int responseCode = doRequest(method, uri);
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
+    testRunner.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
+    });
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"PUT", "POST"})
-  void successfulRequestWithParent(String method) throws Exception {
-    URI uri = resolveAddress("/success");
-    int responseCode = testing.runWithSpan("parent", () -> doRequest(method, uri));
+  DynamicTest successfulRequestWithParent(String method) {
+    return test("successful request with parent [" + method + "]", () -> {
+      URI uri = resolveAddress("/success");
+      int responseCode = testRunner.runWithSpan("parent", () -> doRequest(method, uri));
 
-    assertThat(responseCode).isEqualTo(200);
+      assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> assertClientSpan(span, uri, method, responseCode).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
-        });
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"PUT", "POST"})
-  void shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method)
-      throws Exception {
-    assumeTrue(options.testWithClientParent);
-
-    URI uri = resolveAddress("/success");
-    int responseCode =
-        testing.runWithHttpClientSpan("parent-client-span", () -> doRequest(method, uri));
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace ->
+      testRunner.waitAndAssertTraces(
+          trace -> {
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent-client-span").hasKind(SpanKind.CLIENT).hasNoParent()),
-        trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span)));
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> assertClientSpan(span, uri, method, responseCode).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
+          });
+    });
   }
 
+  DynamicTest shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method) {
+    if(!options.testWithClientParent){
+      return null;
+    }
+    return test("should suppress nested client span if already present under parent client span [" + method + "]", () -> {
+      URI uri = resolveAddress("/success");
+      int responseCode =
+          testRunner.runWithHttpClientSpan("parent-client-span", () -> doRequest(method, uri));
 
+      assertThat(responseCode).isEqualTo(200);
 
-  @DisabledIfSystemProperty(
-      named = "java.vm.name",
-      matches = ".*IBM J9 VM.*",
-      disabledReason = "IBM JVM has different protocol support for TLS")
-  @Test
-  void httpsRequest() throws Exception {
-    assumeTrue(options.testRemoteConnection);
-    assumeTrue(options.testHttps);
-
-    String method = "GET";
-    URI uri = URI.create("https://localhost:" + server.httpsPort() + "/success");
-
-    int responseCode = doRequest(method, uri);
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
+      testRunner.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent-client-span").hasKind(SpanKind.CLIENT).hasNoParent()),
+          trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span)));
+    });
   }
-*/
+
+  // Work-around for lack of @BeforeEach for DynamicTest instances.
+  public DynamicTest test(String name, Executable executable) {
+    return dynamicTest(name, () -> {
+      testRunner.clearAllExportedData();
+      executable.execute();
+    });
+  }
+
 
   // Visible for spock bridge.
   SpanDataAssert assertClientSpan(
@@ -1081,12 +1090,11 @@ public final class HttpClientTests<REQUEST> {
     return httpClientResult;
   }
 
-  private URI resolveAddress(String path) {
+  public URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
   }
-//
-//  final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
-//    this.testRunner = testing;
-//    this.server = server;
-//  }
+
+  public InstrumentationTestRunner getTestRunner() {
+    return testRunner;
+  }
 }

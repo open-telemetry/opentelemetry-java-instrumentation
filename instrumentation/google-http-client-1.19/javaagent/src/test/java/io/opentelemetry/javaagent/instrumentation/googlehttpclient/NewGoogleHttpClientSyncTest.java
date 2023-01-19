@@ -11,6 +11,8 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.NewGoogleHttpClientTests.buildOptions;
+
 class NewGoogleHttpClientSyncTest {
 
   @RegisterExtension
@@ -19,28 +21,13 @@ class NewGoogleHttpClientSyncTest {
   @TestFactory
   Collection<DynamicTest> test() {
     HttpClientTypeAdapter<HttpRequest> adapter = new GoogleClientAdapter(HttpRequest::execute);
-    HttpClientTestOptions options = buildOptions();
 
-    HttpClientTests<HttpRequest> delegate = new HttpClientTests<>(testing.getTestRunner(),
+    HttpClientTestOptions options = buildOptions();
+    HttpClientTests<HttpRequest> clientTests = new HttpClientTests<>(testing.getTestRunner(),
         testing.getServer(), options, adapter);
 
-    return delegate.all();
+    NewGoogleHttpClientTests googleTests = new NewGoogleHttpClientTests(clientTests, adapter);
+
+    return googleTests.all();
   }
-
-  private static HttpClientTestOptions buildOptions() {
-    HttpClientTestOptionsBuilder builder = HttpClientTestOptions.builder();
-
-    // executeAsync does not actually allow asynchronous execution since it returns a standard
-    // Future which cannot have callbacks attached. We instrument execute and executeAsync
-    // differently so test both but do not need to run our normal asynchronous tests, which check
-    // context propagation, as there is no possible context propagation.
-    builder.disableTestCallback();
-    builder.enableTestReadTimeout();
-
-    // Circular redirects don't throw an exception with Google Http Client
-    builder.disableTestCircularRedirects();
-    return builder.build();
-  }
-
-
 }
