@@ -22,18 +22,18 @@ public final class ArmeriaNetClientAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<RequestContext, RequestLog> {
 
   @Override
-  public String transport(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public String getTransport(RequestContext ctx, @Nullable RequestLog requestLog) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String peerName(RequestContext ctx) {
+  public String getPeerName(RequestContext ctx) {
     return request(ctx).uri().getHost();
   }
 
   @Override
-  public Integer peerPort(RequestContext ctx) {
+  public Integer getPeerPort(RequestContext ctx) {
     return request(ctx).uri().getPort();
   }
 

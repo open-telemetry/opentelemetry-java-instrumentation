@@ -11,7 +11,7 @@ import org.springframework.scheduling.support.ScheduledMethodRunnable;
 public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGetter<Runnable> {
 
   @Override
-  public Class<?> codeClass(Runnable runnable) {
+  public Class<?> getCodeClass(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
       return scheduledMethodRunnable.getMethod().getDeclaringClass();
@@ -21,7 +21,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
   }
 
   @Override
-  public String methodName(Runnable runnable) {
+  public String getMethodName(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
       return scheduledMethodRunnable.getMethod().getName();

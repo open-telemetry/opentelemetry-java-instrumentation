@@ -19,18 +19,18 @@ public final class RatpackNetClientAttributesGetter
     implements NetClientAttributesGetter<RequestSpec, HttpResponse> {
 
   @Override
-  public String transport(RequestSpec request, @Nullable HttpResponse response) {
+  public String getTransport(RequestSpec request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(RequestSpec request) {
+  public String getPeerName(RequestSpec request) {
     return request.getUri().getHost();
   }
 
   @Override
-  public Integer peerPort(RequestSpec request) {
+  public Integer getPeerPort(RequestSpec request) {
     return request.getUri().getPort();
   }
 }

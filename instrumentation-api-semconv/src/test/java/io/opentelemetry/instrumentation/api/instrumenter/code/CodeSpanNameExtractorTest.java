@@ -23,8 +23,8 @@ class CodeSpanNameExtractorTest {
     // given
     Object request = new Object();
 
-    doReturn(TestClass.class).when(getter).codeClass(request);
-    doReturn("doSomething").when(getter).methodName(request);
+    doReturn(TestClass.class).when(getter).getCodeClass(request);
+    doReturn("doSomething").when(getter).getMethodName(request);
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -41,8 +41,8 @@ class CodeSpanNameExtractorTest {
     AnonymousBaseClass anon = new AnonymousBaseClass() {};
     Object request = new Object();
 
-    doReturn(anon.getClass()).when(getter).codeClass(request);
-    doReturn("doSomething").when(getter).methodName(request);
+    doReturn(anon.getClass()).when(getter).getCodeClass(request);
+    doReturn("doSomething").when(getter).getMethodName(request);
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -59,8 +59,8 @@ class CodeSpanNameExtractorTest {
     Runnable lambda = () -> {};
     Object request = new Object();
 
-    doReturn(lambda.getClass()).when(getter).codeClass(request);
-    doReturn("doSomething").when(getter).methodName(request);
+    doReturn(lambda.getClass()).when(getter).getCodeClass(request);
+    doReturn("doSomething").when(getter).getMethodName(request);
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 

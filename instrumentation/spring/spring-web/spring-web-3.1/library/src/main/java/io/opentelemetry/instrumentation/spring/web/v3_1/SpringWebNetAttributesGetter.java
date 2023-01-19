@@ -15,18 +15,18 @@ final class SpringWebNetAttributesGetter
     implements NetClientAttributesGetter<HttpRequest, ClientHttpResponse> {
 
   @Override
-  public String transport(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
+  public String getTransport(HttpRequest httpRequest, @Nullable ClientHttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(HttpRequest httpRequest) {
+  public String getPeerName(HttpRequest httpRequest) {
     return httpRequest.getURI().getHost();
   }
 
   @Override
-  public Integer peerPort(HttpRequest httpRequest) {
+  public Integer getPeerPort(HttpRequest httpRequest) {
     return httpRequest.getURI().getPort();
   }
 }

@@ -16,20 +16,20 @@ class AwsSdkNetAttributesGetter
     implements NetClientAttributesGetter<ExecutionAttributes, SdkHttpResponse> {
 
   @Override
-  public String transport(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+  public String getTransport(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(ExecutionAttributes request) {
+  public String getPeerName(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.host();
   }
 
   @Override
-  public Integer peerPort(ExecutionAttributes request) {
+  public Integer getPeerPort(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.port();

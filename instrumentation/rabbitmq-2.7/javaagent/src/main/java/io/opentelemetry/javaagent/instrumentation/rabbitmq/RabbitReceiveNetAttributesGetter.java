@@ -15,37 +15,37 @@ public class RabbitReceiveNetAttributesGetter
 
   @Nullable
   @Override
-  public String transport(ReceiveRequest request, @Nullable GetResponse response) {
+  public String getTransport(ReceiveRequest request, @Nullable GetResponse response) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(ReceiveRequest request) {
+  public String getPeerName(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(ReceiveRequest request) {
+  public Integer getPeerPort(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String sockPeerAddr(ReceiveRequest request, @Nullable GetResponse response) {
+  public String getSockPeerAddr(ReceiveRequest request, @Nullable GetResponse response) {
     return request.getConnection().getAddress().getHostAddress();
   }
 
   @Nullable
   @Override
-  public Integer sockPeerPort(ReceiveRequest request, @Nullable GetResponse response) {
+  public Integer getSockPeerPort(ReceiveRequest request, @Nullable GetResponse response) {
     return request.getConnection().getPort();
   }
 
   @Nullable
   @Override
-  public String sockFamily(ReceiveRequest request, @Nullable GetResponse response) {
+  public String getSockFamily(ReceiveRequest request, @Nullable GetResponse response) {
     if (request.getConnection().getAddress() instanceof Inet6Address) {
       return "inet6";
     }

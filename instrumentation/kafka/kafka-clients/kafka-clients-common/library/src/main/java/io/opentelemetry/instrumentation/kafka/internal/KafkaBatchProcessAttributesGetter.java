@@ -21,18 +21,18 @@ enum KafkaBatchProcessAttributesGetter
   INSTANCE;
 
   @Override
-  public String system(ConsumerRecords<?, ?> records) {
+  public String getSystem(ConsumerRecords<?, ?> records) {
     return "kafka";
   }
 
   @Override
-  public String destinationKind(ConsumerRecords<?, ?> records) {
+  public String getDestinationKind(ConsumerRecords<?, ?> records) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
   @Override
-  public String destination(ConsumerRecords<?, ?> records) {
+  public String getDestination(ConsumerRecords<?, ?> records) {
     Set<String> topics =
         records.partitions().stream().map(TopicPartition::topic).collect(Collectors.toSet());
     // only return topic when there's exactly one in the batch
@@ -40,54 +40,54 @@ enum KafkaBatchProcessAttributesGetter
   }
 
   @Override
-  public boolean temporaryDestination(ConsumerRecords<?, ?> records) {
+  public boolean isTemporaryDestination(ConsumerRecords<?, ?> records) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(ConsumerRecords<?, ?> records) {
+  public String getProtocol(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(ConsumerRecords<?, ?> records) {
+  public String getProtocolVersion(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(ConsumerRecords<?, ?> records) {
+  public String getUrl(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(ConsumerRecords<?, ?> records) {
+  public String getConversationId(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(ConsumerRecords<?, ?> records) {
+  public Long getMessagePayloadSize(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(ConsumerRecords<?, ?> records) {
+  public Long getMessagePayloadCompressedSize(ConsumerRecords<?, ?> records) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(ConsumerRecords<?, ?> records, @Nullable Void unused) {
+  public String getMessageId(ConsumerRecords<?, ?> records, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> header(ConsumerRecords<?, ?> records, String name) {
+  public List<String> getMessageHeader(ConsumerRecords<?, ?> records, String name) {
     return StreamSupport.stream(records.spliterator(), false)
         .flatMap(
             consumerRecord ->

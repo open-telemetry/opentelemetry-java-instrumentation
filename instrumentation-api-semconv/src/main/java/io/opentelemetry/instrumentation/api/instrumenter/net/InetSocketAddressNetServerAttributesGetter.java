@@ -29,7 +29,7 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
 
   @Nullable
   @Override
-  public String sockFamily(REQUEST request) {
+  public String getSockFamily(REQUEST request) {
     InetSocketAddress address = getPeerSocketAddress(request);
     if (address == null) {
       address = getHostSocketAddress(request);
@@ -46,25 +46,25 @@ public abstract class InetSocketAddressNetServerAttributesGetter<REQUEST>
 
   @Override
   @Nullable
-  public final String sockPeerAddr(REQUEST request) {
+  public final String getSockPeerAddr(REQUEST request) {
     return getAddress(getPeerSocketAddress(request));
   }
 
   @Override
   @Nullable
-  public final Integer sockPeerPort(REQUEST request) {
+  public final Integer getSockPeerPort(REQUEST request) {
     return getPort(getPeerSocketAddress(request));
   }
 
   @Nullable
   @Override
-  public String sockHostAddr(REQUEST request) {
+  public String getSockHostAddr(REQUEST request) {
     return getAddress(getHostSocketAddress(request));
   }
 
   @Nullable
   @Override
-  public Integer sockHostPort(REQUEST request) {
+  public Integer getSockHostPort(REQUEST request) {
     return getPort(getHostSocketAddress(request));
   }
 

@@ -17,33 +17,33 @@ final class GoogleHttpClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public String method(HttpRequest httpRequest) {
+  public String getMethod(HttpRequest httpRequest) {
     return httpRequest.getRequestMethod();
   }
 
   @Override
-  public String url(HttpRequest httpRequest) {
+  public String getUrl(HttpRequest httpRequest) {
     return httpRequest.getUrl().build();
   }
 
   @Override
-  public List<String> requestHeader(HttpRequest httpRequest, String name) {
+  public List<String> getRequestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.getHeaders().getHeaderStringValues(name);
   }
 
   @Override
-  public String flavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+  public String getFlavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpRequest httpRequest, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatusCode();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpRequest httpRequest, HttpResponse httpResponse, String name) {
     return httpResponse.getHeaders().getHeaderStringValues(name);
   }

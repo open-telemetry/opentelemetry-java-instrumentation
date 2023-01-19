@@ -67,31 +67,37 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // operationName
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.system(request));
+    internalSet(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.getSystem(request));
     internalSet(
-        attributes, SemanticAttributes.MESSAGING_DESTINATION_KIND, getter.destinationKind(request));
-    boolean isTemporaryDestination = getter.temporaryDestination(request);
+        attributes,
+        SemanticAttributes.MESSAGING_DESTINATION_KIND,
+        getter.getDestinationKind(request));
+    boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
       internalSet(attributes, SemanticAttributes.MESSAGING_TEMP_DESTINATION, true);
       internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION, TEMP_DESTINATION_NAME);
     } else {
       internalSet(
-          attributes, SemanticAttributes.MESSAGING_DESTINATION, getter.destination(request));
+          attributes, SemanticAttributes.MESSAGING_DESTINATION, getter.getDestination(request));
     }
-    internalSet(attributes, SemanticAttributes.MESSAGING_PROTOCOL, getter.protocol(request));
+    internalSet(attributes, SemanticAttributes.MESSAGING_PROTOCOL, getter.getProtocol(request));
     internalSet(
-        attributes, SemanticAttributes.MESSAGING_PROTOCOL_VERSION, getter.protocolVersion(request));
-    internalSet(attributes, SemanticAttributes.MESSAGING_URL, getter.url(request));
+        attributes,
+        SemanticAttributes.MESSAGING_PROTOCOL_VERSION,
+        getter.getProtocolVersion(request));
+    internalSet(attributes, SemanticAttributes.MESSAGING_URL, getter.getUrl(request));
     internalSet(
-        attributes, SemanticAttributes.MESSAGING_CONVERSATION_ID, getter.conversationId(request));
+        attributes,
+        SemanticAttributes.MESSAGING_CONVERSATION_ID,
+        getter.getConversationId(request));
     internalSet(
         attributes,
         SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-        getter.messagePayloadSize(request));
+        getter.getMessagePayloadSize(request));
     internalSet(
         attributes,
         SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
-        getter.messagePayloadCompressedSize(request));
+        getter.getMessagePayloadCompressedSize(request));
     if (operation == RECEIVE || operation == PROCESS) {
       internalSet(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
     }
@@ -105,10 +111,12 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     internalSet(
-        attributes, SemanticAttributes.MESSAGING_MESSAGE_ID, getter.messageId(request, response));
+        attributes,
+        SemanticAttributes.MESSAGING_MESSAGE_ID,
+        getter.getMessageId(request, response));
 
     for (String name : capturedHeaders) {
-      List<String> values = getter.header(request, name);
+      List<String> values = getter.getMessageHeader(request, name);
       if (!values.isEmpty()) {
         internalSet(attributes, attributeKey(name), values);
       }

@@ -18,20 +18,20 @@ import ratpack.server.PublicAddress;
  */
 public final class RatpackNetServerAttributesGetter implements NetServerAttributesGetter<Request> {
   @Override
-  public String transport(Request request) {
+  public String getTransport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String hostName(Request request) {
+  public String getHostName(Request request) {
     PublicAddress publicAddress = getPublicAddress(request);
     return publicAddress == null ? null : publicAddress.get().getHost();
   }
 
   @Nullable
   @Override
-  public Integer hostPort(Request request) {
+  public Integer getHostPort(Request request) {
     PublicAddress publicAddress = getPublicAddress(request);
     return publicAddress == null ? null : publicAddress.get().getPort();
   }
@@ -45,7 +45,7 @@ public final class RatpackNetServerAttributesGetter implements NetServerAttribut
   }
 
   @Override
-  public Integer sockPeerPort(Request request) {
+  public Integer getSockPeerPort(Request request) {
     return request.getRemoteAddress().getPort();
   }
 }

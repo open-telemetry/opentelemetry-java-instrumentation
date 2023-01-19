@@ -21,7 +21,7 @@ class CodeAttributesExtractorTest {
 
   static final class TestAttributesGetter implements CodeAttributesGetter<Map<String, String>> {
     @Override
-    public Class<?> codeClass(Map<String, String> request) {
+    public Class<?> getCodeClass(Map<String, String> request) {
       try {
         String className = request.get("class");
         return className == null ? null : Class.forName(className);
@@ -31,7 +31,7 @@ class CodeAttributesExtractorTest {
     }
 
     @Override
-    public String methodName(Map<String, String> request) {
+    public String getMethodName(Map<String, String> request) {
       return request.get("methodName");
     }
   }

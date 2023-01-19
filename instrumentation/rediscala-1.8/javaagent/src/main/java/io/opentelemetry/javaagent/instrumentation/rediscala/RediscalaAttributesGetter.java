@@ -14,36 +14,36 @@ import redis.RedisCommand;
 final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?>> {
 
   @Override
-  public String system(RedisCommand<?, ?> redisCommand) {
+  public String getSystem(RedisCommand<?, ?> redisCommand) {
     return SemanticAttributes.DbSystemValues.REDIS;
   }
 
   @Override
   @Nullable
-  public String user(RedisCommand<?, ?> redisCommand) {
+  public String getUser(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
   @Nullable
-  public String name(RedisCommand<?, ?> redisCommand) {
+  public String getName(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
   @Nullable
-  public String connectionString(RedisCommand<?, ?> redisCommand) {
+  public String getConnectionString(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
   @Nullable
-  public String statement(RedisCommand<?, ?> redisCommand) {
+  public String getStatement(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
-  public String operation(RedisCommand<?, ?> redisCommand) {
+  public String getOperation(RedisCommand<?, ?> redisCommand) {
     return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
   }
 }

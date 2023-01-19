@@ -19,18 +19,18 @@ public final class OkHttpNetAttributesGetter
     implements NetClientAttributesGetter<Request, Response> {
 
   @Override
-  public String transport(Request request, @Nullable Response response) {
+  public String getTransport(Request request, @Nullable Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(Request request) {
+  public String getPeerName(Request request) {
     return request.url().host();
   }
 
   @Override
-  public Integer peerPort(Request request) {
+  public Integer getPeerPort(Request request) {
     return request.url().port();
   }
 }

@@ -17,18 +17,18 @@ enum RabbitReceiveAttributesGetter
   INSTANCE;
 
   @Override
-  public String system(ReceiveRequest request) {
+  public String getSystem(ReceiveRequest request) {
     return "rabbitmq";
   }
 
   @Override
-  public String destinationKind(ReceiveRequest request) {
+  public String getDestinationKind(ReceiveRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.QUEUE;
   }
 
   @Nullable
   @Override
-  public String destination(ReceiveRequest request) {
+  public String getDestination(ReceiveRequest request) {
     if (request.getResponse() != null) {
       return normalizeExchangeName(request.getResponse().getEnvelope().getExchange());
     } else {
@@ -41,54 +41,54 @@ enum RabbitReceiveAttributesGetter
   }
 
   @Override
-  public boolean temporaryDestination(ReceiveRequest request) {
+  public boolean isTemporaryDestination(ReceiveRequest request) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(ReceiveRequest request) {
+  public String getProtocol(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(ReceiveRequest request) {
+  public String getProtocolVersion(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(ReceiveRequest request) {
+  public String getUrl(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(ReceiveRequest request) {
+  public String getConversationId(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(ReceiveRequest request) {
+  public Long getMessagePayloadSize(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(ReceiveRequest request) {
+  public Long getMessagePayloadCompressedSize(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(ReceiveRequest request, @Nullable GetResponse response) {
+  public String getMessageId(ReceiveRequest request, @Nullable GetResponse response) {
     return null;
   }
 
   @Override
-  public List<String> header(ReceiveRequest request, String name) {
+  public List<String> getMessageHeader(ReceiveRequest request, String name) {
     GetResponse response = request.getResponse();
     if (response != null) {
       Object value = request.getResponse().getProps().getHeaders().get(name);

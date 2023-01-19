@@ -11,13 +11,13 @@ import javax.annotation.Nullable;
 public class FinatraCodeAttributesGetter implements CodeAttributesGetter<Class<?>> {
   @Nullable
   @Override
-  public Class<?> codeClass(Class<?> request) {
+  public Class<?> getCodeClass(Class<?> request) {
     return request;
   }
 
   @Nullable
   @Override
-  public String methodName(Class<?> request) {
+  public String getMethodName(Class<?> request) {
     return null;
   }
 }

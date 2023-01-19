@@ -18,34 +18,35 @@ import javax.annotation.Nullable;
 class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?>, Response<?>> {
 
   @Override
-  public String url(Request<?> request) {
+  public String getUrl(Request<?> request) {
     return request.getEndpoint().toString();
   }
 
   @Override
   @Nullable
-  public String flavor(Request<?> request, @Nullable Response<?> response) {
+  public String getFlavor(Request<?> request, @Nullable Response<?> response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public String method(Request<?> request) {
+  public String getMethod(Request<?> request) {
     return request.getHttpMethod().name();
   }
 
   @Override
-  public List<String> requestHeader(Request<?> request, String name) {
+  public List<String> getRequestHeader(Request<?> request, String name) {
     String value = request.getHeaders().get(name.equals("user-agent") ? "User-Agent" : name);
     return value == null ? emptyList() : singletonList(value);
   }
 
   @Override
-  public Integer statusCode(Request<?> request, Response<?> response, @Nullable Throwable error) {
+  public Integer getStatusCode(
+      Request<?> request, Response<?> response, @Nullable Throwable error) {
     return response.getHttpResponse().getStatusCode();
   }
 
   @Override
-  public List<String> responseHeader(Request<?> request, Response<?> response, String name) {
+  public List<String> getResponseHeader(Request<?> request, Response<?> response, String name) {
     String value = response.getHttpResponse().getHeaders().get(name);
     return value == null ? emptyList() : singletonList(value);
   }

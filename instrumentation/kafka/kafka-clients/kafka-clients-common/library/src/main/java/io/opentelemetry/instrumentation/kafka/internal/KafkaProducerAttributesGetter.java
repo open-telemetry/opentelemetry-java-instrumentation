@@ -24,70 +24,70 @@ enum KafkaProducerAttributesGetter
   INSTANCE;
 
   @Override
-  public String system(ProducerRecord<?, ?> producerRecord) {
+  public String getSystem(ProducerRecord<?, ?> producerRecord) {
     return "kafka";
   }
 
   @Override
-  public String destinationKind(ProducerRecord<?, ?> producerRecord) {
+  public String getDestinationKind(ProducerRecord<?, ?> producerRecord) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
-  public String destination(ProducerRecord<?, ?> producerRecord) {
+  public String getDestination(ProducerRecord<?, ?> producerRecord) {
     return producerRecord.topic();
   }
 
   @Override
-  public boolean temporaryDestination(ProducerRecord<?, ?> producerRecord) {
+  public boolean isTemporaryDestination(ProducerRecord<?, ?> producerRecord) {
     return false;
   }
 
   @Override
   @Nullable
-  public String protocol(ProducerRecord<?, ?> producerRecord) {
+  public String getProtocol(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public String protocolVersion(ProducerRecord<?, ?> producerRecord) {
+  public String getProtocolVersion(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public String url(ProducerRecord<?, ?> producerRecord) {
+  public String getUrl(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public String conversationId(ProducerRecord<?, ?> producerRecord) {
+  public String getConversationId(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long messagePayloadSize(ProducerRecord<?, ?> producerRecord) {
+  public Long getMessagePayloadSize(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long messagePayloadCompressedSize(ProducerRecord<?, ?> producerRecord) {
+  public Long getMessagePayloadCompressedSize(ProducerRecord<?, ?> producerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public String messageId(
+  public String getMessageId(
       ProducerRecord<?, ?> producerRecord, @Nullable RecordMetadata recordMetadata) {
     return null;
   }
 
   @Override
-  public List<String> header(ProducerRecord<?, ?> producerRecord, String name) {
+  public List<String> getMessageHeader(ProducerRecord<?, ?> producerRecord, String name) {
     return StreamSupport.stream(producerRecord.headers().headers(name).spliterator(), false)
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))
         .collect(Collectors.toList());

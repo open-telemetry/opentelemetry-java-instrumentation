@@ -27,11 +27,11 @@ abstract class DbClientCommonAttributesExtractor<
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.DB_SYSTEM, getter.system(request));
-    internalSet(attributes, SemanticAttributes.DB_USER, getter.user(request));
-    internalSet(attributes, SemanticAttributes.DB_NAME, getter.name(request));
+    internalSet(attributes, SemanticAttributes.DB_SYSTEM, getter.getSystem(request));
+    internalSet(attributes, SemanticAttributes.DB_USER, getter.getUser(request));
+    internalSet(attributes, SemanticAttributes.DB_NAME, getter.getName(request));
     internalSet(
-        attributes, SemanticAttributes.DB_CONNECTION_STRING, getter.connectionString(request));
+        attributes, SemanticAttributes.DB_CONNECTION_STRING, getter.getConnectionString(request));
   }
 
   @Override

@@ -21,13 +21,13 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String method(ServletRequestContext<REQUEST> requestContext) {
+  public String getMethod(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestMethod(requestContext.request());
   }
 
   @Override
   @Nullable
-  public String target(ServletRequestContext<REQUEST> requestContext) {
+  public String getTarget(ServletRequestContext<REQUEST> requestContext) {
     REQUEST request = requestContext.request();
     String target = accessor.getRequestUri(request);
     String queryString = accessor.getRequestQueryString(request);
@@ -39,18 +39,18 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String scheme(ServletRequestContext<REQUEST> requestContext) {
+  public String getScheme(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestScheme(requestContext.request());
   }
 
   @Override
-  public List<String> requestHeader(ServletRequestContext<REQUEST> requestContext, String name) {
+  public List<String> getRequestHeader(ServletRequestContext<REQUEST> requestContext, String name) {
     return accessor.getRequestHeaderValues(requestContext.request(), name);
   }
 
   @Override
   @Nullable
-  public String flavor(ServletRequestContext<REQUEST> requestContext) {
+  public String getFlavor(ServletRequestContext<REQUEST> requestContext) {
     String flavor = accessor.getRequestProtocol(requestContext.request());
     if (flavor != null) {
       // remove HTTP/ prefix to comply with semantic conventions
@@ -63,7 +63,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public Integer statusCode(
+  public Integer getStatusCode(
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
@@ -87,7 +87,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext,
       String name) {
@@ -96,7 +96,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  public String route(ServletRequestContext<REQUEST> requestContext) {
+  public String getRoute(ServletRequestContext<REQUEST> requestContext) {
     return null;
   }
 }

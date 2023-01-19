@@ -25,18 +25,18 @@ class InetSocketAddressNetClientAttributesGetterTest {
       getter =
           new InetSocketAddressNetClientAttributesGetter<InetSocketAddress, InetSocketAddress>() {
             @Override
-            public String transport(InetSocketAddress request, InetSocketAddress response) {
+            public String getTransport(InetSocketAddress request, InetSocketAddress response) {
               return SemanticAttributes.NetTransportValues.IP_TCP;
             }
 
             @Override
-            public String peerName(InetSocketAddress request) {
+            public String getPeerName(InetSocketAddress request) {
               // net.peer.name and net.peer.port are tested in NetClientAttributesExtractorTest
               return null;
             }
 
             @Override
-            public Integer peerPort(InetSocketAddress request) {
+            public Integer getPeerPort(InetSocketAddress request) {
               // net.peer.name and net.peer.port are tested in NetClientAttributesExtractorTest
               return null;
             }

@@ -14,17 +14,17 @@ import javax.annotation.Nullable;
 class AkkaHttpNetAttributesGetter implements NetClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  public String transport(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+  public String getTransport(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public String peerName(HttpRequest httpRequest) {
+  public String getPeerName(HttpRequest httpRequest) {
     return httpRequest.uri().authority().host().address();
   }
 
   @Override
-  public Integer peerPort(HttpRequest httpRequest) {
+  public Integer getPeerPort(HttpRequest httpRequest) {
     return httpRequest.uri().authority().port();
   }
 }

@@ -19,7 +19,7 @@ class AwsSdkHttpAttributesGetter
     implements HttpClientAttributesGetter<ExecutionAttributes, SdkHttpResponse> {
 
   @Override
-  public String url(ExecutionAttributes request) {
+  public String getUrl(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.getUri().toString();
@@ -27,19 +27,19 @@ class AwsSdkHttpAttributesGetter
 
   @Override
   @Nullable
-  public String flavor(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
+  public String getFlavor(ExecutionAttributes request, @Nullable SdkHttpResponse response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public String method(ExecutionAttributes request) {
+  public String getMethod(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     return httpRequest.method().name();
   }
 
   @Override
-  public List<String> requestHeader(ExecutionAttributes request, String name) {
+  public List<String> getRequestHeader(ExecutionAttributes request, String name) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
     List<String> value = httpRequest.headers().get(name);
@@ -47,13 +47,13 @@ class AwsSdkHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       ExecutionAttributes request, SdkHttpResponse response, @Nullable Throwable error) {
     return response.statusCode();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       ExecutionAttributes request, SdkHttpResponse response, String name) {
     List<String> value = response.headers().get(name);
     return value == null ? emptyList() : value;

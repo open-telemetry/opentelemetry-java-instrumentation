@@ -37,34 +37,34 @@ class HttpClientAttributesExtractorTest {
       implements HttpClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    public String method(Map<String, String> request) {
+    public String getMethod(Map<String, String> request) {
       return request.get("method");
     }
 
     @Override
-    public String url(Map<String, String> request) {
+    public String getUrl(Map<String, String> request) {
       return request.get("url");
     }
 
     @Override
-    public List<String> requestHeader(Map<String, String> request, String name) {
+    public List<String> getRequestHeader(Map<String, String> request, String name) {
       String value = request.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
     }
 
     @Override
-    public Integer statusCode(
+    public Integer getStatusCode(
         Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       return Integer.parseInt(response.get("statusCode"));
     }
 
     @Override
-    public String flavor(Map<String, String> request, Map<String, String> response) {
+    public String getFlavor(Map<String, String> request, Map<String, String> response) {
       return request.get("flavor");
     }
 
     @Override
-    public List<String> responseHeader(
+    public List<String> getResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
       return value == null ? emptyList() : asList(value.split(","));
@@ -76,19 +76,20 @@ class HttpClientAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String transport(Map<String, String> request, @Nullable Map<String, String> response) {
+    public String getTransport(
+        Map<String, String> request, @Nullable Map<String, String> response) {
       return response.get("transport");
     }
 
     @Nullable
     @Override
-    public String peerName(Map<String, String> request) {
+    public String getPeerName(Map<String, String> request) {
       return request.get("peerName");
     }
 
     @Nullable
     @Override
-    public Integer peerPort(Map<String, String> request) {
+    public Integer getPeerPort(Map<String, String> request) {
       String statusCode = request.get("peerPort");
       return statusCode == null ? null : Integer.parseInt(statusCode);
     }

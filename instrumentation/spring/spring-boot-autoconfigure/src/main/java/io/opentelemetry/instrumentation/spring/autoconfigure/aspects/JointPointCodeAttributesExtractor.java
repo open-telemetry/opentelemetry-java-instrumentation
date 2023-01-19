@@ -11,12 +11,12 @@ enum JointPointCodeAttributesExtractor implements CodeAttributesGetter<JoinPoint
   INSTANCE;
 
   @Override
-  public Class<?> codeClass(JoinPointRequest joinPointRequest) {
+  public Class<?> getCodeClass(JoinPointRequest joinPointRequest) {
     return joinPointRequest.method().getDeclaringClass();
   }
 
   @Override
-  public String methodName(JoinPointRequest joinPointRequest) {
+  public String getMethodName(JoinPointRequest joinPointRequest) {
     return joinPointRequest.method().getName();
   }
 }

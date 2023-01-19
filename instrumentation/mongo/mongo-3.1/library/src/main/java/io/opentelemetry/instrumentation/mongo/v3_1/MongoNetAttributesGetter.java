@@ -13,13 +13,13 @@ class MongoNetAttributesGetter implements NetClientAttributesGetter<CommandStart
 
   @Override
   @Nullable
-  public String transport(CommandStartedEvent event, @Nullable Void unused) {
+  public String getTransport(CommandStartedEvent event, @Nullable Void unused) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(CommandStartedEvent event) {
+  public String getPeerName(CommandStartedEvent event) {
     if (event.getConnectionDescription() != null
         && event.getConnectionDescription().getServerAddress() != null) {
       return event.getConnectionDescription().getServerAddress().getHost();
@@ -29,7 +29,7 @@ class MongoNetAttributesGetter implements NetClientAttributesGetter<CommandStart
 
   @Nullable
   @Override
-  public Integer peerPort(CommandStartedEvent event) {
+  public Integer getPeerPort(CommandStartedEvent event) {
     if (event.getConnectionDescription() != null
         && event.getConnectionDescription().getServerAddress() != null) {
       return event.getConnectionDescription().getServerAddress().getPort();

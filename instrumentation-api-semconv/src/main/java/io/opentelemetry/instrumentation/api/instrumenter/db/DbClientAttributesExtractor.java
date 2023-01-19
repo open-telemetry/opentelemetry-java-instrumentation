@@ -37,7 +37,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, SemanticAttributes.DB_STATEMENT, getter.statement(request));
-    internalSet(attributes, SemanticAttributes.DB_OPERATION, getter.operation(request));
+    internalSet(attributes, SemanticAttributes.DB_STATEMENT, getter.getStatement(request));
+    internalSet(attributes, SemanticAttributes.DB_OPERATION, getter.getOperation(request));
   }
 }

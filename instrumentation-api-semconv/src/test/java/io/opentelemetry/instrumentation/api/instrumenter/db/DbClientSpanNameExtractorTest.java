@@ -24,8 +24,8 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(sqlAttributesGetter.rawStatement(dbRequest)).thenReturn("SELECT * from table");
-    when(sqlAttributesGetter.name(dbRequest)).thenReturn("database");
+    when(sqlAttributesGetter.getRawStatement(dbRequest)).thenReturn("SELECT * from table");
+    when(sqlAttributesGetter.getName(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
@@ -41,8 +41,8 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(sqlAttributesGetter.rawStatement(dbRequest)).thenReturn("SELECT * from another.table");
-    when(sqlAttributesGetter.name(dbRequest)).thenReturn("database");
+    when(sqlAttributesGetter.getRawStatement(dbRequest)).thenReturn("SELECT * from another.table");
+    when(sqlAttributesGetter.getName(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
@@ -58,7 +58,7 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(sqlAttributesGetter.rawStatement(dbRequest)).thenReturn("SELECT * from table");
+    when(sqlAttributesGetter.getRawStatement(dbRequest)).thenReturn("SELECT * from table");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
@@ -74,8 +74,8 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(dbAttributesGetter.operation(dbRequest)).thenReturn("SELECT");
-    when(dbAttributesGetter.name(dbRequest)).thenReturn("database");
+    when(dbAttributesGetter.getOperation(dbRequest)).thenReturn("SELECT");
+    when(dbAttributesGetter.getName(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
@@ -91,7 +91,7 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(dbAttributesGetter.operation(dbRequest)).thenReturn("SELECT");
+    when(dbAttributesGetter.getOperation(dbRequest)).thenReturn("SELECT");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
@@ -107,7 +107,7 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(dbAttributesGetter.name(dbRequest)).thenReturn("database");
+    when(dbAttributesGetter.getName(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 

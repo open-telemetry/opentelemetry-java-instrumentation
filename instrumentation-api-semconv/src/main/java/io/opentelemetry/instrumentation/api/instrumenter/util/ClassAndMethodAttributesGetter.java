@@ -13,13 +13,13 @@ enum ClassAndMethodAttributesGetter implements CodeAttributesGetter<ClassAndMeth
 
   @Nullable
   @Override
-  public Class<?> codeClass(ClassAndMethod classAndMethod) {
+  public Class<?> getCodeClass(ClassAndMethod classAndMethod) {
     return classAndMethod.declaringClass();
   }
 
   @Nullable
   @Override
-  public String methodName(ClassAndMethod classAndMethod) {
+  public String getMethodName(ClassAndMethod classAndMethod) {
     return classAndMethod.methodName();
   }
 }

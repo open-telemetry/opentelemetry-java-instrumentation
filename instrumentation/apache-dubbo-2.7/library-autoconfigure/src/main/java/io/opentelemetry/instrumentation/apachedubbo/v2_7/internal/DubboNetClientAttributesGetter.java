@@ -20,18 +20,18 @@ public final class DubboNetClientAttributesGetter
 
   @Override
   @Nullable
-  public String transport(DubboRequest request, @Nullable Result response) {
+  public String getTransport(DubboRequest request, @Nullable Result response) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(DubboRequest request) {
+  public String getPeerName(DubboRequest request) {
     return request.url().getHost();
   }
 
   @Override
-  public Integer peerPort(DubboRequest request) {
+  public Integer getPeerPort(DubboRequest request) {
     return request.url().getPort();
   }
 

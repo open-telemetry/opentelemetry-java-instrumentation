@@ -12,35 +12,35 @@ import javax.annotation.Nullable;
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest> {
 
   @Override
-  public String system(RedissonRequest request) {
+  public String getSystem(RedissonRequest request) {
     return SemanticAttributes.DbSystemValues.REDIS;
   }
 
   @Nullable
   @Override
-  public String user(RedissonRequest request) {
+  public String getUser(RedissonRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String name(RedissonRequest request) {
+  public String getName(RedissonRequest request) {
     return null;
   }
 
   @Override
-  public String connectionString(RedissonRequest request) {
+  public String getConnectionString(RedissonRequest request) {
     return null;
   }
 
   @Override
-  public String statement(RedissonRequest request) {
+  public String getStatement(RedissonRequest request) {
     return request.getStatement();
   }
 
   @Nullable
   @Override
-  public String operation(RedissonRequest request) {
+  public String getOperation(RedissonRequest request) {
     return request.getOperation();
   }
 }

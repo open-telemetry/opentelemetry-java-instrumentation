@@ -19,71 +19,71 @@ enum RocketMqProducerAttributeGetter
 
   @Nullable
   @Override
-  public String system(PublishingMessageImpl message) {
+  public String getSystem(PublishingMessageImpl message) {
     return "rocketmq";
   }
 
   @Nullable
   @Override
-  public String destinationKind(PublishingMessageImpl message) {
+  public String getDestinationKind(PublishingMessageImpl message) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
   @Override
-  public String destination(PublishingMessageImpl message) {
+  public String getDestination(PublishingMessageImpl message) {
     return message.getTopic();
   }
 
   @Override
-  public boolean temporaryDestination(PublishingMessageImpl message) {
+  public boolean isTemporaryDestination(PublishingMessageImpl message) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(PublishingMessageImpl message) {
+  public String getProtocol(PublishingMessageImpl message) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(PublishingMessageImpl message) {
+  public String getProtocolVersion(PublishingMessageImpl message) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(PublishingMessageImpl message) {
+  public String getUrl(PublishingMessageImpl message) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(PublishingMessageImpl message) {
+  public String getConversationId(PublishingMessageImpl message) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(PublishingMessageImpl message) {
+  public Long getMessagePayloadSize(PublishingMessageImpl message) {
     return (long) message.getBody().remaining();
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(PublishingMessageImpl message) {
+  public Long getMessagePayloadCompressedSize(PublishingMessageImpl message) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(PublishingMessageImpl message, @Nullable SendReceiptImpl sendReceipt) {
+  public String getMessageId(PublishingMessageImpl message, @Nullable SendReceiptImpl sendReceipt) {
     return message.getMessageId().toString();
   }
 
   @Override
-  public List<String> header(PublishingMessageImpl message, String name) {
+  public List<String> getMessageHeader(PublishingMessageImpl message, String name) {
     String value = message.getProperties().get(name);
     if (value != null) {
       return Collections.singletonList(value);

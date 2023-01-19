@@ -18,26 +18,26 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   INSTANCE;
 
   @Override
-  public String method(Request request) {
+  public String getMethod(Request request) {
     return request.getMethod().getName();
   }
 
   @Override
-  public String target(Request request) {
+  public String getTarget(Request request) {
     // Uri is the path + query string, not a full URL
     return request.getUri();
   }
 
   @Override
   @Nullable
-  public String route(Request request) {
+  public String getRoute(Request request) {
     // Ratpack route not available at the beginning of request.
     return null;
   }
 
   @Override
   @Nullable
-  public String scheme(Request request) {
+  public String getScheme(Request request) {
     Context ratpackContext = request.get(Context.class);
     if (ratpackContext == null) {
       return null;
@@ -50,13 +50,13 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  public List<String> requestHeader(Request request, String name) {
+  public List<String> getRequestHeader(Request request, String name) {
     return request.getHeaders().getAll(name);
   }
 
   @Override
   @Nullable
-  public String flavor(Request request) {
+  public String getFlavor(Request request) {
     switch (request.getProtocol()) {
       case "HTTP/1.0":
         return SemanticAttributes.HttpFlavorValues.HTTP_1_0;
@@ -71,12 +71,12 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  public Integer statusCode(Request request, Response response, @Nullable Throwable error) {
+  public Integer getStatusCode(Request request, Response response, @Nullable Throwable error) {
     return response.getStatus().getCode();
   }
 
   @Override
-  public List<String> responseHeader(Request request, Response response, String name) {
+  public List<String> getResponseHeader(Request request, Response response, String name) {
     return response.getHeaders().getAll(name);
   }
 }

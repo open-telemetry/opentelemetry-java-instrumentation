@@ -18,35 +18,36 @@ enum SpringWebfluxHttpAttributesGetter
   INSTANCE;
 
   @Override
-  public String url(ClientRequest request) {
+  public String getUrl(ClientRequest request) {
     return request.url().toString();
   }
 
   @Nullable
   @Override
-  public String flavor(ClientRequest request, @Nullable ClientResponse response) {
+  public String getFlavor(ClientRequest request, @Nullable ClientResponse response) {
     return null;
   }
 
   @Override
-  public String method(ClientRequest request) {
+  public String getMethod(ClientRequest request) {
     return request.method().name();
   }
 
   @Override
-  public List<String> requestHeader(ClientRequest request, String name) {
+  public List<String> getRequestHeader(ClientRequest request, String name) {
     return request.headers().getOrDefault(name, emptyList());
   }
 
   @Override
   @Nullable
-  public Integer statusCode(
+  public Integer getStatusCode(
       ClientRequest request, ClientResponse response, @Nullable Throwable error) {
     return StatusCodes.get(response);
   }
 
   @Override
-  public List<String> responseHeader(ClientRequest request, ClientResponse response, String name) {
+  public List<String> getResponseHeader(
+      ClientRequest request, ClientResponse response, String name) {
     return response.headers().header(name);
   }
 }

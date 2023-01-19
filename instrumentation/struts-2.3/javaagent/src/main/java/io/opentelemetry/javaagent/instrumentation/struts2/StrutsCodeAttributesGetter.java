@@ -11,12 +11,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGett
 public class StrutsCodeAttributesGetter implements CodeAttributesGetter<ActionInvocation> {
 
   @Override
-  public Class<?> codeClass(ActionInvocation actionInvocation) {
+  public Class<?> getCodeClass(ActionInvocation actionInvocation) {
     return actionInvocation.getAction().getClass();
   }
 
   @Override
-  public String methodName(ActionInvocation actionInvocation) {
+  public String getMethodName(ActionInvocation actionInvocation) {
     return actionInvocation.getProxy().getMethod();
   }
 }

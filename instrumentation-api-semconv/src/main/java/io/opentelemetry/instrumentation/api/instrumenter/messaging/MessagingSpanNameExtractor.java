@@ -14,7 +14,8 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#span-name">
    * messaging semantic conventions</a>: {@code <destination name> <operation name>}.
    *
-   * @see MessagingAttributesGetter#destination(Object) used to extract {@code <destination name>}.
+   * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <destination
+   *     name>}.
    * @see MessageOperation used to extract {@code <operation name>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
@@ -35,9 +36,9 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   @Override
   public String extract(REQUEST request) {
     String destinationName =
-        getter.temporaryDestination(request)
+        getter.isTemporaryDestination(request)
             ? MessagingAttributesExtractor.TEMP_DESTINATION_NAME
-            : getter.destination(request);
+            : getter.getDestination(request);
     if (destinationName == null) {
       destinationName = "unknown";
     }

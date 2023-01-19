@@ -21,19 +21,19 @@ enum SpringWebMvcHttpAttributesGetter
 
   @Override
   @Nullable
-  public String method(HttpServletRequest request) {
+  public String getMethod(HttpServletRequest request) {
     return request.getMethod();
   }
 
   @Override
-  public List<String> requestHeader(HttpServletRequest request, String name) {
+  public List<String> getRequestHeader(HttpServletRequest request, String name) {
     Enumeration<String> headers = request.getHeaders(name);
     return headers == null ? Collections.emptyList() : Collections.list(headers);
   }
 
   @Override
   @Nullable
-  public String flavor(HttpServletRequest request) {
+  public String getFlavor(HttpServletRequest request) {
     String flavor = request.getProtocol();
     if (flavor == null) {
       return null;
@@ -45,7 +45,7 @@ enum SpringWebMvcHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpServletRequest request, HttpServletResponse response, @Nullable Throwable error) {
 
     int statusCode;
@@ -64,7 +64,7 @@ enum SpringWebMvcHttpAttributesGetter
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpServletRequest request, HttpServletResponse response, String name) {
     Collection<String> headers = response.getHeaders(name);
     if (headers == null) {
@@ -78,7 +78,7 @@ enum SpringWebMvcHttpAttributesGetter
 
   @Override
   @Nullable
-  public String target(HttpServletRequest request) {
+  public String getTarget(HttpServletRequest request) {
     String target = request.getRequestURI();
     String queryString = request.getQueryString();
     if (queryString != null) {
@@ -89,13 +89,13 @@ enum SpringWebMvcHttpAttributesGetter
 
   @Override
   @Nullable
-  public String route(HttpServletRequest request) {
+  public String getRoute(HttpServletRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String scheme(HttpServletRequest request) {
+  public String getScheme(HttpServletRequest request) {
     return request.getScheme();
   }
 }

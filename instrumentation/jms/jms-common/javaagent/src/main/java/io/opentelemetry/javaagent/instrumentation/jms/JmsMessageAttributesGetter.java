@@ -19,48 +19,48 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
   private static final Logger logger = Logger.getLogger(JmsMessageAttributesGetter.class.getName());
 
   @Override
-  public String system(MessageWithDestination messageWithDestination) {
+  public String getSystem(MessageWithDestination messageWithDestination) {
     return "jms";
   }
 
   @Nullable
   @Override
-  public String destinationKind(MessageWithDestination messageWithDestination) {
+  public String getDestinationKind(MessageWithDestination messageWithDestination) {
     return messageWithDestination.destinationKind();
   }
 
   @Nullable
   @Override
-  public String destination(MessageWithDestination messageWithDestination) {
+  public String getDestination(MessageWithDestination messageWithDestination) {
     return messageWithDestination.destinationName();
   }
 
   @Override
-  public boolean temporaryDestination(MessageWithDestination messageWithDestination) {
+  public boolean isTemporaryDestination(MessageWithDestination messageWithDestination) {
     return messageWithDestination.isTemporaryDestination();
   }
 
   @Nullable
   @Override
-  public String protocol(MessageWithDestination messageWithDestination) {
+  public String getProtocol(MessageWithDestination messageWithDestination) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(MessageWithDestination messageWithDestination) {
+  public String getProtocolVersion(MessageWithDestination messageWithDestination) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(MessageWithDestination messageWithDestination) {
+  public String getUrl(MessageWithDestination messageWithDestination) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(MessageWithDestination messageWithDestination) {
+  public String getConversationId(MessageWithDestination messageWithDestination) {
     try {
       return messageWithDestination.message().getJmsCorrelationId();
     } catch (Exception e) {
@@ -71,19 +71,19 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
 
   @Nullable
   @Override
-  public Long messagePayloadSize(MessageWithDestination messageWithDestination) {
+  public Long getMessagePayloadSize(MessageWithDestination messageWithDestination) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(MessageWithDestination messageWithDestination) {
+  public Long getMessagePayloadCompressedSize(MessageWithDestination messageWithDestination) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(MessageWithDestination messageWithDestination, Void unused) {
+  public String getMessageId(MessageWithDestination messageWithDestination, Void unused) {
     try {
       return messageWithDestination.message().getJmsMessageId();
     } catch (Exception exception) {
@@ -93,7 +93,7 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
   }
 
   @Override
-  public List<String> header(MessageWithDestination messageWithDestination, String name) {
+  public List<String> getMessageHeader(MessageWithDestination messageWithDestination, String name) {
     try {
       String value = messageWithDestination.message().getStringProperty(name);
       if (value != null) {

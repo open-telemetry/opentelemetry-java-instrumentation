@@ -15,19 +15,19 @@ public class JdkHttpNetAttributesGetter
     implements NetClientAttributesGetter<HttpRequest, HttpResponse<?>> {
 
   @Override
-  public String transport(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
+  public String getTransport(HttpRequest httpRequest, @Nullable HttpResponse<?> response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(HttpRequest httpRequest) {
+  public String getPeerName(HttpRequest httpRequest) {
     return httpRequest.uri().getHost();
   }
 
   @Override
   @Nullable
-  public Integer peerPort(HttpRequest httpRequest) {
+  public Integer getPeerPort(HttpRequest httpRequest) {
     return httpRequest.uri().getPort();
   }
 }

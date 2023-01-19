@@ -18,36 +18,37 @@ enum NettyConnectHttpAttributesGetter
 
   @Nullable
   @Override
-  public String url(NettyConnectionRequest nettyConnectionRequest) {
+  public String getUrl(NettyConnectionRequest nettyConnectionRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public String flavor(NettyConnectionRequest nettyConnectionRequest, @Nullable Channel channel) {
+  public String getFlavor(
+      NettyConnectionRequest nettyConnectionRequest, @Nullable Channel channel) {
     return null;
   }
 
   @Nullable
   @Override
-  public String method(NettyConnectionRequest nettyConnectionRequest) {
+  public String getMethod(NettyConnectionRequest nettyConnectionRequest) {
     return null;
   }
 
   @Override
-  public List<String> requestHeader(NettyConnectionRequest nettyConnectionRequest, String name) {
+  public List<String> getRequestHeader(NettyConnectionRequest nettyConnectionRequest, String name) {
     return Collections.emptyList();
   }
 
   @Nullable
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       NettyConnectionRequest nettyConnectionRequest, Channel channel, @Nullable Throwable error) {
     return null;
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       NettyConnectionRequest nettyConnectionRequest, Channel channel, String name) {
     return Collections.emptyList();
   }
