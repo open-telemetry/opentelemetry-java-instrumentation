@@ -109,7 +109,7 @@ public final class HttpClientTests<REQUEST> {
         "successful request with not sampled parent",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
           int responseCode = testRunner.runWithNonRecordingSpan(() -> doRequest(method, uri));
 
           assertThat(responseCode).isEqualTo(200);
@@ -130,7 +130,7 @@ public final class HttpClientTests<REQUEST> {
         "request with callback and parent",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
 
           HttpClientResult result =
               testRunner.runWithSpan(
@@ -165,7 +165,7 @@ public final class HttpClientTests<REQUEST> {
           // This test should handle both types or we should unify how the clients work
 
           String method = "GET";
-          URI uri = resolveAddress("/redirect");
+          URI uri = server.resolveAddress("/redirect");
 
           int responseCode = doRequest(method, uri);
 
@@ -192,7 +192,7 @@ public final class HttpClientTests<REQUEST> {
           // This test should handle both types or we should unify how the clients work
 
           String method = "GET";
-          URI uri = resolveAddress("/another-redirect");
+          URI uri = server.resolveAddress("/another-redirect");
 
           int responseCode = doRequest(method, uri);
 
@@ -216,7 +216,7 @@ public final class HttpClientTests<REQUEST> {
         "request with callback and no parent",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
 
           HttpClientResult result =
               doRequestWithCallback(
@@ -243,7 +243,7 @@ public final class HttpClientTests<REQUEST> {
         "request with callback and implicit parent",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
 
           HttpClientResult result =
               doRequestWithCallback(
@@ -272,7 +272,7 @@ public final class HttpClientTests<REQUEST> {
         "circular redirects",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/circular-redirect");
+          URI uri = server.resolveAddress("/circular-redirect");
 
           Throwable thrown = catchThrowable(() -> doRequest(method, uri));
           Throwable ex;
@@ -307,7 +307,7 @@ public final class HttpClientTests<REQUEST> {
         "redirect to secured copies auth header",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/to-secured");
+          URI uri = server.resolveAddress("/to-secured");
 
           int responseCode =
               doRequest(method, uri, Collections.singletonMap(BASIC_AUTH_KEY, BASIC_AUTH_VAL));
@@ -328,7 +328,7 @@ public final class HttpClientTests<REQUEST> {
         "error span",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/error");
+          URI uri = server.resolveAddress("/error");
 
           testRunner.runWithSpan(
               "parent",
@@ -356,7 +356,7 @@ public final class HttpClientTests<REQUEST> {
         "reuse request",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
 
           int responseCode = doReusedRequest(method, uri);
 
@@ -385,7 +385,7 @@ public final class HttpClientTests<REQUEST> {
         "request with existing tracing headers",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
 
           int responseCode = doRequestWithExistingTracingHeaders(method, uri);
 
@@ -533,7 +533,7 @@ public final class HttpClientTests<REQUEST> {
         "read timed out",
         () -> {
           String method = "GET";
-          URI uri = resolveAddress("/read-timeout");
+          URI uri = server.resolveAddress("/read-timeout");
 
           Throwable thrown =
               catchThrowable(() -> testRunner.runWithSpan("parent", () -> doRequest(method, uri)));
@@ -574,7 +574,7 @@ public final class HttpClientTests<REQUEST> {
         () -> {
           int count = 50;
           String method = "GET";
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
 
           CountDownLatch latch = new CountDownLatch(1);
 
@@ -657,7 +657,7 @@ public final class HttpClientTests<REQUEST> {
         () -> {
           int count = 50;
           String method = "GET";
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
 
           CountDownLatch latch = new CountDownLatch(1);
 
@@ -750,7 +750,7 @@ public final class HttpClientTests<REQUEST> {
           int count = 50;
           String method = "GET";
           String path = "/success";
-          URI uri = resolveAddress(path);
+          URI uri = server.resolveAddress(path);
 
           CountDownLatch latch = new CountDownLatch(1);
           ExecutorService pool = Executors.newFixedThreadPool(4);
@@ -852,7 +852,7 @@ public final class HttpClientTests<REQUEST> {
     return test(
         "successful get request [" + path + "]",
         () -> {
-          URI uri = resolveAddress(path);
+          URI uri = server.resolveAddress(path);
           String method = "GET";
           int responseCode = doRequest(method, uri);
 
@@ -870,7 +870,7 @@ public final class HttpClientTests<REQUEST> {
     return test(
         "successful request with parent [" + method + "]",
         () -> {
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
           int responseCode = testRunner.runWithSpan("parent", () -> doRequest(method, uri));
 
           assertThat(responseCode).isEqualTo(200);
@@ -895,7 +895,7 @@ public final class HttpClientTests<REQUEST> {
             + method
             + "]",
         () -> {
-          URI uri = resolveAddress("/success");
+          URI uri = server.resolveAddress("/success");
           int responseCode =
               testRunner.runWithHttpClientSpan("parent-client-span", () -> doRequest(method, uri));
 
@@ -1059,14 +1059,6 @@ public final class HttpClientTests<REQUEST> {
     HttpClientResult httpClientResult = new HttpClientResult(callback);
     clientAdapter.sendRequestWithCallback(request, method, uri, headers, httpClientResult);
     return httpClientResult;
-  }
-
-  public URI resolveAddress(String path) {
-    return resolveAddress(server, path);
-  }
-
-  public static URI resolveAddress(HttpClientTestServer server, String path) {
-    return URI.create("http://localhost:" + server.httpPort() + path);
   }
 
   public InstrumentationTestRunner getTestRunner() {

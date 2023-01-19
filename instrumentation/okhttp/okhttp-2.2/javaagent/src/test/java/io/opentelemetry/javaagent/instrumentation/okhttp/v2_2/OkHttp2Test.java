@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests.CONNECTION_TIMEOUT_MS;
 import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests.READ_TIMEOUT_MS;
-import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests.resolveAddress;
 
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -53,7 +52,7 @@ public class OkHttp2Test {
 
           // flavor is extracted from the response, and those URLs cause exceptions (= null
           // response)
-          String serverAddress = resolveAddress(testing.getServer(), "/read-timeout").toString();
+          String serverAddress = testing.getServer().resolveAddress("/read-timeout").toString();
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || serverAddress.equals(uri.toString())) {
