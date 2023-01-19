@@ -11,10 +11,13 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -27,9 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.function.Executable;
@@ -59,6 +66,8 @@ public final class HttpClientTests<REQUEST> {
   }
 
   public List<DynamicTest> all(){
+    //TODO: This is long and somewhat redundant.
+    //TODO: Consider reflection to get all methods that take no args and return a dynamic test
     return Stream.of(
             successfulRequestWithNotSampledParent(),
             requestWithCallbackAndParent(),
@@ -74,7 +83,10 @@ public final class HttpClientTests<REQUEST> {
             connectionErrorUnopenedPort(),
             connectionErrorUnopenedPortWithCallback(),
             connectionErrorNonRoutableAddress(),
-            readTimedOut()
+            readTimedOut(),
+            highConcurrency(),
+            highConcurrencyWithCallback(),
+            highConcurrencyOnSingleConnection()
         )
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
@@ -495,6 +507,255 @@ public final class HttpClientTests<REQUEST> {
     });
   }
 
+
+  /**
+   * This test fires a large number of concurrent requests. Each request first hits an HTTP server
+   * and then makes another client request. The goal of this test is to verify that in highly
+   * concurrent environment our instrumentations for http clients (especially inherently concurrent
+   * ones, such as Netty or Reactor) correctly propagate trace context.
+   */
+  DynamicTest highConcurrency() {
+    return test("high concurrency", () -> {
+
+      int count = 50;
+      String method = "GET";
+      URI uri = resolveAddress("/success");
+
+      CountDownLatch latch = new CountDownLatch(1);
+
+      ExecutorService pool = Executors.newFixedThreadPool(4);
+      for (int i = 0; i < count; i++) {
+        int index = i;
+        Runnable job =
+            () -> {
+              try {
+                latch.await();
+              } catch (InterruptedException e) {
+                throw new AssertionError(e);
+              }
+              try {
+                Integer result =
+                    testRunner.runWithSpan(
+                        "Parent span " + index,
+                        () -> {
+                          Span.current().setAttribute("test.request.id", index);
+                          return doRequest(
+                              method,
+                              uri,
+                              Collections.singletonMap("test-request-id", String.valueOf(index)));
+                        });
+                assertThat(result).isEqualTo(200);
+              } catch (Throwable throwable) {
+                if (throwable instanceof AssertionError) {
+                  throw (AssertionError) throwable;
+                }
+                throw new AssertionError(throwable);
+              }
+            };
+        pool.submit(job);
+      }
+      latch.countDown();
+
+      List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+      for (int i = 0; i < count; i++) {
+        assertions.add(
+            trace -> {
+              SpanData rootSpan = trace.getSpan(0);
+              // Traces can be in arbitrary order, let us find out the request id of the current one
+              int requestId = Integer.parseInt(
+                  rootSpan.getName().substring("Parent span ".length()));
+
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(rootSpan.getName())
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasNoParent()
+                          .hasAttributesSatisfying(
+                              attrs -> assertThat(attrs).containsEntry("test.request.id",
+                                  requestId)),
+                  span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
+                  span ->
+                      assertServerSpan(span)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfying(
+                              attrs ->
+                                  assertThat(attrs).containsEntry("test.request.id", requestId)));
+            });
+      }
+
+      testRunner.waitAndAssertTraces(assertions);
+
+      pool.shutdown();
+    });
+  }
+
+  DynamicTest highConcurrencyWithCallback() {
+    if (!options.testCallback || !options.testCallbackWithParent) {
+      return null;
+    }
+    return test("high concurrency with callback", () -> {
+
+      int count = 50;
+      String method = "GET";
+      URI uri = resolveAddress("/success");
+
+      CountDownLatch latch = new CountDownLatch(1);
+
+      ExecutorService pool = Executors.newFixedThreadPool(4);
+      IntStream.range(0, count)
+          .forEach(
+              index -> {
+                Runnable job =
+                    () -> {
+                      try {
+                        latch.await();
+                      } catch (InterruptedException e) {
+                        throw new AssertionError(e);
+                      }
+                      try {
+                        HttpClientResult result =
+                            testRunner.runWithSpan(
+                                "Parent span " + index,
+                                () -> {
+                                  Span.current().setAttribute("test.request.id", index);
+                                  return doRequestWithCallback(
+                                      method,
+                                      uri,
+                                      Collections.singletonMap(
+                                          "test-request-id", String.valueOf(index)),
+                                      () -> testRunner.runWithSpan("child", () -> {
+                                      }));
+                                });
+                        assertThat(result.get()).isEqualTo(200);
+                      } catch (Throwable throwable) {
+                        if (throwable instanceof AssertionError) {
+                          throw (AssertionError) throwable;
+                        }
+                        throw new AssertionError(throwable);
+                      }
+                    };
+                pool.submit(job);
+              });
+      latch.countDown();
+
+      List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+      for (int i = 0; i < count; i++) {
+        assertions.add(
+            trace -> {
+              SpanData rootSpan = trace.getSpan(0);
+              // Traces can be in arbitrary order, let us find out the request id of the current one
+              int requestId = Integer.parseInt(
+                  rootSpan.getName().substring("Parent span ".length()));
+
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(rootSpan.getName())
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasNoParent()
+                          .hasAttributesSatisfying(
+                              attrs -> assertThat(attrs).containsEntry("test.request.id",
+                                  requestId)),
+                  span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
+                  span ->
+                      assertServerSpan(span)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfying(
+                              attrs -> assertThat(attrs).containsEntry("test.request.id",
+                                  requestId)),
+                  span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(rootSpan));
+            });
+      }
+
+      testRunner.waitAndAssertTraces(assertions);
+
+      pool.shutdown();
+    });
+
+  }
+
+
+  /**
+   * Almost similar to the "high concurrency test" test above, but all requests use the same single
+   * connection.
+   */
+  DynamicTest highConcurrencyOnSingleConnection() {
+    SingleConnection singleConnection =
+        options.singleConnectionFactory.apply("localhost", server.httpPort());
+    if(singleConnection == null){
+      return null;
+    }
+    return test("high concurrency on single connection", () -> {
+
+
+    int count = 50;
+    String method = "GET";
+    String path = "/success";
+    URI uri = resolveAddress(path);
+
+    CountDownLatch latch = new CountDownLatch(1);
+    ExecutorService pool = Executors.newFixedThreadPool(4);
+    for (int i = 0; i < count; i++) {
+      int index = i;
+      Runnable job =
+          () -> {
+            try {
+              latch.await();
+            } catch (InterruptedException e) {
+              throw new AssertionError(e);
+            }
+            try {
+              Integer result =
+                  testRunner.runWithSpan(
+                      "Parent span " + index,
+                      () -> {
+                        Span.current().setAttribute("test.request.id", index);
+                        return singleConnection.doRequest(
+                            path,
+                            Collections.singletonMap("test-request-id", String.valueOf(index)));
+                      });
+              assertThat(result).isEqualTo(200);
+            } catch (Throwable throwable) {
+              if (throwable instanceof AssertionError) {
+                throw (AssertionError) throwable;
+              }
+              throw new AssertionError(throwable);
+            }
+          };
+      pool.submit(job);
+    }
+    latch.countDown();
+
+    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      assertions.add(
+          trace -> {
+            SpanData rootSpan = trace.getSpan(0);
+            // Traces can be in arbitrary order, let us find out the request id of the current one
+            int requestId = Integer.parseInt(rootSpan.getName().substring("Parent span ".length()));
+
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(rootSpan.getName())
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfying(
+                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
+                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
+                span ->
+                    assertServerSpan(span)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfying(
+                            attrs ->
+                                assertThat(attrs).containsEntry("test.request.id", requestId)));
+          });
+    }
+
+    testRunner.waitAndAssertTraces(assertions);
+
+    pool.shutdown();
+    });
+  }
+
   // Work-around for lack of @BeforeEach for DynamicTest instances.
   DynamicTest test(String name, Executable executable) {
     return dynamicTest(name, () -> {
@@ -585,241 +846,6 @@ public final class HttpClientTests<REQUEST> {
   }
 */
 
-  /**
-   * This test fires a large number of concurrent requests. Each request first hits an HTTP server
-   * and then makes another client request. The goal of this test is to verify that in highly
-   * concurrent environment our instrumentations for http clients (especially inherently concurrent
-   * ones, such as Netty or Reactor) correctly propagate trace context.
-   */
-  /*
-  @Test
-  void highConcurrency() {
-    int count = 50;
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    CountDownLatch latch = new CountDownLatch(1);
-
-    ExecutorService pool = Executors.newFixedThreadPool(4);
-    for (int i = 0; i < count; i++) {
-      int index = i;
-      Runnable job =
-          () -> {
-            try {
-              latch.await();
-            } catch (InterruptedException e) {
-              throw new AssertionError(e);
-            }
-            try {
-              Integer result =
-                  testing.runWithSpan(
-                      "Parent span " + index,
-                      () -> {
-                        Span.current().setAttribute("test.request.id", index);
-                        return doRequest(
-                            method,
-                            uri,
-                            Collections.singletonMap("test-request-id", String.valueOf(index)));
-                      });
-              assertThat(result).isEqualTo(200);
-            } catch (Throwable throwable) {
-              if (throwable instanceof AssertionError) {
-                throw (AssertionError) throwable;
-              }
-              throw new AssertionError(throwable);
-            }
-          };
-      pool.submit(job);
-    }
-    latch.countDown();
-
-    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
-    for (int i = 0; i < count; i++) {
-      assertions.add(
-          trace -> {
-            SpanData rootSpan = trace.getSpan(0);
-            // Traces can be in arbitrary order, let us find out the request id of the current one
-            int requestId = Integer.parseInt(rootSpan.getName().substring("Parent span ".length()));
-
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(rootSpan.getName())
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
-                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
-                span ->
-                    assertServerSpan(span)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs).containsEntry("test.request.id", requestId)));
-          });
-    }
-
-    testing.waitAndAssertTraces(assertions);
-
-    pool.shutdown();
-  }
-
-  @Test
-  void highConcurrencyWithCallback() {
-    assumeTrue(options.testCallback);
-    assumeTrue(options.testCallbackWithParent);
-
-    int count = 50;
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    CountDownLatch latch = new CountDownLatch(1);
-
-    ExecutorService pool = Executors.newFixedThreadPool(4);
-    IntStream.range(0, count)
-        .forEach(
-            index -> {
-              Runnable job =
-                  () -> {
-                    try {
-                      latch.await();
-                    } catch (InterruptedException e) {
-                      throw new AssertionError(e);
-                    }
-                    try {
-                      HttpClientResult result =
-                          testing.runWithSpan(
-                              "Parent span " + index,
-                              () -> {
-                                Span.current().setAttribute("test.request.id", index);
-                                return doRequestWithCallback(
-                                    method,
-                                    uri,
-                                    Collections.singletonMap(
-                                        "test-request-id", String.valueOf(index)),
-                                    () -> testing.runWithSpan("child", () -> {}));
-                              });
-                      assertThat(result.get()).isEqualTo(200);
-                    } catch (Throwable throwable) {
-                      if (throwable instanceof AssertionError) {
-                        throw (AssertionError) throwable;
-                      }
-                      throw new AssertionError(throwable);
-                    }
-                  };
-              pool.submit(job);
-            });
-    latch.countDown();
-
-    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
-    for (int i = 0; i < count; i++) {
-      assertions.add(
-          trace -> {
-            SpanData rootSpan = trace.getSpan(0);
-            // Traces can be in arbitrary order, let us find out the request id of the current one
-            int requestId = Integer.parseInt(rootSpan.getName().substring("Parent span ".length()));
-
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(rootSpan.getName())
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
-                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
-                span ->
-                    assertServerSpan(span)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
-                span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(rootSpan));
-          });
-    }
-
-    testing.waitAndAssertTraces(assertions);
-
-    pool.shutdown();
-  }
-*/
-
-  /**
-   * Almost similar to the "high concurrency test" test above, but all requests use the same single
-   * connection.
-   */
-  /*
-  @Test
-  void highConcurrencyOnSingleConnection() {
-    SingleConnection singleConnection =
-        options.singleConnectionFactory.apply("localhost", server.httpPort());
-    assumeTrue(singleConnection != null);
-
-    int count = 50;
-    String method = "GET";
-    String path = "/success";
-    URI uri = resolveAddress(path);
-
-    CountDownLatch latch = new CountDownLatch(1);
-    ExecutorService pool = Executors.newFixedThreadPool(4);
-    for (int i = 0; i < count; i++) {
-      int index = i;
-      Runnable job =
-          () -> {
-            try {
-              latch.await();
-            } catch (InterruptedException e) {
-              throw new AssertionError(e);
-            }
-            try {
-              Integer result =
-                  testing.runWithSpan(
-                      "Parent span " + index,
-                      () -> {
-                        Span.current().setAttribute("test.request.id", index);
-                        return singleConnection.doRequest(
-                            path,
-                            Collections.singletonMap("test-request-id", String.valueOf(index)));
-                      });
-              assertThat(result).isEqualTo(200);
-            } catch (Throwable throwable) {
-              if (throwable instanceof AssertionError) {
-                throw (AssertionError) throwable;
-              }
-              throw new AssertionError(throwable);
-            }
-          };
-      pool.submit(job);
-    }
-    latch.countDown();
-
-    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
-    for (int i = 0; i < count; i++) {
-      assertions.add(
-          trace -> {
-            SpanData rootSpan = trace.getSpan(0);
-            // Traces can be in arbitrary order, let us find out the request id of the current one
-            int requestId = Integer.parseInt(rootSpan.getName().substring("Parent span ".length()));
-
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(rootSpan.getName())
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs).containsEntry("test.request.id", requestId)),
-                span -> assertClientSpan(span, uri, method, 200).hasParent(rootSpan),
-                span ->
-                    assertServerSpan(span)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs).containsEntry("test.request.id", requestId)));
-          });
-    }
-
-    testing.waitAndAssertTraces(assertions);
-
-    pool.shutdown();
-  }
-*/
   // Visible for spock bridge.
   SpanDataAssert assertClientSpan(
       SpanDataAssert span, URI uri, String method, Integer responseCode) {
