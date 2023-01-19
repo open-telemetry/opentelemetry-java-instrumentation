@@ -335,7 +335,7 @@ public final class HttpClientTests<REQUEST> {
               () -> {
                 try {
                   doRequest(method, uri);
-                } catch (Throwable ignored) {
+                } catch (Throwable expected) {
                 }
               });
 
