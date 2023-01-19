@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.LegacyHttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
@@ -110,14 +110,14 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(LegacyHttpClientTestOptions options) {
     options.disableTestCircularRedirects();
     options.enableTestReadTimeout();
 
     options.setHttpAttributes(
         uri -> {
           Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+              new HashSet<>(LegacyHttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
           // flavor is extracted from the response, and those URLs cause exceptions (= null
           // response)

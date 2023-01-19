@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.LegacyHttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -96,7 +96,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
+    protected void configure(LegacyHttpClientTestOptions options) {
       configureTest(options);
     }
   }
@@ -142,7 +142,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
+    protected void configure(LegacyHttpClientTestOptions options) {
       configureTest(options);
     }
   }
@@ -183,7 +183,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
+    protected void configure(LegacyHttpClientTestOptions options) {
       configureTest(options);
     }
   }
@@ -229,7 +229,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
+    protected void configure(LegacyHttpClientTestOptions options) {
       configureTest(options);
     }
   }
@@ -265,7 +265,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
+    protected void configure(LegacyHttpClientTestOptions options) {
       configureTest(options);
     }
   }
@@ -301,7 +301,7 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
+    protected void configure(LegacyHttpClientTestOptions options) {
       configureTest(options);
     }
   }
@@ -336,14 +336,14 @@ public abstract class AbstractApacheHttpClientTest {
     };
   }
 
-  static void configureTest(HttpClientTestOptions options) {
+  static void configureTest(LegacyHttpClientTestOptions options) {
     options.setUserAgent("apachehttpclient");
     options.setResponseCodeOnRedirectError(302);
     options.enableTestReadTimeout();
     options.setHttpAttributes(
         endpoint -> {
           Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+              new HashSet<>(LegacyHttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
           attributes.add(SemanticAttributes.HTTP_SCHEME);
           attributes.add(SemanticAttributes.HTTP_TARGET);
           return attributes;

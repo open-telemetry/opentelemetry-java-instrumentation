@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack.client;
 
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.LegacyHttpClientTestOptions;
 import ratpack.http.client.HttpClient;
 
 public abstract class AbstractRatpackPooledHttpClientTest extends AbstractRatpackHttpClientTest {
@@ -16,7 +16,7 @@ public abstract class AbstractRatpackPooledHttpClientTest extends AbstractRatpac
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(LegacyHttpClientTestOptions options) {
     super.configure(options);
 
     // this test is already run for RatpackHttpClientTest

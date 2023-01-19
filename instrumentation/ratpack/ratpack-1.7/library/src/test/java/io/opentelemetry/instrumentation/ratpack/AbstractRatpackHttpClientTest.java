@@ -10,7 +10,7 @@ import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.LegacyHttpClientTestOptions;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
@@ -120,7 +120,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(LegacyHttpClientTestOptions options) {
     options.setSingleConnectionFactory(
         (host, port) ->
             (path, headers) -> {

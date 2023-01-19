@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.LegacyHttpClientTestOptions;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
@@ -85,7 +85,7 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(LegacyHttpClientTestOptions options) {
     options.setMaxRedirects(20);
     options.setResponseCodeOnRedirectError(302);
   }

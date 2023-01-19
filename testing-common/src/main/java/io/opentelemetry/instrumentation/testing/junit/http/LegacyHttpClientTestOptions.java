@@ -16,7 +16,12 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public final class HttpClientTestOptions {
+/**
+ * These options are deprecated as we move away from AbstractHttpClientTest and over
+ * to HttpClientTests, which uses immutable HttpClientTestOptions.
+ */
+@Deprecated
+public final class LegacyHttpClientTestOptions {
 
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
@@ -58,122 +63,122 @@ public final class HttpClientTestOptions {
   boolean testCallbackWithImplicitParent = false;
   boolean testErrorWithCallback = true;
 
-  HttpClientTestOptions() {}
+  LegacyHttpClientTestOptions() {}
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions setHttpAttributes(
+  public LegacyHttpClientTestOptions setHttpAttributes(
       Function<URI, Set<AttributeKey<?>>> httpAttributes) {
     this.httpAttributes = httpAttributes;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions setExpectedClientSpanNameMapper(
+  public LegacyHttpClientTestOptions setExpectedClientSpanNameMapper(
       BiFunction<URI, String, String> expectedClientSpanNameMapper) {
     this.expectedClientSpanNameMapper = expectedClientSpanNameMapper;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions setResponseCodeOnRedirectError(int responseCodeOnRedirectError) {
+  public LegacyHttpClientTestOptions setResponseCodeOnRedirectError(int responseCodeOnRedirectError) {
     this.responseCodeOnRedirectError = responseCodeOnRedirectError;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions setUserAgent(String userAgent) {
+  public LegacyHttpClientTestOptions setUserAgent(String userAgent) {
     this.userAgent = userAgent;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions setClientSpanErrorMapper(
+  public LegacyHttpClientTestOptions setClientSpanErrorMapper(
       BiFunction<URI, Throwable, Throwable> clientSpanErrorMapper) {
     this.clientSpanErrorMapper = clientSpanErrorMapper;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions setSingleConnectionFactory(
+  public LegacyHttpClientTestOptions setSingleConnectionFactory(
       BiFunction<String, Integer, SingleConnection> singleConnectionFactory) {
     this.singleConnectionFactory = singleConnectionFactory;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions setMaxRedirects(int maxRedirects) {
+  public LegacyHttpClientTestOptions setMaxRedirects(int maxRedirects) {
     this.maxRedirects = maxRedirects;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestWithClientParent() {
+  public LegacyHttpClientTestOptions disableTestWithClientParent() {
     testWithClientParent = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestRedirects() {
+  public LegacyHttpClientTestOptions disableTestRedirects() {
     testRedirects = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestCircularRedirects() {
+  public LegacyHttpClientTestOptions disableTestCircularRedirects() {
     testCircularRedirects = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestReusedRequest() {
+  public LegacyHttpClientTestOptions disableTestReusedRequest() {
     testReusedRequest = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestConnectionFailure() {
+  public LegacyHttpClientTestOptions disableTestConnectionFailure() {
     testConnectionFailure = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions enableTestReadTimeout() {
+  public LegacyHttpClientTestOptions enableTestReadTimeout() {
     testReadTimeout = true;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestRemoteConnection() {
+  public LegacyHttpClientTestOptions disableTestRemoteConnection() {
     testRemoteConnection = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestHttps() {
+  public LegacyHttpClientTestOptions disableTestHttps() {
     testHttps = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestCallback() {
+  public LegacyHttpClientTestOptions disableTestCallback() {
     testCallback = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestCallbackWithParent() {
+  public LegacyHttpClientTestOptions disableTestCallbackWithParent() {
     testCallbackWithParent = false;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions enableTestCallbackWithImplicitParent() {
+  public LegacyHttpClientTestOptions enableTestCallbackWithImplicitParent() {
     testCallbackWithImplicitParent = true;
     return this;
   }
 
   @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestErrorWithCallback() {
+  public LegacyHttpClientTestOptions disableTestErrorWithCallback() {
     testErrorWithCallback = false;
     return this;
   }

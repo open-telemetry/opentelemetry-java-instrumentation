@@ -10,7 +10,7 @@ import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.LegacyHttpClientTestOptions;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
@@ -108,7 +108,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(LegacyHttpClientTestOptions options) {
     options.setSingleConnectionFactory(
         (host, port) ->
             (path, headers) -> {
@@ -125,7 +125,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
             case "https://192.0.2.1/": // non routable address
               return "CONNECT";
             default:
-              return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(
+              return LegacyHttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(
                   uri, method);
           }
         });
@@ -158,7 +158,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
       case "https://192.0.2.1/": // non routable address
         return Collections.emptySet();
       default:
-        return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+        return LegacyHttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
     }
   }
 }

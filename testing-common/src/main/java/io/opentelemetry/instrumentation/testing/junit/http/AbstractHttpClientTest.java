@@ -79,7 +79,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   protected InstrumentationTestRunner testing;
   private HttpClientTestServer server;
 
-  private final HttpClientTestOptions options = new HttpClientTestOptions();
+  private final LegacyHttpClientTestOptions options = new LegacyHttpClientTestOptions();
 
   @BeforeAll
   void setupOptions() {
@@ -1051,7 +1051,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return true;
   }
 
-  protected void configure(HttpClientTestOptions options) {}
+  protected void configure(LegacyHttpClientTestOptions options) {}
 
   private int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
