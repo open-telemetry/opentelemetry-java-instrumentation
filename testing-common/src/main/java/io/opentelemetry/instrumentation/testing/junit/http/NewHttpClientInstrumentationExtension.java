@@ -18,16 +18,16 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public final class NewHttpClientInstrumentationExtension extends InstrumentationExtension {
 
   /**
-   * Returns a {@link NewHttpClientInstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
-   * javaagent instrumentation.
+   * Returns a {@link NewHttpClientInstrumentationExtension} to be used with {@link
+   * AbstractHttpClientTest} for javaagent instrumentation.
    */
   public static NewHttpClientInstrumentationExtension forAgent() {
     return new NewHttpClientInstrumentationExtension(AgentTestRunner.instance());
   }
 
   /**
-   * Returns a {@link NewHttpClientInstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
-   * library instrumentation.
+   * Returns a {@link NewHttpClientInstrumentationExtension} to be used with {@link
+   * AbstractHttpClientTest} for library instrumentation.
    */
   public static NewHttpClientInstrumentationExtension forLibrary() {
     return new NewHttpClientInstrumentationExtension(LibraryTestRunner.instance());

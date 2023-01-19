@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,63 +31,70 @@ public class GoogleHttpClientTests {
   private final HttpClientTests<HttpRequest> delegate;
   private final HttpClientTypeAdapter<HttpRequest> adapter;
 
-  private GoogleHttpClientTests(HttpClientTests<HttpRequest> delegate,
-      HttpClientTypeAdapter<HttpRequest> adapter) {
+  private GoogleHttpClientTests(
+      HttpClientTests<HttpRequest> delegate, HttpClientTypeAdapter<HttpRequest> adapter) {
     this.delegate = delegate;
     this.adapter = adapter;
   }
 
-  public static GoogleHttpClientTests create(HttpClientTypeAdapter<HttpRequest> adapter,
-      InstrumentationTestRunner testRunner, HttpClientTestServer server) {
+  public static GoogleHttpClientTests create(
+      HttpClientTypeAdapter<HttpRequest> adapter,
+      InstrumentationTestRunner testRunner,
+      HttpClientTestServer server) {
     HttpClientTestOptions options = buildOptions();
-    HttpClientTests<HttpRequest> clientTests = new HttpClientTests<>(testRunner, server, options, adapter);
+    HttpClientTests<HttpRequest> clientTests =
+        new HttpClientTests<>(testRunner, server, options, adapter);
     return new GoogleHttpClientTests(clientTests, adapter);
   }
 
   List<DynamicTest> all() {
-    return Stream.concat(
-            delegate.all(),
-            Stream.of(errorTracesWhenExceptionIsNotThrown()))
+    return Stream.concat(delegate.all(), Stream.of(errorTracesWhenExceptionIsNotThrown()))
         .collect(Collectors.toList());
   }
 
   DynamicTest errorTracesWhenExceptionIsNotThrown() {
-    return delegate.test("error traces when exception is not thrown", () -> {
+    return delegate.test(
+        "error traces when exception is not thrown",
+        () -> {
+          URI uri = delegate.resolveAddress("/error");
 
-      URI uri = delegate.resolveAddress("/error");
+          HttpRequest request = adapter.buildRequest("GET", uri, Collections.emptyMap());
+          int responseCode = adapter.sendRequest(request, "GET", uri, Collections.emptyMap());
 
-      HttpRequest request = adapter.buildRequest("GET", uri, Collections.emptyMap());
-      int responseCode = adapter.sendRequest(request, "GET", uri, Collections.emptyMap());
-
-      assertThat(responseCode).isEqualTo(500);
-      delegate.getTestRunner().waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.CLIENT)
-                          .hasStatus(StatusData.error())
-                          .hasAttributesSatisfying(
-                              attrs ->
-                                  OpenTelemetryAssertions.assertThat(attrs)
-                                      .hasSize(8)
-                                      .containsEntry(
-                                          SemanticAttributes.NET_TRANSPORT,
-                                          SemanticAttributes.NetTransportValues.IP_TCP)
-                                      .containsEntry(SemanticAttributes.NET_PEER_NAME, "localhost")
-                                      .hasEntrySatisfying(
-                                          SemanticAttributes.NET_PEER_PORT,
-                                          port -> assertThat(port).isPositive())
-                                      .containsEntry(SemanticAttributes.HTTP_URL, uri.toString())
-                                      .containsEntry(SemanticAttributes.HTTP_METHOD, "GET")
-                                      .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, 500)
-                                      .hasEntrySatisfying(
-                                          SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                          length -> assertThat(length).isPositive())
-                                      .containsEntry(
-                                          SemanticAttributes.HTTP_FLAVOR,
-                                          SemanticAttributes.HttpFlavorValues.HTTP_1_1)),
-                  span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
-    });
+          assertThat(responseCode).isEqualTo(500);
+          delegate
+              .getTestRunner()
+              .waitAndAssertTraces(
+                  trace ->
+                      trace.hasSpansSatisfyingExactly(
+                          span ->
+                              span.hasKind(SpanKind.CLIENT)
+                                  .hasStatus(StatusData.error())
+                                  .hasAttributesSatisfying(
+                                      attrs ->
+                                          OpenTelemetryAssertions.assertThat(attrs)
+                                              .hasSize(8)
+                                              .containsEntry(
+                                                  SemanticAttributes.NET_TRANSPORT,
+                                                  SemanticAttributes.NetTransportValues.IP_TCP)
+                                              .containsEntry(
+                                                  SemanticAttributes.NET_PEER_NAME, "localhost")
+                                              .hasEntrySatisfying(
+                                                  SemanticAttributes.NET_PEER_PORT,
+                                                  port -> assertThat(port).isPositive())
+                                              .containsEntry(
+                                                  SemanticAttributes.HTTP_URL, uri.toString())
+                                              .containsEntry(SemanticAttributes.HTTP_METHOD, "GET")
+                                              .containsEntry(
+                                                  SemanticAttributes.HTTP_STATUS_CODE, 500)
+                                              .hasEntrySatisfying(
+                                                  SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                                  length -> assertThat(length).isPositive())
+                                              .containsEntry(
+                                                  SemanticAttributes.HTTP_FLAVOR,
+                                                  SemanticAttributes.HttpFlavorValues.HTTP_1_1)),
+                          span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
+        });
   }
 
   static HttpClientTestOptions buildOptions() {
@@ -99,5 +111,4 @@ public class GoogleHttpClientTests {
     builder.disableTestCircularRedirects();
     return builder.build();
   }
-
 }

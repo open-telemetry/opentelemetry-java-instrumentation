@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests.CONNECTION_TIMEOUT_MS;
@@ -13,11 +18,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTypeAdapter;
 import io.opentelemetry.instrumentation.testing.junit.http.LegacyHttpClientTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.NewHttpClientInstrumentationExtension;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -25,14 +30,15 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class OkHttp2Test {
   @RegisterExtension
-  static final NewHttpClientInstrumentationExtension testing = NewHttpClientInstrumentationExtension.forAgent();
+  static final NewHttpClientInstrumentationExtension testing =
+      NewHttpClientInstrumentationExtension.forAgent();
 
   @TestFactory
   Collection<DynamicTest> test() {
     HttpClientTestOptions options = buildOptions();
     HttpClientTypeAdapter<Request> adapter = buildTypeAdapter();
-    HttpClientTests<Request> tests = new HttpClientTests<>(testing.getTestRunner(),
-        testing.getServer(), options, adapter);
+    HttpClientTests<Request> tests =
+        new HttpClientTests<>(testing.getTestRunner(), testing.getServer(), options, adapter);
     return tests.allList();
   }
 
@@ -69,5 +75,4 @@ public class OkHttp2Test {
     clientWithReadTimeout.setReadTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     return new OkHttp2TypeAdapter(client, clientWithReadTimeout);
   }
-
 }

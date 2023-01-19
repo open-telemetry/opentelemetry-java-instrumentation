@@ -89,7 +89,7 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,
@@ -124,7 +124,7 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,
@@ -198,8 +198,7 @@ class ApacheHttpAsyncClientTest {
     return response.getStatusLine().getStatusCode();
   }
 
-  static FutureCallback<HttpResponse> responseCallback(
-      HttpClientResult httpClientResult) {
+  static FutureCallback<HttpResponse> responseCallback(HttpClientResult httpClientResult) {
     return new FutureCallback<HttpResponse>() {
       @Override
       public void completed(HttpResponse response) {

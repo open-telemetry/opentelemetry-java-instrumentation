@@ -98,7 +98,8 @@ abstract class AbstractReactorNettyHttpClientTest
               return content.map(unused -> resp);
             })
         .subscribe(
-            response -> httpClientResult.complete(response.status().code()), httpClientResult::complete);
+            response -> httpClientResult.complete(response.status().code()),
+            httpClientResult::complete);
   }
 
   @Override
@@ -130,7 +131,8 @@ abstract class AbstractReactorNettyHttpClientTest
       return emptySet();
     }
 
-    Set<AttributeKey<?>> attributes = new HashSet<>(LegacyHttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+    Set<AttributeKey<?>> attributes =
+        new HashSet<>(LegacyHttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     if (uri.toString().contains("/read-timeout")) {
       attributes.remove(SemanticAttributes.NET_PEER_NAME);
       attributes.remove(SemanticAttributes.NET_PEER_PORT);

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import com.google.api.client.http.HttpRequest;
@@ -11,13 +16,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class GoogleHttpClientSyncTest {
 
   @RegisterExtension
-  static final NewHttpClientInstrumentationExtension testing = NewHttpClientInstrumentationExtension.forAgent();
+  static final NewHttpClientInstrumentationExtension testing =
+      NewHttpClientInstrumentationExtension.forAgent();
 
   @TestFactory
   Collection<DynamicTest> test() {
     HttpClientTypeAdapter<HttpRequest> adapter = new GoogleClientAdapter(HttpRequest::execute);
-    GoogleHttpClientTests googleTests = GoogleHttpClientTests.create(adapter,
-        testing.getTestRunner(), testing.getServer());
+    GoogleHttpClientTests googleTests =
+        GoogleHttpClientTests.create(adapter, testing.getTestRunner(), testing.getServer());
     return googleTests.all();
   }
 }

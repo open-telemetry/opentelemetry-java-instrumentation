@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
 import com.squareup.okhttp.Callback;
@@ -9,7 +14,6 @@ import com.squareup.okhttp.Response;
 import com.squareup.okhttp.internal.http.HttpMethod;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTypeAdapter;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
@@ -42,8 +46,13 @@ class OkHttp2TypeAdapter implements HttpClientTypeAdapter<Request> {
   }
 
   @Override
-  public void sendRequestWithCallback(Request request, String method, URI uri,
-      Map<String, String> headers, HttpClientResult httpClientResult) throws Exception {
+  public void sendRequestWithCallback(
+      Request request,
+      String method,
+      URI uri,
+      Map<String, String> headers,
+      HttpClientResult httpClientResult)
+      throws Exception {
     getClient(uri)
         .newCall(request)
         .enqueue(
@@ -66,5 +75,4 @@ class OkHttp2TypeAdapter implements HttpClientTypeAdapter<Request> {
     }
     return client;
   }
-
 }

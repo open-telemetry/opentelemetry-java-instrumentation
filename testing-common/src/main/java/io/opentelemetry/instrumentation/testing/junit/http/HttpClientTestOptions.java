@@ -18,9 +18,11 @@ public final class HttpClientTestOptions {
   public final Integer responseCodeOnRedirectError;
   public final String userAgent;
 
-  public final BiFunction<URI, Throwable, Throwable> clientSpanErrorMapper = (uri, exception) -> exception;
+  public final BiFunction<URI, Throwable, Throwable> clientSpanErrorMapper =
+      (uri, exception) -> exception;
 
-  public final BiFunction<String, Integer, SingleConnection> singleConnectionFactory = (host, port) -> null;
+  public final BiFunction<String, Integer, SingleConnection> singleConnectionFactory =
+      (host, port) -> null;
 
   public final boolean testWithClientParent;
   public final boolean testRedirects;
@@ -54,12 +56,9 @@ public final class HttpClientTestOptions {
     this.testCallbackWithParent = builder.testCallbackWithParent;
     this.testCallbackWithImplicitParent = builder.testCallbackWithImplicitParent;
     this.testErrorWithCallback = builder.testErrorWithCallback;
-
   }
 
   public static HttpClientTestOptionsBuilder builder() {
     return new HttpClientTestOptionsBuilder();
   }
-
-
 }

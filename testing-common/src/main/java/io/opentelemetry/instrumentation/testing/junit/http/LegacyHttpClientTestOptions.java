@@ -17,10 +17,10 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * These options are deprecated as we move away from AbstractHttpClientTest and over
- * to HttpClientTests, which uses immutable HttpClientTestOptions.
+ * These options are deprecated as we move away from AbstractHttpClientTest and over to
+ * HttpClientTests, which uses immutable HttpClientTestOptions.
  */
-//@Deprecated
+// @Deprecated - migrate to HttpClientTests and HttpClientTestOptions
 public final class LegacyHttpClientTestOptions {
 
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
@@ -80,7 +80,8 @@ public final class LegacyHttpClientTestOptions {
   }
 
   @CanIgnoreReturnValue
-  public LegacyHttpClientTestOptions setResponseCodeOnRedirectError(int responseCodeOnRedirectError) {
+  public LegacyHttpClientTestOptions setResponseCodeOnRedirectError(
+      int responseCodeOnRedirectError) {
     this.responseCodeOnRedirectError = responseCodeOnRedirectError;
     return this;
   }

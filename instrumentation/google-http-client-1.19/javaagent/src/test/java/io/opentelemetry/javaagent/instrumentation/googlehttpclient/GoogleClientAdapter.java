@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests.CONNECTION_TIMEOUT_MS;
@@ -14,12 +19,14 @@ import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
 
-class GoogleClientAdapter implements HttpClientTypeAdapter<HttpRequest>  {
+class GoogleClientAdapter implements HttpClientTypeAdapter<HttpRequest> {
 
   private final RequestSender sender;
   private final HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
 
-  GoogleClientAdapter(RequestSender sender) {this.sender = sender;}
+  GoogleClientAdapter(RequestSender sender) {
+    this.sender = sender;
+  }
 
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers)
@@ -46,7 +53,9 @@ class GoogleClientAdapter implements HttpClientTypeAdapter<HttpRequest>  {
   }
 
   @Override
-  public int sendRequest(HttpRequest httpRequest, String method, URI uri, Map<String, String> headers) throws Exception {
+  public int sendRequest(
+      HttpRequest httpRequest, String method, URI uri, Map<String, String> headers)
+      throws Exception {
     HttpResponse response = sender.sendRequest(httpRequest);
     // read request body to avoid broken pipe errors on the server side
     response.parseAsString();

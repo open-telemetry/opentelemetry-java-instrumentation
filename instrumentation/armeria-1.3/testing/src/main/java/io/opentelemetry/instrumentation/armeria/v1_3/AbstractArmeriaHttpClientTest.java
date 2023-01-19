@@ -63,8 +63,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  public int sendRequest(
-      HttpRequest request, String method, URI uri, Map<String, String> headers) {
+  public int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
     try {
       return getClient(uri).execute(request).aggregate().join().status().code();
     } catch (CompletionException e) {

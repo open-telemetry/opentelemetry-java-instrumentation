@@ -1,9 +1,13 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -170,7 +174,7 @@ public final class HttpClientTestOptionsBuilder {
     return this;
   }
 
-  public HttpClientTestOptions build(){
+  public HttpClientTestOptions build() {
     return new HttpClientTestOptions(this);
   }
 }
