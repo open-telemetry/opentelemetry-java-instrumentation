@@ -47,31 +47,12 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public abstract class HttpClientTests<REQUEST> {
+public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<REQUEST> {
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
-
-  /**
-   * Build the request to be passed to {@link #sendRequest(Object, String,
-   * URI, Map)}.
-   *
-   * <p>By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
-   * request a second time to verify that the traceparent header is not added multiple times to the
-   * request, and that the last one wins. Tests will fail if the header shows multiple times.
-   */
-  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
-      throws Exception;
-
-  /**
-   * Make the request and return the status code of the response synchronously. Some clients, e.g.,
-   * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
-   * dedicated API for invoking synchronously, such as OkHttp's execute method.
-   */
-  protected abstract int sendRequest(
-      REQUEST request, String method, URI uri, Map<String, String> headers) throws Exception;
 
   protected void sendRequestWithCallback(
       REQUEST request,
