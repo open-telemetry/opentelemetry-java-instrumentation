@@ -14,16 +14,21 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.junit.jupiter.api.DynamicTest;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 public final class HttpClientTests<REQUEST> {
 
@@ -49,8 +54,19 @@ public final class HttpClientTests<REQUEST> {
     this.clientAdapter = clientAdapter;
   }
 
-  public DynamicTest successfulRequestWithNotSampledParent() throws Exception {
-    return DynamicTest.dynamicTest("successful request with not sampled parent", () -> {
+  public List<DynamicTest> all(){
+    return Stream.of(
+            successfulRequestWithNotSampledParent(),
+            requestWithCallbackAndParent(),
+            basicRequestWith1Redirect(),
+            basicRequestWith2Redirects()
+        )
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  public DynamicTest successfulRequestWithNotSampledParent() {
+    return dynamicTest("successful request with not sampled parent", () -> {
       String method = "GET";
       URI uri = resolveAddress("/success");
       int responseCode = testRunner.runWithNonRecordingSpan(() -> doRequest(method, uri));
@@ -63,6 +79,87 @@ public final class HttpClientTests<REQUEST> {
       assertThat(testRunner.traces()).isEmpty();
     });
   }
+
+  // FIXME: add tests for POST with large/chunked data
+
+  DynamicTest requestWithCallbackAndParent() {
+    if(!options.testCallback || !options.testCallbackWithParent){
+      return null;
+    }
+    return dynamicTest("request with callback and parent", () -> {
+      String method = "GET";
+      URI uri = resolveAddress("/success");
+
+      HttpClientResult result =
+          testRunner.runWithSpan(
+              "parent",
+              () -> doRequestWithCallback(method, uri, () -> testRunner.runWithSpan("child", () -> {})));
+
+      assertThat(result.get()).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> assertClientSpan(span, uri, method, 200).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
+                span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
+          });
+    });
+  }
+
+  DynamicTest basicRequestWith1Redirect() {
+    if (!options.testRedirects) {
+      return null;
+    }
+    return dynamicTest("basic request with 1 redirect", () -> {
+      // TODO quite a few clients create an extra span for the redirect
+      // This test should handle both types or we should unify how the clients work
+
+      String method = "GET";
+      URI uri = resolveAddress("/redirect");
+
+      int responseCode = doRequest(method, uri);
+
+      assertThat(responseCode).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
+    });
+  }
+
+  DynamicTest basicRequestWith2Redirects() {
+    if(!options.testRedirects){
+     return null;
+    }
+
+    return dynamicTest("basic request with 2 redirects", () -> {
+      // TODO quite a few clients create an extra span for the redirect
+      // This test should handle both types or we should unify how the clients work
+
+      String method = "GET";
+      URI uri = resolveAddress("/another-redirect");
+
+      int responseCode = doRequest(method, uri);
+
+      assertThat(responseCode).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          });
+    });
+  }
+
 
 /*
   @ParameterizedTest
@@ -118,33 +215,6 @@ public final class HttpClientTests<REQUEST> {
         trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span)));
   }
 
-  // FIXME: add tests for POST with large/chunked data
-
-  @Test
-  void requestWithCallbackAndParent() throws Throwable {
-    assumeTrue(options.testCallback);
-    assumeTrue(options.testCallbackWithParent);
-
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    HttpClientResult result =
-        testing.runWithSpan(
-            "parent",
-            () -> doRequestWithCallback(method, uri, () -> testing.runWithSpan("child", () -> {})));
-
-    assertThat(result.get()).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> assertClientSpan(span, uri, method, 200).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
-              span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
-        });
-  }
-
   @Test
   void requestWithCallbackAndNoParent() throws Throwable {
     assumeTrue(options.testCallback);
@@ -190,53 +260,6 @@ public final class HttpClientTests<REQUEST> {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  void basicRequestWith1Redirect() throws Exception {
-    // TODO quite a few clients create an extra span for the redirect
-    // This test should handle both types or we should unify how the clients work
-
-    assumeTrue(options.testRedirects);
-
-    String method = "GET";
-    URI uri = resolveAddress("/redirect");
-
-    int responseCode = doRequest(method, uri);
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
-  }
-
-  @Test
-  void basicRequestWith2Redirects() throws Exception {
-    // TODO quite a few clients create an extra span for the redirect
-    // This test should handle both types or we should unify how the clients work
-
-    assumeTrue(options.testRedirects);
-
-    String method = "GET";
-    URI uri = resolveAddress("/another-redirect");
-
-    int responseCode = doRequest(method, uri);
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
   }
 
   @Test

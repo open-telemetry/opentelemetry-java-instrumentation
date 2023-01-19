@@ -6,9 +6,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTypeAdapter;
 import io.opentelemetry.instrumentation.testing.junit.http.NewHttpClientInstrumentationExtension;
-import java.util.Arrays;
 import java.util.Collection;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -19,20 +17,16 @@ class NewGoogleHttpClientSyncTest {
   static final NewHttpClientInstrumentationExtension testing = NewHttpClientInstrumentationExtension.forAgent();
 
   @TestFactory
-  Collection<DynamicTest> test() throws Exception {
+  Collection<DynamicTest> test() {
     HttpClientTypeAdapter<HttpRequest> adapter = new GoogleClientAdapter(HttpRequest::execute);
     HttpClientTestOptions options = buildOptions();
 
     HttpClientTests<HttpRequest> delegate = new HttpClientTests<>(testing.getTestRunner(),
         testing.getServer(), options, adapter);
 
-    //TODO: Will eventually delegate to all() method
-    return Arrays.asList(
-        delegate.successfulRequestWithNotSampledParent()
-    );
+    return delegate.all();
   }
 
-  @NotNull
   private static HttpClientTestOptions buildOptions() {
     HttpClientTestOptionsBuilder builder = HttpClientTestOptions.builder();
 
