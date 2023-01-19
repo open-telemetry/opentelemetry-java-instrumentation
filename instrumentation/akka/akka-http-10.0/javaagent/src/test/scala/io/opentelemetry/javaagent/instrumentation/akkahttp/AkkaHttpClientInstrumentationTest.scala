@@ -44,7 +44,7 @@ class AkkaHttpClientInstrumentationTest
   implicit val materializer: ActorMaterializer =
     ActorMaterializer.create(system)
 
-  override protected def buildRequest(
+  override def buildRequest(
       method: String,
       uri: URI,
       h: util.Map[String, String]
@@ -58,7 +58,7 @@ class AkkaHttpClientInstrumentationTest
           .asJava
       )
 
-  override protected def sendRequest(
+  override def sendRequest(
       request: HttpRequest,
       method: String,
       uri: URI,
@@ -72,7 +72,7 @@ class AkkaHttpClientInstrumentationTest
     response.status.intValue()
   }
 
-  override protected def sendRequestWithCallback(
+  override def sendRequestWithCallback(
       request: HttpRequest,
       method: String,
       uri: URI,
