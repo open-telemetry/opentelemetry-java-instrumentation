@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTelemetry
+import io.opentelemetry.instrumentation.spring.integration.v4_1.SpringIntegrationTelemetry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.integration.config.GlobalChannelInterceptor
