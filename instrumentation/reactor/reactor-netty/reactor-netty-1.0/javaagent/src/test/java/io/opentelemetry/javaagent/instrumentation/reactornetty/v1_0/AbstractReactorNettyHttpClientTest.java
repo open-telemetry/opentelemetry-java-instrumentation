@@ -98,7 +98,8 @@ abstract class AbstractReactorNettyHttpClientTest
               return content.map(unused -> resp);
             })
         .subscribe(
-            response -> httpClientResult.complete(response.status().code()), httpClientResult::complete);
+            response -> httpClientResult.complete(response.status().code()),
+            httpClientResult::complete);
   }
 
   @Override

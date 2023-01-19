@@ -59,7 +59,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     request
         .exchange()
         .subscribe(
-            response -> httpClientResult.complete(getStatusCode(response)), httpClientResult::complete);
+            response -> httpClientResult.complete(getStatusCode(response)),
+            httpClientResult::complete);
   }
 
   @Override

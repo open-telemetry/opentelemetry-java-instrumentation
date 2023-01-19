@@ -323,8 +323,7 @@ public abstract class AbstractApacheHttpClientTest {
     return response.getStatusLine().getStatusCode();
   }
 
-  static ResponseHandler<HttpResponse> responseCallback(
-      HttpClientResult httpClientResult) {
+  static ResponseHandler<HttpResponse> responseCallback(HttpClientResult httpClientResult) {
     return response -> {
       try {
         httpClientResult.complete(getResponseCode(response));

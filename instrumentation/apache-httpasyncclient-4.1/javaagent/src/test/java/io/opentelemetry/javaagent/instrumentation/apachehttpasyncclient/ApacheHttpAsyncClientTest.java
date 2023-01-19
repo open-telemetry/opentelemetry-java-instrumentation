@@ -198,8 +198,7 @@ class ApacheHttpAsyncClientTest {
     return response.getStatusLine().getStatusCode();
   }
 
-  static FutureCallback<HttpResponse> responseCallback(
-      HttpClientResult httpClientResult) {
+  static FutureCallback<HttpResponse> responseCallback(HttpClientResult httpClientResult) {
     return new FutureCallback<HttpResponse>() {
       @Override
       public void completed(HttpResponse response) {

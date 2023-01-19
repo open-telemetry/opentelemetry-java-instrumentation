@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import java.net.URI;
@@ -6,8 +11,7 @@ import java.util.Map;
 public interface HttpClientTypeAdapter<REQUEST> {
 
   /**
-   * Build the request to be passed to {@link #sendRequest(Object, String,
-   * URI, Map)}.
+   * Build the request to be passed to {@link #sendRequest(Object, String, URI, Map)}.
    *
    * <p>By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
    * request a second time to verify that the traceparent header is not added multiple times to the
@@ -20,6 +24,6 @@ public interface HttpClientTypeAdapter<REQUEST> {
    * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
    * dedicated API for invoking synchronously, such as OkHttp's execute method.
    */
-  int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers) throws Exception;
-
+  int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
+      throws Exception;
 }
