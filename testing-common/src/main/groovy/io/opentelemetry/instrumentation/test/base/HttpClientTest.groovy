@@ -110,17 +110,17 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   @Shared
   def junitTest = new AbstractHttpClientTest() {
     @Override
-    protected buildRequest(String method, URI uri, Map<String, String> headers) {
+    public buildRequest(String method, URI uri, Map<String, String> headers) {
       return HttpClientTest.this.buildRequest(method, uri, headers)
     }
 
     @Override
-    protected int sendRequest(def request, String method, URI uri, Map<String, String> headers) {
+    public int sendRequest(def request, String method, URI uri, Map<String, String> headers) {
       return HttpClientTest.this.sendRequest(request, method, uri, headers)
     }
 
     @Override
-    protected void sendRequestWithCallback(def request, String method, URI uri, Map<String, String> headers,
+    public void sendRequestWithCallback(def request, String method, URI uri, Map<String, String> headers,
                                            HttpClientResult requestResult) {
       HttpClientTest.this.sendRequestWithCallback(request, method, uri, headers, requestResult)
     }

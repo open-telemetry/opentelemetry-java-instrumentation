@@ -6,140 +6,65 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import javax.annotation.Nullable;
+import org.junit.jupiter.api.DynamicTest;
 import java.net.URI;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.stream.IntStream;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<REQUEST> {
+public final class HttpClientTests<REQUEST> {
+
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
+  public static final long CONNECTION_TIMEOUT_MS = CONNECTION_TIMEOUT.toMillis();
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
+  public static final long READ_TIMEOUT_MS = READ_TIMEOUT.toMillis();
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
 
-  protected void sendRequestWithCallback(
-      REQUEST request,
-      String method,
-      URI uri,
-      Map<String, String> headers,
-      HttpClientResult httpClientResult)
-      throws Exception {
-    // Must be implemented if testAsync is true
-    throw new UnsupportedOperationException();
+  private final InstrumentationTestRunner testRunner;
+  private final HttpClientTestServer server;
+
+  private final HttpClientTestOptions options;
+  private final HttpClientTypeAdapter<REQUEST> clientAdapter;
+
+  public HttpClientTests(InstrumentationTestRunner testRunner, HttpClientTestServer server,
+      HttpClientTestOptions options, HttpClientTypeAdapter<REQUEST> clientAdapter) {
+    this.testRunner = testRunner;
+    this.server = server;
+    this.options = options;
+    this.clientAdapter = clientAdapter;
   }
 
-  /** Returns the connection timeout that should be used when setting up tested clients. */
-  protected final Duration connectTimeout() {
-    return CONNECTION_TIMEOUT;
+  public DynamicTest successfulRequestWithNotSampledParent() throws Exception {
+    return DynamicTest.dynamicTest("successful request with not sampled parent", () -> {
+      String method = "GET";
+      URI uri = resolveAddress("/success");
+      int responseCode = testRunner.runWithNonRecordingSpan(() -> doRequest(method, uri));
+
+      assertThat(responseCode).isEqualTo(200);
+
+      // sleep to ensure no spans are emitted
+      Thread.sleep(200);
+
+      assertThat(testRunner.traces()).isEmpty();
+    });
   }
 
-  protected final Duration readTimeout() {
-    return READ_TIMEOUT;
-  }
-
-  protected InstrumentationTestRunner testing;
-  private HttpClientTestServer server;
-
-  private final HttpClientTestOptions options = new HttpClientTestOptions();
-
-  @BeforeAll
-  void setupOptions() {
-    // TODO(anuraaga): Have subclasses configure options directly and remove mapping of legacy
-    // protected methods.
-    options.setHttpAttributes(this::httpAttributes);
-    options.setExpectedClientSpanNameMapper(this::expectedClientSpanName);
-    Integer responseCodeOnError = responseCodeOnRedirectError();
-    if (responseCodeOnError != null) {
-      options.setResponseCodeOnRedirectError(responseCodeOnError);
-    }
-    options.setUserAgent(userAgent());
-    options.setClientSpanErrorMapper(this::clientSpanError);
-    options.setSingleConnectionFactory(this::createSingleConnection);
-    if (!testWithClientParent()) {
-      options.disableTestWithClientParent();
-    }
-    if (!testRedirects()) {
-      options.disableTestRedirects();
-    }
-    if (!testCircularRedirects()) {
-      options.disableTestCircularRedirects();
-    }
-    options.setMaxRedirects(maxRedirects());
-    if (!testReusedRequest()) {
-      options.disableTestReusedRequest();
-    }
-    if (!testConnectionFailure()) {
-      options.disableTestConnectionFailure();
-    }
-    if (testReadTimeout()) {
-      options.enableTestReadTimeout();
-    }
-    if (!testRemoteConnection()) {
-      options.disableTestRemoteConnection();
-    }
-    if (!testHttps()) {
-      options.disableTestHttps();
-    }
-    if (!testCallback()) {
-      options.disableTestCallback();
-    }
-    if (!testCallbackWithParent()) {
-      options.disableTestCallbackWithParent();
-    }
-    if (!testErrorWithCallback()) {
-      options.disableTestErrorWithCallback();
-    }
-    if (testCallbackWithImplicitParent()) {
-      options.enableTestCallbackWithImplicitParent();
-    }
-    configure(options);
-  }
-
-  @BeforeEach
-  void verifyExtension() {
-    if (testing == null) {
-      throw new AssertionError(
-          "Subclasses of AbstractHttpClientTest must register HttpClientInstrumentationExtension");
-    }
-  }
-
+/*
   @ParameterizedTest
   @ValueSource(strings = {"/success", "/success?with=params"})
   void successfulGetRequest(String path) throws Exception {
@@ -172,20 +97,6 @@ public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<
               span -> assertClientSpan(span, uri, method, responseCode).hasParent(trace.getSpan(0)),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
-  }
-
-  @Test
-  void successfulRequestWithNotSampledParent() throws Exception {
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-    int responseCode = testing.runWithNonRecordingSpan(() -> doRequest(method, uri));
-
-    assertThat(responseCode).isEqualTo(200);
-
-    // sleep to ensure no spans are emitted
-    Thread.sleep(200);
-
-    assertThat(testing.traces()).isEmpty();
   }
 
   @ParameterizedTest
@@ -623,13 +534,15 @@ public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
   }
+*/
 
   /**
-   * This test fires a large number of concurrent requests. Each request first hits a HTTP server
+   * This test fires a large number of concurrent requests. Each request first hits an HTTP server
    * and then makes another client request. The goal of this test is to verify that in highly
    * concurrent environment our instrumentations for http clients (especially inherently concurrent
    * ones, such as Netty or Reactor) correctly propagate trace context.
    */
+  /*
   @Test
   void highConcurrency() {
     int count = 50;
@@ -777,11 +690,13 @@ public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<
 
     pool.shutdown();
   }
+*/
 
   /**
    * Almost similar to the "high concurrency test" test above, but all requests use the same single
    * connection.
    */
+  /*
   @Test
   void highConcurrencyOnSingleConnection() {
     SingleConnection singleConnection =
@@ -855,7 +770,7 @@ public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<
 
     pool.shutdown();
   }
-
+*/
   // Visible for spock bridge.
   SpanDataAssert assertClientSpan(
       SpanDataAssert span, URI uri, String method, Integer responseCode) {
@@ -957,6 +872,7 @@ public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<
     return span.hasName("test-http-server").hasKind(SpanKind.SERVER);
   }
 
+  /*
   protected Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>();
     attributes.add(SemanticAttributes.HTTP_URL);
@@ -1049,31 +965,32 @@ public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<
     return true;
   }
 
-  protected void configure(HttpClientTestOptions options) {}
+  protected void configure(LegacyHttpClientTestOptions options) {}
+*/
 
   private int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
   }
 
   private int doRequest(String method, URI uri, Map<String, String> headers) throws Exception {
-    REQUEST request = buildRequest(method, uri, headers);
-    return sendRequest(request, method, uri, headers);
+    REQUEST request = clientAdapter.buildRequest(method, uri, headers);
+    return clientAdapter.sendRequest(request, method, uri, headers);
   }
 
   private int doReusedRequest(String method, URI uri) throws Exception {
-    REQUEST request = buildRequest(method, uri, Collections.emptyMap());
-    sendRequest(request, method, uri, Collections.emptyMap());
-    return sendRequest(request, method, uri, Collections.emptyMap());
+    REQUEST request = clientAdapter.buildRequest(method, uri, Collections.emptyMap());
+    clientAdapter.sendRequest(request, method, uri, Collections.emptyMap());
+    return clientAdapter.sendRequest(request, method, uri, Collections.emptyMap());
   }
 
   private int doRequestWithExistingTracingHeaders(String method, URI uri) throws Exception {
     Map<String, String> headers = new HashMap<>();
     for (String field :
-        testing.getOpenTelemetry().getPropagators().getTextMapPropagator().fields()) {
+        testRunner.getOpenTelemetry().getPropagators().getTextMapPropagator().fields()) {
       headers.put(field, "12345789");
     }
-    REQUEST request = buildRequest(method, uri, headers);
-    return sendRequest(request, method, uri, headers);
+    REQUEST request = clientAdapter.buildRequest(method, uri, headers);
+    return clientAdapter.sendRequest(request, method, uri, headers);
   }
 
   private HttpClientResult doRequestWithCallback(String method, URI uri, Runnable callback)
@@ -1083,18 +1000,18 @@ public abstract class HttpClientTests<REQUEST> implements HttpClientTypeAdapter<
 
   private HttpClientResult doRequestWithCallback(
       String method, URI uri, Map<String, String> headers, Runnable callback) throws Exception {
-    REQUEST request = buildRequest(method, uri, headers);
+    REQUEST request = clientAdapter.buildRequest(method, uri, headers);
     HttpClientResult httpClientResult = new HttpClientResult(callback);
-    sendRequestWithCallback(request, method, uri, headers, httpClientResult);
+    clientAdapter.sendRequestWithCallback(request, method, uri, headers, httpClientResult);
     return httpClientResult;
   }
 
   protected URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
   }
-
-  final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
-    this.testing = testing;
-    this.server = server;
-  }
+//
+//  final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
+//    this.testRunner = testing;
+//    this.server = server;
+//  }
 }

@@ -47,7 +47,7 @@ import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@Deprecated // migrate to HttpClientTests dynamic testing framework
+//@Deprecated // migrate to HttpClientTests dynamic testing framework
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeAdapter<REQUEST> {
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
@@ -55,17 +55,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
-
-  protected void sendRequestWithCallback(
-      REQUEST request,
-      String method,
-      URI uri,
-      Map<String, String> headers,
-      HttpClientResult httpClientResult)
-      throws Exception {
-    // Must be implemented if testAsync is true
-    throw new UnsupportedOperationException();
-  }
 
   /** Returns the connection timeout that should be used when setting up tested clients. */
   protected final Duration connectTimeout() {
