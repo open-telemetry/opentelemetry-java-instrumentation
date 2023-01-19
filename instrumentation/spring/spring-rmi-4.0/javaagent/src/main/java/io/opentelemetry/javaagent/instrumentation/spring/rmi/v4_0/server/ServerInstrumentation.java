@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 
 import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.SpringRmiSingletons.serverInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -16,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.SpringRmiSingletons;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -60,11 +60,11 @@ public class ServerInstrumentation implements TypeInstrumentation {
       String methodName = remoteInv.getMethodName();
       request = ClassAndMethod.create(serverClass, methodName);
 
-      if (!SpringRmiSingletons.serverInstrumenter().shouldStart(parentContext, request)) {
+      if (!serverInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = SpringRmiSingletons.serverInstrumenter().start(parentContext, request);
+      context = serverInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -83,7 +83,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      SpringRmiSingletons.serverInstrumenter().end(context, request, null, throwable);
+      serverInstrumenter().end(context, request, null, throwable);
     }
   }
 }
