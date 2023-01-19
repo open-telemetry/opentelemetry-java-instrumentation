@@ -5,15 +5,21 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.junit.jupiter.api.DynamicTest;
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,14 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.function.Executable;
 
 public final class HttpClientTests<REQUEST> {
 
@@ -59,14 +63,25 @@ public final class HttpClientTests<REQUEST> {
             successfulRequestWithNotSampledParent(),
             requestWithCallbackAndParent(),
             basicRequestWith1Redirect(),
-            basicRequestWith2Redirects()
+            basicRequestWith2Redirects(),
+            requestWithCallbackAndNoParent(),
+            requestWithCallbackAndImplicitParent(),
+            circularRedirects(),
+            redirectToSecuredCopiesAuthHeader(),
+            errorSpan(),
+            reuseRequest(),
+            requestWithExistingTracingHeaders(),
+            connectionErrorUnopenedPort(),
+            connectionErrorUnopenedPortWithCallback(),
+            connectionErrorNonRoutableAddress(),
+            readTimedOut()
         )
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
-  public DynamicTest successfulRequestWithNotSampledParent() {
-    return dynamicTest("successful request with not sampled parent", () -> {
+  DynamicTest successfulRequestWithNotSampledParent() {
+    return test("successful request with not sampled parent", () -> {
       String method = "GET";
       URI uri = resolveAddress("/success");
       int responseCode = testRunner.runWithNonRecordingSpan(() -> doRequest(method, uri));
@@ -80,13 +95,13 @@ public final class HttpClientTests<REQUEST> {
     });
   }
 
-  // FIXME: add tests for POST with large/chunked data
 
+  // FIXME: add tests for POST with large/chunked data
   DynamicTest requestWithCallbackAndParent() {
     if(!options.testCallback || !options.testCallbackWithParent){
       return null;
     }
-    return dynamicTest("request with callback and parent", () -> {
+    return test("request with callback and parent", () -> {
       String method = "GET";
       URI uri = resolveAddress("/success");
 
@@ -98,13 +113,11 @@ public final class HttpClientTests<REQUEST> {
       assertThat(result.get()).isEqualTo(200);
 
       testRunner.waitAndAssertTraces(
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, uri, method, 200).hasParent(trace.getSpan(0)),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
-                span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
-          });
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, 200).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
+              span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
     });
   }
 
@@ -112,7 +125,7 @@ public final class HttpClientTests<REQUEST> {
     if (!options.testRedirects) {
       return null;
     }
-    return dynamicTest("basic request with 1 redirect", () -> {
+    return test("basic request with 1 redirect", () -> {
       // TODO quite a few clients create an extra span for the redirect
       // This test should handle both types or we should unify how the clients work
 
@@ -124,12 +137,10 @@ public final class HttpClientTests<REQUEST> {
       assertThat(responseCode).isEqualTo(200);
 
       testRunner.waitAndAssertTraces(
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-          });
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
     });
   }
 
@@ -138,7 +149,7 @@ public final class HttpClientTests<REQUEST> {
      return null;
     }
 
-    return dynamicTest("basic request with 2 redirects", () -> {
+    return test("basic request with 2 redirects", () -> {
       // TODO quite a few clients create an extra span for the redirect
       // This test should handle both types or we should unify how the clients work
 
@@ -150,13 +161,345 @@ public final class HttpClientTests<REQUEST> {
       assertThat(responseCode).isEqualTo(200);
 
       testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    });
+  }
+
+  DynamicTest requestWithCallbackAndNoParent() {
+    if(!options.testCallback || options.testCallbackWithImplicitParent){
+      return null;
+    }
+    return test("request with callback and no parent", () -> {
+      String method = "GET";
+      URI uri = resolveAddress("/success");
+
+      HttpClientResult result =
+          doRequestWithCallback(method, uri, () -> testRunner.runWithSpan("callback", () -> {}));
+
+      assertThat(result.get()).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    });
+  }
+
+  DynamicTest requestWithCallbackAndImplicitParent() {
+    if (!options.testCallbackWithImplicitParent) {
+      return null;
+    }
+    return test("request with callback and implicit parent", () -> {
+      String method = "GET";
+      URI uri = resolveAddress("/success");
+
+      HttpClientResult result =
+          doRequestWithCallback(method, uri, () -> testRunner.runWithSpan("callback", () -> {
+          }));
+
+      assertThat(result.get()).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+                  span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+                  span ->
+                      span.hasName("callback")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))));
+    });
+  }
+
+  DynamicTest circularRedirects() {
+    if(!options.testRedirects || !options.testCircularRedirects){
+      return null;
+    }
+
+    return test("circular redirects", () -> {
+      String method = "GET";
+      URI uri = resolveAddress("/circular-redirect");
+
+      Throwable thrown = catchThrowable(() -> doRequest(method, uri));
+      Throwable ex;
+      if (thrown instanceof ExecutionException) {
+        ex = thrown.getCause();
+      } else {
+        ex = thrown;
+      }
+      Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
+
+      testRunner.waitAndAssertTraces(
           trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+            List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+            assertions.add(
+                span ->
+                    assertClientSpan(span, uri, method, options.responseCodeOnRedirectError)
+                        .hasNoParent()
+                        .hasException(clientError));
+            for (int i = 0; i < options.maxRedirects; i++) {
+              assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+            }
+            trace.hasSpansSatisfyingExactly(assertions);
           });
+
+    });
+  }
+
+  DynamicTest redirectToSecuredCopiesAuthHeader() {
+    if(!options.testRedirects){
+      return null;
+    }
+    return test("redirect to secured copies auth header", () -> {
+      String method = "GET";
+      URI uri = resolveAddress("/to-secured");
+
+      int responseCode =
+          doRequest(method, uri, Collections.singletonMap(BASIC_AUTH_KEY, BASIC_AUTH_VAL));
+
+      assertThat(responseCode).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    });
+  }
+
+  DynamicTest errorSpan() {
+    return test("error span", () -> {
+      String method = "GET";
+      URI uri = resolveAddress("/error");
+
+      testRunner.runWithSpan(
+          "parent",
+          () -> {
+            try {
+              doRequest(method, uri);
+            } catch (Throwable ignored) {
+            }
+          });
+
+      testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, 500).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1))));
+    });
+  }
+
+  DynamicTest reuseRequest() {
+    if(!options.testReusedRequest){
+     return null;
+    }
+    return test("reuse request", () -> {
+      String method = "GET";
+      URI uri = resolveAddress("/success");
+
+      int responseCode = doReusedRequest(method, uri);
+
+      assertThat(responseCode).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))),
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    });
+  }
+
+
+  // this test verifies two things:
+  // * the javaagent doesn't cause multiples of tracing headers to be added
+  //   (TestHttpServer throws exception if there are multiples)
+  // * the javaagent overwrites the existing tracing headers
+  //   (so that it propagates the same trace id / span id that it reports to the backend
+  //   and the trace is not broken)
+  DynamicTest requestWithExistingTracingHeaders() {
+    return test("request with existing tracing headers", () -> {
+
+      String method = "GET";
+      URI uri = resolveAddress("/success");
+
+      int responseCode = doRequestWithExistingTracingHeaders(method, uri);
+
+      assertThat(responseCode).isEqualTo(200);
+
+      testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    });
+  }
+
+  DynamicTest connectionErrorUnopenedPort() {
+    if(!options.testConnectionFailure){
+      return null;
+    }
+    return test("connection error on unopened port", () -> {
+
+      String method = "GET";
+      URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
+
+      Throwable thrown =
+          catchThrowable(() -> testRunner.runWithSpan("parent", () -> doRequest(method, uri)));
+      Throwable ex;
+      if (thrown instanceof ExecutionException) {
+        ex = thrown.getCause();
+      } else {
+        ex = thrown;
+      }
+      Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
+
+      testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("parent")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasNoParent()
+                      .hasStatus(StatusData.error())
+                      .hasException(ex),
+              span ->
+                  assertClientSpan(span, uri, method, null)
+                      .hasParent(trace.getSpan(0))
+                      .hasException(clientError)));
+    });
+  }
+
+  DynamicTest connectionErrorUnopenedPortWithCallback() {
+    if(!options.testConnectionFailure || !options.testCallback || !options.testErrorWithCallback){
+     return null;
+    }
+
+    return test("connection error on unopened port with callback", () -> {
+      String method = "GET";
+      URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
+
+      HttpClientResult result =
+          testRunner.runWithSpan(
+              "parent",
+              () ->
+                  doRequestWithCallback(
+                      method, uri, () -> testRunner.runWithSpan("callback", () -> {})));
+
+      Throwable thrown = catchThrowable(result::get);
+      Throwable ex;
+      if (thrown instanceof ExecutionException) {
+        ex = thrown.getCause();
+      } else {
+        ex = thrown;
+      }
+      Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
+
+      testRunner.waitAndAssertTraces(
+          trace -> {
+            List<Consumer<SpanDataAssert>> spanAsserts =
+                Arrays.asList(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        assertClientSpan(span, uri, method, null)
+                            .hasParent(trace.getSpan(0))
+                            .hasException(clientError),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0)));
+            boolean jdk8 = Objects.equals(System.getProperty("java.specification.version"), "1.8");
+            if (jdk8) {
+              // on some netty based http clients order of `CONNECT` and `callback` spans isn't
+              // guaranteed when running on jdk8
+              trace.hasSpansSatisfyingExactlyInAnyOrder(spanAsserts);
+            } else {
+              trace.hasSpansSatisfyingExactly(spanAsserts);
+            }
+          });
+    });
+  }
+
+  DynamicTest connectionErrorNonRoutableAddress() {
+    if(!options.testRemoteConnection){
+      return null;
+    }
+
+    return test("connection error for non routable address", () -> {
+      String method = "HEAD";
+      URI uri = URI.create(options.testHttps ? "https://192.0.2.1/" : "http://192.0.2.1/");
+
+      Throwable thrown =
+          catchThrowable(() -> testRunner.runWithSpan("parent", () -> doRequest(method, uri)));
+      Throwable ex;
+      if (thrown instanceof ExecutionException) {
+        ex = thrown.getCause();
+      } else {
+        ex = thrown;
+      }
+      Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
+
+      testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("parent")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasNoParent()
+                      .hasStatus(StatusData.error())
+                      .hasException(ex),
+              span ->
+                  assertClientSpan(span, uri, method, null)
+                      .hasParent(trace.getSpan(0))
+                      .hasException(clientError)));
+    });
+  }
+
+  DynamicTest readTimedOut() {
+    if(!options.testReadTimeout){
+      return null;
+    }
+    return test("read timed out", () -> {
+
+      String method = "GET";
+      URI uri = resolveAddress("/read-timeout");
+
+      Throwable thrown =
+          catchThrowable(() -> testRunner.runWithSpan("parent", () -> doRequest(method, uri)));
+      Throwable ex;
+      if (thrown instanceof ExecutionException) {
+        ex = thrown.getCause();
+      } else {
+        ex = thrown;
+      }
+      Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
+
+      testRunner.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("parent")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasNoParent()
+                      .hasStatus(StatusData.error())
+                      .hasException(ex),
+              span ->
+                  assertClientSpan(span, uri, method, null)
+                      .hasParent(trace.getSpan(0))
+                      .hasException(clientError),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1))));
+    });
+  }
+
+  // Work-around for lack of @BeforeEach for DynamicTest instances.
+  DynamicTest test(String name, Executable executable) {
+    return dynamicTest(name, () -> {
+      testRunner.clearAllExportedData();
+      executable.execute();
     });
   }
 
@@ -215,324 +558,7 @@ public final class HttpClientTests<REQUEST> {
         trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span)));
   }
 
-  @Test
-  void requestWithCallbackAndNoParent() throws Throwable {
-    assumeTrue(options.testCallback);
-    assumeFalse(options.testCallbackWithImplicitParent);
 
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    HttpClientResult result =
-        doRequestWithCallback(method, uri, () -> testing.runWithSpan("callback", () -> {}));
-
-    assertThat(result.get()).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        },
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
-  }
-
-  @Test
-  void requestWithCallbackAndImplicitParent() throws Throwable {
-    assumeTrue(options.testCallbackWithImplicitParent);
-
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    HttpClientResult result =
-        doRequestWithCallback(method, uri, () -> testing.runWithSpan("callback", () -> {}));
-
-    assertThat(result.get()).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  void circularRedirects() {
-    assumeTrue(options.testRedirects);
-    assumeTrue(options.testCircularRedirects);
-
-    String method = "GET";
-    URI uri = resolveAddress("/circular-redirect");
-
-    Throwable thrown = catchThrowable(() -> doRequest(method, uri));
-    Throwable ex;
-    if (thrown instanceof ExecutionException) {
-      ex = thrown.getCause();
-    } else {
-      ex = thrown;
-    }
-    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-          assertions.add(
-              span ->
-                  assertClientSpan(span, uri, method, options.responseCodeOnRedirectError)
-                      .hasNoParent()
-                      .hasException(clientError));
-          for (int i = 0; i < options.maxRedirects; i++) {
-            assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-          }
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
-  }
-
-  @Test
-  void redirectToSecuredCopiesAuthHeader() throws Exception {
-    assumeTrue(options.testRedirects);
-
-    String method = "GET";
-    URI uri = resolveAddress("/to-secured");
-
-    int responseCode =
-        doRequest(method, uri, Collections.singletonMap(BASIC_AUTH_KEY, BASIC_AUTH_VAL));
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
-  }
-
-  @Test
-  void errorSpan() {
-    String method = "GET";
-    URI uri = resolveAddress("/error");
-
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          try {
-            doRequest(method, uri);
-          } catch (Throwable ignored) {
-          }
-        });
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> assertClientSpan(span, uri, method, 500).hasParent(trace.getSpan(0)),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
-        });
-  }
-
-  @Test
-  void reuseRequest() throws Exception {
-    assumeTrue(options.testReusedRequest);
-
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    int responseCode = doReusedRequest(method, uri);
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        },
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
-  }
-
-  // this test verifies two things:
-  // * the javaagent doesn't cause multiples of tracing headers to be added
-  //   (TestHttpServer throws exception if there are multiples)
-  // * the javaagent overwrites the existing tracing headers
-  //   (so that it propagates the same trace id / span id that it reports to the backend
-  //   and the trace is not broken)
-  @Test
-  void requestWithExistingTracingHeaders() throws Exception {
-    String method = "GET";
-    URI uri = resolveAddress("/success");
-
-    int responseCode = doRequestWithExistingTracingHeaders(method, uri);
-
-    assertThat(responseCode).isEqualTo(200);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
-  }
-
-  @Test
-  void connectionErrorUnopenedPort() {
-    assumeTrue(options.testConnectionFailure);
-
-    String method = "GET";
-    URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
-
-    Throwable thrown =
-        catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    Throwable ex;
-    if (thrown instanceof ExecutionException) {
-      ex = thrown.getCause();
-    } else {
-      ex = thrown;
-    }
-    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasNoParent()
-                      .hasStatus(StatusData.error())
-                      .hasException(ex),
-              span ->
-                  assertClientSpan(span, uri, method, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError));
-        });
-  }
-
-  @Test
-  void connectionErrorUnopenedPortWithCallback() throws Exception {
-    assumeTrue(options.testConnectionFailure);
-    assumeTrue(options.testCallback);
-    assumeTrue(options.testErrorWithCallback);
-
-    String method = "GET";
-    URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
-
-    HttpClientResult result =
-        testing.runWithSpan(
-            "parent",
-            () ->
-                doRequestWithCallback(
-                    method, uri, () -> testing.runWithSpan("callback", () -> {})));
-
-    Throwable thrown = catchThrowable(result::get);
-    Throwable ex;
-    if (thrown instanceof ExecutionException) {
-      ex = thrown.getCause();
-    } else {
-      ex = thrown;
-    }
-    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> spanAsserts =
-              Arrays.asList(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      assertClientSpan(span, uri, method, null)
-                          .hasParent(trace.getSpan(0))
-                          .hasException(clientError),
-                  span ->
-                      span.hasName("callback")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0)));
-          boolean jdk8 = Objects.equals(System.getProperty("java.specification.version"), "1.8");
-          if (jdk8) {
-            // on some netty based http clients order of `CONNECT` and `callback` spans isn't
-            // guaranteed when running on jdk8
-            trace.hasSpansSatisfyingExactlyInAnyOrder(spanAsserts);
-          } else {
-            trace.hasSpansSatisfyingExactly(spanAsserts);
-          }
-        });
-  }
-
-  @Test
-  void connectionErrorNonRoutableAddress() {
-    assumeTrue(options.testRemoteConnection);
-
-    String method = "HEAD";
-    URI uri = URI.create(options.testHttps ? "https://192.0.2.1/" : "http://192.0.2.1/");
-
-    Throwable thrown =
-        catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    Throwable ex;
-    if (thrown instanceof ExecutionException) {
-      ex = thrown.getCause();
-    } else {
-      ex = thrown;
-    }
-    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasNoParent()
-                      .hasStatus(StatusData.error())
-                      .hasException(ex),
-              span ->
-                  assertClientSpan(span, uri, method, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError));
-        });
-  }
-
-  @Test
-  void readTimedOut() {
-    assumeTrue(options.testReadTimeout);
-
-    String method = "GET";
-    URI uri = resolveAddress("/read-timeout");
-
-    Throwable thrown =
-        catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
-    Throwable ex;
-    if (thrown instanceof ExecutionException) {
-      ex = thrown.getCause();
-    } else {
-      ex = thrown;
-    }
-    Throwable clientError = options.clientSpanErrorMapper.apply(uri, ex);
-
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasNoParent()
-                      .hasStatus(StatusData.error())
-                      .hasException(ex),
-              span ->
-                  assertClientSpan(span, uri, method, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
-        });
-  }
 
   @DisabledIfSystemProperty(
       named = "java.vm.name",
@@ -1029,7 +1055,7 @@ public final class HttpClientTests<REQUEST> {
     return httpClientResult;
   }
 
-  protected URI resolveAddress(String path) {
+  private URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
   }
 //
