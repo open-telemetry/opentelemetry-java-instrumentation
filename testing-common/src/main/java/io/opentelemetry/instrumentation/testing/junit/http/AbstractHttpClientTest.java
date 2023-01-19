@@ -47,7 +47,6 @@ import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-// @Deprecated // migrate to HttpClientTests dynamic testing framework
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeAdapter<REQUEST> {
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
