@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpClientTest,
   HttpClientInstrumentationExtension,
   HttpClientTestOptions,
+  HttpClientResult,
   SingleConnection
 }
 
@@ -76,7 +77,7 @@ class AkkaHttpClientInstrumentationTest
       method: String,
       uri: URI,
       headers: util.Map[String, String],
-      requestResult: AbstractHttpClientTest.RequestResult
+      requestResult: HttpClientResult
   ): Unit = {
     implicit val ec: ExecutionContext =
       ExecutionContexts.fromExecutor(new Executor {
