@@ -111,7 +111,7 @@ abstract class AbstractSpringJpaTest<ENTITY, REPOSITORY extends JpaRepository<EN
         if (!isHibernate4) {
           offset = 1
           span(1) {
-            name "test"
+            name "CALL test"
             kind CLIENT
             childOf span(0)
             attributes {
@@ -120,6 +120,7 @@ abstract class AbstractSpringJpaTest<ENTITY, REPOSITORY extends JpaRepository<EN
               "$SemanticAttributes.DB_USER" "sa"
               "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$SemanticAttributes.DB_STATEMENT" ~/^call next value for /
+              "$SemanticAttributes.DB_OPERATION" "CALL"
             }
           }
         }

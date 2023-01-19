@@ -43,6 +43,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     return new SqlClientAttributesExtractorBuilder<>(getter);
   }
 
+  private static final String SQL_CALL = "CALL";
+
   private final AttributeKey<String> dbTableAttribute;
   private final SqlStatementSanitizer sanitizer;
 
@@ -60,8 +62,11 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.rawStatement(request));
+    String operation = sanitizedStatement.getOperation();
     internalSet(attributes, SemanticAttributes.DB_STATEMENT, sanitizedStatement.getFullStatement());
-    internalSet(attributes, SemanticAttributes.DB_OPERATION, sanitizedStatement.getOperation());
-    internalSet(attributes, dbTableAttribute, sanitizedStatement.getTable());
+    internalSet(attributes, SemanticAttributes.DB_OPERATION, operation);
+    if (!SQL_CALL.equals(operation)) {
+      internalSet(attributes, dbTableAttribute, sanitizedStatement.getMainIdentifier());
+    }
   }
 }
