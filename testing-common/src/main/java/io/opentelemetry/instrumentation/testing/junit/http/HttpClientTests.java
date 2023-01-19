@@ -5,12 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,6 +15,14 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import javax.annotation.Nullable;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -38,18 +40,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
-import javax.annotation.Nullable;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
-//@Deprecated // migrate to HttpClientTests dynamic testing framework
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractHttpClientTest<REQUEST> {
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
+public abstract class HttpClientTests<REQUEST> {
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
 
@@ -57,8 +55,8 @@ public abstract class AbstractHttpClientTest<REQUEST> {
   static final String BASIC_AUTH_VAL = "plain text auth token";
 
   /**
-   * Build the request to be passed to {@link #sendRequest(java.lang.Object, java.lang.String,
-   * java.net.URI, java.util.Map)}.
+   * Build the request to be passed to {@link #sendRequest(Object, String,
+   * URI, Map)}.
    *
    * <p>By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
    * request a second time to verify that the traceparent header is not added multiple times to the

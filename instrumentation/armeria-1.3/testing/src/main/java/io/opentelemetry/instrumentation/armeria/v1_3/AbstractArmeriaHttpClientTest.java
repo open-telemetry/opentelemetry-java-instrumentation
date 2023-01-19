@@ -15,6 +15,7 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.util.Exceptions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
@@ -77,13 +78,13 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     getClient(uri)
         .execute(request)
         .aggregate()
         .whenComplete(
             (response, throwable) ->
-                requestResult.complete(() -> response.status().code(), throwable));
+                httpClientResult.complete(() -> response.status().code(), throwable));
   }
 
   private WebClient getClient(URI uri) {

@@ -9,6 +9,7 @@ import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.invoke.MethodHandle;
@@ -54,11 +55,11 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     request
         .exchange()
         .subscribe(
-            response -> requestResult.complete(getStatusCode(response)), requestResult::complete);
+            response -> httpClientResult.complete(getStatusCode(response)), httpClientResult::complete);
   }
 
   @Override

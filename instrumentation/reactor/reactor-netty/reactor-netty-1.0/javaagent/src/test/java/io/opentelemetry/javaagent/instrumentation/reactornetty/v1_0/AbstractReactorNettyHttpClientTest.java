@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -89,7 +90,7 @@ abstract class AbstractReactorNettyHttpClientTest
       String method,
       URI uri,
       Map<String, String> headers,
-      AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     request
         .responseSingle(
             (resp, content) -> {
@@ -97,7 +98,7 @@ abstract class AbstractReactorNettyHttpClientTest
               return content.map(unused -> resp);
             })
         .subscribe(
-            response -> requestResult.complete(response.status().code()), requestResult::complete);
+            response -> httpClientResult.complete(response.status().code()), httpClientResult::complete);
   }
 
   @Override

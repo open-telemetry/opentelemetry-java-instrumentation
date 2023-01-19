@@ -15,6 +15,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -77,7 +78,7 @@ public abstract class AbstractNetty41ClientTest
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     Channel ch;
     try {
       ch =
@@ -86,12 +87,12 @@ public abstract class AbstractNetty41ClientTest
       Thread.currentThread().interrupt();
       return;
     } catch (Exception exception) {
-      requestResult.complete(exception);
+      httpClientResult.complete(exception);
       return;
     }
     configureChannel(ch);
     CompletableFuture<Integer> result = new CompletableFuture<>();
-    result.whenComplete((status, throwable) -> requestResult.complete(() -> status, throwable));
+    result.whenComplete((status, throwable) -> httpClientResult.complete(() -> status, throwable));
     ch.pipeline().addLast(new ClientHandler(result));
     ch.writeAndFlush(defaultFullHttpRequest);
   }

@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -70,18 +71,18 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
       String method,
       URI uri,
       Map<String, String> headers,
-      AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     try {
       restTemplate.execute(
           uri,
           HttpMethod.valueOf(method),
           req -> headers.forEach(req.getHeaders()::add),
           response -> {
-            requestResult.complete(response.getStatusCode().value());
+            httpClientResult.complete(response.getStatusCode().value());
             return null;
           });
     } catch (ResourceAccessException exception) {
-      requestResult.complete(exception.getCause());
+      httpClientResult.complete(exception.getCause());
     }
   }
 
