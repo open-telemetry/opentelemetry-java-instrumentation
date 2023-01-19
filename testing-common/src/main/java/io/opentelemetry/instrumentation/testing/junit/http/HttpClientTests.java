@@ -683,7 +683,6 @@ public final class HttpClientTests<REQUEST> {
 
   }
 
-
   /**
    * Almost similar to the "high concurrency test" test above, but all requests use the same single
    * connection.
@@ -784,11 +783,9 @@ public final class HttpClientTests<REQUEST> {
       assertThat(responseCode).isEqualTo(200);
 
       testRunner.waitAndAssertTraces(
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-          });
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
     });
   }
 
@@ -802,11 +799,9 @@ public final class HttpClientTests<REQUEST> {
     assertThat(responseCode).isEqualTo(200);
 
     testRunner.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
-              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-        });
+        trace -> trace.hasSpansSatisfyingExactly(
+            span -> assertClientSpan(span, uri, method, responseCode).hasNoParent(),
+            span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
     });
   }
 
@@ -818,12 +813,10 @@ public final class HttpClientTests<REQUEST> {
       assertThat(responseCode).isEqualTo(200);
 
       testRunner.waitAndAssertTraces(
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, uri, method, responseCode).hasParent(trace.getSpan(0)),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
-          });
+          trace -> trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span -> assertClientSpan(span, uri, method, responseCode).hasParent(trace.getSpan(0)),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1))));
     });
   }
 
@@ -842,7 +835,7 @@ public final class HttpClientTests<REQUEST> {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent-client-span").hasKind(SpanKind.CLIENT).hasNoParent()),
-          trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span)));
+          trace -> trace.hasSpansSatisfyingExactly(HttpClientTests::assertServerSpan));
     });
   }
 
@@ -955,102 +948,6 @@ public final class HttpClientTests<REQUEST> {
   static SpanDataAssert assertServerSpan(SpanDataAssert span) {
     return span.hasName("test-http-server").hasKind(SpanKind.SERVER);
   }
-
-  /*
-  protected Set<AttributeKey<?>> httpAttributes(URI uri) {
-    Set<AttributeKey<?>> attributes = new HashSet<>();
-    attributes.add(SemanticAttributes.HTTP_URL);
-    attributes.add(SemanticAttributes.HTTP_METHOD);
-    attributes.add(SemanticAttributes.HTTP_FLAVOR);
-    attributes.add(SemanticAttributes.HTTP_USER_AGENT);
-    return attributes;
-  }
-
-  protected String expectedClientSpanName(URI uri, String method) {
-    return method != null ? "HTTP " + method : "HTTP request";
-  }
-
-  @Nullable
-  protected Integer responseCodeOnRedirectError() {
-    return null;
-  }
-
-  @Nullable
-  protected String userAgent() {
-    return null;
-  }
-
-  protected Throwable clientSpanError(URI uri, Throwable exception) {
-    return exception;
-  }
-
-  // This method should create either a single connection to the target uri or a http client
-  // which is guaranteed to use the same connection for all requests
-  @Nullable
-  protected SingleConnection createSingleConnection(String host, int port) {
-    return null;
-  }
-
-  protected boolean testWithClientParent() {
-    return true;
-  }
-
-  protected boolean testRedirects() {
-    return true;
-  }
-
-  protected boolean testCircularRedirects() {
-    return true;
-  }
-
-  // maximum number of redirects that http client follows before giving up
-  protected int maxRedirects() {
-    return 2;
-  }
-
-  protected boolean testReusedRequest() {
-    return true;
-  }
-
-  protected boolean testConnectionFailure() {
-    return true;
-  }
-
-  protected boolean testReadTimeout() {
-    return false;
-  }
-
-  protected boolean testRemoteConnection() {
-    return true;
-  }
-
-  protected boolean testHttps() {
-    return true;
-  }
-
-  protected boolean testCallback() {
-    return true;
-  }
-
-  protected boolean testCallbackWithParent() {
-    // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
-    // function is used.  There is no way to stop a test from a derived class hence the flag
-    return true;
-  }
-
-  protected boolean testCallbackWithImplicitParent() {
-    // depending on async behavior callback can be executed within
-    // parent span scope or outside of the scope, e.g. in reactor-netty or spring
-    // callback is correlated.
-    return false;
-  }
-
-  protected boolean testErrorWithCallback() {
-    return true;
-  }
-
-  protected void configure(LegacyHttpClientTestOptions options) {}
-*/
 
   private int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
