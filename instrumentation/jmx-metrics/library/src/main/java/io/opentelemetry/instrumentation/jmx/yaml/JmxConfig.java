@@ -19,7 +19,6 @@ public class JmxConfig {
   //   rules:
   //     - JMX_DEFINITION1
   //     - JMX_DEFINITION2
-  // The parser is guaranteed to call setRules with a non-null argument, or throw an exception
   private final List<JmxRule> rules;
 
   public JmxConfig(List<JmxRule> rules) {
