@@ -988,6 +988,10 @@ public final class HttpClientTests<REQUEST> {
   }
 
   public URI resolveAddress(String path) {
+    return resolveAddress(server, path);
+  }
+
+  public static URI resolveAddress(HttpClientTestServer server, String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
   }
 
