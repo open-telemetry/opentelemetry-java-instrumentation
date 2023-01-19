@@ -55,7 +55,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected final HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+  public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     return HttpRequest.of(
         RequestHeaders.builder(HttpMethod.valueOf(method), uri.toString())
             .set(headers.entrySet())
@@ -63,7 +63,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected final int sendRequest(
+  public int sendRequest(
       HttpRequest request, String method, URI uri, Map<String, String> headers) {
     try {
       return getClient(uri).execute(request).aggregate().join().status().code();
