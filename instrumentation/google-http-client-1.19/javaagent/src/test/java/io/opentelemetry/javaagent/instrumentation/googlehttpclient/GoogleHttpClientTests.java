@@ -30,11 +30,16 @@ public class GoogleHttpClientTests {
 
   private final HttpClientTests<HttpRequest> delegate;
   private final HttpClientTypeAdapter<HttpRequest> adapter;
+  private final InstrumentationTestRunner testRunner;
+  private final HttpClientTestServer server;
 
   private GoogleHttpClientTests(
-      HttpClientTests<HttpRequest> delegate, HttpClientTypeAdapter<HttpRequest> adapter) {
+      HttpClientTests<HttpRequest> delegate, HttpClientTypeAdapter<HttpRequest> adapter,
+      InstrumentationTestRunner testRunner, HttpClientTestServer server) {
     this.delegate = delegate;
     this.adapter = adapter;
+    this.testRunner = testRunner;
+    this.server = server;
   }
 
   public static GoogleHttpClientTests create(
@@ -44,7 +49,7 @@ public class GoogleHttpClientTests {
     HttpClientTestOptions options = buildOptions();
     HttpClientTests<HttpRequest> clientTests =
         new HttpClientTests<>(testRunner, server, options, adapter);
-    return new GoogleHttpClientTests(clientTests, adapter);
+    return new GoogleHttpClientTests(clientTests, adapter, testRunner, server);
   }
 
   List<DynamicTest> all() {
@@ -56,14 +61,13 @@ public class GoogleHttpClientTests {
     return delegate.test(
         "error traces when exception is not thrown",
         () -> {
-          URI uri = delegate.resolveAddress("/error");
+          URI uri = server.resolveAddress("/error");
 
           HttpRequest request = adapter.buildRequest("GET", uri, Collections.emptyMap());
           int responseCode = adapter.sendRequest(request, "GET", uri, Collections.emptyMap());
 
           assertThat(responseCode).isEqualTo(500);
-          delegate
-              .getTestRunner()
+          testRunner
               .waitAndAssertTraces(
                   trace ->
                       trace.hasSpansSatisfyingExactly(

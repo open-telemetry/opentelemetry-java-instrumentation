@@ -1061,7 +1061,4 @@ public final class HttpClientTests<REQUEST> {
     return httpClientResult;
   }
 
-  public InstrumentationTestRunner getTestRunner() {
-    return testRunner;
-  }
 }
