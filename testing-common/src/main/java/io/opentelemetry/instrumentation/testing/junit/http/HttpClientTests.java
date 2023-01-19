@@ -5,12 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,6 +15,14 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import javax.annotation.Nullable;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -38,23 +40,49 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
-import javax.annotation.Nullable;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
-//@Deprecated // migrate to HttpClientTests dynamic testing framework
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeAdapter<REQUEST> {
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
+public abstract class HttpClientTests<REQUEST> {
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
+
+  /**
+   * Build the request to be passed to {@link #sendRequest(Object, String,
+   * URI, Map)}.
+   *
+   * <p>By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
+   * request a second time to verify that the traceparent header is not added multiple times to the
+   * request, and that the last one wins. Tests will fail if the header shows multiple times.
+   */
+  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
+      throws Exception;
+
+  /**
+   * Make the request and return the status code of the response synchronously. Some clients, e.g.,
+   * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
+   * dedicated API for invoking synchronously, such as OkHttp's execute method.
+   */
+  protected abstract int sendRequest(
+      REQUEST request, String method, URI uri, Map<String, String> headers) throws Exception;
+
+  protected void sendRequestWithCallback(
+      REQUEST request,
+      String method,
+      URI uri,
+      Map<String, String> headers,
+      HttpClientResult httpClientResult)
+      throws Exception {
+    // Must be implemented if testAsync is true
+    throw new UnsupportedOperationException();
+  }
 
   /** Returns the connection timeout that should be used when setting up tested clients. */
   protected final Duration connectTimeout() {
