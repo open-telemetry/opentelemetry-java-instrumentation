@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.api.client.http.HttpRequest;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptionsBuilder;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTests;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTypeAdapter;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
@@ -19,15 +21,22 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 
 // TODO: This replaces the abstract client test base class
-public class NewGoogleHttpClientTests {
+public class GoogleHttpClientTests {
 
   private final HttpClientTests<HttpRequest> delegate;
   private final HttpClientTypeAdapter<HttpRequest> adapter;
 
-  public NewGoogleHttpClientTests(HttpClientTests<HttpRequest> delegate,
+  private GoogleHttpClientTests(HttpClientTests<HttpRequest> delegate,
       HttpClientTypeAdapter<HttpRequest> adapter) {
     this.delegate = delegate;
     this.adapter = adapter;
+  }
+
+  public static GoogleHttpClientTests create(HttpClientTypeAdapter<HttpRequest> adapter,
+      InstrumentationTestRunner testRunner, HttpClientTestServer server) {
+    HttpClientTestOptions options = buildOptions();
+    HttpClientTests<HttpRequest> clientTests = new HttpClientTests<>(testRunner, server, options, adapter);
+    return new GoogleHttpClientTests(clientTests, adapter);
   }
 
   List<DynamicTest> all() {
