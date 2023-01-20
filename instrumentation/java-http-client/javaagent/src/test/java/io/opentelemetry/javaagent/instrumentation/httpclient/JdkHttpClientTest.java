@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -66,11 +66,11 @@ public class JdkHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.disableTestCircularRedirects();
-    options.enableTestReadTimeout();
+  protected void configure(Options.Builder optionsBuilder) {
+    optionsBuilder.disableTestCircularRedirects();
+    optionsBuilder.enableTestReadTimeout();
     // TODO nested client span is not created, but context is still injected
     //  which is not what the test expects
-    options.disableTestWithClientParent();
+    optionsBuilder.disableTestWithClientParent();
   }
 }

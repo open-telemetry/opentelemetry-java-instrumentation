@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import com.google.auto.value.AutoValue;
@@ -26,25 +31,45 @@ public abstract class Options {
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> method != null ? "HTTP " + method : "HTTP request";
+
   public abstract Function<URI, Set<AttributeKey<?>>> getHttpAttributes();
+
   public abstract Integer getResponseCodeOnRedirectError();
+
   public abstract String getUserAgent();
+
   public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
+
   public abstract BiFunction<String, Integer, SingleConnection> getSingleConnectionFactory();
+
   public abstract BiFunction<URI, String, String> getExpectedClientSpanNameMapper();
+
   public abstract boolean getTestWithClientParent();
+
   public abstract boolean getTestRedirects();
+
   public abstract boolean getTestCircularRedirects();
+
   public abstract int getMaxRedirects();
+
   public abstract boolean getTestReusedRequest();
+
   public abstract boolean getTestConnectionFailure();
+
   public abstract boolean getTestReadTimeout();
+
   public abstract boolean getTestRemoteConnection();
+
   public abstract boolean getTestHttps();
+
   public abstract boolean getTestCallback();
+
   public abstract boolean getTestCallbackWithParent();
+
   public abstract boolean getTestCallbackWithImplicitParent();
+
   public abstract boolean getTestErrorWithCallback();
+
   static Builder builder() {
     return new AutoValue_Options.Builder().withDefaults();
   }
@@ -52,7 +77,7 @@ public abstract class Options {
   @AutoValue.Builder
   public interface Builder {
 
-    default Builder withDefaults(){
+    default Builder withDefaults() {
       return setHttpAttributes(x -> DEFAULT_HTTP_ATTRIBUTES)
           .setResponseCodeOnRedirectError(null)
           .setUserAgent(null)
@@ -71,8 +96,7 @@ public abstract class Options {
           .setTestCallback(true)
           .setTestCallbackWithParent(true)
           .setTestCallbackWithImplicitParent(false)
-          .setTestErrorWithCallback(true)
-          ;
+          .setTestErrorWithCallback(true);
     }
 
     Builder setHttpAttributes(Function<URI, Set<AttributeKey<?>>> value);
@@ -81,27 +105,85 @@ public abstract class Options {
 
     Builder setUserAgent(String value);
 
-    Builder setClientSpanErrorMapper(BiFunction<URI,Throwable,Throwable> value);
+    Builder setClientSpanErrorMapper(BiFunction<URI, Throwable, Throwable> value);
 
-    Builder setSingleConnectionFactory(BiFunction<String,Integer,SingleConnection> value);
+    Builder setSingleConnectionFactory(BiFunction<String, Integer, SingleConnection> value);
 
-    Builder setExpectedClientSpanNameMapper(BiFunction<URI,String,String> value);
+    Builder setExpectedClientSpanNameMapper(BiFunction<URI, String, String> value);
 
     Builder setTestWithClientParent(boolean value);
 
     Builder setTestRedirects(boolean value);
 
     Builder setTestCircularRedirects(boolean value);
+
     Builder setMaxRedirects(int value);
+
     Builder setTestReusedRequest(boolean value);
+
     Builder setTestConnectionFailure(boolean value);
+
     Builder setTestReadTimeout(boolean value);
+
     Builder setTestRemoteConnection(boolean value);
+
     Builder setTestHttps(boolean value);
+
     Builder setTestCallback(boolean value);
+
     Builder setTestCallbackWithParent(boolean value);
+
     Builder setTestCallbackWithImplicitParent(boolean value);
+
     Builder setTestErrorWithCallback(boolean value);
+
+    default Builder disableTestWithClientParent() {
+      return setTestWithClientParent(false);
+    }
+
+    default Builder disableTestRedirects() {
+      return setTestRedirects(false);
+    }
+
+    default Builder disableTestCircularRedirects() {
+      return setTestCircularRedirects(false);
+    }
+
+    default Builder disableTestReusedRequest() {
+      return setTestReusedRequest(false);
+    }
+
+    default Builder disableTestConnectionFailure() {
+      return setTestConnectionFailure(false);
+    }
+
+    default Builder enableTestReadTimeout() {
+      return setTestReadTimeout(true);
+    }
+
+    default Builder disableTestRemoteConnection() {
+      return setTestRemoteConnection(false);
+    }
+
+    default Builder disableTestHttps() {
+      return setTestHttps(false);
+    }
+
+    default Builder disableTestCallback() {
+      return setTestCallback(false);
+    }
+
+    default Builder disableTestCallbackWithParent() {
+      return setTestCallbackWithParent(false);
+    }
+
+    default Builder disableTestErrorWithCallback() {
+      return setTestErrorWithCallback(false);
+    }
+
+    default Builder enableTestCallbackWithImplicitParent() {
+      return setTestCallbackWithImplicitParent(true);
+    }
 
     Options build();
   }

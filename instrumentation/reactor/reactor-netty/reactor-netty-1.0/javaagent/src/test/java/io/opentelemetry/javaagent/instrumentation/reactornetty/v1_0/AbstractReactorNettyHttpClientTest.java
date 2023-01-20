@@ -24,7 +24,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -103,13 +103,13 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.disableTestRedirects();
-    options.enableTestReadTimeout();
-    options.setUserAgent(USER_AGENT);
-    options.enableTestCallbackWithImplicitParent();
+  protected void configure(Options.Builder optionsBuilder) {
+    optionsBuilder.disableTestRedirects();
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setUserAgent(USER_AGENT);
+    optionsBuilder.enableTestCallbackWithImplicitParent();
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
           if (exception.getClass().getName().endsWith("ReactiveException")) {
             // unopened port or non routable address
@@ -121,7 +121,7 @@ abstract class AbstractReactorNettyHttpClientTest
           return exception;
         });
 
-    options.setHttpAttributes(this::getHttpAttributes);
+    optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
@@ -131,7 +131,7 @@ abstract class AbstractReactorNettyHttpClientTest
       return emptySet();
     }
 
-    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+    Set<AttributeKey<?>> attributes = new HashSet<>(Options.DEFAULT_HTTP_ATTRIBUTES);
     if (uri.toString().contains("/read-timeout")) {
       attributes.remove(SemanticAttributes.NET_PEER_NAME);
       attributes.remove(SemanticAttributes.NET_PEER_PORT);

@@ -10,7 +10,7 @@ import static java.util.Objects.requireNonNull;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -64,18 +64,17 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.disableTestRedirects();
+  protected void configure(Options.Builder optionsBuilder) {
+    optionsBuilder.disableTestRedirects();
 
-    options.setHttpAttributes(
+    optionsBuilder.setHttpAttributes(
         uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          Set<AttributeKey<?>> attributes = new HashSet<>(Options.DEFAULT_HTTP_ATTRIBUTES);
           attributes.remove(SemanticAttributes.HTTP_FLAVOR);
           return attributes;
         });
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, throwable) -> {
           if (!throwable.getClass().getName().endsWith("WebClientRequestException")) {
             String uriString = uri.toString();
@@ -90,7 +89,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
           return throwable;
         });
 
-    options.setSingleConnectionFactory(
+    optionsBuilder.setSingleConnectionFactory(
         (host, port) -> new SpringWebfluxSingleConnection(host, port, this::instrument));
   }
 

@@ -10,7 +10,7 @@ import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
@@ -120,8 +120,8 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.setSingleConnectionFactory(
+  protected void configure(Options.Builder optionsBuilder) {
+    optionsBuilder.setSingleConnectionFactory(
         (host, port) ->
             (path, headers) -> {
               URI uri = resolveAddress(path);
@@ -131,7 +131,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
                   .getValueOrThrow();
             });
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
           if (uri.toString().equals("https://192.0.2.1/")) {
             return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
@@ -144,8 +144,8 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
           return exception;
         });
 
-    options.disableTestRedirects();
-    options.disableTestReusedRequest();
-    options.enableTestReadTimeout();
+    optionsBuilder.disableTestRedirects();
+    optionsBuilder.disableTestReusedRequest();
+    optionsBuilder.enableTestReadTimeout();
   }
 }

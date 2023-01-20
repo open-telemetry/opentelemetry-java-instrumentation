@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.time.Duration;
@@ -33,10 +33,10 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.setUserAgent(userAgent());
-    options.enableTestReadTimeout();
-    options.setHttpAttributes(this::getHttpAttributes);
+  protected void configure(Options.Builder optionsBuilder) {
+    optionsBuilder.setUserAgent(userAgent());
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {

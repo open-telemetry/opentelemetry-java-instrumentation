@@ -10,7 +10,7 @@ import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
@@ -108,8 +108,8 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.setSingleConnectionFactory(
+  protected void configure(Options.Builder optionsBuilder) {
+    optionsBuilder.setSingleConnectionFactory(
         (host, port) ->
             (path, headers) -> {
               URI uri = resolveAddress(path);
@@ -118,19 +118,19 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
                   .getValueOrThrow();
             });
 
-    options.setExpectedClientSpanNameMapper(
+    optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
           switch (uri.toString()) {
             case "http://localhost:61/": // unopened port
             case "https://192.0.2.1/": // non routable address
               return "CONNECT";
             default:
-              return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(
+              return Options.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(
                   uri, method);
           }
         });
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
           if (uri.toString().equals("https://192.0.2.1/")) {
             return new ConnectTimeoutException("connection timed out: /192.0.2.1:443");
@@ -142,14 +142,14 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           return exception;
         });
 
-    options.setHttpAttributes(this::computeHttpAttributes);
+    optionsBuilder.setHttpAttributes(this::computeHttpAttributes);
 
-    options.disableTestRedirects();
+    optionsBuilder.disableTestRedirects();
 
     // these tests will pass, but they don't really test anything since REQUEST is Void
-    options.disableTestReusedRequest();
+    optionsBuilder.disableTestReusedRequest();
 
-    options.enableTestReadTimeout();
+    optionsBuilder.enableTestReadTimeout();
   }
 
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
@@ -158,7 +158,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
       case "https://192.0.2.1/": // non routable address
         return Collections.emptySet();
       default:
-        return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+        return Options.DEFAULT_HTTP_ATTRIBUTES;
     }
   }
 }

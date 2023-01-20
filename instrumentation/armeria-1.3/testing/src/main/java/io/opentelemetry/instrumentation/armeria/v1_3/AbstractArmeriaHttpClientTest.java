@@ -16,7 +16,7 @@ import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.util.Exceptions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
@@ -94,12 +94,12 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(Options.Builder optionsBuilder) {
     // Not supported yet: https://github.com/line/armeria/issues/2489
-    options.disableTestRedirects();
+    optionsBuilder.disableTestRedirects();
     // armeria requests can't be reused
-    options.disableTestReusedRequest();
-    options.enableTestReadTimeout();
+    optionsBuilder.disableTestReusedRequest();
+    optionsBuilder.enableTestReadTimeout();
   }
 
   @Test

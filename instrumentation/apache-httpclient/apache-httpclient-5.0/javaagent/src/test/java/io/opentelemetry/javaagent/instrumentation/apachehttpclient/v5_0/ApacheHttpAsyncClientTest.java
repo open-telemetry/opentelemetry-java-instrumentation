@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -111,9 +111,9 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      super.configure(options);
-      options.setResponseCodeOnRedirectError(302);
+    protected void configure(Options.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.setResponseCodeOnRedirectError(302);
     }
   }
 

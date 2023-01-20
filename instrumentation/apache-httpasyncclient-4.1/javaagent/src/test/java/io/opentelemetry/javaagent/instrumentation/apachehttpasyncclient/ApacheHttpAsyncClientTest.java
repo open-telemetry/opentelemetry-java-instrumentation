@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.Options;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -99,8 +99,8 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(Options.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -138,8 +138,8 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(Options.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -176,8 +176,8 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(Options.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -224,14 +224,13 @@ class ApacheHttpAsyncClientTest {
     };
   }
 
-  void configureTest(HttpClientTestOptions options) {
-    options.setUserAgent("httpasyncclient");
-    options.setResponseCodeOnRedirectError(302);
-    options.enableTestReadTimeout();
-    options.setHttpAttributes(
+  void configureTest(Options.Builder optionsBuilder) {
+    optionsBuilder.setUserAgent("httpasyncclient");
+    optionsBuilder.setResponseCodeOnRedirectError(302);
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setHttpAttributes(
         endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          Set<AttributeKey<?>> attributes = new HashSet<>(Options.DEFAULT_HTTP_ATTRIBUTES);
           attributes.add(SemanticAttributes.HTTP_SCHEME);
           attributes.add(SemanticAttributes.HTTP_TARGET);
           return attributes;
