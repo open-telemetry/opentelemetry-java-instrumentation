@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
+
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -37,9 +39,10 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,13 +94,13 @@ public class SpringWebfluxTest {
   private WebClient client;
 
   @BeforeEach
-  public void beforeEach() {
+  void beforeEach() {
     client = WebClient.builder("h1c://localhost:" + port).followRedirects().build();
   }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
-  public void getBasicTest(Parameter parameter) {
+  void basicGetTest(Parameter parameter) {
     AggregatedHttpResponse response = client.get(parameter.urlPath).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -156,9 +159,72 @@ public class SpringWebfluxTest {
                 }));
   }
 
+  private static Stream<Arguments> provideParameters() {
+    return Stream.of(
+        Arguments.of(
+            named(
+                "functional API without parameters",
+                new Parameter(
+                    "/greet",
+                    "/greet",
+                    null,
+                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE))),
+        Arguments.of(
+            named(
+                "functional API with one parameter",
+                new Parameter(
+                    "/greet/WORLD",
+                    "/greet/{name}",
+                    null,
+                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " WORLD"))),
+        Arguments.of(
+            named(
+                "functional API with two parameters",
+                new Parameter(
+                    "/greet/World/Test1",
+                    "/greet/{name}/{word}",
+                    null,
+                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE
+                        + " World Test1"))),
+        Arguments.of(
+            named(
+                "functional API delayed response",
+                new Parameter(
+                    "/greet-delayed",
+                    "/greet-delayed",
+                    null,
+                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE))),
+        Arguments.of(
+            named(
+                "annotation API without parameters",
+                new Parameter(
+                    "/foo", "/foo", "getFooModel", new FooModel(0L, "DEFAULT").toString()))),
+        Arguments.of(
+            named(
+                "annotation API with one parameter",
+                new Parameter(
+                    "/foo/1", "/foo/{id}", "getFooModel", new FooModel(1L, "pass").toString()))),
+        Arguments.of(
+            named(
+                "annotation API with two parameters",
+                new Parameter(
+                    "/foo/2/world",
+                    "/foo/{id}/{name}",
+                    "getFooModel",
+                    new FooModel(2L, "world").toString()))),
+        Arguments.of(
+            named(
+                "annotation API delayed response",
+                new Parameter(
+                    "/foo-delayed",
+                    "/foo-delayed",
+                    "getFooDelayed",
+                    new FooModel(3L, "delayed").toString()))));
+  }
+
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAsyncParameters")
-  public void getAsyncResponseTest(Parameter parameter) {
+  void getAsyncResponseTest(Parameter parameter) {
     AggregatedHttpResponse response = client.get(parameter.urlPath).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -221,6 +287,42 @@ public class SpringWebfluxTest {
                         .hasTotalAttributeCount(0)));
   }
 
+  private static Stream<Arguments> provideAsyncParameters() {
+    return Stream.of(
+        Arguments.of(
+            named(
+                "functional API traced method from mono",
+                new Parameter(
+                    "/greet-mono-from-callable/4",
+                    "/greet-mono-from-callable/{id}",
+                    null,
+                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 4"))),
+        Arguments.of(
+            named(
+                "functional API traced method with delay",
+                new Parameter(
+                    "/greet-delayed-mono/6",
+                    "/greet-delayed-mono/{id}",
+                    null,
+                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 6"))),
+        Arguments.of(
+            named(
+                "annotation API traced method from mono",
+                new Parameter(
+                    "/foo-mono-from-callable/7",
+                    "/foo-mono-from-callable/{id}",
+                    "getMonoFromCallable",
+                    new FooModel(7L, "tracedMethod").toString()))),
+        Arguments.of(
+            named(
+                "annotation API traced method with delay",
+                new Parameter(
+                    "/foo-delayed-mono/9",
+                    "/foo-delayed-mono/{id}",
+                    "getFooDelayedMono",
+                    new FooModel(9L, "tracedMethod").toString()))));
+  }
+
   /*
   This test differs from the previous in one important aspect.
   The test above calls endpoints which does not create any spans during their invocation.
@@ -241,7 +343,7 @@ public class SpringWebfluxTest {
    */
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAsyncHandlerFuncParameters")
-  public void createSpanDuringHandlerFunctionTest(Parameter parameter) {
+  void createSpanDuringHandlerFunctionTest(Parameter parameter) {
     AggregatedHttpResponse response = client.get(parameter.urlPath).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -304,8 +406,28 @@ public class SpringWebfluxTest {
                         .hasTotalAttributeCount(0)));
   }
 
+  private static Stream<Arguments> provideAsyncHandlerFuncParameters() {
+    return Stream.of(
+        Arguments.of(
+            named(
+                "functional API traced method",
+                new Parameter(
+                    "/greet-traced-method/5",
+                    "/greet-traced-method/{id}",
+                    null,
+                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 5"))),
+        Arguments.of(
+            named(
+                "annotation API traced method",
+                new Parameter(
+                    "/foo-traced-method/8",
+                    "/foo-traced-method/{id}",
+                    "getTracedMethod",
+                    new FooModel(8L, "tracedMethod").toString()))));
+  }
+
   @Test
-  public void get404Test() {
+  void get404Test() {
     AggregatedHttpResponse response = client.get("/notfoundgreet").aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(404);
@@ -371,7 +493,7 @@ public class SpringWebfluxTest {
   }
 
   @Test
-  public void postBasicTest() {
+  void basicPostTest() {
     String echoString = "TEST";
     AggregatedHttpResponse response = client.post("/echo", echoString).aggregate().join();
 
@@ -424,7 +546,7 @@ public class SpringWebfluxTest {
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideBadEndpointParameters")
-  public void getToBadEndpointTest(Parameter parameter) {
+  void getToBadEndpointTest(Parameter parameter) {
     AggregatedHttpResponse response = client.get(parameter.urlPath).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(500);
@@ -494,8 +616,28 @@ public class SpringWebfluxTest {
                 }));
   }
 
+  private static Stream<Arguments> provideBadEndpointParameters() {
+    return Stream.of(
+        Arguments.of(
+            named(
+                "functional API fail fast",
+                new Parameter("/greet-failfast/1", "/greet-failfast/{id}", null, null))),
+        Arguments.of(
+            named(
+                "functional API fail Mono",
+                new Parameter("/greet-failmono/1", "/greet-failmono/{id}", null, null))),
+        Arguments.of(
+            named(
+                "annotation API fail fast",
+                new Parameter("/foo-failfast/1", "/foo-failfast/{id}", "getFooFailFast", null))),
+        Arguments.of(
+            named(
+                "annotation API fail Mono",
+                new Parameter("/foo-failmono/1", "/foo-failmono/{id}", "getFooFailMono", null))));
+  }
+
   @Test
-  public void redirectTest() {
+  void redirectTest() {
     AggregatedHttpResponse response = client.get("/double-greet-redirect").aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -587,12 +729,13 @@ public class SpringWebfluxTest {
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideMultipleDelayingRouteParameters")
-  public void multipleGetsToDelayingRoute(Parameter parameter) {
+  void multipleGetsToDelayingRoute(Parameter parameter) {
     int requestsCount = 50;
 
-    List<AggregatedHttpResponse> responses = new ArrayList<>();
-    IntStream.rangeClosed(0, requestsCount - 1)
-        .forEachOrdered(n -> responses.add(client.get(parameter.urlPath).aggregate().join()));
+    List<AggregatedHttpResponse> responses =
+        IntStream.rangeClosed(0, requestsCount - 1)
+            .mapToObj(n -> client.get(parameter.urlPath).aggregate().join())
+            .collect(Collectors.toList());
 
     assertThat(responses)
         .extracting(AggregatedHttpResponse::status)
@@ -655,11 +798,7 @@ public class SpringWebfluxTest {
                                   : val -> val.isEqualTo(TestController.class.getName())));
                 });
 
-    List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
-    IntStream.rangeClosed(0, requestsCount - 1)
-        .forEachOrdered(n -> traceAssertions.add(traceAssertion));
-
-    testing.waitAndAssertTraces(traceAssertions);
+    testing.waitAndAssertTraces(Collections.nCopies(requestsCount, traceAssertion));
   }
 
   private static Stream<Arguments> provideMultipleDelayingRouteParameters() {
@@ -672,145 +811,6 @@ public class SpringWebfluxTest {
                     "/greet-delayed",
                     null,
                     SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE))),
-        Arguments.of(
-            named(
-                "annotation API delayed response",
-                new Parameter(
-                    "/foo-delayed",
-                    "/foo-delayed",
-                    "getFooDelayed",
-                    new FooModel(3L, "delayed").toString()))));
-  }
-
-  private static Stream<Arguments> provideBadEndpointParameters() {
-    return Stream.of(
-        Arguments.of(
-            named(
-                "functional API fail fast",
-                new Parameter("/greet-failfast/1", "/greet-failfast/{id}", null, null))),
-        Arguments.of(
-            named(
-                "functional API fail Mono",
-                new Parameter("/greet-failmono/1", "/greet-failmono/{id}", null, null))),
-        Arguments.of(
-            named(
-                "annotation API fail fast",
-                new Parameter("/foo-failfast/1", "/foo-failfast/{id}", "getFooFailFast", null))),
-        Arguments.of(
-            named(
-                "annotation API fail Mono",
-                new Parameter("/foo-failmono/1", "/foo-failmono/{id}", "getFooFailMono", null))));
-  }
-
-  private static Stream<Arguments> provideAsyncHandlerFuncParameters() {
-    return Stream.of(
-        Arguments.of(
-            named(
-                "functional API traced method",
-                new Parameter(
-                    "/greet-traced-method/5",
-                    "/greet-traced-method/{id}",
-                    null,
-                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 5"))),
-        Arguments.of(
-            named(
-                "annotation API traced method",
-                new Parameter(
-                    "/foo-traced-method/8",
-                    "/foo-traced-method/{id}",
-                    "getTracedMethod",
-                    new FooModel(8L, "tracedMethod").toString()))));
-  }
-
-  private static Stream<Arguments> provideAsyncParameters() {
-    return Stream.of(
-        Arguments.of(
-            named(
-                "functional API traced method from mono",
-                new Parameter(
-                    "/greet-mono-from-callable/4",
-                    "/greet-mono-from-callable/{id}",
-                    null,
-                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 4"))),
-        Arguments.of(
-            named(
-                "functional API traced method with delay",
-                new Parameter(
-                    "/greet-delayed-mono/6",
-                    "/greet-delayed-mono/{id}",
-                    null,
-                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 6"))),
-        Arguments.of(
-            named(
-                "annotation API traced method from mono",
-                new Parameter(
-                    "/foo-mono-from-callable/7",
-                    "/foo-mono-from-callable/{id}",
-                    "getMonoFromCallable",
-                    new FooModel(7L, "tracedMethod").toString()))),
-        Arguments.of(
-            named(
-                "annotation API traced method with delay",
-                new Parameter(
-                    "/foo-delayed-mono/9",
-                    "/foo-delayed-mono/{id}",
-                    "getFooDelayedMono",
-                    new FooModel(9L, "tracedMethod").toString()))));
-  }
-
-  private static Stream<Arguments> provideParameters() {
-    return Stream.of(
-        Arguments.of(
-            named(
-                "functional API without parameters",
-                new Parameter(
-                    "/greet",
-                    "/greet",
-                    null,
-                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE))),
-        Arguments.of(
-            named(
-                "functional API with one parameter",
-                new Parameter(
-                    "/greet/WORLD",
-                    "/greet/{name}",
-                    null,
-                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " WORLD"))),
-        Arguments.of(
-            named(
-                "functional API with two parameters",
-                new Parameter(
-                    "/greet/World/Test1",
-                    "/greet/{name}/{word}",
-                    null,
-                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE
-                        + " World Test1"))),
-        Arguments.of(
-            named(
-                "functional API delayed response",
-                new Parameter(
-                    "/greet-delayed",
-                    "/greet-delayed",
-                    null,
-                    SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE))),
-        Arguments.of(
-            named(
-                "annotation API without parameters",
-                new Parameter(
-                    "/foo", "/foo", "getFooModel", new FooModel(0L, "DEFAULT").toString()))),
-        Arguments.of(
-            named(
-                "annotation API with one parameter",
-                new Parameter(
-                    "/foo/1", "/foo/{id}", "getFooModel", new FooModel(1L, "pass").toString()))),
-        Arguments.of(
-            named(
-                "annotation API with two parameters",
-                new Parameter(
-                    "/foo/2/world",
-                    "/foo/{id}/{name}",
-                    "getFooModel",
-                    new FooModel(2L, "world").toString()))),
         Arguments.of(
             named(
                 "annotation API delayed response",
