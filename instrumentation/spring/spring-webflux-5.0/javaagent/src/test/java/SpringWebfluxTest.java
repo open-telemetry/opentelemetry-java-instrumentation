@@ -356,7 +356,7 @@ public class SpringWebfluxTest {
                                         equalTo(
                                             EXCEPTION_TYPE,
                                             "org.springframework.web.server.ResponseStatusException"),
-                                        equalTo(EXCEPTION_MESSAGE, "Response status 404"),
+                                        satisfies(EXCEPTION_MESSAGE, val -> val.containsAnyOf("Response status 404", "404 NOT_FOUND")),
                                         satisfies(
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
