@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.client.WebClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.Options;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
@@ -23,7 +23,7 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
   }
 
   @Override
-  protected void configure(Options.Builder optionsBuilder) {
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
 
     // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet

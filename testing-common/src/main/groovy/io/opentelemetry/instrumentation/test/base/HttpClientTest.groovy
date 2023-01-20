@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
-import io.opentelemetry.instrumentation.testing.junit.http.Options
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -441,7 +441,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   /** A list of additional HTTP client span attributes extracted by the instrumentation per URI. */
   Set<AttributeKey<?>> httpAttributes(URI uri) {
-    new HashSet<>(Options.DEFAULT_HTTP_ATTRIBUTES)
+    new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES)
   }
 
   //This method should create either a single connection to the target uri or a http client

@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.Options;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -99,7 +99,7 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(Options.Builder optionsBuilder) {
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       configureTest(optionsBuilder);
     }
   }
@@ -138,7 +138,7 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(Options.Builder optionsBuilder) {
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       configureTest(optionsBuilder);
     }
   }
@@ -176,7 +176,7 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(Options.Builder optionsBuilder) {
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       configureTest(optionsBuilder);
     }
   }
@@ -224,13 +224,13 @@ class ApacheHttpAsyncClientTest {
     };
   }
 
-  void configureTest(Options.Builder optionsBuilder) {
+  void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setUserAgent("httpasyncclient");
     optionsBuilder.setResponseCodeOnRedirectError(302);
     optionsBuilder.enableTestReadTimeout();
     optionsBuilder.setHttpAttributes(
         endpoint -> {
-          Set<AttributeKey<?>> attributes = new HashSet<>(Options.DEFAULT_HTTP_ATTRIBUTES);
+          Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
           attributes.add(SemanticAttributes.HTTP_SCHEME);
           attributes.add(SemanticAttributes.HTTP_TARGET);
           return attributes;

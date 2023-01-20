@@ -17,7 +17,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @AutoValue
-public abstract class Options {
+public abstract class HttpClientTestOptions {
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(
@@ -71,7 +71,7 @@ public abstract class Options {
   public abstract boolean getTestErrorWithCallback();
 
   static Builder builder() {
-    return new AutoValue_Options.Builder().withDefaults();
+    return new AutoValue_HttpClientTestOptions.Builder().withDefaults();
   }
 
   @AutoValue.Builder
@@ -185,6 +185,6 @@ public abstract class Options {
       return setTestCallbackWithImplicitParent(true);
     }
 
-    Options build();
+    HttpClientTestOptions build();
   }
 }

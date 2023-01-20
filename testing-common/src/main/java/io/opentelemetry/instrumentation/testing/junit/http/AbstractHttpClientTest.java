@@ -67,11 +67,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   protected InstrumentationTestRunner testing;
   private HttpClientTestServer server;
 
-  private Options options;
+  private HttpClientTestOptions options;
 
   @BeforeAll
   void setupOptions() {
-    Options.Builder builder = Options.builder();
+    HttpClientTestOptions.Builder builder = HttpClientTestOptions.builder();
     // TODO(anuraaga): Have subclasses configure options directly and remove mapping of legacy
     // protected methods.
     builder.setHttpAttributes(this::httpAttributes);
@@ -1041,7 +1041,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return true;
   }
 
-  protected void configure(Options.Builder optionsBuilder) {}
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {}
 
   private int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());

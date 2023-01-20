@@ -10,7 +10,7 @@ import static java.util.Objects.requireNonNull;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.Options;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -64,12 +64,12 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @Override
-  protected void configure(Options.Builder optionsBuilder) {
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
 
     optionsBuilder.setHttpAttributes(
         uri -> {
-          Set<AttributeKey<?>> attributes = new HashSet<>(Options.DEFAULT_HTTP_ATTRIBUTES);
+          Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
           attributes.remove(SemanticAttributes.HTTP_FLAVOR);
           return attributes;
         });
