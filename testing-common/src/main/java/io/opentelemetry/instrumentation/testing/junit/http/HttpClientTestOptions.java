@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import com.google.auto.value.AutoValue;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -35,9 +36,9 @@ public abstract class HttpClientTestOptions {
 
   public abstract Function<URI, Set<AttributeKey<?>>> getHttpAttributes();
 
-  public abstract @Nullable Integer getResponseCodeOnRedirectError();
+  @Nullable public abstract Integer getResponseCodeOnRedirectError();
 
-  public abstract @Nullable String getUserAgent();
+  @Nullable public abstract String getUserAgent();
 
   public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
 
@@ -78,6 +79,7 @@ public abstract class HttpClientTestOptions {
   @AutoValue.Builder
   public interface Builder {
 
+    @CanIgnoreReturnValue
     default Builder withDefaults() {
       return setHttpAttributes(x -> DEFAULT_HTTP_ATTRIBUTES)
           .setResponseCodeOnRedirectError(null)
