@@ -95,7 +95,7 @@ class AkkaHttpClientInstrumentationTest
       }
   }
 
-  override protected def configure(options: HttpClientTestOptions): Unit = {
+  override protected def configure(options: HttpClientTestOptions.Builder): Unit = {
     options.disableTestRedirects()
     // singleConnection test would require instrumentation to support requests made through pools
     // (newHostConnectionPool, superPool, etc), which is currently not supported.
