@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
@@ -62,13 +63,13 @@ public abstract class AbstractApacheHttpClientTest {
   class ApacheClientHostRequestTest extends AbstractHttpClientTest<BasicHttpRequest> {
 
     @Override
-    protected BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       // also testing with an absolute path below
       return configureRequest(new BasicHttpRequest(method, fullPathFromUri(uri)), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         BasicHttpRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
@@ -77,20 +78,20 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         BasicHttpRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
         getClient(uri)
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult));
+                responseCallback(httpClientResult));
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -104,13 +105,13 @@ public abstract class AbstractApacheHttpClientTest {
   class ApacheClientHostRequestContextTest extends AbstractHttpClientTest<BasicHttpRequest> {
 
     @Override
-    protected BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       // also testing with an absolute path below
       return configureRequest(new BasicHttpRequest(method, fullPathFromUri(uri)), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         BasicHttpRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
@@ -122,21 +123,21 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         BasicHttpRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
         getClient(uri)
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult),
+                responseCallback(httpClientResult),
                 new BasicHttpContext());
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -150,12 +151,12 @@ public abstract class AbstractApacheHttpClientTest {
   class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<BasicHttpRequest> {
 
     @Override
-    protected BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(new BasicHttpRequest(method, uri.toString()), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         BasicHttpRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
@@ -164,20 +165,20 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         BasicHttpRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
         getClient(uri)
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult));
+                responseCallback(httpClientResult));
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -192,12 +193,12 @@ public abstract class AbstractApacheHttpClientTest {
       extends AbstractHttpClientTest<BasicHttpRequest> {
 
     @Override
-    protected BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(new BasicHttpRequest(method, uri.toString()), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         BasicHttpRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
@@ -209,21 +210,21 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         BasicHttpRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
         getClient(uri)
             .execute(
                 new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
                 request,
-                responseCallback(requestResult),
+                responseCallback(httpClientResult),
                 new BasicHttpContext());
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -237,29 +238,29 @@ public abstract class AbstractApacheHttpClientTest {
   class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    protected HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       // also testing with an absolute path below
       return configureRequest(new HttpUriRequest(method, uri), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(getClient(uri).execute(request));
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
-        getClient(uri).execute(request, responseCallback(requestResult));
+        getClient(uri).execute(request, responseCallback(httpClientResult));
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -273,29 +274,29 @@ public abstract class AbstractApacheHttpClientTest {
   class ApacheClientUriRequestContextTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    protected HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       // also testing with an absolute path below
       return configureRequest(new HttpUriRequest(method, uri), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(getClient(uri).execute(request, new BasicHttpContext()));
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       try {
-        getClient(uri).execute(request, responseCallback(requestResult), new BasicHttpContext());
+        getClient(uri).execute(request, responseCallback(httpClientResult), new BasicHttpContext());
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
       }
     }
 
@@ -322,13 +323,12 @@ public abstract class AbstractApacheHttpClientTest {
     return response.getStatusLine().getStatusCode();
   }
 
-  static ResponseHandler<HttpResponse> responseCallback(
-      AbstractHttpClientTest.RequestResult requestResult) {
+  static ResponseHandler<HttpResponse> responseCallback(HttpClientResult httpClientResult) {
     return response -> {
       try {
-        requestResult.complete(getResponseCode(response));
+        httpClientResult.complete(getResponseCode(response));
       } catch (Throwable t) {
-        requestResult.complete(t);
+        httpClientResult.complete(t);
         return response;
       }
       return response;

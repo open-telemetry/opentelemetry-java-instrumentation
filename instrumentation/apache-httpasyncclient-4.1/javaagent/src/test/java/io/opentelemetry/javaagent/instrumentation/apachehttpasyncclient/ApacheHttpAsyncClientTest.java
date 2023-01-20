@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
@@ -76,25 +77,25 @@ class ApacheHttpAsyncClientTest {
   class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    protected HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(new HttpUriRequest(method, uri), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(getClient(uri).execute(request, null).get());
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
-      getClient(uri).execute(request, responseCallback(requestResult));
+        HttpClientResult httpClientResult) {
+      getClient(uri).execute(request, responseCallback(httpClientResult));
     }
 
     @Override
@@ -107,13 +108,13 @@ class ApacheHttpAsyncClientTest {
   class ApacheClientHostRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    protected HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(
           new HttpUriRequest(method, URI.create(fullPathFromUri(uri))), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
@@ -123,17 +124,17 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       getClient(uri)
           .execute(
               new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
               request,
-              responseCallback(requestResult));
+              responseCallback(httpClientResult));
     }
 
     @Override
@@ -146,12 +147,12 @@ class ApacheHttpAsyncClientTest {
   class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
-    protected HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       return configureRequest(new HttpUriRequest(method, URI.create(uri.toString())), headers);
     }
 
     @Override
-    protected int sendRequest(
+    public int sendRequest(
         HttpUriRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
       return getResponseCode(
@@ -161,17 +162,17 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void sendRequestWithCallback(
+    public void sendRequestWithCallback(
         HttpUriRequest request,
         String method,
         URI uri,
         Map<String, String> headers,
-        RequestResult requestResult) {
+        HttpClientResult httpClientResult) {
       getClient(uri)
           .execute(
               new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
               request,
-              responseCallback(requestResult));
+              responseCallback(httpClientResult));
     }
 
     @Override
@@ -197,8 +198,7 @@ class ApacheHttpAsyncClientTest {
     return response.getStatusLine().getStatusCode();
   }
 
-  static FutureCallback<HttpResponse> responseCallback(
-      AbstractHttpClientTest.RequestResult requestResult) {
+  static FutureCallback<HttpResponse> responseCallback(HttpClientResult httpClientResult) {
     return new FutureCallback<HttpResponse>() {
       @Override
       public void completed(HttpResponse response) {
@@ -209,17 +209,17 @@ class ApacheHttpAsyncClientTest {
         } catch (IOException e) {
           throw new UncheckedIOException(e);
         }
-        requestResult.complete(response.getStatusLine().getStatusCode());
+        httpClientResult.complete(response.getStatusLine().getStatusCode());
       }
 
       @Override
       public void failed(Exception e) {
-        requestResult.complete(e);
+        httpClientResult.complete(e);
       }
 
       @Override
       public void cancelled() {
-        requestResult.complete(new CancellationException());
+        httpClientResult.complete(new CancellationException());
       }
     };
   }

@@ -16,6 +16,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
@@ -66,19 +67,19 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
       String method,
       URI uri,
       Map<String, String> headers,
-      AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     getClient(uri)
         .newCall(request)
         .enqueue(
             new Callback() {
               @Override
               public void onFailure(Request req, IOException e) {
-                requestResult.complete(e);
+                httpClientResult.complete(e);
               }
 
               @Override
               public void onResponse(Response response) {
-                requestResult.complete(response.code());
+                httpClientResult.complete(response.code());
               }
             });
   }

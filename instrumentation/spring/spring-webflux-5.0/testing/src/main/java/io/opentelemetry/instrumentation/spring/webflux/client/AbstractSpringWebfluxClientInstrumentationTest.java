@@ -9,6 +9,7 @@ import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.invoke.MethodHandle;
@@ -26,7 +27,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     extends AbstractHttpClientTest<WebClient.RequestBodySpec> {
 
   @Override
-  protected WebClient.RequestBodySpec buildRequest(
+  public WebClient.RequestBodySpec buildRequest(
       String method, URI uri, Map<String, String> headers) {
 
     WebClient webClient =
@@ -42,23 +43,24 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   protected abstract WebClient.Builder instrument(WebClient.Builder builder);
 
   @Override
-  protected int sendRequest(
+  public int sendRequest(
       WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers) {
     ClientResponse response = requireNonNull(request.exchange().block());
     return getStatusCode(response);
   }
 
   @Override
-  protected void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       WebClient.RequestBodySpec request,
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     request
         .exchange()
         .subscribe(
-            response -> requestResult.complete(getStatusCode(response)), requestResult::complete);
+            response -> httpClientResult.complete(getStatusCode(response)),
+            httpClientResult::complete);
   }
 
   @Override

@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
@@ -54,7 +55,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
-  protected Request buildRequest(String method, URI uri, Map<String, String> headers)
+  public Request buildRequest(String method, URI uri, Map<String, String> headers)
       throws Exception {
     RequestBody body =
         HttpMethod.requiresRequestBody(method)
@@ -68,7 +69,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
-  protected int sendRequest(Request request, String method, URI uri, Map<String, String> headers)
+  public int sendRequest(Request request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     Response response = getClient(uri).newCall(request).execute();
     try (ResponseBody ignored = response.body()) {
@@ -77,25 +78,25 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
-  protected void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       Request request,
       String method,
       URI uri,
       Map<String, String> headers,
-      AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     getClient(uri)
         .newCall(request)
         .enqueue(
             new Callback() {
               @Override
               public void onFailure(Call call, IOException e) {
-                requestResult.complete(e);
+                httpClientResult.complete(e);
               }
 
               @Override
               public void onResponse(Call call, Response response) {
                 try (ResponseBody ignored = response.body()) {
-                  requestResult.complete(response.code());
+                  httpClientResult.complete(response.code());
                 }
               }
             });
@@ -146,7 +147,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
     String method = "GET";
     URI uri = resolveAddress("/success");
 
-    RequestResult result = new RequestResult(() -> testing.runWithSpan("child", () -> {}));
+    HttpClientResult result = new HttpClientResult(() -> testing.runWithSpan("child", () -> {}));
     OkHttpClient.Builder builder = getClientBuilder(false);
     builder.addInterceptor(new TestInterceptor());
     Call.Factory testClient = createCallFactory(builder);

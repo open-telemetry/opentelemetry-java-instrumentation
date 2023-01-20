@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.time.Duration;
@@ -62,12 +63,12 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
   }
 
   @Override
-  protected final Void buildRequest(String method, URI uri, Map<String, String> headers) {
+  public Void buildRequest(String method, URI uri, Map<String, String> headers) {
     return null;
   }
 
   @Override
-  protected final int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
+  public int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     return exec.yield(
             r -> r.add(Context.class, Context.current()),
@@ -76,12 +77,12 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
   }
 
   @Override
-  protected final void sendRequestWithCallback(
+  public final void sendRequestWithCallback(
       Void request,
       String method,
       URI uri,
       Map<String, String> headers,
-      RequestResult requestResult)
+      HttpClientResult httpClientResult)
       throws Exception {
     // ratpack-test 1.8 supports execute with an Action of registrySpec
     exec.yield(
@@ -92,7 +93,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
                             internalSendRequest(client, method, uri, headers)
                                 .result(
                                     result ->
-                                        requestResult.complete(
+                                        httpClientResult.complete(
                                             result::getValue, result.getThrowable())))
                     .promise())
         .getValueOrThrow();

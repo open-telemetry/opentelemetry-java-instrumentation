@@ -30,15 +30,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
@@ -50,86 +48,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractHttpClientTest<REQUEST> {
+public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeAdapter<REQUEST> {
   public static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
-
-  /**
-   * Build the request to be passed to {@link #sendRequest(java.lang.Object, java.lang.String,
-   * java.net.URI, java.util.Map)}.
-   *
-   * <p>By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
-   * request a second time to verify that the traceparent header is not added multiple times to the
-   * request, and that the last one wins. Tests will fail if the header shows multiple times.
-   */
-  protected abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
-      throws Exception;
-
-  /**
-   * Helper class for capturing result of asynchronous request and running a callback when result is
-   * received.
-   */
-  public static class RequestResult {
-    private static final long timeout = 10_000;
-    private final CountDownLatch valueReady = new CountDownLatch(1);
-    private final Runnable callback;
-    private int status;
-    private Throwable throwable;
-
-    public RequestResult(Runnable callback) {
-      this.callback = callback;
-    }
-
-    public void complete(int status) {
-      complete(() -> status, null);
-    }
-
-    public void complete(Throwable throwable) {
-      complete(null, throwable);
-    }
-
-    public void complete(Supplier<Integer> status, Throwable throwable) {
-      if (throwable != null) {
-        this.throwable = throwable;
-      } else {
-        this.status = status.get();
-      }
-      callback.run();
-      valueReady.countDown();
-    }
-
-    public int get() throws Throwable {
-      if (!valueReady.await(timeout, TimeUnit.MILLISECONDS)) {
-        throw new TimeoutException("Timed out waiting for response in " + timeout + "ms");
-      }
-      if (throwable != null) {
-        throw throwable;
-      }
-      return status;
-    }
-  }
-
-  /**
-   * Make the request and return the status code of the response synchronously. Some clients, e.g.,
-   * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
-   * dedicated API for invoking synchronously, such as OkHttp's execute method.
-   */
-  protected abstract int sendRequest(
-      REQUEST request, String method, URI uri, Map<String, String> headers) throws Exception;
-
-  protected void sendRequestWithCallback(
-      REQUEST request,
-      String method,
-      URI uri,
-      Map<String, String> headers,
-      RequestResult requestResult)
-      throws Exception {
-    // Must be implemented if testAsync is true
-    throw new UnsupportedOperationException();
-  }
 
   /** Returns the connection timeout that should be used when setting up tested clients. */
   protected final Duration connectTimeout() {
@@ -283,7 +207,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     String method = "GET";
     URI uri = resolveAddress("/success");
 
-    RequestResult result =
+    HttpClientResult result =
         testing.runWithSpan(
             "parent",
             () -> doRequestWithCallback(method, uri, () -> testing.runWithSpan("child", () -> {})));
@@ -308,7 +232,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     String method = "GET";
     URI uri = resolveAddress("/success");
 
-    RequestResult result =
+    HttpClientResult result =
         doRequestWithCallback(method, uri, () -> testing.runWithSpan("callback", () -> {}));
 
     assertThat(result.get()).isEqualTo(200);
@@ -331,7 +255,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     String method = "GET";
     URI uri = resolveAddress("/success");
 
-    RequestResult result =
+    HttpClientResult result =
         doRequestWithCallback(method, uri, () -> testing.runWithSpan("callback", () -> {}));
 
     assertThat(result.get()).isEqualTo(200);
@@ -559,7 +483,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     String method = "GET";
     URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
 
-    RequestResult result =
+    HttpClientResult result =
         testing.runWithSpan(
             "parent",
             () ->
@@ -588,7 +512,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                       span.hasName("callback")
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0)));
-          boolean jdk8 = "1.8".equals(System.getProperty("java.specification.version"));
+          boolean jdk8 = Objects.equals(System.getProperty("java.specification.version"), "1.8");
           if (jdk8) {
             // on some netty based http clients order of `CONNECT` and `callback` spans isn't
             // guaranteed when running on jdk8
@@ -790,7 +714,7 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                       throw new AssertionError(e);
                     }
                     try {
-                      RequestResult result =
+                      HttpClientResult result =
                           testing.runWithSpan(
                               "Parent span " + index,
                               () -> {
@@ -967,7 +891,9 @@ public abstract class AbstractHttpClientTest<REQUEST> {
                   assertThat(attrs)
                       .containsEntry(
                           SemanticAttributes.NET_SOCK_PEER_PORT,
-                          "https".equals(uri.getScheme()) ? server.httpsPort() : server.httpPort());
+                          Objects.equals(uri.getScheme(), "https")
+                              ? server.httpsPort()
+                              : server.httpPort());
                 }
               }
 
@@ -1140,17 +1066,17 @@ public abstract class AbstractHttpClientTest<REQUEST> {
     return sendRequest(request, method, uri, headers);
   }
 
-  private RequestResult doRequestWithCallback(String method, URI uri, Runnable callback)
+  private HttpClientResult doRequestWithCallback(String method, URI uri, Runnable callback)
       throws Exception {
     return doRequestWithCallback(method, uri, Collections.emptyMap(), callback);
   }
 
-  private RequestResult doRequestWithCallback(
+  private HttpClientResult doRequestWithCallback(
       String method, URI uri, Map<String, String> headers, Runnable callback) throws Exception {
     REQUEST request = buildRequest(method, uri, headers);
-    RequestResult requestResult = new RequestResult(callback);
-    sendRequestWithCallback(request, method, uri, headers, requestResult);
-    return requestResult;
+    HttpClientResult httpClientResult = new HttpClientResult(callback);
+    sendRequestWithCallback(request, method, uri, headers, httpClientResult);
+    return httpClientResult;
   }
 
   protected URI resolveAddress(String path) {

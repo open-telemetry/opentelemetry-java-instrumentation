@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.InputStream;
 import java.net.URI;
@@ -64,7 +65,7 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
       String method,
       URI uri,
       Map<String, String> headers,
-      AbstractHttpClientTest.RequestResult requestResult) {
+      HttpClientResult httpClientResult) {
     try {
       restTemplate.execute(
           uri,
@@ -75,11 +76,11 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
             try (InputStream inputStream = response.getBody()) {
               while (inputStream.read(buffer) >= 0) {}
             }
-            requestResult.complete(response.getStatusCode().value());
+            httpClientResult.complete(response.getStatusCode().value());
             return null;
           });
     } catch (ResourceAccessException exception) {
-      requestResult.complete(exception.getCause());
+      httpClientResult.complete(exception.getCause());
     }
   }
 
