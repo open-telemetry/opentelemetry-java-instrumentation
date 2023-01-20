@@ -99,28 +99,13 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  String getPeerName() {
-    return uri != null ? uri.getHost() : null;
+  public String getPeerName() {
+    return uri == null ? null : uri.getHost();
   }
 
   @Nullable
-  Integer getPeerPort() {
-    if (uri == null) {
-      return null;
-    }
-    int port = uri.getPort();
-    if (port != -1) {
-      return port;
-    }
-    switch (uri.getScheme()) {
-      case "http":
-        return 80;
-      case "https":
-        return 443;
-      default:
-        logger.log(FINE, "no default port mapping for scheme: {0}", uri.getScheme());
-        return null;
-    }
+  public Integer getPeerPort() {
+    return uri == null ? null : uri.getPort();
   }
 
   @Nullable
