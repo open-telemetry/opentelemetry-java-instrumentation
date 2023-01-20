@@ -36,9 +36,11 @@ public abstract class HttpClientTestOptions {
 
   public abstract Function<URI, Set<AttributeKey<?>>> getHttpAttributes();
 
-  @Nullable public abstract Integer getResponseCodeOnRedirectError();
+  @Nullable
+  public abstract Integer getResponseCodeOnRedirectError();
 
-  @Nullable public abstract String getUserAgent();
+  @Nullable
+  public abstract String getUserAgent();
 
   public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
 
