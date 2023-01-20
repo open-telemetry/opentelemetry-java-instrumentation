@@ -32,7 +32,7 @@ updates:
         versions: [ "(,)" ]
       - dependency-name: "org.mockito:*"
         # mockito 5 requires Java 11
-        versions: [ "[5,)]" ]
+        versions: [ "[5,)" ]
     rebase-strategy: "disabled"
     schedule:
       interval: "daily"
