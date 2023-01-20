@@ -230,7 +230,8 @@ class ApacheHttpAsyncClientTest {
     optionsBuilder.enableTestReadTimeout();
     optionsBuilder.setHttpAttributes(
         endpoint -> {
-          Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
           attributes.add(SemanticAttributes.HTTP_SCHEME);
           attributes.add(SemanticAttributes.HTTP_TARGET);
           return attributes;

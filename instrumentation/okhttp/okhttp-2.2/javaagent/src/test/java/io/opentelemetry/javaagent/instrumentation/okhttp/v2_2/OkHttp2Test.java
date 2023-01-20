@@ -98,7 +98,8 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
 
     optionsBuilder.setHttpAttributes(
         uri -> {
-          Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
           // flavor is extracted from the response, and those URLs cause exceptions (= null
           // response)

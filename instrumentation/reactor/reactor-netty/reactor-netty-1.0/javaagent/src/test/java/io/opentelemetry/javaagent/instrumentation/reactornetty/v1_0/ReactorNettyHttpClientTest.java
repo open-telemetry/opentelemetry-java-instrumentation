@@ -59,7 +59,8 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
     if (uri.toString().contains("/success")) {
       // the single connection test does not report net.peer.* attributes; it only reports the
       // net.peer.sock.* attributes
-      Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
       attributes.remove(SemanticAttributes.NET_PEER_NAME);
       attributes.remove(SemanticAttributes.NET_PEER_PORT);
       return attributes;

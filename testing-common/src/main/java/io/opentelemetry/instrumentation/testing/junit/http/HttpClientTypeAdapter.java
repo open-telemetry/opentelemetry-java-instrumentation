@@ -25,7 +25,7 @@ public interface HttpClientTypeAdapter<REQUEST> {
    * dedicated API for invoking synchronously, such as OkHttp's execute method.
    */
   int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
-     throws Exception;
+      throws Exception;
 
   default void sendRequestWithCallback(
       REQUEST request,

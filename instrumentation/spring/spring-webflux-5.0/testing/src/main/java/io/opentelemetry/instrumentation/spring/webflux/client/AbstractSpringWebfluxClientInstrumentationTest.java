@@ -69,7 +69,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
 
     optionsBuilder.setHttpAttributes(
         uri -> {
-          Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
           attributes.remove(SemanticAttributes.HTTP_FLAVOR);
           return attributes;
         });

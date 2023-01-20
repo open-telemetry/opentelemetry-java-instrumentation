@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,6 +15,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class HttpClientTestOptions {
