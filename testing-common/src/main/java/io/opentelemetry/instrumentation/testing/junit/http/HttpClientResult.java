@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  * Helper class for capturing result of asynchronous request and running a callback when result is
  * received.
  */
-public class HttpClientResult {
+public final class HttpClientResult {
   private static final long timeout = 10_000;
   private final CountDownLatch valueReady = new CountDownLatch(1);
   private final Runnable callback;
