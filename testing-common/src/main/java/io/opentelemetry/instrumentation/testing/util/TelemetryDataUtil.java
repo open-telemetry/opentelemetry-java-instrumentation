@@ -46,9 +46,10 @@ public final class TelemetryDataUtil {
     return traces;
   }
 
-  public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
+  public static List<List<SpanData>> waitForTraces(
+      Supplier<List<SpanData>> supplier, int number, boolean verifyScopeVersion)
       throws InterruptedException, TimeoutException {
-    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS, true);
+    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS, verifyScopeVersion);
   }
 
   public static List<List<SpanData>> waitForTraces(
