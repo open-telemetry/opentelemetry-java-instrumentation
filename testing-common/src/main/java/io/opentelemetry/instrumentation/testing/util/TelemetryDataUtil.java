@@ -48,11 +48,15 @@ public final class TelemetryDataUtil {
 
   public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS);
+    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS, true);
   }
 
   public static List<List<SpanData>> waitForTraces(
-      Supplier<List<SpanData>> supplier, int number, long timeout, TimeUnit unit)
+      Supplier<List<SpanData>> supplier,
+      int number,
+      long timeout,
+      TimeUnit unit,
+      boolean verifyScopeVersion)
       throws InterruptedException, TimeoutException {
     long startTime = System.nanoTime();
     List<List<SpanData>> allTraces = groupTraces(supplier.get());
@@ -74,14 +78,16 @@ public final class TelemetryDataUtil {
               + " total trace(s): "
               + allTraces);
     }
-    // TODO (trask) is there a better location for this assertion?
-    for (List<SpanData> trace : completeTraces) {
-      for (SpanData span : trace) {
-        if (!span.getInstrumentationScopeInfo().getName().equals("test")) {
-          assertThat(span.getInstrumentationScopeInfo().getVersion())
-              .as(
-                  "Instrumentation version was empty; make sure that the instrumentation name matches the gradle module name")
-              .isNotNull();
+    if (verifyScopeVersion) {
+      // TODO (trask) is there a better location for this assertion?
+      for (List<SpanData> trace : completeTraces) {
+        for (SpanData span : trace) {
+          if (!span.getInstrumentationScopeInfo().getName().equals("test")) {
+            assertThat(span.getInstrumentationScopeInfo().getVersion())
+                .as(
+                    "Instrumentation version was empty; make sure that the instrumentation name matches the gradle module name")
+                .isNotNull();
+          }
         }
       }
     }

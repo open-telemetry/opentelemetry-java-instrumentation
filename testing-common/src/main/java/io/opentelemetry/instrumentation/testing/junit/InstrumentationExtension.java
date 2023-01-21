@@ -113,7 +113,7 @@ public abstract class InstrumentationExtension
    * 20 seconds, then times out.
    */
   public List<List<SpanData>> waitForTraces(int numberOfTraces) {
-    return testRunner.waitForTraces(numberOfTraces);
+    return testRunner.waitForTraces(numberOfTraces, true);
   }
 
   @SafeVarargs
@@ -121,6 +121,13 @@ public abstract class InstrumentationExtension
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
     testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertTracesWithoutScopeVersionVerification(
+      Consumer<TraceAssert>... assertions) {
+    testRunner.waitAndAssertTracesWithoutScopeVersionVerification(assertions);
   }
 
   @SafeVarargs
