@@ -2,7 +2,7 @@ name: Issue management - run stale action
 
 on:
   schedule:
-    # Hourly at minute 23
+    # hourly at minute 23
     - cron: "23 * * * *"
 
 jobs:
