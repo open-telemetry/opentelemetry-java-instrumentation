@@ -24,6 +24,9 @@ import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
 
+import static org.assertj.core.api.Assertions.assertThat
+import static org.awaitility.Awaitility.await
+
 /**
  * Base class for test specifications that are shared between instrumentation libraries and agent.
  * The methods in this class are implemented by {@link AgentTestTrait} and
@@ -95,6 +98,11 @@ abstract class InstrumentationSpecification extends Specification {
    */
   List<List<SpanData>> waitForTraces(int numberOfTraces) {
     TelemetryDataUtil.waitForTraces({ testRunner().getExportedSpans() }, numberOfTraces, true)
+  }
+
+  List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
+    await().untilAsserted(() -> assertThat(getLogRecords().size()).isEqualTo(1))
+    return getLogRecords()
   }
 
   void ignoreTracesAndClear(int numberOfTraces) {
