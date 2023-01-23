@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
 public final class Hibernate43Singletons {
 
   private static final Instrumenter<HibernateOperation, Void> INSTANCE =
-      HibernateInstrumenterFactory.createInstrumenter("io.opentelemetry.hibernate-4.3");
+      HibernateInstrumenterFactory.createInstrumenter("io.opentelemetry.hibernate-procedure-call-4.3");
 
   public static Instrumenter<HibernateOperation, Void> instrumenter() {
     return INSTANCE;
