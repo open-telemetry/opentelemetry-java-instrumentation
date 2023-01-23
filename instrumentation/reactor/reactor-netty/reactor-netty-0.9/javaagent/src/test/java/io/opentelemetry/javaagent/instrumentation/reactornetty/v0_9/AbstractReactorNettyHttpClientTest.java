@@ -90,12 +90,12 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.disableTestRedirects();
-    options.enableTestReadTimeout();
-    options.setUserAgent(USER_AGENT);
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.disableTestRedirects();
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setUserAgent(USER_AGENT);
 
-    options.setExpectedClientSpanNameMapper(
+    optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
           switch (uri.toString()) {
             case "http://localhost:61/": // unopened port
@@ -107,7 +107,7 @@ abstract class AbstractReactorNettyHttpClientTest
           }
         });
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
           if (exception.getClass().getName().endsWith("ReactiveException")) {
             // unopened port or non routable address
@@ -119,7 +119,7 @@ abstract class AbstractReactorNettyHttpClientTest
           return exception;
         });
 
-    options.setHttpAttributes(
+    optionsBuilder.setHttpAttributes(
         uri -> {
           // unopened port or non routable address
           if ("http://localhost:61/".equals(uri.toString())
