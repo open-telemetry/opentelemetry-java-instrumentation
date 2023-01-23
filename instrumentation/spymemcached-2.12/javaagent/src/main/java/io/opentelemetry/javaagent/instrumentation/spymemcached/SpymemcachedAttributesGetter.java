@@ -11,37 +11,37 @@ import javax.annotation.Nullable;
 public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<SpymemcachedRequest> {
 
   @Override
-  public String system(SpymemcachedRequest spymemcachedRequest) {
+  public String getSystem(SpymemcachedRequest spymemcachedRequest) {
     return "memcached";
   }
 
   @Override
   @Nullable
-  public String user(SpymemcachedRequest spymemcachedRequest) {
+  public String getUser(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
   @Override
   @Nullable
-  public String name(SpymemcachedRequest spymemcachedRequest) {
+  public String getName(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
   @Override
   @Nullable
-  public String connectionString(SpymemcachedRequest spymemcachedRequest) {
+  public String getConnectionString(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
   @Override
   @Nullable
-  public String statement(SpymemcachedRequest spymemcachedRequest) {
+  public String getStatement(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
   @Override
   @Nullable
-  public String operation(SpymemcachedRequest spymemcachedRequest) {
+  public String getOperation(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.dbOperation();
   }
 }

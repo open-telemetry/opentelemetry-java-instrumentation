@@ -13,37 +13,37 @@ final class ElasticsearchRestAttributesGetter
     implements DbClientAttributesGetter<ElasticsearchRestRequest> {
 
   @Override
-  public String system(ElasticsearchRestRequest request) {
+  public String getSystem(ElasticsearchRestRequest request) {
     return SemanticAttributes.DbSystemValues.ELASTICSEARCH;
   }
 
   @Override
   @Nullable
-  public String user(ElasticsearchRestRequest request) {
+  public String getUser(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String name(ElasticsearchRestRequest request) {
+  public String getName(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String connectionString(ElasticsearchRestRequest request) {
+  public String getConnectionString(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String statement(ElasticsearchRestRequest request) {
+  public String getStatement(ElasticsearchRestRequest request) {
     return request.getMethod() + " " + request.getOperation();
   }
 
   @Override
   @Nullable
-  public String operation(ElasticsearchRestRequest request) {
+  public String getOperation(ElasticsearchRestRequest request) {
     return request.getMethod();
   }
 }

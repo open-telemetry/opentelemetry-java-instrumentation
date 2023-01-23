@@ -21,24 +21,25 @@ enum SpringWebHttpAttributesGetter
   INSTANCE;
 
   @Override
-  public String method(HttpRequest httpRequest) {
+  public String getMethod(HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
   }
 
   @Override
   @Nullable
-  public String url(HttpRequest httpRequest) {
+  public String getUrl(HttpRequest httpRequest) {
     return httpRequest.getURI().toString();
   }
 
   @Override
-  public List<String> requestHeader(HttpRequest httpRequest, String name) {
+  public List<String> getRequestHeader(HttpRequest httpRequest, String name) {
     return httpRequest.getHeaders().getOrDefault(name, emptyList());
   }
 
   @Override
   @Nullable
-  public String flavor(HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
+  public String getFlavor(
+      HttpRequest httpRequest, @Nullable ClientHttpResponse clientHttpResponse) {
     return null;
   }
 
@@ -82,7 +83,7 @@ enum SpringWebHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, @Nullable Throwable error) {
 
     if (GET_STATUS_CODE == null || STATUS_CODE_VALUE == null) {
@@ -98,7 +99,7 @@ enum SpringWebHttpAttributesGetter
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, String name) {
     return clientHttpResponse.getHeaders().getOrDefault(name, emptyList());
   }

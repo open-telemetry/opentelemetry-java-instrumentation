@@ -91,13 +91,14 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, SemanticAttributes.HTTP_URL, stripSensitiveData(getter.url(request)));
+    internalSet(
+        attributes, SemanticAttributes.HTTP_URL, stripSensitiveData(getter.getUrl(request)));
 
     internalNetExtractor.onStart(attributes, request);
   }
 
   private boolean shouldCapturePeerPort(int port, REQUEST request) {
-    String url = getter.url(request);
+    String url = getter.getUrl(request);
     if (url == null) {
       return true;
     }
@@ -160,7 +161,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     super.onEnd(attributes, context, request, response, error);
 
-    internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request, response));
+    internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.getFlavor(request, response));
 
     internalNetExtractor.onEnd(attributes, request, response);
   }
@@ -179,19 +180,19 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     @Nullable
     @Override
-    public String transport(REQUEST request, @Nullable RESPONSE response) {
+    public String getTransport(REQUEST request, @Nullable RESPONSE response) {
       return null;
     }
 
     @Nullable
     @Override
-    public String peerName(REQUEST request) {
+    public String getPeerName(REQUEST request) {
       return null;
     }
 
     @Nullable
     @Override
-    public Integer peerPort(REQUEST request) {
+    public Integer getPeerPort(REQUEST request) {
       return null;
     }
   }

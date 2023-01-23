@@ -18,47 +18,47 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
 
   @Nullable
   @Override
-  public String method(String s) {
+  public String getMethod(String s) {
     return null;
   }
 
   @Override
-  public List<String> requestHeader(String s, String name) {
+  public List<String> getRequestHeader(String s, String name) {
     return emptyList();
   }
 
   @Nullable
   @Override
-  public Integer statusCode(String s, Void unused, @Nullable Throwable error) {
+  public Integer getStatusCode(String s, Void unused, @Nullable Throwable error) {
     return null;
   }
 
   @Override
-  public List<String> responseHeader(String s, Void unused, String name) {
+  public List<String> getResponseHeader(String s, Void unused, String name) {
     return emptyList();
   }
 
   @Nullable
   @Override
-  public String flavor(String s) {
+  public String getFlavor(String s) {
     return null;
   }
 
   @Nullable
   @Override
-  public String target(String s) {
+  public String getTarget(String s) {
     return null;
   }
 
   @Nullable
   @Override
-  public String route(String s) {
+  public String getRoute(String s) {
     return null;
   }
 
   @Nullable
   @Override
-  public String scheme(String s) {
+  public String getScheme(String s) {
     return null;
   }
 }

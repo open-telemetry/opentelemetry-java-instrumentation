@@ -16,33 +16,33 @@ class AkkaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  public String url(HttpRequest httpRequest) {
+  public String getUrl(HttpRequest httpRequest) {
     return httpRequest.uri().toString();
   }
 
   @Override
-  public String flavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
+  public String getFlavor(HttpRequest httpRequest, @Nullable HttpResponse httpResponse) {
     return AkkaHttpUtil.flavor(httpRequest);
   }
 
   @Override
-  public String method(HttpRequest httpRequest) {
+  public String getMethod(HttpRequest httpRequest) {
     return httpRequest.method().value();
   }
 
   @Override
-  public List<String> requestHeader(HttpRequest httpRequest, String name) {
+  public List<String> getRequestHeader(HttpRequest httpRequest, String name) {
     return AkkaHttpUtil.requestHeader(httpRequest, name);
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpRequest httpRequest, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.status().intValue();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpRequest httpRequest, HttpResponse httpResponse, String name) {
     return AkkaHttpUtil.responseHeader(httpResponse, name);
   }

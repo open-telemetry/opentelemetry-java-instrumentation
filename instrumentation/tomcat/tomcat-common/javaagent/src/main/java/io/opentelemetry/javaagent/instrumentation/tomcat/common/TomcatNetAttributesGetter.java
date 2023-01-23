@@ -17,45 +17,45 @@ public class TomcatNetAttributesGetter implements NetServerAttributesGetter<Requ
 
   @Override
   @Nullable
-  public String transport(Request request) {
+  public String getTransport(Request request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String hostName(Request request) {
+  public String getHostName(Request request) {
     return messageBytesToString(request.serverName());
   }
 
   @Override
-  public Integer hostPort(Request request) {
+  public Integer getHostPort(Request request) {
     return request.getServerPort();
   }
 
   @Override
   @Nullable
-  public String sockPeerAddr(Request request) {
+  public String getSockPeerAddr(Request request) {
     request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.remoteAddr());
   }
 
   @Override
   @Nullable
-  public Integer sockPeerPort(Request request) {
+  public Integer getSockPeerPort(Request request) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String sockHostAddr(Request request) {
+  public String getSockHostAddr(Request request) {
     request.action(ActionCode.REQ_LOCAL_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.localAddr());
   }
 
   @Nullable
   @Override
-  public Integer sockHostPort(Request request) {
+  public Integer getSockHostPort(Request request) {
     request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);
     return request.getLocalPort();
   }

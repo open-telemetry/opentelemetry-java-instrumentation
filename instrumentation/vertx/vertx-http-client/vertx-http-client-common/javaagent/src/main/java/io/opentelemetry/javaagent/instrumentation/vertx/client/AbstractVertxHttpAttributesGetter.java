@@ -16,23 +16,23 @@ public abstract class AbstractVertxHttpAttributesGetter
 
   @Nullable
   @Override
-  public String flavor(HttpClientRequest request, @Nullable HttpClientResponse response) {
+  public String getFlavor(HttpClientRequest request, @Nullable HttpClientResponse response) {
     return null;
   }
 
   @Override
-  public List<String> requestHeader(HttpClientRequest request, String name) {
+  public List<String> getRequestHeader(HttpClientRequest request, String name) {
     return request.headers().getAll(name);
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpClientRequest request, HttpClientResponse response, @Nullable Throwable error) {
     return response.statusCode();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpClientRequest request, HttpClientResponse response, String name) {
     return response.headers().getAll(name);
   }

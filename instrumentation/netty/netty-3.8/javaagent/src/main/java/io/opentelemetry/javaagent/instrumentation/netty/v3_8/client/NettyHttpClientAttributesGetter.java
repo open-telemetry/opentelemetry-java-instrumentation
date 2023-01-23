@@ -20,7 +20,7 @@ final class NettyHttpClientAttributesGetter
 
   @Override
   @Nullable
-  public String url(HttpRequestAndChannel requestAndChannel) {
+  public String getUrl(HttpRequestAndChannel requestAndChannel) {
     try {
       String hostHeader = getHost(requestAndChannel);
       String target = requestAndChannel.request().getUri();
@@ -35,12 +35,13 @@ final class NettyHttpClientAttributesGetter
   }
 
   private String getHost(HttpRequestAndChannel requestAndChannel) {
-    List<String> values = requestHeader(requestAndChannel, "host");
+    List<String> values = getRequestHeader(requestAndChannel, "host");
     return values.isEmpty() ? null : values.get(0);
   }
 
   @Override
-  public String flavor(HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+  public String getFlavor(
+      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     String flavor = requestAndChannel.request().getProtocolVersion().toString();
     if (flavor.startsWith("HTTP/")) {
       flavor = flavor.substring("HTTP/".length());
@@ -49,23 +50,23 @@ final class NettyHttpClientAttributesGetter
   }
 
   @Override
-  public String method(HttpRequestAndChannel requestAndChannel) {
+  public String getMethod(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getMethod().getName();
   }
 
   @Override
-  public List<String> requestHeader(HttpRequestAndChannel requestAndChannel, String name) {
+  public List<String> getRequestHeader(HttpRequestAndChannel requestAndChannel, String name) {
     return requestAndChannel.request().headers().getAll(name);
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().getCode();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, String name) {
     return response.headers().getAll(name);
   }

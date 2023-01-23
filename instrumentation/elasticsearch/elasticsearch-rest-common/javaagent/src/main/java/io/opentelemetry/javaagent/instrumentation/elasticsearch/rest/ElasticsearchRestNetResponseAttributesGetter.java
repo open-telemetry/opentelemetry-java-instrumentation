@@ -15,25 +15,25 @@ final class ElasticsearchRestNetResponseAttributesGetter
     implements NetClientAttributesGetter<ElasticsearchRestRequest, Response> {
 
   @Override
-  public String transport(ElasticsearchRestRequest request, Response response) {
+  public String getTransport(ElasticsearchRestRequest request, Response response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(ElasticsearchRestRequest request) {
+  public String getPeerName(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public Integer peerPort(ElasticsearchRestRequest request) {
+  public Integer getPeerPort(ElasticsearchRestRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String sockFamily(
+  public String getSockFamily(
       ElasticsearchRestRequest elasticsearchRestRequest, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() instanceof Inet6Address) {
       return "inet6";
@@ -43,7 +43,7 @@ final class ElasticsearchRestNetResponseAttributesGetter
 
   @Override
   @Nullable
-  public String sockPeerAddr(ElasticsearchRestRequest request, @Nullable Response response) {
+  public String getSockPeerAddr(ElasticsearchRestRequest request, @Nullable Response response) {
     if (response != null && response.getHost().getAddress() != null) {
       return response.getHost().getAddress().getHostAddress();
     }

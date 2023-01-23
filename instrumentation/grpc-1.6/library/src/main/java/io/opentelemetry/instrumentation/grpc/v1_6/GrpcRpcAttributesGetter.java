@@ -17,13 +17,13 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
   INSTANCE;
 
   @Override
-  public String system(GrpcRequest request) {
+  public String getSystem(GrpcRequest request) {
     return "grpc";
   }
 
   @Override
   @Nullable
-  public String service(GrpcRequest request) {
+  public String getService(GrpcRequest request) {
     String fullMethodName = request.getMethod().getFullMethodName();
     int slashIndex = fullMethodName.lastIndexOf('/');
     if (slashIndex == -1) {
@@ -34,7 +34,7 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
 
   @Override
   @Nullable
-  public String method(GrpcRequest request) {
+  public String getMethod(GrpcRequest request) {
     String fullMethodName = request.getMethod().getFullMethodName();
     int slashIndex = fullMethodName.lastIndexOf('/');
     if (slashIndex == -1) {

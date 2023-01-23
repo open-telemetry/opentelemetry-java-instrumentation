@@ -13,37 +13,37 @@ final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest> {
 
   @Override
-  public String system(OpenSearchRestRequest request) {
+  public String getSystem(OpenSearchRestRequest request) {
     return SemanticAttributes.DbSystemValues.OPENSEARCH;
   }
 
   @Override
   @Nullable
-  public String user(OpenSearchRestRequest request) {
+  public String getUser(OpenSearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String name(OpenSearchRestRequest request) {
+  public String getName(OpenSearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String connectionString(OpenSearchRestRequest request) {
+  public String getConnectionString(OpenSearchRestRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String statement(OpenSearchRestRequest request) {
+  public String getStatement(OpenSearchRestRequest request) {
     return request.getMethod() + " " + request.getOperation();
   }
 
   @Override
   @Nullable
-  public String operation(OpenSearchRestRequest request) {
+  public String getOperation(OpenSearchRestRequest request) {
     return request.getMethod();
   }
 }

@@ -11,17 +11,17 @@ enum DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest> {
   INSTANCE;
 
   @Override
-  public String system(DubboRequest request) {
+  public String getSystem(DubboRequest request) {
     return "apache_dubbo";
   }
 
   @Override
-  public String service(DubboRequest request) {
+  public String getService(DubboRequest request) {
     return request.invocation().getInvoker().getInterface().getName();
   }
 
   @Override
-  public String method(DubboRequest request) {
+  public String getMethod(DubboRequest request) {
     return request.invocation().getMethodName();
   }
 }

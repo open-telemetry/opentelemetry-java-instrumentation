@@ -15,18 +15,18 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
   INSTANCE;
 
   @Override
-  public String system(DeliveryRequest request) {
+  public String getSystem(DeliveryRequest request) {
     return "rabbitmq";
   }
 
   @Override
-  public String destinationKind(DeliveryRequest request) {
+  public String getDestinationKind(DeliveryRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.QUEUE;
   }
 
   @Nullable
   @Override
-  public String destination(DeliveryRequest request) {
+  public String getDestination(DeliveryRequest request) {
     if (request.getEnvelope() != null) {
       return normalizeExchangeName(request.getEnvelope().getExchange());
     } else {
@@ -39,37 +39,37 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
   }
 
   @Override
-  public boolean temporaryDestination(DeliveryRequest request) {
+  public boolean isTemporaryDestination(DeliveryRequest request) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(DeliveryRequest request) {
+  public String getProtocol(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(DeliveryRequest request) {
+  public String getProtocolVersion(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(DeliveryRequest request) {
+  public String getUrl(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(DeliveryRequest request) {
+  public String getConversationId(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(DeliveryRequest request) {
+  public Long getMessagePayloadSize(DeliveryRequest request) {
     if (request.getBody() != null) {
       return (long) request.getBody().length;
     }
@@ -78,18 +78,18 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(DeliveryRequest request) {
+  public Long getMessagePayloadCompressedSize(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(DeliveryRequest request, @Nullable Void unused) {
+  public String getMessageId(DeliveryRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> header(DeliveryRequest request, String name) {
+  public List<String> getMessageHeader(DeliveryRequest request, String name) {
     Object value = request.getProperties().getHeaders().get(name);
     if (value != null) {
       return Collections.singletonList(value.toString());

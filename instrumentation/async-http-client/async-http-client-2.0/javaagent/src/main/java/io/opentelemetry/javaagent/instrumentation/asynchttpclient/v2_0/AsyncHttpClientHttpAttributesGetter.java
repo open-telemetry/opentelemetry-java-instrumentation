@@ -15,33 +15,33 @@ final class AsyncHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<RequestContext, Response> {
 
   @Override
-  public String method(RequestContext requestContext) {
+  public String getMethod(RequestContext requestContext) {
     return requestContext.getRequest().getMethod();
   }
 
   @Override
-  public String url(RequestContext requestContext) {
+  public String getUrl(RequestContext requestContext) {
     return requestContext.getRequest().getUri().toUrl();
   }
 
   @Override
-  public List<String> requestHeader(RequestContext requestContext, String name) {
+  public List<String> getRequestHeader(RequestContext requestContext, String name) {
     return requestContext.getRequest().getHeaders().getAll(name);
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       RequestContext requestContext, Response response, @Nullable Throwable error) {
     return response.getStatusCode();
   }
 
   @Override
-  public String flavor(RequestContext requestContext, @Nullable Response response) {
+  public String getFlavor(RequestContext requestContext, @Nullable Response response) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       RequestContext requestContext, Response response, String name) {
     return response.getHeaders().getAll(name);
   }

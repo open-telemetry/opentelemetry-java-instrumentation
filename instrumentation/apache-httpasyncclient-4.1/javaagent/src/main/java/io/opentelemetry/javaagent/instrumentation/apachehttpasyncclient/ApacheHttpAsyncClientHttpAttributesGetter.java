@@ -17,23 +17,23 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
-  public String method(ApacheHttpClientRequest request) {
+  public String getMethod(ApacheHttpClientRequest request) {
     return request.getMethod();
   }
 
   @Override
-  public String url(ApacheHttpClientRequest request) {
+  public String getUrl(ApacheHttpClientRequest request) {
     return request.getUrl();
   }
 
   @Override
-  public List<String> requestHeader(ApacheHttpClientRequest request, String name) {
+  public List<String> getRequestHeader(ApacheHttpClientRequest request, String name) {
     return request.getHeader(name);
   }
 
   @Override
   @Nullable
-  public Integer statusCode(
+  public Integer getStatusCode(
       ApacheHttpClientRequest request, HttpResponse response, @Nullable Throwable error) {
     StatusLine statusLine = response.getStatusLine();
     return statusLine != null ? statusLine.getStatusCode() : null;
@@ -41,12 +41,12 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public String flavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public String getFlavor(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getFlavor();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       ApacheHttpClientRequest request, HttpResponse response, String name) {
     return headersToList(response.getHeaders(name));
   }

@@ -21,32 +21,32 @@ class DbClientAttributesExtractorTest {
 
   static final class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>> {
     @Override
-    public String system(Map<String, String> map) {
+    public String getSystem(Map<String, String> map) {
       return map.get("db.system");
     }
 
     @Override
-    public String user(Map<String, String> map) {
+    public String getUser(Map<String, String> map) {
       return map.get("db.user");
     }
 
     @Override
-    public String name(Map<String, String> map) {
+    public String getName(Map<String, String> map) {
       return map.get("db.name");
     }
 
     @Override
-    public String connectionString(Map<String, String> map) {
+    public String getConnectionString(Map<String, String> map) {
       return map.get("db.connection_string");
     }
 
     @Override
-    public String statement(Map<String, String> map) {
+    public String getStatement(Map<String, String> map) {
       return map.get("db.statement");
     }
 
     @Override
-    public String operation(Map<String, String> map) {
+    public String getOperation(Map<String, String> map) {
       return map.get("db.operation");
     }
   }

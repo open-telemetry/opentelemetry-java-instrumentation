@@ -32,17 +32,17 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
   }
 
   public void onStart(AttributesBuilder attributes, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request));
+    internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request));
 
     boolean setSockFamily = false;
 
-    String sockPeerAddr = getter.sockPeerAddr(request);
+    String sockPeerAddr = getter.getSockPeerAddr(request);
     if (sockPeerAddr != null) {
       setSockFamily = true;
 
       internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_ADDR, sockPeerAddr);
 
-      Integer sockPeerPort = getter.sockPeerPort(request);
+      Integer sockPeerPort = getter.getSockPeerPort(request);
       if (sockPeerPort != null && sockPeerPort > 0) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_PORT, (long) sockPeerPort);
       }
@@ -59,20 +59,20 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
       }
     }
 
-    String sockHostAddr = getter.sockHostAddr(request);
+    String sockHostAddr = getter.getSockHostAddr(request);
     if (sockHostAddr != null && !sockHostAddr.equals(hostName)) {
       setSockFamily = true;
 
       internalSet(attributes, SemanticAttributes.NET_SOCK_HOST_ADDR, sockHostAddr);
 
-      Integer sockHostPort = getter.sockHostPort(request);
+      Integer sockHostPort = getter.getSockHostPort(request);
       if (sockHostPort != null && sockHostPort > 0 && !sockHostPort.equals(hostPort)) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_HOST_PORT, (long) sockHostPort);
       }
     }
 
     if (setSockFamily) {
-      String sockFamily = getter.sockFamily(request);
+      String sockFamily = getter.getSockFamily(request);
       if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
       }
@@ -80,7 +80,7 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
   }
 
   private String extractHostName(REQUEST request) {
-    String peerName = getter.hostName(request);
+    String peerName = getter.getHostName(request);
     if (peerName == null) {
       peerName = fallbackNamePortGetter.name(request);
     }
@@ -88,7 +88,7 @@ public final class InternalNetServerAttributesExtractor<REQUEST> {
   }
 
   private Integer extractHostPort(REQUEST request) {
-    Integer peerPort = getter.hostPort(request);
+    Integer peerPort = getter.getHostPort(request);
     if (peerPort == null) {
       peerPort = fallbackNamePortGetter.port(request);
     }

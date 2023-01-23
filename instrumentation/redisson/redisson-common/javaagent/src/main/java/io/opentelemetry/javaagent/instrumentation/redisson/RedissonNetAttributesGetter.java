@@ -14,19 +14,19 @@ final class RedissonNetAttributesGetter
 
   @Nullable
   @Override
-  public String transport(RedissonRequest request, @Nullable Void unused) {
+  public String getTransport(RedissonRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(RedissonRequest redissonRequest) {
+  public String getPeerName(RedissonRequest redissonRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(RedissonRequest redissonRequest) {
+  public Integer getPeerPort(RedissonRequest redissonRequest) {
     return null;
   }
 

@@ -23,68 +23,68 @@ public enum KafkaConsumerAttributesGetter
   INSTANCE;
 
   @Override
-  public String system(ConsumerRecord<?, ?> consumerRecord) {
+  public String getSystem(ConsumerRecord<?, ?> consumerRecord) {
     return "kafka";
   }
 
   @Override
-  public String destinationKind(ConsumerRecord<?, ?> consumerRecord) {
+  public String getDestinationKind(ConsumerRecord<?, ?> consumerRecord) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Override
-  public String destination(ConsumerRecord<?, ?> consumerRecord) {
+  public String getDestination(ConsumerRecord<?, ?> consumerRecord) {
     return consumerRecord.topic();
   }
 
   @Override
-  public boolean temporaryDestination(ConsumerRecord<?, ?> consumerRecord) {
+  public boolean isTemporaryDestination(ConsumerRecord<?, ?> consumerRecord) {
     return false;
   }
 
   @Override
   @Nullable
-  public String protocol(ConsumerRecord<?, ?> consumerRecord) {
+  public String getProtocol(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public String protocolVersion(ConsumerRecord<?, ?> consumerRecord) {
+  public String getProtocolVersion(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public String url(ConsumerRecord<?, ?> consumerRecord) {
+  public String getUrl(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public String conversationId(ConsumerRecord<?, ?> consumerRecord) {
+  public String getConversationId(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
-  public Long messagePayloadSize(ConsumerRecord<?, ?> consumerRecord) {
+  public Long getMessagePayloadSize(ConsumerRecord<?, ?> consumerRecord) {
     return (long) consumerRecord.serializedValueSize();
   }
 
   @Override
   @Nullable
-  public Long messagePayloadCompressedSize(ConsumerRecord<?, ?> consumerRecord) {
+  public Long getMessagePayloadCompressedSize(ConsumerRecord<?, ?> consumerRecord) {
     return null;
   }
 
   @Override
   @Nullable
-  public String messageId(ConsumerRecord<?, ?> consumerRecord, @Nullable Void unused) {
+  public String getMessageId(ConsumerRecord<?, ?> consumerRecord, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> header(ConsumerRecord<?, ?> consumerRecord, String name) {
+  public List<String> getMessageHeader(ConsumerRecord<?, ?> consumerRecord, String name) {
     return StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false)
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))
         .collect(Collectors.toList());

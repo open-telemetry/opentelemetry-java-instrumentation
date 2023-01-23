@@ -15,19 +15,19 @@ final class ApacheHttpClientNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
-  public String transport(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+  public String getTransport(ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(ApacheHttpClientRequest request) {
+  public String getPeerName(ApacheHttpClientRequest request) {
     return request.getPeerName();
   }
 
   @Override
   @Nullable
-  public Integer peerPort(ApacheHttpClientRequest request) {
+  public Integer getPeerPort(ApacheHttpClientRequest request) {
     return request.getPeerPort();
   }
 

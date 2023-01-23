@@ -17,71 +17,71 @@ enum SpringMessagingAttributesGetter
 
   @Override
   @Nullable
-  public String system(MessageWithChannel messageWithChannel) {
+  public String getSystem(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public String destinationKind(MessageWithChannel messageWithChannel) {
+  public String getDestinationKind(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public String destination(MessageWithChannel messageWithChannel) {
+  public String getDestination(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
-  public boolean temporaryDestination(MessageWithChannel messageWithChannel) {
+  public boolean isTemporaryDestination(MessageWithChannel messageWithChannel) {
     return false;
   }
 
   @Override
   @Nullable
-  public String protocol(MessageWithChannel messageWithChannel) {
+  public String getProtocol(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public String protocolVersion(MessageWithChannel messageWithChannel) {
+  public String getProtocolVersion(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public String url(MessageWithChannel messageWithChannel) {
+  public String getUrl(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public String conversationId(MessageWithChannel messageWithChannel) {
+  public String getConversationId(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long messagePayloadSize(MessageWithChannel messageWithChannel) {
+  public Long getMessagePayloadSize(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public Long messagePayloadCompressedSize(MessageWithChannel messageWithChannel) {
+  public Long getMessagePayloadCompressedSize(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
-  public String messageId(MessageWithChannel messageWithChannel, @Nullable Void unused) {
+  public String getMessageId(MessageWithChannel messageWithChannel, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> header(MessageWithChannel request, String name) {
+  public List<String> getMessageHeader(MessageWithChannel request, String name) {
     Object value = request.getMessage().getHeaders().get(name);
     if (value != null) {
       return Collections.singletonList(value.toString());

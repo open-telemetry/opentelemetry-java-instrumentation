@@ -18,19 +18,19 @@ final class ReactorNettyNetClientAttributesGetter
 
   @Nullable
   @Override
-  public String transport(HttpClientConfig request, @Nullable HttpClientResponse response) {
+  public String getTransport(HttpClientConfig request, @Nullable HttpClientResponse response) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(HttpClientConfig request) {
+  public String getPeerName(HttpClientConfig request) {
     return getHost(request);
   }
 
   @Nullable
   @Override
-  public Integer peerPort(HttpClientConfig request) {
+  public Integer getPeerPort(HttpClientConfig request) {
     return getPort(request);
   }
 

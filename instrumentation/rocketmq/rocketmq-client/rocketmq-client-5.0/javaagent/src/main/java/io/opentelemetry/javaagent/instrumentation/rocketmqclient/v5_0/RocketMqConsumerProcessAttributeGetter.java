@@ -19,71 +19,71 @@ enum RocketMqConsumerProcessAttributeGetter
 
   @Nullable
   @Override
-  public String system(MessageView messageView) {
+  public String getSystem(MessageView messageView) {
     return "rocketmq";
   }
 
   @Nullable
   @Override
-  public String destinationKind(MessageView messageView) {
+  public String getDestinationKind(MessageView messageView) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
   @Override
-  public String destination(MessageView messageView) {
+  public String getDestination(MessageView messageView) {
     return messageView.getTopic();
   }
 
   @Override
-  public boolean temporaryDestination(MessageView messageView) {
+  public boolean isTemporaryDestination(MessageView messageView) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(MessageView messageView) {
+  public String getProtocol(MessageView messageView) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(MessageView messageView) {
+  public String getProtocolVersion(MessageView messageView) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(MessageView messageView) {
+  public String getUrl(MessageView messageView) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(MessageView messageView) {
+  public String getConversationId(MessageView messageView) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(MessageView messageView) {
+  public Long getMessagePayloadSize(MessageView messageView) {
     return (long) messageView.getBody().remaining();
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(MessageView messageView) {
+  public Long getMessagePayloadCompressedSize(MessageView messageView) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(MessageView messageView, @Nullable ConsumeResult unused) {
+  public String getMessageId(MessageView messageView, @Nullable ConsumeResult unused) {
     return messageView.getMessageId().toString();
   }
 
   @Override
-  public List<String> header(MessageView messageView, String name) {
+  public List<String> getMessageHeader(MessageView messageView, String name) {
     String value = messageView.getProperties().get(name);
     if (value != null) {
       return Collections.singletonList(value);

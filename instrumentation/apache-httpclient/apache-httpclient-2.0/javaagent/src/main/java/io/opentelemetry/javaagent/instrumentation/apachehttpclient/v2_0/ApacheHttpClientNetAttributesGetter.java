@@ -15,20 +15,20 @@ final class ApacheHttpClientNetAttributesGetter
     implements NetClientAttributesGetter<HttpMethod, HttpMethod> {
 
   @Override
-  public String transport(HttpMethod request, @Nullable HttpMethod response) {
+  public String getTransport(HttpMethod request, @Nullable HttpMethod response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public String peerName(HttpMethod request) {
+  public String getPeerName(HttpMethod request) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getHost() : null;
   }
 
   @Override
   @Nullable
-  public Integer peerPort(HttpMethod request) {
+  public Integer getPeerPort(HttpMethod request) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getPort() : null;
   }

@@ -18,66 +18,66 @@ enum RocketMqConsumerReceiveAttributeGetter
 
   @Nullable
   @Override
-  public String system(ReceiveMessageRequest request) {
+  public String getSystem(ReceiveMessageRequest request) {
     return "rocketmq";
   }
 
   @Nullable
   @Override
-  public String destinationKind(ReceiveMessageRequest request) {
+  public String getDestinationKind(ReceiveMessageRequest request) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
   @Override
-  public String destination(ReceiveMessageRequest request) {
+  public String getDestination(ReceiveMessageRequest request) {
     return request.getMessageQueue().getTopic().getName();
   }
 
   @Override
-  public boolean temporaryDestination(ReceiveMessageRequest request) {
+  public boolean isTemporaryDestination(ReceiveMessageRequest request) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(ReceiveMessageRequest request) {
+  public String getProtocol(ReceiveMessageRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(ReceiveMessageRequest request) {
+  public String getProtocolVersion(ReceiveMessageRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(ReceiveMessageRequest request) {
+  public String getUrl(ReceiveMessageRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(ReceiveMessageRequest request) {
+  public String getConversationId(ReceiveMessageRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(ReceiveMessageRequest request) {
+  public Long getMessagePayloadSize(ReceiveMessageRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(ReceiveMessageRequest request) {
+  public Long getMessagePayloadCompressedSize(ReceiveMessageRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(ReceiveMessageRequest request, @Nullable List<MessageView> unused) {
+  public String getMessageId(ReceiveMessageRequest request, @Nullable List<MessageView> unused) {
     return null;
   }
 }

@@ -15,69 +15,69 @@ enum SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Me
   INSTANCE;
 
   @Override
-  public String system(Message message) {
+  public String getSystem(Message message) {
     return "rabbitmq";
   }
 
   @Override
-  public String destinationKind(Message message) {
+  public String getDestinationKind(Message message) {
     return "queue";
   }
 
   @Override
   @Nullable
-  public String destination(Message message) {
+  public String getDestination(Message message) {
     return message.getMessageProperties().getReceivedRoutingKey();
   }
 
   @Override
-  public boolean temporaryDestination(Message message) {
+  public boolean isTemporaryDestination(Message message) {
     return false;
   }
 
   @Override
   @Nullable
-  public String protocol(Message message) {
+  public String getProtocol(Message message) {
     return null;
   }
 
   @Override
   @Nullable
-  public String protocolVersion(Message message) {
+  public String getProtocolVersion(Message message) {
     return null;
   }
 
   @Override
   @Nullable
-  public String url(Message message) {
+  public String getUrl(Message message) {
     return null;
   }
 
   @Override
   @Nullable
-  public String conversationId(Message message) {
+  public String getConversationId(Message message) {
     return null;
   }
 
   @Override
-  public Long messagePayloadSize(Message message) {
+  public Long getMessagePayloadSize(Message message) {
     return message.getMessageProperties().getContentLength();
   }
 
   @Override
   @Nullable
-  public Long messagePayloadCompressedSize(Message message) {
+  public Long getMessagePayloadCompressedSize(Message message) {
     return null;
   }
 
   @Override
   @Nullable
-  public String messageId(Message message, @Nullable Void unused) {
+  public String getMessageId(Message message, @Nullable Void unused) {
     return message.getMessageProperties().getMessageId();
   }
 
   @Override
-  public List<String> header(Message message, String name) {
+  public List<String> getMessageHeader(Message message, String name) {
     Object value = message.getMessageProperties().getHeaders().get(name);
     if (value != null) {
       return Collections.singletonList(value.toString());

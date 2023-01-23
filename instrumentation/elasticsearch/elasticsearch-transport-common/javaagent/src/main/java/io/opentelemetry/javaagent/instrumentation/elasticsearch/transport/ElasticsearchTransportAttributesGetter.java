@@ -13,36 +13,36 @@ final class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest> {
 
   @Override
-  public String system(ElasticTransportRequest s) {
+  public String getSystem(ElasticTransportRequest s) {
     return SemanticAttributes.DbSystemValues.ELASTICSEARCH;
   }
 
   @Override
   @Nullable
-  public String user(ElasticTransportRequest s) {
+  public String getUser(ElasticTransportRequest s) {
     return null;
   }
 
   @Override
   @Nullable
-  public String name(ElasticTransportRequest s) {
+  public String getName(ElasticTransportRequest s) {
     return null;
   }
 
   @Override
   @Nullable
-  public String connectionString(ElasticTransportRequest s) {
+  public String getConnectionString(ElasticTransportRequest s) {
     return null;
   }
 
   @Override
   @Nullable
-  public String statement(ElasticTransportRequest s) {
+  public String getStatement(ElasticTransportRequest s) {
     return null;
   }
 
   @Override
-  public String operation(ElasticTransportRequest action) {
+  public String getOperation(ElasticTransportRequest action) {
     return action.getAction().getClass().getSimpleName();
   }
 }

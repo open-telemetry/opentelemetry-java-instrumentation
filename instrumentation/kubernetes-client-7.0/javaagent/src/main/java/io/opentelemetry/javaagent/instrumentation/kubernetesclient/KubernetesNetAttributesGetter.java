@@ -14,17 +14,17 @@ import okhttp3.Request;
 class KubernetesNetAttributesGetter implements NetClientAttributesGetter<Request, ApiResponse<?>> {
 
   @Override
-  public String transport(Request request, @Nullable ApiResponse<?> response) {
+  public String getTransport(Request request, @Nullable ApiResponse<?> response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  public String peerName(Request request) {
+  public String getPeerName(Request request) {
     return request.url().host();
   }
 
   @Override
-  public Integer peerPort(Request request) {
+  public Integer getPeerPort(Request request) {
     return request.url().port();
   }
 }

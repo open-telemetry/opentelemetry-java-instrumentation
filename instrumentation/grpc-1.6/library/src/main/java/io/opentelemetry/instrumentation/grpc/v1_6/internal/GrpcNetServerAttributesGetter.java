@@ -20,18 +20,18 @@ public final class GrpcNetServerAttributesGetter
     extends InetSocketAddressNetServerAttributesGetter<GrpcRequest> {
 
   @Override
-  public String transport(GrpcRequest request) {
+  public String getTransport(GrpcRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Nullable
   @Override
-  public String hostName(GrpcRequest grpcRequest) {
+  public String getHostName(GrpcRequest grpcRequest) {
     return grpcRequest.getLogicalHost();
   }
 
   @Override
-  public Integer hostPort(GrpcRequest grpcRequest) {
+  public Integer getHostPort(GrpcRequest grpcRequest) {
     return grpcRequest.getLogicalPort();
   }
 

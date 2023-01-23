@@ -28,15 +28,15 @@ class HttpSpanNameExtractorTest {
 
   @Test
   void routeAndMethod() {
-    when(serverGetter.route(anyMap())).thenReturn("/cats/{id}");
-    when(serverGetter.method(anyMap())).thenReturn("GET");
+    when(serverGetter.getRoute(anyMap())).thenReturn("/cats/{id}");
+    when(serverGetter.getMethod(anyMap())).thenReturn("GET");
     assertThat(HttpSpanNameExtractor.create(serverGetter).extract(Collections.emptyMap()))
         .isEqualTo("/cats/{id}");
   }
 
   @Test
   void method() {
-    when(clientGetter.method(anyMap())).thenReturn("GET");
+    when(clientGetter.getMethod(anyMap())).thenReturn("GET");
     assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap()))
         .isEqualTo("HTTP GET");
   }

@@ -12,17 +12,17 @@ enum GwtRpcAttributesGetter implements RpcAttributesGetter<Method> {
   INSTANCE;
 
   @Override
-  public String system(Method method) {
+  public String getSystem(Method method) {
     return "gwt";
   }
 
   @Override
-  public String service(Method method) {
+  public String getService(Method method) {
     return method.getDeclaringClass().getName();
   }
 
   @Override
-  public String method(Method method) {
+  public String getMethod(Method method) {
     return method.getName();
   }
 }

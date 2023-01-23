@@ -18,34 +18,34 @@ enum RatpackHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public String url(RequestSpec requestSpec) {
+  public String getUrl(RequestSpec requestSpec) {
     return requestSpec.getUri().toString();
   }
 
   @Override
-  public String flavor(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
+  public String getFlavor(RequestSpec requestSpec, @Nullable HttpResponse httpResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Nullable
   @Override
-  public String method(RequestSpec requestSpec) {
+  public String getMethod(RequestSpec requestSpec) {
     return requestSpec.getMethod().getName();
   }
 
   @Override
-  public List<String> requestHeader(RequestSpec requestSpec, String name) {
+  public List<String> getRequestHeader(RequestSpec requestSpec, String name) {
     return requestSpec.getHeaders().getAll(name);
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       RequestSpec requestSpec, HttpResponse httpResponse, @Nullable Throwable error) {
     return httpResponse.getStatusCode();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       RequestSpec requestSpec, HttpResponse httpResponse, String name) {
     return httpResponse.getHeaders().getAll(name);
   }

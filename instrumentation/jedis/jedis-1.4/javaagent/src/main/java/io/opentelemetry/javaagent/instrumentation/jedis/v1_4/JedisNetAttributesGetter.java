@@ -12,17 +12,17 @@ final class JedisNetAttributesGetter implements NetClientAttributesGetter<JedisR
 
   @Override
   @Nullable
-  public String transport(JedisRequest request, @Nullable Void unused) {
+  public String getTransport(JedisRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public String peerName(JedisRequest request) {
+  public String getPeerName(JedisRequest request) {
     return request.getConnection().getHost();
   }
 
   @Override
-  public Integer peerPort(JedisRequest request) {
+  public Integer getPeerPort(JedisRequest request) {
     return request.getConnection().getPort();
   }
 }

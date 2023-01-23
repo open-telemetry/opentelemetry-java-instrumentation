@@ -10,12 +10,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGett
 public class JaxrsCodeAttributesGetter implements CodeAttributesGetter<HandlerData> {
 
   @Override
-  public Class<?> codeClass(HandlerData handlerData) {
+  public Class<?> getCodeClass(HandlerData handlerData) {
     return handlerData.codeClass();
   }
 
   @Override
-  public String methodName(HandlerData handlerData) {
+  public String getMethodName(HandlerData handlerData) {
     return handlerData.methodName();
   }
 }

@@ -23,7 +23,7 @@ public class Servlet2HttpAttributesGetter
 
   @Override
   @Nullable
-  public Integer statusCode(
+  public Integer getStatusCode(
       ServletRequestContext<HttpServletRequest> requestContext,
       ServletResponseContext<HttpServletResponse> responseContext,
       @Nullable Throwable error) {

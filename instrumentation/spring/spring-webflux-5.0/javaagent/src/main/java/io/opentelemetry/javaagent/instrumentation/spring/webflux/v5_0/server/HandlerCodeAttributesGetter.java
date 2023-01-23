@@ -11,13 +11,13 @@ import javax.annotation.Nullable;
 public class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
   @Nullable
   @Override
-  public Class<?> codeClass(Object handler) {
+  public Class<?> getCodeClass(Object handler) {
     return handler.getClass();
   }
 
   @Nullable
   @Override
-  public String methodName(Object handler) {
+  public String getMethodName(Object handler) {
     return "handle";
   }
 }
