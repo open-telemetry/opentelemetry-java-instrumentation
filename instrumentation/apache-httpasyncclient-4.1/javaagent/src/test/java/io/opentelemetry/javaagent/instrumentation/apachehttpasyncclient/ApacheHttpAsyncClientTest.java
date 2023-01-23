@@ -99,8 +99,8 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -138,8 +138,8 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -176,8 +176,8 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -224,11 +224,11 @@ class ApacheHttpAsyncClientTest {
     };
   }
 
-  void configureTest(HttpClientTestOptions options) {
-    options.setUserAgent("httpasyncclient");
-    options.setResponseCodeOnRedirectError(302);
-    options.enableTestReadTimeout();
-    options.setHttpAttributes(
+  void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setUserAgent("httpasyncclient");
+    optionsBuilder.setResponseCodeOnRedirectError(302);
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setHttpAttributes(
         endpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);

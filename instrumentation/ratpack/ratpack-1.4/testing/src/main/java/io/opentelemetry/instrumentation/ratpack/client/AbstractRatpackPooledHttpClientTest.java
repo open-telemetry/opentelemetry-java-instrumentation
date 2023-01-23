@@ -16,11 +16,11 @@ public abstract class AbstractRatpackPooledHttpClientTest extends AbstractRatpac
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    super.configure(options);
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
 
     // this test is already run for RatpackHttpClientTest
     // returning null here to avoid running the same test twice
-    options.setSingleConnectionFactory((host, port) -> null);
+    optionsBuilder.setSingleConnectionFactory((host, port) -> null);
   }
 }

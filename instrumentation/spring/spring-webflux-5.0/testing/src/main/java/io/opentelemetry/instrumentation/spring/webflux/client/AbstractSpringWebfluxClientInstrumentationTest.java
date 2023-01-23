@@ -64,10 +64,10 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.disableTestRedirects();
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.disableTestRedirects();
 
-    options.setHttpAttributes(
+    optionsBuilder.setHttpAttributes(
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
@@ -75,7 +75,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
           return attributes;
         });
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, throwable) -> {
           if (!throwable.getClass().getName().endsWith("WebClientRequestException")) {
             String uriString = uri.toString();
@@ -90,7 +90,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
           return throwable;
         });
 
-    options.setSingleConnectionFactory(
+    optionsBuilder.setSingleConnectionFactory(
         (host, port) -> new SpringWebfluxSingleConnection(host, port, this::instrument));
   }
 

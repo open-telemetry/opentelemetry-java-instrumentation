@@ -111,9 +111,9 @@ class ApacheHttpAsyncClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      super.configure(options);
-      options.setResponseCodeOnRedirectError(302);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.setResponseCodeOnRedirectError(302);
     }
   }
 

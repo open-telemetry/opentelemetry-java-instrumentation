@@ -108,8 +108,8 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.setSingleConnectionFactory(
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setSingleConnectionFactory(
         (host, port) ->
             (path, headers) -> {
               URI uri = resolveAddress(path);
@@ -118,7 +118,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
                   .getValueOrThrow();
             });
 
-    options.setExpectedClientSpanNameMapper(
+    optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
           switch (uri.toString()) {
             case "http://localhost:61/": // unopened port
@@ -130,7 +130,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           }
         });
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
           if (uri.toString().equals("https://192.0.2.1/")) {
             return new ConnectTimeoutException("connection timed out: /192.0.2.1:443");
@@ -142,14 +142,14 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           return exception;
         });
 
-    options.setHttpAttributes(this::computeHttpAttributes);
+    optionsBuilder.setHttpAttributes(this::computeHttpAttributes);
 
-    options.disableTestRedirects();
+    optionsBuilder.disableTestRedirects();
 
     // these tests will pass, but they don't really test anything since REQUEST is Void
-    options.disableTestReusedRequest();
+    optionsBuilder.disableTestReusedRequest();
 
-    options.enableTestReadTimeout();
+    optionsBuilder.enableTestReadTimeout();
   }
 
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {

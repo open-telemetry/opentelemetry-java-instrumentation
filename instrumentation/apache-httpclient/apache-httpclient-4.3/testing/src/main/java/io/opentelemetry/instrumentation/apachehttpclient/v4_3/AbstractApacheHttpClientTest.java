@@ -96,8 +96,8 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -142,8 +142,8 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -183,8 +183,8 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -229,8 +229,8 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -265,8 +265,8 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -301,8 +301,8 @@ public abstract class AbstractApacheHttpClientTest {
     }
 
     @Override
-    protected void configure(HttpClientTestOptions options) {
-      configureTest(options);
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      configureTest(optionsBuilder);
     }
   }
 
@@ -335,11 +335,11 @@ public abstract class AbstractApacheHttpClientTest {
     };
   }
 
-  static void configureTest(HttpClientTestOptions options) {
-    options.setUserAgent("apachehttpclient");
-    options.setResponseCodeOnRedirectError(302);
-    options.enableTestReadTimeout();
-    options.setHttpAttributes(
+  static void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setUserAgent("apachehttpclient");
+    optionsBuilder.setResponseCodeOnRedirectError(302);
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setHttpAttributes(
         endpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);

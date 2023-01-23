@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -15,9 +16,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
-public final class HttpClientTestOptions {
-
+@AutoValue
+public abstract class HttpClientTestOptions {
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(
@@ -32,149 +34,162 @@ public final class HttpClientTestOptions {
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> method != null ? "HTTP " + method : "HTTP request";
 
-  Function<URI, Set<AttributeKey<?>>> httpAttributes = unused -> DEFAULT_HTTP_ATTRIBUTES;
+  public abstract Function<URI, Set<AttributeKey<?>>> getHttpAttributes();
 
-  BiFunction<URI, String, String> expectedClientSpanNameMapper =
-      DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER;
+  @Nullable
+  public abstract Integer getResponseCodeOnRedirectError();
 
-  Integer responseCodeOnRedirectError = null;
-  String userAgent = null;
+  @Nullable
+  public abstract String getUserAgent();
 
-  BiFunction<URI, Throwable, Throwable> clientSpanErrorMapper = (uri, exception) -> exception;
+  public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
 
-  BiFunction<String, Integer, SingleConnection> singleConnectionFactory = (host, port) -> null;
+  public abstract BiFunction<String, Integer, SingleConnection> getSingleConnectionFactory();
 
-  boolean testWithClientParent = true;
-  boolean testRedirects = true;
-  boolean testCircularRedirects = true;
-  int maxRedirects = 2;
-  boolean testReusedRequest = true;
-  boolean testConnectionFailure = true;
-  boolean testReadTimeout = false;
-  boolean testRemoteConnection = true;
-  boolean testHttps = true;
-  boolean testCallback = true;
-  boolean testCallbackWithParent = true;
-  boolean testCallbackWithImplicitParent = false;
-  boolean testErrorWithCallback = true;
+  public abstract BiFunction<URI, String, String> getExpectedClientSpanNameMapper();
 
-  HttpClientTestOptions() {}
+  public abstract boolean getTestWithClientParent();
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions setHttpAttributes(
-      Function<URI, Set<AttributeKey<?>>> httpAttributes) {
-    this.httpAttributes = httpAttributes;
-    return this;
+  public abstract boolean getTestRedirects();
+
+  public abstract boolean getTestCircularRedirects();
+
+  public abstract int getMaxRedirects();
+
+  public abstract boolean getTestReusedRequest();
+
+  public abstract boolean getTestConnectionFailure();
+
+  public abstract boolean getTestReadTimeout();
+
+  public abstract boolean getTestRemoteConnection();
+
+  public abstract boolean getTestHttps();
+
+  public abstract boolean getTestCallback();
+
+  public abstract boolean getTestCallbackWithParent();
+
+  public abstract boolean getTestCallbackWithImplicitParent();
+
+  public abstract boolean getTestErrorWithCallback();
+
+  static Builder builder() {
+    return new AutoValue_HttpClientTestOptions.Builder().withDefaults();
   }
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions setExpectedClientSpanNameMapper(
-      BiFunction<URI, String, String> expectedClientSpanNameMapper) {
-    this.expectedClientSpanNameMapper = expectedClientSpanNameMapper;
-    return this;
-  }
+  @AutoValue.Builder
+  public interface Builder {
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions setResponseCodeOnRedirectError(int responseCodeOnRedirectError) {
-    this.responseCodeOnRedirectError = responseCodeOnRedirectError;
-    return this;
-  }
+    @CanIgnoreReturnValue
+    default Builder withDefaults() {
+      return setHttpAttributes(x -> DEFAULT_HTTP_ATTRIBUTES)
+          .setResponseCodeOnRedirectError(null)
+          .setUserAgent(null)
+          .setClientSpanErrorMapper((uri, exception) -> exception)
+          .setSingleConnectionFactory((host, port) -> null)
+          .setExpectedClientSpanNameMapper(DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER)
+          .setTestWithClientParent(true)
+          .setTestRedirects(true)
+          .setTestCircularRedirects(true)
+          .setMaxRedirects(2)
+          .setTestReusedRequest(true)
+          .setTestConnectionFailure(true)
+          .setTestReadTimeout(false)
+          .setTestRemoteConnection(true)
+          .setTestHttps(true)
+          .setTestCallback(true)
+          .setTestCallbackWithParent(true)
+          .setTestCallbackWithImplicitParent(false)
+          .setTestErrorWithCallback(true);
+    }
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions setUserAgent(String userAgent) {
-    this.userAgent = userAgent;
-    return this;
-  }
+    Builder setHttpAttributes(Function<URI, Set<AttributeKey<?>>> value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions setClientSpanErrorMapper(
-      BiFunction<URI, Throwable, Throwable> clientSpanErrorMapper) {
-    this.clientSpanErrorMapper = clientSpanErrorMapper;
-    return this;
-  }
+    Builder setResponseCodeOnRedirectError(Integer value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions setSingleConnectionFactory(
-      BiFunction<String, Integer, SingleConnection> singleConnectionFactory) {
-    this.singleConnectionFactory = singleConnectionFactory;
-    return this;
-  }
+    Builder setUserAgent(String value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions setMaxRedirects(int maxRedirects) {
-    this.maxRedirects = maxRedirects;
-    return this;
-  }
+    Builder setClientSpanErrorMapper(BiFunction<URI, Throwable, Throwable> value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestWithClientParent() {
-    testWithClientParent = false;
-    return this;
-  }
+    Builder setSingleConnectionFactory(BiFunction<String, Integer, SingleConnection> value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestRedirects() {
-    testRedirects = false;
-    return this;
-  }
+    Builder setExpectedClientSpanNameMapper(BiFunction<URI, String, String> value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestCircularRedirects() {
-    testCircularRedirects = false;
-    return this;
-  }
+    Builder setTestWithClientParent(boolean value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestReusedRequest() {
-    testReusedRequest = false;
-    return this;
-  }
+    Builder setTestRedirects(boolean value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestConnectionFailure() {
-    testConnectionFailure = false;
-    return this;
-  }
+    Builder setTestCircularRedirects(boolean value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions enableTestReadTimeout() {
-    testReadTimeout = true;
-    return this;
-  }
+    Builder setMaxRedirects(int value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestRemoteConnection() {
-    testRemoteConnection = false;
-    return this;
-  }
+    Builder setTestReusedRequest(boolean value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestHttps() {
-    testHttps = false;
-    return this;
-  }
+    Builder setTestConnectionFailure(boolean value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestCallback() {
-    testCallback = false;
-    return this;
-  }
+    Builder setTestReadTimeout(boolean value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestCallbackWithParent() {
-    testCallbackWithParent = false;
-    return this;
-  }
+    Builder setTestRemoteConnection(boolean value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions enableTestCallbackWithImplicitParent() {
-    testCallbackWithImplicitParent = true;
-    return this;
-  }
+    Builder setTestHttps(boolean value);
 
-  @CanIgnoreReturnValue
-  public HttpClientTestOptions disableTestErrorWithCallback() {
-    testErrorWithCallback = false;
-    return this;
+    Builder setTestCallback(boolean value);
+
+    Builder setTestCallbackWithParent(boolean value);
+
+    Builder setTestCallbackWithImplicitParent(boolean value);
+
+    Builder setTestErrorWithCallback(boolean value);
+
+    default Builder disableTestWithClientParent() {
+      return setTestWithClientParent(false);
+    }
+
+    default Builder disableTestRedirects() {
+      return setTestRedirects(false);
+    }
+
+    default Builder disableTestCircularRedirects() {
+      return setTestCircularRedirects(false);
+    }
+
+    default Builder disableTestReusedRequest() {
+      return setTestReusedRequest(false);
+    }
+
+    default Builder disableTestConnectionFailure() {
+      return setTestConnectionFailure(false);
+    }
+
+    default Builder enableTestReadTimeout() {
+      return setTestReadTimeout(true);
+    }
+
+    default Builder disableTestRemoteConnection() {
+      return setTestRemoteConnection(false);
+    }
+
+    default Builder disableTestHttps() {
+      return setTestHttps(false);
+    }
+
+    default Builder disableTestCallback() {
+      return setTestCallback(false);
+    }
+
+    default Builder disableTestCallbackWithParent() {
+      return setTestCallbackWithParent(false);
+    }
+
+    default Builder disableTestErrorWithCallback() {
+      return setTestErrorWithCallback(false);
+    }
+
+    default Builder enableTestCallbackWithImplicitParent() {
+      return setTestCallbackWithImplicitParent(true);
+    }
+
+    HttpClientTestOptions build();
   }
 }

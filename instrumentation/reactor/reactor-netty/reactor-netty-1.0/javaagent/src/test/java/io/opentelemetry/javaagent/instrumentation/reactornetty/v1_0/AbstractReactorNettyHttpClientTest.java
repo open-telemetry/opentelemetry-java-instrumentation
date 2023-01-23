@@ -103,13 +103,13 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.disableTestRedirects();
-    options.enableTestReadTimeout();
-    options.setUserAgent(USER_AGENT);
-    options.enableTestCallbackWithImplicitParent();
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.disableTestRedirects();
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setUserAgent(USER_AGENT);
+    optionsBuilder.enableTestCallbackWithImplicitParent();
 
-    options.setClientSpanErrorMapper(
+    optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
           if (exception.getClass().getName().endsWith("ReactiveException")) {
             // unopened port or non routable address
@@ -121,7 +121,7 @@ abstract class AbstractReactorNettyHttpClientTest
           return exception;
         });
 
-    options.setHttpAttributes(this::getHttpAttributes);
+    optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
