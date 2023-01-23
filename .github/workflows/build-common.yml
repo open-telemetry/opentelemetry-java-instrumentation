@@ -133,6 +133,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
     strategy:
       matrix:
         test-java-version:
