@@ -16,40 +16,40 @@ import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 final class GrizzlyNetAttributesGetter implements NetServerAttributesGetter<HttpRequestPacket> {
 
   @Override
-  public String transport(HttpRequestPacket request) {
+  public String getTransport(HttpRequestPacket request) {
     return request.getConnection().getTransport() instanceof TCPNIOTransport ? IP_TCP : IP_UDP;
   }
 
   @Nullable
   @Override
-  public String hostName(HttpRequestPacket request) {
+  public String getHostName(HttpRequestPacket request) {
     return request.getLocalHost();
   }
 
   @Override
-  public Integer hostPort(HttpRequestPacket request) {
+  public Integer getHostPort(HttpRequestPacket request) {
     return request.getServerPort();
   }
 
   @Nullable
   @Override
-  public String sockPeerAddr(HttpRequestPacket request) {
+  public String getSockPeerAddr(HttpRequestPacket request) {
     return request.getRemoteAddress();
   }
 
   @Override
-  public Integer sockPeerPort(HttpRequestPacket request) {
+  public Integer getSockPeerPort(HttpRequestPacket request) {
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String sockHostAddr(HttpRequestPacket request) {
+  public String getSockHostAddr(HttpRequestPacket request) {
     return request.getLocalAddress();
   }
 
   @Override
-  public Integer sockHostPort(HttpRequestPacket request) {
+  public Integer getSockHostPort(HttpRequestPacket request) {
     return request.getLocalPort();
   }
 }

@@ -47,26 +47,27 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
 
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
 
-    internalSet(attributes, SemanticAttributes.NET_TRANSPORT, getter.transport(request, response));
+    internalSet(
+        attributes, SemanticAttributes.NET_TRANSPORT, getter.getTransport(request, response));
 
     String peerName = extractPeerName(request);
 
-    String sockPeerAddr = getter.sockPeerAddr(request, response);
+    String sockPeerAddr = getter.getSockPeerAddr(request, response);
     if (sockPeerAddr != null && !sockPeerAddr.equals(peerName)) {
       internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_ADDR, sockPeerAddr);
 
       Integer peerPort = extractPeerPort(request);
-      Integer sockPeerPort = getter.sockPeerPort(request, response);
+      Integer sockPeerPort = getter.getSockPeerPort(request, response);
       if (sockPeerPort != null && sockPeerPort > 0 && !sockPeerPort.equals(peerPort)) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_PORT, (long) sockPeerPort);
       }
 
-      String sockFamily = getter.sockFamily(request, response);
+      String sockFamily = getter.getSockFamily(request, response);
       if (sockFamily != null && !SemanticAttributes.NetSockFamilyValues.INET.equals(sockFamily)) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_FAMILY, sockFamily);
       }
 
-      String sockPeerName = getter.sockPeerName(request, response);
+      String sockPeerName = getter.getSockPeerName(request, response);
       if (sockPeerName != null && !sockPeerName.equals(peerName)) {
         internalSet(attributes, SemanticAttributes.NET_SOCK_PEER_NAME, sockPeerName);
       }
@@ -74,7 +75,7 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
   }
 
   private String extractPeerName(REQUEST request) {
-    String peerName = getter.peerName(request);
+    String peerName = getter.getPeerName(request);
     if (peerName == null) {
       peerName = fallbackNamePortGetter.name(request);
     }
@@ -82,7 +83,7 @@ public final class InternalNetClientAttributesExtractor<REQUEST, RESPONSE> {
   }
 
   private Integer extractPeerPort(REQUEST request) {
-    Integer peerPort = getter.peerPort(request);
+    Integer peerPort = getter.getPeerPort(request);
     if (peerPort == null) {
       peerPort = fallbackNamePortGetter.port(request);
     }

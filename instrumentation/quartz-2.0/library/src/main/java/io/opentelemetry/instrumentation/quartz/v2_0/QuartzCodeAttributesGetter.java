@@ -11,12 +11,12 @@ import org.quartz.JobExecutionContext;
 public class QuartzCodeAttributesGetter implements CodeAttributesGetter<JobExecutionContext> {
 
   @Override
-  public Class<?> codeClass(JobExecutionContext jobExecutionContext) {
+  public Class<?> getCodeClass(JobExecutionContext jobExecutionContext) {
     return jobExecutionContext.getJobDetail().getJobClass();
   }
 
   @Override
-  public String methodName(JobExecutionContext jobExecutionContext) {
+  public String getMethodName(JobExecutionContext jobExecutionContext) {
     return "execute";
   }
 }

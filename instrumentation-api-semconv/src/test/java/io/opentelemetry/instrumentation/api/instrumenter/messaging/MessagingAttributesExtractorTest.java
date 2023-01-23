@@ -119,59 +119,59 @@ class MessagingAttributesExtractorTest {
     INSTANCE;
 
     @Override
-    public String system(Map<String, String> request) {
+    public String getSystem(Map<String, String> request) {
       return request.get("system");
     }
 
     @Override
-    public String destinationKind(Map<String, String> request) {
+    public String getDestinationKind(Map<String, String> request) {
       return request.get("destinationKind");
     }
 
     @Override
-    public String destination(Map<String, String> request) {
+    public String getDestination(Map<String, String> request) {
       return request.get("destination");
     }
 
     @Override
-    public boolean temporaryDestination(Map<String, String> request) {
+    public boolean isTemporaryDestination(Map<String, String> request) {
       return request.containsKey("temporaryDestination");
     }
 
     @Override
-    public String protocol(Map<String, String> request) {
+    public String getProtocol(Map<String, String> request) {
       return request.get("protocol");
     }
 
     @Override
-    public String protocolVersion(Map<String, String> request) {
+    public String getProtocolVersion(Map<String, String> request) {
       return request.get("protocolVersion");
     }
 
     @Override
-    public String url(Map<String, String> request) {
+    public String getUrl(Map<String, String> request) {
       return request.get("url");
     }
 
     @Override
-    public String conversationId(Map<String, String> request) {
+    public String getConversationId(Map<String, String> request) {
       return request.get("conversationId");
     }
 
     @Override
-    public Long messagePayloadSize(Map<String, String> request) {
+    public Long getMessagePayloadSize(Map<String, String> request) {
       String payloadSize = request.get("payloadSize");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
     @Override
-    public Long messagePayloadCompressedSize(Map<String, String> request) {
+    public Long getMessagePayloadCompressedSize(Map<String, String> request) {
       String payloadSize = request.get("payloadCompressedSize");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
     @Override
-    public String messageId(Map<String, String> request, String response) {
+    public String getMessageId(Map<String, String> request, String response) {
       return response;
     }
   }

@@ -22,7 +22,21 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   // Attributes that always exist in a request
 
   @Nullable
-  String url(REQUEST request);
+  default String getUrl(REQUEST request) {
+    return url(request);
+  }
+
+  /**
+   * This method is deprecated and will be removed in the subsequent release.
+   *
+   * @deprecated Use {@link #getUrl(Object)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String url(REQUEST request) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in the subsequent release.");
+  }
 
   // Attributes which are not always available when the request is ready.
 
@@ -33,5 +47,24 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
    * {@code response} is {@code null} or not.
    */
   @Nullable
-  String flavor(REQUEST request, @Nullable RESPONSE response);
+  default String getFlavor(REQUEST request, @Nullable RESPONSE response) {
+    return flavor(request, response);
+  }
+
+  /**
+   * Extracts the {@code http.flavor} span attribute.
+   *
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
+   * {@code response} is {@code null} or not.
+   *
+   * <p>This method is deprecated and will be removed in the subsequent release.
+   *
+   * @deprecated Use {@link #getFlavor(Object, Object)}.
+   */
+  @Deprecated
+  @Nullable
+  default String flavor(REQUEST request, @Nullable RESPONSE response) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in the subsequent release.");
+  }
 }

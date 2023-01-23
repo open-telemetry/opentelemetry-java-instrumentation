@@ -19,72 +19,72 @@ enum RocketMqProducerAttributeGetter
   INSTANCE;
 
   @Override
-  public String system(SendMessageContext sendMessageContext) {
+  public String getSystem(SendMessageContext sendMessageContext) {
     return "rocketmq";
   }
 
   @Override
-  public String destinationKind(SendMessageContext sendMessageContext) {
+  public String getDestinationKind(SendMessageContext sendMessageContext) {
     return SemanticAttributes.MessagingDestinationKindValues.TOPIC;
   }
 
   @Nullable
   @Override
-  public String destination(SendMessageContext sendMessageContext) {
+  public String getDestination(SendMessageContext sendMessageContext) {
     Message message = sendMessageContext.getMessage();
     return message == null ? null : message.getTopic();
   }
 
   @Override
-  public boolean temporaryDestination(SendMessageContext sendMessageContext) {
+  public boolean isTemporaryDestination(SendMessageContext sendMessageContext) {
     return false;
   }
 
   @Nullable
   @Override
-  public String protocol(SendMessageContext sendMessageContext) {
+  public String getProtocol(SendMessageContext sendMessageContext) {
     return null;
   }
 
   @Nullable
   @Override
-  public String protocolVersion(SendMessageContext sendMessageContext) {
+  public String getProtocolVersion(SendMessageContext sendMessageContext) {
     return null;
   }
 
   @Nullable
   @Override
-  public String url(SendMessageContext sendMessageContext) {
+  public String getUrl(SendMessageContext sendMessageContext) {
     return null;
   }
 
   @Nullable
   @Override
-  public String conversationId(SendMessageContext sendMessageContext) {
+  public String getConversationId(SendMessageContext sendMessageContext) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadSize(SendMessageContext sendMessageContext) {
+  public Long getMessagePayloadSize(SendMessageContext sendMessageContext) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long messagePayloadCompressedSize(SendMessageContext sendMessageContext) {
+  public Long getMessagePayloadCompressedSize(SendMessageContext sendMessageContext) {
     return null;
   }
 
   @Nullable
   @Override
-  public String messageId(SendMessageContext request, @Nullable Void unused) {
+  public String getMessageId(SendMessageContext request, @Nullable Void unused) {
     SendResult sendResult = request.getSendResult();
     return sendResult == null ? null : sendResult.getMsgId();
   }
 
   @Override
-  public List<String> header(SendMessageContext request, String name) {
+  public List<String> getMessageHeader(SendMessageContext request, String name) {
     String value = request.getMessage().getProperties().get(name);
     if (value != null) {
       return Collections.singletonList(value);

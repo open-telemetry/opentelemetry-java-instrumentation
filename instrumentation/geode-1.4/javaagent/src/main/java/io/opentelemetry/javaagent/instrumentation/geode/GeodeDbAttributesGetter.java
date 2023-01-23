@@ -17,37 +17,37 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
       SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
-  public String system(GeodeRequest request) {
+  public String getSystem(GeodeRequest request) {
     return SemanticAttributes.DbSystemValues.GEODE;
   }
 
   @Override
   @Nullable
-  public String user(GeodeRequest request) {
+  public String getUser(GeodeRequest request) {
     return null;
   }
 
   @Override
-  public String name(GeodeRequest request) {
+  public String getName(GeodeRequest request) {
     return request.getRegion().getName();
   }
 
   @Override
   @Nullable
-  public String connectionString(GeodeRequest request) {
+  public String getConnectionString(GeodeRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String statement(GeodeRequest request) {
+  public String getStatement(GeodeRequest request) {
     // sanitized statement is cached
     return sanitizer.sanitize(request.getQuery()).getFullStatement();
   }
 
   @Override
   @Nullable
-  public String operation(GeodeRequest request) {
+  public String getOperation(GeodeRequest request) {
     return request.getOperation();
   }
 }

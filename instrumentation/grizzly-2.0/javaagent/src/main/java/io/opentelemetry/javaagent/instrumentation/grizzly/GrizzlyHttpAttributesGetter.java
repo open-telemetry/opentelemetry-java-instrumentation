@@ -18,12 +18,12 @@ final class GrizzlyHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpRequestPacket, HttpResponsePacket> {
 
   @Override
-  public String method(HttpRequestPacket request) {
+  public String getMethod(HttpRequestPacket request) {
     return request.getMethod().getMethodString();
   }
 
   @Override
-  public List<String> requestHeader(HttpRequestPacket request, String name) {
+  public List<String> getRequestHeader(HttpRequestPacket request, String name) {
     return toHeaderList(request.getHeaders().values(name));
   }
 
@@ -37,19 +37,19 @@ final class GrizzlyHttpAttributesGetter
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       HttpRequestPacket request, HttpResponsePacket response, @Nullable Throwable error) {
     return response.getStatus();
   }
 
   @Override
-  public List<String> responseHeader(
+  public List<String> getResponseHeader(
       HttpRequestPacket request, HttpResponsePacket response, String name) {
     return toHeaderList(response.getHeaders().values(name));
   }
 
   @Override
-  public String flavor(HttpRequestPacket request) {
+  public String getFlavor(HttpRequestPacket request) {
     String flavor = request.getProtocolString();
     if (flavor.startsWith("HTTP/")) {
       flavor = flavor.substring("HTTP/".length());
@@ -59,7 +59,7 @@ final class GrizzlyHttpAttributesGetter
 
   @Nullable
   @Override
-  public String target(HttpRequestPacket request) {
+  public String getTarget(HttpRequestPacket request) {
     String target = request.getRequestURI();
     String queryString = request.getQueryString();
     if (queryString != null) {
@@ -70,12 +70,12 @@ final class GrizzlyHttpAttributesGetter
 
   @Nullable
   @Override
-  public String route(HttpRequestPacket request) {
+  public String getRoute(HttpRequestPacket request) {
     return null;
   }
 
   @Override
-  public String scheme(HttpRequestPacket request) {
+  public String getScheme(HttpRequestPacket request) {
     return request.isSecure() ? "https" : "http";
   }
 }

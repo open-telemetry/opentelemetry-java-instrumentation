@@ -15,19 +15,19 @@ public class Elasticsearch6TransportNetAttributesGetter
     extends InetSocketAddressNetClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
   @Override
   @Nullable
-  public String transport(ElasticTransportRequest request, @Nullable ActionResponse response) {
+  public String getTransport(ElasticTransportRequest request, @Nullable ActionResponse response) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(ElasticTransportRequest request) {
+  public String getPeerName(ElasticTransportRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(ElasticTransportRequest request) {
+  public Integer getPeerPort(ElasticTransportRequest request) {
     return null;
   }
 

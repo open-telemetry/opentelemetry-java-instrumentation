@@ -18,33 +18,33 @@ class KubernetesHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, ApiResponse<?>> {
 
   @Override
-  public String method(Request request) {
+  public String getMethod(Request request) {
     return request.method();
   }
 
   @Override
-  public String url(Request request) {
+  public String getUrl(Request request) {
     return request.url().toString();
   }
 
   @Override
-  public List<String> requestHeader(Request request, String name) {
+  public List<String> getRequestHeader(Request request, String name) {
     return request.headers(name);
   }
 
   @Override
-  public String flavor(Request request, @Nullable ApiResponse<?> apiResponse) {
+  public String getFlavor(Request request, @Nullable ApiResponse<?> apiResponse) {
     return SemanticAttributes.HttpFlavorValues.HTTP_1_1;
   }
 
   @Override
-  public Integer statusCode(
+  public Integer getStatusCode(
       Request request, ApiResponse<?> apiResponse, @Nullable Throwable error) {
     return apiResponse.getStatusCode();
   }
 
   @Override
-  public List<String> responseHeader(Request request, ApiResponse<?> apiResponse, String name) {
+  public List<String> getResponseHeader(Request request, ApiResponse<?> apiResponse, String name) {
     return apiResponse.getHeaders().getOrDefault(name, emptyList());
   }
 }

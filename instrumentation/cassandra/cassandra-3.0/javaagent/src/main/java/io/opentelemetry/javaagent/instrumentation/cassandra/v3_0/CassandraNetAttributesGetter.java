@@ -15,19 +15,19 @@ final class CassandraNetAttributesGetter
 
   @Override
   @Nullable
-  public String transport(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+  public String getTransport(CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(CassandraRequest request) {
+  public String getPeerName(CassandraRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(CassandraRequest request) {
+  public Integer getPeerPort(CassandraRequest request) {
     return null;
   }
 

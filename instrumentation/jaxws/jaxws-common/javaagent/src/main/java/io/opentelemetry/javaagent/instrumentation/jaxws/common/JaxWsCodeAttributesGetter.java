@@ -10,12 +10,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGett
 public class JaxWsCodeAttributesGetter implements CodeAttributesGetter<JaxWsRequest> {
 
   @Override
-  public Class<?> codeClass(JaxWsRequest request) {
+  public Class<?> getCodeClass(JaxWsRequest request) {
     return request.codeClass();
   }
 
   @Override
-  public String methodName(JaxWsRequest request) {
+  public String getMethodName(JaxWsRequest request) {
     return request.methodName();
   }
 }

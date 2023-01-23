@@ -23,17 +23,17 @@ class RpcAttributesExtractorTest {
     INSTANCE;
 
     @Override
-    public String system(Map<String, String> request) {
+    public String getSystem(Map<String, String> request) {
       return "test";
     }
 
     @Override
-    public String service(Map<String, String> request) {
+    public String getService(Map<String, String> request) {
       return request.get("service");
     }
 
     @Override
-    public String method(Map<String, String> request) {
+    public String getMethod(Map<String, String> request) {
       return request.get("method");
     }
   }

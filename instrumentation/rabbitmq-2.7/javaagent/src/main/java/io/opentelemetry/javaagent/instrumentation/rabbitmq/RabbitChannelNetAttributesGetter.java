@@ -14,36 +14,36 @@ public class RabbitChannelNetAttributesGetter
 
   @Nullable
   @Override
-  public String transport(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public String getTransport(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return null;
   }
 
   @Nullable
   @Override
-  public String peerName(ChannelAndMethod channelAndMethod) {
+  public String getPeerName(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer peerPort(ChannelAndMethod channelAndMethod) {
+  public Integer getPeerPort(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public String sockPeerAddr(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public String getSockPeerAddr(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return channelAndMethod.getChannel().getConnection().getAddress().getHostAddress();
   }
 
   @Override
-  public Integer sockPeerPort(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public Integer getSockPeerPort(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return channelAndMethod.getChannel().getConnection().getPort();
   }
 
   @Nullable
   @Override
-  public String sockFamily(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+  public String getSockFamily(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     if (channelAndMethod.getChannel().getConnection().getAddress() instanceof Inet6Address) {
       return "inet6";
     }

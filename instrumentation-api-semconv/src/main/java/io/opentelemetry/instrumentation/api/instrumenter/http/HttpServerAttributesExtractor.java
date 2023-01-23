@@ -89,19 +89,19 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.flavor(request));
+    internalSet(attributes, SemanticAttributes.HTTP_FLAVOR, getter.getFlavor(request));
     String forwardedProto = forwardedProto(request);
-    String value = forwardedProto != null ? forwardedProto : getter.scheme(request);
+    String value = forwardedProto != null ? forwardedProto : getter.getScheme(request);
     internalSet(attributes, SemanticAttributes.HTTP_SCHEME, value);
-    internalSet(attributes, SemanticAttributes.HTTP_TARGET, getter.target(request));
-    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.route(request));
+    internalSet(attributes, SemanticAttributes.HTTP_TARGET, getter.getTarget(request));
+    internalSet(attributes, SemanticAttributes.HTTP_ROUTE, getter.getRoute(request));
     internalSet(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request));
 
     internalNetExtractor.onStart(attributes, request);
   }
 
   private boolean shouldCaptureHostPort(int port, REQUEST request) {
-    String scheme = getter.scheme(request);
+    String scheme = getter.getScheme(request);
     if (scheme == null) {
       return true;
     }
@@ -127,7 +127,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   private String forwardedProto(REQUEST request) {
     // try Forwarded
-    String forwarded = firstHeaderValue(getter.requestHeader(request, "forwarded"));
+    String forwarded = firstHeaderValue(getter.getRequestHeader(request, "forwarded"));
     if (forwarded != null) {
       forwarded = extractProtoFromForwardedHeader(forwarded);
       if (forwarded != null) {
@@ -136,7 +136,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try X-Forwarded-Proto
-    forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-proto"));
+    forwarded = firstHeaderValue(getter.getRequestHeader(request, "x-forwarded-proto"));
     if (forwarded != null) {
       return extractProtoFromForwardedProtoHeader(forwarded);
     }
@@ -147,7 +147,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   private String clientIp(REQUEST request) {
     // try Forwarded
-    String forwarded = firstHeaderValue(getter.requestHeader(request, "forwarded"));
+    String forwarded = firstHeaderValue(getter.getRequestHeader(request, "forwarded"));
     if (forwarded != null) {
       forwarded = extractClientIpFromForwardedHeader(forwarded);
       if (forwarded != null) {
@@ -156,7 +156,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     }
 
     // try X-Forwarded-For
-    forwarded = firstHeaderValue(getter.requestHeader(request, "x-forwarded-for"));
+    forwarded = firstHeaderValue(getter.getRequestHeader(request, "x-forwarded-for"));
     if (forwarded != null) {
       return extractClientIpFromForwardedForHeader(forwarded);
     }

@@ -23,8 +23,8 @@ class RpcSpanNameExtractorTest {
   void normal() {
     RpcRequest request = new RpcRequest();
 
-    when(getter.service(request)).thenReturn("my.Service");
-    when(getter.method(request)).thenReturn("Method");
+    when(getter.getService(request)).thenReturn("my.Service");
+    when(getter.getMethod(request)).thenReturn("Method");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
@@ -34,7 +34,7 @@ class RpcSpanNameExtractorTest {
   void serviceNull() {
     RpcRequest request = new RpcRequest();
 
-    when(getter.method(request)).thenReturn("Method");
+    when(getter.getMethod(request)).thenReturn("Method");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
@@ -44,7 +44,7 @@ class RpcSpanNameExtractorTest {
   void methodNull() {
     RpcRequest request = new RpcRequest();
 
-    when(getter.service(request)).thenReturn("my.Service");
+    when(getter.getService(request)).thenReturn("my.Service");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");

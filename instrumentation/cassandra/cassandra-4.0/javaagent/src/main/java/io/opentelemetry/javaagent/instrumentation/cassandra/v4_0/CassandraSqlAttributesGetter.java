@@ -13,31 +13,31 @@ import javax.annotation.Nullable;
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
 
   @Override
-  public String system(CassandraRequest request) {
+  public String getSystem(CassandraRequest request) {
     return SemanticAttributes.DbSystemValues.CASSANDRA;
   }
 
   @Override
   @Nullable
-  public String user(CassandraRequest request) {
+  public String getUser(CassandraRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String name(CassandraRequest request) {
+  public String getName(CassandraRequest request) {
     return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
   @Override
   @Nullable
-  public String connectionString(CassandraRequest request) {
+  public String getConnectionString(CassandraRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String rawStatement(CassandraRequest request) {
+  public String getRawStatement(CassandraRequest request) {
     return request.getStatement();
   }
 }

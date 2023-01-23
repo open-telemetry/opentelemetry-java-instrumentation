@@ -12,17 +12,17 @@ public enum ServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod
   INSTANCE;
 
   @Override
-  public String system(ClassAndMethod classAndMethod) {
+  public String getSystem(ClassAndMethod classAndMethod) {
     return "spring_rmi";
   }
 
   @Override
-  public String service(ClassAndMethod classAndMethod) {
+  public String getService(ClassAndMethod classAndMethod) {
     return classAndMethod.declaringClass().getName();
   }
 
   @Override
-  public String method(ClassAndMethod classAndMethod) {
+  public String getMethod(ClassAndMethod classAndMethod) {
     return classAndMethod.methodName();
   }
 }

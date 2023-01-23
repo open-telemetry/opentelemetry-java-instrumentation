@@ -10,12 +10,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGett
 public class SpringWsCodeAttributesGetter implements CodeAttributesGetter<SpringWsRequest> {
 
   @Override
-  public Class<?> codeClass(SpringWsRequest request) {
+  public Class<?> getCodeClass(SpringWsRequest request) {
     return request.getCodeClass();
   }
 
   @Override
-  public String methodName(SpringWsRequest request) {
+  public String getMethodName(SpringWsRequest request) {
     return request.getMethodName();
   }
 }

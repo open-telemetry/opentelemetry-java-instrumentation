@@ -17,11 +17,53 @@ import javax.annotation.Nullable;
 public interface RpcAttributesGetter<REQUEST> {
 
   @Nullable
-  String system(REQUEST request);
+  default String getSystem(REQUEST request) {
+    return system(request);
+  }
+
+  /**
+   * This method is deprecated and will be removed in the subsequent release.
+   *
+   * @deprecated Use {@link #getSystem(Object)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String system(REQUEST request) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in the subsequent release.");
+  }
 
   @Nullable
-  String service(REQUEST request);
+  default String getService(REQUEST request) {
+    return service(request);
+  }
+
+  /**
+   * This method is deprecated and will be removed in the subsequent release.
+   *
+   * @deprecated Use {@link #getService(Object)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String service(REQUEST request) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in the subsequent release.");
+  }
 
   @Nullable
-  String method(REQUEST request);
+  default String getMethod(REQUEST request) {
+    return method(request);
+  }
+
+  /**
+   * This method is deprecated and will be removed in the subsequent release.
+   *
+   * @deprecated Use {@link #getMethod(Object)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String method(REQUEST request) {
+    throw new UnsupportedOperationException(
+        "This method is deprecated and will be removed in the subsequent release.");
+  }
 }

@@ -20,23 +20,24 @@ enum ArmeriaHttpClientAttributesGetter
   INSTANCE;
 
   @Override
-  public String method(RequestContext ctx) {
+  public String getMethod(RequestContext ctx) {
     return ctx.method().name();
   }
 
   @Override
-  public String url(RequestContext ctx) {
+  public String getUrl(RequestContext ctx) {
     return request(ctx).uri().toString();
   }
 
   @Override
-  public List<String> requestHeader(RequestContext ctx, String name) {
+  public List<String> getRequestHeader(RequestContext ctx, String name) {
     return request(ctx).headers().getAll(name);
   }
 
   @Override
   @Nullable
-  public Integer statusCode(RequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
+  public Integer getStatusCode(
+      RequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
       return status.code();
@@ -45,7 +46,7 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Override
-  public String flavor(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public String getFlavor(RequestContext ctx, @Nullable RequestLog requestLog) {
     SessionProtocol protocol = ctx.sessionProtocol();
     if (protocol.isMultiplex()) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
@@ -55,7 +56,7 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Override
-  public List<String> responseHeader(RequestContext ctx, RequestLog requestLog, String name) {
+  public List<String> getResponseHeader(RequestContext ctx, RequestLog requestLog, String name) {
     return requestLog.responseHeaders().getAll(name);
   }
 

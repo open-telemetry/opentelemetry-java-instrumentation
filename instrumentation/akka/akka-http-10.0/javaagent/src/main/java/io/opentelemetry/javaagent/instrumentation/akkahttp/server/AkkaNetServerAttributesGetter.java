@@ -14,19 +14,19 @@ class AkkaNetServerAttributesGetter implements NetServerAttributesGetter<HttpReq
 
   @Nullable
   @Override
-  public String transport(HttpRequest httpRequest) {
+  public String getTransport(HttpRequest httpRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public String hostName(HttpRequest httpRequest) {
+  public String getHostName(HttpRequest httpRequest) {
     return null;
   }
 
   @Nullable
   @Override
-  public Integer hostPort(HttpRequest httpRequest) {
+  public Integer getHostPort(HttpRequest httpRequest) {
     return null;
   }
 }

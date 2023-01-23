@@ -15,23 +15,23 @@ internal enum class KtorHttpServerAttributesGetter :
   HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
   INSTANCE, ;
 
-  override fun method(request: ApplicationRequest): String {
+  override fun getMethod(request: ApplicationRequest): String {
     return request.httpMethod.value
   }
 
-  override fun requestHeader(request: ApplicationRequest, name: String): List<String> {
+  override fun getRequestHeader(request: ApplicationRequest, name: String): List<String> {
     return request.headers.getAll(name) ?: emptyList()
   }
 
-  override fun statusCode(request: ApplicationRequest, response: ApplicationResponse, error: Throwable?): Int? {
+  override fun getStatusCode(request: ApplicationRequest, response: ApplicationResponse, error: Throwable?): Int? {
     return response.status()?.value
   }
 
-  override fun responseHeader(request: ApplicationRequest, response: ApplicationResponse, name: String): List<String> {
+  override fun getResponseHeader(request: ApplicationRequest, response: ApplicationResponse, name: String): List<String> {
     return response.headers.allValues().getAll(name) ?: emptyList()
   }
 
-  override fun flavor(request: ApplicationRequest): String? {
+  override fun getFlavor(request: ApplicationRequest): String? {
     return when (request.httpVersion) {
       "HTTP/1.1" -> SemanticAttributes.HttpFlavorValues.HTTP_1_1
       "HTTP/2.0" -> SemanticAttributes.HttpFlavorValues.HTTP_2_0
@@ -39,15 +39,15 @@ internal enum class KtorHttpServerAttributesGetter :
     }
   }
 
-  override fun target(request: ApplicationRequest): String {
+  override fun getTarget(request: ApplicationRequest): String {
     return request.uri
   }
 
-  override fun route(request: ApplicationRequest): String? {
+  override fun getRoute(request: ApplicationRequest): String? {
     return null
   }
 
-  override fun scheme(request: ApplicationRequest): String {
+  override fun getScheme(request: ApplicationRequest): String {
     return request.origin.scheme
   }
 }

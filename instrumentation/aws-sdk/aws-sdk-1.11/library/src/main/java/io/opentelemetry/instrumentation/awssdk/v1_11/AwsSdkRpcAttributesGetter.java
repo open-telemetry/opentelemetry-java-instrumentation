@@ -28,17 +28,17 @@ enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>> {
       };
 
   @Override
-  public String system(Request<?> request) {
+  public String getSystem(Request<?> request) {
     return "aws-api";
   }
 
   @Override
-  public String service(Request<?> request) {
+  public String getService(Request<?> request) {
     return request.getServiceName();
   }
 
   @Override
-  public String method(Request<?> request) {
+  public String getMethod(Request<?> request) {
     return OPERATION_NAME.get(request.getOriginalRequest().getClass());
   }
 }
