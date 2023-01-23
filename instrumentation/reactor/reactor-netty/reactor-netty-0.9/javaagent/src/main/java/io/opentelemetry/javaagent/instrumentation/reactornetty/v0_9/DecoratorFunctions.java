@@ -17,9 +17,12 @@ import reactor.netty.http.client.HttpClientResponse;
 
 public final class DecoratorFunctions {
 
-  // ignore our own callbacks - or already decorated functions
+  // ignore already decorated functions
   public static boolean shouldDecorate(Class<?> callbackClass) {
-    return !callbackClass.getName().startsWith("io.opentelemetry.javaagent");
+    return callbackClass != OnRequestDecorator.class
+        && callbackClass != OnResponseDecorator.class
+        && callbackClass != OnRequestErrorDecorator.class
+        && callbackClass != OnResponseErrorDecorator.class;
   }
 
   private abstract static class OnMessageDecorator<M> implements BiConsumer<M, Connection> {
