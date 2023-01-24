@@ -18,7 +18,6 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.stream.Stream;
-import org.assertj.core.api.Assertions;
 import org.jboss.logmanager.Level;
 import org.jboss.logmanager.LogContext;
 import org.jboss.logmanager.Logger;
