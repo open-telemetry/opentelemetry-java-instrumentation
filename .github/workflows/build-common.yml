@@ -9,6 +9,9 @@ on:
       no-build-cache:
         type: boolean
         required: false
+      skip-openj9-tests:
+        type: boolean
+        required: false
       skip-windows-smoke-tests:
         type: boolean
         required: false
@@ -144,6 +147,7 @@ jobs:
           - hotspot
           - openj9
         exclude:
+          - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 19
             vm: openj9
       fail-fast: false

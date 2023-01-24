@@ -11,7 +11,8 @@ jobs:
   common:
     uses: ./.github/workflows/build-common.yml
     with:
-      # windows smoke tests are slower, and it's rare for only the windows smoke tests to break
+      # it's rare for only the openj9 tests or the windows smoke tests to break
+      skip-openj9-tests: false
       skip-windows-smoke-tests: false
       cache-read-only: true
 
