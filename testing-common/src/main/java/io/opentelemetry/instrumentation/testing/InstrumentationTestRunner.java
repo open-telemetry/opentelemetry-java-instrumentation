@@ -62,10 +62,10 @@ public abstract class InstrumentationTestRunner {
     return TelemetryDataUtil.groupTraces(getExportedSpans());
   }
 
-  public final List<List<SpanData>> waitForTraces(int numberOfTraces, boolean verifyScopeVersion) {
+  public final List<List<SpanData>> waitForTraces(int numberOfTraces) {
     try {
       return TelemetryDataUtil.waitForTraces(
-          this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS, verifyScopeVersion);
+          this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS);
     } catch (TimeoutException | InterruptedException e) {
       throw new AssertionError("Error waiting for " + numberOfTraces + " traces", e);
     }
@@ -123,7 +123,10 @@ public abstract class InstrumentationTestRunner {
       @Nullable Comparator<List<SpanData>> traceComparator,
       List<T> assertionsList,
       boolean verifyScopeVersion) {
-    List<List<SpanData>> traces = waitForTraces(assertionsList.size(), verifyScopeVersion);
+    List<List<SpanData>> traces = waitForTraces(assertionsList.size());
+    if (verifyScopeVersion) {
+      TelemetryDataUtil.assertScopeVersion(traces);
+    }
     if (traceComparator != null) {
       traces.sort(traceComparator);
     }

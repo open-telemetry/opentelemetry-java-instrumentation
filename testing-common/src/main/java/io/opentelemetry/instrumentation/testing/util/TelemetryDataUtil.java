@@ -46,18 +46,13 @@ public final class TelemetryDataUtil {
     return traces;
   }
 
-  public static List<List<SpanData>> waitForTraces(
-      Supplier<List<SpanData>> supplier, int number, boolean verifyScopeVersion)
+  public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS, verifyScopeVersion);
+    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS);
   }
 
   public static List<List<SpanData>> waitForTraces(
-      Supplier<List<SpanData>> supplier,
-      int number,
-      long timeout,
-      TimeUnit unit,
-      boolean verifyScopeVersion)
+      Supplier<List<SpanData>> supplier, int number, long timeout, TimeUnit unit)
       throws InterruptedException, TimeoutException {
     long startTime = System.nanoTime();
     List<List<SpanData>> allTraces = groupTraces(supplier.get());
@@ -79,20 +74,21 @@ public final class TelemetryDataUtil {
               + " total trace(s): "
               + allTraces);
     }
-    if (verifyScopeVersion) {
-      // TODO (trask) is there a better location for this assertion?
-      for (List<SpanData> trace : completeTraces) {
-        for (SpanData span : trace) {
-          if (!span.getInstrumentationScopeInfo().getName().equals("test")) {
-            assertThat(span.getInstrumentationScopeInfo().getVersion())
-                .as(
-                    "Instrumentation version was empty; make sure that the instrumentation name matches the gradle module name")
-                .isNotNull();
-          }
+    return completeTraces;
+  }
+
+  // TODO: we should probably move that to InstrumentationTestRunner once we get rid of all groovy
+  public static void assertScopeVersion(List<List<SpanData>> traces) {
+    for (List<SpanData> trace : traces) {
+      for (SpanData span : trace) {
+        if (!span.getInstrumentationScopeInfo().getName().equals("test")) {
+          assertThat(span.getInstrumentationScopeInfo().getVersion())
+              .as(
+                  "Instrumentation version was empty; make sure that the instrumentation name matches the gradle module name")
+              .isNotNull();
         }
       }
     }
-    return completeTraces;
   }
 
   private static long elapsedSeconds(long startTime) {

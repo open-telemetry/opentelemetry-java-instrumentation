@@ -35,8 +35,11 @@ class InMemoryExporterAssert {
                            @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec,
                            boolean verifyScopeVersion) {
     try {
-      def traces = TelemetryDataUtil.waitForTraces(spanSupplier, expectedSize, verifyScopeVersion)
+      def traces = TelemetryDataUtil.waitForTraces(spanSupplier, expectedSize)
       assert traces.size() == expectedSize
+      if (verifyScopeVersion) {
+        TelemetryDataUtil.assertScopeVersion(traces)
+      }
       def asserter = new InMemoryExporterAssert(traces, spanSupplier)
       def clone = (Closure) spec.clone()
       clone.delegate = asserter
