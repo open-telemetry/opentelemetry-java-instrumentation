@@ -18,7 +18,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -130,15 +129,14 @@ class JavaUtilLoggingTest {
       }
 
       if (withParent) {
-        Assertions.assertThat(log.getSpanContext())
-            .isEqualTo(testing.spans().get(0).getSpanContext());
+        assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
       } else {
-        Assertions.assertThat(log.getSpanContext().isValid()).isFalse();
+        assertThat(log.getSpanContext().isValid()).isFalse();
       }
 
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
-      Assertions.assertThat(testing.logRecords()).isEmpty();
+      assertThat(testing.logRecords()).isEmpty();
     }
   }
 

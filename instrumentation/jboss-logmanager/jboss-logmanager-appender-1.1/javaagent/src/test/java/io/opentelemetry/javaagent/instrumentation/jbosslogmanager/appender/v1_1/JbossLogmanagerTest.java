@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1
 import static io.opentelemetry.sdk.testing.assertj.LogAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
@@ -146,15 +147,14 @@ class JbossLogmanagerTest {
       }
 
       if (withParent) {
-        Assertions.assertThat(log.getSpanContext())
-            .isEqualTo(testing.spans().get(0).getSpanContext());
+        assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
       } else {
-        Assertions.assertThat(log.getSpanContext().isValid()).isFalse();
+        assertThat(log.getSpanContext().isValid()).isFalse();
       }
 
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
-      Assertions.assertThat(testing.logRecords()).isEmpty();
+      assertThat(testing.logRecords()).isEmpty();
     }
   }
 

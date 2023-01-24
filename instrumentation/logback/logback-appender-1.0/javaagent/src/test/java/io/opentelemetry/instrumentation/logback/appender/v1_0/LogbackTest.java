@@ -166,7 +166,7 @@ class LogbackTest {
       }
 
       if (withParent) {
-        assertThat(log.getSpanContext()).isEqualTo(testing.spans().get(0).getSpanContext());
+        assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
       } else {
         assertThat(log.getSpanContext().isValid()).isFalse();
       }
