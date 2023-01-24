@@ -60,7 +60,7 @@ jobs:
         run: |
           message="Update the OpenTelemetry SDK version to $VERSION"
           body="Update the OpenTelemetry SDK version to \`$VERSION\`."
-          branch="opentelemetrybot/update-opentelemetry-sdk-to-${NEXT_VERSION}"
+          branch="opentelemetrybot/update-opentelemetry-sdk-to-${VERSION}"
 
           git checkout -b $branch
           git commit -a -m "$message"
