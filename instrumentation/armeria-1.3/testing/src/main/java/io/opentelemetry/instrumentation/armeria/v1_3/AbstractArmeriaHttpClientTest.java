@@ -94,12 +94,12 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     // Not supported yet: https://github.com/line/armeria/issues/2489
-    options.disableTestRedirects();
+    optionsBuilder.disableTestRedirects();
     // armeria requests can't be reused
-    options.disableTestReusedRequest();
-    options.enableTestReadTimeout();
+    optionsBuilder.disableTestReusedRequest();
+    optionsBuilder.enableTestReadTimeout();
   }
 
   @Test

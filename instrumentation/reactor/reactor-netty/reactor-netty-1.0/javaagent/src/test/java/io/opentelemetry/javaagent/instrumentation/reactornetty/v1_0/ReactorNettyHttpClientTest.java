@@ -27,10 +27,10 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    super.configure(options);
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
 
-    options.setSingleConnectionFactory(
+    optionsBuilder.setSingleConnectionFactory(
         (host, port) -> {
           HttpClient httpClient =
               HttpClient.newConnection()

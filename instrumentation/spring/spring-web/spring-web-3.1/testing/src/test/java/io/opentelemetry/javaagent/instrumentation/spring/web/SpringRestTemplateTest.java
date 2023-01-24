@@ -85,8 +85,8 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.setMaxRedirects(20);
-    options.setResponseCodeOnRedirectError(302);
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setMaxRedirects(20);
+    optionsBuilder.setResponseCodeOnRedirectError(302);
   }
 }

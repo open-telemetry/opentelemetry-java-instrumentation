@@ -3,23 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptySet;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.resolver.AddressResolverGroup;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -28,16 +24,13 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.InetSocketAddress;
 import java.net.URI;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.netty.http.client.HttpClient;
@@ -45,29 +38,23 @@ import reactor.netty.http.client.HttpClient;
 abstract class AbstractReactorNettyHttpClientTest
     extends AbstractHttpClientTest<HttpClient.ResponseReceiver<?>> {
 
-  static final String USER_AGENT = "ReactorNetty";
-
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  protected abstract HttpClient createHttpClient();
+  static final String USER_AGENT = "ReactorNetty";
 
-  protected AddressResolverGroup<InetSocketAddress> getAddressResolverGroup() {
-    return CustomNameResolverGroup.INSTANCE;
-  }
+  abstract HttpClient createHttpClient(boolean readTimeout);
 
   @Override
   public HttpClient.ResponseReceiver<?> buildRequest(
       String method, URI uri, Map<String, String> headers) {
-    HttpClient client =
-        createHttpClient()
-            .followRedirect(true)
-            .headers(h -> headers.forEach(h::add))
-            .baseUrl(resolveAddress("").toString());
-    if (uri.toString().contains("/read-timeout")) {
-      client = client.responseTimeout(READ_TIMEOUT);
-    }
-    return client.request(HttpMethod.valueOf(method)).uri(uri.toString());
+    boolean readTimeout = uri.toString().contains("/read-timeout");
+    return createHttpClient(readTimeout)
+        .followRedirect(true)
+        .headers(h -> headers.forEach(h::add))
+        .baseUrl(resolveAddress("").toString())
+        .request(HttpMethod.valueOf(method))
+        .uri(uri.toString());
   }
 
   @Override
@@ -107,7 +94,18 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.disableTestRedirects();
     optionsBuilder.enableTestReadTimeout();
     optionsBuilder.setUserAgent(USER_AGENT);
-    optionsBuilder.enableTestCallbackWithImplicitParent();
+
+    optionsBuilder.setExpectedClientSpanNameMapper(
+        (uri, method) -> {
+          switch (uri.toString()) {
+            case "http://localhost:61/": // unopened port
+            case "https://192.0.2.1/": // non routable address
+              return "CONNECT";
+            default:
+              return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(
+                  uri, method);
+          }
+        });
 
     optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
@@ -121,23 +119,20 @@ abstract class AbstractReactorNettyHttpClientTest
           return exception;
         });
 
-    optionsBuilder.setHttpAttributes(this::getHttpAttributes);
-  }
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          // unopened port or non routable address
+          if ("http://localhost:61/".equals(uri.toString())
+              || "https://192.0.2.1/".equals(uri.toString())) {
+            return emptySet();
+          }
 
-  protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
-    // unopened port or non routable address
-    if ("http://localhost:61/".equals(uri.toString())
-        || "https://192.0.2.1/".equals(uri.toString())) {
-      return emptySet();
-    }
-
-    Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    if (uri.toString().contains("/read-timeout")) {
-      attributes.remove(SemanticAttributes.NET_PEER_NAME);
-      attributes.remove(SemanticAttributes.NET_PEER_PORT);
-      attributes.remove(SemanticAttributes.HTTP_FLAVOR);
-    }
-    return attributes;
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(SemanticAttributes.NET_PEER_NAME);
+          attributes.remove(SemanticAttributes.NET_PEER_PORT);
+          return attributes;
+        });
   }
 
   @Test
@@ -149,11 +144,11 @@ abstract class AbstractReactorNettyHttpClientTest
     CountDownLatch latch = new CountDownLatch(1);
 
     HttpClient httpClient =
-        createHttpClient()
+        createHttpClient(false)
             .doOnRequest((rq, con) -> onRequestSpan.set(Span.current()))
             .doAfterRequest((rq, con) -> afterRequestSpan.set(Span.current()))
             .doOnResponse((rs, con) -> onResponseSpan.set(Span.current()))
-            .doAfterResponseSuccess(
+            .doAfterResponse(
                 (rs, con) -> {
                   afterResponseSpan.set(Span.current());
                   latch.countDown();
@@ -185,7 +180,7 @@ abstract class AbstractReactorNettyHttpClientTest
               span -> span.hasName("HTTP GET").hasKind(CLIENT).hasParent(parentSpan),
               span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
 
-          assertSameSpan(nettyClientSpan, onRequestSpan);
+          assertSameSpan(parentSpan, onRequestSpan);
           assertSameSpan(nettyClientSpan, afterRequestSpan);
           assertSameSpan(nettyClientSpan, onResponseSpan);
           assertSameSpan(parentSpan, afterResponseSpan);
@@ -197,7 +192,8 @@ abstract class AbstractReactorNettyHttpClientTest
     AtomicReference<Span> onRequestErrorSpan = new AtomicReference<>();
 
     HttpClient httpClient =
-        createHttpClient().doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
+        createHttpClient(false)
+            .doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
 
     Throwable thrown =
         catchThrowable(
@@ -207,8 +203,13 @@ abstract class AbstractReactorNettyHttpClientTest
                     () ->
                         httpClient
                             .get()
-                            .uri("http://localhost:" + PortUtils.UNUSABLE_PORT + "/")
-                            .response()
+                            .uri("http://localhost:$UNUSABLE_PORT/")
+                            .responseSingle(
+                                (resp, content) -> {
+                                  // Make sure to consume content since that's when we close the
+                                  // span.
+                                  return content.map(unused -> resp);
+                                })
                             .block()));
 
     testing.waitAndAssertTraces(
@@ -230,88 +231,6 @@ abstract class AbstractReactorNettyHttpClientTest
 
           assertSameSpan(parentSpan, onRequestErrorSpan);
         });
-  }
-
-  @Test
-  void shouldNotLeakConnections() {
-    HashSet<Integer> uniqueChannelHashes = new HashSet<>();
-    HttpClient httpClient =
-        createHttpClient().doOnConnect(config -> uniqueChannelHashes.add(config.channelHash()));
-
-    int count = 100;
-    IntStream.range(0, count)
-        .forEach(
-            i ->
-                testing.runWithSpan(
-                    "parent",
-                    () -> {
-                      int status =
-                          httpClient
-                              .get()
-                              .uri(resolveAddress("/success"))
-                              .responseSingle(
-                                  (resp, content) -> {
-                                    // Make sure to consume content since that's when we close the
-                                    // span.
-                                    return content.map(unused -> resp);
-                                  })
-                              .block()
-                              .status()
-                              .code();
-                      assertThat(status).isEqualTo(200);
-                    }));
-
-    testing.waitForTraces(count);
-    assertThat(uniqueChannelHashes).hasSize(1);
-  }
-
-  @Test
-  void shouldEndSpanOnMonoTimeout() {
-    HttpClient httpClient = createHttpClient();
-
-    URI uri = resolveAddress("/read-timeout");
-    Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        httpClient
-                            .get()
-                            .uri(uri)
-                            .responseSingle(
-                                (resp, content) -> {
-                                  // Make sure to consume content since that's when we close the
-                                  // span.
-                                  return content.map(unused -> resp);
-                                })
-                            // apply Mono timeout that is way shorter than HTTP request timeout
-                            .timeout(Duration.ofSeconds(1))
-                            .block()));
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(thrown),
-                span ->
-                    span.hasName("HTTP GET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
-                            equalTo(SemanticAttributes.HTTP_USER_AGENT, USER_AGENT),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, uri.getPort())),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))));
   }
 
   private static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {

@@ -66,11 +66,11 @@ public class JdkHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.disableTestCircularRedirects();
-    options.enableTestReadTimeout();
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.disableTestCircularRedirects();
+    optionsBuilder.enableTestReadTimeout();
     // TODO nested client span is not created, but context is still injected
     //  which is not what the test expects
-    options.disableTestWithClientParent();
+    optionsBuilder.disableTestWithClientParent();
   }
 }

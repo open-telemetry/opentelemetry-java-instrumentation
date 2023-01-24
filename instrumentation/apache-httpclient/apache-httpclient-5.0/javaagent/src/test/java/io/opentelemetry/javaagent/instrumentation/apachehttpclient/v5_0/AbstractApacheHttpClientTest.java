@@ -33,10 +33,10 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   }
 
   @Override
-  protected void configure(HttpClientTestOptions options) {
-    options.setUserAgent(userAgent());
-    options.enableTestReadTimeout();
-    options.setHttpAttributes(this::getHttpAttributes);
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.setUserAgent(userAgent());
+    optionsBuilder.enableTestReadTimeout();
+    optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI endpoint) {
