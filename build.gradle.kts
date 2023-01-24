@@ -32,3 +32,18 @@ nexusPublishing {
 }
 
 description = "OpenTelemetry instrumentations for Java"
+
+// total of 4 partitions (see modulo 4 below)
+var testPartition = (project.findProperty("testPartition") as String?)?.toInt()
+if (testPartition != null) {
+  var testPartitionCounter = 0
+  subprojects {
+    // relying on predictable ordering of subprojects
+    // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
+    // since we are splitting these tasks across different github action jobs
+    val enabled = testPartitionCounter++ % 4 == testPartition
+    tasks.withType<Test>().configureEach {
+      this.enabled = enabled
+    }
+  }
+}
