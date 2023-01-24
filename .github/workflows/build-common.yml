@@ -136,6 +136,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
     strategy:
       matrix:
         test-java-version:
@@ -146,6 +147,11 @@ jobs:
         vm:
           - hotspot
           - openj9
+        test-partition:
+          - 0
+          - 1
+          - 2
+          - 3
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 19
@@ -193,6 +199,7 @@ jobs:
             -PtestJavaVM=${{ matrix.vm }}
             -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
             -Porg.gradle.java.installations.auto-download=false
+            -PtestPartition=${{ matrix.test-partition }}
             ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
