@@ -28,23 +28,20 @@ jobs:
                                --jq .tagName \
                              | sed 's/^v//')
 
-          echo "current-version=$current_version"
-          echo "latest-version=$latest_version"
-
           echo "current-version=$current_version" >> $GITHUB_OUTPUT
           echo "latest-version=$latest_version" >> $GITHUB_OUTPUT
 
   update-otel-sdk:
+    runs-on: ubuntu-latest
+    if: needs.check-versions.outputs.current-version != needs.check-versions.outputs.latest-version
     needs:
       - check-versions
-    if: needs.check-version.outputs.current-version != needs.check-version.outputs.latest-version
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
       - name: Update version
         env:
-          VERSION: ${needs.check-version.outputs.latest-version}
+          VERSION: ${{ needs.check-versions.outputs.latest-version }}
         run: ./.github/scripts/update-sdk-version.sh $VERSION
 
       - name: Update license report
@@ -57,7 +54,7 @@ jobs:
 
       - name: Create pull request against main
         env:
-          VERSION: ${needs.check-version.outputs.latest-version}
+          VERSION: ${{ needs.check-versions.outputs.latest-version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
