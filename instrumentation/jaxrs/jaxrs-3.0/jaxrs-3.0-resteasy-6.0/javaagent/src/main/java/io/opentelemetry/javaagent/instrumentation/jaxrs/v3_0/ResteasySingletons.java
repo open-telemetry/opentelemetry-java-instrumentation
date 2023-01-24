@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory
 public final class ResteasySingletons {
 
   private static final Instrumenter<HandlerData, Void> INSTANCE =
-      JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.resteasy-6.0");
+      JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-3.0-resteasy-6.0");
 
   public static Instrumenter<HandlerData, Void> instrumenter() {
     return INSTANCE;

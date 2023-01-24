@@ -94,7 +94,7 @@ abstract class InstrumentationSpecification extends Specification {
    * 20 seconds, then times out.
    */
   List<List<SpanData>> waitForTraces(int numberOfTraces) {
-    TelemetryDataUtil.waitForTraces({ testRunner().getExportedSpans() }, numberOfTraces)
+    TelemetryDataUtil.waitForTraces({ testRunner().getExportedSpans() }, numberOfTraces, true)
   }
 
   void ignoreTracesAndClear(int numberOfTraces) {
@@ -109,8 +109,19 @@ abstract class InstrumentationSpecification extends Specification {
       options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
-    InMemoryExporterAssert.assertTraces({ testRunner().getExportedSpans() }, size, spec)
+    InMemoryExporterAssert.assertTraces({ testRunner().getExportedSpans() }, size, spec, true)
   }
+
+  void assertTracesWithoutScopeVersionVerification(
+    final int size,
+    @ClosureParams(
+      value = SimpleType,
+      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
+    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
+    final Closure spec) {
+    InMemoryExporterAssert.assertTraces({ testRunner().getExportedSpans() }, size, spec, false)
+  }
+
 
   /**
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code

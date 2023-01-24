@@ -139,9 +139,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
       LogRecordData log = testing.logRecords().get(0);
       assertThat(log)
           .hasBody("xyz: 123")
-          // TODO (trask) why is version "" instead of null?
-          .hasInstrumentationScope(
-              InstrumentationScopeInfo.builder(expectedLoggerName).setVersion("").build())
+          .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
           .hasSeverity(expectedSeverity)
           .hasSeverityText(expectedSeverityText);
       if (logException) {
@@ -201,8 +199,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     LogRecordData log = getLogRecords().get(0);
     assertThat(log)
         .hasBody("xyz: 123")
-        // TODO (trask) why is version "" instead of null?
-        .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").setVersion("").build())
+        .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         // TODO (trask) convert to hasAttributesSatisfyingExactly once that's available for logs

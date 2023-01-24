@@ -62,10 +62,10 @@ public abstract class InstrumentationTestRunner {
     return TelemetryDataUtil.groupTraces(getExportedSpans());
   }
 
-  public final List<List<SpanData>> waitForTraces(int numberOfTraces) {
+  public final List<List<SpanData>> waitForTraces(int numberOfTraces, boolean verifyScopeVersion) {
     try {
       return TelemetryDataUtil.waitForTraces(
-          this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS);
+          this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS, verifyScopeVersion);
     } catch (TimeoutException | InterruptedException e) {
       throw new AssertionError("Error waiting for " + numberOfTraces + " traces", e);
     }
@@ -75,7 +75,19 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(traceComparator, Arrays.asList(assertions));
+    waitAndAssertTraces(traceComparator, Arrays.asList(assertions), true);
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertTracesWithoutScopeVersionVerification(
+      Consumer<TraceAssert>... assertions) {
+    waitAndAssertTracesWithoutScopeVersionVerification(Arrays.asList(assertions));
+  }
+
+  public final <T extends Consumer<TraceAssert>>
+      void waitAndAssertTracesWithoutScopeVersionVerification(Iterable<T> assertions) {
+    waitAndAssertTraces(null, assertions, false);
   }
 
   @SafeVarargs
@@ -85,28 +97,33 @@ public abstract class InstrumentationTestRunner {
   }
 
   public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
-    waitAndAssertTraces(null, assertions);
+    waitAndAssertTraces(null, assertions, true);
   }
 
   private <T extends Consumer<TraceAssert>> void waitAndAssertTraces(
-      @Nullable Comparator<List<SpanData>> traceComparator, Iterable<T> assertions) {
+      @Nullable Comparator<List<SpanData>> traceComparator,
+      Iterable<T> assertions,
+      boolean verifyScopeVersion) {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
 
     try {
-      await().untilAsserted(() -> doAssertTraces(traceComparator, assertionsList));
+      await()
+          .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
     } catch (ConditionTimeoutException e) {
       // Don't throw this failure since the stack is the awaitility thread, causing confusion.
       // Instead, just assert one more time on the test thread, which will fail with a better stack
       // trace.
       // TODO(anuraaga): There is probably a better way to do this.
-      doAssertTraces(traceComparator, assertionsList);
+      doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
     }
   }
 
   private <T extends Consumer<TraceAssert>> void doAssertTraces(
-      @Nullable Comparator<List<SpanData>> traceComparator, List<T> assertionsList) {
-    List<List<SpanData>> traces = waitForTraces(assertionsList.size());
+      @Nullable Comparator<List<SpanData>> traceComparator,
+      List<T> assertionsList,
+      boolean verifyScopeVersion) {
+    List<List<SpanData>> traces = waitForTraces(assertionsList.size(), verifyScopeVersion);
     if (traceComparator != null) {
       traces.sort(traceComparator);
     }

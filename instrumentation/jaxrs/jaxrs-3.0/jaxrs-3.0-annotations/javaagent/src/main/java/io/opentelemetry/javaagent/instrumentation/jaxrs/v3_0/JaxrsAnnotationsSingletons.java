@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory
 public final class JaxrsAnnotationsSingletons {
 
   private static final Instrumenter<HandlerData, Void> INSTANCE =
-      JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-annotations-3.0");
+      JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-3.0-annotations");
 
   public static Instrumenter<HandlerData, Void> instrumenter() {
     return INSTANCE;

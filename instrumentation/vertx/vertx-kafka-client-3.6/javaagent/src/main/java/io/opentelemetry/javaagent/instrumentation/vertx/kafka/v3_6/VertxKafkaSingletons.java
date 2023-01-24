@@ -15,7 +15,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 public final class VertxKafkaSingletons {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-kafka-client-3.5";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-kafka-client-3.6";
 
   private static final Instrumenter<ConsumerRecords<?, ?>, Void> BATCH_PROCESS_INSTRUMENTER;
   private static final Instrumenter<ConsumerRecord<?, ?>, Void> PROCESS_INSTRUMENTER;
