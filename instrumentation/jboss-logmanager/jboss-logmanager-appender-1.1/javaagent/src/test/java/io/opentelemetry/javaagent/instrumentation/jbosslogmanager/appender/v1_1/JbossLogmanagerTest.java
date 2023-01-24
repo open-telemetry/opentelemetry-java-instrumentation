@@ -97,7 +97,7 @@ class JbossLogmanagerTest {
     testing.clearData();
   }
 
-  private void test(
+  private static void test(
       java.util.logging.Level level,
       LoggerMethod loggerMethod,
       boolean withParam,

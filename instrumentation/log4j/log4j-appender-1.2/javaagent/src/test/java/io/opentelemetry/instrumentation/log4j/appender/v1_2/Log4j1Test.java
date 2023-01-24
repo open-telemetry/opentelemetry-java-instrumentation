@@ -69,7 +69,7 @@ class Log4j1Test {
     testing.clearData();
   }
 
-  private void test(
+  private static void test(
       LoggerMethod loggerMethod,
       ExceptionLoggerMethod exceptionLoggerMethod,
       boolean logException,

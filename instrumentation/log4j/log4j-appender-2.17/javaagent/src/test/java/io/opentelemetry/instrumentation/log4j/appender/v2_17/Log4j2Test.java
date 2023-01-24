@@ -58,7 +58,7 @@ class Log4j2Test {
     testing.clearData();
   }
 
-  private void test(
+  private static void test(
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
       boolean logException,
