@@ -98,6 +98,9 @@ public final class Threads {
       Map<Attributes, Long> counts = new HashMap<>();
       long[] threadIds = threadBean.getAllThreadIds();
       for (ThreadInfo threadInfo : threadBean.getThreadInfo(threadIds)) {
+        if (threadInfo == null) {
+          continue;
+        }
         Attributes threadAttributes = threadAttributes(threadInfo);
         counts.compute(threadAttributes, (k, value) -> value == null ? 1 : value + 1);
       }
