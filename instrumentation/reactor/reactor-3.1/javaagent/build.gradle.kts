@@ -20,7 +20,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-  library("io.projectreactor:reactor-core:3.1.0.RELEASE")
+  library("io.projectreactor:reactor-core:3.5.0")
 
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
 
@@ -30,14 +30,11 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 
-  testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
+  testLibrary("io.projectreactor:reactor-test:3.5.0")
   testImplementation(project(":instrumentation-annotations-support-testing"))
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
   testImplementation(project(":instrumentation-annotations"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
-
-  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
-  latestDepTestLibrary("io.projectreactor:reactor-test:3.4.+")
 }
 
 testing {
@@ -46,7 +43,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
-        implementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
+        implementation("io.projectreactor:reactor-test:3.5.0")
       }
     }
   }
