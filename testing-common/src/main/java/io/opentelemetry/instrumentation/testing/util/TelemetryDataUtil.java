@@ -95,11 +95,6 @@ public final class TelemetryDataUtil {
     return completeTraces;
   }
 
-  public static List<List<SpanData>> waitForLogs(Supplier<List<SpanData>> supplier, int number)
-      throws InterruptedException, TimeoutException {
-    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS);
-  }
-
   private static long elapsedSeconds(long startTime) {
     return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
   }

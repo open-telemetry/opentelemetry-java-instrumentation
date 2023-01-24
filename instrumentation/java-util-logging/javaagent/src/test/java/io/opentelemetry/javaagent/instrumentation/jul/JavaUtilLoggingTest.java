@@ -10,7 +10,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -25,7 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
+class JavaUtilLoggingTest {
 
   private static final Logger logger = Logger.getLogger("abc");
 
@@ -48,10 +47,9 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
   @MethodSource("provideParameters")
   public void test(boolean withParam, boolean logException, boolean withParent)
       throws InterruptedException {
-    test(logger, Level.FINE, Logger::fine, withParam, logException, withParent, null, null, null);
+    test(Level.FINE, Logger::fine, withParam, logException, withParent, null, null, null);
     testing.clearData();
     test(
-        logger,
         Level.INFO,
         Logger::info,
         withParam,
@@ -62,7 +60,6 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
         "INFO");
     testing.clearData();
     test(
-        logger,
         Level.WARNING,
         Logger::warning,
         withParam,
@@ -73,7 +70,6 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
         "WARNING");
     testing.clearData();
     test(
-        logger,
         Level.SEVERE,
         Logger::severe,
         withParam,
@@ -85,8 +81,7 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
     testing.clearData();
   }
 
-  private void test(
-      Logger logger,
+  private static void test(
       Level level,
       LoggerMethod loggerMethod,
       boolean withParam,
@@ -101,11 +96,9 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
     if (withParent) {
       testing.runWithSpan(
           "parent",
-          () -> {
-            performLogging(logger, level, loggerMethod, withParam, logException);
-          });
+          () -> performLogging(level, loggerMethod, withParam, logException));
     } else {
-      performLogging(logger, level, loggerMethod, withParam, logException);
+      performLogging(level, loggerMethod, withParam, logException);
     }
 
     // then
@@ -114,7 +107,7 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
     }
 
     if (expectedSeverity != null) {
-      LogRecordData log = waitForLogRecords(1).get(0);
+      LogRecordData log = testing.waitForLogRecords(1).get(0);
       assertThat(log)
           .hasBody(withParam ? "xyz: 123" : "xyz")
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
@@ -151,7 +144,6 @@ class JavaUtilLoggingTest extends AgentInstrumentationSpecification {
   }
 
   private static void performLogging(
-      Logger logger,
       Level level,
       LoggerMethod loggerMethod,
       boolean withParam,

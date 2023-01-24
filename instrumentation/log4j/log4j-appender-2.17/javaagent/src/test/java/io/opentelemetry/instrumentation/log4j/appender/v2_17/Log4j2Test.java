@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -31,7 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class Log4j2Test extends AgentInstrumentationSpecification {
+class Log4j2Test {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -49,16 +48,15 @@ class Log4j2Test extends AgentInstrumentationSpecification {
   @ParameterizedTest
   @MethodSource("provideParameters")
   public void test(boolean logException, boolean withParent) throws InterruptedException {
-    test(logger, Logger::debug, Logger::debug, logException, withParent, null, null, null);
+    test(Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing.clearData();
     test(
-        logger, Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
+        Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
     testing.clearData();
     test(
-        logger, Logger::warn, Logger::warn, logException, withParent, "abc", Severity.WARN, "WARN");
+        Logger::warn, Logger::warn, logException, withParent, "abc", Severity.WARN, "WARN");
     testing.clearData();
     test(
-        logger,
         Logger::error,
         Logger::error,
         logException,
@@ -70,7 +68,6 @@ class Log4j2Test extends AgentInstrumentationSpecification {
   }
 
   private void test(
-      Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
       boolean logException,
@@ -84,11 +81,9 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     if (withParent) {
       testing.runWithSpan(
           "parent",
-          () -> {
-            performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException);
-          });
+          () -> performLogging(oneArgLoggerMethod, twoArgLoggerMethod, logException));
     } else {
-      performLogging(logger, oneArgLoggerMethod, twoArgLoggerMethod, logException);
+      performLogging(oneArgLoggerMethod, twoArgLoggerMethod, logException);
     }
 
     // then
@@ -97,7 +92,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     }
 
     if (expectedSeverity != null) {
-      LogRecordData log = waitForLogRecords(1).get(0);
+      LogRecordData log = testing.waitForLogRecords(1).get(0);
       assertThat(log)
           .hasBody("xyz: 123")
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
@@ -142,7 +137,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
       ThreadContext.clearMap();
     }
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasBody("xyz: 123")
         .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
@@ -162,7 +157,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     message.put("key2", "val2");
     logger.info(message);
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasBody("")
         .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
@@ -182,7 +177,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     message.put("message", "val2");
     logger.info(message);
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasBody("val2")
         .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
@@ -201,7 +196,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
     message.put("key2", "val2");
     logger.info(message);
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasBody("a message")
         .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
@@ -222,7 +217,7 @@ class Log4j2Test extends AgentInstrumentationSpecification {
 
     logger.info(marker, "Message");
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasAttributesSatisfyingExactly(
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
@@ -231,7 +226,6 @@ class Log4j2Test extends AgentInstrumentationSpecification {
   }
 
   private static void performLogging(
-      Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
       boolean logException) {

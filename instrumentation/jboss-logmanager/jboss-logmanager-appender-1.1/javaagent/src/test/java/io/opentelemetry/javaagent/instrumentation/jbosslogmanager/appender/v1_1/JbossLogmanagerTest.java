@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -29,7 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class JbossLogmanagerTest extends AgentInstrumentationSpecification {
+class JbossLogmanagerTest {
 
   private static final Logger logger = LogContext.getLogContext().getLogger("abc");
 
@@ -57,7 +56,6 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
   public void test(boolean withParam, boolean logException, boolean withParent)
       throws InterruptedException {
     test(
-        logger,
         java.util.logging.Level.FINE,
         java.util.logging.Logger::fine,
         withParam,
@@ -68,7 +66,6 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
         null);
     testing.clearData();
     test(
-        logger,
         java.util.logging.Level.INFO,
         java.util.logging.Logger::info,
         withParam,
@@ -79,7 +76,6 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
         "INFO");
     testing.clearData();
     test(
-        logger,
         java.util.logging.Level.WARNING,
         java.util.logging.Logger::warning,
         withParam,
@@ -90,7 +86,6 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
         "WARNING");
     testing.clearData();
     test(
-        logger,
         java.util.logging.Level.SEVERE,
         java.util.logging.Logger::severe,
         withParam,
@@ -103,7 +98,6 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
   }
 
   private void test(
-      java.util.logging.Logger logger,
       java.util.logging.Level level,
       LoggerMethod loggerMethod,
       boolean withParam,
@@ -118,11 +112,9 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
     if (withParent) {
       testing.runWithSpan(
           "parent",
-          () -> {
-            performLogging(logger, level, loggerMethod, withParam, logException);
-          });
+          () -> performLogging(level, loggerMethod, withParam, logException));
     } else {
-      performLogging(logger, level, loggerMethod, withParam, logException);
+      performLogging(level, loggerMethod, withParam, logException);
     }
 
     // then
@@ -131,7 +123,7 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
     }
 
     if (expectedSeverity != null) {
-      LogRecordData log = waitForLogRecords(1).get(0);
+      LogRecordData log = testing.waitForLogRecords(1).get(0);
       assertThat(log)
           .hasBody(withParam ? "xyz: 123" : "xyz")
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
@@ -168,7 +160,6 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
   }
 
   private static void performLogging(
-      java.util.logging.Logger logger,
       java.util.logging.Level level,
       LoggerMethod loggerMethod,
       boolean withParam,
@@ -200,7 +191,7 @@ class JbossLogmanagerTest extends AgentInstrumentationSpecification {
       MDC.remove("key2");
     }
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasBody("xyz")
         .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())

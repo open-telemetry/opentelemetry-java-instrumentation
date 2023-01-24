@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -28,7 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class Log4j1Test extends AgentInstrumentationSpecification {
+class Log4j1Test {
 
   static {
     // this is needed because log4j1 incorrectly thinks the initial releases of Java 10-19
@@ -60,28 +59,17 @@ class Log4j1Test extends AgentInstrumentationSpecification {
   @ParameterizedTest
   @MethodSource("provideParameters")
   public void test(boolean logException, boolean withParent) throws InterruptedException {
-    test(logger, Logger::debug, Logger::debug, logException, withParent, null, null, null);
+    test(Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing.clearData();
-    test(
-        logger, Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
+    test(Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
     testing.clearData();
-    test(
-        logger, Logger::warn, Logger::warn, logException, withParent, "abc", Severity.WARN, "WARN");
+    test(Logger::warn, Logger::warn, logException, withParent, "abc", Severity.WARN, "WARN");
     testing.clearData();
-    test(
-        logger,
-        Logger::error,
-        Logger::error,
-        logException,
-        withParent,
-        "abc",
-        Severity.ERROR,
-        "ERROR");
+    test(Logger::error, Logger::error, logException, withParent, "abc", Severity.ERROR, "ERROR");
     testing.clearData();
   }
 
   private void test(
-      Logger logger,
       LoggerMethod loggerMethod,
       ExceptionLoggerMethod exceptionLoggerMethod,
       boolean logException,
@@ -95,11 +83,9 @@ class Log4j1Test extends AgentInstrumentationSpecification {
     if (withParent) {
       testing.runWithSpan(
           "parent",
-          () -> {
-            performLogging(logger, loggerMethod, exceptionLoggerMethod, logException);
-          });
+          () -> performLogging(loggerMethod, exceptionLoggerMethod, logException));
     } else {
-      performLogging(logger, loggerMethod, exceptionLoggerMethod, logException);
+      performLogging(loggerMethod, exceptionLoggerMethod, logException);
     }
 
     // then
@@ -108,7 +94,7 @@ class Log4j1Test extends AgentInstrumentationSpecification {
     }
 
     if (expectedSeverity != null) {
-      LogRecordData log = waitForLogRecords(1).get(0);
+      LogRecordData log = testing.waitForLogRecords(1).get(0);
       assertThat(log)
           .hasBody("xyz")
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
@@ -154,7 +140,7 @@ class Log4j1Test extends AgentInstrumentationSpecification {
       MDC.remove("key2");
     }
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasBody("xyz")
         .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
@@ -168,7 +154,6 @@ class Log4j1Test extends AgentInstrumentationSpecification {
   }
 
   private static void performLogging(
-      Logger logger,
       LoggerMethod loggerMethod,
       ExceptionLoggerMethod exceptionLoggerMethod,
       boolean logException) {

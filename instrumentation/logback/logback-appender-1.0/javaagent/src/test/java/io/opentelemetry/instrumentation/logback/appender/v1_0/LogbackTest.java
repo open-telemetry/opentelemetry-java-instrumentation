@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -30,7 +29,7 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-class LogbackTest extends AgentInstrumentationSpecification {
+class LogbackTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -107,7 +106,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     testing.clearData();
   }
 
-  private void test(
+  private static void test(
       Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
@@ -135,7 +134,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
     }
 
     if (expectedSeverity != null) {
-      LogRecordData log = waitForLogRecords(1).get(0);
+      LogRecordData log = testing.waitForLogRecords(1).get(0);
       assertThat(log)
           .hasBody("xyz: 123")
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
@@ -188,7 +187,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
       MDC.clear();
     }
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasBody("xyz: 123")
         .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
@@ -213,7 +212,7 @@ class LogbackTest extends AgentInstrumentationSpecification {
 
     abcLogger.info(marker, "Message");
 
-    LogRecordData log = waitForLogRecords(1).get(0);
+    LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasAttributesSatisfyingExactly(
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),

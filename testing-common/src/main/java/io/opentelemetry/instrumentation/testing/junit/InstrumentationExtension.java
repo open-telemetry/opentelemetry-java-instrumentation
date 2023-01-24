@@ -20,6 +20,7 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -109,11 +110,26 @@ public abstract class InstrumentationExtension
 
   /**
    * Wait until at least {@code numberOfTraces} traces are completed and return all captured traces.
-   * Note that there may be more than {@code numberOfTraces} collected. By default this waits up to
-   * 20 seconds, then times out.
+   * Note that there may be more than {@code numberOfTraces} collected. This waits up to 20 seconds,
+   * then times out.
    */
   public List<List<SpanData>> waitForTraces(int numberOfTraces) {
     return testRunner.waitForTraces(numberOfTraces, true);
+  }
+
+  /**
+   * Wait until at least {@code numberOfLogRecords} log records are completed and return all
+   * captured log records. Note that there may be more than {@code numberOfLogRecords} collected. This
+   * waits up to 20 seconds, then times out.
+   */
+  public List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
+    await()
+        .timeout(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                assertThat(testRunner.getExportedLogRecords().size())
+                    .isEqualTo(numberOfLogRecords));
+    return testRunner.getExportedLogRecords();
   }
 
   @SafeVarargs
