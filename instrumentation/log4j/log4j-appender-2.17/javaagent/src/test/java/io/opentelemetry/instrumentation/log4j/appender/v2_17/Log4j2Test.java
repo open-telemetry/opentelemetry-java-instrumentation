@@ -50,20 +50,11 @@ class Log4j2Test {
   public void test(boolean logException, boolean withParent) throws InterruptedException {
     test(Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing.clearData();
-    test(
-        Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
+    test(Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
     testing.clearData();
-    test(
-        Logger::warn, Logger::warn, logException, withParent, "abc", Severity.WARN, "WARN");
+    test(Logger::warn, Logger::warn, logException, withParent, "abc", Severity.WARN, "WARN");
     testing.clearData();
-    test(
-        Logger::error,
-        Logger::error,
-        logException,
-        withParent,
-        "abc",
-        Severity.ERROR,
-        "ERROR");
+    test(Logger::error, Logger::error, logException, withParent, "abc", Severity.ERROR, "ERROR");
     testing.clearData();
   }
 
@@ -80,8 +71,7 @@ class Log4j2Test {
     // when
     if (withParent) {
       testing.runWithSpan(
-          "parent",
-          () -> performLogging(oneArgLoggerMethod, twoArgLoggerMethod, logException));
+          "parent", () -> performLogging(oneArgLoggerMethod, twoArgLoggerMethod, logException));
     } else {
       performLogging(oneArgLoggerMethod, twoArgLoggerMethod, logException);
     }

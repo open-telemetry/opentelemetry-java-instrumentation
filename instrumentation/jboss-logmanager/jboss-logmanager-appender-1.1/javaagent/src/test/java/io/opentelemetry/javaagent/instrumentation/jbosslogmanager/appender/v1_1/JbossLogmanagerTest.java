@@ -111,8 +111,7 @@ class JbossLogmanagerTest {
     // when
     if (withParent) {
       testing.runWithSpan(
-          "parent",
-          () -> performLogging(level, loggerMethod, withParam, logException));
+          "parent", () -> performLogging(level, loggerMethod, withParam, logException));
     } else {
       performLogging(level, loggerMethod, withParam, logException);
     }

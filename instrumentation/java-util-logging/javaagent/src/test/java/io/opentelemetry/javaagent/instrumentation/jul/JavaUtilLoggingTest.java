@@ -95,8 +95,7 @@ class JavaUtilLoggingTest {
     // when
     if (withParent) {
       testing.runWithSpan(
-          "parent",
-          () -> performLogging(level, loggerMethod, withParam, logException));
+          "parent", () -> performLogging(level, loggerMethod, withParam, logException));
     } else {
       performLogging(level, loggerMethod, withParam, logException);
     }
@@ -144,10 +143,7 @@ class JavaUtilLoggingTest {
   }
 
   private static void performLogging(
-      Level level,
-      LoggerMethod loggerMethod,
-      boolean withParam,
-      boolean logException) {
+      Level level, LoggerMethod loggerMethod, boolean withParam, boolean logException) {
     if (logException) {
       if (withParam) {
         // this is the best j.u.l. can do

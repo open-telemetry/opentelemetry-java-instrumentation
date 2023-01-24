@@ -119,8 +119,8 @@ public abstract class InstrumentationExtension
 
   /**
    * Wait until at least {@code numberOfLogRecords} log records are completed and return all
-   * captured log records. Note that there may be more than {@code numberOfLogRecords} collected. This
-   * waits up to 20 seconds, then times out.
+   * captured log records. Note that there may be more than {@code numberOfLogRecords} collected.
+   * This waits up to 20 seconds, then times out.
    */
   public List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
     await()

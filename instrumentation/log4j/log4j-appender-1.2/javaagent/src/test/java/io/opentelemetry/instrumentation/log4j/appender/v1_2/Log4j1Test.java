@@ -82,8 +82,7 @@ class Log4j1Test {
     // when
     if (withParent) {
       testing.runWithSpan(
-          "parent",
-          () -> performLogging(loggerMethod, exceptionLoggerMethod, logException));
+          "parent", () -> performLogging(loggerMethod, exceptionLoggerMethod, logException));
     } else {
       performLogging(loggerMethod, exceptionLoggerMethod, logException);
     }
