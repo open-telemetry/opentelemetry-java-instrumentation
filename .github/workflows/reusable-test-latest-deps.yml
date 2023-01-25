@@ -19,7 +19,7 @@ on:
 
 jobs:
   test-latest-deps:
-    name: testLatestDeps${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
+    name: testLatestDeps${{ matrix.test-partition }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
