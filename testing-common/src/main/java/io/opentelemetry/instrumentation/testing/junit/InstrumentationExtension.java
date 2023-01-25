@@ -114,7 +114,7 @@ public abstract class InstrumentationExtension
    * then times out.
    */
   public List<List<SpanData>> waitForTraces(int numberOfTraces) {
-    return testRunner.waitForTraces(numberOfTraces, true);
+    return testRunner.waitForTraces(numberOfTraces);
   }
 
   /**
