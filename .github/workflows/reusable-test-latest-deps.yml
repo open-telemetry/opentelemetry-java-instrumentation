@@ -19,8 +19,15 @@ on:
 
 jobs:
   test-latest-deps:
-    name: testLatestDeps
+    name: testLatestDeps${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-partition:
+          - 0
+          - 1
+          - 2
+          - 3
     steps:
       - uses: actions/checkout@v3
 
@@ -48,7 +55,11 @@ jobs:
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
-          arguments: test -PtestLatestDeps=true ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+          arguments: >
+            test
+            -PtestLatestDeps=true
+            -PtestPartition=${{ matrix.test-partition }}
+            ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
