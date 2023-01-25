@@ -12,8 +12,8 @@ jobs:
     uses: ./.github/workflows/build-common.yml
     with:
       # it's rare for only the openj9 tests or the windows smoke tests to break
-      skip-openj9-tests: true
-      skip-windows-smoke-tests: true
+      skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
+      skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
       cache-read-only: true
 
   test-latest-deps:
