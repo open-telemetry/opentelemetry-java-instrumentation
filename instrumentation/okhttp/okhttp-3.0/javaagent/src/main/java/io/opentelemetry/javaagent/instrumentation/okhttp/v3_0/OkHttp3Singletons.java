@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResend;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetry;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpNetAttributesGetter;
@@ -25,6 +28,13 @@ public final class OkHttp3Singletons {
           .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
           .build()
           .newInterceptor();
+
+  public static final Interceptor CONTEXT_INTERCEPTOR =
+      chain -> {
+        try (Scope ignored = HttpClientResend.initialize(Context.current()).makeCurrent()) {
+          return chain.proceed(chain.request());
+        }
+      };
 
   private OkHttp3Singletons() {}
 }

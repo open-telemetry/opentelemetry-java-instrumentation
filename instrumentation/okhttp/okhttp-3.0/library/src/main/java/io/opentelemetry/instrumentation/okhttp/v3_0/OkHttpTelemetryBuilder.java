@@ -34,6 +34,9 @@ public final class OkHttpTelemetryBuilder {
           HttpClientAttributesExtractor.builder(
               OkHttpAttributesGetter.INSTANCE, new OkHttpNetAttributesGetter());
 
+  boolean emitEncompassingSpan = false;
+  boolean createSpanForConnectionErrors = false;
+
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -71,6 +74,19 @@ public final class OkHttpTelemetryBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder setEmitEncompassingSpan(boolean emitEncompassingSpan) {
+    this.emitEncompassingSpan = emitEncompassingSpan;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder setCreateSpanForConnectionErrors(
+      boolean createSpanForConnectionErrors) {
+    this.createSpanForConnectionErrors = createSpanForConnectionErrors;
+    return this;
+  }
+
   /**
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
@@ -87,6 +103,10 @@ public final class OkHttpTelemetryBuilder {
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
             .buildInstrumenter(alwaysClient());
-    return new OkHttpTelemetry(instrumenter, openTelemetry.getPropagators());
+    return new OkHttpTelemetry(
+        instrumenter,
+        openTelemetry.getPropagators(),
+        emitEncompassingSpan,
+        createSpanForConnectionErrors);
   }
 }

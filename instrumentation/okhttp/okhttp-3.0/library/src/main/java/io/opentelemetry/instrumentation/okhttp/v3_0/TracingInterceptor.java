@@ -27,10 +27,7 @@ final class TracingInterceptor implements Interceptor {
   @Override
   public Response intercept(Chain chain) throws IOException {
     Request request = chain.request();
-    Context parentContext = TracingCallFactory.getCallingContextForRequest(request);
-    if (parentContext == null) {
-      parentContext = Context.current();
-    }
+    Context parentContext = Context.current();
 
     if (!instrumenter.shouldStart(parentContext, request)) {
       return chain.proceed(chain.request());
@@ -39,15 +36,17 @@ final class TracingInterceptor implements Interceptor {
     Context context = instrumenter.start(parentContext, request);
     request = injectContextToRequest(request, context);
 
-    Response response;
+    Response response = null;
+    Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
       response = chain.proceed(request);
+      return response;
     } catch (Exception e) {
-      instrumenter.end(context, request, null, e);
+      error = e;
       throw e;
+    } finally {
+      instrumenter.end(context, request, response, error);
     }
-    instrumenter.end(context, request, response, null);
-    return response;
   }
 
   // Context injection is being handled manually for a reason: we want to use the OkHttp Request
