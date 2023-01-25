@@ -26,12 +26,62 @@ dependencies {
 }
 
 tasks {
+  test {
+    filter {
+      excludeTestsMatching("Slf4jToLog4j2Test")
+    }
+    exclude("**/Slf4jToLog4j2Test.*")
+  }
+
   val testAsync by registering(Test::class) {
+    filter {
+      excludeTestsMatching("Slf4jToLog4j2Test")
+    }
     jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
   }
 
-  named<Test>("test") {
+  val testSlf4j1ToLog4j2 by registering(Test::class) {
+    filter {
+      includeTestsMatching("Slf4jToLog4j2Test")
+    }
+    include("**/Slf4jToLog4j2Test.*")
+    configurations {
+      testImplementation {
+        // need to exclude logback in order to test slf4j -> log4j2
+        exclude(group = "ch.qos.logback", module = "logback-classic")
+      }
+    }
+    dependencies {
+      testImplementation("org.slf4j:slf4j-api") {
+        version {
+          strictly("1.5.8")
+        }
+      }
+      testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.0")
+    }
+  }
+
+  val testSlf4j2ToLog4j2 by registering(Test::class) {
+    filter {
+      includeTestsMatching("Slf4jToLog4j2Test")
+    }
+    configurations {
+      testImplementation {
+        // need to exclude logback in order to test slf4j -> log4j2
+        exclude(group = "ch.qos.logback", module = "logback-classic")
+      }
+    }
+    dependencies {
+      // 2.19.0 is the first version of log4j-slf4j2-impl
+      testLibrary("org.apache.logging.log4j:log4j-core:2.19.0")
+      testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.19.0")
+    }
+  }
+
+  check {
     dependsOn(testAsync)
+    dependsOn(testSlf4j1ToLog4j2)
+    dependsOn(testSlf4j2ToLog4j2)
   }
 }
 
