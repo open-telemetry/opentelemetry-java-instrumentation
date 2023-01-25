@@ -31,7 +31,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
 
-@SuppressWarnings("deprecation") // reasons
 class ReactorCoreTest extends AbstractReactorCoreTest {
 
   @RegisterExtension
