@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1;
 
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -17,8 +18,8 @@ class MongoInstrumenterFactory {
 
   private static final MongoAttributesExtractor attributesExtractor =
       new MongoAttributesExtractor();
-  private static final NetClientAttributesExtractor<CommandStartedEvent, Void>
-      netAttributesExtractor = NetClientAttributesExtractor.create(new MongoNetAttributesGetter());
+  private static final AttributesExtractor<CommandStartedEvent, Void> netAttributesExtractor =
+      NetClientAttributesExtractor.create(new MongoNetAttributesGetter());
 
   static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry,

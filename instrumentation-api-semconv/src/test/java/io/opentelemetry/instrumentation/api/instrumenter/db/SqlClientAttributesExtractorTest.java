@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,7 +61,7 @@ class SqlClientAttributesExtractorTest {
 
     Context context = Context.root();
 
-    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+    AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when
@@ -92,7 +93,7 @@ class SqlClientAttributesExtractorTest {
 
     Context context = Context.root();
 
-    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+    AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when
@@ -114,7 +115,7 @@ class SqlClientAttributesExtractorTest {
 
     Context context = Context.root();
 
-    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+    AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
             .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
             .build();
@@ -134,7 +135,7 @@ class SqlClientAttributesExtractorTest {
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // when
-    SqlClientAttributesExtractor<Map<String, String>, Void> underTest =
+    AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when

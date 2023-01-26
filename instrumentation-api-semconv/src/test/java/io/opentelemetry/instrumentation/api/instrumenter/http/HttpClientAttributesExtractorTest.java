@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
@@ -113,7 +114,7 @@ class HttpClientAttributesExtractorTest {
     response.put("header.custom-response-header", "654,321");
     response.put("transport", IP_TCP);
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(
                 new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
             .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
@@ -153,7 +154,7 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("url", url);
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(
                 new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
             .build();
@@ -189,7 +190,7 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "0");
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(
                 new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
@@ -209,7 +210,7 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("header.host", "thehost:777");
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(
             new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
 
@@ -229,7 +230,7 @@ class HttpClientAttributesExtractorTest {
     request.put("peerName", "thehost");
     request.put("peerPort", "777");
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(
             new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter());
 
@@ -249,7 +250,7 @@ class HttpClientAttributesExtractorTest {
     request.put("url", url);
     request.put("peerPort", String.valueOf(peerPort));
 
-    HttpClientAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(
                 new TestHttpClientAttributesGetter(), new TestNetClientAttributesGetter())
             .build();

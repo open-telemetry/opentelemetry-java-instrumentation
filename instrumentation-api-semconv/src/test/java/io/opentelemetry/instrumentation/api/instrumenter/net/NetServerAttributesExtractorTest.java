@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,7 +75,7 @@ class NetServerAttributesExtractorTest {
     }
   }
 
-  NetServerAttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+  AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
       NetServerAttributesExtractor.create(new TestNetServerAttributesGetter());
 
   @Test

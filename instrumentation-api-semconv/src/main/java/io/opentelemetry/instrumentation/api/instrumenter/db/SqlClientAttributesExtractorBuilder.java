@@ -10,6 +10,7 @@ import static java.util.Objects.requireNonNull;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 /** A builder of {@link SqlClientAttributesExtractor}. */
@@ -54,7 +55,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Returns a new {@link SqlClientAttributesExtractor} with the settings of this {@link
    * SqlClientAttributesExtractorBuilder}.
    */
-  public SqlClientAttributesExtractor<REQUEST, RESPONSE> build() {
+  public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
         getter, dbTableAttribute, SqlStatementSanitizer.create(statementSanitizationEnabled));
   }
