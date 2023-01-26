@@ -12,7 +12,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.13.0"
+    classpath "com.diffplug.spotless:spotless-plugin-gradle:6.14.0"
     classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
     classpath "io.opentelemetry.instrumentation:gradle-plugins:1.23.0-alpha-SNAPSHOT"
   }
