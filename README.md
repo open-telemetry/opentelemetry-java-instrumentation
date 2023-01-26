@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml">
-    <img alt="Build Status" src="https://img.shields.io/github/workflow/status/open-telemetry/opentelemetry-java-instrumentation/Build?style=for-the-badge">
+    <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/open-telemetry/opentelemetry-java-instrumentation/build.yml?branch=main&style=for-the-badge">
   </a>
   <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases">
     <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=for-the-badge">
@@ -22,9 +22,9 @@
 
 <p align="center">
   <strong>
-    <a href="CONTRIBUTING.md">Contributing<a/>
+    <a href="CONTRIBUTING.md">Contributing</a>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="docs/scope.md">Scope<a/>
+    <a href="docs/scope.md">Scope</a>
   </strong>
 </p>
 
