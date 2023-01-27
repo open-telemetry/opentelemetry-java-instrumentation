@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.SpringSchedulingSingletons.instrumenter;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
