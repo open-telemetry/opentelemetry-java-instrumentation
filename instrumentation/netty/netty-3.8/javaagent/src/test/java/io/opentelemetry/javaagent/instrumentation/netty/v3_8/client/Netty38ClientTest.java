@@ -22,7 +22,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.URI;
@@ -43,43 +42,49 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
   AsyncHttpClient client;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws Exception {
     AsyncHttpClientConfig.Builder builder =
         new AsyncHttpClientConfig.Builder().setUserAgent(USER_AGENT);
 
-    int connectionTimeout = (int) CONNECTION_TIMEOUT.toMillis();
+    Method setConnectTimeout;
     try {
-      Method setConnectTimeout =
+      setConnectTimeout =
           AsyncHttpClientConfig.Builder.class.getMethod("setConnectTimeout", int.class);
-      setConnectTimeout.invoke(builder, connectionTimeout);
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-      builder.setRequestTimeoutInMs(connectionTimeout);
+    } catch (NoSuchMethodException e) {
+      setConnectTimeout =
+          AsyncHttpClientConfig.Builder.class.getMethod("setRequestTimeoutInMs", int.class);
     }
+    setConnectTimeout.invoke(builder, (int) CONNECTION_TIMEOUT.toMillis());
 
+    Method setFollowRedirect;
     try {
-      Method setFollowRedirect =
+      setFollowRedirect =
           AsyncHttpClientConfig.Builder.class.getMethod("setFollowRedirect", boolean.class);
-      setFollowRedirect.invoke(builder, true);
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-      builder.setFollowRedirects(true);
+    } catch (NoSuchMethodException e) {
+      setFollowRedirect =
+          AsyncHttpClientConfig.Builder.class.getMethod("setFollowRedirects", boolean.class);
     }
+    setFollowRedirect.invoke(builder, true);
 
+    Method setMaxRedirects;
     try {
-      Method setMaxRedirects =
-          AsyncHttpClientConfig.Builder.class.getMethod("setMaxRedirects", int.class);
-      setMaxRedirects.invoke(builder, 3);
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-      builder.setMaximumNumberOfRedirects(3);
+      setMaxRedirects = AsyncHttpClientConfig.Builder.class.getMethod("setMaxRedirects", int.class);
+    } catch (NoSuchMethodException e) {
+      setMaxRedirects =
+          AsyncHttpClientConfig.Builder.class.getMethod("setMaximumNumberOfRedirects", int.class);
     }
+    setMaxRedirects.invoke(builder, 3);
 
+    Method setAllowPoolingConnections;
     try {
-      Method setAllowPoolingConnections =
+      setAllowPoolingConnections =
           AsyncHttpClientConfig.Builder.class.getMethod(
               "setAllowPoolingConnections", boolean.class);
-      setAllowPoolingConnections.invoke(builder, false);
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-      builder.setAllowPoolingConnection(false);
+    } catch (NoSuchMethodException e) {
+      setAllowPoolingConnections =
+          AsyncHttpClientConfig.Builder.class.getMethod("setAllowPoolingConnection", boolean.class);
     }
+    setAllowPoolingConnections.invoke(builder, false);
 
     client = new AsyncHttpClient(builder.build());
   }
