@@ -80,6 +80,12 @@ configured to send data to
 [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md)
 at `http://localhost:4317`.
 
+Note: If you need export metrics you should before install [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md) and also use this command: -Dotel.metrics.exporter=otlp
+
+To install collector, this example: docker run -d -p 4317:4317 otel/opentelemetry-collector
+
+If you not need use [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md) you can use this command to exclude export metrics: -Dotel.metrics.exporter=none
+
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables. See [the configuration documentation][config]
 for the full list of configuration items. For example:
