@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientContextManager.httpContextManager;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientInernalEntityStorage.storage;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -65,9 +67,9 @@ public final class ApacheHttpClientProcessorInstrumentation implements TypeInstr
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(value = 1) HttpContext httpContext) {
-      Context context = ApacheHttpClientEntityStorage.getCurrentContext(httpContext);
+      Context context = httpContextManager().getCurrentContext(httpContext);
       if (context != null) {
-        ApacheHttpClientEntityStorage.storeHttpRequest(context, httpRequest);
+        storage().storeHttpRequest(context, httpRequest);
       }
     }
   }
@@ -78,9 +80,9 @@ public final class ApacheHttpClientProcessorInstrumentation implements TypeInstr
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpResponse httpResponse,
         @Advice.Argument(value = 1) HttpContext httpContext) {
-      Context context = ApacheHttpClientEntityStorage.getCurrentContext(httpContext);
+      Context context = httpContextManager().getCurrentContext(httpContext);
       if (context != null) {
-        ApacheHttpClientEntityStorage.storeHttpResponse(context, httpResponse);
+        storage().storeHttpResponse(context, httpResponse);
       }
     }
   }

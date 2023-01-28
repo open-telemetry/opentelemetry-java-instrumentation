@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientContextManager.httpContextManager;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInernalEntityStorage.storage;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -31,7 +33,7 @@ import org.apache.hc.core5.http.protocol.HttpContext;
  * response in case of errors back to the user. It internally stores this information in it's http
  * context. Hence, to fetch the attributes we instrument the client interceptors.
  */
-class ApacheHttpClientProcessorInstrumentation implements TypeInstrumentation {
+public final class ApacheHttpClientProcessorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.hc.core5.http.protocol.HttpProcessor");
@@ -74,9 +76,9 @@ class ApacheHttpClientProcessorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(value = 1) EntityDetails entityDetails,
         @Advice.Argument(value = 2) HttpContext httpContext) {
-      Context context = ApacheHttpClientEntityStorage.getCurrentContext(httpContext);
+      Context context = httpContextManager().getCurrentContext(httpContext);
       if (context != null) {
-        ApacheHttpClientEntityStorage.storeHttpRequest(context, httpRequest);
+        storage().storeHttpRequest(context, httpRequest);
       }
     }
   }
@@ -88,9 +90,9 @@ class ApacheHttpClientProcessorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpResponse httpResponse,
         @Advice.Argument(value = 1) EntityDetails entityDetails,
         @Advice.Argument(value = 2) HttpContext httpContext) {
-      Context context = ApacheHttpClientEntityStorage.getCurrentContext(httpContext);
+      Context context = httpContextManager().getCurrentContext(httpContext);
       if (context != null) {
-        ApacheHttpClientEntityStorage.storeHttpResponse(context, httpResponse);
+        storage().storeHttpResponse(context, httpResponse);
       }
     }
   }

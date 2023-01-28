@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons;
 
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.CountingOutputStream;
@@ -15,8 +15,8 @@ import org.apache.http.entity.HttpEntityWrapper;
 public final class WrappedHttpEntity extends HttpEntityWrapper {
   private final BytesTransferMetrics metrics;
 
-  public WrappedHttpEntity(BytesTransferMetrics metrics, HttpEntity delegate) {
-    super(delegate);
+  public WrappedHttpEntity(BytesTransferMetrics metrics, HttpEntity wrappedEntity) {
+    super(wrappedEntity);
     this.metrics = metrics;
   }
 

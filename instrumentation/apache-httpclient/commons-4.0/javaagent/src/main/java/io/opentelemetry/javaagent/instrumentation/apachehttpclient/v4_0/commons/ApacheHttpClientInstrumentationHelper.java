@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics.createOrGetWithParentContext;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInernalEntityStorage.storage;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.commons.ApacheHttpClientInernalEntityStorage.storage;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -14,15 +14,16 @@ import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.Bytes
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.OtelHttpRequest;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.OtelHttpResponse;
 import javax.annotation.Nullable;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpEntityContainer;
-import org.apache.hc.core5.http.HttpRequest;
-import org.apache.hc.core5.http.HttpResponse;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 
 public final class ApacheHttpClientInstrumentationHelper {
   private final Instrumenter<OtelHttpRequest, OtelHttpResponse> instrumenter;
 
-  public ApacheHttpClientInstrumentationHelper(Instrumenter<OtelHttpRequest, OtelHttpResponse> instrumenter) {
+  public ApacheHttpClientInstrumentationHelper(
+      Instrumenter<OtelHttpRequest, OtelHttpResponse> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
@@ -33,12 +34,12 @@ public final class ApacheHttpClientInstrumentationHelper {
       return null;
     }
 
-    if (request instanceof HttpEntityContainer) {
-      HttpEntity originalEntity = ((HttpEntityContainer) request).getEntity();
+    if (request instanceof HttpEntityEnclosingRequest) {
+      HttpEntity originalEntity = ((HttpEntityEnclosingRequest) request).getEntity();
       if (originalEntity != null && originalEntity.isChunked()) {
         BytesTransferMetrics metrics = createOrGetWithParentContext(parentContext);
         HttpEntity wrappedHttpEntity = new WrappedHttpEntity(metrics, originalEntity);
-        ((HttpEntityContainer) request).setEntity(wrappedHttpEntity);
+        ((HttpEntityEnclosingRequest) request).setEntity(wrappedHttpEntity);
       }
     }
 
@@ -60,7 +61,7 @@ public final class ApacheHttpClientInstrumentationHelper {
     return request;
   }
 
-  private static <T> OtelHttpResponse getFinalResponse(T result, Context context) {
+  private static  <T> OtelHttpResponse getFinalResponse(T result, Context context) {
     HttpResponse internalResponse = storage().getInternalResponse(context);
     if (internalResponse != null) {
       return new ApacheHttpClientResponse(internalResponse);

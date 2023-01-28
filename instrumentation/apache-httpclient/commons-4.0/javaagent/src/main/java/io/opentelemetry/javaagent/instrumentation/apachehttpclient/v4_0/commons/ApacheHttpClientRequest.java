@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.c
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
+import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.OtelHttpRequest;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.List;
@@ -17,7 +18,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.HttpUriRequest;
 
-public final class ApacheHttpClientRequest {
+public final class ApacheHttpClientRequest implements OtelHttpRequest {
   private final Context parentContext;
   @Nullable private final URI uri;
   @Nullable private final HttpHost target;
@@ -43,18 +44,22 @@ public final class ApacheHttpClientRequest {
     return new ApacheHttpClientRequest(parentContext, uri, target, httpRequest);
   }
 
+  @Override
   public BytesTransferMetrics getBytesTransferMetrics() {
     return BytesTransferMetrics.getBytesTransferMetrics(parentContext);
   }
 
+  @Override
   public String getMethod() {
     return httpRequest.getRequestLine().getMethod();
   }
 
+  @Override
   public String getUrl() {
-    return uri != null ? uri.toString() : null;
+    return uri == null ? null : uri.toString();
   }
 
+  @Override
   public String getFlavor() {
     return ApacheHttpClientAttributesHelper.getFlavor(httpRequest.getProtocolVersion());
   }
@@ -69,16 +74,23 @@ public final class ApacheHttpClientRequest {
     return ApacheHttpClientAttributesHelper.getPeerPort(uri);
   }
 
+  @Nullable
+  public InetSocketAddress getPeerSocketAddress() {
+    return ApacheHttpClientAttributesHelper.getPeerSocketAddress(target);
+  }
+
+  @Override
   public List<String> getHeader(String name) {
     return ApacheHttpClientAttributesHelper.getHeader(httpRequest, name);
   }
 
+  @Override
   public String getFirstHeader(String name) {
     return ApacheHttpClientAttributesHelper.getFirstHeader(httpRequest, name);
   }
 
-  @Nullable
-  public InetSocketAddress peerSocketAddress() {
-    return ApacheHttpClientAttributesHelper.getPeerSocketAddress(target);
+  @Override
+  public void setHeader(String name, String value) {
+    httpRequest.setHeader(name, value);
   }
 }

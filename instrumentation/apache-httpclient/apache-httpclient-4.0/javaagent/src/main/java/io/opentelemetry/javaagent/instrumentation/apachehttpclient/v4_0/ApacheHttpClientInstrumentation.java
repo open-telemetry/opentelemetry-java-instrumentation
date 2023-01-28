@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientInstrumentationHelper.endInstrumentation;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientInstrumentationHelper.startInstrumentation;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -136,7 +135,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, request);
-      context = startInstrumentation(parentContext, request, otelRequest);
+      context = helper().startInstrumentation(parentContext, request, otelRequest);
 
       if (context == null) {
         return;
@@ -158,7 +157,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       }
 
       scope.close();
-      endInstrumentation(context, otelRequest, result, throwable);
+      helper().endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 
@@ -174,7 +173,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, request);
-      context = startInstrumentation(parentContext, request, otelRequest);
+      context = helper().startInstrumentation(parentContext, request, otelRequest);
 
       if (context == null) {
         return;
@@ -203,7 +202,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       }
 
       scope.close();
-      endInstrumentation(context, otelRequest, result, throwable);
+      helper().endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 
@@ -219,7 +218,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, host, request);
-      context = startInstrumentation(parentContext, request, otelRequest);
+      context = helper().startInstrumentation(parentContext, request, otelRequest);
 
       if (context == null) {
         return;
@@ -240,7 +239,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       }
 
       scope.close();
-      endInstrumentation(context, otelRequest, result, throwable);
+      helper().endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 
@@ -257,7 +256,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       otelRequest = new ApacheHttpClientRequest(parentContext, host, request);
-      context = startInstrumentation(parentContext, request, otelRequest);
+      context = helper().startInstrumentation(parentContext, request, otelRequest);
 
       if (context == null) {
         return;
@@ -285,7 +284,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
       }
 
       scope.close();
-      endInstrumentation(context, otelRequest, result, throwable);
+      helper().endInstrumentation(context, otelRequest, result, throwable);
     }
   }
 }
