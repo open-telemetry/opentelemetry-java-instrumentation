@@ -9,8 +9,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import javax.annotation.Nullable;
 
-public final class ApacheHttpClientNetAttributesGetter implements
-    NetClientAttributesGetter<OtelHttpRequest, OtelHttpResponse> {
+public final class ApacheHttpClientNetAttributesGetter
+    implements NetClientAttributesGetter<OtelHttpRequest, OtelHttpResponse> {
   @Override
   public String getTransport(OtelHttpRequest request, @Nullable OtelHttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;

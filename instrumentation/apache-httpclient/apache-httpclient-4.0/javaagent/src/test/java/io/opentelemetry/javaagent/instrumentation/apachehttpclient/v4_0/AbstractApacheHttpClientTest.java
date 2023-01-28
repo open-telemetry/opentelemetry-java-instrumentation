@@ -58,7 +58,11 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
 
   @Override
   public void sendRequestWithCallback(
-      T request, String method, URI uri, Map<String, String> headers, HttpClientResult requestResult) {
+      T request,
+      String method,
+      URI uri,
+      Map<String, String> headers,
+      HttpClientResult requestResult) {
     try {
       executeRequestWithCallback(request, uri, requestResult);
     } catch (Throwable throwable) {
