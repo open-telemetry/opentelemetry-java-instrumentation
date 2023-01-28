@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.c
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.BytesTransferMetrics;
 import io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons.OtelHttpRequest;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -21,27 +20,24 @@ import org.apache.http.client.methods.HttpUriRequest;
 public final class ApacheHttpClientRequest implements OtelHttpRequest {
   private final Context parentContext;
   @Nullable private final URI uri;
-  @Nullable private final HttpHost target;
   private final HttpRequest httpRequest;
 
-  private ApacheHttpClientRequest(
-      Context parentContext, URI uri, HttpHost target, HttpRequest httpRequest) {
+  private ApacheHttpClientRequest(Context parentContext, URI uri, HttpRequest httpRequest) {
     this.parentContext = parentContext;
     this.uri = uri;
     this.httpRequest = httpRequest;
-    this.target = target;
   }
 
   public ApacheHttpClientRequest(Context parentContext, HttpHost target, HttpRequest httpRequest) {
-    this(parentContext, getUri(target, httpRequest), target, httpRequest);
+    this(parentContext, getUri(target, httpRequest), httpRequest);
   }
 
   public ApacheHttpClientRequest(Context parentContext, HttpUriRequest httpRequest) {
-    this(parentContext, httpRequest.getURI(), null, httpRequest);
+    this(parentContext, httpRequest.getURI(), httpRequest);
   }
 
   public ApacheHttpClientRequest withHttpRequest(HttpRequest httpRequest) {
-    return new ApacheHttpClientRequest(parentContext, uri, target, httpRequest);
+    return new ApacheHttpClientRequest(parentContext, uri, httpRequest);
   }
 
   @Override
@@ -72,11 +68,6 @@ public final class ApacheHttpClientRequest implements OtelHttpRequest {
   @Nullable
   public Integer getPeerPort() {
     return ApacheHttpClientAttributesHelper.getPeerPort(uri);
-  }
-
-  @Nullable
-  public InetSocketAddress getPeerSocketAddress() {
-    return ApacheHttpClientAttributesHelper.getPeerSocketAddress(target);
   }
 
   @Override

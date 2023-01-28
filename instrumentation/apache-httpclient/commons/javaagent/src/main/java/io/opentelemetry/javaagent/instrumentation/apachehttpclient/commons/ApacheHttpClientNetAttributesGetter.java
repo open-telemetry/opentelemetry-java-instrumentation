@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.commons;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-public final class ApacheHttpClientNetAttributesGetter extends
-    InetSocketAddressNetClientAttributesGetter<OtelHttpRequest, OtelHttpResponse> {
+public final class ApacheHttpClientNetAttributesGetter implements
+    NetClientAttributesGetter<OtelHttpRequest, OtelHttpResponse> {
   @Override
   public String getTransport(OtelHttpRequest request, @Nullable OtelHttpResponse response) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
@@ -26,12 +25,5 @@ public final class ApacheHttpClientNetAttributesGetter extends
   @Override
   public Integer getPeerPort(OtelHttpRequest request) {
     return request.getPeerPort();
-  }
-
-  @Nullable
-  @Override
-  public InetSocketAddress getPeerSocketAddress(
-      OtelHttpRequest request, @Nullable OtelHttpResponse response) {
-    return request.getPeerSocketAddress();
   }
 }

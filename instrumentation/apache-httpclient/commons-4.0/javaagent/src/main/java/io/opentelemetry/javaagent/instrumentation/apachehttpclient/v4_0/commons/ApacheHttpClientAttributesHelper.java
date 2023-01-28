@@ -99,14 +99,6 @@ public final class ApacheHttpClientAttributesHelper {
     return uri == null ? null : uri.getPort();
   }
 
-  public static InetSocketAddress getPeerSocketAddress(HttpHost target) {
-    if (target == null) {
-      return null;
-    }
-    InetAddress inetAddress = target.getAddress();
-    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
-  }
-
   @Nullable
   private static URI getCalculatedUri(HttpHost httpHost, URI uri) {
     try {

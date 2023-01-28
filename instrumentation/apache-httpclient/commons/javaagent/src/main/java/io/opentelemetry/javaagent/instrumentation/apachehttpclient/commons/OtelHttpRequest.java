@@ -15,8 +15,6 @@ public interface OtelHttpRequest {
 
   Integer getPeerPort();
 
-  InetSocketAddress getPeerSocketAddress();
-
   String getMethod();
 
   String getUrl();
