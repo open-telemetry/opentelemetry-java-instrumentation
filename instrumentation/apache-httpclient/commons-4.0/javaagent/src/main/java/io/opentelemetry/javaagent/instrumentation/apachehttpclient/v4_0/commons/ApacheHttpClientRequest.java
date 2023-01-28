@@ -55,11 +55,13 @@ public final class ApacheHttpClientRequest implements OtelHttpRequest {
     return ApacheHttpClientAttributesHelper.getFlavor(httpRequest.getProtocolVersion());
   }
 
+  @Override
   @Nullable
   public String getPeerName() {
     return ApacheHttpClientAttributesHelper.getPeerName(uri);
   }
 
+  @Override
   @Nullable
   public Integer getPeerPort() {
     return ApacheHttpClientAttributesHelper.getPeerPort(uri);
