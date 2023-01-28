@@ -110,4 +110,8 @@ public final class ApacheHttpClientAttributesHelper {
   public static Integer getPeerPort(HttpRequest httpRequest) {
     return httpRequest.getAuthority().getPort();
   }
+
+  public static String getPeerName(HttpRequest httpRequest) {
+    return httpRequest.getAuthority().getHostName();
+  }
 }

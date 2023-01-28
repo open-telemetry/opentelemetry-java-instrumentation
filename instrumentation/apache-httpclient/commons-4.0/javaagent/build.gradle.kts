@@ -4,5 +4,5 @@ plugins {
 
 dependencies {
   implementation(project(":instrumentation:apache-httpclient:commons:javaagent"))
-  compileOnly("org.apache.httpcomponents:httpclient:4.1")
+  compileOnly("org.apache.httpcomponents:httpcore:4.0")
 }

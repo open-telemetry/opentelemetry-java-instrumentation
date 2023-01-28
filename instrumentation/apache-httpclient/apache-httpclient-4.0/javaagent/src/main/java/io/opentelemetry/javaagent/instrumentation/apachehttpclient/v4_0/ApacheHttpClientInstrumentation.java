@@ -134,7 +134,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      otelRequest = new ApacheHttpClientRequest(parentContext, request);
+      otelRequest = new ApacheHttpClientRequest(parentContext, request.getURI(), request);
       context = helper().startInstrumentation(parentContext, request, otelRequest);
 
       if (context == null) {
@@ -172,7 +172,7 @@ public final class ApacheHttpClientInstrumentation implements TypeInstrumentatio
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      otelRequest = new ApacheHttpClientRequest(parentContext, request);
+      otelRequest = new ApacheHttpClientRequest(parentContext, request.getURI(), request);
       context = helper().startInstrumentation(parentContext, request, otelRequest);
 
       if (context == null) {

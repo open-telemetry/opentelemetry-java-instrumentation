@@ -95,6 +95,10 @@ public final class ApacheHttpClientAttributesHelper {
     }
   }
 
+  public static String getPeerName(URI uri) {
+    return uri == null ? null : uri.getHost();
+  }
+
   public static Integer getPeerPort(URI uri) {
     return uri == null ? null : uri.getPort();
   }

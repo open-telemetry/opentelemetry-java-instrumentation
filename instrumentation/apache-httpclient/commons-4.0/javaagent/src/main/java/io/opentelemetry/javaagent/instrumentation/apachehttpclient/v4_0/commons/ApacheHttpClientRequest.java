@@ -15,14 +15,13 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
-import org.apache.http.client.methods.HttpUriRequest;
 
 public final class ApacheHttpClientRequest implements OtelHttpRequest {
   private final Context parentContext;
   @Nullable private final URI uri;
   private final HttpRequest httpRequest;
 
-  private ApacheHttpClientRequest(Context parentContext, URI uri, HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(Context parentContext, URI uri, HttpRequest httpRequest) {
     this.parentContext = parentContext;
     this.uri = uri;
     this.httpRequest = httpRequest;
@@ -30,10 +29,6 @@ public final class ApacheHttpClientRequest implements OtelHttpRequest {
 
   public ApacheHttpClientRequest(Context parentContext, HttpHost target, HttpRequest httpRequest) {
     this(parentContext, getUri(target, httpRequest), httpRequest);
-  }
-
-  public ApacheHttpClientRequest(Context parentContext, HttpUriRequest httpRequest) {
-    this(parentContext, httpRequest.getURI(), httpRequest);
   }
 
   public ApacheHttpClientRequest withHttpRequest(HttpRequest httpRequest) {
@@ -62,7 +57,7 @@ public final class ApacheHttpClientRequest implements OtelHttpRequest {
 
   @Nullable
   public String getPeerName() {
-    return uri == null ? null : uri.getHost();
+    return ApacheHttpClientAttributesHelper.getPeerName(uri);
   }
 
   @Nullable
