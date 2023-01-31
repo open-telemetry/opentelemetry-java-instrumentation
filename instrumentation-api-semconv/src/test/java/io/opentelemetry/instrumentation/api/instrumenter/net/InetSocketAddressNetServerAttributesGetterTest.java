@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
@@ -51,7 +52,7 @@ class InetSocketAddressNetServerAttributesGetterTest {
           return request.host;
         }
       };
-  private final NetServerAttributesExtractor<Addresses, Addresses> extractor =
+  private final AttributesExtractor<Addresses, Addresses> extractor =
       NetServerAttributesExtractor.create(getter);
 
   @Test

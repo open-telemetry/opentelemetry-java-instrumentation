@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,7 +65,7 @@ class DbClientAttributesExtractorTest {
 
     Context context = Context.root();
 
-    DbClientAttributesExtractor<Map<String, String>, Void> underTest =
+    AttributesExtractor<Map<String, String>, Void> underTest =
         DbClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when
@@ -90,7 +91,7 @@ class DbClientAttributesExtractorTest {
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
-    DbClientAttributesExtractor<Map<String, String>, Void> underTest =
+    AttributesExtractor<Map<String, String>, Void> underTest =
         DbClientAttributesExtractor.create(new TestAttributesGetter());
 
     // when

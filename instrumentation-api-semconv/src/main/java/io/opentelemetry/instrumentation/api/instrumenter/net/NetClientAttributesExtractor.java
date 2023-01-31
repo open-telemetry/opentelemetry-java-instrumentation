@@ -26,7 +26,7 @@ public final class NetClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalNetClientAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
 
-  public static <REQUEST, RESPONSE> NetClientAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       NetClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return new NetClientAttributesExtractor<>(getter);
   }

@@ -22,7 +22,7 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   /** Creates the code attributes extractor. */
-  public static <REQUEST, RESPONSE> CodeAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       CodeAttributesGetter<REQUEST> getter) {
     return new CodeAttributesExtractor<>(getter);
   }

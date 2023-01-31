@@ -111,11 +111,10 @@ public final class SpringIntegrationTelemetryBuilder {
         producerSpanEnabled);
   }
 
-  private static MessagingAttributesExtractor<MessageWithChannel, Void>
-      buildMessagingAttributesExtractor(
-          MessagingAttributesGetter<MessageWithChannel, Void> getter,
-          MessageOperation operation,
-          List<String> capturedHeaders) {
+  private static AttributesExtractor<MessageWithChannel, Void> buildMessagingAttributesExtractor(
+      MessagingAttributesGetter<MessageWithChannel, Void> getter,
+      MessageOperation operation,
+      List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(capturedHeaders)
         .build();
