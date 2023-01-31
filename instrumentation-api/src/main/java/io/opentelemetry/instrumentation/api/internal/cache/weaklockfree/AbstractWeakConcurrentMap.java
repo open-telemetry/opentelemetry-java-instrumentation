@@ -311,7 +311,7 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
    * The weak key invokes the latent key's equality method upon evaluation.
    */
 
-  public static final class WeakKey<K> extends WeakReference<K> {
+  static final class WeakKey<K> extends WeakReference<K> {
 
     private final int hashCode;
     private final WeakReference<ConcurrentMap<WeakKey<K>, ?>> ownerRef;

@@ -17,7 +17,8 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
     this.delegate = new WeakConcurrentMap.WithInlinedExpunction<>();
   }
 
-  public WeakLockFreeCache(ConcurrentMap<WeakConcurrentMap.WeakKey<K>, V> map) {
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  public WeakLockFreeCache(ConcurrentMap map) {
     this.delegate = new WeakConcurrentMap.WithInlinedExpunction<>(map);
   }
 
