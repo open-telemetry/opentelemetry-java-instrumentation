@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal.cache;
 
 import io.opentelemetry.instrumentation.api.internal.cache.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMap;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -25,6 +26,20 @@ public interface Cache<K, V> {
    */
   static <K, V> Cache<K, V> weak() {
     return new WeakLockFreeCache<>();
+  }
+
+  /**
+   * Returns new weak bounded cache.
+   *
+   * <p>Keys are referenced weakly and compared using identity comparison, not {@link
+   * Object#equals(Object)}.
+   */
+  static <K, V> Cache<K, V> weakBounded(int capacity) {
+    ConcurrentLinkedHashMap<WeakConcurrentMap.WeakKey<K>, V> map =
+        new ConcurrentLinkedHashMap.Builder<WeakConcurrentMap.WeakKey<K>, V>()
+            .maximumWeightedCapacity(capacity)
+            .build();
+    return new WeakLockFreeCache<>(map);
   }
 
   /**

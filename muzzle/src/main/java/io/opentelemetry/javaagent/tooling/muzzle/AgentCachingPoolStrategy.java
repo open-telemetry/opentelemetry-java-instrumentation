@@ -56,6 +56,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
           .getBoolean("otel.instrumentation.internal-reflection.enabled", true);
   private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
+  static final int CLASSLOADER_CAPACITY = 64;
   static final int TYPE_CAPACITY = 64;
 
   static final int BOOTSTRAP_HASH = 7236344; // Just a random number
@@ -68,7 +69,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    *   <li>Allow for quick fast path equivalence check of composite keys
    * </ul>
    */
-  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache = Cache.weak();
+  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache =
+      Cache.weakBounded(CLASSLOADER_CAPACITY);
 
   /**
    * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name

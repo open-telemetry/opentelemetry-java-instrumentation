@@ -182,6 +182,12 @@ public class WeakConcurrentMap<K, V>
    */
   public static class WithInlinedExpunction<K, V> extends WeakConcurrentMap<K, V> {
 
+    public WithInlinedExpunction() {}
+
+    public WithInlinedExpunction(ConcurrentMap<WeakKey<K>, V> map) {
+      super(isPersistentClassLoader(LookupKey.class.getClassLoader()), map);
+    }
+
     @Override
     public V get(K key) {
       expungeStaleEntries();

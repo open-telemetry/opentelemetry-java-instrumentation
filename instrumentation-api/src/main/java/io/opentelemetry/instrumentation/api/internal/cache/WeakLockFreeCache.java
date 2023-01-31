@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal.cache;
 
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 final class WeakLockFreeCache<K, V> implements Cache<K, V> {
@@ -14,6 +15,10 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
 
   WeakLockFreeCache() {
     this.delegate = new WeakConcurrentMap.WithInlinedExpunction<>();
+  }
+
+  public WeakLockFreeCache(ConcurrentMap<WeakConcurrentMap.WeakKey<K>, V> map) {
+    this.delegate = new WeakConcurrentMap.WithInlinedExpunction<>(map);
   }
 
   @Override
