@@ -13,8 +13,7 @@ import java.net.URI;
 import java.util.Map;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class HttpUrlConnectionResponseCodeOnlyTest
-    extends AbstractHttpClientTest<HttpURLConnection> {
+class HttpUrlConnectionResponseCodeOnlyTest extends AbstractHttpClientTest<HttpURLConnection> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 

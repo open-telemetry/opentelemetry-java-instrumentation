@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class UrlConnectionTest {
+class UrlConnectionTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -44,7 +44,7 @@ public class UrlConnectionTest {
                       URLConnection connection = url.openConnection();
                       connection.setConnectTimeout(10000);
                       connection.setReadTimeout(10000);
-                      assertThat(Span.current()).isNotNull();
+                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
                       connection.getInputStream();
                     }));
 

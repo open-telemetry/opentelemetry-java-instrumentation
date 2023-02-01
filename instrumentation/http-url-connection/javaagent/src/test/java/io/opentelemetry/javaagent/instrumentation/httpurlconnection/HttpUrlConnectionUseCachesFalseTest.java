@@ -18,7 +18,7 @@ import java.net.URI;
 import java.util.Map;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class HttpUrlConnectionUseCachesFalseTest extends AbstractHttpClientTest<HttpURLConnection> {
+class HttpUrlConnectionUseCachesFalseTest extends AbstractHttpClientTest<HttpURLConnection> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 

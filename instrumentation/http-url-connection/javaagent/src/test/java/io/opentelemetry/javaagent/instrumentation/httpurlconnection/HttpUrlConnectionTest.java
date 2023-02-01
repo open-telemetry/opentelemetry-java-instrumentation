@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
+class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
@@ -58,7 +58,7 @@ public class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnect
       connection.setRequestMethod(method);
       headers.forEach(connection::setRequestProperty);
       connection.setRequestProperty("Connection", "close");
-      connection.setUseCaches(false);
+      connection.setUseCaches(true);
       connection.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
       Span parentSpan = Span.current();
       InputStream stream = connection.getInputStream();
@@ -266,9 +266,8 @@ public class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnect
         () -> {
           HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-          String connectionClassName = connection.getClass().getName();
-
-          assertThat("sun.net.www.protocol.http.HttpURLConnection").isEqualTo(connectionClassName);
+          assertThat(connection.getClass().getName())
+              .isEqualTo("sun.net.www.protocol.http.HttpURLConnection");
 
           connection.setRequestMethod("GET");
 
