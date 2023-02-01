@@ -20,10 +20,13 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.instrumenter;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createInstrumenter;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -41,17 +44,31 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
   protected final S delegate;
   protected final DbInfo dbInfo;
   protected final String query;
+  protected final OpenTelemetry openTelemetry;
+  protected final Instrumenter<DbRequest, Void> instrumenter;
 
   private final ArrayList<String> batchCommands = new ArrayList<>();
 
+  @Deprecated
   OpenTelemetryStatement(S delegate, DbInfo dbInfo) {
-    this(delegate, dbInfo, null);
+    this(delegate, dbInfo, null, GlobalOpenTelemetry.get());
   }
 
+  @Deprecated
   OpenTelemetryStatement(S delegate, DbInfo dbInfo, String query) {
+    this(delegate, dbInfo, query, GlobalOpenTelemetry.get());
+  }
+
+  OpenTelemetryStatement(S delegate, DbInfo dbInfo, OpenTelemetry openTelemetry) {
+    this(delegate, dbInfo, null, openTelemetry);
+  }
+
+  OpenTelemetryStatement(S delegate, DbInfo dbInfo, String query, OpenTelemetry openTelemetry) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.query = query;
+    this.openTelemetry = openTelemetry;
+    this.instrumenter = createInstrumenter(openTelemetry);
   }
 
   @Override
@@ -282,19 +299,19 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
     Context parentContext = Context.current();
     DbRequest request = DbRequest.create(dbInfo, sql);
 
-    if (!instrumenter().shouldStart(parentContext, request)) {
+    if (!this.instrumenter.shouldStart(parentContext, request)) {
       return callable.call();
     }
 
-    Context context = instrumenter().start(parentContext, request);
+    Context context = this.instrumenter.start(parentContext, request);
     T result;
     try (Scope ignored = context.makeCurrent()) {
       result = callable.call();
     } catch (Throwable t) {
-      instrumenter().end(context, request, null, t);
+      this.instrumenter.end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, null, null);
+    this.instrumenter.end(context, request, null, null);
     return result;
   }
 

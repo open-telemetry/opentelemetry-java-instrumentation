@@ -20,8 +20,9 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
@@ -211,7 +212,7 @@ public final class OpenTelemetryDriver implements Driver {
 
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
 
-    return new OpenTelemetryConnection(connection, dbInfo);
+    return new OpenTelemetryConnection(connection, dbInfo, GlobalOpenTelemetry.get());
   }
 
   @Override
