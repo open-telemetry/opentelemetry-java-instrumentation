@@ -11,8 +11,11 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import org.jboss.logmanager.ExtLogRecord;
@@ -64,7 +67,7 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
   }
 
   @Test
-  void idsGeneratedWhenSpanProvided() throws NoSuchMethodException {
+  void idsGeneratedWhenSpanProvided() throws InvocationTargetException, IllegalAccessException {
     Logger logger = LogContext.getLogContext().getLogger("TestLogger");
     logger.setLevel(Level.DEBUG);
     LinkedList<ExtLogRecord> logRecords = new LinkedList<>();
@@ -90,10 +93,27 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
 
     assertThat(logRecords.size()).isEqualTo(3);
 
+    Method getMdcCopy = null;
+    boolean hasGetMdcCopy = false;
+    try {
+      getMdcCopy = logRecords.get(0).getClass().getMethod("getMdcCopy");
+      hasGetMdcCopy = getMdcCopy != null;
+    } catch (NoSuchMethodException ignored) {
+
+    }
+
     assertThat(logRecords.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(logRecords.get(0).getMdc("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
     assertThat(logRecords.get(0).getMdc("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
     assertThat(logRecords.get(0).getMdc("trace_flags")).isEqualTo("01");
+
+    if (hasGetMdcCopy) {
+      @SuppressWarnings("unchecked")
+      Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(logRecords.get(0));
+      assertThat(copiedMdc.get("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
+      assertThat(copiedMdc.get("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
+      assertThat(copiedMdc.get("trace_flags")).isEqualTo("01");
+    }
 
     assertThat(logRecords.get(1).getMessage()).isEqualTo("log message 2");
     assertThat(logRecords.get(1).getMdc("trace_id")).isNull();
@@ -104,5 +124,13 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     assertThat(logRecords.get(2).getMdc("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
     assertThat(logRecords.get(2).getMdc("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
     assertThat(logRecords.get(2).getMdc("trace_flags")).isEqualTo("01");
+
+    if (hasGetMdcCopy) {
+      @SuppressWarnings("unchecked")
+      Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(logRecords.get(2));
+      assertThat(copiedMdc.get("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
+      assertThat(copiedMdc.get("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
+      assertThat(copiedMdc.get("trace_flags")).isEqualTo("01");
+    }
   }
 }
