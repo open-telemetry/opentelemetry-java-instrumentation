@@ -168,6 +168,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    */
   private static final class TypeCacheKey {
     private final int loaderHash;
+    @Nullable
     private final WeakReference<ClassLoader> loaderRef;
     private final String className;
 
@@ -206,6 +207,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       // Also covers the bootstrap null loaderRef case
       if (loaderRef == other.loaderRef) {
         return true;
+      } else if (loaderRef == null || other.loaderRef == null) {
+        return false;
       }
 
       // need to perform a deeper loader check -- requires calling Reference.get
