@@ -168,8 +168,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    */
   private static final class TypeCacheKey {
     private final int loaderHash;
-    @Nullable
-    private final WeakReference<ClassLoader> loaderRef;
+    @Nullable private final WeakReference<ClassLoader> loaderRef;
     private final String className;
 
     private final int hashCode;
