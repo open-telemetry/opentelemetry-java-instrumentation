@@ -16,6 +16,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.HashMap;
@@ -176,7 +177,7 @@ class HttpServerAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("header.x-forwarded-for", "1.1.1.1");
 
-    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         HttpServerAttributesExtractor.builder(
                 new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
@@ -198,7 +199,7 @@ class HttpServerAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("header.x-forwarded-proto", "https");
 
-    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         HttpServerAttributesExtractor.builder(
                 new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
@@ -218,7 +219,7 @@ class HttpServerAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("header.host", "thehost:777");
 
-    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         HttpServerAttributesExtractor.builder(
                 new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
@@ -240,7 +241,7 @@ class HttpServerAttributesExtractorTest {
     request.put("hostName", "thehost");
     request.put("hostPort", 777);
 
-    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         HttpServerAttributesExtractor.builder(
                 new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())
@@ -262,7 +263,7 @@ class HttpServerAttributesExtractorTest {
     request.put("scheme", scheme);
     request.put("hostPort", hostPort);
 
-    HttpServerAttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
+    AttributesExtractor<Map<String, Object>, Map<String, Object>> extractor =
         HttpServerAttributesExtractor.builder(
                 new TestHttpServerAttributesGetter(), new TestNetServerAttributesGetter())
             .setCapturedRequestHeaders(emptyList())

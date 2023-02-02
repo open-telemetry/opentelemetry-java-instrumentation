@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
@@ -84,8 +85,8 @@ public final class JmsInstrumenterFactory {
         .buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
   }
 
-  private MessagingAttributesExtractor<MessageWithDestination, Void>
-      createMessagingAttributesExtractor(MessageOperation operation) {
+  private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(
+      MessageOperation operation) {
     return MessagingAttributesExtractor.builder(JmsMessageAttributesGetter.INSTANCE, operation)
         .setCapturedHeaders(capturedHeaders)
         .build();

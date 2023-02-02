@@ -23,7 +23,7 @@ public final class NetServerAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalNetServerAttributesExtractor<REQUEST> internalExtractor;
 
-  public static <REQUEST, RESPONSE> NetServerAttributesExtractor<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       NetServerAttributesGetter<REQUEST> getter) {
     return new NetServerAttributesExtractor<>(getter);
   }

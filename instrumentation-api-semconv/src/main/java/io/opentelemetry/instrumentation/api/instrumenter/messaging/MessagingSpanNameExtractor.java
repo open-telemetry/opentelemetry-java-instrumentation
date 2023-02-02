@@ -32,7 +32,6 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
     this.operation = operation;
   }
 
-  @SuppressWarnings("deprecation") // operationName
   @Override
   public String extract(REQUEST request) {
     String destinationName =

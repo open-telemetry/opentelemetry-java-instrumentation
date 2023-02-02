@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSA
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -123,7 +124,7 @@ class RocketMqInstrumenterFactory {
     }
   }
 
-  private static <T> MessagingAttributesExtractor<T, Void> buildMessagingAttributesExtractor(
+  private static <T> AttributesExtractor<T, Void> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<T, Void> getter,
       MessageOperation operation,
       List<String> capturedHeaders) {

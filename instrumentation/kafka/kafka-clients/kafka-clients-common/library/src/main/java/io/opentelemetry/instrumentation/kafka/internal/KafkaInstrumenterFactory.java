@@ -171,7 +171,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   private static <REQUEST, RESPONSE>
-      MessagingAttributesExtractor<REQUEST, RESPONSE> buildMessagingAttributesExtractor(
+      AttributesExtractor<REQUEST, RESPONSE> buildMessagingAttributesExtractor(
           MessagingAttributesGetter<REQUEST, RESPONSE> getter,
           MessageOperation operation,
           List<String> capturedHeaders) {
