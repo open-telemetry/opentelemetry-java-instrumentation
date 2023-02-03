@@ -428,7 +428,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   protected String expectedClientSpanName(URI uri, String method) {
-    return method != null ? "HTTP " + method : "HTTP request"
+    return method != null ? method : "HTTP request"
   }
 
   Integer responseCodeOnRedirectError() {

@@ -594,7 +594,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   public String expectedServerSpanName(ServerEndpoint endpoint, String method) {
     String route = expectedHttpRoute(endpoint);
-    return route == null ? "HTTP " + method : route;
+    return route == null ? method : method + " " + route;
   }
 
   public String expectedHttpRoute(ServerEndpoint endpoint) {
