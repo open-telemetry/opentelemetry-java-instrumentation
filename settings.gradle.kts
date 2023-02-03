@@ -475,6 +475,7 @@ hideFromDependabot(":instrumentation:spring:spring-webmvc:spring-webmvc-common:t
 hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:library")
 hideFromDependabot(":instrumentation:spring:spring-webflux-5.0:testing")
+hideFromDependabot(":instrumentation:spring:spring-webflux-5.3:library")
 hideFromDependabot(":instrumentation:spring:spring-ws-2.0:javaagent")
 hideFromDependabot(":instrumentation:spring:spring-boot-autoconfigure")
 hideFromDependabot(":instrumentation:spring:starters:spring-boot-starter")
