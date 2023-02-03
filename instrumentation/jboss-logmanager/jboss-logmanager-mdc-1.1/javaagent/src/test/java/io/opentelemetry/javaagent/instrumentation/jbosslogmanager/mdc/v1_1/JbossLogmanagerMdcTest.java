@@ -94,12 +94,9 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     assertThat(logRecords.size()).isEqualTo(3);
 
     Method getMdcCopy = null;
-    boolean hasGetMdcCopy = false;
     try {
       getMdcCopy = logRecords.get(0).getClass().getMethod("getMdcCopy");
-      hasGetMdcCopy = getMdcCopy != null;
     } catch (NoSuchMethodException ignored) {
-
     }
 
     assertThat(logRecords.get(0).getMessage()).isEqualTo("log message 1");
@@ -107,7 +104,7 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     assertThat(logRecords.get(0).getMdc("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
     assertThat(logRecords.get(0).getMdc("trace_flags")).isEqualTo("01");
 
-    if (hasGetMdcCopy) {
+    if (getMdcCopy != null) {
       @SuppressWarnings("unchecked")
       Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(logRecords.get(0));
       assertThat(copiedMdc.get("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
@@ -125,7 +122,7 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     assertThat(logRecords.get(2).getMdc("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
     assertThat(logRecords.get(2).getMdc("trace_flags")).isEqualTo("01");
 
-    if (hasGetMdcCopy) {
+    if (getMdcCopy != null) {
       @SuppressWarnings("unchecked")
       Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(logRecords.get(2));
       assertThat(copiedMdc.get("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
